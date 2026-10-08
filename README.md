@@ -1,2 +1,16 @@
-# Pawblossom-Puzzle
-Pawblossom Puzzle — a cozy match-3 game with cute animal friends and a growing woodland village. English-first, planned for Android.
+# Pawblossom Puzzle
+
+귀여운 동물 친구들과 함께 숲속 마을을 가꾸는 포근한 매치3 퍼즐 게임입니다.
+
+과일과 자연 소재 블록을 맞추고, 동물 친구들의 부탁을 해결하며 마을을 조금씩 완성해 나갑니다.
+
+## 개발 방향
+
+- **출시 목표:** 한국과 해외 시장을 대상으로 구글 플레이에 출시
+- **게임 언어:** 영어를 기본 언어로 제작하고 한국어 지원
+- **분위기:** 따뜻한 색감, 둥근 동물 캐릭터, 부드러운 연출
+- **이용자:** 아이부터 중장년까지 편하게 즐길 수 있는 퍼즐을 지향
+- **수익화 계획:** 광고와 광고 제거 일회성 결제
+- **현재 상태:** 컨셉과 프로젝트 이름을 정한 초기 기획 단계
+
+저장소의 소개와 개발 문서는 한국어로 작성합니다.
