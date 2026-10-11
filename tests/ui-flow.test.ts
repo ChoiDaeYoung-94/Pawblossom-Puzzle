@@ -13,6 +13,7 @@ const stateCode = compile(read('../src/state.ts'));
 const levelsCode = compile(read('../src/levels.ts'));
 const boardCode = compile(read('../src/BoardScene.ts'));
 const engineCode = compile(read('../src/core/BoardEngine.ts'));
+const practiceCode = compile(read('../src/SwapPractice.ts'));
 
 class ElementStub {
   id: string;
@@ -30,6 +31,7 @@ class ElementStub {
   removeAttribute() {}
   append() {}
   focus() {}
+  setPointerCapture() {}
   toggleAttribute() {}
   addEventListener(name: string, callback: (event: { preventDefault(): void }) => void) { this.listeners[name] = callback; }
   showModal() { this.open = true; }
@@ -80,7 +82,8 @@ function mainHarness(storageFails = false, firstUse = false) {
     document: {
       createElement: () => new ElementStub('button'),
       querySelector: element,
-      querySelectorAll: (selector: string) => selector === '.view'
+      querySelectorAll: (selector: string) => selector === '#practice-board button'
+        ? Array.from({length:9},(_,i)=>{const button=element(`#practice-cell-${Math.floor(i/3)}-${i%3}`);button.dataset={row:String(Math.floor(i/3)),col:String(i%3)};return button;}) : selector === '.view'
         ? ['puzzle', 'village', 'journal', 'settings'].map(name => element(`#${name}-view`)) : [],
       documentElement: {}, addEventListener() {},
     },
@@ -94,6 +97,10 @@ function mainHarness(storageFails = false, firstUse = false) {
   const levelExports: Record<string, unknown> = {};
   vm.runInNewContext(levelsCode, {exports:levelExports});
   Object.assign(context,{require:(name:string) => {if(name==='./levels')return levelExports;throw new Error(name);}});
+  const coreExports:Record<string,unknown>={}, practiceExports:Record<string,unknown>={};
+  vm.runInNewContext(engineCode,{exports:coreExports});
+  vm.runInNewContext(practiceCode,{exports:practiceExports,require:()=>coreExports});
+  Object.assign(context,practiceExports);
   vm.runInContext(stateCode, context);
   Object.assign(context, stateExports);
   vm.runInContext(mainCode, context);
@@ -219,7 +226,7 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
 });
 
 describe('첫 플레이 안내', () => {
-  it('첫 실행은 보드를 멈추고 3단계를 끝낸 뒤 저장하고 재개합니다', () => {
+  it('첫 실행은 보드를 멈추고 설명·실습을 끝낸 뒤 저장하고 재개합니다', () => {
     const h=mainHarness(false,true);
     expect(h.element('#tutorial-dialog').open).toBe(true);
     expect(h.run('game.paused')).toBe(true);
@@ -227,6 +234,13 @@ describe('첫 플레이 안내', () => {
     expect(h.run('tutorialPage')).toBe(1);
     h.element('#guide-next').onclick();
     expect(h.run('tutorialPage')).toBe(2);
+    h.element('#guide-next').onclick();
+    expect(h.run('tutorialPage')).toBe(3);
+    h.element('#guide-next').onclick(); // 실습 전에는 다음으로 갈 수 없습니다.
+    expect(h.element('#tutorial-dialog').open).toBe(true);
+    h.element('#practice-cell-0-2').onclick();
+    h.element('#practice-cell-1-2').onclick();
+    expect(h.run('practice.completed')).toBe(true);
     h.element('#guide-next').onclick();
     expect(h.element('#tutorial-dialog').open).toBe(false);
     expect(h.run('game.paused')).toBe(false);
@@ -275,5 +289,47 @@ describe('첫 플레이 안내', () => {
     h.run('showTutorial()');
     expect(h.element('#tutorial-dialog').open).toBe(false);
     expect(h.element('#result-dialog').open).toBe(true);
+  });
+  it('설정 실습은 언어 변경 중 선택과 성공을 유지하며 진행·보상을 쓰지 않습니다',()=>{
+    const h=mainHarness();const before=h.stored();
+    h.run("switchView('settings');showTutorial()");
+    for(let i=0;i<3;i++)h.element('#guide-next').onclick();
+    h.element('#practice-cell-1-2').onclick();
+    h.run("changeLanguage('ko')");
+    expect(h.run('practice.selected.row')).toBe(1);
+    h.element('#practice-cell-0-2').onclick();
+    h.run("changeLanguage('en')");
+    expect(h.run('practice.completed')).toBe(true);
+    expect(h.run('moves')).toBe(24); // 현재 본 게임은 저장된 2스테이지입니다.
+    h.element('#guide-next').onclick();
+    expect(h.stored()).toMatchObject(before);
+    expect(h.run('route')).toBe('settings');
+    expect(h.run('game.paused')).toBe(true);
+    h.run('showTutorial()');
+    for(let i=0;i<3;i++)h.element('#guide-next').onclick();
+    expect(h.run('practice.completed')).toBe(false);
+  });
+  it('실습 중 건너뛰기와 뒤로 이동은 게임 진행을 바꾸지 않습니다',()=>{
+    const h=mainHarness(false,true);
+    for(let i=0;i<3;i++)h.element('#guide-next').onclick();
+    h.element('#practice-cell-0-2').onclick();
+    h.element('#guide-back').onclick();h.element('#guide-next').onclick();
+    expect(h.run('practice.selected')).toBeUndefined();
+    h.element('#guide-skip').onclick();
+    expect(h.run('moves')).toBe(26);
+    expect(h.stored()).toMatchObject({completed:[],stars:0,coins:0,tutorialSeen:true});
+  });
+  it('실습 포인터는 다른 손가락의 놓기를 무시하고 취소 후 다시 밀 수 있습니다',()=>{
+    const h=mainHarness(false,true);
+    for(let i=0;i<3;i++)h.element('#guide-next').onclick();
+    h.run("document.querySelector('#practice-cell-0-2').onpointerdown({button:0,pointerId:1,clientX:0,clientY:0})");
+    h.run("document.querySelector('#practice-cell-0-2').onpointerup({pointerId:2,clientX:0,clientY:60,preventDefault(){}})");
+    expect(h.run('practice.completed')).toBe(false);
+    h.run("document.querySelector('#practice-cell-0-2').onpointercancel()");
+    h.run("document.querySelector('#practice-cell-0-2').onpointerdown({button:0,pointerId:3,clientX:0,clientY:0})");
+    h.run("document.querySelector('#practice-cell-0-2').onpointerup({pointerId:3,clientX:0,clientY:60,preventDefault(){}})");
+    expect(h.run('practice.completed')).toBe(true);
+    expect(h.run('moves')).toBe(26);
+    expect(h.run('save.coins')).toBe(0);
   });
 });
