@@ -113,15 +113,7 @@ export class BoardScene extends Phaser.Scene {
   private resetHint(){this.hintTimer?.remove();this.hintTimer=this.time.delayedCall(7500,()=>this.showHint());}
   private showHint(){
     if(this.busy||this.finished||this.selected)return;
-    for(let r=0;r<8;r++)for(let c=0;c<8;c++)for(const b of [{row:r+1,col:c},{row:r,col:c+1}]){
-      if(b.row>=8||b.col>=8)continue;
-      const a={row:r,col:c};const board=this.engine.board;
-      const x=board[r][c],y=board[b.row][b.col];
-      let valid=x.special==='rainbow'||y.special==='rainbow'||Boolean(x.special&&y.special);
-      if(!valid){
-        [board[r][c],board[b.row][b.col]]=[y,x];valid=this.engine.findMatches().some(p=>(p.row===r&&p.col===c)||(p.row===b.row&&p.col===b.col));[board[r][c],board[b.row][b.col]]=[x,y];
-      }
-      if(valid){this.tweens.add({targets:[this.pieces[a.row][a.col],this.pieces[b.row][b.col]],scale:1.1,duration:450,yoyo:true,repeat:1,ease:'Sine.easeInOut'});this.resetHint();return;}
-    }
+    const move=this.engine.legalMoves()[0];
+    if(move){const {a,b}=move;this.tweens.add({targets:[this.pieces[a.row][a.col],this.pieces[b.row][b.col]],scale:1.1,duration:450,yoyo:true,repeat:1,ease:'Sine.easeInOut'});this.resetHint();}
   }
 }

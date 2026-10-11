@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
+    "balance:report": "node scripts/balance-report.mjs",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android"
   },
