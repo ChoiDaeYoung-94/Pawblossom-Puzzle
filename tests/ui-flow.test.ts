@@ -27,17 +27,20 @@ class ElementStub {
   constructor(selector: string) { this.id = selector.slice(1); this.hidden = selector !== '#puzzle-view'; }
   setAttribute() {}
   removeAttribute() {}
+  append() {}
+  focus() {}
   toggleAttribute() {}
   addEventListener(name: string, callback: (event: { preventDefault(): void }) => void) { this.listeners[name] = callback; }
   showModal() { this.open = true; }
   close() { this.open = false; }
 }
 
-function mainHarness(storageFails = false) {
+function mainHarness(storageFails = false, firstUse = false) {
   const elements = new Map<string, ElementStub>();
   const timers = new Map<number, { callback: () => void; ms: number }>();
   let timerId = 0, writes = 0;
   let stored = JSON.stringify({ version: 1, language: 'en', highestLevel: 2, completed: [1], stars: 1, coins: 40, garden: 0, music: true, sfx: true });
+  if(firstUse)stored='null';
   const element = (selector: string): ElementStub => {
     if (!elements.has(selector)) elements.set(selector, new ElementStub(selector));
     return elements.get(selector)!;
@@ -48,7 +51,9 @@ function mainHarness(storageFails = false) {
     stopPlaying() {}
   }
   class GameStub {
-    scene = { isPaused: () => false, isActive: () => true, pause() {}, resume() {} };
+    events = { once() {} };
+    paused=false;
+    scene = { isPaused: () => this.paused, isActive: () => !this.paused, pause:()=>{this.paused=true;}, resume:()=>{this.paused=false;} };
     scale = { refresh() {} };
     destroy() {}
   }
@@ -72,6 +77,7 @@ function mainHarness(storageFails = false) {
       },
     },
     document: {
+      createElement: () => new ElementStub('button'),
       querySelector: element,
       querySelectorAll: (selector: string) => selector === '.view'
         ? ['puzzle', 'village', 'journal', 'settings'].map(name => element(`#${name}-view`)) : [],
@@ -205,5 +211,65 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     expect(h.element('#toast').textContent).toMatch(/Storage is unavailable/);
     expect(h.stored().highestLevel).toBe(2); // 저장 실패가 이전 데이터를 지우지는 않습니다.
     expect(h.run('loadSave().highestLevel')).toBe(2);
+  });
+});
+
+describe('첫 플레이 안내', () => {
+  it('첫 실행은 보드를 멈추고 3단계를 끝낸 뒤 저장하고 재개합니다', () => {
+    const h=mainHarness(false,true);
+    expect(h.element('#tutorial-dialog').open).toBe(true);
+    expect(h.run('game.paused')).toBe(true);
+    h.element('#guide-next').onclick();
+    expect(h.run('tutorialPage')).toBe(1);
+    h.element('#guide-next').onclick();
+    expect(h.run('tutorialPage')).toBe(2);
+    h.element('#guide-next').onclick();
+    expect(h.element('#tutorial-dialog').open).toBe(false);
+    expect(h.run('game.paused')).toBe(false);
+    expect(h.stored().tutorialSeen).toBe(true);
+    expect(h.run('moves')).toBe(22);
+    expect(h.stored().completed).toEqual([]);
+  });
+  it('건너뛰기와 Escape 모두 재실행 때 자동 안내를 반복하지 않습니다', () => {
+    for(const escape of [false,true]){
+      const h=mainHarness(false,true);
+      if(escape)h.element('#tutorial-dialog').listeners.cancel({preventDefault(){}});
+      else h.element('#guide-skip').onclick();
+      expect(h.run('loadSave().tutorialSeen')).toBe(true);
+      expect(h.element('#tutorial-dialog').open).toBe(false);
+      expect(h.run('game.paused')).toBe(false);
+    }
+  });
+  it('기존 완료 기록이 있으면 자동 안내를 생략하고 설정에서 다시 볼 수 있습니다', () => {
+    const h=mainHarness();
+    expect(h.element('#tutorial-dialog').open).toBe(false);
+    h.run("switchView('settings');showTutorial()");
+    expect(h.element('#tutorial-dialog').open).toBe(true);
+    h.element('#guide-next').onclick();
+    h.element('#guide-back').onclick();
+    expect(h.run('tutorialPage')).toBe(0);
+    h.element('#guide-skip').onclick();
+    expect(h.run('route')).toBe('settings');
+    expect(h.run('game.paused')).toBe(true);
+    h.run("switchView('puzzle')");
+    expect(h.run('game.paused')).toBe(false);
+  });
+  it('안내 도중 언어를 바꾸어도 현재 단계와 진행은 보존됩니다', () => {
+    const h=mainHarness(false,true);
+    h.element('#guide-next').onclick();
+    h.run("changeLanguage('ko')");
+    expect(h.run('tutorialPage')).toBe(1);
+    expect(h.element('#tutorial-dialog').open).toBe(true);
+    expect(h.stored().language).toBe('ko');
+    expect(h.run('moves')).toBe(22);
+  });
+  it('결과 대기 또는 결과 창 표시 중에는 안내를 열지 않습니다', () => {
+    const h=mainHarness();
+    h.run('startLevel(1);scene.hooks.onMove([12,10,0,0,0,0],220);showTutorial()');
+    expect(h.element('#tutorial-dialog').open).toBe(false);
+    h.flushResults();
+    h.run('showTutorial()');
+    expect(h.element('#tutorial-dialog').open).toBe(false);
+    expect(h.element('#result-dialog').open).toBe(true);
   });
 });
