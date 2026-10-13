@@ -29,9 +29,21 @@ if (-not (Get-Command node -ErrorAction SilentlyContinue) -or
 $nodeVersion = & node -p 'process.versions.node'
 if ([version]$nodeVersion -lt [version]'22.0.0') { throw 'Node.js 22 이상이 필요합니다.' }
 
+if (-not $JavaHome) {
+    $jdkRoot = Join-Path $env:LOCALAPPDATA 'Pawblossom\tools'
+    if (Test-Path -LiteralPath $jdkRoot) {
+        $jdk = Get-ChildItem -LiteralPath $jdkRoot -Directory -Filter 'jdk-21*' |
+            Where-Object { $_.Name -match '^jdk-21\.\d+\.\d+(\.\d+)?\+\d+$' } |
+            Sort-Object { [version](($_.Name -replace '^jdk-', '') -replace '\+.*$', '') } -Descending |
+            Select-Object -First 1
+        if ($jdk) { $JavaHome = $jdk.FullName }
+    }
+}
 if ($JavaHome) {
-    if (-not (Test-Path -LiteralPath (Join-Path $JavaHome 'bin\javac.exe'))) {
-        throw 'JavaHome에는 bin\javac.exe가 있어야 합니다.'
+    foreach ($required in @('bin\java.exe', 'bin\javac.exe', 'bin\jlink.exe', 'jmods\java.base.jmod')) {
+        if (-not (Test-Path -LiteralPath (Join-Path $JavaHome $required))) {
+            throw "전체 JDK 구성요소가 없습니다: $required"
+        }
     }
     $env:JAVA_HOME = $JavaHome
     $env:PATH = "$(Join-Path $JavaHome 'bin');$env:PATH"
