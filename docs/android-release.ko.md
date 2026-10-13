@@ -10,6 +10,8 @@
 
 ## 빌드 절차
 
+2026-10-13 새 PC에서는 과거 Unity SDK 경로가 존재하지 않습니다. 아래는 빌드 절차이며 현재 PC의 Android 빌드 성공 기록이 아닙니다. [새 환경 확인과 SDK 재개 조건](new-pc-environment.ko.md)을 먼저 확인합니다.
+
 Node.js 22 이상, Android SDK platform 36 및 Build Tools 36.0.0, JDK 21 이상이 필요합니다. 이 PC에서는 JDK 24.0.2와 기존 Unity 설치에 포함된 SDK를 사용했습니다. Unity로 게임을 개발한다는 의미는 아니며 Android 도구만 사용합니다.
 
 `android/local.properties`를 생성하여 해당 PC의 SDK 위치를 적습니다. 이 파일은 Git에 저장하지 않습니다.

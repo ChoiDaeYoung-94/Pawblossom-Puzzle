@@ -21,6 +21,8 @@
 
 Node.js 22 이상을 사용합니다.
 
+PC 이전 후 도구가 PATH에 없으면 [새 PC 환경과 PowerShell 실행 방법](docs/new-pc-environment.ko.md)을 확인해 주세요.
+
 ```sh
 npm ci
 npm run dev

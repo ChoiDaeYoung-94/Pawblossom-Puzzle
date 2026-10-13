@@ -56,6 +56,7 @@ $('#app').innerHTML=`
 `;
 
 function updateWallet(){
+  $('.wallet.stars .sr-only').textContent=text('stars');$('.wallet.coins .sr-only').textContent=text('coins');
   $('#star-count').textContent=String(save.stars);$('#coin-count').textContent=String(save.coins);$('#garden-count').textContent=`${save.garden} / 5`;$('#garden-fill').style.width=`${save.garden*20}%`;
 }
 function updateGoals(){
@@ -165,7 +166,7 @@ function renderViews(){
   $('#reset').onclick=()=>{if(!confirm(text('resetConfirm')))return;save=clearSave();persist();audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');showTutorial();};
 }
 function localize(){document.documentElement.lang=save.language;document.querySelectorAll<HTMLElement>('[data-t]').forEach(el=>el.textContent=text(el.dataset.t as TextKey));$('#language-toggle').textContent=save.language==='en'?'한국어':'EN';$('#settings-button').setAttribute('aria-label',text('settings'));$('#restart').setAttribute('aria-label',text('restart'));}
-function changeLanguage(language:'en'|'ko'){save.language=language;persist();localize();renderViews();updateGoals();if($<HTMLDialogElement>('#tutorial-dialog').open)renderTutorial();}
+function changeLanguage(language:'en'|'ko'){save.language=language;persist();localize();updateWallet();renderViews();updateGoals();if($<HTMLDialogElement>('#tutorial-dialog').open)renderTutorial();}
 function switchView(name:string){
   if(!scene.canLeave())return;
   route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
