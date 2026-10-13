@@ -15,7 +15,7 @@
 | 다운로드 검증 | nodejs.org 배포의 SHASUMS256.txt와 ZIP의 SHA256 일치 확인 |
 | Java/JDK | Rider 2025.1.3의 `jbr`, Java 21.0.7, javac 존재 확인 |
 | Git | Codex 런타임의 Git 실행, 원격 읽기 성공 |
-| GitHub | Chrome 로그인에서 이슈 생성 성공. 이전 저장 API 자격증명은 HTTP 401이며 CLI 쓰기 권한은 별도 확인 필요 |
+| GitHub | Chrome 이슈 생성 성공. 기존 자격증명 HTTP 401을 확인한 뒤 Git Credential Manager 브라우저 인증 갱신, 계정 확인과 작업 브랜치 푸시 성공 |
 | gh | 현재 PATH에 없음. 이슈·PR은 로그인된 브라우저를 사용할 수 있음 |
 | Android SDK/adb | 확인한 기존 Unity 경로와 일반 SDK 경로에 없음. Android 빌드 미재검증 |
 
@@ -44,6 +44,8 @@ npm.cmd run dev
 - JDK 21 이상
 
 SDK 구성과 약관 확인 후 현재 PC의 실제 경로를 `android/local.properties`에 적습니다. 이 파일은 Git에서 제외됩니다. 스크립트에 `-AndroidSdk <경로>`를 전달하면 위 구성요소 존재를 확인하고 ANDROID_HOME과 현재 PATH만 설정합니다. SDK 설치나 라이선스 동의를 자동 수행하지 않습니다.
+
+공식 다운로드 화면은 Android SDK 약관 동의를 요구합니다. 명령줄 도구와 위 SDK 구성요소 설치에 대한 사용자 확인을 요청했으며, 동의 전 다운로드·라이선스 수락을 진행하지 않습니다.
 
 이후 `npm.cmd run android:sync`와 `android\gradlew.bat -p android assembleDebug bundleRelease`를 실행합니다. 10월 11일의 기존 APK/AAB 성공 기록은 새 PC에서 다시 성공했다는 의미가 아닙니다.
 
