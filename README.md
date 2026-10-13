@@ -61,6 +61,8 @@ Android 빌드에는 Android SDK와 JDK가 별도로 필요합니다. [빌드와
 - [초반 난이도 측정과 조정 근거](docs/level-balance.ko.md)
 - [첫 교환 실습 검증](docs/practice-qa.ko.md)
 - [출시까지 남은 전체 작업](docs/release-checklist.ko.md)
+- [회사 테스트 폰에서 APK 점검](docs/remote-device-test.ko.md)
+- [PR 웹 자동 검증](docs/web-ci.ko.md)
 - [다음 개발 순서](docs/roadmap.ko.md)
 
 앞으로 생성하는 작업 세션은 **6.1 Sol · Medium**을 사용합니다. 상세 규칙은 [AGENTS.md](AGENTS.md)에 기록합니다.
