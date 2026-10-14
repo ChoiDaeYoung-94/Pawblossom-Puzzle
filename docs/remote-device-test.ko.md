@@ -4,7 +4,23 @@
 
 사용자님은 회사의 테스트 폰에서 Google Drive APK를 내려받아 확인합니다. 개발 PC에 바로 USB를 연결할 수 있다는 전제로 작업하지 않습니다. 배포 파일은 개인 Drive의 `Pawblossom Puzzle 테스트` 폴더에 관리하며, 다운로드 링크는 사용자님께 직접 전달합니다. 파일을 올린 것과 실기기 검증 완료를 구분합니다.
 
-## 최신 전달 빌드 (v0.1.3)
+## 최신 전달 빌드 (v0.1.4)
+
+2026-10-14 [PR #29](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/29)에서 테스트 전용 1~10스테이지 바로 선택을 추가했습니다. 기존 Chrome 작업 탭의 개인 Drive 폴더에서 APK·체크섬·안내문 3개 업로드 완료와 새 파일 목록을 확인했습니다. 이전 버전 파일을 보존했고 새 창·공유 권한 변경은 없습니다.
+
+- 파일: `Pawblossom-Puzzle-v0.1.4-2026-10-14-70321d9-debug.apk`
+- 코드·리소스 기준: `70321d9` (후속 변경은 전달 기록 문서)
+- versionName 0.1.4 / versionCode 5, minSdk 24 / targetSdk 36
+- 크기: 8,924,876바이트
+- SHA256: `6a3356e1e1a4cde72122383c5271f78a17481968a202a3bfcaee70c9d47f4d72`
+- 안내문: `테스트-안내-v0.1.4-2026-10-14.txt`, 체크섬: `SHA256SUMS-v0.1.4.txt`
+- 자동 테스트 73개·Chrome 테스트/출시 빌드 검사·APK 서명·빌드·Node 22/24 CI 통과
+
+기존 앱 위에 업데이트하고 **퍼즐 화면 → 스테이지 제목 옆 테스트 → 원하는 번호**를 누릅니다. 4·5·8은 낙엽 한 겹, 6·7·9·10은 두 겹입니다. 앞 스테이지 완료 없이 이동하며 시험 결과는 완료 기록·별·코인·잠금 해제에 반영되지 않습니다. 일반 플레이로 돌아가려면 같은 창의 **일반 플레이로 돌아가기**를 누릅니다. 시험 상태는 재시작·재도전·다음에는 유지하고 앱 재실행에는 저장하지 않습니다. 이전 정원·낙엽·사운드 변경도 포함합니다.
+
+기본 production 웹 빌드에는 버튼·선택 창이 없습니다. Android 테스트 에셋의 출시 빌드 차단과 일반 에셋의 AAB 성공을 확인했습니다. 자세한 재현 방법은 [Android 기록](android-release.ko.md)에 있습니다. 단말에서 실제 조작하는 검수와 광고·결제·스토어 검증은 남아 있습니다.
+
+## 이전 전달 빌드 (v0.1.3)
 
 2026-10-14 최종 음량 보정 [PR #23](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/23), 정원 성장 [PR #25](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/25), 낙엽 목표 [PR #27](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/27)을 포함합니다. 기존 작업용 Chrome Drive 탭에서 APK·체크섬·안내문 3개 업로드 완료와 파일 목록을 확인했습니다. 새 APK 일반 액세스는 제한됨·소유자 1명이며 이전 파일을 보존했습니다. 새 Chrome 창은 만들지 않았습니다.
 
