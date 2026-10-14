@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import ts from 'typescript';
+import { BoardEngine, seededRng, type BoardSnapshot } from '../src/core';
 
 // 테스트에만 사용하는 Node API입니다. 별도 @types/node 설치 없이 런타임에서 읽습니다.
 const fsModule = 'node:fs', vmModule = 'node:vm';
@@ -41,7 +42,7 @@ class ElementStub {
   close() { this.open = false; }
 }
 
-function mainHarness(storageFails = false, firstUse = false, testTools = false, native = false) {
+function mainHarness(storageFails = false, firstUse = false, testTools = false, native = false, initial?:unknown) {
   const elements = new Map<string, ElementStub>();
   const timers = new Map<number, { callback: () => void; ms: number }>();
   let timerId = 0, writes = 0;
@@ -51,13 +52,16 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const nativeState=new Promise<{isActive:boolean}>(resolve=>{resolveNativeState=resolve;});
   let stored = JSON.stringify({ version: 1, language: 'en', highestLevel: 2, completed: [1], stars: 1, coins: 40, garden: 0, music: true, sfx: true });
   if(firstUse)stored='null';
+  if(initial!==undefined)stored=JSON.stringify(initial);
   const element = (selector: string): ElementStub => {
     if (!elements.has(selector)) elements.set(selector, new ElementStub(selector));
     return elements.get(selector)!;
   };
   class SceneStub {
-    constructor(public hooks: { onMove(items: number[], points: number): void; onReady():void }) {}
-    configureLeaves() {}
+    engine:BoardEngine;
+    constructor(public hooks: { onMove(items: number[], points: number): void; onReady():void },snapshot?:BoardSnapshot) {this.engine=new BoardEngine(8,8,seededRng(42),snapshot);}
+    configureLeaves(piles:Parameters<BoardEngine['setLeaves']>[0]) {this.engine.setLeaves(piles);}
+    shuffle(){this.engine.shuffle();return true;}
     canLeave() { return true; }
     stopPlaying() {}
   }
@@ -109,7 +113,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   });
   const levelExports: Record<string, unknown> = {};
   vm.runInNewContext(levelsCode, {exports:levelExports});
-  Object.assign(context,{require:(name:string) => {if(name==='./levels')return levelExports;throw new Error(name);}});
+  Object.assign(context,{require:(name:string) => {if(name==='./levels')return levelExports;if(name==='./core')return coreExports;throw new Error(name);}});
   const coreExports:Record<string,unknown>={}, practiceExports:Record<string,unknown>={};
   vm.runInNewContext(engineCode,{exports:coreExports});
   vm.runInNewContext(practiceCode,{exports:practiceExports,require:()=>coreExports});
@@ -467,7 +471,7 @@ describe('30스테이지 진행과 선택 묶음',()=>{
     expect(app.stored().highestLevel).toBe(30);
     expect(app.element('#result-dialog').innerHTML).toContain('All 30 prototype levels');
     app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(30);
-    const before=app.stored();app.run('finish(true)');expect(app.stored()).toEqual(before);
+    const before=app.stored();app.run('finish(true)');expect(app.stored()).toEqual({...before,inProgress:undefined});
   });
   it('일반 선택 묶음은 잠금을 유지하고 테스트 30번은 진행 기록을 바꾸지 않습니다',()=>{
     const app=mainHarness(false,false,true), before=app.stored();
@@ -527,5 +531,57 @@ describe('문서·Android·모달 복귀',()=>{
     const app=mainHarness(false,true,true);app.run('game.paused=false;scene.hooks.onReady()');expect(app.run('game.paused')).toBe(true);
     app.run("closeTutorial();switchView('village');game.paused=false;scene.hooks.onReady()");expect(app.run('game.paused')).toBe(true);
     const ready=app.run('scene.hooks.onReady');app.run("switchView('puzzle');startLevel(2)");ready();expect(app.run('game.paused')).toBe(false);
+  });
+});
+
+describe('정상 회차 복구와 종료 확정',()=>{
+  it('엔진 판정 뒤 숨김·설정 저장은 직전 회차를 유지하고 이동 완료 뒤 재실행합니다',()=>{
+    const app=mainHarness(),before=app.stored().inProgress;
+    app.run('const move=scene.engine.legalMoves()[0];const resolved=scene.engine.swap(move.a,move.b)');
+    app.run("document.hidden=true");app.documentEvents.visibilitychange();app.run("changeLanguage('ko')");
+    expect(app.stored().inProgress).toEqual(before);
+    const interrupted=mainHarness(false,false,false,false,app.stored());
+    expect(interrupted.run('scene.engine.board')).toEqual(before.board);expect(interrupted.run('moves')).toBe(before.moves);
+    app.run('scene.hooks.onMove(resolved.collected,resolved.score,resolved.steps.length,resolved.leavesCleared)');
+    const saved=app.stored();expect(saved.inProgress.moves).toBe(before.moves-1);expect(saved.inProgress.score).toBeGreaterThan(0);
+    const restored=mainHarness(false,false,false,false,saved);
+    expect(restored.stored()).toEqual(saved);expect(restored.run('scene.engine.board')).toEqual(saved.inProgress.board);
+  });
+  it('무료 섞기 후 보드와 사용 횟수를 복원하며 두 번째 사용은 저장하지 않습니다',()=>{
+    const app=mainHarness(),before=app.stored();app.element('#shuffle').onclick();
+    const shuffled=app.stored();expect(shuffled.inProgress.shuffles).toBe(0);expect(shuffled.inProgress.board).not.toEqual(before.inProgress.board);
+    app.element('#shuffle').onclick();expect(app.stored()).toEqual(shuffled);
+    const restored=mainHarness(false,false,false,false,shuffled);expect(restored.run('shuffles')).toBe(0);expect(restored.stored()).toEqual(shuffled);
+  });
+  it('시험·시험 재시작·완료는 정상 저장을 보존하고 일반 복귀와 재실행은 이어갑니다',()=>{
+    const app=mainHarness(false,false,true);app.element('#shuffle').onclick();const normal=app.stored();
+    app.run('startLevel(30,true);scene.hooks.onMove([2,0,0,0,0,0],20,1,0)');
+    app.element('#restart').onclick();app.run('finish(true)');expect(app.stored()).toEqual(normal);
+    const relaunched=mainHarness(false,false,true,false,app.stored());expect(relaunched.run('testingLevel')).toBe(false);expect(relaunched.stored()).toEqual(normal);
+    app.element('#result-test').onclick();app.element('#test-normal').onclick();expect(app.stored()).toEqual(normal);expect(app.run('shuffles')).toBe(0);
+  });
+  it('정상 재시작·다른 선택·초기화는 새 회차이며 이전 콜백을 무시합니다',()=>{
+    const app=mainHarness();app.element('#shuffle').onclick();const stale=app.run('scene.hooks.onMove');
+    app.element('#restart').onclick();expect(app.stored().inProgress.shuffles).toBe(1);
+    const restarted=app.stored();stale([20,20,20,20,20,20],999);expect(app.stored()).toEqual(restarted);
+    app.run('startLevel(1)');expect(app.stored().inProgress.levelId).toBe(1);
+    app.element('#reset').onclick();expect(app.stored()).toMatchObject({completed:[],coins:0,stars:0,garden:0,inProgress:{levelId:1,score:0,moves:26}});
+  });
+  it('완료 보상과 회차 삭제는 결과창 전 저장하고 중복·늦은 콜백을 무시합니다',()=>{
+    const app=mainHarness(),callback=app.run('scene.hooks.onMove');callback([0,12,10,0,0,0],220);
+    expect(app.element('#result-dialog').open).toBe(false);expect(app.stored()).toMatchObject({completed:[1,2],stars:2,coins:80,highestLevel:3});expect(app.stored().inProgress).toBeUndefined();
+    const settled=app.stored();callback([0,12,10,0,0,0],220);expect(app.stored()).toEqual(settled);expect(app.resultTimers()).toHaveLength(1);
+    const relaunched=mainHarness(false,false,false,false,settled);expect(relaunched.run('currentLevel')).toBe(3);expect(relaunched.stored().coins).toBe(80);
+    const delayed=app.resultTimers()[0].callback;app.run('startLevel(3)');delayed();expect(app.element('#result-dialog').open).toBe(false);expect(app.stored().coins).toBe(80);
+  });
+  it('마지막 실패도 결과창 전 회차를 지우며 실패 복원·보상을 만들지 않습니다',()=>{
+    const app=mainHarness();app.run('moves=1;scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');
+    expect(app.stored().inProgress).toBeUndefined();expect(app.stored().coins).toBe(40);
+    const next=mainHarness(false,false,false,false,app.stored());expect(next.run('moves')).toBe(24);
+    app.flushResults();expect(app.element('#result-dialog').open).toBe(true);expect(app.element('#result-dialog').innerHTML).toContain('Try again');
+  });
+  it('저장 실패는 안내하고 이전 디스크 회차를 유지합니다',()=>{
+    const source=mainHarness().stored(),app=mainHarness(true,false,false,false,source);
+    app.element('#shuffle').onclick();expect(app.stored()).toEqual(source);expect(app.element('#toast').textContent).toContain('Storage is unavailable');
   });
 });

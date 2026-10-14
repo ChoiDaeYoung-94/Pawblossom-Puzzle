@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { BoardEngine, type Position, type Tile, type ResolveStep, type LeafPile } from './core';
+import { BoardEngine, type Position, type Tile, type ResolveStep, type LeafPile, type BoardSnapshot } from './core';
 import type { AudioManager } from './audio/AudioManager';
 import { BoardEffects } from './BoardEffects';
 
@@ -8,7 +8,7 @@ type Notice='matched'|'chain'|'specialCreated'|'noMoves'|'rowClear'|'columnClear
 interface Hooks { audio: AudioManager; onStart:()=>void; onReady?:()=>void; onMove:(collected:number[],score:number,chains:number,leavesCleared:number)=>void; onNotice:(kind:Notice)=>void; }
 const CELL = 56, PAD = 16;
 export class BoardScene extends Phaser.Scene {
-  engine = new BoardEngine();
+  engine: BoardEngine;
   private pieces: Phaser.GameObjects.Container[][] = [];
   private selected?: Position;
   private down?: {pos:Position,x:number,y:number,pointerId:number};
@@ -18,7 +18,7 @@ export class BoardScene extends Phaser.Scene {
   private hintTimer?: Phaser.Time.TimerEvent;
   private leafObjects:(Phaser.GameObjects.Graphics|Phaser.GameObjects.Image|Phaser.GameObjects.Text)[]=[];
   private effects?:BoardEffects;
-  constructor(hooks: Hooks) {super('Board');this.hooks=hooks;}
+  constructor(hooks: Hooks, snapshot?:BoardSnapshot) {super('Board');this.hooks=hooks;this.engine=new BoardEngine(8,8,Math.random,snapshot);}
   configureLeaves(piles:LeafPile[]){this.engine.setLeaves(piles);}
   preload() {tileNames.forEach(name=>this.load.svg(name,`/assets/tiles/${name}.svg`,{width:100,height:100}));for(const name of ['leaf-pile','leaf-single'])this.load.svg(name,`/assets/obstacles/${name}.svg`,{width:100,height:100});}
   create() {

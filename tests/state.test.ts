@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { loadSave, saveData } from '../src/state';
-import { LEVEL_COUNT } from '../src/levels';
+import { loadSave, saveData, levelSignature, validateCheckpoint, type RoundCheckpoint } from '../src/state';
+import { LEVEL_COUNT, levels } from '../src/levels';
+import { BoardEngine, seededRng } from '../src/core';
 
 afterEach(()=>vi.unstubAllGlobals());
 function storage(value:unknown){
@@ -36,6 +37,62 @@ describe('튜토리얼 저장 호환',()=>{
     vi.stubGlobal('localStorage',{getItem:()=>{throw Error('read');},setItem:()=>{throw Error('write');}});
     const save=loadSave();expect(save.tutorialSeen).toBe(false);
     expect(saveData({...save,tutorialSeen:true})).toBe(false);
+  });
+});
+
+function roundSave():RoundCheckpoint {
+  const level=levels[5],engine=new BoardEngine(8,8,seededRng(42));engine.setLeaves(level.leaves!);
+  engine.board[0][0].special='rainbow';engine.leaves[2][2]=1;engine.leaves[2][5]=0;
+  return {schema:1,levelId:6,levelSignature:levelSignature(level),board:engine.board,leaves:engine.leaves,
+    moves:24,score:1240,collected:[3,4,5,6,7,8],shuffles:0,clearedLeaves:1};
+}
+describe('안정 회차 저장 검증',()=>{
+  it('보드·특수·낙엽·수치와 기존 영구 기록을 같은 저장 키로 복원합니다',()=>{
+    storage({version:1,highestLevel:6,completed:[1,2,3,4,5],stars:3,coins:200,garden:1,inProgress:roundSave()});
+    const save=loadSave();expect(save.inProgress).toEqual(roundSave());
+    expect(saveData(save)).toBe(true);expect(loadSave()).toEqual(save);
+  });
+  it.each([
+    ['스키마',(x:RoundCheckpoint)=>{x.schema=2 as 1;}],
+    ['레벨 서명',(x:RoundCheckpoint)=>{x.levelSignature+='old';}],
+    ['레벨 ID',(x:RoundCheckpoint)=>{x.levelId=31;}],
+    ['이동 종료',(x:RoundCheckpoint)=>{x.moves=0;}],
+    ['이동 초과',(x:RoundCheckpoint)=>{x.moves=29;}],
+    ['음수 점수',(x:RoundCheckpoint)=>{x.score=-1;}],
+    ['점수 상한',(x:RoundCheckpoint)=>{x.score=100_000_001;}],
+    ['섞기 횟수',(x:RoundCheckpoint)=>{x.shuffles=2;}],
+    ['수집 크기',(x:RoundCheckpoint)=>{x.collected.push(0);}],
+    ['수집 상한',(x:RoundCheckpoint)=>{x.collected[0]=1_000_001;}],
+    ['행 크기',(x:RoundCheckpoint)=>{x.board[0].pop();}],
+    ['타일 종류',(x:RoundCheckpoint)=>{x.board[0][0].kind=6;}],
+    ['특수 종류',(x:RoundCheckpoint)=>{x.board[0][0].special='other' as never;}],
+    ['낙엽 위치',(x:RoundCheckpoint)=>{x.leaves[0][0]=1;}],
+    ['낙엽 겹 수',(x:RoundCheckpoint)=>{x.leaves[2][2]=3;}],
+    ['낙엽 완료 수',(x:RoundCheckpoint)=>{x.clearedLeaves=2;}],
+    ['이미 완료된 목표',(x:RoundCheckpoint)=>{x.collected.fill(100);x.leaves=x.leaves.map(row=>row.map(()=>0));x.clearedLeaves=4;}],
+    ['불안정 매치',(x:RoundCheckpoint)=>{x.board[0][0]={kind:0};x.board[0][1]={kind:0};x.board[0][2]={kind:0};}],
+    ['이동 없는 보드',(x:RoundCheckpoint)=>{x.board=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({kind:(r*2+c)%6})));}],
+  ] as const)('%s 손상은 회차만 버리고 별·코인·정원을 유지합니다',(_name,damage)=>{
+    const checkpoint=roundSave();damage(checkpoint);
+    storage({version:1,highestLevel:6,completed:[1,2,3,4,5],stars:3,coins:200,garden:1,inProgress:checkpoint});
+    expect(loadSave()).toMatchObject({highestLevel:6,stars:3,coins:200,garden:1});expect(loadSave().inProgress).toBeUndefined();
+  });
+  it('잠긴 ID는 복원하지 않으며 기존 완료 목록의 해제 경계를 사용합니다',()=>{
+    storage({version:1,highestLevel:1,inProgress:roundSave()});expect(loadSave().inProgress).toBeUndefined();
+    storage({version:1,highestLevel:1,completed:[1,2,3,4,5],inProgress:roundSave()});expect(loadSave().inProgress?.levelId).toBe(6);
+  });
+  it('검증·스냅샷 복원·합법 이동 조회는 난수를 소비하지 않고 입력을 복사합니다',()=>{
+    const rng=vi.fn(()=>{throw Error('난수 소비');}),snapshot=roundSave(),before=structuredClone(snapshot);
+    const valid=validateCheckpoint(snapshot,6)!;expect(valid).toEqual(before);
+    const engine=new BoardEngine(8,8,rng,valid);engine.legalMoves();expect(rng).not.toHaveBeenCalled();
+    engine.board[0][0].kind=2;engine.leaves[2][2]=0;valid.collected[0]=100;
+    expect(snapshot).toEqual(before);
+  });
+  it('비정상 대형 배열은 원소 검사를 시작하기 전에 크기로 거부합니다',()=>{
+    const large=new Array(100_000);Object.defineProperty(large,0,{get(){throw Error('대형 입력 순회');}});
+    expect(validateCheckpoint({...roundSave(),board:large},6)).toBeUndefined();
+    expect(validateCheckpoint({...roundSave(),leaves:large},6)).toBeUndefined();
+    expect(validateCheckpoint({...roundSave(),collected:large},6)).toBeUndefined();
   });
 });
 
