@@ -4,7 +4,22 @@
 
 사용자님은 회사의 테스트 폰에서 Google Drive APK를 내려받아 확인합니다. 개발 PC에 바로 USB를 연결할 수 있다는 전제로 작업하지 않습니다. 배포 파일은 개인 Drive의 `Pawblossom Puzzle 테스트` 폴더에 관리하며, 다운로드 링크는 사용자님께 직접 전달합니다. 파일을 올린 것과 실기기 검증 완료를 구분합니다.
 
-## 최신 전달 빌드 (v0.1.2)
+## 최신 전달 빌드 (v0.1.3)
+
+2026-10-14 최종 음량 보정 [PR #23](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/23), 정원 성장 [PR #25](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/25), 낙엽 목표 [PR #27](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/27)을 포함합니다. 기존 작업용 Chrome Drive 탭에서 APK·체크섬·안내문 3개 업로드 완료와 파일 목록을 확인했습니다. 새 APK 일반 액세스는 제한됨·소유자 1명이며 이전 파일을 보존했습니다. 새 Chrome 창은 만들지 않았습니다.
+
+- 파일: `Pawblossom-Puzzle-v0.1.3-2026-10-14-aaea3e9-debug.apk`
+- 게임 코드·리소스 기준: `aaea3e9` (이후 변경은 전달 기록 문서)
+- versionName 0.1.3 / versionCode 4, minSdk 24 / targetSdk 36
+- 크기: 8,923,597바이트
+- SHA256: `3d846608bbeb383558d46a933ac7a6ebd22e77e1a0706e5b3be6e985d61834ee`
+- APK v2 서명과 이전 테스트 인증서 일치, 내부 JS·CSS·낙엽 SVG와 dist 일치
+- 자동 테스트 70개·웹/Android 빌드·3개 PR의 Node 22/24 CI 통과
+- 안내문: `테스트-안내-v0.1.3-2026-10-14.txt`, 체크섬: `SHA256SUMS-v0.1.3.txt`
+
+기존 앱 위에 업데이트하여 설정·진행·별·코인·정원 유지, 4스테이지 한 겹과 6스테이지 두 겹 낙엽의 규칙·목표 표시, 꽃밭 심기·재실행 복원, 가로·세로 배치를 확인합니다. 기존 완료 스테이지를 다시 깨도 별·코인을 재지급하지 않습니다. 기본 음량 조정은 사용자님 피드백을 반영한 약 1dB 보정으로 마무리했으며 [측정 기록](audio-direction.ko.md)이 있습니다. 실제 단말에서 규칙 이해도와 난이도를 확인하는 단계입니다. 광고·결제는 포함하지 않았고 AAB는 출시 키로 서명하지 않았습니다.
+
+## 이전 전달 빌드 (v0.1.2)
 
 2026-10-14 음량 확대 [PR #17](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/17), 특수 범위 표시 [PR #19](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/19), Android 아이콘 [PR #21](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/21)을 함께 반영한 APK입니다. 기존 개인 Drive 테스트 폴더에서 APK·버전별 체크섬·안내문 3개 업로드 완료 표시와 파일 목록을 확인했습니다. 기존 버전 파일은 보존했습니다. 커넥터는 기존 폴더에 접근할 수 없어 기존 작업용 Chrome Drive 탭을 사용했고 새 창을 만들지 않았습니다.
 
