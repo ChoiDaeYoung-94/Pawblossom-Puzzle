@@ -223,7 +223,7 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     h.element('#reset').onclick();
     expect(h.writes()).toBeGreaterThan(0);
     expect(h.run('save.highestLevel')).toBe(1);
-    expect(h.element('#toast').textContent).toMatch(/Storage is unavailable/);
+    expect(h.element('#toast').textContent).toMatch(/기기 저장 공간을 사용할 수 없어요/);
     expect(h.stored().highestLevel).toBe(2); // 저장 실패가 이전 데이터를 지우지는 않습니다.
     expect(h.run('loadSave().highestLevel')).toBe(2);
   });

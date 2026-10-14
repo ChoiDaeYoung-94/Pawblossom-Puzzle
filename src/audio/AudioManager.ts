@@ -25,6 +25,7 @@ const BASS = [48, 45, 55, 48, 48, 45, 55, 48] as const;
 const FIFTHS = [55, 52, 62, 55, 55, 52, 62, 55] as const;
 const EIGHTH = 60 / 72 / 2;
 const PENTATONIC = [0, 2, 4, 7, 9] as const;
+export const AUDIO_LEVELS={music:0.85,sfx:1.15,master:0.9} as const;
 
 /** Owns one lazy Web Audio context. Call unlock directly from a user gesture.
  * No samples, remote assets, Phaser audio, or Capacitor dependency required.
@@ -67,9 +68,9 @@ export class AudioManager {
         this.sfxBus = ctx.createGain();
         const master = ctx.createGain();
         const compressor = ctx.createDynamicsCompressor();
-        this.musicBus.gain.value = this.music ? 0.32 : 0;
-        this.sfxBus.gain.value = this.sfx ? 0.65 : 0;
-        master.gain.value = 0.65;
+        this.musicBus.gain.value = this.music ? AUDIO_LEVELS.music : 0;
+        this.sfxBus.gain.value = this.sfx ? AUDIO_LEVELS.sfx : 0;
+        master.gain.value = AUDIO_LEVELS.master;
         compressor.threshold.value = -12;
         compressor.knee.value = 12;
         compressor.ratio.value = 8;
@@ -92,14 +93,14 @@ export class AudioManager {
 
   setMusicEnabled(enabled: boolean): void {
     this.music = enabled;
-    this.setBus(this.musicBus, enabled ? 0.32 : 0);
+    this.setBus(this.musicBus, enabled ? AUDIO_LEVELS.music : 0);
     if (!enabled) this.stopMusic(true);
     else this.startMusic();
   }
 
   setSfxEnabled(enabled: boolean): void {
     this.sfx = enabled;
-    this.setBus(this.sfxBus, enabled ? 0.65 : 0);
+    this.setBus(this.sfxBus, enabled ? AUDIO_LEVELS.sfx : 0);
     if (!enabled) this.stopVoices('sfx', true);
   }
 

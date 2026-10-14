@@ -7,6 +7,11 @@ function storage(value:unknown){
   vi.stubGlobal('localStorage',{getItem:()=>raw,setItem:(_key:string,next:string)=>{raw=next;}});
 }
 describe('튜토리얼 저장 호환',()=>{
+  it('첫 실행과 언어 없는 저장은 한국어이며 명시한 영어는 유지합니다',()=>{
+    storage(null);expect(loadSave().language).toBe('ko');
+    storage({version:1});expect(loadSave().language).toBe('ko');
+    storage({version:1,language:'en'});expect(loadSave().language).toBe('en');
+  });
   it('신규 저장은 안내 미완료이며 안내 완료는 재로드 후 복원됩니다',()=>{
     storage(null);
     const save=loadSave();expect(save.tutorialSeen).toBe(false);
