@@ -4,7 +4,21 @@
 
 사용자님은 회사의 테스트 폰에서 Google Drive APK를 내려받아 확인합니다. 개발 PC에 바로 USB를 연결할 수 있다는 전제로 작업하지 않습니다. 배포 파일은 개인 Drive의 `Pawblossom Puzzle 테스트` 폴더에 관리하며, 다운로드 링크는 사용자님께 직접 전달합니다. 파일을 올린 것과 실기기 검증 완료를 구분합니다.
 
-## 최신 전달 빌드 (v0.1.5)
+## 최신 전달 빌드 (v0.1.6)
+
+2026-10-14 낙엽 숫자 팝업 간소화 PR #33과 핍 결과·테스트 선택 전환 PR #35를 포함한 빌드입니다. 기존 Chrome 작업용 Drive 폴더에서 새 APK와 체크섬 두 파일의 업로드 완료와 목록을 확인했습니다. 별도 테스트 안내 파일은 생성·업로드하지 않았고 안내는 사용자 대화에 직접 전달합니다. 이전 전달 파일과 공유 범위를 보존했으며 새 Chrome 창은 없습니다.
+
+- 파일: `Pawblossom-Puzzle-v0.1.6-2026-10-14-fff4b51-debug.apk`
+- 코드·리소스 기준: `fff4b51` (이후 변경은 전달 기록 문서)
+- versionName 0.1.6 / versionCode 7, minSdk 24 / targetSdk 36
+- 크기: 8,928,012바이트
+- SHA256: `1fe585a3635dcf428a0f74e034806b269023b6c1898755f5f3c2be431095d818`
+- 체크섬: `SHA256SUMS-v0.1.6.txt`
+- 검사 81개·Chrome 결과/낙엽/저장/포커스·테스트/일반 웹·APK/AAB·APK v2·내부 JS/CSS 일치·2개 PR Node 22/24 CI 통과
+
+테스트 도구를 제외한 AAB는 unsigned이며 이번 Drive 전달에는 포함하지 않았습니다. 7,642,254바이트, SHA256 `7bd4b7ff69d2e4b499fda73774affffe27b25aab6ab1e029100eed249d8b77ae`입니다. 실제 단말 결과·뒤로가기·복귀와 광고·결제·스토어 검증은 남아 있습니다.
+
+## 이전 전달 빌드 (v0.1.5)
 
 2026-10-14 [이슈 #30](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/30)·[PR #31](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/31)에서 낙엽 겹 감소와 매치·특수 연출을 보강했습니다. 기존 작업용 Chrome Drive 폴더에서 APK·체크섬·안내문 3개 업로드 완료와 파일 목록을 확인했습니다. 이전 파일·공유 범위를 유지하고 새 Chrome 창을 만들지 않았습니다.
 
