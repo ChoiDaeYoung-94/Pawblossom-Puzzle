@@ -62,3 +62,12 @@ One original adorable cream rabbit gardener, full body, front three-quarter view
 
 ![빈 정원](screenshots/garden-empty-ko.png)
 ![완성 정원](screenshots/garden-complete-ko.png)
+
+### 2026-10-14 낙엽 바닥층 (이슈 #26)
+
+`public/assets/obstacles/leaf-pile.svg`의 갈색 겹잎·잎맥·그림자는 직접 작성한 벡터입니다. 보드의 바닥색·테두리·겹 수 점·제거 테두리는 `BoardScene.ts`에서 직접 그립니다. 외부 에셋·생성 프롬프트는 없습니다. 초록색 일반 잎 블록과 갈색 낙엽 목표를 구분하며, 아직 시제품 단계입니다.
+
+320×568·360×640·360×800 세로, 640×360·800×360 가로 화면에서 목표·보드·도구의 한 화면 배치를 확인했습니다. 실제 손가락 조작과 작은 겹 수 표시는 사용자 APK 재시험에서 검수합니다.
+
+![두 겹 낙엽 스테이지](screenshots/leaves-double-ko.png)
+![가로 화면](screenshots/leaves-landscape-ko.png)

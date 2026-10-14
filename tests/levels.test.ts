@@ -3,6 +3,15 @@ import {levels} from '../src/levels';
 import {BoardEngine,seededRng} from '../src/core';
 
 describe('출시 전 레벨 데이터 점검',()=>{
+  it('첫 세 스테이지는 기존 규칙이고 이후 낙엽 위치와 겹 수는 유효합니다',()=>{
+    expect(levels.slice(0,3).map(level=>level.leaves)).toEqual([undefined,undefined,undefined]);
+    for(const level of levels.slice(3)){
+      const engine=new BoardEngine(8,8,seededRng(1));engine.setLeaves(level.leaves!);
+      expect(engine.remainingLeaves()).toBe(level.leaves!.length);expect(level.leaves!.length).toBeGreaterThan(0);
+    }
+    expect(levels[3].leaves!.every(p=>p.layers===1)).toBe(true);
+    expect(levels[5].leaves!.every(p=>p.layers===2)).toBe(true);
+  });
   it('저장 ID 1~10을 유지하고 목표가 실제 타일 종류와 연결됩니다',()=>{
     expect(levels.map(level=>level.id)).toEqual([1,2,3,4,5,6,7,8,9,10]);
     for(const level of levels){

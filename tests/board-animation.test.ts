@@ -5,6 +5,7 @@ class Piece {
   destroyed=false;alpha=1;scale=1;
   constructor(public x:number,public y:number){}
   add(){return this;}setScale(value:number){this.scale=value;return this;}
+  setDepth(){return this;}
   setPosition(x:number,y:number){this.x=x;this.y=y;return this;}
   destroy(){this.destroyed=true;}
 }
@@ -18,7 +19,7 @@ class Graphic {
 }
 vi.mock('phaser',()=>{
   return {default:{Scene:class {
-    add={container:(x:number,y:number)=>new Piece(x,y),graphics:()=>new Graphic(),image:()=>({setDisplaySize(){return this;}}),circle:(x:number,y:number)=>new Piece(x,y)};
+    add={container:(x:number,y:number)=>new Piece(x,y),graphics:()=>new Graphic(),image:()=>({setDisplaySize(){return this;},setDepth(){return this;},destroy(){}}),circle:(x:number,y:number)=>new Piece(x,y)};
     tweens={killTweensOf(){},add(config:Record<string,unknown>){
       const targets=Array.isArray(config.targets)?config.targets:[config.targets];
       for(const target of targets)for(const key of ['x','y','scale','alpha'])if(config[key]!==undefined)target[key]=config[key];
@@ -33,6 +34,7 @@ interface RenderScene {
   paint(board:Tile[][]):void;drop(step:ResolveStep):void;
   attempt(a:Position,b?:Position):Promise<void>;tap(p:Position):void;resetHint():void;
   showEffect(step:ResolveStep):Graphic;
+  paintLeaves(leaves:number[][]):void;
 }
 function harness(){
   const onMove=vi.fn(),onNotice=vi.fn();
@@ -43,6 +45,15 @@ function harness(){
   return {scene,onMove,onNotice};
 }
 describe('블록 객체 보존과 낙하 연출',()=>{
+  it('낙엽은 각 연쇄의 이전·이후 상태를 표시하고 완료 수를 한 번 전달합니다',async()=>{
+    const {scene,onMove}=harness();scene.engine.board[3][3].special='row';
+    scene.engine.setLeaves([{row:3,col:5,layers:2}]);scene.paint(scene.engine.board);
+    const snapshots:number[][][]=[],paint=scene.paintLeaves.bind(scene);
+    scene.paintLeaves=leaves=>{snapshots.push(leaves.map(row=>row.slice()));paint(leaves);};
+    await scene.attempt({row:3,col:3});
+    expect(snapshots[0][3][5]).toBe(2);expect(snapshots.at(-1)![3][5]).toBe(0);
+    expect(onMove).toHaveBeenCalledOnce();expect(onMove.mock.calls[0][3]).toBe(1);
+  });
   it('보통 매치와 연쇄에서 제거되지 않은 객체를 유지하고 영향 없는 열을 그대로 둡니다',async()=>{
     const {scene,onMove,onNotice}=harness();
     for(const [r,c,k] of [[3,0,5],[3,1,5],[3,2,1],[4,2,5]])scene.engine.board[r][c]={kind:k};

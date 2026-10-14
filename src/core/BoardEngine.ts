@@ -1,6 +1,8 @@
 export type Special = 'row' | 'column' | 'bomb' | 'rainbow';
 export interface Tile { kind: number; special?: Special }
 export interface Position { row: number; col: number }
+export interface LeafPile extends Position { layers: 1 | 2 }
+export interface LeafHit extends Position { before: number; after: number }
 export interface LegalMove { a: Position; b: Position }
 export interface ResolveStep {
   before: Tile[][];
@@ -8,12 +10,14 @@ export interface ResolveStep {
   after: Tile[][];
   created?: (Position & { tile: Tile })[];
   effects?: (Position & { special: Special })[];
+  leaves?: { before: number[][]; after: number[][]; hits: LeafHit[] };
 }
 export interface SwapResult {
   valid: boolean;
   steps: ResolveStep[];
   collected: number[];
   score: number;
+  leavesCleared?: number;
 }
 interface Run { cells: Position[]; horizontal: boolean }
 const clone = (board: Tile[][]): Tile[][] => board.map(row => row.map(tile => ({ ...tile })));
@@ -33,13 +37,27 @@ export function seededRng(seed: number): () => number {
 /** 순수 동기 엔진입니다. board를 직접 바꿀 때는 크기와 kind 범위를 유지해 주세요. */
 export class BoardEngine {
   public board: Tile[][];
+  public leaves: number[][];
   constructor(public readonly rows = 8, public readonly cols = 8, private readonly rng: () => number = Math.random) {
     if (!Number.isInteger(rows) || !Number.isInteger(cols) || rows < 3 || cols < 3) {
       throw new RangeError('보드의 행과 열은 각각 3 이상의 정수여야 합니다.');
     }
     this.board = [];
+    this.leaves = Array.from({length:rows},()=>Array(cols).fill(0));
     this.generate();
   }
+
+  /** 낙엽은 타일과 별개인 고정 바닥층입니다. 잘못된 설정은 기존 층을 바꾸지 않습니다. */
+  public setLeaves(piles: LeafPile[]): void {
+    const keys=new Set<number>();
+    for(const pile of piles){
+      if(!this.inside(pile)||(pile.layers!==1&&pile.layers!==2)||keys.has(this.key(pile)))throw new RangeError('낙엽 좌표·겹 수·중복 설정을 확인해 주세요.');
+      keys.add(this.key(pile));
+    }
+    this.leaves=Array.from({length:this.rows},()=>Array(this.cols).fill(0));
+    piles.forEach(p=>{this.leaves[p.row][p.col]=p.layers;});
+  }
+  public remainingLeaves(): number {return this.leaves.flat().filter(layers=>layers>0).length;}
 
   private randomIndex(length: number): number {
     const value = this.rng();
@@ -182,24 +200,26 @@ export class BoardEngine {
       const removed = new Set<number>();
       const queue: Position[] = [];
       const effects: (Position & { special: Special })[] = [];
+      const specialTargets=new Set<number>();
       const add = (p: Position): void => {
         if (!this.inside(p) || protectedKeys.has(this.key(p)) || removed.has(this.key(p))) return;
         removed.add(this.key(p)); queue.push(p);
       };
+      const hit=(p:Position):void=>{if(this.inside(p))specialTargets.add(this.key(p));add(p);};
       const area = (p: Position, radius: number): void => {
-        for (let row = p.row - radius; row <= p.row + radius; row++) for (let col = p.col - radius; col <= p.col + radius; col++) add({ row, col });
+        for (let row = p.row - radius; row <= p.row + radius; row++) for (let col = p.col - radius; col <= p.col + radius; col++) hit({ row, col });
       };
       runs.forEach(run => run.cells.forEach(add));
       if(first)trigger.forEach(add);
       if (first && combined) {
         const x = before[a.row][a.col], y = before[b.row][b.col];
-        if(x.special)add(a);if(y.special)add(b);
+        if(x.special)hit(a);if(y.special)hit(b);
         if (x.special === 'rainbow' || y.special === 'rainbow') {
           const other = x.special === 'rainbow' ? y : x;
           for (let row = 0; row < this.rows; row++) for (let col = 0; col < this.cols; col++) {
             if (other.special === 'rainbow' || before[row][col].kind === other.kind) {
               if (other.special && other.special !== 'rainbow' && !protectedKeys.has(row * this.cols + col)) this.board[row][col].special = other.special;
-              add({ row, col });
+              hit({ row, col });
             }
           }
         } else if (!x.special || !y.special) {
@@ -209,28 +229,41 @@ export class BoardEngine {
         } else if (x.special === 'bomb' || y.special === 'bomb') {
           const center = x.special === 'bomb' ? a : b;
           for (let row = 0; row < this.rows; row++) for (let col = 0; col < this.cols; col++) {
-            if (Math.abs(row - center.row) <= 1 || Math.abs(col - center.col) <= 1) add({ row, col });
+            if (Math.abs(row - center.row) <= 1 || Math.abs(col - center.col) <= 1) hit({ row, col });
           }
         } else {
           // 줄 특수 두 개는 교환 위치 두 곳에서 가로·세로를 모두 지웁니다.
           for (const center of [a, b]) for (let row = 0; row < this.rows; row++) for (let col = 0; col < this.cols; col++) {
-            if (row === center.row || col === center.col) add({ row, col });
+            if (row === center.row || col === center.col) hit({ row, col });
           }
         }
       }
       for (let i = 0; i < queue.length; i++) {
         const p = queue[i], tile = this.board[p.row][p.col];
         if(tile.special)effects.push({...p,special:tile.special});
-        if (tile.special === 'row') for (let col = 0; col < this.cols; col++) add({ row: p.row, col });
-        if (tile.special === 'column') for (let row = 0; row < this.rows; row++) add({ row, col: p.col });
+        if (tile.special === 'row') for (let col = 0; col < this.cols; col++) hit({ row: p.row, col });
+        if (tile.special === 'column') for (let row = 0; row < this.rows; row++) hit({ row, col: p.col });
         if (tile.special === 'bomb') area(p, 1);
         if (tile.special === 'rainbow' && !(first && combined && (this.key(p) === this.key(a) || this.key(p) === this.key(b)))) for (let row = 0; row < this.rows; row++) for (let col = 0; col < this.cols; col++) {
-          if (this.board[row][col].kind === tile.kind) add({ row, col });
+          if (this.board[row][col].kind === tile.kind) hit({ row, col });
         }
       }
+      const leafTargets=new Set(specialTargets);
+      // 한 단계에서 여러 매치가 같은 더미에 닿아도 한 겹만 제거합니다. 대각선은 제외합니다.
+      for(const run of runs)for(const p of run.cells)for(const [dr,dc] of [[0,0],[-1,0],[1,0],[0,-1],[0,1]]){
+        const q={row:p.row+dr,col:p.col+dc};if(this.inside(q))leafTargets.add(this.key(q));
+      }
+      const leafHits:LeafHit[]=[...leafTargets].sort((x,y)=>x-y).flatMap(key=>{
+        const p=this.position(key),before=this.leaves[p.row][p.col];
+        return before>0?[{...p,before,after:specialTargets.has(key)?0:before-1}]:[];
+      });
+      const leafBefore=leafHits.length?this.leaves.map(row=>row.slice()):undefined;
+      leafHits.forEach(p=>{this.leaves[p.row][p.col]=p.after;});
+      const cleared=leafHits.filter(p=>p.after===0).length;
+      if(cleared)result.leavesCleared=(result.leavesCleared??0)+cleared;
       const positions = [...removed].sort((x, y) => x - y).map(key => this.position(key));
       positions.forEach(p => { result.collected[before[p.row][p.col].kind]++; });
-      result.score += positions.length * 10 * (result.steps.length + 1);
+      result.score += positions.length * 10 * (result.steps.length + 1)+cleared*20;
       created.forEach(p => { this.board[p.row][p.col] = { ...p.tile }; });
       const next: (Tile | undefined)[][] = Array.from({ length: this.rows }, () => Array(this.cols).fill(undefined));
       for (let col = 0; col < this.cols; col++) {
@@ -250,7 +283,7 @@ export class BoardEngine {
         next[row][col] = { kind: choices[this.randomIndex(choices.length)] };
       }
       this.board = next as Tile[][];
-      result.steps.push({ before, removed: positions, after: clone(this.board), ...(created.length ? { created: created.map(p => ({ ...p, tile: { ...p.tile } })) } : {}), ...(effects.length?{effects}: {}) });
+      result.steps.push({ before, removed: positions, after: clone(this.board), ...(created.length ? { created: created.map(p => ({ ...p, tile: { ...p.tile } })) } : {}), ...(effects.length?{effects}: {}), ...(leafBefore?{leaves:{before:leafBefore,after:this.leaves.map(row=>row.slice()),hits:leafHits}}:{}) });
       first = false;
       runs = this.runs();
     }

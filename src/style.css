@@ -71,3 +71,5 @@ html:lang(ko) h1,html:lang(ko) h2,html:lang(ko) h3,html:lang(ko) .moves-box stro
 .garden-card h3{margin:10px 5px 6px;font-size:15px}
 .garden-card .garden-stage{margin:0 5px 10px;font-size:11px;line-height:1.5}
 .garden-card>p:not(.garden-stage){display:none}
+/* 세 번째 낙엽 목표도 가로 화면의 왼쪽 패널 안에 배치합니다. */
+@media(orientation:landscape) and (max-height:600px){#goals.has-leaves{gap:5px}#goals.has-leaves .goal-item{gap:2px}#goals.has-leaves img{width:20px;height:20px}#goals.has-leaves strong{font-size:13px}}
