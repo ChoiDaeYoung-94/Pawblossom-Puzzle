@@ -1,17 +1,19 @@
 {
   "name": "pawblossom-puzzle",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "npm run assets:check && tsc --noEmit && vite build",
+    "build:test": "npm run assets:check && tsc --noEmit && vite build --mode testing",
     "assets:generate": "node scripts/generate-launcher-assets.mjs",
     "assets:check": "node scripts/generate-launcher-assets.mjs --check",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "balance:report": "node scripts/balance-report.mjs",
     "android:sync": "npm run build && cap sync android",
+    "android:sync:test": "npm run build:test && cap sync android",
     "android:open": "cap open android"
   },
   "dependencies": {

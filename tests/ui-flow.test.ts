@@ -40,7 +40,7 @@ class ElementStub {
   close() { this.open = false; }
 }
 
-function mainHarness(storageFails = false, firstUse = false) {
+function mainHarness(storageFails = false, firstUse = false, testTools = false) {
   const elements = new Map<string, ElementStub>();
   const timers = new Map<number, { callback: () => void; ms: number }>();
   let timerId = 0, writes = 0;
@@ -73,6 +73,7 @@ function mainHarness(storageFails = false, firstUse = false) {
   }
   const stateExports: Record<string, unknown> = {};
   const context = vm.createContext({
+    TEST_TOOLS_ENABLED:testTools,
     exports: stateExports,
     localStorage: {
       getItem: () => stored,
@@ -85,7 +86,8 @@ function mainHarness(storageFails = false, firstUse = false) {
     document: {
       createElement: () => new ElementStub('button'),
       querySelector: element,
-      querySelectorAll: (selector: string) => selector === '#practice-board button'
+      querySelectorAll: (selector: string) => selector === '[data-test-level]'
+        ? Array.from({length:10},(_,i)=>{const button=element(`#test-stage-${i+1}`);button.dataset.testLevel=String(i+1);return button;}) : selector === '#practice-board button'
         ? Array.from({length:9},(_,i)=>{const button=element(`#practice-cell-${Math.floor(i/3)}-${i%3}`);button.dataset={row:String(Math.floor(i/3)),col:String(i%3)};return button;}) : selector === '.view'
         ? ['puzzle', 'village', 'journal', 'settings'].map(name => element(`#${name}-view`)) : [],
       documentElement: {}, addEventListener() {},
@@ -160,6 +162,39 @@ function boardHarness() {
 }
 
 describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
+  it('테스트 선택은 잠긴 스테이지로 이동하지만 완료·재시작·재도전에 기록과 보상을 쓰지 않습니다',()=>{
+    const h=mainHarness(false,false,true),before=h.stored(),writes=h.writes();
+    h.element('#test-level-button').onclick();expect(h.element('#test-level-dialog').open).toBe(true);expect(h.run('game.paused')).toBe(true);
+    h.element('#test-stage-6').onclick();expect(h.run('currentLevel')).toBe(6);expect(h.run('testingLevel')).toBe(true);
+    expect(h.element('#test-level-dialog').open).toBe(false);expect(h.run('game.paused')).toBe(false);
+    h.element('#restart').onclick();expect(h.run('testingLevel')).toBe(true);
+    h.run('scene.hooks.onMove([12,0,0,0,0,16],280,1,4)');h.flushResults();
+    expect(h.stored()).toEqual(before);expect(h.writes()).toBe(writes);
+    h.element('#result-next').onclick();expect(h.run('currentLevel')).toBe(7);expect(h.run('testingLevel')).toBe(true);
+    h.run('finish(false)');h.element('#result-next').onclick();expect(h.run('testingLevel')).toBe(true);
+    h.element('#test-level-button').onclick();h.element('#test-normal').onclick();
+    expect(h.run('currentLevel')).toBe(2);expect(h.run('testingLevel')).toBe(false);
+    expect(h.stored()).toEqual(before);
+    h.run('scene.hooks.onMove([0,12,10,0,0,0],220)');h.flushResults();
+    expect(h.stored()).toMatchObject({completed:[1,2],stars:2,coins:80,highestLevel:3});
+  });
+  it('선택 창 취소는 기존 보드와 이동을 유지하고 연쇄·결과 대기 중에는 열리지 않습니다',()=>{
+    const h=mainHarness(false,false,true);h.run('moves=20');
+    h.element('#test-level-button').onclick();h.element('#test-close').onclick();
+    expect(h.run('moves')).toBe(20);expect(h.run('game.paused')).toBe(false);
+    h.run('scene.canLeave=()=>false;showTestPicker()');expect(h.element('#test-level-dialog').open).toBe(false);
+    h.run('scene.canLeave=()=>true;startLevel(1);scene.hooks.onMove([12,10,0,0,0,0],220);showTestPicker()');
+    expect(h.element('#test-level-dialog').open).toBe(false);h.flushResults();h.run('showTestPicker()');expect(h.element('#test-level-dialog').open).toBe(false);
+  });
+  it('출시 설정은 테스트 UI와 기능을 끄며 새 실행에는 테스트 상태를 저장하지 않습니다',()=>{
+    const h=mainHarness();expect(h.element('#app').innerHTML).not.toContain('test-level-button');
+    h.run('showTestPicker();startLevel(2,true)');expect(h.element('#test-level-dialog').open).toBe(false);expect(h.run('testingLevel')).toBe(false);
+    const test=mainHarness(false,false,true);test.run('startLevel(10,true)');expect(test.stored()).not.toHaveProperty('testingLevel');
+    expect(test.run('loadSave().highestLevel')).toBe(2);
+    test.run('startLevel(99,true)');expect(test.run('currentLevel')).toBe(10);
+    test.run("showTestPicker();changeLanguage('ko')");expect(test.element('#test-level-dialog').innerHTML).toContain('낙엽 두 겹');
+    test.element('#test-level-dialog').listeners.cancel({preventDefault(){}});expect(test.run('game.paused')).toBe(false);
+  });
   it('열매와 낙엽 목표를 모두 채워야 완료되고 기존 보상은 재지급하지 않습니다',()=>{
     const h=mainHarness();h.run("save.highestLevel=6;startLevel(4)");
     h.run('scene.hooks.onMove([0,0,0,14,12,0],260,1,3)');
