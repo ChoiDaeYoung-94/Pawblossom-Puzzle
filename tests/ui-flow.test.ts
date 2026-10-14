@@ -164,6 +164,29 @@ function boardHarness() {
 }
 
 describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
+  it.each([true,false])('테스트 결과 %s에서 선택 취소는 결과로 돌아가고 다른 스테이지는 기록을 쓰지 않습니다',won=>{
+    const h=mainHarness(false,false,true),before=h.stored(),writes=h.writes();
+    h.run(`startLevel(6,true);finish(${won})`);
+    const result=h.element('#result-dialog').innerHTML;
+    expect(result).toContain(won?'result-win':'result-retry');expect(result).toContain('/assets/pip.png');
+    expect(result).not.toContain('result-rewards');
+    h.element('#result-test').onclick();expect(h.element('#result-dialog').open).toBe(false);expect(h.element('#test-level-dialog').open).toBe(true);
+    h.element('#test-close').onclick();expect(h.element('#result-dialog').open).toBe(true);expect(h.element('#result-dialog').innerHTML).toBe(result);
+    h.element('#result-test').onclick();h.element('#test-level-dialog').listeners.cancel({preventDefault(){}});
+    expect(h.element('#result-dialog').open).toBe(true);
+    h.element('#result-test').onclick();h.element('#test-stage-8').onclick();
+    expect(h.run('currentLevel')).toBe(8);expect(h.run('testingLevel')).toBe(true);expect(h.run('pickerReturnToResult')).toBe(false);
+    expect(h.element('#result-dialog').open).toBe(false);expect(h.run('game.paused')).toBe(false);
+    h.element('#test-level-button').onclick();h.element('#test-close').onclick();expect(h.element('#result-dialog').open).toBe(false);
+    expect(h.stored()).toEqual(before);expect(h.writes()).toBe(writes);
+  });
+  it('일반 첫 완료와 재플레이는 실제 보상에 맞는 결과를 표시합니다',()=>{
+    const h=mainHarness();h.run('startLevel(2);finish(true)');
+    expect(h.element('#result-dialog').innerHTML).toContain('result-rewards');expect(h.stored()).toMatchObject({completed:[1,2],stars:2,coins:80});
+    expect(h.element('#result-dialog').innerHTML).not.toContain('result-test');
+    h.run('startLevel(2);finish(true)');expect(h.element('#result-dialog').innerHTML).not.toContain('result-rewards');
+    expect(h.element('#result-dialog').innerHTML).toContain('first clear');expect(h.stored()).toMatchObject({completed:[1,2],stars:2,coins:80});
+  });
   it('테스트 선택은 잠긴 스테이지로 이동하지만 완료·재시작·재도전에 기록과 보상을 쓰지 않습니다',()=>{
     const h=mainHarness(false,false,true),before=h.stored(),writes=h.writes();
     h.element('#test-level-button').onclick();expect(h.element('#test-level-dialog').open).toBe(true);expect(h.run('game.paused')).toBe(true);

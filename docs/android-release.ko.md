@@ -2,7 +2,13 @@
 
 ## 현재 설정과 검증
 
-앱 이름은 Pawblossom Puzzle이며 개발용 applicationId는 `com.choidaeyoung.pawblossompuzzle`입니다. Play 등록 전에 최종 확정합니다. 현재 개발 브랜치의 versionName은 `0.1.5`, versionCode는 `6`입니다. Capacitor 8, minSdk 24, compileSdk/targetSdk 36, Android Gradle Plugin 8.13.0, Gradle 8.14.3, Build Tools 36.0.0을 사용합니다.
+앱 이름은 Pawblossom Puzzle이며 개발용 applicationId는 `com.choidaeyoung.pawblossompuzzle`입니다. Play 등록 전에 최종 확정합니다. 현재 개발 브랜치의 versionName은 `0.1.6`, versionCode는 `7`입니다. Capacitor 8, minSdk 24, compileSdk/targetSdk 36, Android Gradle Plugin 8.13.0, Gradle 8.14.3, Build Tools 36.0.0을 사용합니다.
+
+### v0.1.6 낙엽 표시 간소화·핍 결과 반응 (이슈 #32·#34)
+
+낙엽 겹 감소의 2→1 팝업을 제거하고 남은 숫자·겹별 그림·날림을 유지했습니다. 기존 핍 그림의 성공/재도전 반응, 결과 dialog 포커스, 테스트 결과→다른 스테이지 선택→취소/확정 전환을 추가했습니다. 자동 검사 81개·Chrome 성공/실패 × 3비율·한국어/영어·움직임 줄이기·보상/저장 분리·테스트/일반 웹 빌드·APK/AAB를 통과했습니다. 단말의 결과·뒤로가기·복귀 검수는 남아 있습니다.
+
+APK는 테스트 도구 포함 빌드, AAB는 테스트 도구 제외 unsigned 빌드입니다. APK v2와 이전 인증서 일치, versionName 0.1.6/code 7, 내부 JS/CSS와 테스트 dist 일치를 확인했습니다. APK 크기 8,928,012바이트, SHA256 `1fe585a3635dcf428a0f74e034806b269023b6c1898755f5f3c2be431095d818`입니다. 이번부터 별도 테스트 안내 파일은 만들지 않고 대화에서 전달합니다.
 
 ### v0.1.5 낙엽·퍼즐 연출 보강 (이슈 #30)
 
