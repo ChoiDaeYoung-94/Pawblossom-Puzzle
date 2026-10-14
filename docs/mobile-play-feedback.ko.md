@@ -1,6 +1,6 @@
 # 실기기 플레이 피드백 수정
 
-2026-10-14 · [이슈 #14](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/14) · v0.1.1 / Android versionCode 2
+2026-10-14 · [PR #15](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/15) · [이슈 #14](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/14) · v0.1.1 / Android versionCode 2
 
 ## 반영한 동작
 
