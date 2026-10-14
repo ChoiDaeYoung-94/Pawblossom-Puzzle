@@ -88,7 +88,8 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false) 
       createElement: () => new ElementStub('button'),
       querySelector: element,
       querySelectorAll: (selector: string) => selector === '[data-test-level]'
-        ? Array.from({length:10},(_,i)=>{const button=element(`#test-stage-${i+1}`);button.dataset.testLevel=String(i+1);return button;}) : selector === '#practice-board button'
+        ? Array.from({length:30},(_,i)=>{const button=element(`#test-stage-${i+1}`);button.dataset.testLevel=String(i+1);return button;}) : selector === '[data-chapter]' || selector === '[data-test-chapter]'
+        ? Array.from({length:3},(_,i)=>{const test=selector.includes('test-');const button=element(`#${test?'test-':''}chapter-${i+1}`);button.dataset[test?'testChapter':'chapter']=String(i+1);return button;}) : selector === '#practice-board button'
         ? Array.from({length:9},(_,i)=>{const button=element(`#practice-cell-${Math.floor(i/3)}-${i%3}`);button.dataset={row:String(Math.floor(i/3)),col:String(i%3)};return button;}) : selector === '.view'
         ? ['puzzle', 'village', 'journal', 'settings'].map(name => element(`#${name}-view`)) : [],
       documentElement: {}, addEventListener() {},
@@ -442,5 +443,33 @@ describe('첫 플레이 안내', () => {
     expect(h.run('practice.completed')).toBe(true);
     expect(h.run('moves')).toBe(26);
     expect(h.run('save.coins')).toBe(0);
+  });
+});
+
+
+describe('30스테이지 진행과 선택 묶음',()=>{
+  it('10번 완료는 11번을 해제하고 마지막 완료 안내를 표시하지 않습니다',()=>{
+    const app=mainHarness();app.run('startLevel(10);finish(true)');
+    expect(app.stored().highestLevel).toBe(11);
+    expect(app.element('#result-dialog').innerHTML).toContain('Next level');
+    app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(11);
+    expect(app.element('#chapter-name').textContent).toContain('Flower Path');
+  });
+  it('30번 완료는 31번을 열지 않으며 재플레이 보상을 중복 지급하지 않습니다',()=>{
+    const app=mainHarness();app.run('startLevel(30);finish(true)');
+    expect(app.stored().highestLevel).toBe(30);
+    expect(app.element('#result-dialog').innerHTML).toContain('All 30 prototype levels');
+    app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(30);
+    const before=app.stored();app.run('finish(true)');expect(app.stored()).toEqual(before);
+  });
+  it('일반 선택 묶음은 잠금을 유지하고 테스트 30번은 진행 기록을 바꾸지 않습니다',()=>{
+    const app=mainHarness(false,false,true), before=app.stored();
+    app.element('#chapter-3').onclick();
+    expect(app.element('#village-view').innerHTML).toContain('data-level="30" disabled');
+    expect(app.element('#village-view').innerHTML).not.toContain('data-level="1"');
+    app.run('showTestPicker()');app.element('#test-chapter-3').onclick();
+    expect(app.element('#test-level-dialog').innerHTML).toContain('data-test-level="30"');
+    expect(app.element('#test-level-dialog').innerHTML).not.toContain('data-test-level="1"');
+    app.element('#test-stage-30').onclick();app.run('finish(true)');expect(app.stored()).toEqual(before);
   });
 });

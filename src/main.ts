@@ -9,7 +9,7 @@ import '@fontsource/fraunces/latin-600.css';
 import './style.css';
 import { BoardScene,tileNames } from './BoardScene';
 import { AudioManager } from './audio/AudioManager';
-import { loadSave,saveData,clearSave,levels } from './state';
+import { loadSave,saveData,clearSave,levels,LEVEL_COUNT,chapters,chapterForLevel } from './state';
 import { t,type TextKey } from './i18n';
 import { icon } from './icons';
 import { SwapPractice } from './SwapPractice';
@@ -26,6 +26,8 @@ let growing=false;
 let clearedLeaves=0;
 let testingLevel=false;
 let pickerReturnToResult=false;
+let selectedChapter=chapterForLevel(save.highestLevel).id;
+let selectedTestChapter=chapterForLevel(currentLevel).id;
 const audio=new AudioManager();audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);
 const text=(key:TextKey)=>t(save.language,key);
 const label=(key:TextKey)=>`<span data-t="${key}">${text(key)}</span>`;
@@ -39,7 +41,7 @@ $('#app').innerHTML=`
   </header>
   <main class="workspace">
     <section class="story-panel">
-      <div class="eyebrow"><span class="tiny-leaf">${icon('leaf',15)}</span>${label('chapter')}</div>
+      <div class="eyebrow"><span class="tiny-leaf">${icon('leaf',15)}</span><span id="story-chapter-name"></span></div>
       <h1>${label('greeting')}</h1><p class="story-copy">${label('story')}</p>
       <div class="meadow-art"><img class="environment" src="/assets/meadow.png" alt=""/><div class="art-shade"></div><span class="art-label">${icon('home',15)} Blossom Meadow</span><img class="pip" src="/assets/pip.png" alt="Pip"/><span class="floating-flower f1">✦</span><span class="floating-flower f2">✧</span></div>
       <div class="friend-message"><span class="friend-avatar"><img src="/assets/pip.png" alt=""/></span><div><strong>${label('pip')}</strong><p>${label('request')}</p></div><span class="message-flower">${icon('flower',25)}</span></div>
@@ -47,7 +49,7 @@ $('#app').innerHTML=`
     </section>
     <section class="game-panel">
       <div id="puzzle-view" class="view">
-        <div class="level-top"><div><div class="eyebrow">${label('chapter')}</div><h2><span data-t="level">${text('level')}</span> <span id="level-number">1</span><span class="level-flower">${icon('flower',21)}</span></h2></div><div class="level-actions">${TEST_TOOLS_ENABLED?`<button id="test-level-button" class="test-level-button">${label('testPick')}</button>`:''}<button id="restart" class="icon-button" aria-label="${text('restart')}">${icon('restart',20)}</button></div></div>
+        <div class="level-top"><div><div class="eyebrow"><span id="chapter-name"></span></div><h2><span data-t="level">${text('level')}</span> <span id="level-number">1</span><span class="level-flower">${icon('flower',21)}</span></h2></div><div class="level-actions">${TEST_TOOLS_ENABLED?`<button id="test-level-button" class="test-level-button">${label('testPick')}</button>`:''}<button id="restart" class="icon-button" aria-label="${text('restart')}">${icon('restart',20)}</button></div></div>
         <div class="mission-bar"><div class="moves-box"><strong id="moves">22</strong>${label('moves')}</div><div class="goal-box"><div class="goal-heading">${label('goal')}<span id="score">0</span></div><div id="goals"></div></div></div>
         <div class="board-wrap"><div id="game-canvas" aria-label="Match-3 puzzle board. Tap two neighboring tiles or swipe a tile." role="application"></div><div id="board-notice" aria-live="polite"></div></div>
         <p class="board-hint">${icon('leaf',15)} <span id="board-hint-text">${text('hint')}</span></p>
@@ -69,10 +71,13 @@ function updateGoals(){
   $('#game-canvas').setAttribute('aria-label',text('boardLabel'));
   $('.bottom-nav').setAttribute('aria-label',text('navLabel'));
   const level=levels[currentLevel-1];
+  const chapter=chapterForLevel(currentLevel);
+  for(const id of ['#story-chapter-name','#chapter-name'])$(id).textContent=`${text(chapter.title)} · ${chapter.first}–${chapter.last}`;
   $('#level-number').textContent=String(currentLevel);$('#moves').textContent=String(moves);$('#score').textContent=score.toLocaleString(save.language==='ko'?'ko-KR':'en-US');
   $('#goals').innerHTML=level.goals.map(goal=>{const remaining=Math.max(0,goal.count-collected[goal.kind]);return `<div class="goal-item ${remaining===0?'done':''}"><img src="/assets/tiles/${tileNames[goal.kind]}.svg" alt="${text(tileNames[goal.kind] as TextKey)}"/><strong>${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,collected[goal.kind]/goal.count*100)}%"></span></div>`;}).join('');
   const total=level.leaves?.length??0,remaining=Math.max(0,total-clearedLeaves);
   $('#goals').classList.toggle('has-leaves',total>0);
+  $('#goals').classList.toggle('has-many',level.goals.length+(total?1:0)>2);
   if(total)$('#goals').innerHTML+=`<div class="goal-item ${remaining===0?'done':''}"><img src="/assets/obstacles/leaf-pile.svg" alt="${text('leafPile')}"/><strong>${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,clearedLeaves/total*100)}%"></span></div>`;
   $('#board-hint-text').textContent=(testingLevel?text('testRound')+' · ':'')+text(total?(level.leaves!.some(p=>p.layers===2)?'leafHintDouble':'leafHint'):'hint');
   $('#shuffle-count').textContent=String(shuffles);$('#shuffle').toggleAttribute('disabled',shuffles<1);
@@ -157,20 +162,33 @@ function closeTutorial(){
   $<HTMLDialogElement>('#tutorial-dialog').close();save.tutorialSeen=true;persist();
   if(route==='puzzle'&&game.scene.isPaused('Board'))game.scene.resume('Board');
 }
+function chapterTabs(selected:number,test=false){
+  const prefix=test?'test-':'';
+  return `<div class="chapter-tabs" role="tablist" aria-label="${text('chapterSelect')}">${chapters.map(chapter=>`<button id="${prefix}chapter-${chapter.id}" data-${prefix}chapter="${chapter.id}" role="tab" aria-selected="${chapter.id===selected}" aria-controls="${prefix}chapter-levels" tabindex="${chapter.id===selected?0:-1}"><strong>${chapter.first}–${chapter.last}</strong><small>${text(chapter.title)}</small></button>`).join('')}</div>`;
+}
+function bindChapterTabs(test=false){
+  const prefix=test?'test-':'';
+  document.querySelectorAll<HTMLButtonElement>(`[data-${prefix}chapter]`).forEach(button=>{
+    const select=(id:number)=>{if(test){selectedTestChapter=id;renderTestPicker();}else{selectedChapter=id;renderViews();}$(`#${prefix}chapter-${id}`).focus();};
+    button.onclick=()=>select(Number(test?button.dataset.testChapter:button.dataset.chapter));
+    button.onkeydown=event=>{const index=chapters.findIndex(chapter=>chapter.id===Number(test?button.dataset.testChapter:button.dataset.chapter));const next=event.key==='ArrowRight'?(index+1)%chapters.length:event.key==='ArrowLeft'?(index+chapters.length-1)%chapters.length:event.key==='Home'?0:event.key==='End'?chapters.length-1:-1;if(next>=0){event.preventDefault();select(chapters[next].id);}};
+  });
+}
 function renderTestPicker(){
   if(!TEST_TOOLS_ENABLED)return;
   const dialog=$<HTMLDialogElement>('#test-level-dialog');
-  dialog.innerHTML=`<div class="test-picker"><h2 id="test-level-title">${text('testPickTitle')}</h2><p>${text('testPickDesc')}</p><div class="test-level-grid">${levels.map(level=>`<button data-test-level="${level.id}" class="test-stage"><strong>${text('level')} ${level.id}</strong><small>${text(!level.leaves?'testBasic':level.leaves.some(p=>p.layers===2)?'testDouble':'testSingle')}</small></button>`).join('')}</div><button id="test-normal" class="primary">${text('testNormal')}</button><button id="test-close" class="text-button">${text('testClose')}</button></div>`;
+  dialog.innerHTML=`<div class="test-picker"><h2 id="test-level-title">${text('testPickTitle')}</h2><p>${text('testPickDesc')}</p>${chapterTabs(selectedTestChapter,true)}<div class="test-level-grid" id="test-chapter-levels" role="tabpanel" aria-labelledby="test-chapter-${selectedTestChapter}">${levels.filter(level=>chapterForLevel(level.id).id===selectedTestChapter).map(level=>`<button data-test-level="${level.id}" class="test-stage"><strong>${text('level')} ${level.id}</strong><small>${text(!level.leaves?'testBasic':level.leaves.some(p=>p.layers===2)?'testDouble':'testSingle')}</small></button>`).join('')}</div><button id="test-normal" class="primary">${text('testNormal')}</button><button id="test-close" class="text-button">${text('testClose')}</button></div>`;
   document.querySelectorAll<HTMLButtonElement>('[data-test-level]').forEach(button=>button.onclick=()=>{
     if(!scene.canLeave()||resultTimer)return;
     pickerReturnToResult=false;dialog.close();startLevel(Number(button.dataset.testLevel),true);switchView('puzzle');
   });
+  bindChapterTabs(true);
   $('#test-normal').onclick=()=>{if(!scene.canLeave()||resultTimer)return;pickerReturnToResult=false;dialog.close();startLevel(save.highestLevel);switchView('puzzle');};
   $('#test-close').onclick=closeTestPicker;
 }
 function showTestPicker(fromResult=false){
   if(!TEST_TOOLS_ENABLED||!scene.canLeave()||resultTimer||$<HTMLDialogElement>('#result-dialog').open||$<HTMLDialogElement>('#tutorial-dialog').open)return;
-  pickerReturnToResult=fromResult;
+  pickerReturnToResult=fromResult;selectedTestChapter=chapterForLevel(currentLevel).id;
   renderTestPicker();$<HTMLDialogElement>('#test-level-dialog').showModal();
   if(game.scene.isActive('Board'))game.scene.pause('Board');
 }
@@ -183,28 +201,29 @@ function closeTestPicker(){
 }
 function finish(won:boolean){
   const first=won&&!testingLevel&&!save.completed.includes(currentLevel);
-  if(first){save.completed.push(currentLevel);save.stars++;save.coins+=40;save.highestLevel=Math.min(10,Math.max(save.highestLevel,currentLevel+1));persist();updateWallet();renderViews();}
+  if(first){save.completed.push(currentLevel);save.stars++;save.coins+=40;save.highestLevel=Math.min(LEVEL_COUNT,Math.max(save.highestLevel,currentLevel+1));selectedChapter=chapterForLevel(save.highestLevel).id;persist();updateWallet();renderViews();}
   audio.play(won?'win':'lose');
-  const done=won&&!testingLevel&&currentLevel===10;
+  const done=won&&!testingLevel&&currentLevel===LEVEL_COUNT;
   const dialog=$<HTMLDialogElement>('#result-dialog');
-  dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><img class="result-pip" src="/assets/pip.png" alt=""/><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc')}</p>${first?`<div class="result-rewards"><span>${icon('star',20)} +1</span><span>${icon('coin',20)} +40</span></div>`:''}<button class="primary" id="result-next">${text(won?(done||currentLevel===10?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
+  dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><img class="result-pip" src="/assets/pip.png" alt=""/><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p>${first?`<div class="result-rewards"><span>${icon('star',20)} +1</span><span>${icon('coin',20)} +40</span></div>`:''}<button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
   dialog.showModal();
   $('#result-next').focus();
-  $('#result-next').onclick=()=>{dialog.close();startLevel(won?Math.min(10,currentLevel+1):currentLevel,testingLevel);switchView('puzzle');};
+  $('#result-next').onclick=()=>{dialog.close();startLevel(won?Math.min(LEVEL_COUNT,currentLevel+1):currentLevel,testingLevel);switchView('puzzle');};
   $('#result-home').onclick=()=>{dialog.close();switchView('village');};
   if(testingLevel)$('#result-test').onclick=()=>{dialog.close();showTestPicker(true);};
 }
 function renderViews(grew=false){
-  $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">BLOSSOM MEADOW</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div><div class="garden-card"><div class="garden-picture"><div class="garden-illustration" role="img" aria-label="${text('gardenImage').replace('{count}',String(save.garden))}">${gardenArt(save.garden,grew)}</div><span class="garden-pill">${icon('flower',17)} ${save.garden} / 5</span></div><h3>${text('garden')}</h3><p class="garden-stage" role="status">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div><div class="level-picker"><h3>${text('levelSelect')}</h3><div class="level-grid">${levels.map(l=>`<button data-level="${l.id}" ${l.id>save.highestLevel?'disabled':''} class="level-node ${save.completed.includes(l.id)?'completed':''}" aria-label="${text('level')} ${l.id}">${l.id>save.highestLevel?icon('lock',19):l.id}${save.completed.includes(l.id)?`<span>${icon('star',13)}</span>`:''}</button>`).join('')}</div></div>`;
+  $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">BLOSSOM MEADOW</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div><div class="garden-card"><div class="garden-picture"><div class="garden-illustration" role="img" aria-label="${text('gardenImage').replace('{count}',String(save.garden))}">${gardenArt(save.garden,grew)}</div><span class="garden-pill">${icon('flower',17)} ${save.garden} / 5</span></div><h3>${text('garden')}</h3><p class="garden-stage" role="status">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div><div class="level-picker"><h3>${text('levelSelect')}</h3>${chapterTabs(selectedChapter)}<div class="level-grid" id="chapter-levels" role="tabpanel" aria-labelledby="chapter-${selectedChapter}">${levels.filter(l=>chapterForLevel(l.id).id===selectedChapter).map(l=>`<button data-level="${l.id}" ${l.id>save.highestLevel?'disabled':''} class="level-node ${save.completed.includes(l.id)?'completed':''}" aria-label="${text('level')} ${l.id}">${l.id>save.highestLevel?icon('lock',19):l.id}${save.completed.includes(l.id)?`<span>${icon('star',13)}</span>`:''}</button>`).join('')}</div></div>`;
   $('#journal-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM FRIENDS</div><h2>${text('friendsTitle')}</h2><p>${text('friendsDesc')}</p></div><div class="journal-card"><span class="friend-number">01</span><img src="/assets/pip.png" alt="Pip"/><h3>${text('pip')}</h3><p>${text('pipDesc')}</p><span class="friend-tag">${icon('leaf',15)} Blossom Meadow</span></div><div class="coming-card">${icon('paw',28)}<div><strong>${text('upcoming')}</strong><p>${text('upcomingDesc')}</p></div></div>`;
   $('#settings-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v0.1.6</p>`;
+  bindChapterTabs();
   $('#grow').onclick=()=>{if(growing||save.stars<2||save.garden>=5)return;growing=true;save.stars-=2;save.garden++;const stored=persist();updateWallet();renderViews(true);audio.play('reward');if(stored)notice(text('planted'));setTimeout(()=>{growing=false;$('#grow').toggleAttribute('disabled',save.stars<2||save.garden>=5);},450);};
-  document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach(button=>button.onclick=()=>{if(!scene.canLeave())return;startLevel(Number(button.dataset.level));switchView('puzzle');});
+  document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach(button=>button.onclick=()=>{if(!scene.canLeave())return;const id=Number(button.dataset.level);if(id>save.highestLevel)return;startLevel(id);switchView('puzzle');});
   $('#music-toggle').onclick=()=>{save.music=!save.music;audio.setMusicEnabled(save.music);persist();renderViews();};
   const help=document.createElement('button');help.id='tutorial-help';help.className='primary guide-help';help.textContent=text('tutorial');help.onclick=showTutorial;$('#settings-view').append(help);
   $('#sfx-toggle').onclick=()=>{save.sfx=!save.sfx;audio.setSfxEnabled(save.sfx);persist();renderViews();};
   $<HTMLSelectElement>('#language').onchange=event=>changeLanguage((event.target as HTMLSelectElement).value==='ko'?'ko':'en');
-  $('#reset').onclick=()=>{if(!confirm(text('resetConfirm')))return;save=clearSave();persist();audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');showTutorial();};
+  $('#reset').onclick=()=>{if(!confirm(text('resetConfirm')))return;save=clearSave();selectedChapter=1;persist();audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');showTutorial();};
 }
 function localize(){document.documentElement.lang=save.language;document.querySelectorAll<HTMLElement>('[data-t]').forEach(el=>el.textContent=text(el.dataset.t as TextKey));$('#language-toggle').textContent=save.language==='en'?'한국어':'EN';$('#settings-button').setAttribute('aria-label',text('settings'));$('#restart').setAttribute('aria-label',text('restart'));}
 function changeLanguage(language:'en'|'ko'){save.language=language;persist();localize();updateWallet();renderViews();updateGoals();if($<HTMLDialogElement>('#tutorial-dialog').open)renderTutorial();if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)renderTestPicker();}
