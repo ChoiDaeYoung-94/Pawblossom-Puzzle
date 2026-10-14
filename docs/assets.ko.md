@@ -35,3 +35,7 @@ One original adorable cream rabbit gardener, full body, front three-quarter view
 - 저사양 기기 텍스처 메모리·로딩 측정 후 해상도와 압축 최적화
 - 앱 적응형 아이콘·스토어 아이콘·스크린샷·피처 그래픽 제작
 - 최종 음색과 음량을 휴대폰 스피커·이어폰으로 청취하여 보강
+
+### 2026-10-14 특수 블록 효과 표시
+
+방향 화살표·제거 칸 테두리·줄·원형 효과는 `src/BoardScene.ts`의 Phaser Graphics로 직접 작성했습니다. 외부 그림·프롬프트·추출 에셋은 사용하지 않았습니다. 시제품 연출이며 Android 기기에서 작은 보드의 가독성과 움직임을 확인할 예정입니다.
