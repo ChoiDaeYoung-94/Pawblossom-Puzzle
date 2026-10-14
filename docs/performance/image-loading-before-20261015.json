@@ -1,0 +1,168 @@
+{
+  "dateKst": "2026-10-15",
+  "mode": "before",
+  "browser": "155.0.8059.41",
+  "environment": "production dist·격리 headless Chrome·임시 HTTP 서버. JS 응답에서 Game 참조 관찰자만 주입하며 파일은 수정하지 않습니다. 각 조건은 새 browser context, 정적 파일 max-age=3600. PNG 응답 본문을 측정하며 APK/LCP/FPS/Android 검증과 구분합니다.",
+  "assets": [
+    {
+      "file": "meadow.png",
+      "bytes": 3011327,
+      "sha256": "fdd7aa15f95518167d355d8aecb5952ee13d54d380956ed087d397a0ef4d4195"
+    },
+    {
+      "file": "pip.png",
+      "bytes": 1166317,
+      "sha256": "be54a5a265d05cff964eff3177e637a1540138c7680802ab0a553496e118bcba"
+    }
+  ],
+  "cases": [
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "pipDelay": 0,
+      "storyVisible": false,
+      "initialPng": [
+        {
+          "phase": "320x568-0-initial",
+          "url": "/assets/pip.png",
+          "bytes": 1166317
+        },
+        {
+          "phase": "320x568-0-initial",
+          "url": "/assets/meadow.png",
+          "bytes": 3011327
+        }
+      ],
+      "initialPngBodyBytes": 4177644,
+      "firstResultPipReady": true,
+      "resizePng": [],
+      "reloadPng": []
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "pipDelay": 0,
+      "storyVisible": false,
+      "initialPng": [
+        {
+          "phase": "360x640-0-initial",
+          "url": "/assets/pip.png",
+          "bytes": 1166317
+        },
+        {
+          "phase": "360x640-0-initial",
+          "url": "/assets/meadow.png",
+          "bytes": 3011327
+        }
+      ],
+      "initialPngBodyBytes": 4177644,
+      "firstResultPipReady": true,
+      "resizePng": [],
+      "reloadPng": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "pipDelay": 0,
+      "storyVisible": true,
+      "initialPng": [
+        {
+          "phase": "390x844-0-initial",
+          "url": "/assets/pip.png",
+          "bytes": 1166317
+        },
+        {
+          "phase": "390x844-0-initial",
+          "url": "/assets/meadow.png",
+          "bytes": 3011327
+        }
+      ],
+      "initialPngBodyBytes": 4177644,
+      "firstResultPipReady": true,
+      "resizePng": [],
+      "reloadPng": []
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "pipDelay": 0,
+      "storyVisible": false,
+      "initialPng": [
+        {
+          "phase": "640x360-0-initial",
+          "url": "/assets/pip.png",
+          "bytes": 1166317
+        },
+        {
+          "phase": "640x360-0-initial",
+          "url": "/assets/meadow.png",
+          "bytes": 3011327
+        }
+      ],
+      "initialPngBodyBytes": 4177644,
+      "firstResultPipReady": true,
+      "resizePng": [],
+      "reloadPng": []
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "pipDelay": 0,
+      "storyVisible": true,
+      "initialPng": [
+        {
+          "phase": "1440x900-0-initial",
+          "url": "/assets/pip.png",
+          "bytes": 1166317
+        },
+        {
+          "phase": "1440x900-0-initial",
+          "url": "/assets/meadow.png",
+          "bytes": 3011327
+        }
+      ],
+      "initialPngBodyBytes": 4177644,
+      "firstResultPipReady": true,
+      "resizePng": [],
+      "reloadPng": []
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640,
+        "pipDelay": 1000
+      },
+      "pipDelay": 1000,
+      "storyVisible": false,
+      "initialPng": [
+        {
+          "phase": "360x640-1000-initial",
+          "url": "/assets/meadow.png",
+          "bytes": 3011327
+        },
+        {
+          "phase": "360x640-1000-initial",
+          "url": "/assets/pip.png",
+          "bytes": 1166317
+        }
+      ],
+      "initialPngBodyBytes": 4177644,
+      "firstResultPipReady": true,
+      "resizePng": [],
+      "reloadPng": []
+    }
+  ],
+  "missing": [],
+  "pageerrors": [],
+  "licenses": "dist와 public의 OFL 원문 일치"
+}

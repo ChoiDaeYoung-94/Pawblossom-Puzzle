@@ -48,7 +48,7 @@ $('#app').innerHTML=`
     <section class="story-panel">
       <div class="eyebrow"><span class="tiny-leaf">${icon('leaf',15)}</span><span id="story-chapter-name"></span></div>
       <h1>${label('greeting')}</h1><p class="story-copy">${label('story')}</p>
-      <div class="meadow-art"><img class="environment" src="/assets/meadow.png" alt=""/><div class="art-shade"></div><span class="art-label">${icon('home',15)} Blossom Meadow</span><img class="pip" src="/assets/pip.png" alt="Pip"/><span class="floating-flower f1">✦</span><span class="floating-flower f2">✧</span></div>
+      <div class="meadow-art"><img class="environment" src="/assets/meadow.png" loading="lazy" decoding="async" alt=""/><div class="art-shade"></div><span class="art-label">${icon('home',15)} Blossom Meadow</span><img class="pip" src="/assets/pip.png" alt="Pip"/><span class="floating-flower f1">✦</span><span class="floating-flower f2">✧</span></div>
       <div class="friend-message"><span class="friend-avatar"><img src="/assets/pip.png" alt=""/></span><div><strong>${label('pip')}</strong><p>${label('request')}</p></div><span class="message-flower">${icon('flower',25)}</span></div>
       <div class="garden-status"><div><span>${icon('leaf',16)} ${label('garden')}</span><strong id="garden-count">0 / 5</strong></div><div class="garden-track"><i id="garden-fill"></i></div></div>
     </section>
