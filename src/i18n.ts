@@ -3,7 +3,7 @@ const strings = {
   en: {
     leafThinned: 'One layer swept away!', leavesCleared: 'Leaves cleared!',
     testPick: 'Test', testPickTitle: 'Jump to a test level', testPickDesc: 'Choose any level. Test wins do not save completion, rewards or unlocks.', testRound: 'Test play · no rewards', testBasic: 'Basic puzzle', testSingle: 'Single-layer leaves', testDouble: 'Two-layer leaves', testNormal: 'Return to normal play', testClose: 'Close',
-    leafPile: 'Leaf pile', leafHint: 'Match on or beside brown leaves to clear them. Specials sweep them away!', leafHintDouble: '2 → 1 → clear! Match on or beside leaves. A direct special hit clears both layers!',
+    leafPile: 'Leaf pile', leafHint: 'Match on or beside brown leaves to clear them. Specials sweep them away!', leafHintDouble: '2 means two layers, 1 means one. Match on or beside leaves. A direct special hit clears both layers!',
     tutorial: 'How to play', tutorialStep: 'Step', tutorialSkip: 'Skip guide', tutorialBack: 'Back', tutorialNext: 'Next', tutorialStart: 'Let’s grow!',
     tutorialTry: 'Try a match', practiceTitle: 'Your first little match.', practiceDesc: 'Tap the two glowing tiles, or swipe one toward the other, to line up 3 strawberries. This is a practice board: your level, moves and rewards stay the same.',
     practiceDone: 'Lovely! You matched 3 strawberries. You’re ready to help Pip.', practiceBoard: 'Practice board', practiceCell: '{tile}, row {row}, column {col}', practicePrompt: 'Swap the glowing carrot and strawberry.', practiceSelected: 'One tile selected. Choose the other glowing tile.', practiceMatched: '3 strawberries matched!',

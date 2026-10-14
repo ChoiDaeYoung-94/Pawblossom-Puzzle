@@ -22,11 +22,13 @@ export class BoardEffects {
     const pulse=this.scene.add.graphics().setDepth(11).setName('leaf-hit-pulse');
     pulse.lineStyle(3,cleared?0x9ebf7a:0xe3aa65,1);pulse.strokeRoundedRect(x-25,y-25,50,50,11);
     this.animate(pulse,{alpha:0,duration:reduced?180:420});
-    const label=this.scene.add.text(x,y-12,cleared?'✓':`${hit.before} → ${hit.after}`,{
-      fontFamily:'Arial, sans-serif',fontSize:cleared?'26px':'19px',fontStyle:'bold',color:cleared?'#426c37':'#744521',
+    if(cleared){
+    const label=this.scene.add.text(x,y-12,'✓',{
+      fontFamily:'Arial, sans-serif',fontSize:'26px',fontStyle:'bold',color:'#426c37',
       backgroundColor:'#fff8e5',padding:{x:4,y:2},stroke:'#fff8e5',strokeThickness:2,
     }).setOrigin(.5).setDepth(14).setName('leaf-hit-label');
     this.animate(label,{...(reduced?{}:{y:y-28}),alpha:0,delay:reduced?240:300,duration:reduced?160:300,ease:'Sine.easeOut'});
+    }
     if(reduced)return;
     const count=cleared?4:2;
     for(let i=0;i<count;i++){
