@@ -71,3 +71,13 @@ One original adorable cream rabbit gardener, full body, front three-quarter view
 
 ![두 겹 낙엽 스테이지](screenshots/leaves-double-ko.png)
 ![가로 화면](screenshots/leaves-landscape-ko.png)
+
+### 2026-10-14 낙엽 겹 감소와 추가 연출 (이슈 #30)
+
+`public/assets/obstacles/leaf-single.svg`는 한 장 낙엽의 자체 제작 벡터입니다. 기존 겹잎 그림을 두 겹에, 새 한 장 그림을 한 겹에 사용하고 크기·바닥색·숫자 2/1로 구분합니다. 외부 에셋·생성 프롬프트는 없습니다.
+
+`src/BoardEffects.ts`에서 실제 단계의 낙엽 변경 값으로 2 → 1 또는 ✓, 짧은 낙엽 조각 날림과 테두리 감쇠를 만듭니다. 일반 매치의 반짝임, 줄 제거의 빛 이동, 폭발·색 제거의 확산 원도 직접 작성했습니다. 신규 음원은 없으며 기존 확정 믹스를 유지합니다. 움직임 줄이기에서는 새 이동 장식을 생략하고 겹 변화 기호를 유지합니다. 시제품 연출이므로 휴대폰 가독성·프레임과 반복 피로감은 새 APK에서 검수합니다.
+
+| 두 겹 → 한 겹 표시 | 남은 한 겹 |
+| --- | --- |
+| ![겹 감소 효과](screenshots/leaves-peel-v015.png) | ![한 겹 남은 모습](screenshots/leaves-one-v015.png) |

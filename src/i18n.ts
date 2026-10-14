@@ -1,8 +1,9 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    leafThinned: 'One layer swept away!', leavesCleared: 'Leaves cleared!',
     testPick: 'Test', testPickTitle: 'Jump to a test level', testPickDesc: 'Choose any level. Test wins do not save completion, rewards or unlocks.', testRound: 'Test play · no rewards', testBasic: 'Basic puzzle', testSingle: 'Single-layer leaves', testDouble: 'Two-layer leaves', testNormal: 'Return to normal play', testClose: 'Close',
-    leafPile: 'Leaf pile', leafHint: 'Match on or beside brown leaves to clear them. Specials sweep them away!', leafHintDouble: 'Two dots mean two layers. Match on or beside leaves, or sweep them with a special!',
+    leafPile: 'Leaf pile', leafHint: 'Match on or beside brown leaves to clear them. Specials sweep them away!', leafHintDouble: '2 → 1 → clear! Match on or beside leaves. A direct special hit clears both layers!',
     tutorial: 'How to play', tutorialStep: 'Step', tutorialSkip: 'Skip guide', tutorialBack: 'Back', tutorialNext: 'Next', tutorialStart: 'Let’s grow!',
     tutorialTry: 'Try a match', practiceTitle: 'Your first little match.', practiceDesc: 'Tap the two glowing tiles, or swipe one toward the other, to line up 3 strawberries. This is a practice board: your level, moves and rewards stay the same.',
     practiceDone: 'Lovely! You matched 3 strawberries. You’re ready to help Pip.', practiceBoard: 'Practice board', practiceCell: '{tile}, row {row}, column {col}', practicePrompt: 'Swap the glowing carrot and strawberry.', practiceSelected: 'One tile selected. Choose the other glowing tile.', practiceMatched: '3 strawberries matched!',
@@ -41,8 +42,9 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    leafThinned: '한 겹 치웠어요!', leavesCleared: '낙엽을 치웠어요!',
     testPick: '테스트', testPickTitle: '테스트 스테이지 바로 가기', testPickDesc: '원하는 스테이지를 바로 골라요. 테스트 완료는 기록·보상·잠금 해제에 반영되지 않아요.', testRound: '테스트 플레이 · 보상 없음', testBasic: '기본 퍼즐', testSingle: '낙엽 한 겹', testDouble: '낙엽 두 겹', testNormal: '일반 플레이로 돌아가기', testClose: '닫기',
-    leafPile: '낙엽 더미', leafHint: '갈색 낙엽 위나 바로 옆에서 맞춰요. 특수 효과로도 치울 수 있어요!', leafHintDouble: '점 두 개는 두 겹이에요. 위나 바로 옆 매치로 한 겹씩, 특수 효과로 한 번에 치워요!',
+    leafPile: '낙엽 더미', leafHint: '갈색 낙엽 위나 바로 옆에서 맞춰요. 특수 효과로도 치울 수 있어요!', leafHintDouble: '2는 두 겹, 1은 한 겹이에요. 위나 바로 옆 매치로 한 겹씩, 특수 효과로 한 번에 치워요!',
     tutorial: '플레이 방법', tutorialStep: '단계', tutorialSkip: '안내 건너뛰기', tutorialBack: '이전', tutorialNext: '다음', tutorialStart: '함께 가꿔요!',
     tutorialTry: '직접 맞춰 보기', practiceTitle: '첫 번째 매치를 해 볼까요?', practiceDesc: '빛나는 두 블록을 차례로 누르거나 서로를 향해 밀어 딸기 3개를 나란히 맞춰요. 연습용 보드라 현재 스테이지의 이동과 보상은 그대로예요.',
     practiceDone: '잘했어요! 딸기 3개를 맞췄어요. 이제 핍을 도와줄 준비가 됐어요.', practiceBoard: '연습 보드', practiceCell: '{row}행 {col}열 {tile}', practicePrompt: '빛나는 당근과 딸기의 자리를 바꿔 주세요.', practiceSelected: '하나를 골랐어요. 다른 빛나는 블록을 눌러 주세요.', practiceMatched: '딸기 3개를 맞췄어요!',
