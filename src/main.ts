@@ -13,6 +13,7 @@ import { loadSave,saveData,clearSave,levels } from './state';
 import { t,type TextKey } from './i18n';
 import { icon } from './icons';
 import { SwapPractice } from './SwapPractice';
+import { gardenArt } from './GardenArt';
 
 let save=loadSave(), currentLevel=save.highestLevel, moves=0, score=0, collected=Array(6).fill(0) as number[], shuffles=1;
 let scene:BoardScene, game:Phaser.Game, route='puzzle', toastTimer:ReturnType<typeof setTimeout>;
@@ -20,11 +21,12 @@ let resultTimer:ReturnType<typeof setTimeout>|undefined;
 let round=0;
 let tutorialPage=0;
 let practice:SwapPractice|undefined;
+let growing=false;
 const audio=new AudioManager();audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);
 const text=(key:TextKey)=>t(save.language,key);
 const label=(key:TextKey)=>`<span data-t="${key}">${text(key)}</span>`;
 const $=<T extends HTMLElement=HTMLElement>(selector:string)=>document.querySelector<T>(selector)!;
-function persist(){if(!saveData(save))notice(save.language==='ko'?'기기 저장 공간을 사용할 수 없어요. 이번 진행은 앱을 닫으면 사라질 수 있어요.':'Storage is unavailable. This session’s progress may not be saved.');}
+function persist(){const stored=saveData(save);if(!stored)notice(save.language==='ko'?'기기 저장 공간을 사용할 수 없어요. 이번 진행은 앱을 닫으면 사라질 수 있어요.':'Storage is unavailable. This session’s progress may not be saved.');return stored;}
 
 $('#app').innerHTML=`
   <header class="topbar">
@@ -153,11 +155,11 @@ function finish(won:boolean){
   $('#result-next').onclick=()=>{dialog.close();startLevel(won?Math.min(10,currentLevel+1):currentLevel);switchView('puzzle');};
   $('#result-home').onclick=()=>{dialog.close();switchView('village');};
 }
-function renderViews(){
-  $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">BLOSSOM MEADOW</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div><div class="garden-card"><div class="garden-picture"><img src="/assets/meadow.png" alt="Blossom Meadow"/><div class="planted-flowers">${Array.from({length:save.garden},(_,i)=>`<img src="/assets/tiles/flower.svg" alt="" style="left:${18+i*13}%;bottom:${12+(i%2)*12}%"/>`).join('')}</div><span class="garden-pill">${icon('flower',17)} ${save.garden} / 5</span></div><h3>${text('garden')}</h3><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div><div class="level-picker"><h3>${text('levelSelect')}</h3><div class="level-grid">${levels.map(l=>`<button data-level="${l.id}" ${l.id>save.highestLevel?'disabled':''} class="level-node ${save.completed.includes(l.id)?'completed':''}" aria-label="${text('level')} ${l.id}">${l.id>save.highestLevel?icon('lock',19):l.id}${save.completed.includes(l.id)?`<span>${icon('star',13)}</span>`:''}</button>`).join('')}</div></div>`;
+function renderViews(grew=false){
+  $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">BLOSSOM MEADOW</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div><div class="garden-card"><div class="garden-picture"><div class="garden-illustration" role="img" aria-label="${text('gardenImage').replace('{count}',String(save.garden))}">${gardenArt(save.garden,grew)}</div><span class="garden-pill">${icon('flower',17)} ${save.garden} / 5</span></div><h3>${text('garden')}</h3><p class="garden-stage" role="status">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div><div class="level-picker"><h3>${text('levelSelect')}</h3><div class="level-grid">${levels.map(l=>`<button data-level="${l.id}" ${l.id>save.highestLevel?'disabled':''} class="level-node ${save.completed.includes(l.id)?'completed':''}" aria-label="${text('level')} ${l.id}">${l.id>save.highestLevel?icon('lock',19):l.id}${save.completed.includes(l.id)?`<span>${icon('star',13)}</span>`:''}</button>`).join('')}</div></div>`;
   $('#journal-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM FRIENDS</div><h2>${text('friendsTitle')}</h2><p>${text('friendsDesc')}</p></div><div class="journal-card"><span class="friend-number">01</span><img src="/assets/pip.png" alt="Pip"/><h3>${text('pip')}</h3><p>${text('pipDesc')}</p><span class="friend-tag">${icon('leaf',15)} Blossom Meadow</span></div><div class="coming-card">${icon('paw',28)}<div><strong>${text('upcoming')}</strong><p>${text('upcomingDesc')}</p></div></div>`;
   $('#settings-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v0.1.2</p>`;
-  $('#grow').onclick=()=>{if(save.stars<2||save.garden>=5)return;save.stars-=2;save.garden++;persist();updateWallet();renderViews();audio.play('reward');notice(text('planted'));};
+  $('#grow').onclick=()=>{if(growing||save.stars<2||save.garden>=5)return;growing=true;save.stars-=2;save.garden++;const stored=persist();updateWallet();renderViews(true);audio.play('reward');if(stored)notice(text('planted'));setTimeout(()=>{growing=false;$('#grow').toggleAttribute('disabled',save.stars<2||save.garden>=5);},450);};
   document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach(button=>button.onclick=()=>{if(!scene.canLeave())return;startLevel(Number(button.dataset.level));switchView('puzzle');});
   $('#music-toggle').onclick=()=>{save.music=!save.music;audio.setMusicEnabled(save.music);persist();renderViews();};
   const help=document.createElement('button');help.id='tutorial-help';help.className='primary guide-help';help.textContent=text('tutorial');help.onclick=showTutorial;$('#settings-view').append(help);
