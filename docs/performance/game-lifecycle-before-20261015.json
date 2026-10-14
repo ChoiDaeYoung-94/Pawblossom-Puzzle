@@ -1,0 +1,73 @@
+{
+  "dateKst": "2026-10-15",
+  "variant": "0445cab 수정 전",
+  "environment": "실제 Phaser 3.90.0, 격리 headless Chrome, 소스 메모리 변환과 로컬 에셋 가상 route. 서버/HMR 없음, Capacitor 웹 조건, 폰트 import 생략. 강제 GC는 실기기 메모리·FPS 측정이 아님.",
+  "sourceHashes": {
+    "src/audio/AudioManager.ts": "292ffc2159246c30cc305430add55dafff34f8ac17b2bd9e9ee5a4632f86e611",
+    "src/BoardEffects.ts": "e1f7b5772d6d3fdb58c10c620c08bef2c9c65bb8223b330478f1d34e5e3240a7",
+    "src/BoardScene.ts": "3d7d408a56a6eff1b3bde02725f3d8872a6e5c0bad15d92e9336b6e1232f29b2",
+    "src/buildFlags.ts": "2d3548ef6f510a1ac2eee3823997f5f53fa8ac8e6fd52e2020caf0f72846a21b",
+    "src/core/BoardEngine.ts": "f07d4d5ae190b9a0ff28150e2c392adf7810a3eb84b17e1de25c3493269c293e",
+    "src/core/index.ts": "cbe12ac9bd8719811e5d64b6bba3ff047674e1ed20d7eec40dc178f1171d025d",
+    "src/GardenArt.ts": "67ed80704e7726a398010f8a56232c10a84aabfcbd32d68418baad9c01450424",
+    "src/i18n.ts": "3e414664f8f22b79e6379182cd9b70ea9ea947e0715036dbe33d6e2fde4698c3",
+    "src/icons.ts": "7bf5ee22508b9454cd0c19275b5da8d2d28b781f3bdfebb839eda5332f309e34",
+    "src/levels.ts": "d88db9132cddd84a280d548ca917fe1c1e430c9d58e43744e5935d69dba86166",
+    "src/main.ts": "9ed45e37c742cdb6d94a632cd58fd7451c95f811a4729a4556d58cbc1a78e00a",
+    "src/state.ts": "018c07c54c424ae7ae9bf1fb5c9b5a5e1d92f230f8f79ce93e8236b85fb859d1",
+    "src/SwapPractice.ts": "efbca489e4fdb8fa4d9d4c4375b23d3fe4916dec8d42ad2e09c9883dc90e5cd5"
+  },
+  "checks": [
+    "수정 전 30회 전환 visibilitychange 2→32 재현",
+    "수정 전 초기 복원 안내가 저장 실패 경고를 덮는 현상 재현",
+    "pageerror 0"
+  ],
+  "samples": [
+    {
+      "label": "시작",
+      "visibilityListeners": 2,
+      "gameCreations": 1,
+      "gamesAlive": 1,
+      "scenes": 1,
+      "canvases": 1,
+      "oldScenesAlive": 0,
+      "hints": 1,
+      "effects": 0,
+      "tweens": 0,
+      "textures": 20,
+      "pendingAdds": 0,
+      "queuedOperations": 0,
+      "heap": {
+        "usedSize": 7537792,
+        "totalSize": 11329536,
+        "embedderHeapUsedSize": 2587888,
+        "backingStorageSize": 5106812
+      }
+    },
+    {
+      "label": "30회 전환",
+      "visibilityListeners": 32,
+      "gameCreations": 31,
+      "gamesAlive": 1,
+      "scenes": 1,
+      "canvases": 1,
+      "oldScenesAlive": 0,
+      "hints": 1,
+      "effects": 0,
+      "tweens": 0,
+      "textures": 20,
+      "pendingAdds": 0,
+      "queuedOperations": 0,
+      "heap": {
+        "usedSize": 7799724,
+        "totalSize": 12902400,
+        "embedderHeapUsedSize": 3140576,
+        "backingStorageSize": 5124874
+      }
+    }
+  ],
+  "pageerrors": [],
+  "warnings": [],
+  "browser": "155.0.8059.41",
+  "restoreFailureToast": "저장된 회차를 이어서 시작했어요."
+}

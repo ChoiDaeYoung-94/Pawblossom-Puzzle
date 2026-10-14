@@ -20,7 +20,10 @@ export class BoardScene extends Phaser.Scene {
   private effects?:BoardEffects;
   constructor(hooks: Hooks, snapshot?:BoardSnapshot) {super('Board');this.hooks=hooks;this.engine=new BoardEngine(8,8,Math.random,snapshot);}
   configureLeaves(piles:LeafPile[]){this.engine.setLeaves(piles);}
-  preload() {tileNames.forEach(name=>this.load.svg(name,`/assets/tiles/${name}.svg`,{width:100,height:100}));for(const name of ['leaf-pile','leaf-single'])this.load.svg(name,`/assets/obstacles/${name}.svg`,{width:100,height:100});}
+  preload() {
+    for(const name of tileNames)if(!this.textures.exists(name))this.load.svg(name,`/assets/tiles/${name}.svg`,{width:100,height:100});
+    for(const name of ['leaf-pile','leaf-single'])if(!this.textures.exists(name))this.load.svg(name,`/assets/obstacles/${name}.svg`,{width:100,height:100});
+  }
   create() {
     this.effects=new BoardEffects(this);
     this.cameras.main.setBackgroundColor('#dae6d7');
@@ -49,7 +52,7 @@ export class BoardScene extends Phaser.Scene {
     this.events.on(Phaser.Scenes.Events.PAUSE,cancelGesture);
     this.events.on(Phaser.Scenes.Events.RESUME,cancelGesture);
     this.events.on(Phaser.Scenes.Events.SLEEP,cancelGesture);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>{cancelGesture();this.effects?.clear();this.leafObjects=[];});
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>{cancelGesture();this.stopPlaying();this.effects?.clear();this.pieces=[];this.leafObjects=[];});
     this.resetHint();
     // CREATE는 에셋 로딩과 create()가 끝나고 Scene이 RUNNING이 된 뒤 발생합니다.
     this.events.once(Phaser.Scenes.Events.CREATE,()=>this.hooks.onReady?.());
@@ -192,7 +195,7 @@ export class BoardScene extends Phaser.Scene {
     this.busy=false;if(!this.finished)this.resetHint();
   }
   stopPlaying(){this.finished=true;this.hintTimer?.remove();this.clearSelection();}
-  shuffle():boolean {if(this.busy||this.finished)return false;this.clearSelection();this.engine.shuffle();this.paint(this.engine.board);this.hooks.audio.play('special');this.resetHint();return true;}
+  shuffle():boolean {if(this.busy||this.finished||!this.sys.isActive())return false;this.clearSelection();this.engine.shuffle();this.paint(this.engine.board);this.hooks.audio.play('special');this.resetHint();return true;}
   canLeave(){return !this.busy;}
   private resetHint(){this.hintTimer?.remove();this.hintTimer=this.time.delayedCall(7500,()=>this.showHint());}
   private showHint(){

@@ -20,6 +20,7 @@ let save=loadSave(), currentLevel=save.highestLevel, moves=0, score=0, collected
 let scene:BoardScene, game:Phaser.Game, route='puzzle', toastTimer:ReturnType<typeof setTimeout>;
 let resultTimer:ReturnType<typeof setTimeout>|undefined;
 let round=0;
+let boardPending=false;
 let roundEnded=false, resultShown=false, firstReward=false;
 let tutorialPage=0;
 let practice:SwapPractice|undefined;
@@ -101,9 +102,17 @@ function checkpoint(){
   save.inProgress={schema:1,levelId:currentLevel,levelSignature:levelSignature(levels[currentLevel-1]),
     board:scene.engine.board.map(row=>row.map(tile=>({...tile}))),leaves:scene.engine.leaves.map(row=>row.slice()),
     moves,score,collected:collected.slice(),shuffles,clearedLeaves};
-  persist();
+  return persist();
 }
-function resumeNormal(){const saved=save.inProgress;startLevel(saved?.levelId??save.highestLevel,false,saved);}
+function resumeNormal(){const saved=save.inProgress;return startLevel(saved?.levelId??save.highestLevel,false,saved);}
+function replaceBoard(){
+  // Phaser 3.90은 추가 큐를 제거 큐보다 먼저 처리합니다.
+  // POST_RENDER는 SceneManager.render() 뒤라 같은 키를 동기적으로 교체할 수 있습니다.
+  if(!boardPending||!game.scene.isBooted||game.scene.isProcessing)return;
+  boardPending=false;
+  if(game.scene.getScene('Board')){game.scene.stop('Board');game.scene.remove('Board');}
+  game.scene.add('Board',scene,true);
+}
 function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
   if(!Number.isInteger(id)||id<1||id>levels.length)return;
   clearTimeout(resultTimer);resultTimer=undefined;round++;
@@ -114,8 +123,9 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
   $<HTMLDialogElement>('#result-dialog').close();
   currentLevel=id;moves=levels[id-1].moves;score=0;collected=Array(6).fill(0);shuffles=1;clearedLeaves=0;
   if(restored&&!testingLevel){moves=restored.moves;score=restored.score;collected=restored.collected.slice();shuffles=restored.shuffles;clearedLeaves=restored.clearedLeaves;}
-  game?.destroy(true);
-  scene=new BoardScene({audio,onReady:()=>{if(activeRound===round)syncActivity();},onStart:()=>{void audio.unlock().catch(()=>{});},onNotice:key=>{
+  scene?.stopPlaying();
+  scene=new BoardScene({audio,onReady:()=>{if(activeRound===round)syncActivity();},onStart:()=>{if(activeRound===round)void audio.unlock().catch(()=>{});},onNotice:key=>{
+    if(activeRound!==round)return;
     $('#board-notice').textContent=text(key);$('#board-notice').classList.remove('pop');void $('#board-notice').offsetWidth;$('#board-notice').classList.add('pop');
   },onMove:(items,points,_chains,leavesCleared)=>{
     if(activeRound!==round||roundEnded)return;
@@ -127,10 +137,15 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
   }},restored);
   if(!restored)scene.configureLeaves(levels[id-1].leaves??[]);
   // 엔진 생성/복원 직후부터 안정 상태를 유지하며 연쇄 도중에는 갱신하지 않습니다.
-  checkpoint();
-  game=new Phaser.Game({type:Phaser.AUTO,width:480,height:480,parent:'game-canvas',backgroundColor:'#dae6d7',scene:[scene],transparent:false,
-    scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true,roundPixels:false},audio:{noAudio:true},input:{activePointers:2}});
+  const stored=checkpoint();
+  boardPending=true;
+  if(!game){
+    game=new Phaser.Game({type:Phaser.AUTO,width:480,height:480,parent:'game-canvas',backgroundColor:'#dae6d7',scene:[],transparent:false,
+      scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true,roundPixels:false},audio:{noAudio:true},input:{activePointers:2}});
+    game.events.on(Phaser.Core.Events.POST_RENDER,replaceBoard);
+  }
   updateGoals();syncActivity();
+  return stored;
 }
 function notice(message:string){clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').classList.add('visible');toastTimer=setTimeout(()=>$('#toast').classList.remove('visible'),3200);}
 function renderTutorial(){
@@ -268,7 +283,7 @@ function switchView(name:string){
   if(!scene.canLeave())return;
   route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
   document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(b=>{b.classList.toggle('active',b.dataset.route===name);if(b.dataset.route===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
-  if(name==='puzzle')game.scale.refresh();syncActivity();
+  if(name==='puzzle'&&game.isBooted)game.scale.refresh();syncActivity();
 }
 document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(button=>button.onclick=()=>switchView(button.dataset.route!));
 $('#settings-button').onclick=()=>switchView(route==='settings'?'puzzle':'settings');
@@ -276,7 +291,7 @@ $('.brand').onclick=e=>{e.preventDefault();switchView('puzzle');};
 $('#language-toggle').onclick=()=>changeLanguage(save.language==='en'?'ko':'en');
 $('#restart').onclick=()=>{if(scene.canLeave())startLevel(currentLevel,testingLevel);};
 if(TEST_TOOLS_ENABLED){$('#test-level-button').onclick=()=>showTestPicker();$<HTMLDialogElement>('#test-level-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTestPicker();});}
-$('#shuffle').onclick=()=>{if(shuffles>0&&scene.shuffle()){shuffles--;updateGoals();checkpoint();}};
+$('#shuffle').onclick=()=>{if(!boardPending&&game.scene.isActive('Board')&&shuffles>0&&scene.shuffle()){shuffles--;updateGoals();checkpoint();}};
 $<HTMLDialogElement>('#result-dialog').addEventListener('cancel',event=>{event.preventDefault();$<HTMLDialogElement>('#result-dialog').close();switchView('village');});
 $<HTMLDialogElement>('#tutorial-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTutorial();});
 document.addEventListener('pointerdown',()=>{void audio.unlock().catch(()=>{});},{passive:true,capture:true});
@@ -291,9 +306,9 @@ if(Capacitor.isNativePlatform()){
   void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('village');}else if(route!=='puzzle')switchView('puzzle');else void App.minimizeApp();});
 }
 if(typeof ResizeObserver!=='undefined'){
-  new ResizeObserver(()=>{game?.scale.refresh();}).observe($('#game-canvas'));
+  new ResizeObserver(()=>{if(game?.isBooted)game.scale.refresh();}).observe($('#game-canvas'));
 }
 const resumed=Boolean(save.inProgress);
-resumeNormal();updateWallet();renderViews();localize();
-if(resumed)notice(text('roundResumed'));
+const resumedStored=resumeNormal();updateWallet();renderViews();localize();
+if(resumed&&resumedStored)notice(text('roundResumed'));
 if(!save.tutorialSeen)showTutorial();
