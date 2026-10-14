@@ -1,6 +1,11 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    boardKeyboardHelp: 'Tab to the board · Arrow keys: move · Enter/Space: select, swap or use power-up · Esc: cancel selection',
+    boardCell: 'Row {row}, column {col}: {tile}. {special}. Leaf layers remaining: {layers}.',
+    boardSelected: 'Selected: row {row}, column {col}.', boardUnselected: 'No tile selected.',
+    boardOrdinary: 'Ordinary tile', boardRow: 'Row clear power-up', boardColumn: 'Column clear power-up', boardBomb: 'Bomb power-up', boardRainbow: 'Color clear power-up',
+    boardBusy: 'Resolving the move. Please wait.', boardFinished: 'Round finished.', boardUnavailable: 'Board is not available.',
     chapterSelect: 'Level groups', chapterMeadow: 'Blossom Meadow', chapterPath: 'Flower Path', chapterSunshine: 'Sunny Stroll',
     pipWin: '“We did it! Thanks for your help!”', pipRetry: '“It’s okay. Let’s try together again.”', replayDesc: 'A lovely replay! New rewards are given on your first clear.', testOther: 'Test another level', testResultDesc: 'Test finished. Your progress and rewards stay the same.',
     leafThinned: 'One layer swept away!', leavesCleared: 'Leaves cleared!',
@@ -44,6 +49,11 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    boardKeyboardHelp: 'Tab: 보드 진입 · 방향키: 칸 이동 · Enter/Space: 선택·교환·특수 사용 · Esc: 선택 취소',
+    boardCell: '{row}행 {col}열: {tile}. {special}. 낙엽 남은 겹: {layers}.',
+    boardSelected: '선택한 칸: {row}행 {col}열.', boardUnselected: '선택한 칸 없음.',
+    boardOrdinary: '일반 블록', boardRow: '가로 제거 특수', boardColumn: '세로 제거 특수', boardBomb: '주변 폭발 특수', boardRainbow: '같은 색 제거 특수',
+    boardBusy: '교환과 연쇄가 진행 중이에요. 잠시 기다려 주세요.', boardFinished: '회차가 끝났어요.', boardUnavailable: '지금은 보드를 조작할 수 없어요.',
     chapterSelect: '스테이지 묶음', chapterMeadow: '꽃잎 초원', chapterPath: '꽃길 정원', chapterSunshine: '햇살 산책',
     pipWin: '“해냈어요! 도와줘서 고마워요!”', pipRetry: '“괜찮아요. 같이 다시 해봐요.”', replayDesc: '다시 즐긴 스테이지예요. 새 보상은 첫 완료 때 받아요.', testOther: '다른 스테이지 테스트', testResultDesc: '테스트가 끝났어요. 기록과 보상은 그대로예요.',
     leafThinned: '한 겹 치웠어요!', leavesCleared: '낙엽을 치웠어요!',

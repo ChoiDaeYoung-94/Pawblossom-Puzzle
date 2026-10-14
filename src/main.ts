@@ -56,8 +56,9 @@ $('#app').innerHTML=`
       <div id="puzzle-view" class="view">
         <div class="level-top"><div><div class="eyebrow"><span id="chapter-name"></span></div><h2><span data-t="level">${text('level')}</span> <span id="level-number">1</span><span class="level-flower">${icon('flower',21)}</span></h2></div><div class="level-actions">${TEST_TOOLS_ENABLED?`<button id="test-level-button" class="test-level-button">${label('testPick')}</button>`:''}<button id="restart" class="icon-button" aria-label="${text('restart')}">${icon('restart',20)}</button></div></div>
         <div class="mission-bar"><div class="moves-box"><strong id="moves">22</strong>${label('moves')}</div><div class="goal-box"><div class="goal-heading">${label('goal')}<span id="score">0</span></div><div id="goals"></div></div></div>
-        <div class="board-wrap"><div id="game-canvas" aria-label="Match-3 puzzle board. Tap two neighboring tiles or swipe a tile." role="application"></div><div id="board-notice" aria-live="polite"></div></div>
-        <p class="board-hint">${icon('leaf',15)} <span id="board-hint-text">${text('hint')}</span></p>
+        <div class="board-wrap"><div id="game-canvas" tabindex="-1" aria-label="${text('boardLabel')}" aria-describedby="board-keyboard-help board-keyboard-status" role="application"></div><div id="board-notice" aria-live="polite"></div></div>
+        <p class="board-hint">${icon('leaf',15)} <span id="board-hint-text">${text('hint')}</span><span id="board-keyboard-help">${text('boardKeyboardHelp')}</span></p>
+        <div id="board-keyboard-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
         <div class="tools"><button id="shuffle" class="shuffle-button">${icon('shuffle',20)}${label('shuffle')}<span id="shuffle-count">1</span></button><span class="tool-note">${label('shuffleHelp')}</span></div>
       </div>
       <div id="village-view" class="view" hidden></div><div id="journal-view" class="view" hidden></div><div id="settings-view" class="view" hidden></div>
@@ -77,6 +78,23 @@ function syncActivity(){
   const playing=active&&route==='puzzle'&&!modal;
   if(playing){if(game.scene.isPaused('Board'))game.scene.resume('Board');}
   else if(game.scene.isActive('Board'))game.scene.pause('Board');
+  updateBoardAccess();
+}
+function updateBoardAccess(){
+  const board=$('#game-canvas'),state=scene?.keyboardState();
+  const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open);
+  const visible=nativeActive&&!document.hidden&&route==='puzzle'&&!modal&&!boardPending;
+  const available=visible&&Boolean(state?.available);
+  board.tabIndex=visible&&(available||state?.busy)?0:-1;
+  board.setAttribute('aria-disabled',String(!available));board.setAttribute('aria-busy',String(Boolean(state?.busy)));
+  let description=text(state?.finished?'boardFinished':state?.busy?'boardBusy':'boardUnavailable');
+  if(available&&state?.cursor&&state.tile){
+    description=text('boardCell').replace('{row}',String(state.cursor.row+1)).replace('{col}',String(state.cursor.col+1))
+      .replace('{tile}',text(tileNames[state.tile.kind] as TextKey)).replace('{special}',text(state.tile.special==='row'?'boardRow':state.tile.special==='column'?'boardColumn':state.tile.special==='bomb'?'boardBomb':state.tile.special==='rainbow'?'boardRainbow':'boardOrdinary'))
+      .replace('{layers}',String(state.layers));
+    description+=' '+(state.selected?text('boardSelected').replace('{row}',String(state.selected.row+1)).replace('{col}',String(state.selected.col+1)):text('boardUnselected'));
+  }else if(available)description=text('boardKeyboardHelp');
+  const status=$('#board-keyboard-status');if(status.textContent!==description)status.textContent=description;
 }
 function updateWallet(){
   $('.wallet.stars .sr-only').textContent=text('stars');$('.wallet.coins .sr-only').textContent=text('coins');
@@ -84,6 +102,7 @@ function updateWallet(){
 }
 function updateGoals(){
   $('#game-canvas').setAttribute('aria-label',text('boardLabel'));
+  $('#board-keyboard-help').textContent=text('boardKeyboardHelp');
   $('.bottom-nav').setAttribute('aria-label',text('navLabel'));
   const level=levels[currentLevel-1];
   const chapter=chapterForLevel(currentLevel);
@@ -124,7 +143,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
   currentLevel=id;moves=levels[id-1].moves;score=0;collected=Array(6).fill(0);shuffles=1;clearedLeaves=0;
   if(restored&&!testingLevel){moves=restored.moves;score=restored.score;collected=restored.collected.slice();shuffles=restored.shuffles;clearedLeaves=restored.clearedLeaves;}
   scene?.stopPlaying();
-  scene=new BoardScene({audio,onReady:()=>{if(activeRound===round)syncActivity();},onStart:()=>{if(activeRound===round)void audio.unlock().catch(()=>{});},onNotice:key=>{
+  scene=new BoardScene({audio,onBoardState:()=>{if(activeRound===round)updateBoardAccess();},onReady:()=>{if(activeRound===round)syncActivity();},onStart:()=>{if(activeRound===round)void audio.unlock().catch(()=>{});},onNotice:key=>{
     if(activeRound!==round)return;
     $('#board-notice').textContent=text(key);$('#board-notice').classList.remove('pop');void $('#board-notice').offsetWidth;$('#board-notice').classList.add('pop');
   },onMove:(items,points,_chains,leavesCleared)=>{
@@ -278,7 +297,7 @@ function renderViews(grew=false){
   $('#reset').onclick=()=>{if(!confirm(text('resetConfirm')))return;save=clearSave();selectedChapter=1;persist();audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');showTutorial();};
 }
 function localize(){document.documentElement.lang=save.language;document.querySelectorAll<HTMLElement>('[data-t]').forEach(el=>el.textContent=text(el.dataset.t as TextKey));$('#language-toggle').textContent=save.language==='en'?'한국어':'EN';$('#settings-button').setAttribute('aria-label',text('settings'));$('#restart').setAttribute('aria-label',text('restart'));}
-function changeLanguage(language:'en'|'ko'){save.language=language;persist();localize();updateWallet();renderViews();updateGoals();if($<HTMLDialogElement>('#tutorial-dialog').open)renderTutorial();if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)renderTestPicker();}
+function changeLanguage(language:'en'|'ko'){save.language=language;persist();localize();updateWallet();renderViews();updateGoals();updateBoardAccess();if($<HTMLDialogElement>('#tutorial-dialog').open)renderTutorial();if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)renderTestPicker();}
 function switchView(name:string){
   if(!scene.canLeave())return;
   route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
@@ -295,6 +314,21 @@ $('#shuffle').onclick=()=>{if(!boardPending&&game.scene.isActive('Board')&&shuff
 $<HTMLDialogElement>('#result-dialog').addEventListener('cancel',event=>{event.preventDefault();$<HTMLDialogElement>('#result-dialog').close();switchView('village');});
 $<HTMLDialogElement>('#tutorial-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTutorial();});
 document.addEventListener('pointerdown',()=>{void audio.unlock().catch(()=>{});},{passive:true,capture:true});
+// 한 Game 동안 DOM에 한 번만 등록합니다. 회차 교체는 현재 scene을 조회합니다.
+const boardFocus=$('#game-canvas');
+boardFocus.addEventListener('focus',()=>{if(boardFocus.matches(':focus-visible')){boardFocus.dataset.keyboard='true';scene?.focusKeyboard();}updateBoardAccess();});
+boardFocus.addEventListener('blur',()=>{boardFocus.dataset.keyboard='false';scene?.cancelInput();});
+boardFocus.addEventListener('pointerdown',()=>{boardFocus.dataset.keyboard='false';scene?.hideKeyboardCursor();},{capture:true});
+boardFocus.addEventListener('keydown',event=>{
+  if(event.target!==boardFocus||document.activeElement!==boardFocus||event.altKey||event.ctrlKey||event.metaKey||event.isComposing)return;
+  if(!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter',' ','Escape'].includes(event.key))return;
+  if(boardPending||route!=='puzzle'||!nativeActive||document.hidden||document.querySelector('dialog[open]'))return;
+  // 대기 중에도 방향키/Space의 페이지 스크롤은 막고 엔진 입력은 거부합니다.
+  event.preventDefault();
+  if(!scene.keyboardState().available)return;
+  boardFocus.dataset.keyboard='true';void audio.unlock().catch(()=>{});scene.focusKeyboard();scene.keyboardKey(event.key,event.repeat);
+});
+window.addEventListener('blur',()=>{boardFocus.dataset.keyboard='false';scene?.cancelInput();});
 document.addEventListener('visibilitychange',syncActivity);
 if(Capacitor.isNativePlatform()){
   void App.addListener('appStateChange',({isActive})=>{nativeRevision++;nativeActive=isActive;syncActivity();}).then(async()=>{
