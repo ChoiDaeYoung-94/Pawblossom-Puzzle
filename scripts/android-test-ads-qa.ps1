@@ -6,11 +6,16 @@ $marker = Join-Path $androidRoot 'app/src/main/assets/public/build-info.json'
 $original = [System.IO.File]::ReadAllBytes($marker)
 $checks = @()
 $cases = @(
-    @{ name='시험 에셋'; content='{"testTools":true,"androidTestAds":true}' },
+    @{ name='시험 에셋'; content='{"testTools":true,"androidTestAds":true,"androidTestBilling":true}' },
     @{ name='누락'; content=$null },
     @{ name='손상 JSON'; content='{"testTools":' },
     @{ name='광고 필드 누락'; content='{"testTools":false}' },
-    @{ name='문자열 false'; content='{"testTools":"false","androidTestAds":"false"}' }
+    @{ name='문자열 false'; content='{"testTools":"false","androidTestAds":"false","androidTestBilling":"false"}' },
+    @{ name='결제 필드 누락'; content='{"testTools":false,"androidTestAds":false}' },
+    @{ name='결제 문자열 false'; content='{"testTools":false,"androidTestAds":false,"androidTestBilling":"false"}' },
+    @{ name='결제 문자열 true'; content='{"testTools":false,"androidTestAds":false,"androidTestBilling":"true"}' },
+    @{ name='결제 숫자'; content='{"testTools":false,"androidTestAds":false,"androidTestBilling":0}' },
+    @{ name='결제 시험만 활성'; content='{"testTools":false,"androidTestAds":false,"androidTestBilling":true}' }
 )
 try {
     foreach ($case in $cases) {
@@ -28,4 +33,4 @@ try {
     [System.IO.File]::WriteAllBytes($marker, $original)
 }
 @{dateKst='2026-10-15'; checks=$checks; restored=([Convert]::ToBase64String($original) -eq [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($marker)))} |
-    ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $projectRoot 'docs/performance/test-ads-release-guard-20261015.json') -Encoding utf8
+    ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $projectRoot 'docs/performance/billing-release-guard-20261015.json') -Encoding utf8

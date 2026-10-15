@@ -1,8 +1,16 @@
 apply plugin: 'com.android.application'
 
+// 실값은 Git 밖 로컬 파일에만 둡니다. 파싱 실패도 런타임에서 구성 오류로 차단합니다.
+def billingTest = new Properties()
+try {
+    def config = rootProject.file('billing-test.properties')
+    if (config.exists()) config.withInputStream { billingTest.load(it) }
+} catch (Exception ignored) { billingTest.setProperty('productId', '__invalid__') }
+
 android {
     namespace = "com.choidaeyoung.pawblossompuzzle"
     compileSdk = rootProject.ext.compileSdkVersion
+    buildFeatures { buildConfig true }
     defaultConfig {
         applicationId "com.choidaeyoung.pawblossompuzzle"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -17,6 +25,11 @@ android {
         }
     }
     buildTypes {
+        debug {
+            buildConfigField 'String', 'BILLING_TEST_PRODUCT_ID', groovy.json.JsonOutput.toJson(billingTest.getProperty('productId', '').trim())
+            buildConfigField 'String', 'BILLING_TEST_PUBLIC_KEY', groovy.json.JsonOutput.toJson(billingTest.getProperty('publicKey', '').trim())
+            buildConfigField 'boolean', 'BILLING_TEST_PERMANENT_PRODUCT', (billingTest.getProperty('permanentProductConfirmed', '') == 'true').toString()
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -31,6 +44,7 @@ repositories {
 }
 
 dependencies {
+    debugImplementation('com.android.billingclient:billing:9.1.0') { version { strictly '9.1.0' } }
     // 광고 브리지와 SDK는 debug에만 존재합니다. release에는 전이 의존성도 없습니다.
     debugImplementation('com.google.android.gms:play-services-ads:25.4.0') { version { strictly '25.4.0' } }
     debugImplementation('com.google.android.ump:user-messaging-platform:4.0.0') { version { strictly '4.0.0' } }
@@ -53,7 +67,7 @@ tasks.matching { it.name == 'preReleaseBuild' }.configureEach {
         def buildInfo = file('src/main/assets/public/build-info.json')
         try {
             def info = new groovy.json.JsonSlurper().parse(buildInfo)
-            if (info.testTools != false || info.androidTestAds != false) throw new Exception('시험 기능 또는 불완전한 정보')
+            if (info.testTools != false || info.androidTestAds != false || info.androidTestBilling != false) throw new Exception('시험 기능 또는 불완전한 정보')
         } catch (Exception e) {
             throw new GradleException('출시 웹 에셋 검증 실패(시험/누락/손상). npm run android:sync 후 다시 빌드해 주세요.', e)
         }

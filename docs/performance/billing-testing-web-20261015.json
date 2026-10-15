@@ -1,0 +1,11 @@
+{
+  "dateKst": "2026-10-15",
+  "mode": "dist {\"testTools\":true,\"androidTestAds\":true,\"androidTestBilling\":true}",
+  "browser": "155.0.8059.41",
+  "checks": [
+    "실제 웹 플랫폼: 결제 진입/모달 없음·Billing IPC 0회"
+  ],
+  "layouts": [],
+  "errors": [],
+  "external": []
+}

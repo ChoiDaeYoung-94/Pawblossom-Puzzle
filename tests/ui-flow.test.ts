@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import ts from 'typescript';
 import { BoardEngine, seededRng, type BoardSnapshot } from '../src/core';
 import {TestAdsController,adCopy,type TestAdsBridge} from '../src/testAds';
+import {TestBillingController,billingCopy,type TestBillingBridge,type BillingSnapshot} from '../src/testBilling';
 
 // 테스트에만 사용하는 Node API입니다. 별도 @types/node 설치 없이 런타임에서 읽습니다.
 const fsModule = 'node:fs', vmModule = 'node:vm';
@@ -46,7 +47,7 @@ class ElementStub {
   close() { this.open = false; }
 }
 
-function mainHarness(storageFails = false, firstUse = false, testTools = false, native = false, initial?:unknown, autoFrame=true, adsBridge?:TestAdsBridge) {
+function mainHarness(storageFails = false, firstUse = false, testTools = false, native = false, initial?:unknown, autoFrame=true, adsBridge?:TestAdsBridge,billingBridge?:TestBillingBridge) {
   const elements = new Map<string, ElementStub>();
   const timers = new Map<number, { callback: () => void; ms: number }>();
   let timerId = 0, writes = 0;
@@ -104,6 +105,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const context = vm.createContext({
     TEST_TOOLS_ENABLED:testTools,
     ANDROID_TEST_ADS_ENABLED:Boolean(adsBridge),TestAdsController,adCopy,nativeTestAds:()=>adsBridge,
+    ANDROID_TEST_BILLING_ENABLED:Boolean(billingBridge),TestBillingController,billingCopy,nativeTestBilling:()=>billingBridge,
     exports: stateExports,
     localStorage: {
       getItem: () => stored,
@@ -128,7 +130,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     Phaser: { Game: GameStub, AUTO: 0, Scale: { FIT: 0, CENTER_BOTH: 0 }, Core:{Events:{POST_RENDER:'postrender'}} },
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     AudioManager: AudioStub, t: (_language: string, key: string) => key, icon: () => '',
-    Capacitor: { isNativePlatform: () => native,getPlatform:()=>native?'android':'web',isPluginAvailable:()=>Boolean(adsBridge) },
+    Capacitor: { isNativePlatform: () => native,getPlatform:()=>native?'android':'web',isPluginAvailable:(name:string)=>Boolean(name==='PawblossomTestBilling'?billingBridge:adsBridge) },
     App:{addListener:(name:string,callback:(state:{isActive:boolean})=>void)=>{nativeEvents[name]=callback;return Promise.resolve({remove(){}});},getState:()=>nativeState,minimizeApp:()=>Promise.resolve()}, confirm: () => true,
     setTimeout: (callback: () => void, ms: number) => { timers.set(++timerId, { callback, ms }); return timerId; },
     clearTimeout: (id: number) => timers.delete(id),
@@ -160,6 +162,47 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
 }
 
 type Pointer = { id: number; x: number; y: number };
+describe('광고 제거 조회·구매창과 게임 활동 상태',()=>{
+  function setup(configured=true){
+    let value:BillingSnapshot={available:true,configured,state:configured?'querying':'idle',entitlement:'unknown',revision:0,error:'',price:'',overlay:false,adsBlocked:configured,preparingPurchase:false};
+    let callback!:(state:BillingSnapshot)=>void;
+    const emit=(patch:Partial<BillingSnapshot>)=>{value={...value,...patch,revision:value.revision+1};callback?.({...value});return {...value};};
+    const bridge:TestBillingBridge={getStatus:async()=>({...value}),restore:async()=>emit({state:'querying'}),queryProduct:async()=>emit({state:'products'}),purchase:async()=>emit({state:'purchasing',overlay:true}),addListener:async(_name,listener)=>{callback=listener;return {remove:async()=>{}};}};
+    const h=mainHarness(false,false,true,true,undefined,true,undefined,bridge);h.nativeEvents.appStateChange({isActive:true});
+    return {h,emit};
+  }
+  it('시작 자동 조회는 보드·음악을 멈추지 않고 모달을 연 동안만 멈춥니다',async()=>{
+    const {h,emit}=setup();await h.run('testBilling.connect()');
+    expect(h.run('game.paused')).toBe(false);expect(h.run('audio.suspended')).toBe(false);
+    await h.run('showBillingDialog()');expect(h.run('game.paused')).toBe(true);expect(h.run('audio.suspended')).toBe(true);
+    h.run('closeBillingDialog()');expect(h.run('game.paused')).toBe(false);expect(h.run('audio.suspended')).toBe(false);
+    emit({state:'failed',error:'query:2'});expect(h.run('game.paused')).toBe(false);
+  });
+  it('Play창 종료·늦은 검증 결과만으로 모달을 닫거나 게임을 자동 재개하지 않습니다',async()=>{
+    const {h,emit}=setup();await h.run('testBilling.connect()');const before=h.stored();await h.run('showBillingDialog()');
+    emit({state:'purchasing',overlay:true});h.run('closeBillingDialog()');expect(h.element('#test-billing-dialog').open).toBe(true);
+    h.nativeEvents.appStateChange({isActive:false});emit({state:'idle',overlay:false,entitlement:'owned',adsBlocked:true});
+    expect(h.run('game.paused')).toBe(true);h.nativeEvents.appStateChange({isActive:true});expect(h.run('game.paused')).toBe(true);
+    h.run('document.hidden=true;closeBillingDialog()');expect(h.run('game.paused')).toBe(true);
+    h.run('document.hidden=false');h.documentEvents.visibilitychange();expect(h.run('game.paused')).toBe(false);
+    expect(h.stored()).toEqual(before);
+  });
+  it('구성 미완료 모달은 즉시 닫히고 음량·기존 진행 저장을 보존합니다',async()=>{
+    const {h}=setup(false);await h.run('testBilling.connect()');const before=h.stored();
+    await h.run('showBillingDialog()');expect(h.element('#test-billing-status').textContent).toContain('Setup incomplete');
+    h.run('closeBillingDialog()');expect(h.element('#test-billing-dialog').open).toBe(false);expect(h.run('game.paused')).toBe(false);expect(h.stored()).toEqual(before);
+  });
+  it('구매 준비 연결/상품 재조회 중 닫기·뒤로가기·Escape를 막고 늦은 Play창도 같은 모달 아래 유지합니다',async()=>{
+    const {h,emit}=setup();await h.run('testBilling.connect()');await h.run('showBillingDialog()');
+    for(const state of ['connecting','products'] as const){
+      emit({state,preparingPurchase:true});h.element('#test-billing-close').onclick();h.nativeEvents.backButton({isActive:true});h.element('#test-billing-dialog').listeners.cancel({preventDefault(){}});
+      expect(h.element('#test-billing-dialog').open).toBe(true);expect(h.run('game.paused')).toBe(true);expect(h.run('audio.suspended')).toBe(true);
+    }
+    emit({state:'purchasing',preparingPurchase:false,overlay:true});h.run('closeBillingDialog()');expect(h.element('#test-billing-dialog').open).toBe(true);
+    emit({state:'failed',preparingPurchase:false,overlay:false,error:'timeout'});h.run('closeBillingDialog()');expect(h.element('#test-billing-dialog').open).toBe(false);
+    await h.run('showBillingDialog()');emit({state:'products',preparingPurchase:false});h.run('closeBillingDialog()');expect(h.element('#test-billing-dialog').open).toBe(false);
+  });
+});
 describe('시험 광고와 기존 게임 활동 상태 통합',()=>{
   function setup(){
     let value={available:true,state:'idle',revision:0,error:'',privacyRequired:false} as import('../src/testAds').AdSnapshot;

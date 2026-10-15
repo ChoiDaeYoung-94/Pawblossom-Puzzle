@@ -53,6 +53,46 @@ Google은 클라이언트 승인 경로도 제공하므로 모든 일회성 상�
 
 후속 콘솔 작업에는 최종 package ID, 실제 대상 연령대, KO/EN 상품명·설명, 변경/재사용할 수 없는 상품 ID, 가격·판매 국가·테스터, 광고 App ID(`~`)·단위 ID(`/`), 메시지·지원 연락처·개인정보처리방침·app-ads.txt가 필요합니다. 지금 계정 자격정보를 요청하거나 콘솔을 변경하지 않았습니다. [상품 등록](https://support.google.com/googleplay/android-developer/answer/1153481?hl=en), [Billing 테스트](https://developer.android.com/google/play/billing/test), [AdMob 앱 준비](https://support.google.com/admob/answer/9989980?hl=en), [app-ads.txt 검증](https://support.google.com/admob/answer/14538460?hl=en).
 
+## 광고 제거 결제·복원 시험 연결 (이슈 #56)
+
+### 구현한 범위와 미설정 조건
+
+2026-10-15 [통합 문서](https://developer.android.com/google/play/billing/integrate)와 [릴리스 노트](https://developer.android.com/google/play/billing/release-notes)를 확인하고 **Billing 9.1.0**을 `debugImplementation`에 strictly 고정했습니다. 실제 AAR로 Java API를 컴파일하며, 자체 Capacitor Java 브리지는 한 비소모성 상품의 상품 조회·구매창·현재 INAPP 구매 조회·acknowledge만 연결합니다. consume·구독·다중 스토어·범용 provider는 없습니다. SDK·상품 구성 필드·브리지는 `src/debug`에만 있고 release에는 빈 등록 함수만 있습니다.
+
+**실제 상품 ID·가격·라이선스 공개키·테스트 트랙·계정은 미설정이며 실제 Play 구매·복원은 미검증입니다.** 콘솔 변경·가입·구매 실행을 하지 않았습니다. 가짜 상품/가격/샘플 키/성공 응답을 앱에 넣지 않았습니다. 화면은 실제 Android testing 빌드에서만 “광고 제거 연동 시험 / 아직 운영 서비스가 아님”을 KO/EN으로 안내합니다. 실제 웹·production에는 시험 구매 진입/요청이 없습니다. 버전 0.1.6/code 7을 유지하며 이번에는 APK를 전달하지 않습니다.
+
+추후 담당자가 Git 제외 `android/billing-test.properties`에 입력할 키 이름은 아래와 같습니다. 이 빈 예시로는 SDK 연결·상품 조회·구매·권한 지급을 허용하지 않습니다.
+
+```properties
+productId=
+publicKey=
+permanentProductConfirmed=false
+```
+
+`publicKey`는 해당 Play 앱의 완전한 Base64 X.509 RSA 공개키이며 비밀키가 아닙니다. 2048비트 이상 RSA·완전한 Base64·상품 ID 형식을 확인하고 손상/부분 구성은 차단합니다. Play Developer API 비밀정보는 앱·Git에 넣지 않습니다. `permanentProductConfirmed=true`는 이 상품 ID가 **임대·예약판매 이력이 없는 영구 buy 전용 비소모성 한 상품**임을 담당자가 확인한 뒤에만 입력합니다. Purchase 공개 API만으로 과거 구매 옵션을 판별할 수 없어 이 운영 계약을 확정하기 전에는 구매도 허용하지 않습니다.
+
+[구매 옵션 문서](https://developer.android.com/google/play/billing/one-time-product-multi-purchase-options-offers)에 따라 정확히 한 개의 영구 오퍼만 허용하며 rental·preorder·기간 제한을 거부합니다. 가격은 해당 오퍼의 Play 지역화 문자열만 표시합니다. 구매 직전 새 ProductDetails의 상품·구매 옵션·오퍼 토큰·통화·금액·표시 가격을 비교하고, 바뀌면 새 조건을 표시한 뒤 다시 누르게 합니다. launch에는 같은 새 오퍼의 토큰을 사용합니다.
+
+### 검증·복원·광고·활동
+
+- [Google Codelab Security.kt](https://github.com/googlecodelabs/play-billing-scalable-kotlin/blob/master/codelab-04/app/src/main/java/com/example/playbilling/trivialdrive/kotlin/billingrepo/Security.kt)의 RSA/X.509/`SHA1withRSA` 방식과 [현재 Purchase API](https://developer.android.com/reference/com/android/billingclient/api/Purchase)를 확인했습니다. 예제 키·구현 소스는 복사하지 않았습니다. `getOriginalJson()`의 UTF-8 원문 그대로 서명을 검증하고 재직렬화하지 않습니다. 이후에도 패키지·상품 하나(productId/productIds와 두 필드의 일치)·토큰·수량 1·상태를 SDK 해석과 묶습니다.
+- 실제 `billing-9.1.0.aar`의 `javap -c -p Purchase`에서 원문 4→SDK PENDING(2), 그 외→PURCHASED(1)인 느슨한 매핑을 확인했습니다. 앱은 원문 **0→PURCHASED, 4→PENDING**만 허용하며 상태 누락/미지원 값은 거부합니다. RSA 헬퍼는 Android 없는 JVM에서 시험하고, Base64·스트림 처리는 minSdk 24에 맞춥니다.
+- launch OK·창 닫힘·PENDING만으로 완료 처리하지 않습니다. 검증된 PURCHASED에서만 메모리 권한을 반영하며 이미 acknowledged인 구매도 복원합니다. 성공한 전체 query에서 해당 구매가 없을 때만 권한을 해제합니다. 조회/검증 실패는 기존 검증 권한을 즉시 지우지 않고 재확인으로 안내합니다. 게임 localStorage boolean으로 구매 완료를 복원하지 않습니다.
+- 권한 반영 뒤 acknowledge하며 같은 토큰의 동시 요청·중복 콜백은 attempt ID로 제어합니다. 실패/30초 timeout은 2초·6초의 제한된 backoff 뒤 전체 재조회·검증을 거쳐 재시도합니다. 이후에는 명시적 복원/다음 앱 복귀에서 재시도합니다. 승인 A timeout 뒤 B가 시작되면 A의 늦은 콜백은 B 잠금을 해제하지 않습니다. 빈 query로 해제한 토큰의 늦은 구매/대기 콜백도 재지급하지 않고 다시 조회합니다.
+- 설정이 준비되면 시작·연결·앱 복귀·명시적 복원에서 구매를 조회합니다. 앱 미실행 중 승인은 다음 조회가 필요합니다. 권한은 메모리만 사용하므로 오프라인 재실행은 unknown이며 광고를 보류합니다. 조회 실패를 빈 목록으로 바꾸지 않습니다. 영구 disk cache·서버 추상화는 추가하지 않았습니다.
+- owned·준비된 설정의 unknown/pending·구매/조회 중에는 기존 시험 광고 load/show를 JS와 네이티브 양쪽에서 차단하고 준비 중인 광고를 폐기합니다. 구매 구성이 아예 없는 기본 빌드는 기존 시험 광고를 계속 사용할 수 있습니다. 실제 운영 광고는 없습니다.
+- 구매 모달·구매 준비(연결/상품 재조회)·실제 Play 창과 문서/Android 활동을 `syncActivity`에 통합해 보드·키보드·오디오를 멈춥니다. 자동 권한 조회만으로는 퍼즐/음악을 멈추지 않습니다. 구매 준비 중 닫기·Escape·Android back은 막고 앱 비활성화 시 준비 작업을 무효화합니다. 일반 상품 확인/복원 중에는 닫을 수 있습니다. SDK 45초·IPC 12초 timeout을 두며 실제 창은 SDK 결과/앱 복귀로 확인합니다. 창 종료만으로 구매 완료·모달 닫힘·게임 자동 재개를 만들지 않습니다.
+
+이 로컬 검증은 [Google의 서버 검증·승인 권장사항](https://developer.android.com/google/play/billing/security)을 대체하지 않습니다. 수정된 앱·증거 재생·기기 위변조를 완전히 막지 못하며 환불을 실시간 통지받지 않습니다. 다음 성공적인 현재 구매 조회에서 권한 해제를 반영합니다. 서버 검증·RTDN·취소 구매 확인·계정 바인딩은 출시 전 별도 설계/검증 대상입니다. 한국·미국/어린이~중장년 기획을 유지하며 실제 대상 연령·부모 동의·스토어 국가/설문은 별도 미완료입니다.
+
+### 검사와 남은 검증
+
+자동 **179개**, JVM **8개**가 통과했습니다. JVM은 실행 시 만든 시험 RSA 키로 원문 변조·다른/부분/약한 키 거부와 필드 바인딩·pending 전환·복원·승인 timeout/늦은 콜백/backoff·빈 조회 해제를 확인합니다. 시험 키는 앱 설정에 쓰지 않으며 실제 Play 서명 시험을 대신하지 않습니다. 일반/testing 타입·웹 빌드, 격리 headless Chrome의 실제 웹 미노출과 **Android IPC 대역**을 분리합니다. 대역은 KO/EN 3비율×6상태 36개 배치·44px·구매 준비 중 닫기/뒤로가기·앱 복귀·광고 억제·저장/음량 보존을 확인합니다. 기존 키보드 12개·회차 저장 8개도 통과했습니다.
+
+Android debug/release 빌드가 성공했고 lint는 debug 0 errors/15 warnings, release 0 errors/17 warnings입니다. release의 추가 2개는 변경하지 않은 API 26 아이콘의 MonochromeLauncherIcon 경고이며 새 NewApi 오류는 없습니다. APK v2 검증 통과·버전 유지와 release AAB unsigned 상태를 확인했습니다. 의존성/Manifest/DEX와 release guard는 [네이티브 기록](performance/billing-native-20261015.json), [출시 차단 기록](performance/billing-release-guard-20261015.json)에 기록합니다. 새 `androidTestBilling`을 엄격한 boolean으로 검사하며 CI도 두 모드를 확인합니다. 시험/누락/손상/문자열/숫자 마커 10종은 release를 차단하고, 마지막 dist와 Android 에셋은 production으로 복구합니다. [IPC](performance/billing-ipc-20261015.json), [testing 웹](performance/billing-testing-web-20261015.json), [production 웹](performance/billing-production-20261015.json), [미설정 화면](screenshots/billing-unconfigured-ko.png), [영문 IPC 상태 화면](screenshots/billing-unknown-landscape-en.png).
+
+실기기/AVD가 없어 Play 서비스 연결·지역화 가격·구매 UI·테스트 수단·승인/복원/재설치·환불/계정 변경·보호자 승인·오프라인의 실제 동작은 미검증입니다. [공식 시험 문서](https://developer.android.com/google/play/billing/test)에 따라 정확한 패키지/상품/라이선스 테스터와 실제 기기·트랙을 준비한 뒤 확인해야 합니다. 테스트 트랙의 일반 계정은 실제 청구가 가능하며 이번에는 구매를 실행하지 않았습니다.
+
 ## Android 전면 시험 광고 구현·검증 (이슈 #54)
 
 ### 선택한 구조와 정확한 버전
@@ -182,4 +222,4 @@ CLI는 8.4.3으로 고정했습니다. 최초 8.5.3 CLI의 전이 개발 의존�
 4. 최종 앱 ID, 업로드 키와 키 보관, 서명 AAB, 스토어 소재·개인정보 문서·연령 및 데이터 설문을 준비합니다.
 5. Play Console 테스트 요구사항을 해당 계정에서 확인하고 테스트 트랙부터 진행합니다.
 
-현재 광고 SDK는 debug 전용 시험 경로에만 있고 release에서 제외됩니다. 결제 SDK는 미설치이며 게임 진행은 기기에 저장합니다. 저장소만으로 스토어 공개나 수익화가 완료되지는 않습니다. [Capacitor Android 공식 문서](https://capacitorjs.com/docs/android)를 환경 설정 기준으로 사용합니다.
+현재 광고·Billing SDK는 debug 전용 시험 경로에만 있고 release에서 제외됩니다. 실제 상품·검증 설정은 미완료이며 게임 진행은 기기에 저장합니다. 저장소만으로 스토어 공개나 수익화가 완료되지는 않습니다. [Capacitor Android 공식 문서](https://capacitorjs.com/docs/android)를 환경 설정 기준으로 사용합니다.

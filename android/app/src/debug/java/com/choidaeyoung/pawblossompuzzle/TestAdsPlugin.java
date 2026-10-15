@@ -42,6 +42,12 @@ public class TestAdsPlugin extends Plugin {
     private InterstitialAd ad;
     private Runnable timeout;
 
+    @Override public void load() {
+        TestCommerce.adsChanged = () -> {
+            if (!destroyed && TestCommerce.blocksAds(getContext()) && !overlay() && (busy() || state.equals("ready"))) fail("billing-blocked");
+        };
+    }
+
     // 웹 플래그 외에 패키지 내 실제 에셋과 Manifest까지 확인합니다. 누락/손상은 차단합니다.
     private boolean available() {
         try (var stream = getContext().getAssets().open("public/build-info.json")) {
@@ -85,6 +91,7 @@ public class TestAdsPlugin extends Plugin {
     }
     private void update(String next, String reason) {
         state = next; error = reason; revision++;
+        TestCommerce.adOverlay = overlay();
         notifyListeners("stateChange", snapshot());
     }
     private void discard() {
@@ -109,6 +116,7 @@ public class TestAdsPlugin extends Plugin {
     @PluginMethod public void prepare(PluginCall call) {
         main.post(() -> {
             if (!guard(call)) return;
+            if (TestCommerce.blocksAds(getContext())) { fail("billing-blocked"); call.resolve(snapshot()); return; }
             if (busy() || state.equals("ready")) { call.resolve(snapshot()); return; }
             if (!foreground()) { call.reject("앱이 비활성 상태입니다.", "inactive"); return; }
             if (initializing) { call.reject("SDK 초기화 응답을 기다리고 있습니다. 앱을 다시 열어 주세요.", "initializing"); return; }
@@ -147,6 +155,7 @@ public class TestAdsPlugin extends Plugin {
     private void consentComplete(long id) {
         if (!current(id)) return;
         try {
+            if (TestCommerce.blocksAds(getContext())) { fail("billing-blocked"); return; }
             privacyRequired = consent.getPrivacyOptionsRequirementStatus() == ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED;
             if (!consent.canRequestAds() || consent.getConsentStatus() == ConsentInformation.ConsentStatus.UNKNOWN) { fail("consent-blocked"); return; }
             if (!foreground()) { fail("inactive"); return; }
@@ -168,12 +177,14 @@ public class TestAdsPlugin extends Plugin {
     private void loadAd(long id) {
         if (!current(id)) return;
         try {
+            if (TestCommerce.blocksAds(getContext())) { fail("billing-blocked"); return; }
             if (!foreground() || consent == null || !consent.canRequestAds()) { fail("consent-blocked"); return; }
             Bundle extras = new Bundle(); extras.putString("npa", "1");
             AdRequest request = new AdRequest.Builder().addNetworkExtrasBundle(AdMobAdapter.class, extras).build();
             InterstitialAd.load(getContext(), UNIT_ID, request, new InterstitialAdLoadCallback() {
             @Override public void onAdLoaded(InterstitialAd loaded) {
                 if (!current(id) || !state.equals("loading")) return;
+                if (TestCommerce.blocksAds(getContext())) { fail("billing-blocked"); return; }
                 stopTimer(); ad = loaded; readyAt = SystemClock.elapsedRealtime(); update("ready", "");
             }
             @Override public void onAdFailedToLoad(LoadAdError e) { if (current(id) && state.equals("loading")) fail("load:" + e.getCode()); }
@@ -184,6 +195,7 @@ public class TestAdsPlugin extends Plugin {
     @PluginMethod public void show(PluginCall call) {
         main.post(() -> {
             if (!guard(call)) return;
+            if (TestCommerce.blocksAds(getContext())) { if (!overlay()) fail("billing-blocked"); call.resolve(snapshot()); return; }
             if (overlay()) { call.resolve(snapshot()); return; }
             if (!state.equals("ready") || ad == null) { call.reject("준비된 광고가 없습니다.", "not-ready"); return; }
             if (!foreground()) { call.reject("앱이 비활성 상태입니다.", "inactive"); return; }
@@ -218,6 +230,7 @@ public class TestAdsPlugin extends Plugin {
     @PluginMethod public void privacyOptions(PluginCall call) {
         main.post(() -> {
             if (!guard(call)) return;
+            if (TestCommerce.billingOverlay || TestCommerce.billingBusy) { call.resolve(snapshot()); return; }
             if (busy() || !privacyRequired || consent == null || !foreground()) { call.resolve(snapshot()); return; }
             discard(); final long id = ++attempt; update("privacy", "");
             try { UserMessagingPlatform.showPrivacyOptionsForm(getActivity(), formError -> safely(id, () -> {
@@ -236,6 +249,7 @@ public class TestAdsPlugin extends Plugin {
         }
     }
     @Override protected void handleOnDestroy() {
+        TestCommerce.adsChanged = null; TestCommerce.adOverlay = false;
         destroyed = true; attempt++; stopTimer(); discard(); main.removeCallbacksAndMessages(null);
         super.handleOnDestroy();
     }

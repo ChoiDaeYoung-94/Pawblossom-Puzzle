@@ -5,6 +5,7 @@ coverage/
 *.log
 android/.gradle/
 android/local.properties
+android/billing-test.properties
 android/**/build/
 *.jks
 *.keystore
