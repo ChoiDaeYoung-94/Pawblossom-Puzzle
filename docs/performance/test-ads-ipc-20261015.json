@@ -1,0 +1,1238 @@
+{
+  "dateKst": "2026-10-15",
+  "mode": "testing 소스 + Android IPC 대역",
+  "browser": "155.0.8059.41",
+  "checks": [
+    "실제 웹 플랫폼: 설정 광고 진입 없음·광고 IPC 0회",
+    "Android IPC 대역: 초기 요청 0회·명시적 load/show·중복 탭 각 1회·취소 실패 모달 유지·재시도 성공·닫힘 후 보드 복귀·게임 저장/음량 보존·리스너 1개",
+    "3개 비율×KO/EN×7개 상태: dialog 스크롤 없음·44px 버튼·화면 안 배치"
+  ],
+  "layouts": [
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "ko",
+      "state": "idle",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 119,
+          "h": 50
+        },
+        {
+          "id": "test-ad-show",
+          "w": 119,
+          "h": 50
+        },
+        {
+          "id": "test-ad-close",
+          "w": 119,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "ko",
+      "state": "consent",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 119,
+          "h": 52
+        },
+        {
+          "id": "test-ad-show",
+          "w": 119,
+          "h": 52
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 119,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "ko",
+      "state": "loading",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 119,
+          "h": 52
+        },
+        {
+          "id": "test-ad-show",
+          "w": 119,
+          "h": 52
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 119,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "ko",
+      "state": "ready",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 119,
+          "h": 52
+        },
+        {
+          "id": "test-ad-show",
+          "w": 119,
+          "h": 52
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 119,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "ko",
+      "state": "showing",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 119,
+          "h": 52
+        },
+        {
+          "id": "test-ad-show",
+          "w": 119,
+          "h": 52
+        },
+        {
+          "id": "test-ad-close",
+          "w": 119,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "ko",
+      "state": "closed",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 119,
+          "h": 50
+        },
+        {
+          "id": "test-ad-show",
+          "w": 119,
+          "h": 50
+        },
+        {
+          "id": "test-ad-close",
+          "w": 119,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "ko",
+      "state": "failed",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 119,
+          "h": 50
+        },
+        {
+          "id": "test-ad-show",
+          "w": 119,
+          "h": 50
+        },
+        {
+          "id": "test-ad-close",
+          "w": 119,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "en",
+      "state": "idle",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 119,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "en",
+      "state": "consent",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 119,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "en",
+      "state": "loading",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 119,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "en",
+      "state": "ready",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 119,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "en",
+      "state": "showing",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 119,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "en",
+      "state": "closed",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 119,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "en",
+      "state": "failed",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 119,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 119,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "language": "ko",
+      "state": "idle",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 139,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "language": "ko",
+      "state": "consent",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 139,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "language": "ko",
+      "state": "loading",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 139,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "language": "ko",
+      "state": "ready",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 139,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "language": "ko",
+      "state": "showing",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 139,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "language": "ko",
+      "state": "closed",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 139,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "language": "ko",
+      "state": "failed",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 139,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "language": "en",
+      "state": "idle",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 139,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "language": "en",
+      "state": "consent",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 139,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "language": "en",
+      "state": "loading",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 139,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "language": "en",
+      "state": "ready",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 139,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "language": "en",
+      "state": "showing",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 139,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "language": "en",
+      "state": "closed",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 139,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "language": "en",
+      "state": "failed",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 139,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 139,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "ko",
+      "state": "idle",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 250,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "ko",
+      "state": "consent",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 250,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "ko",
+      "state": "loading",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 250,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "ko",
+      "state": "ready",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 250,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "ko",
+      "state": "showing",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 250,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "ko",
+      "state": "closed",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 250,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "ko",
+      "state": "failed",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 250,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "en",
+      "state": "idle",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 250,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "en",
+      "state": "consent",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 250,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "en",
+      "state": "loading",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 250,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "en",
+      "state": "ready",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-cancel",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 250,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "en",
+      "state": "showing",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 250,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "en",
+      "state": "closed",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 250,
+          "h": 44
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "en",
+      "state": "failed",
+      "fits": true,
+      "scroll": false,
+      "controls": [
+        {
+          "id": "test-ad-load",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-show",
+          "w": 250,
+          "h": 44
+        },
+        {
+          "id": "test-ad-close",
+          "w": 250,
+          "h": 44
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "external": []
+}

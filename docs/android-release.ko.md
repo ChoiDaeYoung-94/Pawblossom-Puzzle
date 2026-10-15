@@ -6,7 +6,7 @@
 
 ## 광고·광고 제거 결제 도입 판단 (이슈 #51)
 
-2026-10-15 공식 자료와 배포 태그를 조사했습니다. 사용자님이 **첫 출시 준비 국가를 한국·미국**으로 선택했고, 어린이부터 중장년까지의 기획은 유지합니다. 아래는 구현 기준과 미완료 조건이며, SDK 설치·콘솔 설정·광고 표시·구매 검증을 완료한 기록이 아닙니다. 현재 앱에는 광고·결제 SDK나 작동하는 상품 UI가 없습니다.
+2026-10-15 공식 자료와 배포 태그를 조사했습니다. 사용자님이 **첫 출시 준비 국가를 한국·미국**으로 선택했고, 어린이부터 중장년까지의 기획은 유지합니다. 아래 #51 판단 당시에는 광고·결제 SDK나 작동하는 상품 UI가 없었습니다. 후속 #54에서 추가한 debug 전용 시험 광고와 미검증 범위는 아래 별도 구현 기록을 기준으로 합니다.
 
 ### 광고와 연령·동의
 
@@ -14,7 +14,7 @@
 
 다음 개발 단계는 **전체 요청에 아동 보호 설정을 적용한 Android 테스트 광고 한 형식**입니다. Google 테스트 ID만 사용하고 중개 네트워크를 추가하지 않습니다. 이는 시험 전략이며 운영 연령 확인이나 부모 동의의 면제 근거가 아닙니다. SDK 자동 초기화와 요청 전 보호 신호 적용, 병합 Manifest의 식별자 권한·실제 수집도 확인합니다. 설정·연령·동의·구매 상태가 불명확하면 자동 광고를 보류합니다.
 
-선정 후보 플러그인의 `initialize`에는 `tagForChildDirectedTreatment:true`, `tagForUnderAgeOfConsent:true`, `maxAdContentRating:General`(네이티브 `G`)을 검토합니다. UMP의 `requestConsentInfo({tagForUnderAgeOfConsent:true})`는 별도입니다. UMP 신호가 광고 요청에 자동 전달된다고 가정하지 않습니다. Google은 새 연령 제한 API도 제공하므로 실제 고정 GMA 버전과 기존 플래그의 지원을 다시 대조합니다. [플러그인 타입](https://github.com/capacitor-community/admob/blob/v8.2.1/src/definitions.ts), [AdMob 요청 설정](https://developers.google.com/admob/android/targeting), [UMP 미성년 처리](https://developers.google.com/admob/android/privacy/gdpr).
+#54에서 공식 문서와 실제 GMA 25.4.0 API를 대조해 정정했습니다. **광고 요청의 TFCD와 TFUA를 동시에 true로 설정하지 않습니다.** 둘 다 true이면 TFCD가 우선하며 두 API는 deprecated입니다. 실제 구현은 초기화 전에 `setAgeRestrictedTreatment(AgeRestrictedTreatment.CHILD)`와 최대 등급 `G`를 설정합니다. 별도로 UMP에는 `ConsentRequestParameters.setTagForUnderAgeOfConsent(true)`를 적용합니다. 이는 모든 시험 요청을 아동 보호 수준으로 다루는 설정이며 실제 이용자의 연령 판정이 아닙니다. [AdMob 요청 설정·상호작용](https://developers.google.com/admob/android/targeting), [GMA 변경 이력](https://developers.google.com/admob/android/rel-notes), [UMP 미성년 처리](https://developers.google.com/admob/android/privacy/gdpr).
 
 UMP는 앱 시작마다 정보를 갱신하고 필요한 양식을 표시한 뒤 `canRequestAds`를 확인합니다. 필요할 때 개인정보 선택 변경 진입점을 제공합니다. 요청 허용을 두 경로에서 확인해도 초기화·광고 요청은 중복 실행하지 않습니다. 앱 자체의 저장된 동의 값이나 `npa`만으로 이 흐름을 대체하지 않습니다. [UMP 구현](https://developers.google.com/admob/android/privacy).
 
@@ -52,6 +52,45 @@ Google은 클라이언트 승인 경로도 제공하므로 모든 일회성 상�
 4. 자동 검사는 설정 누락 차단·실패 무보상·중복 한 번 지급·pending 미지급을 다룹니다. 이후 서명한 테스트 트랙에서 광고 형식·부모/개인정보 동의 적용 조건·구매/복원·환불·오프라인을 실기기로 확인합니다.
 
 후속 콘솔 작업에는 최종 package ID, 실제 대상 연령대, KO/EN 상품명·설명, 변경/재사용할 수 없는 상품 ID, 가격·판매 국가·테스터, 광고 App ID(`~`)·단위 ID(`/`), 메시지·지원 연락처·개인정보처리방침·app-ads.txt가 필요합니다. 지금 계정 자격정보를 요청하거나 콘솔을 변경하지 않았습니다. [상품 등록](https://support.google.com/googleplay/android-developer/answer/1153481?hl=en), [Billing 테스트](https://developer.android.com/google/play/billing/test), [AdMob 앱 준비](https://support.google.com/admob/answer/9989980?hl=en), [app-ads.txt 검증](https://support.google.com/admob/answer/14538460?hl=en).
+
+## Android 전면 시험 광고 구현·검증 (이슈 #54)
+
+### 선택한 구조와 정확한 버전
+
+`@capacitor-community/admob@8.2.1`의 [package.json](https://github.com/capacitor-community/admob/blob/v8.2.1/package.json), [Gradle](https://github.com/capacitor-community/admob/blob/v8.2.1/android/build.gradle), [AdMob.java](https://github.com/capacitor-community/admob/blob/v8.2.1/android/src/main/java/com/getcapacitor/community/admob/AdMob.java), Manifest를 직접 읽었습니다. Node 22 이상·Capacitor 8 계열 선언과 프로젝트의 core/android 8.5.3이 맞습니다. 태그의 `load()`는 네이티브 광고 배치용 WebView 메시지 리스너를 등록하고 `initialize()`는 보호 설정 후 GMA를 초기화하지만, release에서 SDK 자체를 제외하는 구조는 제공하지 않습니다. 기본 GMA는 동적 `25.4.+`입니다.
+
+이번에는 npm 광고 래퍼를 설치하지 않고 Capacitor 공개 API로 전면 광고만 노출하는 작은 Java 브리지를 자체 작성했습니다. 외부 구현 소스를 복사하지 않았습니다. `src/debug` 브리지와 `debugImplementation`을 사용해 **GMA 25.4.0·UMP 4.0.0을 strictly 고정**하고, release에는 등록 함수의 빈 구현만 둡니다. 별도 flavor·중개 네트워크·범용 광고 계층은 추가하지 않았습니다. npm 잠금 파일을 유지하며 core/android 8.5.3·CLI 8.4.3을 사용합니다. CLI 고정은 기존 audit 대응을 유지한 결정이며 이번 `npm audit`도 0건입니다. SDK/서비스 약관을 대신하는 별도 승인을 만들거나 계정·콘솔을 설정하지 않았습니다.
+
+### 기본 꺼짐과 네이티브 시작 경계
+
+- 웹 빌드는 `testing` 모드일 때만 `androidTestAds:true`를 기록합니다. 실제 Android 플랫폼과 네이티브 플러그인 존재까지 확인해야 설정에 **시험 광고** 진입이 생깁니다. development·일반 production·웹 testing에서는 광고 IPC를 호출하지 않습니다.
+- 진입은 상태 조회만 합니다. **테스트 광고 불러오기 → 준비됨 → 테스트 광고 표시**의 두 번의 명시적 선택이 필요합니다. 자동 요청·자동 표시·게임 보상·구매 UI는 없습니다. 활성화 선택을 기기에 저장하지 않습니다.
+- 네이티브는 매 명령에서 패키지의 build-info 두 boolean true·debuggable·공식 샘플 App ID를 재확인합니다. 마커 누락·손상·타입 불일치 또는 구성 불일치면 SDK 호출 전에 거부합니다.
+- Google 공식 [샘플 App ID](https://developers.google.com/admob/android/quick-start) `ca-app-pub-3940256099942544~3347511713`와 [전면 테스트 단위](https://developers.google.com/admob/android/interstitial) `ca-app-pub-3940256099942544/1033173712`만 코드에 고정했습니다. 호출자가 다른 ID·지역 강제·연령 값을 전달할 인터페이스는 없습니다.
+- debug Manifest에서 `MobileAdsInitProvider`를 제거하고 `DELAY_APP_MEASUREMENT_INIT=true`를 넣었습니다. `AD_ID` 및 AdServices 광고 ID·기여·주제 권한도 제거했습니다. JS 꺼짐만으로 초기화를 제어하지 않습니다. 브리지 생성자/`load()`에는 SDK 호출이 없습니다. release 의존성과 병합 Manifest에서는 GMA·UMP·샘플 App ID·광고 브리지 자체를 제외합니다.
+
+자동 Provider 제거는 일반 Google 통합 가이드의 기본 경로를 변경한 debug 시험 선택입니다. 다운로드한 실제 `play-services-ads-api-25.4.0.aar`의 `javap`에서 `MobileAdsInitProvider.attachInfo → zzev.attachInfo`의 Manifest 검사/설정 경로와 `MobileAds.initialize(Context, listener) → zzeu.zzc`의 별도 초기화 진입을 확인했습니다. `play-services-ads-25.4.0.aar`의 `internal.util.zzs`에도 PackageManager의 ApplicationInfo.metaData에서 `ads.APPLICATION_ID`를 읽고 형식을 확인하는 별도 함수가 있습니다. 따라서 App ID 메타데이터를 남기고 명시적 초기화 경로를 사용하는 구조로 작성했지만, **Provider 제거 상태의 실제 SDK 초기화 성공은 컴파일만으로 증명되지 않습니다.** 실기기 UMP·GMA 실행으로 확인해야 합니다. debug에는 AndroidX Startup의 WorkManager·Emoji·Lifecycle·ProfileInstaller 초기화와 SDK 전이 구성요소가 남습니다. 이 조사만으로 SDK의 모든 내부 동작이나 재시작·백그라운드 네트워크 무수집을 입증한 것은 아닙니다. 출시 release에는 이 광고 의존성이 없습니다.
+
+### 동의·상태·복귀
+
+명시적 불러오기마다 GMA `CHILD/G` 설정 → UMP 미성년 파라미터 → consent info 갱신 → 필요한 양식 → `canRequestAds` 및 UNKNOWN 아님 확인 → GMA 초기화 → 테스트 광고 load 순서로 실행합니다. 요청에는 추가로 `npa=1`을 사용하지만 이를 동의 대체로 삼지 않습니다. 이전 저장 동의로 오류를 우회하지 않습니다. 샘플 App ID의 UMP 갱신이 실패하거나 동의가 불명확하면 광고를 차단합니다. 필요한 개인정보 선택 진입은 양식을 다시 열며 그 뒤 광고를 자동 요청하지 않습니다. 기본 꺼짐 정책 때문에 앱 시작 시 UMP 통신도 하지 않고, 해당 실행에서 사용자가 처음 요청할 때부터 갱신합니다.
+
+로딩·준비·표시 요청·표시·실패·닫힘·취소·개인정보 처리 상태를 KO/EN으로 안내합니다. prepare 중복, 네이티브 attempt별 늦은 응답, revision별 역순/중복 이벤트를 차단합니다. SDK initialize 대기·consent 정보/양식 load·광고 load에는 45초 제한이 있고 취소 뒤 늦은 광고를 표시하지 않습니다. 이미 표시 요청한 전면 광고나 실제 열린 개인정보 양식은 JS 시간 초과로 닫힘/승인 처리하지 않습니다. SDK 응답이 오지 않으면 앱 재실행 안내를 사용합니다.
+
+광고/양식 진행 상태를 기존 `syncActivity`에 합쳐 보드·키보드 접근·오디오를 중지합니다. 닫힘/실패 후에도 문서·native 활성 상태, 화면과 기존 modal 조건을 모두 적용합니다. 표시 중 native stop을 광고 종료로 오인하지 않습니다. 준비된 광고는 폐기를 확인한 뒤에만 시험 창을 닫고, IPC 오류는 재조회/취소 재시도로 복구합니다. 앱 초기 상태 조회가 실패해도 돌아갈 수 있습니다. 이벤트 리스너는 한 개를 유지하고 페이지 종료에 제거합니다. 게임 저장/보상/음량 설정을 광고 경로에서 변경하지 않습니다.
+
+시험 창에는 무보상·기본 꺼짐·운영 연령 확인/부모 동의의 대체가 아님·UMP가 앱 전체의 동의가 아님을 명시합니다. 한국·미국/어린이 포함 기획과 운영 ID·결제·콘솔·출시 대상 국가는 바꾸지 않았습니다.
+
+### 검증 기록과 남은 범위
+
+검증 명령은 `scripts/use-dev-tools.ps1`로 환경을 적용한 **실제** `C:\Users\user\Documents\ChatGPT\match3` 경로에서 실행했습니다. 옛 pc_17 junction을 작업 경로로 사용하면 cap 생성 경로와 Gradle 캐시가 섞일 수 있어 실제 경로로 통일했습니다. 최초 캐시 충돌/daemon 종료 뒤 해당 프로젝트의 `gradlew clean` 및 `--no-daemon --max-workers=2 -Dorg.gradle.jvmargs=-Xmx1024m`으로 빌드가 성공했습니다. 다른 프로젝트의 프로세스·공용 캐시를 지우지 않았습니다.
+
+- 자동 테스트 **162개**(기존 142개+신규 20개), 일반·testing 타입/웹 빌드, Chrome의 회차 저장 8항목·키보드 12항목 회귀를 확인했습니다. 추가 광고 상태/활동/취소 실패 회귀는 `tests/test-ads.test.ts`, `tests/ui-flow.test.ts`에 있습니다.
+- `scripts/test-ads-qa.mjs`는 격리 headless Chrome만 사용하고 종료합니다. 웹 플랫폼의 실제 진입 없음/IPC 0회와 Android **IPC 대역**의 3비율 × KO/EN × 7상태(42개) dialog 화면 안 배치·스크롤 없음·44px, 명시적 load/show·중복·취소 실패/복구·보드 복귀·저장/음량 보존을 확인합니다. 대역은 실제 광고 재생 증거가 아닙니다. [IPC 측정](performance/test-ads-ipc-20261015.json), [시험 웹 측정](performance/test-ads-testing-web-20261015.json), [production 측정](performance/test-ads-production-20261015.json), [한국어 오류 화면](screenshots/test-ad-error-ko.png), [영어 가로 오류 화면](screenshots/test-ad-error-landscape-en.png).
+- `:app:assembleDebug`·`:app:lintDebug`와 정확한 debug SDK 의존성 검사를 수행했습니다. lint는 minSdk 24에 없는 `readAllBytes()` 대신 read 루프를 사용하며 새 NewApi 오류가 없습니다. 처음 나타난 기존 local.properties `C:`의 PropertyEscape 오류는 Git 제외 로컬 설정을 `C\:`로 바로잡았습니다. 최종 lint는 0 errors/15 warnings로, 기존 리소스/Manifest 순서·도구 버전 관련 경고입니다. [네이티브 산출물 측정](performance/test-ads-native-20261015.json).
+- `scripts/android-test-ads-qa.ps1`로 시험·마커 누락·손상·필드 누락·문자열 boolean의 release 차단을 재현하고 원본 마커를 finally로 복구했습니다. production 에셋 재동기화 뒤 `bundleRelease`가 성공했습니다. release RuntimeClasspath와 Manifest에 GMA/UMP 광고 항목이 없고, 실제 AAB의 1개 DEX에서 광고 SDK/브리지 descriptor 부재를 확인했습니다. 최종 dist의 27개 파일은 Android production 웹 에셋과 SHA-256이 모두 같으며 두 마커는 모두 false입니다. [차단 측정](performance/test-ads-release-guard-20261015.json).
+
+이번 Android 빌드는 검증용이며 앱 버전 증가·APK 전달·Drive 업로드는 하지 않습니다. **실제 Android 광고/UMP 실행, Provider 제거 후 초기화, 닫기 버튼의 5초 조건, 네트워크 실패·홈 복귀·백그라운드 수집, 아동/부모 동의·Families/한국·미국 운영 적합성은 미검증입니다.** 기기·에뮬레이터가 연결되어 있지 않습니다. 이 상태는 출시 준비 완료가 아니며 release에서 광고는 계속 제외됩니다.
 
 ## APK 빌드 이력
 
@@ -139,8 +178,8 @@ CLI는 8.4.3으로 고정했습니다. 최초 8.5.3 CLI의 전이 개발 의존�
 
 1. 실제 Android에서 첫 실행, 네 방향 스와이프, 다중 터치, 연쇄 중 백그라운드 전환과 복귀를 확인합니다.
 2. 실제 스피커로 BGM·효과음의 음량과 음색, 끊김, 음소거 복원을 조정합니다.
-3. 테스트 ID 광고와 결제를 연결하고 실패·취소·구매 복원을 확인합니다.
+3. #54 시험 광고의 실제 기기 표시·동의·실패·취소를 검증하고, 이후 별도 결제 연결과 구매 복원을 확인합니다.
 4. 최종 앱 ID, 업로드 키와 키 보관, 서명 AAB, 스토어 소재·개인정보 문서·연령 및 데이터 설문을 준비합니다.
 5. Play Console 테스트 요구사항을 해당 계정에서 확인하고 테스트 트랙부터 진행합니다.
 
-현재 광고·결제 SDK는 미설치이며 게임 진행은 기기에 저장합니다. 저장소만으로 스토어 공개나 수익화가 완료되지는 않습니다. [Capacitor Android 공식 문서](https://capacitorjs.com/docs/android)를 환경 설정 기준으로 사용합니다.
+현재 광고 SDK는 debug 전용 시험 경로에만 있고 release에서 제외됩니다. 결제 SDK는 미설치이며 게임 진행은 기기에 저장합니다. 저장소만으로 스토어 공개나 수익화가 완료되지는 않습니다. [Capacitor Android 공식 문서](https://capacitorjs.com/docs/android)를 환경 설정 기준으로 사용합니다.
