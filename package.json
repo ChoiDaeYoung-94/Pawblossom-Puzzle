@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run assets:check && tsc --noEmit && vite build",
+    "assets:generate": "node scripts/generate-launcher-assets.mjs",
+    "assets:check": "node scripts/generate-launcher-assets.mjs --check",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "balance:report": "node scripts/balance-report.mjs",

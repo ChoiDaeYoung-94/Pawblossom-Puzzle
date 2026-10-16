@@ -4,7 +4,22 @@
 
 사용자님은 회사의 테스트 폰에서 Google Drive APK를 내려받아 확인합니다. 개발 PC에 바로 USB를 연결할 수 있다는 전제로 작업하지 않습니다. 배포 파일은 개인 Drive의 `Pawblossom Puzzle 테스트` 폴더에 관리하며, 다운로드 링크는 사용자님께 직접 전달합니다. 파일을 올린 것과 실기기 검증 완료를 구분합니다.
 
-## 최신 전달 빌드 (v0.1.1)
+## 최신 전달 빌드 (v0.1.2)
+
+2026-10-14 음량 확대 [PR #17](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/17), 특수 범위 표시 [PR #19](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/19), Android 아이콘 [PR #21](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/21)을 함께 반영한 APK입니다. 기존 개인 Drive 테스트 폴더에서 APK·버전별 체크섬·안내문 3개 업로드 완료 표시와 파일 목록을 확인했습니다. 기존 버전 파일은 보존했습니다. 커넥터는 기존 폴더에 접근할 수 없어 기존 작업용 Chrome Drive 탭을 사용했고 새 창을 만들지 않았습니다.
+
+- 파일: `Pawblossom-Puzzle-v0.1.2-2026-10-14-c0fc661-debug.apk`
+- 코드·Android 리소스 기준: `c0fc661` (후속 변경은 전달 기록 문서)
+- versionName 0.1.2 / versionCode 3, minSdk 24 / targetSdk 36
+- 크기: 8,919,991바이트
+- SHA256: `12f5a4895b93f8e3ad348dfda97b5990db679696110aa63c6efee2b35e0f8018`
+- APK v2 서명 통과, 기존 테스트 APK와 같은 인증서
+- APK 안의 JS·CSS가 현재 웹 빌드와 SHA256이 같은 것을 확인
+- 자동 검사 57개·원본/생성 에셋 일치 검사·웹/Android 빌드·3개 PR의 Node 22/24 CI 통과
+
+기존 앱 위에 업데이트하고 우선 소리 크기와 음악/효과음 균형을 확인합니다. 특수 제거 범위 표시·아이콘·시작 화면과 회전·연속 터치·홈 복귀·설정 유지도 확인합니다. 실제 광고·결제는 포함하지 않았고 출시 AAB의 키 서명은 미완료입니다. 출력 RMS 비교는 [오디오 기록](audio-direction.ko.md), 범위 표시는 [플레이 수정 기록](mobile-play-feedback.ko.md), 아이콘은 [제작 기록](assets.ko.md)에 있습니다.
+
+## 이전 전달 빌드 (v0.1.1)
 
 2026-10-14 실기기 피드백을 반영한 [PR #15](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/15)의 테스트 빌드를 기존 개인 Drive 테스트 폴더에 업로드했습니다. APK·날짜별 체크섬·테스트 안내문 3개 완료 표시와 파일 목록을 확인했습니다. Google Drive 커넥터는 다른 계정에 연결되어 폴더가 조회되지 않아 사용자님의 기존 작업용 Chrome Drive 탭을 사용했습니다. 새 Chrome 창을 만들지 않았습니다.
 
