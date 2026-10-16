@@ -22,9 +22,9 @@ function harness(){
 const step:ResolveStep={before:[],after:[],removed:Array.from({length:64},(_,i)=>({row:Math.floor(i/8),col:i%8})),effects:[{row:2,col:2,special:'row'},{row:4,col:4,special:'bomb'}]};
 afterEach(()=>vi.unstubAllGlobals());
 describe('낙엽과 퍼즐 임시 연출',()=>{
-  it('겹 감소와 완전 제거를 서로 다른 기호로 표시하고 실제 변경 값만 사용합니다',()=>{
+  it('한 겹 감소는 추가 숫자 팝업 없이 날림만, 완전 제거는 체크를 표시합니다',()=>{
     const h=harness();h.effects.leafHit({row:2,col:2,before:2,after:1});
-    expect(h.objects.filter(obj=>obj.kind==='text').map(obj=>obj.value)).toEqual(['2 → 1']);
+    expect(h.objects.filter(obj=>obj.kind==='text')).toEqual([]);
     expect(h.objects.filter(obj=>obj.name==='leaf-chip')).toHaveLength(2);
     h.effects.leafHit({row:3,col:3,before:2,after:0});
     expect(h.objects.filter(obj=>obj.kind==='text').at(-1)?.value).toBe('✓');
@@ -48,8 +48,9 @@ describe('낙엽과 퍼즐 임시 연출',()=>{
   it('움직임 줄이기에서는 겹 숫자와 완료 표시는 남기고 날림·이동 장식을 생략합니다',()=>{
     vi.stubGlobal('window',{matchMedia:()=>({matches:true})});
     const h=harness();h.effects.leafHit({row:1,col:1,before:2,after:1});h.effects.match(step,1);h.effects.special(step);
-    expect(h.objects.map(obj=>obj.name)).toEqual(['leaf-hit-pulse','leaf-hit-label']);
+    expect(h.objects.map(obj=>obj.name)).toEqual(['leaf-hit-pulse']);
+    h.effects.leafHit({row:1,col:1,before:1,after:0});
     expect(h.tweens.every(config=>config.x===undefined&&config.y===undefined&&config.angle===undefined)).toBe(true);
-    expect(h.objects[1].value).toBe('2 → 1');h.finish();expect(h.effects.activeCount).toBe(0);
+    expect(h.objects.at(-1)?.value).toBe('✓');h.finish();expect(h.effects.activeCount).toBe(0);
   });
 });

@@ -207,7 +207,7 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     h.run('startLevel(4);scene.hooks.onMove([0,0,0,14,12,0],260,1,4)');h.flushResults();
     expect(h.stored()).toMatchObject({completed:[1,4],stars:2,coins:80});
     h.run('startLevel(6)');expect(h.run('clearedLeaves')).toBe(0);
-    expect(h.element('#board-hint-text').textContent).toContain('2 → 1');
+    expect(h.element('#board-hint-text').textContent).toContain('2 means two layers');
     h.run("changeLanguage('ko')");expect(h.element('#board-hint-text').textContent).toContain('두 겹');
   });
   it('꽃밭 성장은 별 2개를 한 번만 쓰고 저장·그림·최대 5개 제한을 유지합니다',()=>{
