@@ -99,7 +99,8 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
       },
       isPaused: () => this.paused, isActive: () => !this.paused, pause:()=>{this.paused=true;this.pauses++;}, resume:()=>{this.paused=false;this.resumes++;},
     };
-    scale = { refresh() {} };
+    isBooted=true;
+    scale = { getParentBounds() {},refresh() {} };
     destroy() {destroys++;}
   }
   class AudioStub {
@@ -291,14 +292,15 @@ function boardHarness() {
     };
   }
   const engineExports: Record<string, unknown> = {}, boardExports: Record<string, unknown> = {};
-  const effectsExports:Record<string,unknown>={};vm.runInNewContext(effectsCode,{exports:effectsExports});
+  const motionExports={reducedMotion:()=>false};
+  const effectsExports:Record<string,unknown>={};vm.runInNewContext(effectsCode,{exports:effectsExports,require:()=>motionExports});
   vm.runInNewContext(engineCode, { exports: engineExports });
   vm.runInNewContext(boardCode, {
     exports: boardExports,
     require: (name: string) => name === 'phaser' ? { default: {
       Scene: PhaserSceneStub,
       Scenes: { Events: { PAUSE: 'pause', RESUME: 'resume', SLEEP: 'sleep', WAKE:'wake', SHUTDOWN: 'shutdown', DESTROY:'destroy', CREATE:'create' } },Scale:{Events:{RESIZE:'resize'}},
-    } } : name==='./BoardEffects'?effectsExports:engineExports,
+    } } : name==='./BoardEffects'?effectsExports:name==='./reducedMotion'?motionExports:engineExports,
   });
   const Constructor = boardExports.BoardScene as new (hooks: object) => {
     create(): void; paint: () => void; resetHint: () => void; pieces:unknown[][];
@@ -315,6 +317,10 @@ function boardHarness() {
 }
 
 describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
+  it('숨김 화면에서 보드 복귀는 현재 부모 크기를 먼저 읽어 입력 좌표를 계산합니다',()=>{
+    const h=mainHarness();h.run(`switchView('settings');globalThis.boundsOrder=[];game.scale.getParentBounds=()=>boundsOrder.push('parent');game.scale.refresh=()=>boundsOrder.push('canvas');switchView('puzzle');`);
+    expect(h.run('boundsOrder')).toEqual(['parent','canvas']);expect(h.run('game.paused')).toBe(false);
+  });
   it.each(['pause','resume','sleep','shutdown','destroy'])('%s는 보드 키보드 커서와 선택·포인터를 정리합니다',event=>{
     const h=boardHarness();h.scene.focusKeyboard();h.scene.keyboardKey('ArrowRight');h.scene.selected={row:1,col:1};h.scene.down={pointerId:1};
     expect(h.scene.keyboardState().cursor).toEqual({row:0,col:1});h.lifecycle[event]();

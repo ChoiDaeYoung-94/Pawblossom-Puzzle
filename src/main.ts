@@ -428,7 +428,8 @@ function switchView(name:string){
   route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
   document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(b=>{b.classList.toggle('active',b.dataset.route===name);if(b.dataset.route===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   updateSaveStatus();
-  if(name==='puzzle'&&game.isBooted)game.scale.refresh();syncActivity();
+  // Phaser refresh는 직전 parentSize로 계산하므로 숨김→표시 직후 부모 크기를 먼저 갱신합니다.
+  if(name==='puzzle'&&game.isBooted){game.scale.getParentBounds();game.scale.refresh();}syncActivity();
 }
 document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(button=>button.onclick=()=>switchView(button.dataset.route!));
 $('#settings-button').onclick=()=>switchView(route==='settings'?'puzzle':'settings');
@@ -471,7 +472,7 @@ if(Capacitor.isNativePlatform()){
 if(androidAdEntry)$<HTMLDialogElement>('#test-ad-dialog').addEventListener('cancel',event=>{event.preventDefault();void closeAdDialog();});
 if(androidBillingEntry)$<HTMLDialogElement>('#test-billing-dialog').addEventListener('cancel',event=>{event.preventDefault();closeBillingDialog();});
 if(typeof ResizeObserver!=='undefined'){
-  new ResizeObserver(()=>{if(game?.isBooted)game.scale.refresh();}).observe($('#game-canvas'));
+  new ResizeObserver(()=>{if(game?.isBooted&&route==='puzzle'){game.scale.getParentBounds();game.scale.refresh();}}).observe($('#game-canvas'));
 }
 const resumed=Boolean(save.inProgress);
 const resumedStored=resumeNormal();updateWallet();renderViews();localize();

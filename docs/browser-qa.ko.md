@@ -1,3 +1,29 @@
+## 2026-10-16 · 보드 모션 감소와 화면 복귀 입력 (이슈 #70)
+
+기준 `4f750dec9753473b2f369e87bc1bbd3ffa0e65d3`의 `codex/68-localization-version`에서 `codex/70-reduced-motion-board`로 작업했습니다. `BoardScene`과 `BoardEffects`가 같은 OS 선호 조회 함수를 사용합니다. 모션 감소 상태의 선택은 안쪽 테두리+체크, 힌트는 두 칸 테두리+연결선/밑줄로 표시해 키보드 바깥 이중 테두리/모서리와 구분합니다. 비필수 확대·바운스·교환/낙하 공간 tween·제거 축소/상승 점은 생략합니다. 매치 제거는 180ms fade, 특수 범위는 실제 제거 칸/방향 표시, 낙엽은 단계별 겹 수와 완료 체크를 유지합니다. 새 외부 에셋·설정 UI·제품 디버그 진입은 없습니다.
+
+**적용 경계:** 포인터 제스처 시작/탭·키보드 진입/조작·7.5초 힌트 표시·교환 시작/무효 원복·제거·낙하 시작 시 OS 설정을 조회합니다. 이미 실행 중인 tween을 OS 변경 순간에 전부 취소하지는 않습니다. 다음 조작에서 이전 선택 확대/바운스 또는 정적 표시를 정리하고 현재 모드로 다시 표시하며, 다음 제거/낙하 단계는 새 선호를 읽습니다. OS용 matchMedia listener는 추가하지 않았습니다. 일반 모드의 연출 수치와 엔진 판정·난수·오디오 호출·대기 순서(교환 140ms, 무효 원복 150ms, 특수 범위 180ms, 제거 후 200ms, 낙하 후 300ms, 셔플 단계 250ms)는 유지합니다.
+
+취소된 새 터치의 `wasCanceled` 종료는 기존 선택을 유지하던 의미를 보존합니다. 이때 정적 선택이 보이는 것은 기존 선택이 유효하기 때문이며, 이동/점수는 소비하지 않습니다. Escape는 포인터 down과 선택/선택 확대만 정리하고 키보드 커서·힌트는 직접 지우지 않습니다. blur·PAUSE/RESUME/SLEEP/WAKE·섞기·종료는 `cancelInput`으로 선택/힌트/확대·커서·포인터를 정리합니다. `pointerupoutside`는 진행 중인 주체 포인터의 종료일 때만, `gameout`/resize는 down이 있을 때만 이 전체 취소를 적용합니다. 포인터 제스처가 없는 gameout/resize는 키보드 상태를 보존합니다. 정적 Graphics는 종류별 한 객체를 재사용하고 Scene 종료 시 참조를 비우며, 기존 BoardEffects의 120개 상한과 tween 정리를 유지합니다.
+
+반복 검사에서 **동일한 CSS 수정 전 dist에서도 간헐적 화면 복귀 실패**를 확인했습니다. 부모 DOM은 224×224인데 숨김 상태에서 만든 Phaser inline 크기/입력 bounds가 0으로 남아, 실제 캔버스가 다시 224×224로 보인 뒤에도 터치 좌표가 유효하지 않았습니다. 부모 크기 재조회나 rAF 갱신만으로 통과/실패가 섞였으므로 재시도 통과를 완료 근거로 삼지 않았습니다. 정사각 부모가 canvas의 CSS 표시 크기를 소유하도록 명시하고, 복귀/ResizeObserver에서 부모 크기를 먼저 조회하며 숨김 화면의 불필요한 refresh를 피했습니다. 최종 반복 검사는 복귀 후 고정 지연을 넣지 않고 실제 터치와 bounds/배율을 검사합니다.
+
+| 검사 | 결과와 근거 |
+| --- | --- |
+| 전체 자동 검사 | `npm test` **349개 통과**. Scene 회귀 **94개**를 두 모드로 실행해 기존 포인터 취소/다중 입력·객체 보존·특수·낙엽·키보드·수명 경계와 정적 선택/힌트·설정 반전/진행 중 변경을 검사했습니다. 동일 시드 두 모드의 엔진 결과/보드·오디오 호출·대기 순서 일치, UI 복귀 부모 조회 순서도 확인했습니다. Phaser/DOM 대역 검사는 실제 브라우저 입력과 구분합니다. |
+| testing 전체 브라우저 | `npm run build:test`와 격리 headless Chrome에서 **두 모드 × KO/EN × 320×568·640×360 = 8개 표본**. [기술 JSON](performance/issue-70-reduced-motion-testing-20261016.json). |
+| production 전체 브라우저 | `npm run build`와 동일 **8개 표본**. [기술 JSON](performance/issue-70-reduced-motion-production-20261016.json). 마지막 dist의 `testTools/androidTestAds/androidTestBilling`은 **모두 false**입니다. |
+| 독립 화면 복귀 반복 | 각 빌드의 별도 Chrome 실행·새 문맥 **8개 × 10회 = 80회** 설정 왕복, 그중 40회 안내 모달을 포함합니다. 매회 복귀 즉시 실제 canvas 터치 선택과 양수 bounds/유한 입력 배율을 확인했습니다. 전체 검사의 40회 왕복과 합쳐 **빌드별 120회**, 두 빌드 총 240회입니다. [testing](performance/issue-70-scale-recovery-testing-20261016.json), [production](performance/issue-70-scale-recovery-production-20261016.json). |
+| 추가 화면 smoke | production의 두 모드 × **390×844·1280×800 = 4개 표본**. 정사각 보드·화면 내 배치, KO 실제 touchscreen/EN 실제 mouse의 선택 좌표와 자연 보드 유효 교환·이동 1회/점수·저장 주의 배지 없음(`saveWarning:false`)을 확인했습니다. 별도 fixture 저장 거부 진단은 `fixtureSave` 필드로 구분합니다. [기술 JSON](performance/issue-70-layout-smoke-production-20261016.json). |
+
+전체 표본은 자연 생성 보드의 **실제 두 칸 touchscreen 탭 → 실제 엔진 swap 판정 → 이동 1회/점수/안정 저장**부터 확인합니다. 메모리에만 주입한 보드/낙엽 fixture에서는 실제 탭 무효 교환·일반 매치의 낙엽 2→1·특수 즉시 탭 `activate`의 2→0·특수+특수 CDP touch drag `swap`의 콤보를 구분합니다. 임시 관찰 래퍼는 tween 공간 속성, 단계별 낙엽 상태, 생존 객체 동일성, 대기와 엔진 결과를 읽습니다. 특수 범위 Graphics가 실제 표시된 구간도 확인합니다. UI 설정/안내·CDP touchCancel/outside·키보드 전환·실시간 media 전환은 실제 입력이고, 테스트용 `paint/showHint/cancelInput` 호출과 fixture 주입은 브라우저 내 관찰/준비 작업입니다. 제품 소스나 dist 파일을 수정하여 이런 진입을 남기지 않았습니다. dist 응답에서만 Game 참조를 노출해 검사합니다.
+
+fixture의 낙엽 배치/남은 총수는 실제 레벨 30의 정상 checkpoint 조건과 다르므로 저장 검증에서 거부되며, 콤보 스크린샷의 저장 주의 배지는 이 검사 준비로 생긴 예상 결과입니다. **fixture 구간과 해당 스크린샷은 정상 저장 근거가 아닙니다.** 별도 메모리 낙엽 주입→실제 특수 탭으로 경고 발생과 직전 자연 보드 저장의 불변을 재확인했고, 자연 보드 smoke 4개에서는 실제 저장 반영 및 경고 없음이 통과했습니다. 제품 저장 검증은 완화하거나 변경하지 않았습니다.
+
+각 전체 표본에서 선택/7.5초 힌트/유효·무효 교환/특수·콤보/겹낙엽/취소·모달/OS 설정 양방향 전환/섞기/5회 Scene 교체/객체 정리/가로 넘침을 확인합니다. 기술 JSON은 `src/main.ts`, CSS, Scene/Effects/공통 함수, 두 회귀 테스트와 QA 스크립트 및 실제 실행 dist JS/CSS·index·build-info의 SHA-256을 보존합니다. 대표 [모션 감소 선택](screenshots/issue-70-production-reduce-ko-320-selection.png), [정적 힌트](screenshots/issue-70-production-reduce-hint.png), [특수 범위](screenshots/issue-70-production-reduce-combo.png), [일반 모드 가로](screenshots/issue-70-production-no-preference-en-640-selection.png)를 별도 이슈 #70 이름으로 저장했고 이전 QA 이미지는 보존했습니다. 자체 HTTP 서버는 띄우지 않고 Playwright route로 dist를 제공했으며 격리 Chrome은 finally에서 종료합니다.
+
+Android OS/WebView의 실제 움직임 줄이기 설정·작은 화면 가독성·손가락 조작감·회전/중단 복귀·사용자 최종 감각 검수는 **미완료**입니다. 단말 테스트·APK 전달은 폰 연결까지 보류합니다. 새 APK/AAB·Android 동기화·버전 증가·Drive/콘솔·광고/결제 설정 변경은 없습니다. 웹 빌드의 기존 큰 청크 경고는 유지합니다.
+
 ## 2026-10-16 · 화면 언어와 버전 단일 원본 (이슈 #68)
 
 이슈 #66의 clean `e3a8373`에서 `codex/68-localization-version`으로 작업했습니다. 지역/친구 제목과 핍 alt를 KO/EN 번역에 연결하고 주 메뉴의 초기 aria-label을 기존 동적 번역과 맞췄습니다. 헤더 언어 버튼의 접근성 이름도 전환 대상 언어에 맞춥니다. 열린 결과창의 문구만 갱신하며 보상·저장 확정·종료음·300ms 타이머·이미지 요청·버튼 DOM을 다시 만들지 않습니다. 안내/실습/시험 선택창과 설정의 교체된 초점은 같은 ID로 복원합니다. 표시 중인 짧은 알림만 번역하며, 시간이 끝난 토스트/애니메이션은 언어 변경 때문에 다시 발표하지 않습니다.

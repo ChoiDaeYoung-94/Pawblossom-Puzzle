@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BoardEngine, seededRng, type Tile, type Position, type ResolveStep } from '../src/core';
 
 class Piece {
@@ -13,13 +13,13 @@ class Piece {
   destroy(){this.destroyed=true;}
 }
 class Graphic {
-  destroyed=false;alpha=1;rectangles:number[][]=[];lines:number[][]=[];
+  destroyed=false;alpha=1;rectangles:number[][]=[];lines:number[][]=[];strokes:number[][]=[];
   fillStyle(){return this;}lineStyle(){return this;}setDepth(){return this;}
   fillRoundedRect(...values:number[]){this.rectangles.push(values);return this;}
-  strokeRoundedRect(){return this;}fillCircle(){return this;}strokeCircle(){return this;}
+  strokeRoundedRect(...values:number[]){this.strokes.push(values);return this;}fillCircle(){return this;}strokeCircle(){return this;}
   lineBetween(...values:number[]){this.lines.push(values);return this;}
   setName(){return this;}setPosition(){return this;}
-  clear(){return this;}
+  clear(){this.rectangles=[];this.lines=[];this.strokes=[];return this;}
   destroy(){this.destroyed=true;}
 }
 vi.mock('phaser',async()=>{
@@ -48,7 +48,13 @@ interface RenderScene {
   busy:boolean;finished:boolean;
   keyboardState:BoardScene['keyboardState'];focusKeyboard:BoardScene['focusKeyboard'];keyboardKey:BoardScene['keyboardKey'];cancelInput:BoardScene['cancelInput'];stopPlaying:BoardScene['stopPlaying'];
   create():void;down?:unknown;input:{emit(event:string,pointer?:unknown):void;listenerCount(event:string):number};events:{emit(event:string):void;listenerCount(event:string):number};scale:{emit(event:string):void;listenerCount(event:string):number};
+  showHint():void;selectionMark?:Graphic;hintMark?:Graphic;cursorMark?:Graphic;hintPieces:Piece[];
+  tweens:{add(config:Record<string,unknown>):void;killTweensOf(target:unknown):void};wait(ms:number):Promise<void>;
 }
+
+describe.each([false,true])('보드 모션 감소=%s',reduced=>{
+beforeEach(()=>vi.stubGlobal('window',{matchMedia:()=>({matches:reduced})}));
+afterEach(()=>vi.unstubAllGlobals());
 
 describe('보드 포인터 종료 (Phaser 입력 대역)',()=>{
   const pointer=(overrides:Record<string,unknown>={})=>({id:1,x:44,y:44,downTime:1,wasTouch:true,wasCanceled:false,event:{touches:[{}]},...overrides});
@@ -67,6 +73,19 @@ describe('보드 포인터 종료 (Phaser 입력 대역)',()=>{
     scene.input.emit('pointerup',pointer({id:0,wasTouch:false,button:2}));expect(scene.down).toBeDefined();
     scene.input.emit('pointerup',mouse);expect(scene.keyboardState().selected).toEqual({row:0,col:0});scene.cancelInput();
     scene.input.emit('pointerdown',pointer({wasTouch:false,button:2}));scene.input.emit('pointerup',pointer({wasTouch:false,button:2}));expect(scene.keyboardState().selected).toBeUndefined();
+  });
+  it('기존 선택 뒤 touchcancel은 선택을 유지하고 밖 종료·일시정지·섞기는 표시까지 정리합니다',()=>{
+    const {scene}=create();scene.tap({row:0,col:0});
+    scene.input.emit('pointerdown',pointer({x:100}));scene.input.emit('pointerup',pointer({x:100,wasCanceled:true}));
+    expect(scene.keyboardState().selected).toEqual({row:0,col:0});
+    expect((scene.selectionMark?.strokes.length??0)>0).toBe(reduced);
+    for(const action of ['outside','pause','shuffle']){
+      scene.tap({row:0,col:0});scene.input.emit('pointerdown',pointer({x:100}));
+      if(action==='outside')scene.input.emit('pointerupoutside',pointer({x:100}));
+      else if(action==='pause')scene.events.emit('pause');else scene.shuffle();
+      expect(scene.keyboardState().selected).toBeUndefined();expect(scene.selectionMark?.strokes??[]).toEqual([]);
+      expect(scene.pieces.flat().every(p=>p.scale===1)).toBe(true);
+    }
   });
   it.each(['취소','비활성','busy','재사용','보드 밖'])('본인 종료는 실행 불가 상태에도 down을 비웁니다: %s',reason=>{
     const {scene,onMove}=create();scene.input.emit('pointerdown',pointer());
@@ -253,4 +272,63 @@ describe('보드 키보드 입력과 읽기 상태',()=>{
     const {scene}=harness();scene.paint(scene.engine.board);scene.focusKeyboard();scene.keyboardKey('ArrowDown');scene.keyboardKey('Enter');scene.cancelInput();
     expect(scene.keyboardState()).toMatchObject({cursor:undefined,selected:undefined});scene.focusKeyboard();expect(scene.keyboardState().cursor).toEqual({row:0,col:0});
   });
+});
+
+describe('모션 설정 경계와 정적 표시',()=>{
+  it('선택·힌트·무효/유효 교환·낙하는 설정에 맞고 단계 대기·결과·오디오는 같습니다',async()=>{
+    const {scene,onMove}=harness();for(const [r,c,k] of [[3,0,5],[3,1,5],[3,2,1],[4,2,5]])scene.engine.board[r][c]={kind:k};scene.paint(scene.engine.board);
+    const tweens=vi.spyOn(scene.tweens,'add'),wait=vi.spyOn(scene,'wait').mockResolvedValue();
+    scene.showHint();
+    if(reduced){expect(scene.hintMark?.strokes).toHaveLength(2);expect(scene.hintMark?.lines).toHaveLength(3);}
+    else expect(tweens.mock.calls.some(([c])=>c.scale===1.1&&c.repeat===1)).toBe(true);
+    scene.cancelInput();expect(scene.hintPieces).toEqual([]);expect(scene.hintMark?.strokes??[]).toEqual([]);
+    tweens.mockClear();scene.tap({row:0,col:0});
+    expect(scene.pieces[0][0].scale).toBe(reduced?1:1.12);
+    if(reduced){expect(scene.selectionMark?.strokes).toHaveLength(2);expect(scene.selectionMark?.lines).toHaveLength(2);}
+    scene.focusKeyboard();expect(scene.cursorMark?.lines).toHaveLength(8);
+    await scene.attempt({row:0,col:0},{row:0,col:1});
+    expect(wait.mock.calls.map(c=>c[0])).toEqual([140,150]);expect(onMove).not.toHaveBeenCalled();
+    expect(scene.pieces[0][0]).toMatchObject({x:44,y:44,scale:1});expect(scene.selectionMark?.strokes??[]).toEqual([]);
+    wait.mockClear();tweens.mockClear();
+    for(const [r,c,k] of [[3,0,5],[3,1,5],[3,2,1],[4,2,5]])scene.engine.board[r][c]={kind:k};
+    scene.paint(scene.engine.board);await scene.attempt({row:4,col:2},{row:3,col:2});
+    expect(onMove).toHaveBeenCalledOnce();expect(wait.mock.calls.map(c=>c[0])).toContain(200);expect(wait.mock.calls.map(c=>c[0])).toContain(300);
+    if(reduced)expect(tweens.mock.calls.every(([c])=>['x','y','scale','scaleX','scaleY','angle'].every(key=>c[key]===undefined))).toBe(true);
+    else {expect(tweens.mock.calls.some(([c])=>c.duration===280&&c.y!==undefined)).toBe(true);expect(tweens.mock.calls.some(([c])=>c.scale===.25)).toBe(true);}
+  });
+  it('현재 보드에서 설정 반전은 다음 포인터/키/힌트부터 이전 확대와 정적 표시를 정리합니다',()=>{
+    const {scene}=harness();for(const [r,c,k] of [[3,0,5],[3,1,5],[3,2,1],[4,2,5]])scene.engine.board[r][c]={kind:k};scene.create();scene.showHint();scene.tap({row:0,col:0});
+    vi.stubGlobal('window',{matchMedia:()=>({matches:!reduced})});scene.focusKeyboard();
+    expect(scene.pieces[0][0].scale).toBe(reduced?1.12:1);expect(scene.pieces[0][0].y).toBe(44);
+    expect(scene.hintMark?.strokes??[]).toEqual([]);expect(scene.hintPieces).toEqual([]);
+    if(!reduced)expect(scene.selectionMark?.lines).toHaveLength(2);
+    else expect(scene.selectionMark?.strokes??[]).toEqual([]);
+    scene.cancelInput();expect(scene.pieces[0][0]).toMatchObject({scale:1,y:44});
+    scene.showHint();scene.events.emit('pause');expect(scene.hintMark?.strokes??[]).toEqual([]);
+    scene.events.emit('resume');scene.showHint();scene.shuffle();expect(scene.hintMark?.strokes??[]).toEqual([]);
+    scene.showHint();scene.events.emit('shutdown');expect(scene.hintMark).toBeUndefined();expect(scene.selectionMark).toBeUndefined();
+    scene.create();expect(scene.keyboardState().available).toBe(true);expect(scene.keyboardState().selected).toBeUndefined();
+  });
+  it('같은 엔진 시드의 유효 교환은 두 모드에서 판정·난수·결과·음형·대기 순서가 같습니다',async()=>{
+    const run=async(value:boolean)=>{
+      vi.stubGlobal('window',{matchMedia:()=>({matches:value})});const h=harness();h.scene.paint(h.scene.engine.board);
+      for(const [r,c,k] of [[3,0,5],[3,1,5],[3,2,1],[4,2,5]])h.scene.engine.board[r][c]={kind:k};
+      const wait=vi.spyOn(h.scene,'wait').mockResolvedValue();const audio=vi.fn();
+      (h.scene as unknown as {hooks:{audio:{play:typeof audio}}}).hooks.audio.play=audio;
+      await h.scene.attempt({row:4,col:2},{row:3,col:2});
+      return {board:snapshot(h.scene.engine),move:h.onMove.mock.calls,notice:h.onNotice.mock.calls,audio:audio.mock.calls,wait:wait.mock.calls};
+    };
+    expect(await run(true)).toEqual(await run(false));
+  });
+  it('진행 중 설정 변경은 시작한 교환을 유지하고 다음 제거/낙하부터 읽습니다',async()=>{
+    vi.stubGlobal('window',{matchMedia:()=>({matches:false})});const {scene,onMove}=harness();
+    for(const [r,c,k] of [[3,0,5],[3,1,5],[3,2,1],[4,2,5]])scene.engine.board[r][c]={kind:k};scene.paint(scene.engine.board);
+    const tweens=vi.spyOn(scene.tweens,'add');let boundary=0;
+    vi.spyOn(scene,'wait').mockImplementation(async ms=>{if(ms===140){boundary=tweens.mock.calls.length;vi.stubGlobal('window',{matchMedia:()=>({matches:true})});}});
+    await scene.attempt({row:4,col:2},{row:3,col:2});expect(onMove).toHaveBeenCalledOnce();
+    expect(tweens.mock.calls.slice(0,boundary).some(([c])=>c.duration===130&&c.y!==undefined)).toBe(true);
+    expect(tweens.mock.calls.slice(boundary).every(([c])=>['x','y','scale','angle'].every(k=>c[k]===undefined))).toBe(true);
+    expect(scene.pieces.flat().every(p=>p.scale===1&&p.alpha===1)).toBe(true);
+  });
+});
 });
