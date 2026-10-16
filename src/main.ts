@@ -13,6 +13,7 @@ import { loadSave,saveData,retrySave,saveStatus,clearSave,levels,LEVEL_COUNT,cha
 import { t,type TextKey } from './i18n';
 import { icon } from './icons';
 import { SwapPractice } from './SwapPractice';
+import { bindPracticeBoard } from './bindPracticeInputs';
 import { gardenArt } from './GardenArt';
 import { TEST_TOOLS_ENABLED } from './buildFlags';
 import { ANDROID_TEST_ADS_ENABLED } from './buildFlags';
@@ -28,6 +29,7 @@ let boardPending=false;
 let roundEnded=false, resultShown=false, firstReward=false;
 let tutorialPage=0;
 let practice:SwapPractice|undefined;
+let practiceInputs:ReturnType<typeof bindPracticeBoard>|undefined;
 let growing=false;
 let clearedLeaves=0;
 let testingLevel=false;
@@ -102,6 +104,7 @@ function billingModal(){return Boolean(androidBillingEntry&&$<HTMLDialogElement>
 // 문서와 Android 상태 중 하나라도 비활성이면 오디오와 진행을 멈춥니다.
 function syncActivity(){
   const active=nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!billingModal();
+  if(!active)practiceInputs?.cancel();
   if(audioActive!==active){audioActive=active;if(active)audio.resume();else audio.suspend();}
   if(!game)return;
   const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
@@ -198,6 +201,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
 }
 function notice(message:string){clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').classList.add('visible');toastTimer=setTimeout(()=>$('#toast').classList.remove('visible'),3200);}
 function renderTutorial(){
+  practiceInputs?.dispose();practiceInputs=undefined;
   const headings:TextKey[]=['tutorialSwap','tutorialGoal','tutorialMagic','practiceTitle'];
   const descriptions:TextKey[]=['tutorialSwapDesc','tutorialGoalDesc','tutorialMagicDesc',practice?.completed?'practiceDone':'practiceDesc'];
   const tile=(name:string)=>`<img src="/assets/tiles/${name}.svg" alt=""/>`;
@@ -218,29 +222,15 @@ function practiceArt(){
   }).join('')).join('')}</div><div id="practice-feedback" class="practice-feedback" role="status">${text(lesson.completed?'practiceMatched':lesson.selected?'practiceSelected':'practicePrompt')}</div>`;
 }
 function bindPracticeInputs(){
-  let pointer:{id:number,x:number,y:number,row:number,col:number}|undefined;
   const refresh=(done:boolean,pos:{row:number,col:number})=>{
     renderTutorial();
     if(done){audio.play('match');$('#guide-next').focus();}
     else $(`#practice-cell-${pos.row}-${pos.col}`).focus();
   };
-  document.querySelectorAll<HTMLButtonElement>('#practice-board button').forEach(button=>{
-    const pos={row:Number(button.dataset.row),col:Number(button.dataset.col)};let swiped=false;
-    button.onclick=()=>{if(swiped){swiped=false;return;}refresh(practice!.select(pos),pos);};
-    button.onpointerdown=event=>{
-      if(pointer||event.button!==0)return;
-      swiped=false;pointer={id:event.pointerId,x:event.clientX,y:event.clientY,...pos};button.setPointerCapture(event.pointerId);
-    };
-    button.onpointercancel=()=>{pointer=undefined;};
-    button.onpointerup=event=>{
-      if(!pointer||pointer.id!==event.pointerId)return;
-      const down=pointer;pointer=undefined;
-      const dx=event.clientX-down.x,dy=event.clientY-down.y;
-      if(Math.hypot(dx,dy)<=16)return;
-      swiped=true;event.preventDefault();
-      if(practice!.swipe(down,dx,dy))refresh(true,pos);
-      else $('#practice-feedback').textContent=text('practicePrompt');
-    };
+  const lesson=practice!;
+  practiceInputs=bindPracticeBoard($('#practice-board'),{
+    tap:pos=>refresh(lesson.select(pos),pos),
+    swipe:(pos,dx,dy)=>{if(lesson.swipe(pos,dx,dy))refresh(true,pos);else $('#practice-feedback').textContent=text('practicePrompt');},
   });
 }
 function showTutorial(){
@@ -249,6 +239,7 @@ function showTutorial(){
   syncActivity();
 }
 function closeTutorial(){
+  practiceInputs?.dispose();practiceInputs=undefined;
   $<HTMLDialogElement>('#tutorial-dialog').close();save.tutorialSeen=true;persist();
   syncActivity();
 }
@@ -431,7 +422,8 @@ boardFocus.addEventListener('keydown',event=>{
   if(!scene.keyboardState().available)return;
   boardFocus.dataset.keyboard='true';void audio.unlock().catch(()=>{});scene.focusKeyboard();scene.keyboardKey(event.key,event.repeat);
 });
-window.addEventListener('blur',()=>{boardFocus.dataset.keyboard='false';scene?.cancelInput();});
+window.addEventListener('blur',()=>{boardFocus.dataset.keyboard='false';scene?.cancelInput();practiceInputs?.cancel();});
+window.addEventListener('resize',()=>practiceInputs?.cancel());
 document.addEventListener('visibilitychange',()=>{syncActivity();if(testAds){renderAdDialog();if(!document.hidden)void testAds.refresh();}if(testBilling){renderBillingDialog();if(!document.hidden)void testBilling.refresh();}});
 window.addEventListener('pagehide',()=>{void testAds?.dispose();void testBilling?.dispose();});
 if(Capacitor.isNativePlatform()){

@@ -1,0 +1,1179 @@
+{
+  "dateKst": "2026-10-16",
+  "browser": "155.0.8059.41",
+  "environment": "격리 headless Chrome, Vite testing, CDP 실제 터치와 DOM TouchEvent/PointerEvent 오류 주입. 실제 Android OS 제스처/회전/홈 복귀는 미검증.",
+  "checks": [
+    "CDP touchcancel 일반/특수 탭·유효 swipe: 실제 wasCanceled pointerup 수신, 보드/선택/이동/점수/모든 저장 불변·다음 정상 입력 회복",
+    "실제 CDP 네 방향 정상 swipe는 점수·checkpoint·이동 1회 반영",
+    "실제 두 칸 tap 무효 교환은 이동·점수·보드·저장 불변",
+    "실제 일반 칸→인접 특수 두 칸 tap 교환·완료 저장",
+    "실제 Phaser DOM TouchEvent 다중 입력: 보조 취소는 주체 유지·주체 취소 후 보조 up 무실행·동시 시작/추가 손가락 거부",
+    "보드 밖 터치 종료·gameout/pointerupoutside·마우스 보조 버튼 무실행과 회복",
+    "CDP down 중 활동 PAUSE/RESUME·설정·SLEEP/WAKE·세로/가로 resize·Scene 교체: 지연 종료 무변경, 다음 특수 정상",
+    "실제 touch down 중 100회 Scene 교체: 오래된 up 무실행·이전 상태 정리·canvas/Scene/resize/pause/sleep listener 일정·일반 저장 보존",
+    "실제 캔버스 touchStart→DOM 무료 섞기/키보드 조작→이전 touchEnd 무실행·새 입력 회복",
+    "실습 실제 CDP touchcancel→합성 click 무실행·실제 mouse tap/자동 lostcapture는 정상 두 칸 교환",
+    "실습 실제 capture release/lostpointercapture→늦은 up·click 무실행, Enter/Space 접근성 유지",
+    "실습 보드 밖 긴 swipe·보조 버튼/다른 ID up·click은 무실행, 다른 ID cancel은 주체 정상 swipe 유지",
+    "연속 취소/스와이프 뒤 실습 실제 CDP 일반 tap 두 번은 정상 pointerup으로 첫 교환 완료 (native click 생략에도 회복)",
+    "실습 capture 예외·DOM 교체 뒤 지연 종료는 무실행, 새 실제 swipe 정상·본 게임 저장/보상/이동 불변"
+  ],
+  "events": [
+    {
+      "label": "CDP 취소 일반 탭",
+      "events": [
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 43.99999929028888,
+          "y": 43.99998864462209,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 312.5
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 43.99999929028888,
+          "y": 43.99998864462209,
+          "wasCanceled": true,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchcancel",
+          "downTime": 312.5
+        }
+      ]
+    },
+    {
+      "label": "CDP 취소 특수 탭",
+      "events": [
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 346.3999999910593
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 158.79068064135174,
+          "wasCanceled": true,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchcancel",
+          "downTime": 346.3999999910593
+        }
+      ]
+    },
+    {
+      "label": "CDP 취소 유효 교환",
+      "events": [
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 214.79067780250728,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 289.8999999910593
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 270.79071754633,
+          "wasCanceled": true,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchcancel",
+          "downTime": 289.8999999910593
+        }
+      ]
+    },
+    {
+      "label": "CDP 정상 아래",
+      "events": [
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 211.99998012808868,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 302.20000000298023
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 268.0000198719113,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchend",
+          "downTime": 302.20000000298023
+        }
+      ]
+    },
+    {
+      "label": "CDP 정상 위",
+      "events": [
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 268.0000198719113,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 296.5
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 211.99998012808868,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchend",
+          "downTime": 296.5
+        }
+      ]
+    },
+    {
+      "label": "CDP 정상 오른쪽",
+      "events": [
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 212.00000141942223,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 304.09999999403954
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 267.99999858057777,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchend",
+          "downTime": 304.09999999403954
+        }
+      ]
+    },
+    {
+      "label": "CDP 정상 왼쪽",
+      "events": [
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 267.99999858057777,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 296.20000000298023
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 212.00000141942223,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchend",
+          "downTime": 296.20000000298023
+        }
+      ]
+    },
+    {
+      "label": "다중 TouchEvent 보조 취소→주체 정상 교환",
+      "events": [
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 211.99998012808868,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": false,
+          "dom": "touchstart",
+          "downTime": 312
+        },
+        {
+          "type": "pointerdown",
+          "id": 2,
+          "x": 156.00000425826673,
+          "y": 155.99998296693315,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": false,
+          "dom": "touchstart",
+          "downTime": 316.79999999701977
+        },
+        {
+          "type": "pointerup",
+          "id": 2,
+          "x": 156.00000425826673,
+          "y": 155.99998296693315,
+          "wasCanceled": true,
+          "wasTouch": true,
+          "trusted": false,
+          "dom": "touchcancel",
+          "downTime": 316.79999999701977
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 268.0000198719113,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": false,
+          "dom": "touchend",
+          "downTime": 312
+        }
+      ]
+    },
+    {
+      "label": "주체 취소·동시 시작/추가 손가락 거부와 정상 회복",
+      "events": [
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": false,
+          "dom": "touchstart",
+          "downTime": 316.3999999910593
+        },
+        {
+          "type": "pointerdown",
+          "id": 2,
+          "x": 43.99999929028888,
+          "y": 46.7906863190407,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": false,
+          "dom": "touchstart",
+          "downTime": 317
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 158.79068064135174,
+          "wasCanceled": true,
+          "wasTouch": true,
+          "trusted": false,
+          "dom": "touchcancel",
+          "downTime": 316.3999999910593
+        },
+        {
+          "type": "pointerup",
+          "id": 2,
+          "x": 43.99999929028888,
+          "y": 46.7906863190407,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": false,
+          "dom": "touchend",
+          "downTime": 317
+        },
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": false,
+          "dom": "touchstart",
+          "downTime": 330.5
+        },
+        {
+          "type": "pointerdown",
+          "id": 2,
+          "x": 43.99999929028888,
+          "y": 46.7906863190407,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": false,
+          "dom": "touchstart",
+          "downTime": 330.5
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": false,
+          "dom": "touchend",
+          "downTime": 330.5
+        },
+        {
+          "type": "pointerup",
+          "id": 2,
+          "x": 43.99999929028888,
+          "y": 46.7906863190407,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": false,
+          "dom": "touchend",
+          "downTime": 330.5
+        },
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 337.29999999701977
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchend",
+          "downTime": 337.29999999701977
+        }
+      ]
+    },
+    {
+      "label": "보드 밖 touch·canvas 밖 mouse·보조 마우스",
+      "events": [
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 294.90000000596046
+        },
+        {
+          "type": "gameout"
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": -406.8968023255814,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchend",
+          "downTime": 294.90000000596046
+        },
+        {
+          "type": "pointerdown",
+          "id": 0,
+          "x": 154.88372093023256,
+          "y": 158.21947674418604,
+          "wasCanceled": false,
+          "wasTouch": false,
+          "trusted": true,
+          "dom": "mousedown",
+          "downTime": 372.59999999403954
+        },
+        {
+          "type": "pointerup",
+          "id": 0,
+          "x": 154.88372093023256,
+          "y": 158.21947674418604,
+          "wasCanceled": false,
+          "wasTouch": false,
+          "trusted": true,
+          "dom": "mouseup",
+          "downTime": 372.59999999403954
+        },
+        {
+          "type": "pointerdown",
+          "id": 0,
+          "x": 154.88372093023256,
+          "y": 158.21947674418604,
+          "wasCanceled": false,
+          "wasTouch": false,
+          "trusted": true,
+          "dom": "mousedown",
+          "downTime": 379.70000000298023
+        },
+        {
+          "type": "pointerup",
+          "id": 0,
+          "x": 154.88372093023256,
+          "y": 158.21947674418604,
+          "wasCanceled": false,
+          "wasTouch": false,
+          "trusted": true,
+          "dom": "mouseup",
+          "downTime": 379.70000000298023
+        },
+        {
+          "type": "pointerdown",
+          "id": 0,
+          "x": 154.88372093023256,
+          "y": 158.21947674418604,
+          "wasCanceled": false,
+          "wasTouch": false,
+          "trusted": true,
+          "dom": "mousedown",
+          "downTime": 393.79999999701977
+        },
+        {
+          "type": "pointerup",
+          "id": 0,
+          "x": 154.88372093023256,
+          "y": 158.21947674418604,
+          "wasCanceled": false,
+          "wasTouch": false,
+          "trusted": true,
+          "dom": "mouseup",
+          "downTime": 393.79999999701977
+        },
+        {
+          "type": "gameout"
+        },
+        {
+          "type": "pointerupoutside",
+          "id": 0,
+          "x": -30.697674418604652,
+          "y": -405.5014534883721,
+          "wasCanceled": false,
+          "wasTouch": false,
+          "trusted": true,
+          "dom": "mouseup",
+          "downTime": 393.79999999701977
+        }
+      ]
+    },
+    {
+      "label": "활동 중단 후 늦은 종료·회복",
+      "events": [
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 317.09999999403954
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchend",
+          "downTime": 317.09999999403954
+        },
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 394
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchend",
+          "downTime": 394
+        }
+      ]
+    },
+    {
+      "label": "설정 전환 후 늦은 종료·회복",
+      "events": [
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 418
+        },
+        {
+          "type": "pointerupoutside",
+          "id": 0,
+          "x": 464.6511627906977,
+          "y": -370.61773255813955,
+          "wasCanceled": false,
+          "wasTouch": false,
+          "trusted": true,
+          "dom": "mouseup",
+          "downTime": 557.9000000059605
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 155.99998296693315,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchend",
+          "downTime": 418
+        },
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 155.99998296693315,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 706.7999999970198
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 155.99998296693315,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchend",
+          "downTime": 706.7999999970198
+        }
+      ]
+    },
+    {
+      "label": "sleep/wake 후 늦은 종료·회복",
+      "events": [
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 155.99998296693315,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 305
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 155.99998296693315,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchend",
+          "downTime": 305
+        },
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 155.99998296693315,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 389.19999998807907
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 155.99998296693315,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchend",
+          "downTime": 389.19999998807907
+        }
+      ]
+    },
+    {
+      "label": "회전 후 늦은 종료·회복",
+      "events": [
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 158.79068064135174,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 336.5
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": -334.0082926769969,
+          "y": 681.9771541104772,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchend",
+          "downTime": 336.5
+        },
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00002431275934,
+          "y": 155.99999392181016,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 468.70000000298023
+        },
+        {
+          "type": "pointerup",
+          "id": 1,
+          "x": 156.00002431275934,
+          "y": 155.99999392181016,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchend",
+          "downTime": 468.70000000298023
+        }
+      ]
+    },
+    {
+      "label": "Scene 교체 후 늦은 종료·회복",
+      "events": [
+        {
+          "type": "pointerdown",
+          "id": 1,
+          "x": 156.00000425826673,
+          "y": 155.99998296693315,
+          "wasCanceled": false,
+          "wasTouch": true,
+          "trusted": true,
+          "dom": "touchstart",
+          "downTime": 316
+        }
+      ]
+    }
+  ],
+  "samples": [
+    {
+      "label": "교체 전",
+      "canvases": 1,
+      "scenes": 1,
+      "resize": 1,
+      "up": 2,
+      "pause": 2,
+      "sleep": 2
+    },
+    {
+      "label": "30회 Scene 교체",
+      "canvases": 1,
+      "scenes": 1,
+      "resize": 1,
+      "up": 1,
+      "pause": 2,
+      "sleep": 2
+    },
+    {
+      "label": "60회 Scene 교체",
+      "canvases": 1,
+      "scenes": 1,
+      "resize": 1,
+      "up": 1,
+      "pause": 2,
+      "sleep": 2
+    },
+    {
+      "label": "100회 Scene 교체",
+      "canvases": 1,
+      "scenes": 1,
+      "resize": 1,
+      "up": 1,
+      "pause": 2,
+      "sleep": 2
+    }
+  ],
+  "practiceEvents": [
+    {
+      "type": "pointerdown",
+      "id": 2,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "pointercancel",
+      "id": 2,
+      "button": -1,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 312.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "lostpointercapture",
+      "id": 2,
+      "button": -1,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 312.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "id": 77,
+      "button": 0,
+      "primary": true,
+      "detail": 1,
+      "x": 267,
+      "y": 245,
+      "target": "practice-cell-0-2",
+      "trusted": false
+    },
+    {
+      "type": "pointerdown",
+      "id": 1,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "pointerup",
+      "id": 1,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "id": 1,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 312.140625,
+      "target": "practice-cell-1-2",
+      "trusted": true
+    },
+    {
+      "type": "pointerup",
+      "id": 1,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 312.140625,
+      "target": "practice-cell-1-2",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "id": 3,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "lostpointercapture",
+      "id": 3,
+      "button": -1,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 312.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "pointerup",
+      "id": 3,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 312.140625,
+      "target": "practice-cell-1-2",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "id": 77,
+      "button": 0,
+      "primary": true,
+      "detail": 1,
+      "x": 267,
+      "y": 245,
+      "target": "practice-cell-0-2",
+      "trusted": false
+    },
+    {
+      "type": "click",
+      "id": -1,
+      "button": 0,
+      "primary": false,
+      "detail": 0,
+      "x": 0,
+      "y": 0,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "id": -1,
+      "button": 0,
+      "primary": false,
+      "detail": 0,
+      "x": 0,
+      "y": 0,
+      "target": "practice-cell-1-2",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "id": 4,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "pointerup",
+      "id": 4,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 439.640625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "lostpointercapture",
+      "id": 4,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 439.640625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "id": 77,
+      "button": 0,
+      "primary": true,
+      "detail": 1,
+      "x": 267,
+      "y": 245,
+      "target": "practice-cell-0-2",
+      "trusted": false
+    },
+    {
+      "type": "pointerdown",
+      "id": 77,
+      "button": 2,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": false
+    },
+    {
+      "type": "pointerup",
+      "id": 77,
+      "button": 2,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": false
+    },
+    {
+      "type": "click",
+      "id": 77,
+      "button": 2,
+      "primary": true,
+      "detail": 1,
+      "x": 267,
+      "y": 245,
+      "target": "practice-cell-0-2",
+      "trusted": false
+    },
+    {
+      "type": "pointerdown",
+      "id": 5,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "pointercancel",
+      "id": 88,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": false
+    },
+    {
+      "type": "pointerup",
+      "id": 88,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": false
+    },
+    {
+      "type": "click",
+      "id": 88,
+      "button": 0,
+      "primary": true,
+      "detail": 1,
+      "x": 267,
+      "y": 245,
+      "target": "practice-cell-0-2",
+      "trusted": false
+    },
+    {
+      "type": "pointerup",
+      "id": 5,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 312.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "id": 6,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "pointerup",
+      "id": 6,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "id": 7,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 312.140625,
+      "target": "practice-cell-1-2",
+      "trusted": true
+    },
+    {
+      "type": "pointerup",
+      "id": 7,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 312.140625,
+      "target": "practice-cell-1-2",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "id": 1,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "pointerup",
+      "id": 1,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "id": 1,
+      "button": 0,
+      "primary": false,
+      "detail": 1,
+      "x": 267,
+      "y": 245,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "id": 8,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "pointerup",
+      "id": 8,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "id": 8,
+      "button": 0,
+      "primary": false,
+      "detail": 1,
+      "x": 267,
+      "y": 245,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "id": 77,
+      "button": 0,
+      "primary": true,
+      "detail": 1,
+      "x": 267,
+      "y": 245,
+      "target": "practice-cell-0-2",
+      "trusted": false
+    },
+    {
+      "type": "pointerdown",
+      "id": 9,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 245.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    },
+    {
+      "type": "pointerup",
+      "id": 9,
+      "button": 0,
+      "primary": true,
+      "detail": 0,
+      "x": 267,
+      "y": 312.140625,
+      "target": "practice-cell-0-2",
+      "trusted": true
+    }
+  ],
+  "pageerrors": []
+}

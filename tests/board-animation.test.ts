@@ -22,8 +22,10 @@ class Graphic {
   clear(){return this;}
   destroy(){this.destroyed=true;}
 }
-vi.mock('phaser',()=>{
-  return {default:{Scene:class {
+vi.mock('phaser',async()=>{
+  const {default:Events}=await import('eventemitter3');
+  return {default:{Scenes:{Events:{PAUSE:'pause',RESUME:'resume',SLEEP:'sleep',WAKE:'wake',SHUTDOWN:'shutdown',DESTROY:'destroy',CREATE:'create'}},Scale:{Events:{RESIZE:'resize'}},Scene:class {
+    input=new Events();events=new Events();scale=new Events();cameras={main:{setBackgroundColor(){}}};
     sys={isActive:()=>true};
     add={container:(x:number,y:number)=>new Piece(x,y),graphics:()=>new Graphic(),image:(x:number,y:number,texture:string)=>{const image=new Piece(x,y);image.texture=texture;return image;},text:(x:number,y:number,text:string)=>{const label=new Piece(x,y);label.text=text;return label;},circle:(x:number,y:number)=>new Piece(x,y)};
     tweens={killTweensOf(){},add(config:Record<string,unknown>){
@@ -45,7 +47,68 @@ interface RenderScene {
   leafObjects:(Piece|Graphic)[];
   busy:boolean;finished:boolean;
   keyboardState:BoardScene['keyboardState'];focusKeyboard:BoardScene['focusKeyboard'];keyboardKey:BoardScene['keyboardKey'];cancelInput:BoardScene['cancelInput'];stopPlaying:BoardScene['stopPlaying'];
+  create():void;down?:unknown;input:{emit(event:string,pointer?:unknown):void;listenerCount(event:string):number};events:{emit(event:string):void;listenerCount(event:string):number};scale:{emit(event:string):void;listenerCount(event:string):number};
 }
+
+describe('보드 포인터 종료 (Phaser 입력 대역)',()=>{
+  const pointer=(overrides:Record<string,unknown>={})=>({id:1,x:44,y:44,downTime:1,wasTouch:true,wasCanceled:false,event:{touches:[{}]},...overrides});
+  const create=()=>{const h=harness();h.scene.create();return h;};
+  it.each([false,true])('취소된 일반/특수 탭은 보드·선택·결과를 바꾸지 않고 다음 입력은 회복합니다 (%s)',async special=>{
+    const {scene,onMove}=create();if(special)scene.engine.board[0][0].special='row';
+    const before=snapshot(scene.engine);scene.input.emit('pointerdown',pointer());scene.input.emit('pointerup',pointer({wasCanceled:true}));
+    expect(snapshot(scene.engine)).toEqual(before);expect(scene.keyboardState().selected).toBeUndefined();expect(onMove).not.toHaveBeenCalled();expect(scene.down).toBeUndefined();
+    scene.input.emit('pointerdown',pointer({downTime:2}));scene.input.emit('pointerup',pointer({downTime:2}));
+    if(special){await vi.waitFor(()=>expect(scene.busy).toBe(false));expect(onMove).toHaveBeenCalledOnce();}else expect(scene.keyboardState().selected).toEqual({row:0,col:0});
+  });
+  it('보조 포인터·보조 마우스 종료는 주체를 빼앗지 않으며 동시 시작은 거부합니다',()=>{
+    const {scene}=create();scene.input.emit('pointerdown',pointer({event:{touches:[{},{}]}}));expect(scene.down).toBeUndefined();
+    const mouse=pointer({id:0,wasTouch:false,button:0});scene.input.emit('pointerdown',mouse);
+    scene.input.emit('pointerdown',pointer({id:2}));scene.input.emit('pointerup',pointer({id:2,wasCanceled:true}));
+    scene.input.emit('pointerup',pointer({id:0,wasTouch:false,button:2}));expect(scene.down).toBeDefined();
+    scene.input.emit('pointerup',mouse);expect(scene.keyboardState().selected).toEqual({row:0,col:0});scene.cancelInput();
+    scene.input.emit('pointerdown',pointer({wasTouch:false,button:2}));scene.input.emit('pointerup',pointer({wasTouch:false,button:2}));expect(scene.keyboardState().selected).toBeUndefined();
+  });
+  it.each(['취소','비활성','busy','재사용','보드 밖'])('본인 종료는 실행 불가 상태에도 down을 비웁니다: %s',reason=>{
+    const {scene,onMove}=create();scene.input.emit('pointerdown',pointer());
+    if(reason==='비활성')scene.sys.isActive=()=>false;if(reason==='busy')scene.busy=true;
+    scene.input.emit('pointerup',pointer({wasCanceled:reason==='취소',downTime:reason==='재사용'?2:1,x:reason==='보드 밖'?3:44}));
+    expect(scene.down).toBeUndefined();expect(scene.keyboardState().selected).toBeUndefined();expect(onMove).not.toHaveBeenCalled();
+    scene.busy=false;scene.sys.isActive=()=>true;scene.input.emit('pointerdown',pointer({downTime:3}));scene.input.emit('pointerup',pointer({downTime:3}));expect(scene.keyboardState().selected).toBeDefined();
+  });
+  it.each(['pause','resume','sleep','wake','shutdown','destroy','gameout','pointerupoutside','resize'])('수명 경계 %s 뒤 늦은 up은 실행하지 않습니다',event=>{
+    const {scene,onMove}=create();scene.focusKeyboard();scene.keyboardKey('Enter');scene.input.emit('pointerdown',pointer());
+    if(['gameout','pointerupoutside'].includes(event))scene.input.emit(event,pointer());else if(event==='resize')scene.scale.emit(event);else scene.events.emit(event);
+    scene.input.emit('pointerup',pointer({y:100}));expect(scene.down).toBeUndefined();expect(scene.keyboardState()).toMatchObject({cursor:undefined,selected:undefined});expect(onMove).not.toHaveBeenCalled();
+    if(event==='shutdown'||event==='destroy'){
+      for(const name of ['pointerdown','pointerup','pointerupoutside','gameout'])expect(scene.input.listenerCount(name)).toBe(0);
+      for(const name of ['pause','resume','sleep','wake','shutdown','destroy'])expect(scene.events.listenerCount(name)).toBe(0);
+      expect(scene.scale.listenerCount('resize')).toBe(0);
+    }
+  });
+  it.each([[0,56], [0,-56], [56,0], [-56,0]])('정상 스와이프 방향 %s/%s는 인접 교환 한 번을 실행합니다',async(dx,dy)=>{
+    const {scene}=create();const swap=vi.spyOn(scene.engine,'swap');
+    scene.input.emit('pointerdown',pointer({x:212,y:212}));scene.input.emit('pointerup',pointer({x:212+dx,y:212+dy}));
+    await vi.waitFor(()=>expect(scene.busy).toBe(false));expect(swap).toHaveBeenCalledExactlyOnceWith({row:3,col:3},{row:3+Math.sign(dy),col:3+Math.sign(dx)});
+  });
+  it('두 칸 탭 특수 교환은 한 번만 실행합니다',async()=>{
+    const {scene,onMove}=create();scene.engine.board[0][1].special='row';const swap=vi.spyOn(scene.engine,'swap');
+    for(const x of [44,100]){scene.input.emit('pointerdown',pointer({x}));scene.input.emit('pointerup',pointer({x}));}
+    await vi.waitFor(()=>expect(scene.busy).toBe(false));expect(swap).toHaveBeenCalledExactlyOnceWith({row:0,col:0},{row:0,col:1});expect(onMove).toHaveBeenCalledOnce();
+  });
+  it('무료 섞기 뒤 오래된 down/up은 새 보드를 실행하지 않으며 새 입력은 회복합니다',()=>{
+    const {scene,onMove}=create();scene.input.emit('pointerdown',pointer());expect(scene.shuffle()).toBe(true);const after=snapshot(scene.engine);
+    scene.input.emit('pointerup',pointer({y:100}));expect(snapshot(scene.engine)).toEqual(after);expect(scene.keyboardState().selected).toBeUndefined();expect(onMove).not.toHaveBeenCalled();
+    scene.input.emit('pointerdown',pointer({downTime:2}));scene.input.emit('pointerup',pointer({downTime:2}));expect(scene.keyboardState().selected).toEqual({row:0,col:0});
+  });
+  it.each(['ArrowRight','Enter',' ','Escape'])('키보드 %s는 이전 포인터를 무효화하고 키보드 상태를 유지합니다',key=>{
+    const {scene}=create();scene.focusKeyboard();scene.input.emit('pointerdown',pointer({x:212,y:212}));scene.keyboardKey(key);const state=scene.keyboardState();
+    expect(scene.down).toBeUndefined();scene.input.emit('pointerup',pointer({x:268,y:212}));expect(scene.keyboardState()).toEqual(state);
+  });
+  it('포인터 제스처 없는 gameout/resize는 키보드 커서와 선택을 지우지 않습니다',()=>{
+    const {scene}=create();scene.focusKeyboard();scene.keyboardKey('Enter');const state=scene.keyboardState();
+    scene.input.emit('gameout',pointer());scene.scale.emit('resize');expect(scene.keyboardState()).toEqual(state);
+  });
+});
 const snapshot=(engine:BoardEngine)=>({board:engine.board.map(row=>row.map(tile=>({...tile}))),leaves:engine.leaves.map(row=>row.slice())});
 function harness(){
   const onMove=vi.fn(),onNotice=vi.fn();

@@ -3,6 +3,7 @@ import ts from 'typescript';
 import { BoardEngine, seededRng, type BoardSnapshot } from '../src/core';
 import {TestAdsController,adCopy,type TestAdsBridge} from '../src/testAds';
 import {TestBillingController,billingCopy,type TestBillingBridge,type BillingSnapshot} from '../src/testBilling';
+import {bindPracticeBoard} from '../src/bindPracticeInputs';
 
 // 테스트에만 사용하는 Node API입니다. 별도 @types/node 설치 없이 런타임에서 읽습니다.
 const fsModule = 'node:fs', vmModule = 'node:vm';
@@ -31,7 +32,7 @@ class ElementStub {
   style: Record<string, string> = {};
   dataset: Record<string, string> = {};
   listeners: Record<string, (event: { preventDefault(): void }) => void> = {};
-  onclick: () => void = () => {};
+  onclick: (event?:{detail:number;button:number}) => void = () => {};
   classList = { add() {}, remove() {}, toggle() {} };
   constructor(selector: string) { this.id = selector.slice(1); this.hidden = selector !== '#puzzle-view'; }
   setAttribute() {}
@@ -41,6 +42,10 @@ class ElementStub {
   matches(){return true;}
   querySelector(selector:string){return this.innerHTML.includes(`id="${selector.slice(1)}"`)?new ElementStub(selector):null;}
   setPointerCapture() {}
+  hasPointerCapture(){return false;}releasePointerCapture(){}
+  isConnected=true;disabled=false;
+  getBoundingClientRect(){return {left:0,top:0,right:180,bottom:180};}
+  querySelectorAll(_selector:string):ElementStub[]{return [];}
   toggleAttribute() {}
   addEventListener(name: string, callback: (event: { preventDefault(): void }) => void) { this.listeners[name] = callback; }
   showModal() { this.open = true; }
@@ -62,6 +67,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const storageValues=new Map<string,string>(stored==='null'?[]:[['pawblossom.save.v1',stored]]);
   const element = (selector: string): ElementStub => {
     if (!elements.has(selector)) elements.set(selector, new ElementStub(selector));
+    if(selector==='#practice-board')elements.get(selector)!.querySelectorAll=()=>Array.from({length:9},(_,i)=>{const button=element(`#practice-cell-${Math.floor(i/3)}-${i%3}`);button.dataset={row:String(Math.floor(i/3)),col:String(i%3)};return button;});
     return elements.get(selector)!;
   };
   class SceneStub {
@@ -131,6 +137,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     window:{addEventListener(){}},
     Phaser: { Game: GameStub, AUTO: 0, Scale: { FIT: 0, CENTER_BOTH: 0 }, Core:{Events:{POST_RENDER:'postrender'}} },
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
+    bindPracticeBoard,
     AudioManager: AudioStub, t: (_language: string, key: string) => key, icon: () => '',
     Capacitor: { isNativePlatform: () => native,getPlatform:()=>native?'android':'web',isPluginAvailable:(name:string)=>Boolean(name==='PawblossomTestBilling'?billingBridge:adsBridge) },
     App:{addListener:(name:string,callback:(state:{isActive:boolean})=>void)=>{nativeEvents[name]=callback;return Promise.resolve({remove(){}});},getState:()=>nativeState,minimizeApp:()=>Promise.resolve()}, confirm: () => true,
@@ -268,10 +275,13 @@ function boardHarness() {
     sys={isActive:()=>true};
     cameras = { main: { setBackgroundColor() {} } };
     add = { graphics: () => graphics };
-    input = { on: (name: string, callback: (pointer: Pointer) => void) => { handlers[name] = callback; } };
+    // 간단한 좌표 시나리오도 실제 Phaser의 정상 touch 필드를 갖추어 전달합니다.
+    input = { on: (name: string, callback: (pointer: Pointer) => void,context?:unknown) => { handlers[name] = p=>callback.call(context??this,{wasTouch:true,wasCanceled:false,button:0,downTime:1,event:{touches:[{}]},...p} as Pointer); },off:(name:string)=>{delete handlers[name];} };
+    scale={on(){},off(){}};
     events = {
       on: (name: string, callback: () => void) => { lifecycle[name] = callback; },
       once: (name: string, callback: () => void) => { lifecycle[name] = callback; },
+      off:(name:string)=>{delete lifecycle[name];},
     };
   }
   const engineExports: Record<string, unknown> = {}, boardExports: Record<string, unknown> = {};
@@ -281,7 +291,7 @@ function boardHarness() {
     exports: boardExports,
     require: (name: string) => name === 'phaser' ? { default: {
       Scene: PhaserSceneStub,
-      Scenes: { Events: { PAUSE: 'pause', RESUME: 'resume', SLEEP: 'sleep', SHUTDOWN: 'shutdown', DESTROY:'destroy', CREATE:'create' } },
+      Scenes: { Events: { PAUSE: 'pause', RESUME: 'resume', SLEEP: 'sleep', WAKE:'wake', SHUTDOWN: 'shutdown', DESTROY:'destroy', CREATE:'create' } },Scale:{Events:{RESIZE:'resize'}},
     } } : name==='./BoardEffects'?effectsExports:engineExports,
   });
   const Constructor = boardExports.BoardScene as new (hooks: object) => {
@@ -502,8 +512,8 @@ describe('첫 플레이 안내', () => {
     expect(h.run('tutorialPage')).toBe(3);
     h.element('#guide-next').onclick(); // 실습 전에는 다음으로 갈 수 없습니다.
     expect(h.element('#tutorial-dialog').open).toBe(true);
-    h.element('#practice-cell-0-2').onclick();
-    h.element('#practice-cell-1-2').onclick();
+    h.element('#practice-cell-0-2').onclick({detail:0,button:0});
+    h.element('#practice-cell-1-2').onclick({detail:0,button:0});
     expect(h.run('practice.completed')).toBe(true);
     h.element('#guide-next').onclick();
     expect(h.element('#tutorial-dialog').open).toBe(false);
@@ -558,10 +568,10 @@ describe('첫 플레이 안내', () => {
     const h=mainHarness();const before=h.stored();
     h.run("switchView('settings');showTutorial()");
     for(let i=0;i<3;i++)h.element('#guide-next').onclick();
-    h.element('#practice-cell-1-2').onclick();
+    h.element('#practice-cell-1-2').onclick({detail:0,button:0});
     h.run("changeLanguage('ko')");
     expect(h.run('practice.selected.row')).toBe(1);
-    h.element('#practice-cell-0-2').onclick();
+    h.element('#practice-cell-0-2').onclick({detail:0,button:0});
     h.run("changeLanguage('en')");
     expect(h.run('practice.completed')).toBe(true);
     expect(h.run('moves')).toBe(24); // 현재 본 게임은 저장된 2스테이지입니다.
@@ -576,7 +586,7 @@ describe('첫 플레이 안내', () => {
   it('실습 중 건너뛰기와 뒤로 이동은 게임 진행을 바꾸지 않습니다',()=>{
     const h=mainHarness(false,true);
     for(let i=0;i<3;i++)h.element('#guide-next').onclick();
-    h.element('#practice-cell-0-2').onclick();
+    h.element('#practice-cell-0-2').onclick({detail:0,button:0});
     h.element('#guide-back').onclick();h.element('#guide-next').onclick();
     expect(h.run('practice.selected')).toBeUndefined();
     h.element('#guide-skip').onclick();
@@ -586,12 +596,12 @@ describe('첫 플레이 안내', () => {
   it('실습 포인터는 다른 손가락의 놓기를 무시하고 취소 후 다시 밀 수 있습니다',()=>{
     const h=mainHarness(false,true);
     for(let i=0;i<3;i++)h.element('#guide-next').onclick();
-    h.run("document.querySelector('#practice-cell-0-2').onpointerdown({button:0,pointerId:1,clientX:0,clientY:0})");
-    h.run("document.querySelector('#practice-cell-0-2').onpointerup({pointerId:2,clientX:0,clientY:60,preventDefault(){}})");
+    h.run("document.querySelector('#practice-cell-0-2').onpointerdown({button:0,isPrimary:true,pointerId:1,clientX:0,clientY:0})");
+    h.run("document.querySelector('#practice-cell-0-2').onpointerup({button:0,pointerId:2,clientX:0,clientY:60,preventDefault(){}})");
     expect(h.run('practice.completed')).toBe(false);
-    h.run("document.querySelector('#practice-cell-0-2').onpointercancel()");
-    h.run("document.querySelector('#practice-cell-0-2').onpointerdown({button:0,pointerId:3,clientX:0,clientY:0})");
-    h.run("document.querySelector('#practice-cell-0-2').onpointerup({pointerId:3,clientX:0,clientY:60,preventDefault(){}})");
+    h.run("document.querySelector('#practice-cell-0-2').onpointercancel({pointerId:1})");
+    h.run("document.querySelector('#practice-cell-0-2').onpointerdown({button:0,isPrimary:true,pointerId:3,clientX:0,clientY:0})");
+    h.run("document.querySelector('#practice-cell-0-2').onpointerup({button:0,pointerId:3,clientX:0,clientY:60,preventDefault(){}})");
     expect(h.run('practice.completed')).toBe(true);
     expect(h.run('moves')).toBe(26);
     expect(h.run('save.coins')).toBe(0);

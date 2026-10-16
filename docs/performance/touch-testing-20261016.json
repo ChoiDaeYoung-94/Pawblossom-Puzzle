@@ -1,0 +1,66 @@
+{
+  "dateKst": "2026-10-16",
+  "variant": "testing",
+  "flags": {
+    "testTools": true,
+    "androidTestAds": true,
+    "androidTestBilling": true
+  },
+  "browser": "155.0.8059.41",
+  "environment": "최종 웹 dist, 격리 headless Chrome/CDP 실제 터치, 가상 route. 실제 Android 단말 검증은 아님.",
+  "samples": [
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "checks": [
+        "실제 특수 touchcancel은 모든 저장 불변",
+        "다음 실제 특수 tap 이동 1회·점수·새로고침 복원",
+        "실습 cancel→합성 click 무실행·Enter/Space 정상·본 게임 불변",
+        "testing/production 시험 진입 구분"
+      ]
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "checks": [
+        "실제 특수 touchcancel은 모든 저장 불변",
+        "다음 실제 특수 tap 이동 1회·점수·새로고침 복원",
+        "실습 cancel→합성 click 무실행·Enter/Space 정상·본 게임 불변",
+        "testing/production 시험 진입 구분"
+      ]
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "checks": [
+        "실제 특수 touchcancel은 모든 저장 불변",
+        "다음 실제 특수 tap 이동 1회·점수·새로고침 복원",
+        "실습 cancel→합성 click 무실행·Enter/Space 정상·본 게임 불변",
+        "testing/production 시험 진입 구분"
+      ]
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "checks": [
+        "실제 특수 touchcancel은 모든 저장 불변",
+        "다음 실제 특수 tap 이동 1회·점수·새로고침 복원",
+        "실습 cancel→합성 click 무실행·Enter/Space 정상·본 게임 불변",
+        "testing/production 시험 진입 구분"
+      ]
+    }
+  ],
+  "pageerrors": []
+}

@@ -174,7 +174,8 @@ try{
     assert.deepEqual(await stored(page),played);assert.deepEqual(await page.evaluate(()=>__qa.scene().engine.board),played.inProgress.board);
     report.checks.push('연쇄 비활성 중 타일·이동 불변, 복귀 후 이동 한 번 차감과 새로고침 checkpoint 복원');
     const failing=await open({initial:played,storageFails:true});await ready(failing.page);
-    assert.match(await failing.page.locator('#toast').textContent(),/저장 공간/);assert.deepEqual(await stored(failing.page),played);
+    // #58부터 지속적인 저장 경고는 storage-announcement와 설정 카드에 표시합니다.
+    assert.match(await failing.page.locator('#storage-announcement').textContent(),/복구 사본.*이전 저장.*유지/);assert.deepEqual(await stored(failing.page),played);
     assert.deepEqual(await failing.page.evaluate(()=>__qa.scene().engine.board),played.inProgress.board);await failing.context.close();
     report.checks.push('초기 복원 저장 실패 경고 유지·메모리 보드 복원·이전 디스크 저장 보존');
     await page.evaluate(()=>{

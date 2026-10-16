@@ -11,7 +11,7 @@ export class BoardScene extends Phaser.Scene {
   engine: BoardEngine;
   private pieces: Phaser.GameObjects.Container[][] = [];
   private selected?: Position;
-  private down?: {pos:Position,x:number,y:number,pointerId:number};
+  private down?: {pos:Position,x:number,y:number,pointerId:number,downTime:number};
   private busy = false;
   private finished = false;
   private hooks: Hooks;
@@ -36,30 +36,50 @@ export class BoardScene extends Phaser.Scene {
     }
     this.paint(this.engine.board);
     this.paintLeaves(this.engine.leaves);
-    this.input.on('pointerdown',(p:Phaser.Input.Pointer)=>{
-      if(!this.canInteract()||this.down)return;
-      const pos=this.position(p.x,p.y);if(pos)this.down={pos,x:p.x,y:p.y,pointerId:p.id};
-    });
-    this.input.on('pointerup',(p:Phaser.Input.Pointer)=>{
-      if(!this.canInteract()||!this.down||this.down.pointerId!==p.id)return;
-      const d=this.down;this.down=undefined;
-      const dx=p.x-d.x,dy=p.y-d.y;
-      if(Math.hypot(dx,dy)>16){
-        const to={row:d.pos.row+(Math.abs(dy)>Math.abs(dx)?Math.sign(dy):0),col:d.pos.col+(Math.abs(dx)>=Math.abs(dy)?Math.sign(dx):0)};
-        if(to.row>=0&&to.row<8&&to.col>=0&&to.col<8)void this.attempt(d.pos,to);
-      }else this.tap(d.pos);
-    });
-    this.input.on('gameout',()=>{this.down=undefined;});
+    this.input.on('pointerdown',this.pointerDown,this);
+    this.input.on('pointerup',this.pointerUp,this);
+    this.input.on('pointerupoutside',this.pointerOutside,this);
     const cancelGesture=()=>this.cancelInput();
+    const cancelPointer=()=>{if(this.down)this.cancelInput();};
+    this.input.on('gameout',cancelPointer);
+    this.scale.on(Phaser.Scale.Events.RESIZE,cancelPointer);
     this.events.on(Phaser.Scenes.Events.PAUSE,cancelGesture);
     this.events.on(Phaser.Scenes.Events.RESUME,cancelGesture);
     this.events.on(Phaser.Scenes.Events.SLEEP,cancelGesture);
-    const dispose=()=>{this.stopPlaying();this.effects?.clear();this.cursorMark=undefined;this.pieces=[];this.leafObjects=[];};
+    this.events.on(Phaser.Scenes.Events.WAKE,cancelGesture);
+    const dispose=()=>{
+      this.input.off('pointerdown',this.pointerDown,this);this.input.off('pointerup',this.pointerUp,this);
+      this.input.off('pointerupoutside',this.pointerOutside,this);this.input.off('gameout',cancelPointer);
+      this.scale.off(Phaser.Scale.Events.RESIZE,cancelPointer);
+      for(const event of [Phaser.Scenes.Events.PAUSE,Phaser.Scenes.Events.RESUME,Phaser.Scenes.Events.SLEEP,Phaser.Scenes.Events.WAKE])this.events.off(event,cancelGesture);
+      this.events.off(Phaser.Scenes.Events.SHUTDOWN,dispose);this.events.off(Phaser.Scenes.Events.DESTROY,dispose);
+      this.stopPlaying();this.effects?.clear();this.cursorMark=undefined;this.pieces=[];this.leafObjects=[];
+    };
     this.events.once(Phaser.Scenes.Events.SHUTDOWN,dispose);
     this.events.once(Phaser.Scenes.Events.DESTROY,dispose);
     this.resetHint();
     // CREATE는 에셋 로딩과 create()가 끝나고 Scene이 RUNNING이 된 뒤 발생합니다.
     this.events.once(Phaser.Scenes.Events.CREATE,()=>{this.hooks.onReady?.();this.changed();});
+  }
+  private pointerDown(p:Phaser.Input.Pointer){
+    if(!this.canInteract()||this.down||(!p.wasTouch&&p.button!==0))return;
+    // TouchEvent에는 isPrimary가 없습니다. 이미 다른 손가락이 내려간 뒤의 새 제스처는 받지 않습니다.
+    if(p.wasTouch&&(p.event as TouchEvent).touches.length!==1)return;
+    const pos=this.position(p.x,p.y);if(pos)this.down={pos,x:p.x,y:p.y,pointerId:p.id,downTime:p.downTime};
+  }
+  private pointerOutside(p:Phaser.Input.Pointer){
+    if(this.down?.pointerId===p.id&&(p.wasTouch||p.button===0))this.cancelInput();
+  }
+  private pointerUp(p:Phaser.Input.Pointer){
+    if(!this.down||this.down.pointerId!==p.id||(!p.wasTouch&&p.button!==0))return;
+    const d=this.down;this.down=undefined;
+    // Phaser 3.90은 touchcancel도 pointerup으로 전달합니다. 비활성/취소 종료도 down부터 비웁니다.
+    if(p.wasCanceled||p.downTime!==d.downTime||!this.canInteract()||!this.position(p.x,p.y))return;
+    const dx=p.x-d.x,dy=p.y-d.y;
+    if(Math.hypot(dx,dy)>16){
+      const to={row:d.pos.row+(Math.abs(dy)>Math.abs(dx)?Math.sign(dy):0),col:d.pos.col+(Math.abs(dx)>=Math.abs(dy)?Math.sign(dx):0)};
+      if(to.row>=0&&to.row<8&&to.col>=0&&to.col<8)void this.attempt(d.pos,to);
+    }else this.tap(d.pos);
   }
   private canInteract(){return !this.busy&&!this.finished&&this.pieces.length===this.engine.rows&&this.sys.isActive();}
   /** 조회는 엔진 판정/난수/이동을 소비하지 않습니다. */
@@ -74,10 +94,11 @@ export class BoardScene extends Phaser.Scene {
   cancelInput(){this.down=undefined;this.hideKeyboardCursor();this.clearSelection();}
   keyboardKey(key:string,repeat=false){
     if(!this.canInteract()||!this.cursor)return false;
-    if(key==='Escape'){this.clearSelection();return true;}
-    if(key==='Enter'||key===' '){if(!repeat)this.tap({...this.cursor});return true;}
+    if(key==='Escape'){this.down=undefined;this.clearSelection();return true;}
+    if(key==='Enter'||key===' '){this.down=undefined;if(!repeat)this.tap({...this.cursor});return true;}
     const delta=key==='ArrowUp'?[-1,0]:key==='ArrowDown'?[1,0]:key==='ArrowLeft'?[0,-1]:key==='ArrowRight'?[0,1]:undefined;
     if(!delta)return false;
+    this.down=undefined;
     this.cursor={row:Math.max(0,Math.min(this.engine.rows-1,this.cursor.row+delta[0])),col:Math.max(0,Math.min(this.engine.cols-1,this.cursor.col+delta[1]))};
     this.drawCursor();this.changed();return true;
   }
@@ -191,6 +212,7 @@ export class BoardScene extends Phaser.Scene {
   private wait(ms:number){return new Promise<void>(resolve=>this.time.delayedCall(ms,()=>resolve()));}
   private async attempt(a:Position,b?:Position) {
     if(!this.canInteract())return;
+    this.down=undefined;
     this.busy=true;this.hintTimer?.remove();this.clearSelection();this.hooks.onStart();
     this.pieces.forEach((row,r)=>row.forEach((item,c)=>{this.tweens.killTweensOf(item);item.setScale(1);item.setPosition(this.point({row:r,col:c}).x,this.point({row:r,col:c}).y);}));
     const x=this.pieces[a.row][a.col],y=b?this.pieces[b.row][b.col]:undefined;
@@ -232,7 +254,7 @@ export class BoardScene extends Phaser.Scene {
     this.busy=false;if(!this.finished)this.resetHint();this.changed();
   }
   stopPlaying(){this.finished=true;this.hintTimer?.remove();this.cancelInput();}
-  shuffle():boolean {if(!this.canInteract())return false;this.clearSelection();this.engine.shuffle();this.paint(this.engine.board);this.hooks.audio.play('special');this.resetHint();this.changed();return true;}
+  shuffle():boolean {if(!this.canInteract())return false;this.cancelInput();this.engine.shuffle();this.paint(this.engine.board);this.hooks.audio.play('special');this.resetHint();this.changed();return true;}
   canLeave(){return !this.busy;}
   private resetHint(){this.hintTimer?.remove();this.hintTimer=this.time.delayedCall(7500,()=>this.showHint());}
   private showHint(){

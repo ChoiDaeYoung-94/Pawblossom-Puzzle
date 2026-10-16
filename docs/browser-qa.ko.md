@@ -147,3 +147,26 @@ Game은 문서 수명 동안 한 번만 생성합니다. 회차 요청 때 엔�
 실제 화면 기록은 `screenshots/prototype-desktop.jpg`, `screenshots/prototype-mobile.jpg`입니다. 테스트 중 HMR은 플레이 상태를 새로 시작할 수 있습니다.
 
 아직 전체 10레벨 수동 클리어, Android 실제 터치·성능·생명주기, 사운드 실제 청취를 검증한 것은 아닙니다. 난이도와 튜토리얼, 완성된 마을 아트 변화, 수익화 연동은 후속 범위입니다. [독립 코드 검토](prototype-review.ko.md)와 함께 확인합니다.
+## 2026-10-16 터치 취소·다중 입력·화면 전환 검증 (이슈 #60)
+
+설치된 Phaser 3.90.0의 `InputManager.onTouchCancel → Pointer.touchcancel(wasCanceled=true) → InputPlugin.processUpEvents → pointerup` 경로를 확인했습니다. 취소 종료를 정상 탭/스와이프로 실행하던 보드는 입력 주체·시작 시각·정상 종료·보드 내부 좌표를 검사합니다. 본인 종료는 busy/비활성 상태에도 먼저 down을 비우고, 보조 버튼·다른 손가락 종료는 주체를 빼앗지 않습니다. 동시에 시작하거나 다른 손가락이 남은 상태의 새 터치는 받지 않습니다.
+
+캔버스 밖 종료·gameout·PAUSE/RESUME·SLEEP/WAKE·크기 변경·SHUTDOWN/DESTROY·무료 섞기·인식한 키보드 조작에서 이전 제스처를 정리합니다. gameout/resize는 진행 중 포인터가 있을 때만 정리해 키보드 커서와 선택을 보존합니다. Scene 제거 시 자신의 입력/Scene/공유 scale 리스너를 해제합니다.
+
+첫 교환 실습은 primary pointer의 정상 up에서 탭/스와이프를 한 번 실행합니다. 본인 pointercancel/lostpointercapture·capture 예외·보드 밖 종료·DOM 교체·비활성/blur/resize 뒤 up은 실행하지 않습니다. 모든 포인터 click은 추가 실행하지 않으며 Enter/Space·보조 기술의 detail=0 click은 유지합니다. 연속 취소/스와이프 뒤 Chrome이 다음 정상 up/lostcapture만 보내고 native click을 생략한 사례를 관찰했으며, 실제 CDP 두 번 탭 회복을 확인했습니다. 다른 ID cancel은 주체를 지우지 않고 정상 up 뒤 자동 lostcapture도 결과를 중복 실행하지 않습니다.
+
+| 검사 | 결과와 증거 |
+| --- | --- |
+| 전체 자동 검사 | **249개 통과**. 기존 210개에 보드/실습 입력 회귀 39개 추가. 포인터·Scene/DOM 대역 검사는 실제 플랫폼 입력과 구분합니다. |
+| 새 터치 브라우저 검사 | **14개 시나리오 통과**, pageerror 0. [터치 기술 JSON](performance/touch-cancellation-20261016.json), `scripts/touch-cancellation-qa.mjs`. |
+| 기존 키보드·회차·Scene 수명 | **12 / 8 / 12개 통과**. [키보드 JSON](performance/board-keyboard-20261016.json), [회차 JSON](performance/round-save-20261016.json), [Scene JSON](performance/game-lifecycle-after-20261016.json). 기존 lifecycle의 저장 실패 검사는 #58의 지속 경고 영역과 복구 사본 실패 상태로 갱신했습니다. |
+| 일반/testing 웹 빌드 | `npm run build`, `npm run build:test` 통과. 마지막 dist는 production으로 복구했습니다. 기존 Phaser 큰 번들 경고는 남습니다. |
+| 빌드 결과 실제 실행 | 각 빌드 **KO/EN × 390×844/640×360, 4개 표본** 통과, pageerror 0. [testing JSON](performance/touch-testing-20261016.json), [production JSON](performance/touch-production-20261016.json), `scripts/touch-build-qa.mjs`. 특수 취소 시 모든 저장 불변·다음 탭 이동 1회/점수·새로고침 회차 복원·실습 취소 뒤 합성 click 차단·Enter/Space·시험 진입 포함/제외 확인. 복원 재기록 시 backup이 최신 정상 회차로 회전하는 #58 동작도 확인했습니다. |
+
+새 검사는 사용자 Chrome과 분리한 **headless Chrome 155.0.8059.41**에서 수행했습니다. 실제 canvas 좌표에 CDP `Input.dispatchTouchEvent(touchStart/Move/Cancel/End)`를 보내고 Phaser가 전달한 `isTrusted=true`, `wasCanceled`, DOM 타입과 좌표를 관찰했습니다. 직접 `scene.input.emit`으로 실제 터치를 대신하지 않았습니다. 일부 다중 손가락·보조 ID/버튼/capture 예외는 DOM `TouchEvent`/`PointerEvent` 오류 주입이며 isTrusted=false로 기록합니다. 보드·낙엽·이동·점수·주 저장/backup을 비교하고 취소 다음 정상 입력·네 방향 유효 교환·두 칸 탭·특수 사용/교환·무효 무이동을 확인했습니다. 실제 touch down 중 **100회 Scene 교체** 뒤 canvas/Scene/scale 취소 리스너는 각 1개, pause/sleep 리스너 총수는 각각 2개로 유지됐습니다(Phaser 자체 리스너 포함).
+
+검사 도구·소스/설치된 Phaser 원문의 해시와 최종 빌드 플래그는 [최종 검증 요약](performance/touch-verification-20261016.json)에 보존합니다.
+
+화면은 [실습 완료](screenshots/touch-practice-20261016.png), [보드](screenshots/touch-board-20261016.png), [키보드 세로](screenshots/touch-keyboard-portrait-20261016.png)/[가로](screenshots/touch-keyboard-landscape-20261016.png), [회차 복원](screenshots/touch-round-save-20261016.png)에 보존합니다. 과거 2026-10-15 QA 산출물은 덮어쓰지 않고 이번 결과를 날짜 16 파일로 보존했습니다.
+
+실제 Android OS 가장자리 제스처·홈/전화/잠금/광고 뒤 복귀·물리 회전·기기 다중 터치·TalkBack은 미검증입니다. 브라우저 resize와 활동 상태 주입을 단말 OS 검증으로 표현하지 않습니다. APK/AAB·앱 버전·Drive/콘솔·시험 SDK·확정 음량/레이아웃/언어는 변경하지 않았으며 출시 완료를 뜻하지 않습니다.
