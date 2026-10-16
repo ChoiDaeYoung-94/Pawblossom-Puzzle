@@ -1,6 +1,7 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    pipWin: '“We did it! Thanks for your help!”', pipRetry: '“It’s okay. Let’s try together again.”', replayDesc: 'A lovely replay! New rewards are given on your first clear.', testOther: 'Test another level', testResultDesc: 'Test finished. Your progress and rewards stay the same.',
     leafThinned: 'One layer swept away!', leavesCleared: 'Leaves cleared!',
     testPick: 'Test', testPickTitle: 'Jump to a test level', testPickDesc: 'Choose any level. Test wins do not save completion, rewards or unlocks.', testRound: 'Test play · no rewards', testBasic: 'Basic puzzle', testSingle: 'Single-layer leaves', testDouble: 'Two-layer leaves', testNormal: 'Return to normal play', testClose: 'Close',
     leafPile: 'Leaf pile', leafHint: 'Match on or beside brown leaves to clear them. Specials sweep them away!', leafHintDouble: '2 means two layers, 1 means one. Match on or beside leaves. A direct special hit clears both layers!',
@@ -42,6 +43,7 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    pipWin: '“해냈어요! 도와줘서 고마워요!”', pipRetry: '“괜찮아요. 같이 다시 해봐요.”', replayDesc: '다시 즐긴 스테이지예요. 새 보상은 첫 완료 때 받아요.', testOther: '다른 스테이지 테스트', testResultDesc: '테스트가 끝났어요. 기록과 보상은 그대로예요.',
     leafThinned: '한 겹 치웠어요!', leavesCleared: '낙엽을 치웠어요!',
     testPick: '테스트', testPickTitle: '테스트 스테이지 바로 가기', testPickDesc: '원하는 스테이지를 바로 골라요. 테스트 완료는 기록·보상·잠금 해제에 반영되지 않아요.', testRound: '테스트 플레이 · 보상 없음', testBasic: '기본 퍼즐', testSingle: '낙엽 한 겹', testDouble: '낙엽 두 겹', testNormal: '일반 플레이로 돌아가기', testClose: '닫기',
     leafPile: '낙엽 더미', leafHint: '갈색 낙엽 위나 바로 옆에서 맞춰요. 특수 효과로도 치울 수 있어요!', leafHintDouble: '2는 두 겹, 1은 한 겹이에요. 위나 바로 옆 매치로 한 겹씩, 특수 효과로 한 번에 치워요!',

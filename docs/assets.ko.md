@@ -81,3 +81,12 @@ One original adorable cream rabbit gardener, full body, front three-quarter view
 | 두 겹 → 한 겹 표시 | 남은 한 겹 |
 | --- | --- |
 | ![겹 감소 효과](screenshots/leaves-peel-v015.png) | ![한 겹 남은 모습](screenshots/leaves-one-v015.png) |
+
+### 2026-10-14 핍 결과 반응 (이슈 #34)
+
+기존 자체 제작 `public/assets/pip.png`를 결과 화면에 재사용했습니다. 성공 시 한 번 가볍게 뛰는 동작과 별 장식, 실패 시 작은 기울임과 응원 문구를 `src/style.css`·`src/main.ts`에서 직접 작성했습니다. 기존 별·잎 SVG 아이콘을 재사용하고 새로운 외부 에셋·생성 프롬프트는 없습니다. 원본 얼굴을 바꾼 표정 이미지 세트를 제작한 것은 아니며 표정 전용 아트는 후속 항목입니다.
+
+동작은 850ms 후 멈추고 움직임 줄이기에서는 생략합니다. 별 장식은 장식으로 숨기며 실제 새 보상은 첫 일반 완료에만 표시합니다. 360×640·320×568·640×360의 결과·버튼 배치와 한국어/영어·움직임 줄이기를 Chrome에서 확인했습니다. 실기기 반응·복귀 검수가 남은 시제품 연출입니다.
+
+![핍 성공 반응](screenshots/result-win-v016.png)
+![가로 결과 화면](screenshots/result-landscape-v016.png)
