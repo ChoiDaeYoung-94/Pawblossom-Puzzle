@@ -4,6 +4,21 @@
 
 앱 이름은 Pawblossom Puzzle이며 개발용 applicationId는 `com.choidaeyoung.pawblossompuzzle`입니다. Play 등록 전에 최종 확정합니다. 현재 main의 versionName은 `0.1.7`, versionCode는 `8`입니다. Capacitor 8, minSdk 24, compileSdk/targetSdk 36, Android Gradle Plugin 8.13.0, Gradle 8.14.3, Build Tools 36.0.0을 사용합니다.
 
+## 2026-10-16 · 한영 스토어 소개 초안 (이슈 #75)
+
+원본은 [store-listing-drafts.json](store-listing-drafts.json)입니다. `locales`의 `ko-KR`·`en-US`에 제목·짧은 소개·전체 소개만 두고, 초안 상태·기준 커밋·공식 출처·기능 근거·출시 전 미확정 사항은 별도 `metadata`에 기록했습니다. 게임 기본 언어는 `gameDefaultLocale: "ko-KR"`이고 영어를 지원합니다. 스토어 기본 언어는 아직 선택하지 않아 `storeDefaultLocale: null`로 구분합니다. 기준 `c3be5c24e5fa736a3a78db732fd8bd7c3989ca38`의 실제 보드·목표·첫 완료 보상·정원·핍·언어/음소거 구현과 에셋/오디오 기록을 대조했습니다. 여러 친구·지역이나 확정 출시 스테이지 수, 클라우드·멀티플레이·매일 보상·상점·무제한·광고 없음·작동하는 광고 제거 구매·오프라인 검증 완료·최종 대상 연령은 소개에 약속하지 않습니다.
+
+확인일은 **2026-10-16**입니다. [앱 설정·소개 한도](https://support.google.com/googleplay/android-developer/answer/9859152?hl=en), [메타데이터 정책](https://support.google.com/googleplay/android-developer/answer/9898842?hl=en), [소개 작성 권장사항](https://support.google.com/googleplay/android-developer/answer/13393723?hl=en-GB)을 확인했습니다. 마지막 문서의 `hl=en`은 429 응답이어서 같은 문서의 `en-GB` 본문을 읽었습니다. 정확한 기능 설명·번역 일관성·오해 유발 메타데이터 금지를 기준으로 작성했으며 정책 전반의 출시 적합성 판정은 아닙니다.
+
+| 언어 | 제목 (최대 30자) | 짧은 소개 (최대 80자) | 전체 소개 (최대 4,000자) |
+| --- | ---: | ---: | ---: |
+| ko-KR | 17 | 36 | 467 |
+| en-US | 17 | 70 | 984 |
+
+문자 수는 JSON을 해석한 문자열의 공백·문장부호·LF 줄바꿈을 포함한 Unicode 코드 포인트 수이며 현재 BMP 문자만 있어 JavaScript `length`와 같습니다. JSON 파싱·중복 키·locale 누락/중복·필드·문자 수/한도·기능 일치·문서 링크와 `git diff --check`를 확인했습니다. 제품 코드가 바뀌지 않아 기존 브라우저·Android 검사는 반복하지 않습니다. PR 최신 head의 Node 22·24 CI와 병합 후 main CI는 별도 확인 대상이며 결과는 해당 PR에 남깁니다.
+
+**초안 작성만 완료**했습니다. 첫 공개 콘텐츠·아트·두 언어 최종 문구, 지원 이메일/공개 연락처·개인정보처리방침 URL, 실제 대상 연령·콘텐츠 등급·동의/데이터 보안 설문, 가격·상품·운영 광고/결제와 필요한 표시, 언어별 스크린샷·피처 그래픽·스토어 아이콘, 최종 앱 ID·스토어 기본 언어 선택(게임의 한국어 기본과 별도)·국가/카테고리/태그·계정별 테스트 조건과 콘솔 등록은 확정·검증 전입니다. 개인 계정·연락처·URL·가격·상품을 추정하거나 등록하지 않았습니다. 스토어 제출·심사 통과·출시 완료가 아니며 [보류 검증 #73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)을 유지합니다. 단말 테스트·APK 전달은 보류하며 새 APK/AAB·Android 동기화·버전·음량·계정/서비스·Drive/콘솔 변경은 없습니다.
+
 ## 2026-10-16 · v0.1.7 누적 테스트 빌드 (이슈 #66)
 
 v0.1.6 이후의 30스테이지, 안정된 회차 저장·손상 복구, 키보드·터치 취소·가독성, 핍 전용 결과 아트와 오디오 복구를 묶었습니다. 기준 `850c1f6c066e432ac24cb2d6180d954856ba7dc1`에서 버전/검증 도구를 준비한 **`c6b157826ba9e7fed79d1f748ef606131f2b0e1b`**의 앱 코드·리소스로 빌드했습니다. 이후 수정은 검증 스크립트의 package-lock 빈 이름 키 파싱·정상 차단 후 성공 종료코드와 기술 기록이며 APK 앱 소스를 바꾸지 않습니다. package.json·lock 루트/패키지 버전과 Android 0.1.7/code 8을 대조했습니다.
