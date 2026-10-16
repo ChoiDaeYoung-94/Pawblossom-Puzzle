@@ -16,7 +16,9 @@ import { SwapPractice } from './SwapPractice';
 import { gardenArt } from './GardenArt';
 import { TEST_TOOLS_ENABLED } from './buildFlags';
 import { ANDROID_TEST_ADS_ENABLED } from './buildFlags';
+import { ANDROID_TEST_BILLING_ENABLED } from './buildFlags';
 import { TestAdsController,nativeTestAds,adCopy } from './testAds';
+import { TestBillingController,nativeTestBilling,billingCopy } from './testBilling';
 
 let save=loadSave(), currentLevel=save.highestLevel, moves=0, score=0, collected=Array(6).fill(0) as number[], shuffles=1;
 let scene:BoardScene, game:Phaser.Game, route='puzzle', toastTimer:ReturnType<typeof setTimeout>;
@@ -37,6 +39,8 @@ let nativeRevision=0;
 let audioActive:boolean|undefined;
 const androidAdEntry=typeof ANDROID_TEST_ADS_ENABLED!=='undefined'&&ANDROID_TEST_ADS_ENABLED&&Capacitor.isNativePlatform()&&Capacitor.getPlatform()==='android'&&Capacitor.isPluginAvailable('PawblossomTestAds');
 let testAds:TestAdsController|undefined;
+const androidBillingEntry=typeof ANDROID_TEST_BILLING_ENABLED!=='undefined'&&ANDROID_TEST_BILLING_ENABLED&&Capacitor.isNativePlatform()&&Capacitor.getPlatform()==='android'&&Capacitor.isPluginAvailable('PawblossomTestBilling');
+let testBilling:TestBillingController|undefined;
 const audio=new AudioManager(false);audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);
 const text=(key:TextKey)=>t(save.language,key);
 const label=(key:TextKey)=>`<span data-t="${key}">${text(key)}</span>`;
@@ -75,10 +79,14 @@ $('#app').innerHTML=`
 if(androidAdEntry){
   const dialog=document.createElement('dialog');dialog.id='test-ad-dialog';dialog.setAttribute('aria-labelledby','test-ad-title');document.body.append(dialog);
 }
+if(androidBillingEntry){
+  const dialog=document.createElement('dialog');dialog.id='test-billing-dialog';dialog.setAttribute('aria-labelledby','test-billing-title');document.body.append(dialog);
+}
+function billingModal(){return Boolean(androidBillingEntry&&$<HTMLDialogElement>('#test-billing-dialog').open);}
 
 // 문서와 Android 상태 중 하나라도 비활성이면 오디오와 진행을 멈춥니다.
 function syncActivity(){
-  const active=nativeActive&&!document.hidden&&!testAds?.pausesGame;
+  const active=nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!billingModal();
   if(audioActive!==active){audioActive=active;if(active)audio.resume();else audio.suspend();}
   if(!game)return;
   const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
@@ -90,7 +98,7 @@ function syncActivity(){
 function updateBoardAccess(){
   const board=$('#game-canvas'),state=scene?.keyboardState();
   const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
-  const visible=nativeActive&&!document.hidden&&!testAds?.pausesGame&&route==='puzzle'&&!modal&&!boardPending;
+  const visible=nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!billingModal()&&route==='puzzle'&&!modal&&!boardPending;
   const available=visible&&Boolean(state?.available);
   board.tabIndex=visible&&(available||state?.busy)?0:-1;
   board.setAttribute('aria-disabled',String(!available));board.setAttribute('aria-busy',String(Boolean(state?.busy)));
@@ -295,8 +303,8 @@ function renderAdDialog(){
   const copy=adCopy(save.language),dialog=$<HTMLDialogElement>('#test-ad-dialog');
   if(!dialog.querySelector('#test-ad-title')){
     dialog.innerHTML='<div class="test-ad-content"><h2 id="test-ad-title" tabindex="-1"></h2><p id="test-ad-intro"></p><p id="test-ad-notice"></p><p id="test-ad-status" role="status" aria-live="polite"></p><p id="test-ad-error"></p><div class="test-ad-actions"><button id="test-ad-load" class="primary"></button><button id="test-ad-show" class="primary"></button><button id="test-ad-cancel" class="text-button"></button><button id="test-ad-privacy" class="text-button"></button><button id="test-ad-close" class="text-button"></button></div></div>';
-    $('#test-ad-load').onclick=()=>{void testAds!.command('prepare');};
-    $('#test-ad-show').onclick=()=>{if(nativeActive&&!document.hidden)void testAds!.command('show');};
+    $('#test-ad-load').onclick=()=>{if(!testBilling?.blocksAds)void testAds!.command('prepare');};
+    $('#test-ad-show').onclick=()=>{if(nativeActive&&!document.hidden&&!testBilling?.blocksAds)void testAds!.command('show');};
     $('#test-ad-cancel').onclick=()=>{void testAds!.command('cancel');};
     $('#test-ad-privacy').onclick=()=>{void testAds!.command('privacyOptions');};
     $('#test-ad-close').onclick=()=>{void closeAdDialog();};
@@ -304,10 +312,10 @@ function renderAdDialog(){
   const state=testAds.snapshot;
   $('#test-ad-title').textContent=copy.title;$('#test-ad-intro').textContent=copy.intro;$('#test-ad-notice').textContent=copy.notice;
   $('#test-ad-status').textContent=state.available?copy.states[state.state]:copy.unavailable;
-  $('#test-ad-error').textContent=state.error?(state.error.startsWith('consent')?copy.blocked:copy.recovery):'';
+  $('#test-ad-error').textContent=testBilling?.blocksAds?(save.language==='ko'?'광고 제거 권한 확인 또는 적용 중 · 광고 보류':'Ad removal is active or being checked · Ads held'):state.error?(state.error.startsWith('consent')?copy.blocked:copy.recovery):'';
   $('#test-ad-load').textContent=copy.prepare;$('#test-ad-show').textContent=copy.show;$('#test-ad-cancel').textContent=copy.cancel;$('#test-ad-close').textContent=copy.close;$('#test-ad-privacy').textContent=copy.privacy;
-  $('#test-ad-load').toggleAttribute('disabled',!state.available||testAds.busy||state.state==='ready');
-  $('#test-ad-show').toggleAttribute('disabled',!state.available||testAds.busy||state.state!=='ready'||!nativeActive||document.hidden);
+  $('#test-ad-load').toggleAttribute('disabled',!state.available||testAds.busy||state.state==='ready'||Boolean(testBilling?.blocksAds));
+  $('#test-ad-show').toggleAttribute('disabled',!state.available||testAds.busy||state.state!=='ready'||!nativeActive||document.hidden||Boolean(testBilling?.blocksAds));
   $('#test-ad-cancel').hidden=!['consent','loading','ready'].includes(state.state);
   $('#test-ad-cancel').toggleAttribute('disabled',testAds.pending||testAds.overlay);
   $('#test-ad-privacy').hidden=!state.privacyRequired;
@@ -315,7 +323,7 @@ function renderAdDialog(){
   $('#test-ad-close').toggleAttribute('disabled',testAds.busy);
 }
 async function showAdDialog(){
-  if(!androidAdEntry||!scene.canLeave()||document.querySelector('dialog[open]'))return;
+  if(!androidAdEntry||testBilling?.pausesGame||!scene.canLeave()||document.querySelector('dialog[open]'))return;
   if(!testAds)testAds=new TestAdsController(nativeTestAds(),()=>{renderAdDialog();syncActivity();});
   renderAdDialog();$<HTMLDialogElement>('#test-ad-dialog').showModal();syncActivity();$('#test-ad-title').focus();
   await testAds.connect();
@@ -325,6 +333,37 @@ async function closeAdDialog(){
   if(testAds.needsCancellation)await testAds.command('cancel');
   if(testAds.busy||testAds.needsCancellation)return;
   $<HTMLDialogElement>('#test-ad-dialog').close();syncActivity();$('#test-ad-button').focus();
+}
+function renderBillingDialog(){
+  if(!testBilling)return;
+  const copy=billingCopy(save.language),dialog=$<HTMLDialogElement>('#test-billing-dialog');
+  if(!dialog.querySelector('#test-billing-title')){
+    dialog.innerHTML='<div class="test-ad-content"><h2 id="test-billing-title" tabindex="-1"></h2><p id="test-billing-intro"></p><p id="test-billing-notice"></p><p id="test-billing-status" role="status" aria-live="polite"></p><p id="test-billing-error" role="status"></p><div class="test-ad-actions"><button id="test-billing-product" class="primary"></button><button id="test-billing-buy" class="primary"></button><button id="test-billing-restore" class="text-button"></button><button id="test-billing-close" class="text-button"></button></div></div>';
+    $('#test-billing-product').onclick=()=>{void testBilling!.command('queryProduct');};
+    $('#test-billing-buy').onclick=()=>{if(nativeActive&&!document.hidden&&!testAds?.busy)void testBilling!.command('purchase');};
+    $('#test-billing-restore').onclick=()=>{void testBilling!.command('restore');};
+    $('#test-billing-close').onclick=closeBillingDialog;
+  }
+  const value=testBilling.snapshot;
+  $('#test-billing-title').textContent=copy.title;$('#test-billing-intro').textContent=copy.intro;$('#test-billing-notice').textContent=copy.notice;
+  $('#test-billing-status').textContent=!value.configured?copy.unconfigured:copy.entitlement[value.entitlement]+(testBilling.busy?' · '+copy.busy:'');
+  $('#test-billing-error').textContent=!value.configured?'':value.error?(value.error.startsWith('ack')?copy.ack:value.error==='verification'?copy.verification:value.error==='price-changed'?copy.priceChanged:value.error==='cancelled'?copy.cancelled:copy.error):value.state==='cancelled'?copy.cancelled:'';
+  $('#test-billing-product').textContent=copy.queryProduct;
+  $('#test-billing-buy').textContent=copy.purchase+(value.price?' · '+value.price:'');
+  $('#test-billing-restore').textContent=copy.restore;$('#test-billing-close').textContent=copy.close;
+  for(const id of ['product','restore'])$('#test-billing-'+id).toggleAttribute('disabled',!value.available||!value.configured||testBilling.busy||Boolean(testAds?.busy)||!nativeActive||document.hidden);
+  $('#test-billing-buy').toggleAttribute('disabled',!testBilling.canPurchase||Boolean(testAds?.busy)||!nativeActive||document.hidden);
+  // 전체 구매 조회 중에도 화면을 닫을 수 있습니다. 실제 Play 창 종료는 네이티브가 확인합니다.
+  $('#test-billing-close').toggleAttribute('disabled',testBilling.pausesGame);
+}
+async function showBillingDialog(){
+  if(!androidBillingEntry||!scene.canLeave()||testAds?.busy||document.querySelector('dialog[open]'))return;
+  renderBillingDialog();$<HTMLDialogElement>('#test-billing-dialog').showModal();syncActivity();$('#test-billing-title').focus();
+  await testBilling?.connect();
+}
+function closeBillingDialog(){
+  if(testBilling?.pausesGame)return;
+  $<HTMLDialogElement>('#test-billing-dialog').close();syncActivity();$('#test-billing-button').focus();
 }
 function renderViews(grew=false){
   $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">BLOSSOM MEADOW</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div><div class="garden-card"><div class="garden-picture"><div class="garden-illustration" role="img" aria-label="${text('gardenImage').replace('{count}',String(save.garden))}">${gardenArt(save.garden,grew)}</div><span class="garden-pill">${icon('flower',17)} ${save.garden} / 5</span></div><h3>${text('garden')}</h3><p class="garden-stage" role="status">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div><div class="level-picker"><h3>${text('levelSelect')}</h3>${chapterTabs(selectedChapter)}<div class="level-grid" id="chapter-levels" role="tabpanel" aria-labelledby="chapter-${selectedChapter}">${levels.filter(l=>chapterForLevel(l.id).id===selectedChapter).map(l=>`<button data-level="${l.id}" ${l.id>save.highestLevel?'disabled':''} class="level-node ${save.completed.includes(l.id)?'completed':''}" aria-label="${text('level')} ${l.id}">${l.id>save.highestLevel?icon('lock',19):l.id}${save.completed.includes(l.id)?`<span>${icon('star',13)}</span>`:''}</button>`).join('')}</div></div>`;
@@ -336,12 +375,13 @@ function renderViews(grew=false){
   $('#music-toggle').onclick=()=>{save.music=!save.music;audio.setMusicEnabled(save.music);persist();$('#music-toggle').classList.toggle('on',save.music);$('#music-toggle').setAttribute('aria-checked',String(save.music));};
   const help=document.createElement('button');help.id='tutorial-help';help.className='primary guide-help';help.textContent=text('tutorial');help.onclick=showTutorial;$('#settings-view').append(help);
   if(androidAdEntry){const entry=document.createElement('button');entry.id='test-ad-button';entry.className='text-button';entry.textContent=adCopy(save.language).title;entry.onclick=()=>{void showAdDialog();};$('#settings-view').append(entry);}
+  if(androidBillingEntry){const entry=document.createElement('button');entry.id='test-billing-button';entry.className='text-button';entry.textContent=billingCopy(save.language).title;entry.onclick=()=>{void showBillingDialog();};$('#settings-view').append(entry);}
   $('#sfx-toggle').onclick=()=>{save.sfx=!save.sfx;audio.setSfxEnabled(save.sfx);persist();$('#sfx-toggle').classList.toggle('on',save.sfx);$('#sfx-toggle').setAttribute('aria-checked',String(save.sfx));};
   $<HTMLSelectElement>('#language').onchange=event=>changeLanguage((event.target as HTMLSelectElement).value==='ko'?'ko':'en');
   $('#reset').onclick=()=>{if(!confirm(text('resetConfirm')))return;save=clearSave();selectedChapter=1;persist();audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');showTutorial();};
 }
 function localize(){document.documentElement.lang=save.language;document.querySelectorAll<HTMLElement>('[data-t]').forEach(el=>el.textContent=text(el.dataset.t as TextKey));$('#language-toggle').textContent=save.language==='en'?'한국어':'EN';$('#settings-button').setAttribute('aria-label',text('settings'));$('#restart').setAttribute('aria-label',text('restart'));}
-function changeLanguage(language:'en'|'ko'){const focusedLanguage=document.activeElement===$('#language');save.language=language;persist();localize();updateWallet();renderViews();if(focusedLanguage)$('#language').focus();updateGoals();updateBoardAccess();if($<HTMLDialogElement>('#tutorial-dialog').open)renderTutorial();if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)renderTestPicker();if(androidAdEntry&&testAds)renderAdDialog();}
+function changeLanguage(language:'en'|'ko'){const focusedLanguage=document.activeElement===$('#language');save.language=language;persist();localize();updateWallet();renderViews();if(focusedLanguage)$('#language').focus();updateGoals();updateBoardAccess();if($<HTMLDialogElement>('#tutorial-dialog').open)renderTutorial();if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)renderTestPicker();if(androidAdEntry&&testAds)renderAdDialog();if(androidBillingEntry&&testBilling)renderBillingDialog();}
 function switchView(name:string){
   if(!scene.canLeave())return;
   route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
@@ -366,29 +406,34 @@ boardFocus.addEventListener('pointerdown',()=>{boardFocus.dataset.keyboard='fals
 boardFocus.addEventListener('keydown',event=>{
   if(event.target!==boardFocus||document.activeElement!==boardFocus||event.altKey||event.ctrlKey||event.metaKey||event.isComposing)return;
   if(!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter',' ','Escape'].includes(event.key))return;
-  if(boardPending||route!=='puzzle'||!nativeActive||document.hidden||testAds?.pausesGame||document.querySelector('dialog[open]'))return;
+  if(boardPending||route!=='puzzle'||!nativeActive||document.hidden||testAds?.pausesGame||testBilling?.pausesGame||document.querySelector('dialog[open]'))return;
   // 대기 중에도 방향키/Space의 페이지 스크롤은 막고 엔진 입력은 거부합니다.
   event.preventDefault();
   if(!scene.keyboardState().available)return;
   boardFocus.dataset.keyboard='true';void audio.unlock().catch(()=>{});scene.focusKeyboard();scene.keyboardKey(event.key,event.repeat);
 });
 window.addEventListener('blur',()=>{boardFocus.dataset.keyboard='false';scene?.cancelInput();});
-document.addEventListener('visibilitychange',()=>{syncActivity();if(testAds){renderAdDialog();if(!document.hidden)void testAds.refresh();}});
-window.addEventListener('pagehide',()=>{void testAds?.dispose();});
+document.addEventListener('visibilitychange',()=>{syncActivity();if(testAds){renderAdDialog();if(!document.hidden)void testAds.refresh();}if(testBilling){renderBillingDialog();if(!document.hidden)void testBilling.refresh();}});
+window.addEventListener('pagehide',()=>{void testAds?.dispose();void testBilling?.dispose();});
 if(Capacitor.isNativePlatform()){
-  void App.addListener('appStateChange',({isActive})=>{nativeRevision++;nativeActive=isActive;syncActivity();if(testAds){renderAdDialog();if(isActive)void testAds.refresh();}}).then(async()=>{
+  void App.addListener('appStateChange',({isActive})=>{nativeRevision++;nativeActive=isActive;syncActivity();if(testAds){renderAdDialog();if(isActive)void testAds.refresh();}if(testBilling){renderBillingDialog();if(isActive)void testBilling.refresh();}}).then(async()=>{
     const revision=nativeRevision;
     const state=await App.getState();
     // 늦게 반환된 초기 상태가 이후의 복귀 이벤트를 덮어쓰지 않도록 합니다.
     if(revision===nativeRevision){nativeActive=state.isActive;syncActivity();}
   }).catch(()=>{ /* 네이티브 상태를 확인할 수 없으면 비활성 상태를 유지합니다. */ });
-  void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open){void closeAdDialog();}else if(testAds?.pausesGame)return;else if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('village');}else if(route!=='puzzle')switchView('puzzle');else void App.minimizeApp();});
+  void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if(billingModal())closeBillingDialog();else if(testBilling?.pausesGame)return;else if(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open){void closeAdDialog();}else if(testAds?.pausesGame)return;else if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('village');}else if(route!=='puzzle')switchView('puzzle');else void App.minimizeApp();});
 }
 if(androidAdEntry)$<HTMLDialogElement>('#test-ad-dialog').addEventListener('cancel',event=>{event.preventDefault();void closeAdDialog();});
+if(androidBillingEntry)$<HTMLDialogElement>('#test-billing-dialog').addEventListener('cancel',event=>{event.preventDefault();closeBillingDialog();});
 if(typeof ResizeObserver!=='undefined'){
   new ResizeObserver(()=>{if(game?.isBooted)game.scale.refresh();}).observe($('#game-canvas'));
 }
 const resumed=Boolean(save.inProgress);
 const resumedStored=resumeNormal();updateWallet();renderViews();localize();
+if(androidBillingEntry){
+  testBilling=new TestBillingController(nativeTestBilling(),()=>{renderBillingDialog();if(testAds)renderAdDialog();syncActivity();});
+  void testBilling.connect();
+}
 if(resumed&&resumedStored)notice(text('roundResumed'));
 if(!save.tutorialSeen)showTutorial();
