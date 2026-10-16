@@ -5,8 +5,10 @@ import { BoardEngine, seededRng } from '../src/core';
 
 afterEach(()=>vi.unstubAllGlobals());
 function storage(value:unknown){
-  let raw=JSON.stringify(value);
-  vi.stubGlobal('localStorage',{getItem:()=>raw,setItem:(_key:string,next:string)=>{raw=next;}});
+  const base={version:1,highestLevel:1,completed:[],stars:0,coins:0,garden:0};
+  const data=value&&typeof value==='object'?{...base,...value}:value;
+  const values=new Map<string,string>(data===null?[]:[['pawblossom.save.v1',JSON.stringify(data)]]);
+  vi.stubGlobal('localStorage',{getItem:(key:string)=>values.get(key)??null,setItem:(key:string,next:string)=>{values.set(key,next);},removeItem:(key:string)=>values.delete(key)});
 }
 describe('튜토리얼 저장 호환',()=>{
   it('첫 실행과 언어 없는 저장은 한국어이며 명시한 영어는 유지합니다',()=>{

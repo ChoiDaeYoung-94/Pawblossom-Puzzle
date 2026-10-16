@@ -9,7 +9,7 @@ import '@fontsource/fraunces/latin-600.css';
 import './style.css';
 import { BoardScene,tileNames } from './BoardScene';
 import { AudioManager } from './audio/AudioManager';
-import { loadSave,saveData,clearSave,levels,LEVEL_COUNT,chapters,chapterForLevel,levelSignature,type RoundCheckpoint } from './state';
+import { loadSave,saveData,retrySave,saveStatus,clearSave,levels,LEVEL_COUNT,chapters,chapterForLevel,levelSignature,type RoundCheckpoint } from './state';
 import { t,type TextKey } from './i18n';
 import { icon } from './icons';
 import { SwapPractice } from './SwapPractice';
@@ -45,7 +45,21 @@ const audio=new AudioManager(false);audio.setMusicEnabled(save.music);audio.setS
 const text=(key:TextKey)=>t(save.language,key);
 const label=(key:TextKey)=>`<span data-t="${key}">${text(key)}</span>`;
 const $=<T extends HTMLElement=HTMLElement>(selector:string)=>document.querySelector<T>(selector)!;
-function persist(){const stored=saveData(save);if(!stored)notice(save.language==='ko'?'기기 저장 공간을 사용할 수 없어요. 이번 진행은 앱을 닫으면 사라질 수 있어요.':'Storage is unavailable. This session’s progress may not be saved.');return stored;}
+function persist(){const stored=saveData(save);updateSaveStatus();return stored;}
+let announcedSave='';
+function updateSaveStatus(){
+  const status=saveStatus();
+  const problem=status.write==='reset-failed'||status.write==='blocked'||status.write==='failed'||status.write==='backup-failed'||status.resetPending||['corrupt','unsupported','read-error','conflict'].includes(status.load);
+  const key:TextKey=status.write==='reset-failed'?'saveResetFailed':status.resetPending?'saveResetPending':status.load==='conflict'?'saveConflict':status.load==='unsupported'?'saveUnsupported':status.load==='read-error'?'saveReadError':status.load==='corrupt'?'saveCorrupt':status.write==='backup-failed'?'saveBackupFailed':status.write==='failed'?'saveFailed':status.load==='recovered'?'saveRecovered':status.write==='saved'?'saveSaved':'saveNew';
+  const message=text(key), detail=document.querySelector('#save-status');
+  if(detail)detail.textContent=message;
+  const retry=document.querySelector<HTMLButtonElement>('#save-retry');
+  if(retry){retry.textContent=text('saveRetry');retry.hidden=!problem&&document.activeElement!==retry;}
+  const reload=document.querySelector<HTMLButtonElement>('#save-reload');if(reload){reload.textContent=text('saveReload');reload.hidden=status.load!=='conflict';}
+  const settings=$('#settings-button');settings.classList.toggle('save-attention',problem||status.load==='recovered');settings.setAttribute('aria-label',text('settings')+(problem?' · '+text('saveAttention'):''));
+  const signature=key+':'+save.language;
+  if(signature!==announcedSave){announcedSave=signature;$('#storage-announcement').textContent=problem||status.load==='recovered'?message:'';}
+}
 
 $('#app').innerHTML=`
   <header class="topbar">
@@ -74,6 +88,7 @@ $('#app').innerHTML=`
     </section>
   </main>
   <footer class="page-footer"><span>${label('tagline')}</span><span>${label('prototype')}</span></footer>
+  <div id="storage-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
   <div id="toast" role="status"></div><dialog id="result-dialog" aria-labelledby="result-title" aria-describedby="result-description"></dialog><dialog id="tutorial-dialog" aria-labelledby="tutorial-title" aria-describedby="tutorial-description"></dialog>${TEST_TOOLS_ENABLED?'<dialog id="test-level-dialog" aria-labelledby="test-level-title"></dialog>':''}
 `;
 if(androidAdEntry){
@@ -368,7 +383,10 @@ function closeBillingDialog(){
 function renderViews(grew=false){
   $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">BLOSSOM MEADOW</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div><div class="garden-card"><div class="garden-picture"><div class="garden-illustration" role="img" aria-label="${text('gardenImage').replace('{count}',String(save.garden))}">${gardenArt(save.garden,grew)}</div><span class="garden-pill">${icon('flower',17)} ${save.garden} / 5</span></div><h3>${text('garden')}</h3><p class="garden-stage" role="status">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div><div class="level-picker"><h3>${text('levelSelect')}</h3>${chapterTabs(selectedChapter)}<div class="level-grid" id="chapter-levels" role="tabpanel" aria-labelledby="chapter-${selectedChapter}">${levels.filter(l=>chapterForLevel(l.id).id===selectedChapter).map(l=>`<button data-level="${l.id}" ${l.id>save.highestLevel?'disabled':''} class="level-node ${save.completed.includes(l.id)?'completed':''}" aria-label="${text('level')} ${l.id}">${l.id>save.highestLevel?icon('lock',19):l.id}${save.completed.includes(l.id)?`<span>${icon('star',13)}</span>`:''}</button>`).join('')}</div></div>`;
   $('#journal-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM FRIENDS</div><h2>${text('friendsTitle')}</h2><p>${text('friendsDesc')}</p></div><div class="journal-card"><span class="friend-number">01</span><img src="/assets/pip.png" alt="Pip"/><h3>${text('pip')}</h3><p>${text('pipDesc')}</p><span class="friend-tag">${icon('leaf',15)} Blossom Meadow</span></div><div class="coming-card">${icon('paw',28)}<div><strong>${text('upcoming')}</strong><p>${text('upcomingDesc')}</p></div></div>`;
-  $('#settings-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v0.1.6</p>`;
+  $('#settings-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><div class="storage-card"><p id="save-status"></p><button id="save-retry" class="text-button" hidden></button><button id="save-reload" class="text-button" hidden></button></div><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v0.1.6</p>`;
+  updateSaveStatus();
+  $('#save-retry').onclick=()=>{retrySave(save);updateSaveStatus();};
+  $('#save-reload').onclick=()=>{if(confirm(text('saveReloadConfirm')))window.location.reload();};
   bindChapterTabs();
   $('#grow').onclick=()=>{if(growing||save.stars<2||save.garden>=5)return;growing=true;save.stars-=2;save.garden++;const stored=persist();updateWallet();renderViews(true);audio.play('reward');if(stored)notice(text('planted'));setTimeout(()=>{growing=false;$('#grow').toggleAttribute('disabled',save.stars<2||save.garden>=5);},450);};
   document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach(button=>button.onclick=()=>{if(!scene.canLeave())return;const id=Number(button.dataset.level);if(id>save.highestLevel)return;startLevel(id);switchView('puzzle');});
@@ -378,7 +396,7 @@ function renderViews(grew=false){
   if(androidBillingEntry){const entry=document.createElement('button');entry.id='test-billing-button';entry.className='text-button';entry.textContent=billingCopy(save.language).title;entry.onclick=()=>{void showBillingDialog();};$('#settings-view').append(entry);}
   $('#sfx-toggle').onclick=()=>{save.sfx=!save.sfx;audio.setSfxEnabled(save.sfx);persist();$('#sfx-toggle').classList.toggle('on',save.sfx);$('#sfx-toggle').setAttribute('aria-checked',String(save.sfx));};
   $<HTMLSelectElement>('#language').onchange=event=>changeLanguage((event.target as HTMLSelectElement).value==='ko'?'ko':'en');
-  $('#reset').onclick=()=>{if(!confirm(text('resetConfirm')))return;save=clearSave();selectedChapter=1;persist();audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');showTutorial();};
+  $('#reset').onclick=()=>{if(!confirm(text('resetConfirm')))return;const cleared=clearSave();updateSaveStatus();if(!cleared)return;save=cleared;selectedChapter=1;audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');showTutorial();};
 }
 function localize(){document.documentElement.lang=save.language;document.querySelectorAll<HTMLElement>('[data-t]').forEach(el=>el.textContent=text(el.dataset.t as TextKey));$('#language-toggle').textContent=save.language==='en'?'한국어':'EN';$('#settings-button').setAttribute('aria-label',text('settings'));$('#restart').setAttribute('aria-label',text('restart'));}
 function changeLanguage(language:'en'|'ko'){const focusedLanguage=document.activeElement===$('#language');save.language=language;persist();localize();updateWallet();renderViews();if(focusedLanguage)$('#language').focus();updateGoals();updateBoardAccess();if($<HTMLDialogElement>('#tutorial-dialog').open)renderTutorial();if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)renderTestPicker();if(androidAdEntry&&testAds)renderAdDialog();if(androidBillingEntry&&testBilling)renderBillingDialog();}
@@ -386,6 +404,7 @@ function switchView(name:string){
   if(!scene.canLeave())return;
   route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
   document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(b=>{b.classList.toggle('active',b.dataset.route===name);if(b.dataset.route===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+  updateSaveStatus();
   if(name==='puzzle'&&game.isBooted)game.scale.refresh();syncActivity();
 }
 document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(button=>button.onclick=()=>switchView(button.dataset.route!));
@@ -435,5 +454,5 @@ if(androidBillingEntry){
   testBilling=new TestBillingController(nativeTestBilling(),()=>{renderBillingDialog();if(testAds)renderAdDialog();syncActivity();});
   void testBilling.connect();
 }
-if(resumed&&resumedStored)notice(text('roundResumed'));
+if(resumed&&resumedStored&&saveStatus().load!=='recovered')notice(text('roundResumed'));
 if(!save.tutorialSeen)showTutorial();

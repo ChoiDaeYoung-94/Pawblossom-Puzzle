@@ -1,5 +1,7 @@
 # 출시까지 남은 작업
 
+2026-10-16 이슈 #58: 로컬 저장 오류·손상 보호를 개발 브랜치에 구현했습니다. 구조 검증한 v1 사본 1개, 미래 형식/읽기 실패 덮어쓰기 차단, 새로 발견한 기존 기록의 충돌 보호, 최신 진행 재시도와 초기화 중 실패·종료 뒤 옛 사본 부활 방지를 포함합니다. KO/EN 상태·재시도·확인 후 기존 기록 불러오기를 설정에 연결했습니다. 자동 검사 210개·저장 오류 Chrome 14개·회차 8개·키보드 12개·화면 104개 표본·일반/testing 빌드·최종 production 8개 표본 통과. [기록과 한계](browser-qa.ko.md)를 보존하며 실제 Android 저장소 소진·강제 종료·업데이트/재설치와 TalkBack은 아직 검증 전입니다. 이번 변경은 APK/AAB 제작·업로드나 출시 검증 완료가 아닙니다.
+
 2026-10-15 기준입니다. 구현 상태는 현재 개발 브랜치 기준이며 main 반영이나 출시 완료를 뜻하지 않습니다. 각 항목을 시작할 때 이슈를 만들거나 연결하고, 검증 후 PR로 제출합니다.
 
 현재 열린 선행 PR은 [작업 규칙 #3](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/3), [설명 안내 #5](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/5), [초반 난이도 #7](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/7)입니다. 병합은 사용자님의 지시에 따릅니다. 후속 PR은 선행 PR 병합 후 main 기준으로 다시 확인합니다.

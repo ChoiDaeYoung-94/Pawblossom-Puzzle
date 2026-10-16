@@ -1,0 +1,101 @@
+{
+  "dateKst": "2026-10-16",
+  "browser": "155.0.8059.41",
+  "build": {
+    "testTools": false,
+    "androidTestAds": false,
+    "androidTestBilling": false
+  },
+  "method": "production dist 실제 실행, 정상 primary+미래 backup 보호, 실제 클릭/Space와 포커스, 4개 크기×KO/EN",
+  "samples": [
+    {
+      "language": "ko",
+      "width": 320,
+      "height": 568,
+      "message": "지원하지 않는 저장 형식이라 덮어쓰기와 이전 사본 복원을 막았어요. 맞는 앱 버전을 사용하거나 직접 초기화해 주세요.",
+      "button": [
+        141.515625,
+        44
+      ],
+      "overflow": false
+    },
+    {
+      "language": "en",
+      "width": 320,
+      "height": 568,
+      "message": "This save uses an unsupported format. It is protected from overwriting and older recovery copies. Use the matching app version, or reset explicitly.",
+      "button": [
+        185.640625,
+        44
+      ],
+      "overflow": false
+    },
+    {
+      "language": "ko",
+      "width": 360,
+      "height": 640,
+      "message": "지원하지 않는 저장 형식이라 덮어쓰기와 이전 사본 복원을 막았어요. 맞는 앱 버전을 사용하거나 직접 초기화해 주세요.",
+      "button": [
+        141.515625,
+        44
+      ],
+      "overflow": false
+    },
+    {
+      "language": "en",
+      "width": 360,
+      "height": 640,
+      "message": "This save uses an unsupported format. It is protected from overwriting and older recovery copies. Use the matching app version, or reset explicitly.",
+      "button": [
+        185.640625,
+        44
+      ],
+      "overflow": false
+    },
+    {
+      "language": "ko",
+      "width": 390,
+      "height": 844,
+      "message": "지원하지 않는 저장 형식이라 덮어쓰기와 이전 사본 복원을 막았어요. 맞는 앱 버전을 사용하거나 직접 초기화해 주세요.",
+      "button": [
+        141.515625,
+        44
+      ],
+      "overflow": false
+    },
+    {
+      "language": "en",
+      "width": 390,
+      "height": 844,
+      "message": "This save uses an unsupported format. It is protected from overwriting and older recovery copies. Use the matching app version, or reset explicitly.",
+      "button": [
+        185.640625,
+        44
+      ],
+      "overflow": false
+    },
+    {
+      "language": "ko",
+      "width": 640,
+      "height": 360,
+      "message": "지원하지 않는 저장 형식이라 덮어쓰기와 이전 사본 복원을 막았어요. 맞는 앱 버전을 사용하거나 직접 초기화해 주세요.",
+      "button": [
+        141.515625,
+        44
+      ],
+      "overflow": false
+    },
+    {
+      "language": "en",
+      "width": 640,
+      "height": 360,
+      "message": "This save uses an unsupported format. It is protected from overwriting and older recovery copies. Use the matching app version, or reset explicitly.",
+      "button": [
+        185.640625,
+        44
+      ],
+      "overflow": false
+    }
+  ],
+  "pageerrors": []
+}
