@@ -1,5 +1,11 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-16 · 피처 그래픽 초안 (이슈 #77)
+
+`assets/store/play-feature-v1.png`에 **1024×500, 24-bit RGB PNG(no alpha), 1,313,700바이트**의 소개 삽화 초안을 보존했습니다. SHA256은 `aaeeab330e36941dd89cc0a6b232ab4503cd218f52f8ddaa5477af593c19b4f4`입니다. [원본·참조·전체 프롬프트·공식 규격/권고 구분·검증](assets.ko.md#2026-10-16--google-play-피처-그래픽-초안-이슈-77)을 기록했으며 총괄 초안 시각 검수 완료(최종 사용자/출시 소재 승인 별도)입니다. 한국·미국 공용 게임 제목과 KO/EN alt 초안을 준비한 단계입니다.
+
+**최종 소재 승인·실제 기기 스크린샷·스토어 아이콘 최종 검수·Play Console 등록/노출 형식별 잘림·overlay 검증은 미완료**입니다. 실제 게임 캡처가 아닌 자체 핍/초원 참조의 마케팅 삽화입니다. 이번 작업에는 APK/AAB·Android 동기화·버전/패키지·Drive/콘솔·운영 광고/결제·오디오 변경이 없습니다. 단말 테스트·APK 전달 보류와 [후속 #73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)을 유지합니다.
+
 ## 현재 설정과 검증
 
 앱 이름은 Pawblossom Puzzle이며 개발용 applicationId는 `com.choidaeyoung.pawblossompuzzle`입니다. Play 등록 전에 최종 확정합니다. 현재 main의 versionName은 `0.1.7`, versionCode는 `8`입니다. Capacitor 8, minSdk 24, compileSdk/targetSdk 36, Android Gradle Plugin 8.13.0, Gradle 8.14.3, Build Tools 36.0.0을 사용합니다.
