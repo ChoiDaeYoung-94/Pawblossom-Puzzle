@@ -1,0 +1,28 @@
+{
+  "issue": 68,
+  "dateKst": "2026-10-16",
+  "variant": "development",
+  "version": "0.1.7",
+  "browser": "155.0.8059.41",
+  "viewport": {
+    "width": 360,
+    "height": 640
+  },
+  "defines": {
+    "__APP_VERSION__": "\"0.1.7\"",
+    "__TEST_TOOLS_ENABLED__": "true",
+    "__ANDROID_TEST_ADS_ENABLED__": "false",
+    "__ANDROID_TEST_BILLING_ENABLED__": "false"
+  },
+  "settingsVersion": true,
+  "languageFocusPreserved": true,
+  "pageerrors": [],
+  "hashes": {
+    "src/main.ts": "89e0475ae2ea603fc1f350a445015a7589b5a74469ecae4a98adb8721248f1f5",
+    "src/i18n.ts": "5de5cfc8a041d1f65af0787c114a95759566d94928448350466e6b7aab645931",
+    "src/appVersion.ts": "b9160f90f2a14f3efa089c49e1d91642880e3f2f9d288a9cd7a3d8909ec708e6",
+    "vite.config.ts": "86b9cad279721dd5f25a614e4b96a7435cc820bb0f03a072ac0d5763f585d9d9",
+    "package.json": "edfd8bc89efe7f61d4fd0f182d9fc680112b6eea1be86046f14f3f99b9278b35",
+    "scripts/localization-version-qa.mjs": "d30dd96604a8f681fb365f6f589e8f0aa32b42e1d301881556b397f97f078718"
+  }
+}

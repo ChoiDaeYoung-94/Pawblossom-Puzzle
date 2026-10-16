@@ -1,3 +1,24 @@
+## 2026-10-16 · 화면 언어와 버전 단일 원본 (이슈 #68)
+
+이슈 #66의 clean `e3a8373`에서 `codex/68-localization-version`으로 작업했습니다. 지역/친구 제목과 핍 alt를 KO/EN 번역에 연결하고 주 메뉴의 초기 aria-label을 기존 동적 번역과 맞췄습니다. 헤더 언어 버튼의 접근성 이름도 전환 대상 언어에 맞춥니다. 열린 결과창의 문구만 갱신하며 보상·저장 확정·종료음·300ms 타이머·이미지 요청·버튼 DOM을 다시 만들지 않습니다. 안내/실습/시험 선택창과 설정의 교체된 초점은 같은 ID로 복원합니다. 표시 중인 짧은 알림만 번역하며, 시간이 끝난 토스트/애니메이션은 언어 변경 때문에 다시 발표하지 않습니다.
+
+`package.json`의 **0.1.7**을 Vite `__APP_VERSION__` → `APP_VERSION` → 설정 표시로 공급합니다. 버전은 올리지 않았으며 `build-info.json`의 기존 세 boolean 키와 production 가드는 유지했습니다. README는 30스테이지 초안·v0.1.7 개발 상태로 정정했습니다. AGENTS/로드맵은 최신 사용자 지시인 **단말 테스트·APK 전달 보류 → 폰 연결 후 총괄의 설치·입력·저장·복귀·로그 일괄 점검 → 사용자 최종 감각 검수와 변경 결정 → 후속 구현** 순서를 명시합니다.
+
+| 검사 | 결과와 근거 |
+| --- | --- |
+| 전체 자동 검사 | **296개 통과**. 기존 284개에 KO/EN 키·치환 변수 정합, package 버전과 실제 설정 표시, 번역 연결, 첫 완료/재완료/실패/최종/시험 결과 상태·노드·핸들러·종료음/아트 호출, 300ms 대기, 실습 선택/시험 묶음/저장 경고, 만료 알림 회귀 12개 추가. DOM 대역 검사는 실제 브라우저 검사와 구분합니다. |
+| testing 웹 빌드·실행 | `npm run build:test` 통과. **KO/EN × 320×568·360×640·640×360 = 6개 흐름**, 결과 **36개** 통과, pageerror 0. [testing 기술 JSON](performance/issue-68-localization-testing-20261016.json). |
+| production 웹 빌드·실행 | `npm run build` 통과. 동일 **6개 흐름**, 결과 **24개** 통과, pageerror 0. 시험 진입 없음과 `testTools/androidTestAds/androidTestBilling` **모두 false** 확인. [production 기술 JSON](performance/issue-68-localization-production-20261016.json). 마지막 dist는 이 production 빌드입니다. |
+| development 버전 | 별도 임시 Vite 서버와 격리 Chrome에서 KO/EN 설정 표시 **v0.1.7**, select 초점 보존과 개발용 시험 선택 진입을 확인했습니다. 세 모드의 버전 원본은 같습니다. [development 기술 JSON](performance/issue-68-localization-development-20261016.json). |
+
+재현 도구는 `scripts/localization-version-qa.mjs`입니다. Node **24.21.0**(`scripts/use-dev-tools.ps1`)과 번들 Playwright의 headless Chrome **155.0.8059.41**을 사용했습니다. 각 보고서에는 소스·설정·QA 스크립트 SHA-256을 보존합니다. 실제 canvas 두 칸 click으로 유효 교환하고 연쇄 도중 실제 헤더 click으로 언어를 변경했습니다. 직전 안정 회차 유지 → 이동 정확히 1회·점수 증가 → 무료 섞기 사용 상태·보드·낙엽·수집·저장 보존을 비교하고 새로고침 복원을 확인했습니다. 메뉴/친구/마을은 헤더 click, 설정은 실제 select로 언어를 전환했습니다. 저장 실패를 주입한 뒤 경고/재시도·설정 보조 이름·초점을 확인했습니다.
+
+**모달이 열려 있으면 헤더/설정은 접근할 수 없는 정상 dialog 동작**입니다. 새 언어 버튼을 추가하지 않았습니다. 열린 안내/실습·시험 선택·결과창의 번역 회귀는 숨겨진 기존 select의 `onchange`를 관찰용으로 호출한 검사이며 실제 사용자 입력이라고 주장하지 않습니다. 이 호출에서 실습 선택/완료·선택한 시험 묶음·초점·결과 버튼/핸들러/아트 노드를 보존했습니다. 결과 이미지가 대기 중이어도 기본 핍과 버튼을 유지하고, 해독 후 교체한 뒤에도 번역 때문에 재요청/재시작하지 않습니다. 실제 모달 바깥 헤더 좌표 click 차단, Tab 순서, 시험 선택 취소 후 같은 결과 복귀, 다음 버튼 1회 진행을 확인했습니다.
+
+가로 넘침과 dialog의 화면 내 배치를 검사했습니다. 친구/마을/설정 하단은 기존 내부 스크롤로 접근합니다. 대표 화면은 `screenshots/issue-68-{testing,production}-{ko-320,en-640}-{village,journal,settings,result}.png`에 보존하며 과거 QA 파일은 덮어쓰지 않았습니다. 기존 Phaser 500KB 번들 경고는 남아 있습니다. 사용자 Chrome에는 연결하지 않았고 자체 Chrome/context와 임시 Vite 서버는 검사 후 종료했습니다.
+
+이번 검증은 Android OS·WebView·TalkBack·실제 청취·스토어/광고/구매 검증을 대신하지 않습니다. 새 APK/AAB·Android 동기화·버전 증가·Drive/콘솔 작업은 수행하지 않았으며, 실기기/출시/운영 수익화 완료를 뜻하지 않습니다.
+
 ## 2026-10-16 · v0.1.7 누적 빌드 회귀 (이슈 #66)
 
 앱 소스 **c6b157826ba9e7fed79d1f748ef606131f2b0e1b**를 실제 Chrome **155.0.8059.41**의 새 headless 프로세스와 임시 context로 검사했습니다. 사용자 Chrome에는 연결하지 않았습니다. 기존 QA 소스를 메모리에 읽어 **출력 경로와 기록 날짜만** 바꿔 실행하며 과거 JSON·스크린샷을 보존했습니다. [집계·원본 스크립트/결과 해시](performance/batched-browser-20261016-v0.1.7.json)에 15개 스크립트 실행과 범위를 기록합니다. 원본 보고서·화면·stdout은 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\v0.1.7\browser-{development,testing,production}`에 보존했습니다. 원본 파일명의 과거 날짜는 기존 스크립트 경로를 유지한 것이며 새 외부 폴더와 보고서 dateKst는 2026-10-16입니다.

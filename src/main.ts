@@ -16,6 +16,7 @@ import { SwapPractice } from './SwapPractice';
 import { bindPracticeBoard } from './bindPracticeInputs';
 import { gardenArt } from './GardenArt';
 import { showResultPip } from './ResultPip';
+import { APP_VERSION } from './appVersion';
 import { TEST_TOOLS_ENABLED } from './buildFlags';
 import { ANDROID_TEST_ADS_ENABLED } from './buildFlags';
 import { ANDROID_TEST_BILLING_ENABLED } from './buildFlags';
@@ -28,6 +29,8 @@ let resultTimer:ReturnType<typeof setTimeout>|undefined;
 let round=0;
 let boardPending=false;
 let roundEnded=false, resultShown=false, firstReward=false;
+let resultWon:boolean|undefined;
+let noticeKey:TextKey|undefined, boardNoticeKey:TextKey|undefined;
 let tutorialPage=0;
 let practice:SwapPractice|undefined;
 let practiceInputs:ReturnType<typeof bindPracticeBoard>|undefined;
@@ -67,13 +70,13 @@ function updateSaveStatus(){
 $('#app').innerHTML=`
   <header class="topbar">
     <a class="brand" href="#puzzle" aria-label="Pawblossom Puzzle"><span class="brand-mark">${icon('paw',26)}</span><span>Pawblossom<small>PUZZLE</small></span></a>
-    <div class="header-right"><div class="wallet stars">${icon('star',18)}<strong id="star-count">0</strong><span class="sr-only">${text('stars')}</span></div><div class="wallet coins">${icon('coin',18)}<strong id="coin-count">0</strong><span class="sr-only">${text('coins')}</span></div><button id="language-toggle" class="language-button" aria-label="한국어 / English">${save.language==='en'?'한국어':'EN'}</button><button id="settings-button" class="icon-button" aria-label="${text('settings')}">${icon('settings',21)}</button></div>
+    <div class="header-right"><div class="wallet stars">${icon('star',18)}<strong id="star-count">0</strong><span class="sr-only">${text('stars')}</span></div><div class="wallet coins">${icon('coin',18)}<strong id="coin-count">0</strong><span class="sr-only">${text('coins')}</span></div><button id="language-toggle" class="language-button" aria-label="${text('switchLanguage')}">${save.language==='en'?'한국어':'EN'}</button><button id="settings-button" class="icon-button" aria-label="${text('settings')}">${icon('settings',21)}</button></div>
   </header>
   <main class="workspace">
     <section class="story-panel">
       <div class="eyebrow"><span class="tiny-leaf">${icon('leaf',15)}</span><span id="story-chapter-name"></span></div>
       <h1>${label('greeting')}</h1><p class="story-copy">${label('story')}</p>
-      <div class="meadow-art"><img class="environment" src="/assets/meadow.png" loading="lazy" decoding="async" alt=""/><div class="art-shade"></div><span class="art-label">${icon('home',15)} Blossom Meadow</span><img class="pip" src="/assets/pip.png" alt="Pip"/><span class="floating-flower f1">✦</span><span class="floating-flower f2">✧</span></div>
+      <div class="meadow-art"><img class="environment" src="/assets/meadow.png" loading="lazy" decoding="async" alt=""/><div class="art-shade"></div><span class="art-label">${icon('home',15)} ${label('chapterMeadow')}</span><img class="pip" src="/assets/pip.png" alt="${text('pip')}" data-alt="pip"/><span class="floating-flower f1">✦</span><span class="floating-flower f2">✧</span></div>
       <div class="friend-message"><span class="friend-avatar"><img src="/assets/pip.png" alt=""/></span><div><strong>${label('pip')}</strong><p>${label('request')}</p></div><span class="message-flower">${icon('flower',25)}</span></div>
       <div class="garden-status"><div><span>${icon('leaf',16)} ${label('garden')}</span><strong id="garden-count">0 / 5</strong></div><div class="garden-track"><i id="garden-fill"></i></div></div>
     </section>
@@ -87,7 +90,7 @@ $('#app').innerHTML=`
         <div class="tools"><button id="shuffle" class="shuffle-button">${icon('shuffle',20)}${label('shuffle')}<span id="shuffle-count">1</span></button><span class="tool-note">${label('shuffleHelp')}</span></div>
       </div>
       <div id="village-view" class="view" hidden></div><div id="journal-view" class="view" hidden></div><div id="settings-view" class="view" hidden></div>
-      <nav class="bottom-nav" aria-label="Main navigation">${(['puzzle','village','journal'] as const).map((name,i)=>`<button data-route="${name}" class="${i===0?'active':''}" ${i===0?'aria-current="page"':''}>${icon(['puzzle','home','paw'][i],21)}${label(name)}</button>`).join('')}</nav>
+      <nav class="bottom-nav" aria-label="${text('navLabel')}">${(['puzzle','village','journal'] as const).map((name,i)=>`<button data-route="${name}" class="${i===0?'active':''}" ${i===0?'aria-current="page"':''}>${icon(['puzzle','home','paw'][i],21)}${label(name)}</button>`).join('')}</nav>
     </section>
   </main>
   <footer class="page-footer"><span>${label('tagline')}</span><span>${label('prototype')}</span></footer>
@@ -169,7 +172,7 @@ function replaceBoard(){
 function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
   if(!Number.isInteger(id)||id<1||id>levels.length)return;
   clearTimeout(resultTimer);resultTimer=undefined;round++;
-  roundEnded=false;resultShown=false;firstReward=false;
+  roundEnded=false;resultShown=false;firstReward=false;resultWon=undefined;boardNoticeKey=undefined;
   const activeRound=round;
   testingLevel=TEST_TOOLS_ENABLED&&testPlay;
   pickerReturnToResult=false;
@@ -179,7 +182,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
   scene?.stopPlaying();
   scene=new BoardScene({audio,onBoardState:()=>{if(activeRound===round)updateBoardAccess();},onReady:()=>{if(activeRound===round)syncActivity();},onStart:()=>{if(activeRound===round)void audio.unlock().catch(()=>{});},onNotice:key=>{
     if(activeRound!==round)return;
-    $('#board-notice').textContent=text(key);$('#board-notice').classList.remove('pop');void $('#board-notice').offsetWidth;$('#board-notice').classList.add('pop');
+    boardNoticeKey=key;$('#board-notice').textContent=text(key);$('#board-notice').classList.remove('pop');void $('#board-notice').offsetWidth;$('#board-notice').classList.add('pop');
   },onMove:(items,points,_chains,leavesCleared)=>{
     if(activeRound!==round||roundEnded)return;
     moves--;score+=points;clearedLeaves+=leavesCleared??0;items.forEach((n,i)=>collected[i]+=n);updateGoals();
@@ -200,7 +203,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
   updateGoals();syncActivity();
   return stored;
 }
-function notice(message:string){clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').classList.add('visible');toastTimer=setTimeout(()=>$('#toast').classList.remove('visible'),3200);}
+function notice(key:TextKey){noticeKey=key;clearTimeout(toastTimer);$('#toast').textContent=text(key);$('#toast').classList.add('visible');toastTimer=setTimeout(()=>{noticeKey=undefined;$('#toast').classList.remove('visible');},3200);}
 function renderTutorial(){
   practiceInputs?.dispose();practiceInputs=undefined;
   const headings:TextKey[]=['tutorialSwap','tutorialGoal','tutorialMagic','practiceTitle'];
@@ -259,7 +262,7 @@ function bindChapterTabs(test=false){
 function renderTestPicker(){
   if(!TEST_TOOLS_ENABLED)return;
   const dialog=$<HTMLDialogElement>('#test-level-dialog');
-  dialog.innerHTML=`<div class="test-picker"><h2 id="test-level-title">${text('testPickTitle')}</h2><p>${text('testPickDesc')}</p>${chapterTabs(selectedTestChapter,true)}<div class="test-level-grid" id="test-chapter-levels" role="tabpanel" aria-labelledby="test-chapter-${selectedTestChapter}">${levels.filter(level=>chapterForLevel(level.id).id===selectedTestChapter).map(level=>`<button data-test-level="${level.id}" class="test-stage"><strong>${text('level')} ${level.id}</strong><small>${text(!level.leaves?'testBasic':level.leaves.some(p=>p.layers===2)?'testDouble':'testSingle')}</small></button>`).join('')}</div><button id="test-normal" class="primary">${text('testNormal')}</button><button id="test-close" class="text-button">${text('testClose')}</button></div>`;
+  dialog.innerHTML=`<div class="test-picker"><h2 id="test-level-title">${text('testPickTitle')}</h2><p>${text('testPickDesc')}</p>${chapterTabs(selectedTestChapter,true)}<div class="test-level-grid" id="test-chapter-levels" role="tabpanel" aria-labelledby="test-chapter-${selectedTestChapter}">${levels.filter(level=>chapterForLevel(level.id).id===selectedTestChapter).map(level=>`<button id="test-stage-${level.id}" data-test-level="${level.id}" class="test-stage"><strong>${text('level')} ${level.id}</strong><small>${text(!level.leaves?'testBasic':level.leaves.some(p=>p.layers===2)?'testDouble':'testSingle')}</small></button>`).join('')}</div><button id="test-normal" class="primary">${text('testNormal')}</button><button id="test-close" class="text-button">${text('testClose')}</button></div>`;
   document.querySelectorAll<HTMLButtonElement>('[data-test-level]').forEach(button=>button.onclick=()=>{
     if(!scene.canLeave()||resultTimer)return;
     pickerReturnToResult=false;dialog.close();startLevel(Number(button.dataset.testLevel),true);switchView('puzzle');
@@ -293,18 +296,30 @@ function settleRound(won:boolean){
 }
 function finish(won:boolean){
   if(resultShown)return;
-  settleRound(won);resultShown=true;
+  settleRound(won);resultShown=true;resultWon=won;
   const first=firstReward;
   audio.play(won?'win':'lose');
   const done=won&&!testingLevel&&currentLevel===LEVEL_COUNT;
   const dialog=$<HTMLDialogElement>('#result-dialog');
-  dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><span class="result-character"><img class="result-pip" src="/assets/pip.png" decoding="async" alt=""/></span><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p>${first?`<div class="result-rewards"><span>${icon('star',20)} +1</span><span>${icon('coin',20)} +40</span></div>`:''}<button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
+  dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><span class="result-character"><img class="result-pip" src="/assets/pip.png" decoding="async" alt=""/></span><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line" id="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow" id="result-level">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p>${first?`<div class="result-rewards"><span>${icon('star',20)} +1</span><span>${icon('coin',20)} +40</span></div>`:''}<button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
   dialog.showModal();syncActivity();
   $('#result-next').focus();
   $('#result-next').onclick=()=>{dialog.close();startLevel(won?Math.min(LEVEL_COUNT,currentLevel+1):currentLevel,testingLevel);switchView('puzzle');};
   $('#result-home').onclick=()=>{dialog.close();switchView('village');};
   if(testingLevel)$('#result-test').onclick=()=>{dialog.close();showTestPicker(true);};
   showResultPip($<HTMLImageElement>('.result-pip'),won);
+}
+// 문구만 갱신하여 결과 보상·타이머·아트 요청·버튼·초점을 유지합니다.
+function updateResultCopy(){
+  if(resultWon===undefined)return;
+  const won=resultWon,done=won&&!testingLevel&&currentLevel===LEVEL_COUNT;
+  $('#result-pip-line').textContent=text(won?'pipWin':'pipRetry');
+  $('#result-level').textContent=`${text('level')} ${currentLevel}${testingLevel?' · '+text('testPick'):''}`;
+  $('#result-title').textContent=text(done?'complete':won?'win':'lose');
+  $('#result-description').textContent=text(testingLevel?'testResultDesc':done?'completeDesc':won?(firstReward?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT));
+  $('#result-next').innerHTML=text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')+icon('arrow',19);
+  $('#result-home').textContent=text('home');
+  if(testingLevel)$('#result-test').textContent=text('testOther');
 }
 function renderAdDialog(){
   if(!testAds)return;
@@ -374,14 +389,14 @@ function closeBillingDialog(){
   $<HTMLDialogElement>('#test-billing-dialog').close();syncActivity();$('#test-billing-button').focus();
 }
 function renderViews(grew=false){
-  $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">BLOSSOM MEADOW</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div><div class="garden-card"><div class="garden-picture"><div class="garden-illustration" role="img" aria-label="${text('gardenImage').replace('{count}',String(save.garden))}">${gardenArt(save.garden,grew)}</div><span class="garden-pill">${icon('flower',17)} ${save.garden} / 5</span></div><h3>${text('garden')}</h3><p class="garden-stage" role="status">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div><div class="level-picker"><h3>${text('levelSelect')}</h3>${chapterTabs(selectedChapter)}<div class="level-grid" id="chapter-levels" role="tabpanel" aria-labelledby="chapter-${selectedChapter}">${levels.filter(l=>chapterForLevel(l.id).id===selectedChapter).map(l=>`<button data-level="${l.id}" ${l.id>save.highestLevel?'disabled':''} class="level-node ${save.completed.includes(l.id)?'completed':''}" aria-label="${text('level')} ${l.id}">${l.id>save.highestLevel?icon('lock',19):l.id}${save.completed.includes(l.id)?`<span>${icon('star',13)}</span>`:''}</button>`).join('')}</div></div>`;
-  $('#journal-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM FRIENDS</div><h2>${text('friendsTitle')}</h2><p>${text('friendsDesc')}</p></div><div class="journal-card"><span class="friend-number">01</span><img src="/assets/pip.png" alt="Pip"/><h3>${text('pip')}</h3><p>${text('pipDesc')}</p><span class="friend-tag">${icon('leaf',15)} Blossom Meadow</span></div><div class="coming-card">${icon('paw',28)}<div><strong>${text('upcoming')}</strong><p>${text('upcomingDesc')}</p></div></div>`;
-  $('#settings-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><div class="storage-card"><p id="save-status"></p><button id="save-retry" class="text-button" hidden></button><button id="save-reload" class="text-button" hidden></button></div><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v0.1.6</p>`;
+  $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('chapterMeadow')}</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div><div class="garden-card"><div class="garden-picture"><div class="garden-illustration" role="img" aria-label="${text('gardenImage').replace('{count}',String(save.garden))}">${gardenArt(save.garden,grew)}</div><span class="garden-pill">${icon('flower',17)} ${save.garden} / 5</span></div><h3>${text('garden')}</h3><p class="garden-stage" role="status">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div><div class="level-picker"><h3>${text('levelSelect')}</h3>${chapterTabs(selectedChapter)}<div class="level-grid" id="chapter-levels" role="tabpanel" aria-labelledby="chapter-${selectedChapter}">${levels.filter(l=>chapterForLevel(l.id).id===selectedChapter).map(l=>`<button data-level="${l.id}" ${l.id>save.highestLevel?'disabled':''} class="level-node ${save.completed.includes(l.id)?'completed':''}" aria-label="${text('level')} ${l.id}">${l.id>save.highestLevel?icon('lock',19):l.id}${save.completed.includes(l.id)?`<span>${icon('star',13)}</span>`:''}</button>`).join('')}</div></div>`;
+  $('#journal-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('friendsHeading')}</div><h2>${text('friendsTitle')}</h2><p>${text('friendsDesc')}</p></div><div class="journal-card"><span class="friend-number">01</span><img src="/assets/pip.png" alt="${text('pip')}" data-alt="pip"/><h3>${text('pip')}</h3><p>${text('pipDesc')}</p><span class="friend-tag">${icon('leaf',15)} ${text('chapterMeadow')}</span></div><div class="coming-card">${icon('paw',28)}<div><strong>${text('upcoming')}</strong><p>${text('upcomingDesc')}</p></div></div>`;
+  $('#settings-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><div class="storage-card"><p id="save-status"></p><button id="save-retry" class="text-button" hidden></button><button id="save-reload" class="text-button" hidden></button></div><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v${APP_VERSION}</p>`;
   updateSaveStatus();
   $('#save-retry').onclick=()=>{retrySave(save);updateSaveStatus();};
   $('#save-reload').onclick=()=>{if(confirm(text('saveReloadConfirm')))window.location.reload();};
   bindChapterTabs();
-  $('#grow').onclick=()=>{if(growing||save.stars<2||save.garden>=5)return;growing=true;save.stars-=2;save.garden++;const stored=persist();updateWallet();renderViews(true);audio.play('reward');if(stored)notice(text('planted'));setTimeout(()=>{growing=false;$('#grow').toggleAttribute('disabled',save.stars<2||save.garden>=5);},450);};
+  $('#grow').onclick=()=>{if(growing||save.stars<2||save.garden>=5)return;growing=true;save.stars-=2;save.garden++;const stored=persist();updateWallet();renderViews(true);audio.play('reward');if(stored)notice('planted');setTimeout(()=>{growing=false;$('#grow').toggleAttribute('disabled',save.stars<2||save.garden>=5);},450);};
   document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach(button=>button.onclick=()=>{if(!scene.canLeave())return;const id=Number(button.dataset.level);if(id>save.highestLevel)return;startLevel(id);switchView('puzzle');});
   $('#music-toggle').onclick=()=>{save.music=!save.music;audio.setMusicEnabled(save.music);persist();$('#music-toggle').classList.toggle('on',save.music);$('#music-toggle').setAttribute('aria-checked',String(save.music));};
   const help=document.createElement('button');help.id='tutorial-help';help.className='primary guide-help';help.textContent=text('tutorial');help.onclick=showTutorial;$('#settings-view').append(help);
@@ -391,8 +406,23 @@ function renderViews(grew=false){
   $<HTMLSelectElement>('#language').onchange=event=>changeLanguage((event.target as HTMLSelectElement).value==='ko'?'ko':'en');
   $('#reset').onclick=()=>{if(!confirm(text('resetConfirm')))return;const cleared=clearSave();updateSaveStatus();if(!cleared)return;save=cleared;selectedChapter=1;audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');showTutorial();};
 }
-function localize(){document.documentElement.lang=save.language;document.querySelectorAll<HTMLElement>('[data-t]').forEach(el=>el.textContent=text(el.dataset.t as TextKey));$('#language-toggle').textContent=save.language==='en'?'한국어':'EN';$('#settings-button').setAttribute('aria-label',text('settings'));$('#restart').setAttribute('aria-label',text('restart'));}
-function changeLanguage(language:'en'|'ko'){const focusedLanguage=document.activeElement===$('#language');save.language=language;persist();localize();updateWallet();renderViews();if(focusedLanguage)$('#language').focus();updateGoals();updateBoardAccess();if($<HTMLDialogElement>('#tutorial-dialog').open)renderTutorial();if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)renderTestPicker();if(androidAdEntry&&testAds)renderAdDialog();if(androidBillingEntry&&testBilling)renderBillingDialog();}
+function localize(){
+  document.documentElement.lang=save.language;
+  document.querySelectorAll<HTMLElement>('[data-t]').forEach(el=>el.textContent=text(el.dataset.t as TextKey));
+  document.querySelectorAll<HTMLElement>('[data-alt]').forEach(el=>el.setAttribute('alt',text(el.dataset.alt as TextKey)));
+  $('#language-toggle').textContent=save.language==='en'?'한국어':'EN';$('#language-toggle').setAttribute('aria-label',text('switchLanguage'));
+  $('#settings-button').setAttribute('aria-label',text('settings'));$('#restart').setAttribute('aria-label',text('restart'));
+  if(noticeKey)$('#toast').textContent=text(noticeKey);
+  if(boardNoticeKey)$('#board-notice').textContent=text(boardNoticeKey);
+}
+function changeLanguage(language:'en'|'ko'){
+  const focused=document.activeElement as HTMLElement|null,focusedId=focused?.id;
+  save.language=language;persist();localize();updateWallet();renderViews();updateGoals();updateBoardAccess();updateResultCopy();
+  if($<HTMLDialogElement>('#tutorial-dialog').open)renderTutorial();
+  if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)renderTestPicker();
+  if(androidAdEntry&&testAds)renderAdDialog();if(androidBillingEntry&&testBilling)renderBillingDialog();
+  if(focusedId&&!focused?.isConnected)document.querySelector<HTMLElement>('#'+focusedId)?.focus();
+}
 function switchView(name:string){
   if(!scene.canLeave())return;
   route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
@@ -404,6 +434,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(button=>but
 $('#settings-button').onclick=()=>switchView(route==='settings'?'puzzle':'settings');
 $('.brand').onclick=e=>{e.preventDefault();switchView('puzzle');};
 $('#language-toggle').onclick=()=>changeLanguage(save.language==='en'?'ko':'en');
+$('#board-notice').addEventListener('animationend',()=>{boardNoticeKey=undefined;});
 $('#restart').onclick=()=>{if(scene.canLeave())startLevel(currentLevel,testingLevel);};
 if(TEST_TOOLS_ENABLED){$('#test-level-button').onclick=()=>showTestPicker();$<HTMLDialogElement>('#test-level-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTestPicker();});}
 $('#shuffle').onclick=()=>{if(!boardPending&&game.scene.isActive('Board')&&shuffles>0&&scene.shuffle()){shuffles--;updateGoals();checkpoint();}};
@@ -448,5 +479,5 @@ if(androidBillingEntry){
   testBilling=new TestBillingController(nativeTestBilling(),()=>{renderBillingDialog();if(testAds)renderAdDialog();syncActivity();});
   void testBilling.connect();
 }
-if(resumed&&resumedStored&&saveStatus().load!=='recovered')notice(text('roundResumed'));
+if(resumed&&resumedStored&&saveStatus().load!=='recovered')notice('roundResumed');
 if(!save.tutorialSeen)showTutorial();
