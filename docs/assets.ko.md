@@ -1,5 +1,83 @@
 # 에셋 제작 기록
 
+## 2026-10-16 · Google Play 피처 그래픽 초안 (이슈 #77)
+
+**초안 제작·파일 규격 확인 완료, 총괄 초안 시각 검수 완료(최종 사용자/출시 소재 승인 별도)**입니다. 최종 출시 소재 승인·실제 기기 스크린샷·콘솔 업로드/노출 검증은 미완료입니다. 한 장의 소개 삽화이며 실제 게임 화면이나 추가 플레이 기능을 나타내지 않습니다. 원본과 최종본은 `assets/store`에만 보존하고 runtime/public/Android/audio/package/version/dist/서버는 변경하지 않았습니다.
+
+![피처 그래픽 초안](../assets/store/play-feature-v1.png)
+
+### 공식 규격과 디자인 판단
+
+확인일 2026-10-16: [Google Play 미리보기 에셋 안내](https://support.google.com/googleplay/android-developer/answer/9866151?hl=en)의 피처 그래픽 **필수 규격**은 JPEG 또는 **24-bit PNG(no alpha), 1024×500**입니다. 핵심 요소 중앙 배치·cutoff zone 회피·추가 UI overlay 고려·가장자리 배경·작은 화면 세부 묘사 절제·게임과 색채 일치·앱 아이콘과 중복되는 큰 브랜딩 회피는 **Highly recommended(권고)**로 구분합니다. 공식 본문에는 안전영역의 고정 픽셀 수치가 없어 임의 수치를 공식 규격으로 쓰지 않습니다. 이 초안의 제작 여백 100px(좌우)·55px(상하)은 자체 기준입니다.
+
+최종 1024×500에서 핍 실루엣은 대략 x=228–474/y=101–421, 제목은 x=500–902/y=160–298입니다. 핵심 요소는 자체 여백 안에 있으며 중앙 (512,250) 주변의 가상 재생 버튼이 제목에 일부 겹칠 가능성은 남습니다. 미리보기 영상은 만들거나 등록하지 않았으며 실제 Play 노출 형식별 crop/overlay는 콘솔 단계에서 별도 확인합니다. 배경의 집·산·강·꽃은 기존 `meadow.png`를 참고한 소개 삽화 요소이며 새로운 지역/상호작용을 약속하지 않습니다.
+
+[Google Play 메타데이터 정책](https://support.google.com/googleplay/android-developer/answer/9898842?hl=en)의 허위·무관·과도한 메타데이터 금지를 확인했습니다. 표시 문구는 **Pawblossom Puzzle** 하나이며 가격·순위·수상·리뷰·다운로드 유도·스토어 배지·허위 보드/UI·새 동물/기능은 없습니다. 한국·미국 공용 제목 초안이며 별도 슬로건은 없습니다.
+
+- KO alt 초안: `꽃이 핀 초원에서 당근을 안고 웃는 크림색 토끼 핍과 Pawblossom Puzzle 제목`
+- EN alt 초안: `Pip, a cream rabbit in sage gardening overalls, smiles with a carrot in a flower meadow beside the Pawblossom Puzzle title.`
+- 두 alt는 각각 140자 이하입니다. Play Console 입력·실제 보조 기술 검증은 미완료입니다.
+
+### 참조·생성·출처
+
+내장 `image_gen.imagegen`을 사용했습니다. 1차는 참조 기반 생성, 2차는 핍 크기/상단 여백만 요청한 편집입니다. 창작 생성·수정은 imagegen에서만 했으며 Python 이미지 편집·새 외부 에셋·폰트 추가는 없습니다.
+
+- 정체성 참조: `public/assets/pip.png` (자체 imagegen 시제품). 크림 털·갈색 눈·분홍 귀/볼·세이지 멜빵·나무 버튼·잎 포켓·당근을 유지합니다.
+- 배경/그림체 참조: `public/assets/meadow.png` (자체 imagegen 시제품).
+- 보조 표정/동작 참조: `assets/source/pip-win-v1.png` (이슈 #62 자체 핍 변형). 한 캐릭터의 참고이며 두 번째 동물이 아닙니다.
+- 참조 파일 SHA256: `public/assets/pip.png` = `be54a5a265d05cff964eff3177e637a1540138c7680802ab0a553496e118bcba`, `public/assets/meadow.png` = `fdd7aa15f95518167d355d8aecb5952ee13d54d380956ed087d397a0ef4d4195`, `assets/source/pip-win-v1.png` = `df3601c2c9015f403c42e95a817d3772c12fe977bfa4910d2dfae5afbbe4f7da`입니다.
+- 브랜드 확인: `assets/branding/pawblossom-color.svg`, `pawblossom-mark.json`의 샐비어 `#6E8968`·배경 `#E7ECDC`·꽃 `#E6A7AA`·노랑 `#F7D784`. 기존 SVG는 발바닥/꽃 심벌이고 타이틀 글자는 없습니다. 큰 앱 아이콘 중복을 피하려고 심벌을 합성하지 않았습니다.
+- 제목은 기존 영문 Fraunces 제목의 둥근 세리프 인상을 imagegen이 그렸습니다. Fraunces 글꼴 파일로 조판한 결과나 확정 로고가 아닙니다. 정확한 실제 폰트 조판/기존 SVG 합성은 필요하지 않아 수행하지 않았습니다.
+- OpenAI 출력 사용 조건 참고는 위 핍 기록과 같은 [이용약관 Content/Ownership](https://openai.com/policies/row-terms-of-use/)입니다. 자체 참조와 AI 생성 사실을 보존하며 최종 권리·독창성/상업 사용 적합성은 출시 검수 항목으로 남깁니다.
+
+내장 원본 경로(동일 바이트를 아래 Git 파일에 복사하여 외부 경로 의존 없음):
+
+- 1차: `C:\Users\user\.codex\generated_images\01a143f2-aee1-7383-a361-a51cc9bd2787\exec-8c586a90-ab49-4542-9a0c-11097913d153.png` → `assets/store/play-feature-base-v1.png`
+- 여백 수정: `C:\Users\user\.codex\generated_images\01a143f2-aee1-7383-a361-a51cc9bd2787\exec-d01531e6-a3e5-4708-850d-377bcc0c63f1.png` → `assets/store/play-feature-source-v1.png`
+
+### 파일 검사와 기술 내보내기
+
+| 파일 | 규격·형식 | 알파/불투명 | 바이트 | SHA256 |
+| --- | --- | --- | ---: | --- |
+| `assets/store/play-feature-base-v1.png` | 1794×877, RGB 8-bit/channel PNG | no alpha / opaque | 2,464,138 | `0bf43f085bf6fad1a9ae7ed6fc81c663fb64b69e0c6129592f294bb70bd9b43d` |
+| `assets/store/play-feature-source-v1.png` | 1793×877, RGB 8-bit/channel PNG | no alpha / opaque | 2,377,262 | `502bde83e94287c2fbda99a254f475d3520fae4ea21072f1cad882e3384eb0dd` |
+| `assets/store/play-feature-v1.png` | **1024×500, 24-bit RGB PNG** | **no alpha / opaque** | **1,313,700** | `aaeeab330e36941dd89cc0a6b232ab4503cd218f52f8ddaa5477af593c19b4f4` |
+
+sharp 0.35.5/libvips 8.18.7로 전체 파일 해독·metadata/stats·SHA256·PNG IHDR 검사를 수행했습니다. 최종 PNG는 color type 2(Truecolor), bit depth 8, channels 3, hasAlpha=false, isOpaque=true입니다. imagegen 원본이 정확한 요청 픽셀 수를 보장하지 않아 **기술적 규격/인코딩 내보내기**만 아래처럼 수행했습니다. 1793×877 원본의 비율을 유지하는 cover+centre 리샘플링으로 1024×500에 맞추며 위아래 가장자리 배경 합계 약 0.9px(최종 기준)이 잘립니다. 덧칠·합성·타이포/색상 등 창작 수정은 하지 않았고 프로젝트 의존성도 추가하지 않았습니다.
+
+```js
+await sharp('assets/store/play-feature-source-v1.png')
+  .resize({ width: 1024, height: 500, fit: 'cover', position: 'centre', kernel: 'lanczos3' })
+  .toColourspace('srgb').removeAlpha()
+  .png({ compressionLevel: 9, palette: false })
+  .toFile('assets/store/play-feature-v1.png');
+```
+
+최종 파일을 view_image로 육안 확인하여 제목 철자·한 캐릭터·복장·손/발·당근·여백·기존 배경 일치를 점검했습니다. 기준 main `4740ba1cae2fe03a76b21e93db67789d3594f3f3` 위 작업 트리에서 Node 24.19.0으로 `node scripts/generate-launcher-assets.mjs --check`, `node node_modules/typescript/bin/tsc --noEmit`, `node node_modules/vitest/vitest.mjs run`을 실행하여 아이콘 일치·타입 검사·자동 349개(15개 파일)를 통과했습니다. 로컬 npm 명령이 PATH에 없어 기존 스크립트의 같은 실행 파일을 직접 호출했습니다. 로컬 웹 빌드는 dist 보존을 위해 수행하지 않았습니다. 앱 실행 화면을 바꾸지 않아 새로운 runtime 브라우저/Android 검증 결과로 표시하지 않습니다. 총괄 검수·최신 PR/main Node 22·24 CI 결과는 이슈/PR에 보존합니다.
+
+### 1차 프롬프트 전문
+
+```text
+Use case: ads-marketing / compositing.
+Asset type: Google Play feature graphic DRAFT for the original cozy match-3 game Pawblossom Puzzle. One cohesive hand-painted introduction illustration, not a gameplay screenshot.
+Input images: Image 1 (pip.png) is the sole character identity reference. Image 2 (meadow.png) is the existing game's landscape, palette and gouache style reference. Image 3 (pip-win-v1.png) is a supporting expression/pose reference of the SAME rabbit, not a second character.
+Primary request: Compose a polished, calm, welcoming wide banner that introduces Pip in his existing flower meadow. Preserve the exact cream rabbit identity, rounded head/body proportions, long peach-pink inner ears, dark brown eyes, peach cheeks, sage-green short gardening overalls, wooden buttons, leaf pocket, cream paws and small fluffy tail. Pip holds one recognizable orange carrot with green leaves and smiles toward the viewer; one rabbit only.
+Scene/backdrop: Simplified existing meadow, warm ivory sunlight, sage and mint green hills and soft foliage, a few existing pink flowers. Use only landscape elements already in meadow.png; keep peripheral background soft, sparse and subordinate. Do not invent new locations or structures.
+Style/medium: Same warm hand-painted gouache storybook brushwork as the input images, soft natural light, crisp readable character silhouette. Palette matches #6E8968 sage, #E7ECDC pale cream-green, #E6A7AA dusty pink and #F7D784 warm yellow accents.
+Composition/framing: Wide landscape aspect ratio exactly 1024:500 (2.048:1), opaque edge-to-edge artwork. Intended final export 1024 by 500 pixels. Keep all important elements well inside an internal production margin of 100px left/right and 55px top/bottom at final size. Pip stands fully visible in the left-center, about x=280, ears above y=75 and feet above y=430. Title sits in the right-center, about x=650 y=230, no overlap with Pip or carrot. Leave the geometric center uncluttered for potential Play overlays. Edges contain only soft background greenery, never title or face. Big clear forms, no dense fine details.
+Text (verbatim, only visible text): "Pawblossom Puzzle". Set on two balanced lines, "Pawblossom" above "Puzzle", with exact capitalization and spelling, a warm rounded readable serif inspired by the game's Fraunces headings, dark sage green against a quiet pale cream-green open background. No heavy frame, badge, app icon duplication or extra logo.
+Constraints: A single original marketing illustration, no fake UI, game board, buttons, score, screen, device mockup or screenshot. No added animals/characters, new costumes, regions, modes, social features or unimplemented features. No price, rank, awards, review claims, promotional words, call-to-action, store badge, watermark or third-party marks. Not imitating any existing game's art. Preserve the supplied original character and palette. No transparency.
+```
+
+### 여백 편집 프롬프트 전문
+
+```text
+Use case: precise-object-edit / identity-preserve.
+Input image 1 is the edit target, the Pawblossom Puzzle feature graphic draft. Make ONE targeted composition correction only: reduce Pip the rabbit, including his carrot, proportionally to about 83 percent of his current size and position him slightly lower, still left-center. At final 1024 by 500 scale, keep his highest ear tip below y=65 and his lowest feet above y=425, with his face around x=340 y=220. Fill the newly revealed area naturally using the SAME existing meadow background. Do not change rabbit identity, expression, pose, cream fur, pink ears and cheeks, dark brown eyes, sage gardening overalls, wooden buttons, leaf pocket or carrot.
+Preserve the exact existing text "Pawblossom Puzzle", its exact spelling, two-line layout, size, color and position. Preserve existing gouache style, colors, sunlight, wide aspect ratio exactly 1024:500, background composition and all other elements. Single rabbit only. No new objects, characters, buildings, locations, text, UI, logos, device images, badges, claims or watermark. Edge-to-edge opaque artwork, no transparency. This is a marketing illustration draft, not a gameplay screenshot.
+```
+
+
 제작일: 2026-10-08. 현재 에셋은 첫 시제품용입니다. 스토어용 최종 아트 검수는 남아 있습니다.
 
 | 파일 | 제작 방식 | 용도 |
