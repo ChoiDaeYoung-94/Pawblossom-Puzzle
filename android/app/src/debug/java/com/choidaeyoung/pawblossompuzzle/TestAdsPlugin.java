@@ -20,6 +20,8 @@ import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.RequestConfiguration;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
+import com.google.android.gms.ads.rewarded.RewardedAd;
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 import com.google.android.ump.ConsentInformation;
 import com.google.android.ump.ConsentRequestParameters;
 import com.google.android.ump.UserMessagingPlatform;
@@ -27,11 +29,12 @@ import java.nio.charset.StandardCharsets;
 import java.io.ByteArrayOutputStream;
 import org.json.JSONObject;
 
-/** 자체 작성한 debug 전용 전면 시험 광고. load()/생성자에는 SDK 호출이 없습니다. */
+/** 자체 작성한 debug 전용 수동 시험 광고. load()/생성자에는 SDK 호출이 없습니다. */
 @CapacitorPlugin(name = "PawblossomTestAds")
 public class TestAdsPlugin extends Plugin {
     private static final String APP_ID = "ca-app-pub-3940256099942544~3347511713";
     private static final String UNIT_ID = "ca-app-pub-3940256099942544/1033173712";
+    private static final String REWARDED_UNIT_ID = "ca-app-pub-3940256099942544/5224354917";
     private final Handler main = new Handler(Looper.getMainLooper());
     private String state = "idle", error = "";
     private long revision = 0, attempt = 0, readyAt = 0;
@@ -40,11 +43,17 @@ public class TestAdsPlugin extends Plugin {
     private boolean consentUpdated = false;
     private ConsentInformation consent;
     private InterstitialAd ad;
+    private RewardedAd rewardedAd;
+    private String format = "interstitial";
+    private final RewardLedger rewards = new RewardLedger();
     private Runnable timeout;
 
     @Override public void load() {
         TestCommerce.adsChanged = () -> {
-            if (!destroyed && TestCommerce.blocksAds(getContext()) && !overlay() && (busy() || state.equals("ready"))) fail("billing-blocked");
+            if (!destroyed && TestCommerce.blocksAds(getContext())) {
+                rewards.invalidate();
+                if (!overlay() && (busy() || state.equals("ready"))) fail("billing-blocked");
+            }
         };
     }
 
@@ -83,10 +92,15 @@ public class TestAdsPlugin extends Plugin {
         timeout = () -> { if (current(id) && !overlay()) fail("timeout"); };
         main.postDelayed(timeout, 45000);
     }
+    private void expireReady() {
+        if (state.equals("ready") && SystemClock.elapsedRealtime() - readyAt >= 3300000) fail("expired");
+    }
     private JSObject snapshot() {
+        expireReady();
         JSObject result = new JSObject();
         result.put("available", available()); result.put("state", state); result.put("revision", revision);
         result.put("error", error); result.put("privacyRequired", privacyRequired);
+        result.put("bridgeVersion", 2); result.put("format", format); result.put("rewardEvents", rewards.events());
         return result;
     }
     private void update(String next, String reason) {
@@ -96,7 +110,8 @@ public class TestAdsPlugin extends Plugin {
     }
     private void discard() {
         if (ad != null) ad.setFullScreenContentCallback(null);
-        ad = null; readyAt = 0;
+        if (rewardedAd != null) rewardedAd.setFullScreenContentCallback(null);
+        rewards.invalidate(); ad = null; rewardedAd = null; readyAt = 0;
     }
     private void fail(String reason) {
         attempt++; stopTimer(); discard(); update("failed", reason);
@@ -106,6 +121,17 @@ public class TestAdsPlugin extends Plugin {
         return true;
     }
     @PluginMethod public void getStatus(PluginCall call) { main.post(() -> call.resolve(snapshot())); }
+    @PluginMethod public void selectFormat(PluginCall call) {
+        main.post(() -> {
+            if (!guard(call)) return;
+            expireReady();
+            String requested = call.getString("format");
+            if (!"interstitial".equals(requested) && !"rewarded".equals(requested)) { call.reject("지원하지 않는 광고 형식입니다.", "format"); return; }
+            if (busy() || state.equals("ready")) { call.resolve(snapshot()); return; }
+            if (!format.equals(requested)) { attempt++; stopTimer(); discard(); format = requested; update("idle", ""); }
+            call.resolve(snapshot());
+        });
+    }
 
     private void protectRequests() {
         MobileAds.setRequestConfiguration(new RequestConfiguration.Builder()
@@ -116,8 +142,9 @@ public class TestAdsPlugin extends Plugin {
     @PluginMethod public void prepare(PluginCall call) {
         main.post(() -> {
             if (!guard(call)) return;
-            if (TestCommerce.blocksAds(getContext())) { fail("billing-blocked"); call.resolve(snapshot()); return; }
+            expireReady();
             if (busy() || state.equals("ready")) { call.resolve(snapshot()); return; }
+            if (TestCommerce.blocksAds(getContext())) { fail("billing-blocked"); call.resolve(snapshot()); return; }
             if (!foreground()) { call.reject("앱이 비활성 상태입니다.", "inactive"); return; }
             if (initializing) { call.reject("SDK 초기화 응답을 기다리고 있습니다. 앱을 다시 열어 주세요.", "initializing"); return; }
             discard(); consentUpdated = false; final long id = ++attempt;
@@ -128,7 +155,7 @@ public class TestAdsPlugin extends Plugin {
                 consent = UserMessagingPlatform.getConsentInformation(getContext());
                 ConsentRequestParameters params = new ConsentRequestParameters.Builder().setTagForUnderAgeOfConsent(true).build();
                 consent.requestConsentInfoUpdate(getActivity(), params, () -> safely(id, () -> {
-                    if (!current(id) || consentUpdated) return;
+                    if (!current(id) || consentUpdated || !state.equals("consent")) return;
                     consentUpdated = true;
                     privacyRequired = consent.getPrivacyOptionsRequirementStatus() == ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED;
                     if (!foreground()) { fail("inactive"); return; }
@@ -136,6 +163,7 @@ public class TestAdsPlugin extends Plugin {
                     try {
                         UserMessagingPlatform.loadConsentForm(getContext(), form -> {
                             if (!current(id) || !state.equals("consent")) return;
+                            if (TestCommerce.blocksAds(getContext())) { fail("billing-blocked"); return; }
                             if (!foreground()) { fail("inactive"); return; }
                             // 실제 표시된 양식만 시간 초과 취소에서 제외합니다.
                             stopTimer(); update("privacy", "");
@@ -153,7 +181,7 @@ public class TestAdsPlugin extends Plugin {
     }
 
     private void consentComplete(long id) {
-        if (!current(id)) return;
+        if (!current(id) || !(state.equals("consent") || state.equals("privacy"))) return;
         try {
             if (TestCommerce.blocksAds(getContext())) { fail("billing-blocked"); return; }
             privacyRequired = consent.getPrivacyOptionsRequirementStatus() == ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED;
@@ -169,53 +197,88 @@ public class TestAdsPlugin extends Plugin {
         initializing = true;
         try {
             MobileAds.initialize(getContext(), status -> main.post(() -> {
+                if (destroyed) return;
                 initialized = true; initializing = false;
                 if (current(id)) loadAd(id);
             }));
         } catch (Exception e) { initializing = false; fail("sdk"); }
     }
     private void loadAd(long id) {
-        if (!current(id)) return;
+        if (!current(id) || !state.equals("loading")) return;
         try {
             if (TestCommerce.blocksAds(getContext())) { fail("billing-blocked"); return; }
-            if (!foreground() || consent == null || !consent.canRequestAds()) { fail("consent-blocked"); return; }
+            if (!foreground() || consent == null || !consent.canRequestAds() || consent.getConsentStatus() == ConsentInformation.ConsentStatus.UNKNOWN) { fail("consent-blocked"); return; }
             Bundle extras = new Bundle(); extras.putString("npa", "1");
             AdRequest request = new AdRequest.Builder().addNetworkExtrasBundle(AdMobAdapter.class, extras).build();
-            InterstitialAd.load(getContext(), UNIT_ID, request, new InterstitialAdLoadCallback() {
+            if (format.equals("rewarded")) {
+                RewardedAd.load(getContext(), REWARDED_UNIT_ID, request, new RewardedAdLoadCallback() {
+                    @Override public void onAdLoaded(RewardedAd loaded) {
+                        if (!canAcceptLoaded(id)) return;
+                        rewardedAd = loaded; rewards.begin(id); loaded(id);
+                    }
+                    @Override public void onAdFailedToLoad(LoadAdError e) { if (current(id) && state.equals("loading")) fail("load:" + e.getCode()); }
+                });
+            } else InterstitialAd.load(getContext(), UNIT_ID, request, new InterstitialAdLoadCallback() {
             @Override public void onAdLoaded(InterstitialAd loaded) {
-                if (!current(id) || !state.equals("loading")) return;
-                if (TestCommerce.blocksAds(getContext())) { fail("billing-blocked"); return; }
-                stopTimer(); ad = loaded; readyAt = SystemClock.elapsedRealtime(); update("ready", "");
+                if (!canAcceptLoaded(id)) return;
+                ad = loaded; loaded(id);
             }
             @Override public void onAdFailedToLoad(LoadAdError e) { if (current(id) && state.equals("loading")) fail("load:" + e.getCode()); }
             });
         } catch (Exception e) { if (current(id)) fail("sdk"); }
     }
 
+    private boolean canAcceptLoaded(long id) {
+        if (!current(id) || !state.equals("loading")) return false;
+        if (TestCommerce.blocksAds(getContext())) { fail("billing-blocked"); return false; }
+        if (!foreground() || consent == null || !consent.canRequestAds() || consent.getConsentStatus() == ConsentInformation.ConsentStatus.UNKNOWN) { fail("consent-blocked"); return false; }
+        return true;
+    }
+    private void loaded(long id) {
+        stopTimer(); readyAt = SystemClock.elapsedRealtime(); update("ready", "");
+        // 준비된 객체도 TTL이 지나면 정리합니다. 실제 SDK overlay에는 타이머를 적용하지 않습니다.
+        timeout = () -> { if (current(id) && state.equals("ready")) fail("expired"); };
+        main.postDelayed(timeout, 3300000);
+    }
+
     @PluginMethod public void show(PluginCall call) {
         main.post(() -> {
             if (!guard(call)) return;
-            if (TestCommerce.blocksAds(getContext())) { if (!overlay()) fail("billing-blocked"); call.resolve(snapshot()); return; }
+            if (TestCommerce.blocksAds(getContext())) { rewards.invalidate(); if (!overlay()) fail("billing-blocked"); call.resolve(snapshot()); return; }
             if (overlay()) { call.resolve(snapshot()); return; }
-            if (!state.equals("ready") || ad == null) { call.reject("준비된 광고가 없습니다.", "not-ready"); return; }
+            expireReady();
+            if (!state.equals("ready") || (format.equals("rewarded") ? rewardedAd == null : ad == null)) { call.reject("준비된 광고가 없습니다.", "not-ready"); return; }
             if (!foreground()) { call.reject("앱이 비활성 상태입니다.", "inactive"); return; }
             try {
-            if (SystemClock.elapsedRealtime() - readyAt > 3300000 || consent == null || !consent.canRequestAds()) {
+            if (consent == null || !consent.canRequestAds() || consent.getConsentStatus() == ConsentInformation.ConsentStatus.UNKNOWN) {
                 fail("expired"); call.resolve(snapshot()); return;
             }
             final long id = attempt;
-            ad.setFullScreenContentCallback(new FullScreenContentCallback() {
+            FullScreenContentCallback callback = new FullScreenContentCallback() {
                 @Override public void onAdShowedFullScreenContent() {
                     if (current(id) && state.equals("presenting")) update("showing", "");
                 }
                 @Override public void onAdDismissedFullScreenContent() {
-                    if (!current(id)) return;
-                    attempt++; discard(); update("closed", "");
+                    if (!current(id) || !(state.equals("presenting") || state.equals("showing"))) return;
+                    attempt++; stopTimer(); discard(); update("closed", "");
                 }
-                @Override public void onAdFailedToShowFullScreenContent(AdError e) { if (current(id)) fail("show:" + e.getCode()); }
-            });
+                @Override public void onAdFailedToShowFullScreenContent(AdError e) { if (current(id) && (state.equals("presenting") || state.equals("showing"))) fail("show:" + e.getCode()); }
+            };
+            stopTimer();
+            if (format.equals("rewarded")) rewardedAd.setFullScreenContentCallback(callback);
+            else ad.setFullScreenContentCallback(callback);
+            if (format.equals("rewarded") && !rewards.show(id)) { fail("show-used"); call.resolve(snapshot()); return; }
             update("presenting", "");
-            ad.show(getActivity());
+            if (format.equals("rewarded")) rewardedAd.show(getActivity(), item -> {
+                // Google 광고의 보상→닫힘 순서만 지원합니다. 게임 보상/재화/저장 API를 호출하지 않습니다.
+                if (!current(id) || !(state.equals("presenting") || state.equals("showing"))) return;
+                try {
+                    if (!available() || TestCommerce.blocksAds(getContext()) || consent == null || !consent.canRequestAds()
+                        || consent.getConsentStatus() == ConsentInformation.ConsentStatus.UNKNOWN) { rewards.invalidate(); return; }
+                    if (rewards.earn(id)) update(state, "");
+                } catch (Exception ignored) { rewards.invalidate(); } // 불확실한 실제 overlay를 조기 해제하지 않습니다.
+            });
+            else ad.show(getActivity());
             } catch (Exception e) { fail("show"); }
             call.resolve(snapshot());
         });

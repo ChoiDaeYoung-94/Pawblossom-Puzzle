@@ -1,3 +1,26 @@
+## 2026-10-16 · 보상형 시험 광고와 콜백 단발 기록 (이슈 #83)
+
+기준 main `662c95aee9c9818c1579bb9d1b4b1bc86b4aec84`에서 `codex/rewarded-test-ads`로 작업했습니다. debug + testing의 기존 수동 광고 모달에 전면/보상형 선택과 **시험 보상 이벤트 (현재 실행)**를 추가했습니다. 숫자는 네이티브 `onUserEarnedReward` 콜백을 해당 표시 시도에 한 번 기록한 것으로, 서버 검증된 운영 보상이나 게임 지급이 아닙니다. 별·코인·이동·보상·잠금·회차·저장 스키마·오디오 믹스·버전은 변경하지 않았습니다. 보상량/type을 임의 설정하거나 상품처럼 표시하지 않습니다.
+
+`bridgeVersion:2`, `format`, `rewardEvents`와 기존 snapshot의 필수 타입/안전한 정수/revision 순서를 검사합니다. 누락·손상·구형 브리지는 요청을 차단하고 실제 overlay를 임의로 닫지 않습니다. 형식은 네이티브에서 확정하며 준비/진행/표시 중 바꾸지 않습니다. `RewardLedger`는 해당 attempt의 show와 보상 콜백을 각각 한 번만 허용합니다. 취소·실패·폐기·TTL·파괴·새 attempt에서 무효화하며, 기존 billing 광고 차단을 보상형에도 보수적으로 적용합니다. 실제 표시 중 권한이 차단되어도 SDK 전면창은 유지하고 이후 보상 기록 권한만 폐기합니다.
+
+| 검사 | 이번 변경의 결과·범위 |
+| --- | --- |
+| TypeScript/자동 검사 | 독립 `npx tsc --noEmit`, `npm test` **369개 통과**. 형식 선택/중복/수명, 구형·누락·타입 오류·역순·숫자 감소 차단, JS 명령에 의한 가산 없음, 두 형식의 보드/오디오 회귀 포함. 최초 mock `Promise<unknown>` 오류는 수정 후 독립 타입 검사로 통과했습니다. 앞선 연속 명령의 최종 exit 0을 타입 성공 근거로 쓰지 않았습니다. |
+| 순수 Java | 동일 debug 원본 `RewardLedger.java`를 JDK 21.0.12.1+1/JUnit 4.13.2로 컴파일·실행하여 **5개 통과**. 매칭 시도·표시 전 거부·show/earn 중복·무효화·이전 시도·새 ledger 초기화 검사입니다. SDK 취소/실패/파괴 각각을 재현한 것으로 합산하지 않습니다. |
+| SDK API 컴파일 | dry-run 목록 확인 후 `:app:compileDebugJavaWithJavac :app:compileReleaseJavaWithJavac` 통과. 최종 네이티브 콜백 try/catch 수정 이후 다시 컴파일했습니다. GMA 25.4.0/UMP 4.0.0/Billing 9.1.0 유지. 리소스 처리·compile용 라이브러리 JAR 의존 작업과 APK/AAB 패키징은 구분합니다. 앱 package/assemble/bundle·Capacitor sync 없음. release 의존성/클래스에서 시험 SDK 및 `TestAdsPlugin`/`RewardLedger` 제외 확인. |
+| testing 웹 빌드·실제 dist IPC | `npm run build:test` 통과. `scripts/test-ads-qa.mjs --dist --output=<새 외부 폴더>`에서 **6개 검사 묶음·120개 배치**, 오류/외부 요청 0. KO/EN × 320×568·360×640·640×360 × 전면/보상형 × 10상태의 화면 내 배치·44px 버튼/select·내부 스크롤 후 마지막 버튼 접근을 확인했습니다. |
+| 기존 주요 브라우저 회귀 | `scripts/batched-browser-qa.mjs --suite=development\|testing\|production --output=<각각 새 외부 폴더>`로 **development 6개·testing 4개·production 5개 스크립트 통과**. 실제 보드 입력/회차 저장/복구/터치 취소/가독성/오디오/결과창/Billing을 모드별로 구분합니다. testing dist 광고 검사는 native IPC 대역 전체 경로를 실행합니다. |
+| production 웹 빌드·미노출 | `npm run build` 통과. 실제 웹 및 Android IPC 대역 각각 설정의 시험 광고 진입 없음·광고 IPC **0회**. 마지막 primary dist의 세 flags 모두 **false**. 기존 Phaser 큰 청크 경고는 남아 있습니다. |
+
+브라우저의 광고/동의/timeout/보상/권한 이벤트는 **IPC snapshot 대역 주입**입니다. 클릭·impression·dismiss 등으로 가산하지 않는 네이티브 구현은 코드 검토와 순수 ledger 검사로 분리합니다. 두 형식의 실패/취소·수동 재시도·역순 응답·중복 snapshot·billing unknown/pending/owned 차단·비활성 show 차단·Escape/Android back 대역의 overlay 유지·복귀 상태 조회·새 브리지 실행 시 0을 확인했습니다. 언어 전환/초기 저장 정규화를 마친 뒤 각 광고 구간 전후 **저장 문자열 바이트 일치**를 확인했습니다. 새 브리지 실행 대역의 초기화를 실제 Android WebView 새로고침 시 plugin 초기화라고 주장하지 않습니다.
+
+실제 Chrome AudioContext의 suspend와 복귀 후 **설정 버튼의 실제 입력을 통한 resume**, 캔버스 접근 상태 복귀를 확인했습니다. 사용자 입력 전 자동 resume 보장 결과가 아닙니다. Scene 실제 입력·회차·오디오 복구는 별도 기존 QA로 구분합니다. 선택창 label/KOEN option·실제 focus를 확인했고 작은 가로 화면은 필요할 때 내부 스크롤합니다.
+
+최초 일반 development 5173의 native 진입 timeout은 정상적인 시험 광고 false 설정 때문이었습니다. 기존 총괄 서버를 변경하지 않았고 별도 5174 testing 소스에서 배치 확인 후 그 서버만 종료했습니다. 최종 전체 광고 근거는 testing dist입니다. 초기 실패/최종 성공 산출물 모두 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\v0.1.7\issue-83-*`에 보존합니다. `issue-83-testing-dist-2/report.json`에는 소스/QA/네이티브·실행 dist SHA-256과 120개 배치·6개 검사 결과가 있습니다. `issue-83-native`에는 컴파일/dry-run/release 의존성/JVM 로그, `issue-83-{development,testing,production}-regression`에는 각 기존 QA 결과·스크린샷을 보존합니다. 자체 Chrome/HTTP 서버는 finally에서 종료하며 사용자 Chrome·총괄 5173은 보존합니다.
+
+공식 [Google Android Rewarded 문서](https://developers.google.com/admob/android/rewarded)(2026-10-15 갱신, 2026-10-16 확인)의 Legacy Java `RewardedAd.load`/`RewardedAdLoadCallback`·`OnUserEarnedRewardListener`·main thread와 시험 ID `ca-app-pub-3940256099942544/5224354917`를 사용합니다. **Google 제공 광고의 보상→닫힘 순서만 지원**하며 mediation 일반 순서 지원 완료를 주장하지 않습니다. 실제 SDK 표시/UMP/OS 복귀·운영 보상 정책/서버 검증·SSV·실서비스·스토어 검증은 [#73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73) 미완료입니다. 새 APK/AAB·Android 동기화·기기 시험·APK 전달·Drive/콘솔·상품 설정은 수행하지 않았습니다.
+
 ## 2026-10-16 · 보드 모션 감소와 화면 복귀 입력 (이슈 #70)
 
 2026-10-16 main 통합: 기존 PR 35개 중 **35개 Squash merge · 0개 기반 규칙 선반영 완료**입니다. 앱 소스 기준은 `116020bdd550fbc98f38ee998905c83ea1b933d5`이며 원래 최종 head `f1edcf6`와 코드·에셋·네이티브/검증 자료가 동일하고 최신 AGENTS·이슈/PR 템플릿을 추가했습니다. 초기 네 개발 PR은 그 버전의 로컬 테스트/웹 빌드, CI 도입 이후에는 각 새 head의 Node 22·24 성공과 병합 tree 일치를 확인했습니다. 최신 main에서 **자동 349개·JVM 구매 검증 8개·testing/production 웹 빌드·브라우저 주요 경로**를 확인했고 마지막 primary dist 세 flags는 false입니다. 기존 원격/로컬 작업 브랜치 35개씩은 보존·내용 통합·고유 변경 부재·미사용 확인 후 정리했습니다. [PR별 검증·정리 근거](performance/main-integration-20261016.json), [보류 검증 #73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)을 보존합니다. 단말 테스트·APK 전달과 실서비스·출시 검증은 계속 보류합니다.
