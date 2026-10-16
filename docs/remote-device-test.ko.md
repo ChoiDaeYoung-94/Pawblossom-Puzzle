@@ -4,7 +4,23 @@
 
 사용자님은 회사의 테스트 폰에서 Google Drive APK를 내려받아 확인합니다. 개발 PC에 바로 USB를 연결할 수 있다는 전제로 작업하지 않습니다. 배포 파일은 개인 Drive의 `Pawblossom Puzzle 테스트` 폴더에 관리하며, 다운로드 링크는 사용자님께 직접 전달합니다. 파일을 올린 것과 실기기 검증 완료를 구분합니다.
 
-## 최신 전달 빌드 (v0.1.6)
+## 최신 전달 빌드 (v0.1.7)
+
+2026-10-16 [이슈 #66](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/66): v0.1.6 이후 30스테이지·안정 회차 저장/손상 복구·키보드/터치/가독성·핍 전용 결과 아트·오디오 복구를 한 번의 테스트 빌드로 묶었습니다. 총괄이 기존 작업용 Chrome Drive 폴더에서 APK·체크섬 두 파일의 녹색 업로드 완료와 목록(13.4MB/120바이트)을 확인했습니다. 이전 전달 파일·공유 범위는 보존했고 새 Chrome 창은 만들지 않았습니다. 별도 테스트 안내 파일은 생성·업로드하지 않으며 사용자 대화에 직접 안내합니다.
+
+- 파일: `Pawblossom-Puzzle-v0.1.7-2026-10-16-c6b1578-debug.apk`
+- 앱 코드·리소스 기준: `c6b157826ba9e7fed79d1f748ef606131f2b0e1b` (이후 변경은 검증 도구·기술/전달 기록)
+- versionName **0.1.7** / versionCode **8**, applicationId `com.choidaeyoung.pawblossompuzzle`, minSdk 24 / targetSdk 36
+- 크기: **14,044,758바이트**, SHA-256: **`3c4952f544ce7391b6ae8427106a90c67d022eaa06fd9ab199617d792dea7220`**
+- 체크섬: `SHA256SUMS-v0.1.7.txt` (120바이트, 파일 자체 SHA-256 `2af9ce5d61d01c7dd7e40295c19cfb9df5abf68e99a2f60f1b892cbb8f0cdd48`)
+- 로컬 보존: Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\v0.1.7`의 버전별 APK/체크섬과 원본 빌드/검증 결과
+- 총괄이 Drive에서 **다시 다운로드한 APK와 체크섬** `C:\Users\user\Downloads\Pawblossom-Puzzle-v0.1.7-2026-10-16-c6b1578-debug.apk`, `C:\Users\user\Downloads\SHA256SUMS-v0.1.7.txt`는 각각 크기·SHA-256이 위 원본과 같습니다. 업로드 완료 증빙은 외부 산출물 폴더의 `drive-upload-complete.jpg`입니다. 성공 UI·파일 목록과 두 파일의 바이트 재다운로드 검증을 모두 확인했습니다.
+
+자동 **284개**, Billing JVM **8개**, 브라우저 기존 검사 15개 스크립트, testing/production 웹·Android 빌드, debug/release lint **0 errors/15·17 warnings**, 10종 release 차단과 원본 복구, APK/AAB 각각 웹 에셋 **29개** 전수 해시를 확인했습니다. APK v2 인증서 SHA-256 **`3db1481f54ab024e442493713f4d5dd400b985e4c2a41852b4b389a6e2df47b3`**는 실제 이전 전달 v0.1.6 APK와 같으며 기존 기본 개발 서명을 유지합니다. 같은 인증서라는 사실과 실제 단말 업데이트 성공은 구분합니다. [빌드 근거](android-release.ko.md), [브라우저 근거](browser-qa.ko.md).
+
+debug는 기본 꺼짐의 수동 전면 시험 광고와 Billing 시험 SDK/브리지를 포함합니다. **운영 광고는 없고 실제 상품 ID·공개키·가격 설정도 없으므로 실제 구매는 실행되지 않습니다.** 실기기 SDK·동의·구매 성공 검증이 아닙니다. AAB는 시험 기능·광고/Billing SDK를 제외한 production unsigned 검증용으로 **Drive에 업로드하지 않았습니다**. 크기 7,717,275바이트, SHA-256 `ec4ccafbbcc9f4895948cc52d53d4083a2f02c24d9e0a0e558d2cf4b9b367210`. 마지막 dist/Android 에셋의 세 flags는 모두 false입니다. 실제 Android 설치·업데이트·저장 복구/강제 종료·오디오 포커스/전화/Bluetooth·광고·결제/복원·스토어 검증은 남아 있습니다. 비공개 접근 링크는 사용자 대화로 전달합니다.
+
+## 이전 전달 빌드 (v0.1.6)
 
 2026-10-14 낙엽 숫자 팝업 간소화 PR #33과 핍 결과·테스트 선택 전환 PR #35를 포함한 빌드입니다. 기존 Chrome 작업용 Drive 폴더에서 새 APK와 체크섬 두 파일의 업로드 완료와 목록을 확인했습니다. 별도 테스트 안내 파일은 생성·업로드하지 않았고 안내는 사용자 대화에 직접 전달합니다. 이전 전달 파일과 공유 범위를 보존했으며 새 Chrome 창은 없습니다.
 

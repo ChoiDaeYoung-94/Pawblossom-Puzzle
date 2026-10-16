@@ -1,0 +1,68 @@
+{
+  "debugApkV2": true,
+  "billingVersion": "9.1.0",
+  "billingAarSha256": "d28286d4e4c18725510980de01211d9b72501e7146d96817fa0c9999af9b0d22",
+  "releaseAabSigned": false,
+  "artifacts": [
+    {
+      "billingSdk": true,
+      "dexCount": 8,
+      "variant": "debug",
+      "billingBridge": true,
+      "adsBridge": true,
+      "sha256": "3c4952f544ce7391b6ae8427106a90c67d022eaa06fd9ab199617d792dea7220",
+      "bytes": 14044758,
+      "umpSdk": true,
+      "buildInfo": {
+        "testTools": true,
+        "androidTestAds": true,
+        "androidTestBilling": true
+      },
+      "adsSdk": true
+    },
+    {
+      "billingSdk": false,
+      "dexCount": 1,
+      "variant": "release",
+      "billingBridge": false,
+      "adsBridge": false,
+      "sha256": "ec4ccafbbcc9f4895948cc52d53d4083a2f02c24d9e0a0e558d2cf4b9b367210",
+      "bytes": 7717275,
+      "umpSdk": false,
+      "buildInfo": {
+        "testTools": false,
+        "androidTestAds": false,
+        "androidTestBilling": false
+      },
+      "adsSdk": false
+    }
+  ],
+  "version": "0.1.7 / 8",
+  "debugBillingPermission": true,
+  "dependencies": {
+    "debug": {
+      "billing910": true,
+      "sdkLines": [
+        "+--- com.android.billingclient:billing:{strictly 9.1.0} -> 9.1.0",
+        "+--- com.google.android.gms:play-services-ads:{strictly 25.4.0} -> 25.4.0",
+        "|    |    +--- com.google.android.ump:user-messaging-platform:4.0.0",
+        "+--- com.google.android.ump:user-messaging-platform:{strictly 4.0.0} -> 4.0.0 (*)"
+      ]
+    },
+    "release": {
+      "billing910": false,
+      "sdkLines": []
+    }
+  },
+  "productionAssetMatches": 29,
+  "lint": {
+    "release": "0 errors, 17 warnings",
+    "releaseAdditional": "변경하지 않은 API 26 아이콘 2개의 MonochromeLauncherIcon 경고",
+    "debug": "0 errors, 15 warnings"
+  },
+  "dateKst": "2026-10-16",
+  "billingJvmTests": 8,
+  "releaseManifestAndConfigClean": true,
+  "scope": "실제 SDK 컴파일/로컬 JVM/정적 산출물 검사. 실제 Play/기기 결제 미검증",
+  "localProductConfigurationPresent": false
+}

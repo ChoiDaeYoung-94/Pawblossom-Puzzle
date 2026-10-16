@@ -2,7 +2,29 @@
 
 ## 현재 설정과 검증
 
-앱 이름은 Pawblossom Puzzle이며 개발용 applicationId는 `com.choidaeyoung.pawblossompuzzle`입니다. Play 등록 전에 최종 확정합니다. 현재 개발 브랜치의 versionName은 `0.1.6`, versionCode는 `7`입니다. Capacitor 8, minSdk 24, compileSdk/targetSdk 36, Android Gradle Plugin 8.13.0, Gradle 8.14.3, Build Tools 36.0.0을 사용합니다.
+앱 이름은 Pawblossom Puzzle이며 개발용 applicationId는 `com.choidaeyoung.pawblossompuzzle`입니다. Play 등록 전에 최종 확정합니다. 현재 개발 브랜치의 versionName은 `0.1.7`, versionCode는 `8`입니다. Capacitor 8, minSdk 24, compileSdk/targetSdk 36, Android Gradle Plugin 8.13.0, Gradle 8.14.3, Build Tools 36.0.0을 사용합니다.
+
+## 2026-10-16 · v0.1.7 누적 테스트 빌드 (이슈 #66)
+
+v0.1.6 이후의 30스테이지, 안정된 회차 저장·손상 복구, 키보드·터치 취소·가독성, 핍 전용 결과 아트와 오디오 복구를 묶었습니다. 기준 `850c1f6c066e432ac24cb2d6180d954856ba7dc1`에서 버전/검증 도구를 준비한 **`c6b157826ba9e7fed79d1f748ef606131f2b0e1b`**의 앱 코드·리소스로 빌드했습니다. 이후 수정은 검증 스크립트의 package-lock 빈 이름 키 파싱·정상 차단 후 성공 종료코드와 기술 기록이며 APK 앱 소스를 바꾸지 않습니다. package.json·lock 루트/패키지 버전과 Android 0.1.7/code 8을 대조했습니다.
+
+실제 경로 `C:\Users\user\Documents\ChatGPT\match3`에서 `scripts/use-dev-tools.ps1`을 dot-source하여 Node **24.21.0**, Temurin JDK **21.0.12.1**, 기존 SDK 36으로 실행했습니다. 순서는 `npm test` → `npm run android:sync:test` → `assembleDebug testDebugUnitTest lintDebug` → 버전명 APK 사본 보존 → `npm run android:sync` → `bundleRelease lintRelease compileReleaseJavaWithJavac` → release guard 10종 및 원본 production 마커 복구 → 네이티브·전수 에셋 검사입니다. Gradle에는 `--no-daemon --max-workers=2 -Dorg.gradle.jvmargs="-Xmx1024m -Dfile.encoding=UTF-8"`를 사용했습니다.
+
+| 산출물 | 바이트 | SHA-256 |
+| --- | ---: | --- |
+| `Pawblossom-Puzzle-v0.1.7-2026-10-16-c6b1578-debug.apk` | 14,044,758 | `3c4952f544ce7391b6ae8427106a90c67d022eaa06fd9ab199617d792dea7220` |
+| `Pawblossom-Puzzle-v0.1.7-2026-10-16-c6b1578-release-unsigned.aab` | 7,717,275 | `ec4ccafbbcc9f4895948cc52d53d4083a2f02c24d9e0a0e558d2cf4b9b367210` |
+
+두 사본과 `SHA256SUMS-v0.1.7.txt`는 **Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\v0.1.7`**에 보존했습니다. 체크섬 파일 자체의 SHA-256은 `2af9ce5d61d01c7dd7e40295c19cfb9df5abf68e99a2f60f1b892cbb8f0cdd48`입니다. 원본 Android 출력과 testing/production dist 사본·빌드 로그·브라우저 원본 결과도 보존합니다. AAB는 검증용 unsigned이며 Drive 업로드 대상이 아닙니다. APK·키·AAB는 Git에 넣지 않습니다. 총괄 읽기검토 후 기존 Drive 폴더에 APK·체크섬 두 파일의 업로드 완료를 확인했고, 재다운로드한 APK 크기·해시가 원본과 같습니다. [기존 전달 기록](remote-device-test.ko.md)에 근거와 검증 범위를 기록합니다.
+
+- 자동 **284개**, Billing JVM **8개** 성공. debug lint **0 errors/15 warnings**, release **0 errors/17 warnings**이며 release 추가 2개는 기존 API 26 아이콘 MonochromeLauncherIcon 경고입니다. 기존 Phaser 500KB 번들·Gradle flatDir/폐기 예정 API 경고는 남아 있습니다.
+- aapt에서 applicationId 유지, versionName **0.1.7/code 8**, minSdk **24**/targetSdk **36**을 확인했습니다. apksigner **v2** 통과. 총괄이 실제 Drive에서 내려받은 전달 v0.1.6 APK는 8,928,012바이트·SHA-256 `1fe585a3635dcf428a0f74e034806b269023b6c1898755f5f3c2be431095d818`로 과거 기록과 일치합니다. 두 APK 인증서 SHA-256은 **`3db1481f54ab024e442493713f4d5dd400b985e4c2a41852b4b389a6e2df47b3`**로 같습니다. 기존 기본 debug signing을 유지했고 새 키 생성/서명 변경은 없습니다. 실제 단말의 업데이트 성공까지 검증한 결과는 아닙니다.
+- debug 8개 DEX에서 **GMA 25.4.0·UMP 4.0.0·Billing 9.1.0 SDK와 두 브리지**, BILLING 권한 및 세 시험 flags true를 확인했습니다. release RuntimeClasspath/1개 DEX/Manifest/BuildConfig에는 수익화 SDK·시험 브리지·BILLING/광고 항목·상품/키 필드가 없습니다. release AAB의 세 flags는 false이며 `jarsigner -verify`는 **unsigned**입니다. [네이티브 검사](performance/billing-native-20261016-v0.1.7.json).
+- 시험 true·누락·손상·필드 누락·문자열·숫자 등 **10종**은 `preReleaseBuild`를 모두 차단했습니다. finally에서 원본 마커를 바이트 단위로 복구했습니다. [차단/복구](performance/billing-release-guard-20261016-v0.1.7.json). 검증 스크립트도 전체 차단 확인과 보고서 저장 뒤에는 성공을 반환하도록 정리하여, 마지막 Gradle의 의도된 실패 종료코드를 잘못 전파하지 않습니다.
+- APK↔testing dist와 AAB↔production dist 각각 **29개 웹 파일**(JS/CSS·모든 그림/폰트·핍 WebP·build-info 포함)의 경로·크기·SHA-256 전수 일치. Capacitor 추가 파일 `cordova.js`, `cordova_plugins.js`는 두 산출물 모두 0바이트이며 예상 밖 웹 파일이 없습니다. 마지막 dist/Android public도 production 29개와 같고 세 flags 모두 false입니다. [파일별 해시·이전 인증서 비교](performance/batched-artifacts-20261016-v0.1.7.json).
+- 두 PowerShell QA 스크립트는 현재 버전·한국 날짜를 읽고 `-OutputPath`를 받으며 기존 보고서 경로를 덮어쓰지 않습니다. 과거 20261015 JSON을 보존했습니다. [브라우저 재검사](browser-qa.ko.md)의 원본도 새 외부 폴더로 분리했습니다.
+
+`android/billing-test.properties`는 계속 없으며 실제 상품 ID·키·가격·실구매 설정을 만들지 않았습니다. debug에는 명시적 요청의 수동 시험 광고만 있고 운영 광고·게임 보상 광고는 없습니다. 실제 Android 설치·저장소 소진·강제 종료·오디오 포커스/전화/Bluetooth·UMP/GMA 실행·Play 구매/복원·스토어 검증은 미완료입니다. 콘솔 변경·구매·앱 삭제/재설치는 수행하지 않았습니다. 이번 결과는 출시 완료나 대상 연령/국가별 운영 적합성 검증이 아닙니다.
 
 ## 광고·광고 제거 결제 도입 판단 (이슈 #51)
 

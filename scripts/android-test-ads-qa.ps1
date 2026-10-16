@@ -1,7 +1,13 @@
+param([string]$OutputPath)
 # 개발 도구 환경을 먼저 dot-source한 뒤 실행합니다. 웹 에셋은 finally에서 원본으로 복구합니다.
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $androidRoot = Join-Path $projectRoot 'android'
+$dateKst = [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([DateTimeOffset]::UtcNow, 'Korea Standard Time').ToString('yyyy-MM-dd')
+$version = (Get-Content -LiteralPath (Join-Path $projectRoot 'package.json') -Raw | ConvertFrom-Json).version
+if (-not $OutputPath) { $OutputPath = Join-Path $projectRoot ('docs/performance/billing-release-guard-' + $dateKst.Replace('-', '') + '-v' + $version + '.json') }
+$OutputPath = [System.IO.Path]::GetFullPath($OutputPath)
+if (Test-Path -LiteralPath $OutputPath) { throw ('기존 보고서를 덮어쓰지 않습니다: ' + $OutputPath) }
 $marker = Join-Path $androidRoot 'app/src/main/assets/public/build-info.json'
 $original = [System.IO.File]::ReadAllBytes($marker)
 $checks = @()
@@ -32,5 +38,7 @@ try {
 } finally {
     [System.IO.File]::WriteAllBytes($marker, $original)
 }
-@{dateKst='2026-10-15'; checks=$checks; restored=([Convert]::ToBase64String($original) -eq [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($marker)))} |
-    ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $projectRoot 'docs/performance/billing-release-guard-20261015.json') -Encoding utf8
+@{dateKst=$dateKst; version=$version; checks=$checks; restored=([Convert]::ToBase64String($original) -eq [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($marker)))} |
+    ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $OutputPath -Encoding utf8
+# 모든 차단이 예상대로 확인된 경우에만 성공을 반환합니다. 마지막 Gradle의 의도된 1을 전파하지 않습니다.
+exit 0
