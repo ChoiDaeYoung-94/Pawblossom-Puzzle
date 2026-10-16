@@ -1,8 +1,21 @@
+param([string]$OutputPath)
 # debug 시험 APK와 production release AAB를 각각 빌드한 뒤 실행합니다. 기기 시험은 아닙니다.
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $androidRoot = Join-Path $projectRoot 'android'
-$sdk = Join-Path $env:LOCALAPPDATA 'Android/Sdk'
+$sdk = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { Join-Path $env:LOCALAPPDATA 'Android/Sdk' }
+$package = Get-Content -LiteralPath (Join-Path $projectRoot 'package.json') -Raw | ConvertFrom-Json
+$lock = Get-Content -LiteralPath (Join-Path $projectRoot 'package-lock.json') -Raw | ConvertFrom-Json
+$gradle = Get-Content -LiteralPath (Join-Path $androidRoot 'app/build.gradle') -Raw
+if ($gradle -notmatch 'versionCode\s+(\d+)') { throw 'Android versionCode 선언 없음' }
+$versionCode = $Matches[1]
+if ($gradle -notmatch 'versionName\s+"([^"]+)"') { throw 'Android versionName 선언 없음' }
+$versionName = $Matches[1]
+if ($package.version -ne $versionName -or $lock.version -ne $versionName -or $lock.packages.''.version -ne $versionName) { throw 'package/lock/Android 버전 선언 불일치' }
+$dateKst = [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([DateTimeOffset]::UtcNow, 'Korea Standard Time').ToString('yyyy-MM-dd')
+if (-not $OutputPath) { $OutputPath = Join-Path $projectRoot ('docs/performance/billing-native-' + $dateKst.Replace('-', '') + '-v' + $versionName + '.json') }
+$OutputPath = [System.IO.Path]::GetFullPath($OutputPath)
+if (Test-Path -LiteralPath $OutputPath) { throw ('기존 보고서를 덮어쓰지 않습니다: ' + $OutputPath) }
 $aapt = Join-Path $sdk 'build-tools/36.0.0/aapt.exe'
 $checks = @()
 $dependencyResults = @{}
@@ -38,8 +51,12 @@ foreach ($variant in @('debug', 'release')) {
         $sdkFound = $dexText.Contains('Lcom/android/billingclient/api/BillingClient;')
         $bridgeFound = $dexText.Contains('Lcom/choidaeyoung/pawblossompuzzle/TestBillingPlugin;')
         if ($sdkFound -ne $expected -or $bridgeFound -ne $expected) { throw ($variant + ' DEX Billing 분리 실패') }
-        if (-not $expected -and $dexText -match 'BILLING_TEST_PUBLIC_KEY|BILLING_TEST_PRODUCT_ID|PawblossomTestBilling|Lcom/google/android/gms/ads/|Lcom/google/android/ump/') { throw 'release DEX에 시험 구성/광고 잔존' }
-        $artifacts += @{variant=$variant;bytes=(Get-Item -LiteralPath $artifact).Length;sha256=(Get-FileHash -LiteralPath $artifact -Algorithm SHA256).Hash.ToLowerInvariant();buildInfo=$info;dexCount=$dexEntries.Count;billingSdk=$sdkFound;billingBridge=$bridgeFound}
+        $adsSdk = $dexText.Contains('Lcom/google/android/gms/ads/MobileAds;')
+        $umpSdk = $dexText.Contains('Lcom/google/android/ump/UserMessagingPlatform;')
+        $adsBridge = $dexText.Contains('Lcom/choidaeyoung/pawblossompuzzle/TestAdsPlugin;')
+        if ($adsSdk -ne $expected -or $umpSdk -ne $expected -or $adsBridge -ne $expected) { throw ($variant + ' DEX 광고 SDK/브리지 분리 실패') }
+        if (-not $expected -and $dexText -match 'BILLING_TEST_PUBLIC_KEY|BILLING_TEST_PRODUCT_ID|BILLING_TEST_PERMANENT_PRODUCT|PawblossomTestBilling|Lcom/google/android/gms/ads/|Lcom/google/android/ump/') { throw 'release DEX에 시험 구성/광고 잔존' }
+        $artifacts += @{variant=$variant;bytes=(Get-Item -LiteralPath $artifact).Length;sha256=(Get-FileHash -LiteralPath $artifact -Algorithm SHA256).Hash.ToLowerInvariant();buildInfo=$info;dexCount=$dexEntries.Count;billingSdk=$sdkFound;billingBridge=$bridgeFound;adsSdk=$adsSdk;umpSdk=$umpSdk;adsBridge=$adsBridge}
     } finally { $archive.Dispose() }
 }
 $debugManifest = & $aapt dump permissions (Join-Path $androidRoot 'app/build/outputs/apk/debug/app-debug.apk') | Out-String
@@ -66,8 +83,8 @@ if ($LASTEXITCODE -ne 0 -or -not $signature.Contains('v2): true')) { throw 'debu
 $releaseSignature = & jarsigner -verify (Join-Path $androidRoot 'app/build/outputs/bundle/release/app-release.aab') | Out-String
 if (-not $releaseSignature.Contains('jar is unsigned')) { throw '예상하지 않은 release AAB 서명 상태' }
 $badging = & $aapt dump badging (Join-Path $androidRoot 'app/build/outputs/apk/debug/app-debug.apk') | Out-String
-if ($LASTEXITCODE -ne 0 -or -not $badging.Contains("versionCode='7' versionName='0.1.6'")) { throw '시험 APK 버전 불일치' }
+if ($LASTEXITCODE -ne 0 -or -not $badging.Contains("versionCode='$versionCode' versionName='$versionName'")) { throw '시험 APK 버전 불일치' }
 $aar = Get-ChildItem -LiteralPath (Join-Path $env:USERPROFILE '.gradle/caches/modules-2/files-2.1/com.android.billingclient/billing/9.1.0') -Recurse -Filter '*.aar' | Select-Object -First 1
-$report = @{dateKst='2026-10-15';scope='실제 SDK 컴파일/로컬 JVM/정적 산출물 검사. 실제 Play/기기 결제 미검증';billingVersion='9.1.0';billingAarSha256=(Get-FileHash -LiteralPath $aar.FullName).Hash.ToLowerInvariant();dependencies=$dependencyResults;artifacts=$artifacts;debugBillingPermission=$true;releaseManifestAndConfigClean=$true;productionAssetMatches=$assetMatches;lint=@{debug='0 errors, 15 warnings';release='0 errors, 17 warnings';releaseAdditional='변경하지 않은 API 26 아이콘 2개의 MonochromeLauncherIcon 경고'};billingJvmTests=8;debugApkV2=$true;releaseAabSigned=$false;version='0.1.6 / 7';localProductConfigurationPresent=(Test-Path -LiteralPath (Join-Path $androidRoot 'billing-test.properties'))}
-$report | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $projectRoot 'docs/performance/billing-native-20261015.json') -Encoding utf8
+$report = @{dateKst=$dateKst;scope='실제 SDK 컴파일/로컬 JVM/정적 산출물 검사. 실제 Play/기기 결제 미검증';billingVersion='9.1.0';billingAarSha256=(Get-FileHash -LiteralPath $aar.FullName).Hash.ToLowerInvariant();dependencies=$dependencyResults;artifacts=$artifacts;debugBillingPermission=$true;releaseManifestAndConfigClean=$true;productionAssetMatches=$assetMatches;lint=@{debug='0 errors, 15 warnings';release='0 errors, 17 warnings';releaseAdditional='변경하지 않은 API 26 아이콘 2개의 MonochromeLauncherIcon 경고'};billingJvmTests=8;debugApkV2=$true;releaseAabSigned=$false;version=($versionName + ' / ' + $versionCode);localProductConfigurationPresent=(Test-Path -LiteralPath (Join-Path $androidRoot 'billing-test.properties'))}
+$report | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $OutputPath -Encoding utf8
 Write-Output ($report | ConvertTo-Json -Depth 8)
