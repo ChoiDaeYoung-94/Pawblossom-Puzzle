@@ -10,6 +10,7 @@ const compile = (source: string): string => ts.transpileModule(source, {
 }).outputText;
 const mainCode = compile(read('../src/main.ts').replace(/^import .*;\r?\n/gm, ''));
 const stateCode = compile(read('../src/state.ts'));
+const levelsCode = compile(read('../src/levels.ts'));
 const boardCode = compile(read('../src/BoardScene.ts'));
 const engineCode = compile(read('../src/core/BoardEngine.ts'));
 
@@ -90,6 +91,9 @@ function mainHarness(storageFails = false, firstUse = false) {
     setTimeout: (callback: () => void, ms: number) => { timers.set(++timerId, { callback, ms }); return timerId; },
     clearTimeout: (id: number) => timers.delete(id),
   });
+  const levelExports: Record<string, unknown> = {};
+  vm.runInNewContext(levelsCode, {exports:levelExports});
+  Object.assign(context,{require:(name:string) => {if(name==='./levels')return levelExports;throw new Error(name);}});
   vm.runInContext(stateCode, context);
   Object.assign(context, stateExports);
   vm.runInContext(mainCode, context);
@@ -227,7 +231,7 @@ describe('첫 플레이 안내', () => {
     expect(h.element('#tutorial-dialog').open).toBe(false);
     expect(h.run('game.paused')).toBe(false);
     expect(h.stored().tutorialSeen).toBe(true);
-    expect(h.run('moves')).toBe(22);
+    expect(h.run('moves')).toBe(26);
     expect(h.stored().completed).toEqual([]);
   });
   it('건너뛰기와 Escape 모두 재실행 때 자동 안내를 반복하지 않습니다', () => {
@@ -261,7 +265,7 @@ describe('첫 플레이 안내', () => {
     expect(h.run('tutorialPage')).toBe(1);
     expect(h.element('#tutorial-dialog').open).toBe(true);
     expect(h.stored().language).toBe('ko');
-    expect(h.run('moves')).toBe(22);
+    expect(h.run('moves')).toBe(26);
   });
   it('결과 대기 또는 결과 창 표시 중에는 안내를 열지 않습니다', () => {
     const h=mainHarness();

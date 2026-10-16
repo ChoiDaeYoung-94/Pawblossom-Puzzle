@@ -15,4 +15,4 @@ export function loadSave(): SaveData {
 }
 export function saveData(data: SaveData): boolean { try {localStorage.setItem(key, JSON.stringify(data)); return true;}catch{return false;} }
 export function clearSave(): SaveData { const data = defaults(); saveData(data); return data; }
-export const levels = Array.from({length:10},(_,i)=>({id:i+1,moves: i<3 ? 22 : 24,goals:[{kind:i%6,count:12+Math.floor(i/2)*2},{kind:(i+1)%6,count:10+Math.floor(i/3)*2}]}));
+export { levels } from './levels';

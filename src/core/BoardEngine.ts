@@ -1,6 +1,7 @@
 export type Special = 'row' | 'column' | 'bomb' | 'rainbow';
 export interface Tile { kind: number; special?: Special }
 export interface Position { row: number; col: number }
+export interface LegalMove { a: Position; b: Position }
 export interface ResolveStep {
   before: Tile[][];
   removed: Position[];
@@ -84,19 +85,21 @@ export class BoardEngine {
     const y = this.board[b.row][b.col].special;
     return x === 'rainbow' || y === 'rainbow' || (!!x && !!y);
   }
-  public hasMoves(): boolean {
+  /** 보드와 보충 난수를 소비하지 않는 합법 이동 조회입니다. */
+  public legalMoves(): LegalMove[] { return [...this.scanMoves()]; }
+  public hasMoves(): boolean { return !this.scanMoves().next().done; }
+  private *scanMoves(): Generator<LegalMove> {
     for (let row = 0; row < this.rows; row++) for (let col = 0; col < this.cols; col++) {
       const a = { row, col };
       for (const b of [{ row, col: col + 1 }, { row: row + 1, col }]) {
         if (!this.inside(b)) continue;
-        if (this.specialSwap(a, b)) return true;
+        if (this.specialSwap(a, b)) { yield {a,b}; continue; }
         this.exchange(a, b);
         const matches = this.findMatches();
         this.exchange(a, b);
-        if (matches.some(p => this.key(p) === this.key(a) || this.key(p) === this.key(b))) return true;
+        if (matches.some(p => this.key(p) === this.key(a) || this.key(p) === this.key(b))) yield {a,b};
       }
     }
-    return false;
   }
   private generate(): void {
     for (let attempt = 0; attempt < 100; attempt++) {
