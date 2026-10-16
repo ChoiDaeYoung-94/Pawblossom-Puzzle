@@ -1,0 +1,60 @@
+{
+  "metadata": {
+    "status": "소개 초안",
+    "checkedOn": "2026-10-16",
+    "implementationCommit": "c3be5c24e5fa736a3a78db732fd8bd7c3989ca38",
+    "issue": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/75",
+    "gameDefaultLocale": "ko-KR",
+    "storeDefaultLocale": null,
+    "preparationCountries": ["KR", "US"],
+    "scope": "현재 구현에 근거한 스토어 소개 초안입니다. 최종 확정·콘솔 등록·제출·심사 통과·출시 완료를 뜻하지 않습니다.",
+    "limits": { "title": 30, "shortDescription": 80, "fullDescription": 4000 },
+    "characterCountRule": "JSON을 해석한 문자열의 공백·문장부호·LF 줄바꿈을 포함한 Unicode 코드 포인트 수입니다. 현재 문자열은 BMP 문자만 사용하므로 JavaScript length와도 같으며 콘솔 입력 시 다시 확인합니다.",
+    "sources": [
+      {
+        "url": "https://support.google.com/googleplay/android-developer/answer/9859152?hl=en",
+        "confirmed": "제목 30자·짧은 소개 80자·전체 소개 4,000자 한도, 언어별 소개와 필수 지원 이메일 안내"
+      },
+      {
+        "url": "https://support.google.com/googleplay/android-developer/answer/9898842?hl=en",
+        "confirmed": "실제 기능에 맞는 간결한 설명, 오해 유발 메타데이터와 불필요한 키워드 반복 금지, 제목·아이콘·개발자 이름의 순위/가격/프로모션 표시 제한"
+      },
+      {
+        "url": "https://support.google.com/googleplay/android-developer/answer/13393723?hl=en",
+        "readUrl": "https://support.google.com/googleplay/android-developer/answer/13393723?hl=en-GB",
+        "confirmed": "정확한 기능 설명, 모든 번역에 동일 정책 적용, 실제 경험을 보여 주는 소재와 대상 연령의 일치",
+        "accessNote": "en URL은 429 응답으로 본문을 읽지 못해 같은 공식 문서의 en-GB 본문을 확인했습니다."
+      }
+    ],
+    "implementationEvidence": [
+      { "claim": "8×8 보드·탭/드래그 교환·3개 이상 매치·연쇄와 낙하", "files": ["src/BoardScene.ts", "src/core/BoardEngine.ts"] },
+      { "claim": "스테이지별 수확 목표·한 겹/두 겹 낙엽", "files": ["src/levels.ts", "src/core/BoardEngine.ts", "src/i18n.ts"] },
+      { "claim": "4개 이상 매치로 특수 블록 생성·탭 발동·조합·가로/세로/주변/같은 종류 제거", "files": ["src/core/BoardEngine.ts", "src/BoardScene.ts"] },
+      { "claim": "일반 스테이지 첫 완료 별 보상·별을 사용한 꽃밭 성장", "files": ["src/main.ts", "src/state.ts", "src/GardenArt.ts"] },
+      { "claim": "토끼 핍의 응원·한국어/영어·개별 배경음/효과음 켜기와 끄기", "files": ["src/i18n.ts", "src/main.ts", "src/ResultPip.ts", "src/audio/AudioManager.ts"] },
+      { "claim": "자체 제작 배경음·효과음과 에셋 기록", "files": ["src/audio/AudioManager.ts", "docs/audio-direction.ko.md", "docs/assets.ko.md"] }
+    ],
+    "pendingBeforeSubmission": [
+      "첫 공개 스테이지 수·콘텐츠·출시 아트·두 언어 최종 문구와 실제 배포 버전의 일치",
+      "실제 대상 연령·콘텐츠 등급·한국/미국 조건·동의/데이터 보안 설문과 관련 정책 검증",
+      "지원 이메일·공개 연락처·개인정보처리방침 URL과 실제 데이터 처리의 일치",
+      "가격·광고·광고 제거 상품 및 운영 서비스 구현/검증 여부와 필요한 표시",
+      "언어별 스크린샷·피처 그래픽·스토어 아이콘·권리 조건 최종 검수",
+      "게임의 한국어 기본·영어 지원과 구분한 스토어 기본 언어 선택(미확정), 최종 앱 ID·국가/카테고리/태그·테스트 요구사항과 콘솔 설정/등록",
+      "폰 연결 후 총괄의 단말 일괄 점검과 사용자의 최종 감각 검수"
+    ],
+    "excludedClaims": "출시 스테이지 수, 여러 친구/지역, 클라우드/멀티플레이, 매일 보상, 상점, 무제한, 광고 없음/작동하는 광고 제거 구매, 오프라인 검증 완료, 최종 대상 연령은 약속하지 않습니다. 연락처·URL·가격·상품·계정 값은 추정하지 않습니다."
+  },
+  "locales": {
+    "ko-KR": {
+      "title": "Pawblossom Puzzle",
+      "shortDescription": "블록을 맞추고 낙엽을 치우며 토끼 핍과 작은 정원을 가꿔 보세요.",
+      "fullDescription": "Pawblossom Puzzle은 토끼 핍과 작은 정원을 가꾸는 포근한 매치3 퍼즐 게임입니다.\n\n이웃한 블록을 바꿔 같은 블록을 세 개 이상 맞춰 보세요. 열매와 자연 소재 블록이 연쇄로 터지고, 빈자리는 새로운 블록으로 채워집니다.\n\n이동 횟수 안에 스테이지별 수확 목표를 채워 보세요. 한 겹·두 겹 낙엽을 치우는 목표도 등장합니다. 네 개 이상을 맞춰 만든 특수 블록을 누르거나 서로 조합하면 가로·세로 줄, 주변 블록, 같은 종류의 블록을 정리할 수 있습니다.\n\n스테이지를 처음 완료해 모은 별로 정원에 꽃밭을 하나씩 늘려 보세요. 핍의 작은 응원과 따뜻한 색감, 직접 제작한 배경음과 효과음이 함께합니다.\n\n- 탭과 드래그로 즐기는 8×8 매치3 퍼즐\n- 수확과 낙엽 정리 목표\n- 가로·세로 제거, 폭발, 같은 종류 제거 특수 블록과 조합\n- 별로 성장하는 작은 정원\n- 한국어·영어 지원, 배경음·효과음 각각 켜기와 끄기"
+    },
+    "en-US": {
+      "title": "Pawblossom Puzzle",
+      "shortDescription": "Match fruit, clear leaves, and grow a cozy garden with Pip the rabbit.",
+      "fullDescription": "Take a little break with Pip the rabbit in Pawblossom Puzzle, a cozy match-3 game where you grow a small garden.\n\nSwap neighboring blocks to match three or more of the same kind. Fruit and nature-inspired pieces pop in cascades, and new blocks fill the spaces.\n\nMeet each stage's harvest goals before your moves run out. Some stages also ask you to clear one- or two-layer leaf piles. Match four or more to create power-ups, then tap them or combine them to clear rows, columns, nearby blocks, or blocks of the same kind.\n\nEarn stars from first-time stage clears and use them to grow flower patches in your small garden. Pip's cheerful reactions, warm colors, and original music and sound effects accompany your progress.\n\n- Tap or drag on an 8-by-8 match-3 board\n- Harvest goals and leaf-clearing goals\n- Row, column, bomb, and same-kind clear power-ups and combinations\n- A garden that grows with your stars\n- Korean and English, with separate music and sound effect on/off controls"
+    }
+  }
+}
