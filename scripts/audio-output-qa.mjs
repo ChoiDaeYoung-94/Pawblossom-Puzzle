@@ -10,7 +10,13 @@ import ts from 'typescript';
 const modulePath=process.env.PAWBLOSSOM_PLAYWRIGHT_MODULE;
 const {chromium}=await import(modulePath?pathToFileURL(path.resolve(modulePath)).href:'playwright');
 const compile=source=>ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
-const baseline=compile(execFileSync('git',['show','221a294:src/audio/AudioManager.ts'],{encoding:'utf8'}));
+const args=process.argv.slice(2);
+const baselineRef=args.find(arg=>arg.startsWith('--baseline='))?.split('=')[1]??'221a294';
+const minimumGain=Number(args.find(arg=>arg.startsWith('--min-gain-db='))?.split('=')[1]??7);
+const maximumGain=Number(args.find(arg=>arg.startsWith('--max-gain-db='))?.split('=')[1]??100);
+const output=args.find(arg=>arg.startsWith('--output='))?.slice('--output='.length)??'docs/audio/louder-output-qa.json';
+if(!/^[a-f0-9]{7,40}$/.test(baselineRef)||!Number.isFinite(minimumGain)||!Number.isFinite(maximumGain)||minimumGain<0||maximumGain<minimumGain)throw Error('비교 기준과 음량 범위를 확인해 주세요.');
+const baseline=compile(execFileSync('git',['show',`${baselineRef}:src/audio/AudioManager.ts`],{encoding:'utf8'}));
 const current=compile(fs.readFileSync('src/audio/AudioManager.ts','utf8'));
 const browser=await chromium.launch({headless:true,channel:process.env.PAWBLOSSOM_CHROME_CHANNEL??'chrome'});
 try{
@@ -54,17 +60,18 @@ try{
       const before=await render(baseline,scenario),after=await render(current,scenario);
       results.push({scenario,before,after,rmsGainDb:before.rms?20*Math.log10(after.rms/before.rms):null});
     }
-    return {sampleRate:48000,seconds:2,baseline:'221a294',results,limit:await render(current,'limit')};
+    return {sampleRate:48000,seconds:2,results,limit:await render(current,'limit')};
   },{baseline,current});
+  report.baseline=baselineRef;
   for(const result of report.results){
     assert(result.after.clipped===0,`${result.scenario}: 출력 잘림`);
     assert(result.after.peak<0.98,`${result.scenario}: 출력 피크`);
     assert(result.after.voices<=20,`${result.scenario}: 동시음 상한`);
     if(result.scenario==='muted')assert.equal(result.after.rms,0);
-    else assert(result.rmsGainDb>7,`${result.scenario}: 음량 증가가 부족합니다.`);
+    else assert(result.rmsGainDb>minimumGain&&result.rmsGainDb<=maximumGain,`${result.scenario}: 음량 증가가 요청 범위 밖입니다.`);
   }
   assert(report.limit.peak<0.98&&report.limit.clipped===0);
-  const output='docs/audio/louder-output-qa.json';fs.mkdirSync(path.dirname(output),{recursive:true});
+  fs.mkdirSync(path.dirname(output),{recursive:true});
   fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
 }finally{await browser.close();}
 

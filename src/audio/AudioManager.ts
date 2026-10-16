@@ -25,7 +25,7 @@ const BASS = [48, 45, 55, 48, 48, 45, 55, 48] as const;
 const FIFTHS = [55, 52, 62, 55, 55, 52, 62, 55] as const;
 const EIGHTH = 60 / 72 / 2;
 const PENTATONIC = [0, 2, 4, 7, 9] as const;
-export const AUDIO_LEVELS={music:4,sfx:3.4,master:1} as const;
+export const AUDIO_LEVELS={music:4,sfx:3.4,master:1,makeup:1.12} as const;
 
 // 최종 출력의 급격한 잘림을 피하면서 큰 동시 신호를 부드럽게 제한합니다.
 export function outputCurve():Float32Array<ArrayBuffer> {
@@ -76,6 +76,7 @@ export class AudioManager {
         this.sfxBus = ctx.createGain();
         const master = ctx.createGain();
         const compressor = ctx.createDynamicsCompressor();
+        const makeup = ctx.createGain();
         const limiter = ctx.createWaveShaper();
         const peakGuard = ctx.createWaveShaper();
         this.musicBus.gain.value = this.music ? AUDIO_LEVELS.music : 0;
@@ -86,6 +87,7 @@ export class AudioManager {
         compressor.ratio.value = 6;
         compressor.attack.value = 0.004;
         compressor.release.value = 0.16;
+        makeup.gain.value = AUDIO_LEVELS.makeup;
         this.musicBus.connect(master);
         this.sfxBus.connect(master);
         master.connect(compressor);
@@ -94,10 +96,11 @@ export class AudioManager {
         // 오버샘플링 필터의 순간 오버슈트도 최종 출력에서 제한합니다.
         peakGuard.curve = Float32Array.from({length:4097},(_,i)=>Math.max(-0.95,Math.min(0.95,i/4096*2-1)));
         peakGuard.oversample = 'none';
-        compressor.connect(limiter);
+        compressor.connect(makeup);
+        makeup.connect(limiter);
         limiter.connect(peakGuard);
         peakGuard.connect(ctx.destination);
-        this.outputNodes = [this.musicBus, this.sfxBus, master, compressor, limiter, peakGuard];
+        this.outputNodes = [this.musicBus, this.sfxBus, master, compressor, makeup, limiter, peakGuard];
         ctx.onstatechange = this.onStateChange;
       } catch {
         // Audio is optional: unsupported/restricted WebViews still run the game.
