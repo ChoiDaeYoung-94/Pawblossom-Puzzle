@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
 import type { LeafHit, Position, ResolveStep } from './core';
+import { reducedMotion } from './reducedMotion';
 
 type EffectObject=Phaser.GameObjects.Graphics|Phaser.GameObjects.Image|Phaser.GameObjects.Text;
 const point=(p:Position)=>({x:44+p.col*56,y:44+p.row*56});
@@ -9,7 +10,6 @@ export class BoardEffects {
   private objects=new Set<EffectObject>();
   constructor(private scene:Phaser.Scene){}
   get activeCount(){return this.objects.size;}
-  private reduced(){return typeof window!=='undefined'&&typeof window.matchMedia==='function'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;}
   private finish(item:EffectObject){if(this.objects.delete(item))item.destroy();}
   private animate(item:EffectObject,config:Omit<Phaser.Types.Tweens.TweenBuilderConfig,'targets'|'onComplete'>){
     if(this.objects.size>=120){item.destroy();return;}
@@ -18,7 +18,7 @@ export class BoardEffects {
   }
   clear(){for(const item of this.objects){this.scene.tweens.killTweensOf(item);item.destroy();}this.objects.clear();}
   leafHit(hit:LeafHit){
-    const {x,y}=point(hit),cleared=hit.after===0,reduced=this.reduced();
+    const {x,y}=point(hit),cleared=hit.after===0,reduced=reducedMotion();
     const pulse=this.scene.add.graphics().setDepth(11).setName('leaf-hit-pulse');
     pulse.lineStyle(3,cleared?0x9ebf7a:0xe3aa65,1);pulse.strokeRoundedRect(x-25,y-25,50,50,11);
     this.animate(pulse,{alpha:0,duration:reduced?180:420});
@@ -37,7 +37,7 @@ export class BoardEffects {
     }
   }
   match(step:ResolveStep,chain:number){
-    if(this.reduced())return;
+    if(reducedMotion())return;
     // 64칸 제거에도 최대 12개만 만들어 모바일의 중첩 비용을 제한합니다.
     const stride=Math.max(1,Math.ceil(step.removed.length/12));
     step.removed.filter((_,i)=>i%stride===0).forEach((p,i)=>{
@@ -48,7 +48,7 @@ export class BoardEffects {
     });
   }
   special(step:ResolveStep){
-    if(this.reduced())return;
+    if(reducedMotion())return;
     const drawn=new Set<string>();
     for(const p of step.effects??[]){
       const key=p.special==='row'?`r${p.row}`:p.special==='column'?`c${p.col}`:`${p.row},${p.col}`;

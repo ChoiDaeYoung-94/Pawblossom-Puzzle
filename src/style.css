@@ -29,7 +29,8 @@ html,body{height:100%;overflow:hidden}
 .goal-box{min-width:0;padding-top:3px}.goal-heading{font-size:9px;letter-spacing:0}#goals{gap:10px;margin-top:3px}.goal-item{min-width:0;padding-bottom:5px}.goal-item img{width:29px;height:29px}.goal-item strong{font-size:18px}
 .board-wrap{flex:1;min-height:0;padding:0;border:0;box-shadow:none;background:transparent;container-type:size;display:grid;place-items:center;overflow:hidden}
 #game-canvas{width:min(100cqw,100cqh);height:min(100cqw,100cqh);aspect-ratio:1;flex-shrink:0}
-#game-canvas canvas{max-height:100%;max-width:100%}
+/* 정사각 부모가 화면 크기를 소유합니다. 숨김 상태의 Phaser inline 0px을 복귀 레이아웃에 사용하지 않습니다. */
+#game-canvas canvas{width:100%!important;height:100%!important;max-height:100%;max-width:100%}
 .board-hint{flex-shrink:0;font-size:11px;line-height:1.4;margin:0;align-items:center;text-align:center}.board-hint svg{width:13px;height:13px}
 .tools{flex-shrink:0;margin:0 0 8px;gap:10px}.shuffle-button{min-height:40px;padding:8px 12px}.tool-note{font-size:10px;max-width:130px}
 .bottom-nav{flex-shrink:0;margin:0 -14px;padding:8px 12px}.bottom-nav button{min-height:40px;font-size:10px;gap:3px}.bottom-nav svg{width:19px;height:19px}

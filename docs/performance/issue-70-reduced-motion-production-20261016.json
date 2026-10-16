@@ -1,0 +1,591 @@
+{
+  "issue": 70,
+  "dateKst": "2026-10-16",
+  "variant": "production",
+  "runType": "full",
+  "flags": {
+    "testTools": false,
+    "androidTestAds": false,
+    "androidTestBilling": false
+  },
+  "browser": "155.0.8059.41",
+  "cases": [
+    {
+      "reducedMotion": "reduce",
+      "language": "ko",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "checks": [
+        "자연 보드 실제 두 칸 터치·엔진 유효 판정·이동 1회·점수/저장·생존 객체 보존",
+        "실제 7.5초 힌트·조작 가능·다음 탭 정리·CDP touchCancel은 기존 선택 유지·pointerupoutside 전체 취소·설정/안내 pause/resume",
+        "fixture 실제 터치 무효 원복·특수 즉시 탭·콤보 교환·2→1/0 낙엽 단계·표시/엔진 제거 범위·effects 정리",
+        "현재 보드 설정 양방향 전환·키보드 커서/선택 구분·Escape/blur/shuffle·5회 숨김/복귀 실제 터치·5회 Scene 교체·canvas/Scene 1개·가로 넘침 없음"
+      ],
+      "samples": {
+        "natural": {
+          "moves": 33,
+          "score": 110
+        },
+        "hintDelay": 7500,
+        "invalidWaits": [
+          140,
+          150
+        ],
+        "matchLeafTransitions": [
+          2,
+          1
+        ],
+        "singleLeafTransitions": [
+          2,
+          0
+        ],
+        "singleMethod": "activate",
+        "comboLeafTransitions": [
+          2,
+          0
+        ],
+        "comboMethod": "swap",
+        "comboOverlayObserved": true,
+        "comboEffects": 0,
+        "dropCount": 1,
+        "recovery": [
+          {
+            "width": 224,
+            "scale": 2.142857142857143
+          },
+          {
+            "width": 224,
+            "scale": 2.142857142857143
+          },
+          {
+            "width": 224,
+            "scale": 2.142857142857143
+          },
+          {
+            "width": 224,
+            "scale": 2.142857142857143
+          },
+          {
+            "width": 224,
+            "scale": 2.142857142857143
+          }
+        ],
+        "switched": {
+          "selection": false,
+          "cursor": true,
+          "scale": 1.12
+        }
+      }
+    },
+    {
+      "reducedMotion": "reduce",
+      "language": "ko",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "checks": [
+        "자연 보드 실제 두 칸 터치·엔진 유효 판정·이동 1회·점수/저장·생존 객체 보존",
+        "실제 7.5초 힌트·조작 가능·다음 탭 정리·CDP touchCancel은 기존 선택 유지·pointerupoutside 전체 취소·설정/안내 pause/resume",
+        "fixture 실제 터치 무효 원복·특수 즉시 탭·콤보 교환·2→1/0 낙엽 단계·표시/엔진 제거 범위·effects 정리",
+        "현재 보드 설정 양방향 전환·키보드 커서/선택 구분·Escape/blur/shuffle·5회 숨김/복귀 실제 터치·5회 Scene 교체·canvas/Scene 1개·가로 넘침 없음"
+      ],
+      "samples": {
+        "natural": {
+          "moves": 33,
+          "score": 30
+        },
+        "hintDelay": 7500,
+        "invalidWaits": [
+          140,
+          150
+        ],
+        "matchLeafTransitions": [
+          2,
+          1
+        ],
+        "singleLeafTransitions": [
+          2,
+          0
+        ],
+        "singleMethod": "activate",
+        "comboLeafTransitions": [
+          2,
+          0
+        ],
+        "comboMethod": "swap",
+        "comboOverlayObserved": true,
+        "comboEffects": 0,
+        "dropCount": 1,
+        "recovery": [
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          },
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          },
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          },
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          },
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          }
+        ],
+        "switched": {
+          "selection": false,
+          "cursor": true,
+          "scale": 1.12
+        }
+      }
+    },
+    {
+      "reducedMotion": "reduce",
+      "language": "en",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "checks": [
+        "자연 보드 실제 두 칸 터치·엔진 유효 판정·이동 1회·점수/저장·생존 객체 보존",
+        "실제 7.5초 힌트·조작 가능·다음 탭 정리·CDP touchCancel은 기존 선택 유지·pointerupoutside 전체 취소·설정/안내 pause/resume",
+        "fixture 실제 터치 무효 원복·특수 즉시 탭·콤보 교환·2→1/0 낙엽 단계·표시/엔진 제거 범위·effects 정리",
+        "현재 보드 설정 양방향 전환·키보드 커서/선택 구분·Escape/blur/shuffle·5회 숨김/복귀 실제 터치·5회 Scene 교체·canvas/Scene 1개·가로 넘침 없음"
+      ],
+      "samples": {
+        "natural": {
+          "moves": 33,
+          "score": 210
+        },
+        "hintDelay": 7500,
+        "invalidWaits": [
+          140,
+          150
+        ],
+        "matchLeafTransitions": [
+          2,
+          1
+        ],
+        "singleLeafTransitions": [
+          2,
+          0
+        ],
+        "singleMethod": "activate",
+        "comboLeafTransitions": [
+          2,
+          0,
+          0,
+          0
+        ],
+        "comboMethod": "swap",
+        "comboOverlayObserved": true,
+        "comboEffects": 0,
+        "dropCount": 4,
+        "recovery": [
+          {
+            "width": 227,
+            "scale": 2.1145374449339207
+          },
+          {
+            "width": 227,
+            "scale": 2.1145374449339207
+          },
+          {
+            "width": 227,
+            "scale": 2.1145374449339207
+          },
+          {
+            "width": 227,
+            "scale": 2.1145374449339207
+          },
+          {
+            "width": 227,
+            "scale": 2.1145374449339207
+          }
+        ],
+        "switched": {
+          "selection": false,
+          "cursor": true,
+          "scale": 1.12
+        }
+      }
+    },
+    {
+      "reducedMotion": "reduce",
+      "language": "en",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "checks": [
+        "자연 보드 실제 두 칸 터치·엔진 유효 판정·이동 1회·점수/저장·생존 객체 보존",
+        "실제 7.5초 힌트·조작 가능·다음 탭 정리·CDP touchCancel은 기존 선택 유지·pointerupoutside 전체 취소·설정/안내 pause/resume",
+        "fixture 실제 터치 무효 원복·특수 즉시 탭·콤보 교환·2→1/0 낙엽 단계·표시/엔진 제거 범위·effects 정리",
+        "현재 보드 설정 양방향 전환·키보드 커서/선택 구분·Escape/blur/shuffle·5회 숨김/복귀 실제 터치·5회 Scene 교체·canvas/Scene 1개·가로 넘침 없음"
+      ],
+      "samples": {
+        "natural": {
+          "moves": 33,
+          "score": 30
+        },
+        "hintDelay": 7500,
+        "invalidWaits": [
+          140,
+          150
+        ],
+        "matchLeafTransitions": [
+          2,
+          1
+        ],
+        "singleLeafTransitions": [
+          2,
+          0
+        ],
+        "singleMethod": "activate",
+        "comboLeafTransitions": [
+          2,
+          0
+        ],
+        "comboMethod": "swap",
+        "comboOverlayObserved": true,
+        "comboEffects": 0,
+        "dropCount": 2,
+        "recovery": [
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          },
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          },
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          },
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          },
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          }
+        ],
+        "switched": {
+          "selection": false,
+          "cursor": true,
+          "scale": 1.12
+        }
+      }
+    },
+    {
+      "reducedMotion": "no-preference",
+      "language": "ko",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "checks": [
+        "자연 보드 실제 두 칸 터치·엔진 유효 판정·이동 1회·점수/저장·생존 객체 보존",
+        "실제 7.5초 힌트·조작 가능·다음 탭 정리·CDP touchCancel은 기존 선택 유지·pointerupoutside 전체 취소·설정/안내 pause/resume",
+        "fixture 실제 터치 무효 원복·특수 즉시 탭·콤보 교환·2→1/0 낙엽 단계·표시/엔진 제거 범위·effects 정리",
+        "현재 보드 설정 양방향 전환·키보드 커서/선택 구분·Escape/blur/shuffle·5회 숨김/복귀 실제 터치·5회 Scene 교체·canvas/Scene 1개·가로 넘침 없음"
+      ],
+      "samples": {
+        "natural": {
+          "moves": 33,
+          "score": 90
+        },
+        "hintDelay": 7500,
+        "invalidWaits": [
+          140,
+          150
+        ],
+        "matchLeafTransitions": [
+          2,
+          1
+        ],
+        "singleLeafTransitions": [
+          2,
+          0
+        ],
+        "singleMethod": "activate",
+        "comboLeafTransitions": [
+          2,
+          0,
+          0,
+          0
+        ],
+        "comboMethod": "swap",
+        "comboOverlayObserved": true,
+        "comboEffects": 0,
+        "dropCount": 2,
+        "recovery": [
+          {
+            "width": 224,
+            "scale": 2.142857142857143
+          },
+          {
+            "width": 224,
+            "scale": 2.142857142857143
+          },
+          {
+            "width": 224,
+            "scale": 2.142857142857143
+          },
+          {
+            "width": 224,
+            "scale": 2.142857142857143
+          },
+          {
+            "width": 224,
+            "scale": 2.142857142857143
+          }
+        ],
+        "switched": {
+          "selection": true,
+          "cursor": true,
+          "scale": 1
+        }
+      }
+    },
+    {
+      "reducedMotion": "no-preference",
+      "language": "ko",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "checks": [
+        "자연 보드 실제 두 칸 터치·엔진 유효 판정·이동 1회·점수/저장·생존 객체 보존",
+        "실제 7.5초 힌트·조작 가능·다음 탭 정리·CDP touchCancel은 기존 선택 유지·pointerupoutside 전체 취소·설정/안내 pause/resume",
+        "fixture 실제 터치 무효 원복·특수 즉시 탭·콤보 교환·2→1/0 낙엽 단계·표시/엔진 제거 범위·effects 정리",
+        "현재 보드 설정 양방향 전환·키보드 커서/선택 구분·Escape/blur/shuffle·5회 숨김/복귀 실제 터치·5회 Scene 교체·canvas/Scene 1개·가로 넘침 없음"
+      ],
+      "samples": {
+        "natural": {
+          "moves": 33,
+          "score": 30
+        },
+        "hintDelay": 7500,
+        "invalidWaits": [
+          140,
+          150
+        ],
+        "matchLeafTransitions": [
+          2,
+          1
+        ],
+        "singleLeafTransitions": [
+          2,
+          0
+        ],
+        "singleMethod": "activate",
+        "comboLeafTransitions": [
+          2,
+          0
+        ],
+        "comboMethod": "swap",
+        "comboOverlayObserved": true,
+        "comboEffects": 0,
+        "dropCount": 1,
+        "recovery": [
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          },
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          },
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          },
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          },
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          }
+        ],
+        "switched": {
+          "selection": true,
+          "cursor": true,
+          "scale": 1
+        }
+      }
+    },
+    {
+      "reducedMotion": "no-preference",
+      "language": "en",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "checks": [
+        "자연 보드 실제 두 칸 터치·엔진 유효 판정·이동 1회·점수/저장·생존 객체 보존",
+        "실제 7.5초 힌트·조작 가능·다음 탭 정리·CDP touchCancel은 기존 선택 유지·pointerupoutside 전체 취소·설정/안내 pause/resume",
+        "fixture 실제 터치 무효 원복·특수 즉시 탭·콤보 교환·2→1/0 낙엽 단계·표시/엔진 제거 범위·effects 정리",
+        "현재 보드 설정 양방향 전환·키보드 커서/선택 구분·Escape/blur/shuffle·5회 숨김/복귀 실제 터치·5회 Scene 교체·canvas/Scene 1개·가로 넘침 없음"
+      ],
+      "samples": {
+        "natural": {
+          "moves": 33,
+          "score": 30
+        },
+        "hintDelay": 7500,
+        "invalidWaits": [
+          140,
+          150
+        ],
+        "matchLeafTransitions": [
+          2,
+          1
+        ],
+        "singleLeafTransitions": [
+          2,
+          0
+        ],
+        "singleMethod": "activate",
+        "comboLeafTransitions": [
+          2,
+          0
+        ],
+        "comboMethod": "swap",
+        "comboOverlayObserved": true,
+        "comboEffects": 0,
+        "dropCount": 1,
+        "recovery": [
+          {
+            "width": 227,
+            "scale": 2.1145374449339207
+          },
+          {
+            "width": 227,
+            "scale": 2.1145374449339207
+          },
+          {
+            "width": 227,
+            "scale": 2.1145374449339207
+          },
+          {
+            "width": 227,
+            "scale": 2.1145374449339207
+          },
+          {
+            "width": 227,
+            "scale": 2.1145374449339207
+          }
+        ],
+        "switched": {
+          "selection": true,
+          "cursor": true,
+          "scale": 1
+        }
+      }
+    },
+    {
+      "reducedMotion": "no-preference",
+      "language": "en",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "checks": [
+        "자연 보드 실제 두 칸 터치·엔진 유효 판정·이동 1회·점수/저장·생존 객체 보존",
+        "실제 7.5초 힌트·조작 가능·다음 탭 정리·CDP touchCancel은 기존 선택 유지·pointerupoutside 전체 취소·설정/안내 pause/resume",
+        "fixture 실제 터치 무효 원복·특수 즉시 탭·콤보 교환·2→1/0 낙엽 단계·표시/엔진 제거 범위·effects 정리",
+        "현재 보드 설정 양방향 전환·키보드 커서/선택 구분·Escape/blur/shuffle·5회 숨김/복귀 실제 터치·5회 Scene 교체·canvas/Scene 1개·가로 넘침 없음"
+      ],
+      "samples": {
+        "natural": {
+          "moves": 33,
+          "score": 150
+        },
+        "hintDelay": 7500,
+        "invalidWaits": [
+          140,
+          150
+        ],
+        "matchLeafTransitions": [
+          2,
+          1
+        ],
+        "singleLeafTransitions": [
+          2,
+          0
+        ],
+        "singleMethod": "activate",
+        "comboLeafTransitions": [
+          2,
+          0,
+          0,
+          0
+        ],
+        "comboMethod": "swap",
+        "comboOverlayObserved": true,
+        "comboEffects": 0,
+        "dropCount": 5,
+        "recovery": [
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          },
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          },
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          },
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          },
+          {
+            "width": 241,
+            "scale": 1.991701244813278
+          }
+        ],
+        "switched": {
+          "selection": true,
+          "cursor": true,
+          "scale": 1
+        }
+      }
+    }
+  ],
+  "pageerrors": [],
+  "scope": "격리 headless Chrome 실제 dist·실제 canvas touch/keyboard/CDP touchCancel. 자연 보드 유효 교환 후 메모리 fixture로 특수/콤보/겹낙엽 경계 검사. OS 설정은 Playwright emulateMedia. Android·감각 검수 아님.",
+  "hashes": {
+    "src/main.ts": "720d0c18a20dccb3deace750cb8e45f4ee4e2b761c74e6a7efe13fca39d528d5",
+    "src/style.css": "4ecbde39698f26fd42952f0fef3069926ca1635fdb86f42f442658ec453166a0",
+    "src/BoardScene.ts": "ee5f809589b04f8003f9c0ed4c0f45db6dc29f5d5c86fb65f3f3112d9bca46c9",
+    "src/BoardEffects.ts": "52a06abde84976dfcea0eedaf0b924529c9372f0769e654967cc4094bd3f00b6",
+    "src/reducedMotion.ts": "5ec1fc537e84b7b9814c855649ba2398ea476e67833f35cd1e1011094dd40e02",
+    "tests/board-animation.test.ts": "a053b47f9ac0735e5f60a55dec6f0f4339782fed438226666a9a422f3d59992a",
+    "tests/ui-flow.test.ts": "2c487b31b5c66fe011754866bce9355016fa13b1d27a0ef81936f1e3c99620be",
+    "scripts/reduced-motion-qa.mjs": "7c978d78c5118a96479973a735881dd5012240d536a78e5973ffb184efe2b114"
+  },
+  "distHashes": {
+    "build-info.json": "45356b36843207f374e2b0f5e979435917ebf7b435e419b4f53de31c1194b6e9",
+    "index.html": "8c8b95719ce4d2dba2a258a23b0b9331ae268d95665a438235fc4a647040f982",
+    "assets/index-C1JnDi-n.js": "1aa3950bbadd758774c0b95486da0a63a5e50b215936a2caf7072a7d458a09cf",
+    "assets/index-CrVNYGe2.css": "f67ab3aea0f8f74738841ff1d07c71e0f31be390d999be4f778b2fda5c853c11",
+    "assets/web-q8WIOUgJ.js": "b400d3dcb18608c7a4607d87ecd875e83ac65850776da9e9c96de58f429de11b"
+  }
+}
