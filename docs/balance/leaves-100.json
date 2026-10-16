@@ -1,0 +1,611 @@
+{
+  "schema": 2,
+  "configuration": "current",
+  "seeds": [
+    1,
+    100
+  ],
+  "manualShuffle": false,
+  "policies": [
+    "random",
+    "goal"
+  ],
+  "levels": [
+    {
+      "id": 1,
+      "moves": 26,
+      "goals": [
+        {
+          "kind": 0,
+          "count": 12
+        },
+        {
+          "kind": 1,
+          "count": 10
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "moves": 24,
+      "goals": [
+        {
+          "kind": 1,
+          "count": 12
+        },
+        {
+          "kind": 2,
+          "count": 10
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "moves": 24,
+      "goals": [
+        {
+          "kind": 2,
+          "count": 14
+        },
+        {
+          "kind": 3,
+          "count": 10
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "moves": 26,
+      "goals": [
+        {
+          "kind": 3,
+          "count": 14
+        },
+        {
+          "kind": 4,
+          "count": 12
+        }
+      ],
+      "leaves": [
+        {
+          "row": 2,
+          "col": 2,
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 5,
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 2,
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 5,
+          "layers": 1
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "moves": 26,
+      "goals": [
+        {
+          "kind": 4,
+          "count": 16
+        },
+        {
+          "kind": 5,
+          "count": 12
+        }
+      ],
+      "leaves": [
+        {
+          "row": 2,
+          "col": 2,
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 5,
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 2,
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 5,
+          "layers": 1
+        },
+        {
+          "row": 3,
+          "col": 3,
+          "layers": 1
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "layers": 1
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "moves": 28,
+      "goals": [
+        {
+          "kind": 5,
+          "count": 16
+        },
+        {
+          "kind": 0,
+          "count": 12
+        }
+      ],
+      "leaves": [
+        {
+          "row": 2,
+          "col": 2,
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 5,
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 2,
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 5,
+          "layers": 2
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "moves": 28,
+      "goals": [
+        {
+          "kind": 0,
+          "count": 18
+        },
+        {
+          "kind": 1,
+          "count": 14
+        }
+      ],
+      "leaves": [
+        {
+          "row": 2,
+          "col": 2,
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 5,
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 2,
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 5,
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 3,
+          "layers": 2
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "layers": 2
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "moves": 28,
+      "goals": [
+        {
+          "kind": 1,
+          "count": 18
+        },
+        {
+          "kind": 2,
+          "count": 14
+        }
+      ],
+      "leaves": [
+        {
+          "row": 2,
+          "col": 2,
+          "layers": 1
+        },
+        {
+          "row": 2,
+          "col": 5,
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 2,
+          "layers": 1
+        },
+        {
+          "row": 5,
+          "col": 5,
+          "layers": 1
+        },
+        {
+          "row": 3,
+          "col": 3,
+          "layers": 1
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "layers": 1
+        },
+        {
+          "row": 1,
+          "col": 4,
+          "layers": 1
+        },
+        {
+          "row": 6,
+          "col": 3,
+          "layers": 1
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "moves": 30,
+      "goals": [
+        {
+          "kind": 2,
+          "count": 20
+        },
+        {
+          "kind": 3,
+          "count": 14
+        }
+      ],
+      "leaves": [
+        {
+          "row": 2,
+          "col": 2,
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 5,
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 2,
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 5,
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 3,
+          "layers": 2
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "layers": 2
+        },
+        {
+          "row": 1,
+          "col": 4,
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 3,
+          "layers": 2
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "moves": 30,
+      "goals": [
+        {
+          "kind": 3,
+          "count": 20
+        },
+        {
+          "kind": 4,
+          "count": 16
+        }
+      ],
+      "leaves": [
+        {
+          "row": 2,
+          "col": 2,
+          "layers": 2
+        },
+        {
+          "row": 2,
+          "col": 5,
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 2,
+          "layers": 2
+        },
+        {
+          "row": 5,
+          "col": 5,
+          "layers": 2
+        },
+        {
+          "row": 3,
+          "col": 3,
+          "layers": 2
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "layers": 2
+        },
+        {
+          "row": 1,
+          "col": 4,
+          "layers": 2
+        },
+        {
+          "row": 6,
+          "col": 3,
+          "layers": 2
+        }
+      ]
+    }
+  ],
+  "results": [
+    {
+      "policy": "random",
+      "level": 1,
+      "runs": 100,
+      "wins": 98,
+      "winPercent": 98,
+      "meanMoves": 15.8,
+      "medianWinningMoves": 16,
+      "meanShortfall": 0.1,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "random",
+      "level": 2,
+      "runs": 100,
+      "wins": 97,
+      "winPercent": 97,
+      "meanMoves": 15.9,
+      "medianWinningMoves": 15,
+      "meanShortfall": 0.1,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "random",
+      "level": 3,
+      "runs": 100,
+      "wins": 87,
+      "winPercent": 87,
+      "meanMoves": 17.7,
+      "medianWinningMoves": 17,
+      "meanShortfall": 0.4,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "random",
+      "level": 4,
+      "runs": 100,
+      "wins": 94,
+      "winPercent": 94,
+      "meanMoves": 18.6,
+      "medianWinningMoves": 18,
+      "meanShortfall": 0.1,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "random",
+      "level": 5,
+      "runs": 100,
+      "wins": 86,
+      "winPercent": 86,
+      "meanMoves": 19.6,
+      "medianWinningMoves": 19,
+      "meanShortfall": 0.3,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "random",
+      "level": 6,
+      "runs": 100,
+      "wins": 92,
+      "winPercent": 92,
+      "meanMoves": 19.6,
+      "medianWinningMoves": 18,
+      "meanShortfall": 0.2,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "random",
+      "level": 7,
+      "runs": 100,
+      "wins": 86,
+      "winPercent": 86,
+      "meanMoves": 21.5,
+      "medianWinningMoves": 21,
+      "meanShortfall": 0.4,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "random",
+      "level": 8,
+      "runs": 100,
+      "wins": 89,
+      "winPercent": 89,
+      "meanMoves": 21.6,
+      "medianWinningMoves": 21,
+      "meanShortfall": 0.3,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "random",
+      "level": 9,
+      "runs": 100,
+      "wins": 88,
+      "winPercent": 88,
+      "meanMoves": 24.1,
+      "medianWinningMoves": 25,
+      "meanShortfall": 0.5,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "random",
+      "level": 10,
+      "runs": 100,
+      "wins": 85,
+      "winPercent": 85,
+      "meanMoves": 24.7,
+      "medianWinningMoves": 25,
+      "meanShortfall": 0.4,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "goal",
+      "level": 1,
+      "runs": 100,
+      "wins": 100,
+      "winPercent": 100,
+      "meanMoves": 9.8,
+      "medianWinningMoves": 10,
+      "meanShortfall": 0,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "goal",
+      "level": 2,
+      "runs": 100,
+      "wins": 100,
+      "winPercent": 100,
+      "meanMoves": 10.1,
+      "medianWinningMoves": 10,
+      "meanShortfall": 0,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "goal",
+      "level": 3,
+      "runs": 100,
+      "wins": 100,
+      "winPercent": 100,
+      "meanMoves": 11.8,
+      "medianWinningMoves": 12,
+      "meanShortfall": 0,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "goal",
+      "level": 4,
+      "runs": 100,
+      "wins": 100,
+      "winPercent": 100,
+      "meanMoves": 12.8,
+      "medianWinningMoves": 12,
+      "meanShortfall": 0,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "goal",
+      "level": 5,
+      "runs": 100,
+      "wins": 100,
+      "winPercent": 100,
+      "meanMoves": 12.8,
+      "medianWinningMoves": 12,
+      "meanShortfall": 0,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "goal",
+      "level": 6,
+      "runs": 100,
+      "wins": 99,
+      "winPercent": 99,
+      "meanMoves": 13.4,
+      "medianWinningMoves": 13,
+      "meanShortfall": 0,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "goal",
+      "level": 7,
+      "runs": 100,
+      "wins": 99,
+      "winPercent": 99,
+      "meanMoves": 14.8,
+      "medianWinningMoves": 14,
+      "meanShortfall": 0,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "goal",
+      "level": 8,
+      "runs": 100,
+      "wins": 97,
+      "winPercent": 97,
+      "meanMoves": 14.6,
+      "medianWinningMoves": 14,
+      "meanShortfall": 0,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "goal",
+      "level": 9,
+      "runs": 100,
+      "wins": 99,
+      "winPercent": 99,
+      "meanMoves": 16.2,
+      "medianWinningMoves": 16,
+      "meanShortfall": 0,
+      "meanLeafShortfall": 0
+    },
+    {
+      "policy": "goal",
+      "level": 10,
+      "runs": 100,
+      "wins": 99,
+      "winPercent": 99,
+      "meanMoves": 17.2,
+      "medianWinningMoves": 17,
+      "meanShortfall": 0,
+      "meanLeafShortfall": 0
+    }
+  ]
+}

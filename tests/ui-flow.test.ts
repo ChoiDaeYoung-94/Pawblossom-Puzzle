@@ -52,6 +52,7 @@ function mainHarness(storageFails = false, firstUse = false) {
   };
   class SceneStub {
     constructor(public hooks: { onMove(items: number[], points: number): void }) {}
+    configureLeaves() {}
     canLeave() { return true; }
     stopPlaying() {}
   }
@@ -159,6 +160,19 @@ function boardHarness() {
 }
 
 describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
+  it('열매와 낙엽 목표를 모두 채워야 완료되고 기존 보상은 재지급하지 않습니다',()=>{
+    const h=mainHarness();h.run("save.highestLevel=6;startLevel(4)");
+    h.run('scene.hooks.onMove([0,0,0,14,12,0],260,1,3)');
+    expect(h.resultTimers()).toHaveLength(0);expect(h.run('clearedLeaves')).toBe(3);
+    expect(h.element('#goals').innerHTML).toContain('leaf-pile.svg');
+    h.run('scene.hooks.onMove([0,0,0,0,0,0],20,1,1)');h.flushResults();
+    expect(h.stored()).toMatchObject({completed:[1,4],stars:2,coins:80});
+    h.run('startLevel(4);scene.hooks.onMove([0,0,0,14,12,0],260,1,4)');h.flushResults();
+    expect(h.stored()).toMatchObject({completed:[1,4],stars:2,coins:80});
+    h.run('startLevel(6)');expect(h.run('clearedLeaves')).toBe(0);
+    expect(h.element('#board-hint-text').textContent).toContain('Two dots');
+    h.run("changeLanguage('ko')");expect(h.element('#board-hint-text').textContent).toContain('두 겹');
+  });
   it('꽃밭 성장은 별 2개를 한 번만 쓰고 저장·그림·최대 5개 제한을 유지합니다',()=>{
     const h=mainHarness();h.run('save.stars=4;renderViews()');
     h.element('#grow').onclick();h.element('#grow').onclick();
