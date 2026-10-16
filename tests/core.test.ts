@@ -56,6 +56,7 @@ describe('BoardEngine', () => {
     set(engine, 2, 2, 1); set(engine, 3, 2, 5);
     const result = engine.swap({ row: 3, col: 2 }, { row: 2, col: 2 });
     expect(result.steps[0].created).toEqual([{ row: 2, col: 2, tile: { kind: 5, special: 'rainbow' } }]);
+    expect(result.steps[0].effects).toBeUndefined(); // 생성과 발동은 구분합니다.
     expect(result.steps[0].removed).toHaveLength(4);
   });
   it('T 매치는 bomb를 생성합니다', () => {
@@ -87,6 +88,7 @@ describe('BoardEngine', () => {
     set(engine, 0, 0, 0, 'rainbow'); set(engine, 0, 1, 1, 'rainbow');
     const result = engine.swap({ row: 0, col: 0 }, { row: 0, col: 1 });
     expect(result.steps[0].removed).toHaveLength(64);
+    expect(result.steps[0].effects).toEqual([{row:0,col:0,special:'rainbow'},{row:0,col:1,special:'rainbow'}]);
     expect(new Set(result.steps[0].removed.map(p => `${p.row},${p.col}`)).size).toBe(64);
   });
   it('줄 특수 조합에 맞은 bomb는 연쇄 발동합니다', () => {
@@ -95,6 +97,10 @@ describe('BoardEngine', () => {
     const result = engine.swap({ row: 3, col: 3 }, { row: 3, col: 4 });
     expect(result.steps[0].removed).toContainEqual({ row: 2, col: 7 });
     expect(result.steps[0].removed).toContainEqual({ row: 4, col: 7 });
+    expect(result.steps[0].effects).toContainEqual({row:3,col:6,special:'bomb'});
+    const effects=result.steps[0].effects!;
+    expect(new Set(effects.map(p=>`${p.row},${p.col}`)).size).toBe(effects.length);
+    effects.forEach(p=>expect(result.steps[0].removed).toContainEqual({row:p.row,col:p.col}));
   });
   it('셔플 결과는 매치 없이 이동 가능하고 정상 구성의 타일을 보존합니다', () => {
     const engine = fixture();
@@ -115,6 +121,7 @@ describe('BoardEngine', () => {
     const expected=before.flatMap((row,r)=>row.flatMap((tile,c)=>
       (special==='row'?r===3:special==='column'?c===3:special==='bomb'?Math.abs(r-3)<=1&&Math.abs(c-3)<=1:tile.kind===3)?[{row:r,col:c}]:[]));
     expect(result.valid).toBe(true);expect(result.steps[0].removed).toEqual(expected);
+    expect(result.steps[0].effects).toEqual([{row:3,col:3,special}]);
     expect(result.collected.reduce((a,b)=>a+b,0)).toBe(result.steps.reduce((a,b)=>a+b.removed.length,0));
     expect(engine.findMatches()).toEqual([]);expect(engine.hasMoves()).toBe(true);
   });
@@ -170,6 +177,7 @@ describe('BoardEngine', () => {
     set(engine, 0, 0, 0, 'rainbow'); set(engine, 0, 1, 1, 'row');
     const result = engine.swap({ row: 0, col: 0 }, { row: 0, col: 1 });
     expect(result.steps[0].removed).toHaveLength(64);
+    expect(result.steps[0].effects?.some(p=>p.special==='row'&&!result.steps[0].before[p.row][p.col].special)).toBe(true);
   });
   it('상수 난수의 보충도 연쇄를 종료합니다', () => {
     const engine = new BoardEngine(3, 3, () => 0);

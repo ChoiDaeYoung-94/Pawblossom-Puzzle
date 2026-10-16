@@ -8,10 +8,17 @@ class Piece {
   setPosition(x:number,y:number){this.x=x;this.y=y;return this;}
   destroy(){this.destroyed=true;}
 }
+class Graphic {
+  destroyed=false;alpha=1;rectangles:number[][]=[];lines:number[][]=[];
+  fillStyle(){return this;}lineStyle(){return this;}setDepth(){return this;}
+  fillRoundedRect(...values:number[]){this.rectangles.push(values);return this;}
+  strokeRoundedRect(){return this;}fillCircle(){return this;}strokeCircle(){return this;}
+  lineBetween(...values:number[]){this.lines.push(values);return this;}
+  destroy(){this.destroyed=true;}
+}
 vi.mock('phaser',()=>{
-  const graphic:object=new Proxy({}, {get:()=>()=>graphic});
   return {default:{Scene:class {
-    add={container:(x:number,y:number)=>new Piece(x,y),graphics:()=>graphic,image:()=>({setDisplaySize(){return this;}}),circle:(x:number,y:number)=>new Piece(x,y)};
+    add={container:(x:number,y:number)=>new Piece(x,y),graphics:()=>new Graphic(),image:()=>({setDisplaySize(){return this;}}),circle:(x:number,y:number)=>new Piece(x,y)};
     tweens={killTweensOf(){},add(config:Record<string,unknown>){
       const targets=Array.isArray(config.targets)?config.targets:[config.targets];
       for(const target of targets)for(const key of ['x','y','scale','alpha'])if(config[key]!==undefined)target[key]=config[key];
@@ -25,6 +32,7 @@ interface RenderScene {
   pieces:Piece[][];engine:BoardEngine;
   paint(board:Tile[][]):void;drop(step:ResolveStep):void;
   attempt(a:Position,b?:Position):Promise<void>;tap(p:Position):void;resetHint():void;
+  showEffect(step:ResolveStep):Graphic;
 }
 function harness(){
   const onMove=vi.fn(),onNotice=vi.fn();
@@ -79,5 +87,19 @@ describe('블록 객체 보존과 낙하 연출',()=>{
     await scene.attempt({row:0,col:0});expect(onMove).toHaveBeenCalledOnce();
     scene.engine.board[3][3].special='column';scene.paint(scene.engine.board);
     await scene.attempt({row:3,col:3},{row:3,col:4});expect(onMove).toHaveBeenCalledTimes(2);
+  });
+  it('실제 제거 칸·줄 방향을 먼저 표시하고 중복 입력을 막은 뒤 표시 객체를 정리합니다',async()=>{
+    const {scene,onMove,onNotice}=harness();scene.engine.board[3][3].special='row';scene.paint(scene.engine.board);
+    const overlays:Graphic[]=[],showEffect=scene.showEffect.bind(scene);
+    scene.showEffect=step=>{
+      const overlay=showEffect(step);overlays.push(overlay);
+      expect(overlay.rectangles.map(rect=>rect.slice(0,2))).toEqual(step.removed.map(p=>[18+p.col*56,18+p.row*56]));
+      expect(overlay.lines).toContainEqual([16,212,464,212]);
+      return overlay;
+    };
+    const first=scene.attempt({row:3,col:3});
+    await scene.attempt({row:3,col:3});await first;
+    expect(onMove).toHaveBeenCalledOnce();expect(onNotice.mock.calls[0]).toEqual(['rowClear']);
+    expect(overlays).toHaveLength(1);expect(overlays.every(overlay=>overlay.destroyed)).toBe(true);
   });
 });

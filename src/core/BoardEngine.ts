@@ -7,6 +7,7 @@ export interface ResolveStep {
   removed: Position[];
   after: Tile[][];
   created?: (Position & { tile: Tile })[];
+  effects?: (Position & { special: Special })[];
 }
 export interface SwapResult {
   valid: boolean;
@@ -180,6 +181,7 @@ export class BoardEngine {
       const protectedKeys = new Set(created.map(p => this.key(p)));
       const removed = new Set<number>();
       const queue: Position[] = [];
+      const effects: (Position & { special: Special })[] = [];
       const add = (p: Position): void => {
         if (!this.inside(p) || protectedKeys.has(this.key(p)) || removed.has(this.key(p))) return;
         removed.add(this.key(p)); queue.push(p);
@@ -218,6 +220,7 @@ export class BoardEngine {
       }
       for (let i = 0; i < queue.length; i++) {
         const p = queue[i], tile = this.board[p.row][p.col];
+        if(tile.special)effects.push({...p,special:tile.special});
         if (tile.special === 'row') for (let col = 0; col < this.cols; col++) add({ row: p.row, col });
         if (tile.special === 'column') for (let row = 0; row < this.rows; row++) add({ row, col: p.col });
         if (tile.special === 'bomb') area(p, 1);
@@ -247,7 +250,7 @@ export class BoardEngine {
         next[row][col] = { kind: choices[this.randomIndex(choices.length)] };
       }
       this.board = next as Tile[][];
-      result.steps.push({ before, removed: positions, after: clone(this.board), ...(created.length ? { created: created.map(p => ({ ...p, tile: { ...p.tile } })) } : {}) });
+      result.steps.push({ before, removed: positions, after: clone(this.board), ...(created.length ? { created: created.map(p => ({ ...p, tile: { ...p.tile } })) } : {}), ...(effects.length?{effects}: {}) });
       first = false;
       runs = this.runs();
     }

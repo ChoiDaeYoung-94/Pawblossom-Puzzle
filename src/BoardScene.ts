@@ -3,7 +3,8 @@ import { BoardEngine, type Position, type Tile, type ResolveStep } from './core'
 import type { AudioManager } from './audio/AudioManager';
 
 export const tileNames = ['strawberry','carrot','blueberry','acorn','leaf','flower'];
-interface Hooks { audio: AudioManager; onStart:()=>void; onMove:(collected:number[],score:number,chains:number)=>void; onNotice:(kind:'matched'|'chain'|'special'|'noMoves')=>void; }
+type Notice='matched'|'chain'|'specialCreated'|'noMoves'|'rowClear'|'columnClear'|'bombClear'|'colorClear'|'comboClear';
+interface Hooks { audio: AudioManager; onStart:()=>void; onMove:(collected:number[],score:number,chains:number)=>void; onNotice:(kind:Notice)=>void; }
 const CELL = 56, PAD = 16;
 export class BoardScene extends Phaser.Scene {
   engine = new BoardEngine();
@@ -58,8 +59,8 @@ export class BoardScene extends Phaser.Scene {
       const image=this.add.image(0,0,tileNames[tile.kind]).setDisplaySize(43,43);item.add(image);
       if(tile.special){
         const mark=this.add.graphics().lineStyle(3,0xfffaf0,1);
-        if(tile.special==='row') {mark.lineBetween(-17,-5,17,-5);mark.lineBetween(-17,3,17,3);}
-        if(tile.special==='column') {mark.lineBetween(-5,-17,-5,17);mark.lineBetween(3,-17,3,17);}
+        if(tile.special==='row') {mark.lineBetween(-19,0,19,0);mark.lineBetween(-19,0,-12,-6);mark.lineBetween(-19,0,-12,6);mark.lineBetween(19,0,12,-6);mark.lineBetween(19,0,12,6);}
+        if(tile.special==='column') {mark.lineBetween(0,-19,0,19);mark.lineBetween(0,-19,-6,-12);mark.lineBetween(0,-19,6,-12);mark.lineBetween(0,19,-6,12);mark.lineBetween(0,19,6,12);}
         if(tile.special==='bomb') {mark.fillStyle(0xfff5db);mark.fillCircle(13,14,8);mark.lineStyle(2,0xc78f48);mark.strokeCircle(13,14,8);}
         if(tile.special==='rainbow') {const colors=[0xe67883,0xe9bd62,0x8db87b,0x849ccc,0xbd93ce];colors.forEach((color,i)=>{mark.lineStyle(3,color);mark.strokeCircle(0,0,17+i*1.7);});}
         item.add(mark);
@@ -98,6 +99,29 @@ export class BoardScene extends Phaser.Scene {
     this.tweens.add({targets:this.pieces[pos.row][pos.col],y:this.point(pos).y-3,duration:180,yoyo:true,repeat:1});
   }
   private clearSelection(){if(this.selected)this.pieces[this.selected.row]?.[this.selected.col]?.setScale(1);this.selected=undefined;}
+  private effectNotice(step:ResolveStep):Notice {
+    const effects=step.effects??[];
+    if(effects.length>1)return 'comboClear';
+    return effects[0]?.special==='row'?'rowClear':effects[0]?.special==='column'?'columnClear':effects[0]?.special==='bomb'?'bombClear':'colorClear';
+  }
+  private showEffect(step:ResolveStep) {
+    const overlay=this.add.graphics().setDepth(10);
+    // 판정이 끝난 실제 제거 칸을 사용하므로 조합·연쇄의 범위와도 일치합니다.
+    for(const p of step.removed){
+      overlay.fillStyle(0xffefab,0.22);overlay.fillRoundedRect(PAD+p.col*CELL+2,PAD+p.row*CELL+2,52,52,11);
+      overlay.lineStyle(2,0xfff8d3,0.9);overlay.strokeRoundedRect(PAD+p.col*CELL+2,PAD+p.row*CELL+2,52,52,11);
+    }
+    const drawn=new Set<string>();
+    for(const effect of step.effects??[]){
+      const point=this.point(effect),key=effect.special==='row'?`r${effect.row}`:effect.special==='column'?`c${effect.col}`:`${effect.row},${effect.col}`;
+      if(drawn.has(key))continue;drawn.add(key);
+      overlay.lineStyle(5,effect.special==='rainbow'?0xd7b7f2:effect.special==='bomb'?0xf5bbcf:0xffe8a2,0.85);
+      if(effect.special==='row')overlay.lineBetween(PAD,point.y,PAD+this.engine.cols*CELL,point.y);
+      else if(effect.special==='column')overlay.lineBetween(point.x,PAD,point.x,PAD+this.engine.rows*CELL);
+      else overlay.strokeCircle(point.x,point.y,effect.special==='bomb'?CELL*1.25:24);
+    }
+    return overlay;
+  }
   private wait(ms:number){return new Promise<void>(resolve=>this.time.delayedCall(ms,()=>resolve()));}
   private async attempt(a:Position,b?:Position) {
     if(this.busy||this.finished)return;
@@ -118,9 +142,13 @@ export class BoardScene extends Phaser.Scene {
       for(let i=0;i<result.steps.length;i++){
         const step=result.steps[i];
         if(!step.removed.length){this.hooks.onNotice('noMoves');this.paint(step.after);await this.wait(250);continue;}
-        const special=step.created?.length||step.removed.some(p=>step.before[p.row][p.col].special);
+        const special=step.created?.length||step.effects?.length;
         this.hooks.audio.play(special?'special':'match',i+1);
-        this.hooks.onNotice(special?'special':i>0?'chain':'matched');
+        this.hooks.onNotice(step.effects?.length?this.effectNotice(step):step.created?.length?'specialCreated':i>0?'chain':'matched');
+        if(step.effects?.length){
+          const overlay=this.showEffect(step);await this.wait(180);
+          this.tweens.add({targets:overlay,alpha:0,duration:130,onComplete:()=>overlay.destroy()});
+        }
         step.removed.forEach(p=>{
           const item=this.pieces[p.row][p.col];this.tweens.add({targets:item,scale:.25,alpha:0,duration:180,ease:'Back.easeIn'});
           const dot=this.add.circle(item.x,item.y,5,[0xf7b0a7,0xf4d488,0xa6c88e][i%3]);
