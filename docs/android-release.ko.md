@@ -1,5 +1,61 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-16 · 데이터·권한·SDK 기술 현황 (이슈 #81)
+
+**현재 소스의 기술 현황 작성만 완료했으며 개인정보처리방침·데이터 보안 설문·출시 적합성 확정은 미완료**입니다. 기준은 [main `fb199314475e5110628693a286a1230e37acd20e`](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/tree/fb199314475e5110628693a286a1230e37acd20e)입니다. 앱 `0.1.7`/code `8`, 한국·미국 준비와 어린이부터 중장년까지의 기획을 유지합니다. 실제 대상 연령·동의 설계는 아직 확정하지 않았습니다. 아래는 정적 소스 관찰이며, 최신 배포 APK/AAB의 merged manifest·전이 SDK·실제 네트워크/OS 저장 동작을 검증한 결과가 아닙니다. 이번 변경은 이 문서와 출시 체크리스트, [미완료 후속 #73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)의 백업 확인 항목뿐입니다.
+
+### 앱 자체 저장과 초기화
+
+웹/Capacitor WebView에서 `localStorage`를 사용합니다. [저장 스키마와 3키](../src/state.ts), [회차 저장·설정·초기화 호출](../src/main.ts)을 대조했습니다.
+
+| 위치/필드 | 현재 목적과 처리 | 구분·미검증 사항 |
+| --- | --- | --- |
+| `pawblossom.save.v1` | 정규화한 `SaveData` JSON을 저장·로드합니다. | 앱 자체 저장이며 계정/서버 저장이 아닙니다. 저장소 사용 불가·손상·지원하지 않는 형식은 별도 상태로 보호합니다. |
+| `pawblossom.save.v1.backup` | 구조 검증한 복구 사본 1개입니다. 성공 저장 시 primary보다 먼저 쓰며 기존 baseline을 보관하므로 직전 저장일 수 있습니다. primary 부재/손상 시 검증한 사본을 복원합니다. | 동일 localStorage의 앱 내부 사본이며 OS 백업과 다릅니다. 용량/읽기 실패와 미래 형식·충돌은 덮어쓰기를 차단하며 원자적 다중키 저장이 아닙니다. |
+| `pawblossom.save.v1.reset` | 확인한 초기화에서 먼저 `'1'` 마커를 기록합니다. 다음 정상 저장으로 기본/새 진행을 primary와 사본에 기록한 뒤 마커를 지웁니다. | 초기화는 전체 `localStorage.clear()`가 아닙니다. 마커 동안 과거 사본을 로드하지 않으며, 과거 바이트/외부 OS 백업의 즉시 완전 삭제를 보장하지 않습니다. SDK 저장소 삭제도 수행하지 않습니다. |
+| `version`, `highestLevel`, `completed`, `stars`, `coins`, `garden` | 저장 형식, 스테이지 잠금/완료, 첫 완료 보상과 정원 진행을 유지합니다. | 코인은 현재 게임 내 진행 값입니다. 이 스키마에 결제 수단·구매 토큰·이름·이메일·생년월일·광고 ID 필드는 없습니다. |
+| `language`, `music`, `sfx`, `tutorialSeen` | 한국어/영어·BGM/효과음 켜짐·첫 안내 완료를 유지합니다. 초기화 시 기본값(한국어·음향 켜짐·안내 미완료)로 돌아갑니다. | 원격 사용자 프로필/연령 확인 정보가 아닙니다. |
+| 선택적 `inProgress` | `schema`, `levelId`, `levelSignature`, `board`, `leaves`, `moves`, `score`, `collected`, `shuffles`, `clearedLeaves`: 일반 플레이의 마지막 안정된 8×8 보드·특수블록/낙엽·목표/이동/점수·섞기 잔여를 검증해 이어갑니다. 완료 시 삭제하며 시험 회차는 저장하지 않습니다. | 손상되거나 현재 스테이지 구성과 맞지 않는 회차는 복원하지 않습니다. 실제 Android 저장소 소진·업데이트/재설치·강제 종료·기기 이동은 #73에서 미검증입니다. |
+
+### 직접 통신·로컬 에셋·권한
+
+검색 범위는 저장소 `src` 전체와 `android/app/src/{main,debug,release}/java`, `capacitor.config.ts`, `index.html`입니다. `fetch`, XHR, WebSocket/EventSource/sendBeacon, CapacitorHttp, HttpURLConnection/OkHttp/Retrofit/Socket 및 공유/외부 열기 호출(`ACTION_SEND`, `ACTION_VIEW`, `FileProvider.getUriForFile`, URI grant flag, `navigator.share`, Share/Browser/openUrl)을 검색해 **직접 호출 일치 없음(rg 종료코드1)**을 확인했습니다. `localStorage` 외 sessionStorage/IndexedDB/cookie/Preferences/SharedPreferences 사용 검색에서도 앱 작성 코드의 영속 저장 구현은 위 SaveStore만 확인했습니다. Firebase/analytics/Crashlytics/PlayFab/Supabase/Sentry 및 URL 검색은 `GardenArt.ts`의 SVG namespace만 일치했습니다. XML namespace·npm registry·Gradle 다운로드 주소는 사용자 데이터 전송 endpoint로 세지 않습니다.
+
+이 검색에는 설치 패키지/SDK 내부·생성 dist·플랫폼/Google Play 서비스·실행 중 호출·전체 전이 의존성 분석이 포함되지 않습니다. **직접 통신 호출 부재를 전체 데이터 수집 없음·완전 오프라인·SDK 통신 없음으로 해석하지 않습니다.** debug의 네이티브 SDK 호출은 아래에 따로 기록합니다.
+
+| 항목 | 소스에서 확인한 사실 | 출시 전 확인 |
+| --- | --- | --- |
+| 웹 배포/에셋 | [Capacitor 설정](../capacitor.config.ts)은 `webDir: 'dist'`이며 `server.url`이 없습니다. [main](../src/main.ts)은 로컬 Fontsource Nunito/Fraunces와 `/assets/meadow.png`, `/assets/pip.png`를 사용합니다. [BoardScene](../src/BoardScene.ts)·[결과 아트](../src/ResultPip.ts)·[index.html](../index.html)은 로컬 SVG/WebP를 읽습니다. 한국어는 기기 기본 글꼴입니다. | 실제 배포 파일의 포함/원격 요청·캐시/오프라인 동작 확인. 로컬 개발 서버 통신과 Android 배포를 구분합니다. |
+| 기본 권한 | [main manifest](../android/app/src/main/AndroidManifest.xml)은 `android.permission.INTERNET`를 선언합니다. 같은 파일에는 위치·연락처·카메라/마이크·광고 ID·BILLING 권한 선언이 없습니다. | 라이브러리 manifest가 병합되는 실제 변형별 최종 권한/컴포넌트를 확인해야 합니다. main 파일만으로 최종 권한 목록을 확정하지 않습니다. |
+| FileProvider | main manifest의 provider는 `${applicationId}.fileprovider`, `exported=false`, `grantUriPermissions=true`, `@xml/file_paths`를 선언합니다. [경로 XML](../android/app/src/main/res/xml/file_paths.xml)은 `external-path`와 `cache-path` 각각 `path="."`로 넓은 범위를 지정합니다. 위 앱 작성 코드 검색에서 URI 발급/공유 호출은 발견하지 못했습니다. | 선언만으로 실제 공유가 있었다거나 항상 안전하다고 판정하지 않습니다. 라이브러리 동작·URI 임시 권한 부여·필요 경로 범위 검토가 남습니다. |
+| OS 백업 | main manifest의 application은 **`allowBackup=true`**입니다. `android/app/src` XML 검색에서 `fullBackupContent`, `dataExtractionRules`, `backupAgent`는 없었습니다. targetSdk는 [variables.gradle](../android/variables.gradle)의 36입니다. | WebView localStorage 및 SDK 저장 파일의 OS 클라우드 백업/D2D 포함·제외, 제조사/OS/사용자 설정별 복원과 초기화 후 옛 기록 복원 가능성을 확인합니다. 별도 규칙 부재를 백업 보장으로 해석하지 않습니다. |
+
+[Android Auto Backup 공식 안내](https://developer.android.com/identity/data/autobackup)(확인일 2026-10-16)는 OS 클라우드 백업과 기기 간 이동(D2D), 버전별 규칙을 구분합니다. 기본 앱 데이터 백업에는 제외 영역과 실행 조건이 있고 실제 백업이 발생하지 않을 수도 있습니다. target31+의 일부 제조사에서는 `allowBackup=false`조차 D2D를 막지 않을 수 있으므로 단일 플래그로 모든 이동을 통제한다고 가정하지 않습니다. `fullBackupContent`와 `dataExtractionRules`의 적용 OS/target 조건을 검토해야 합니다. 문서의 명시적 allowBackup 설정은 **권고**이며 현재 이미 true를 명시했습니다. 백업 허용/제외 정책 결정과 실제 WebView 저장 포함 여부는 아직 확인하지 않았습니다.
+
+[설정 안내의 KO/EN 문구](../src/i18n.ts)는 앱이 자체 제공하는 클라우드·다른 기기 복원 기능이 없다는 현재 구현 기준입니다. **이 문구와 OS가 수행할 수 있는 백업/기기 이동은 별개**이며, 현재 문구만으로 기기 밖 전송이 전혀 없거나 다른 기기에서 기록이 절대로 돌아오지 않는다고 보장할 수 없습니다. 문구·설정·동작 변경은 이번 범위에 포함하지 않았고, 실제 백업 검증과 제품 방침 결정 후 안내의 정확성을 다시 검토합니다.
+
+### SDK/변형별 경계
+
+| 구분 | 현재 소스/잠금 파일 근거 | 데이터 처리와 한계 |
+| --- | --- | --- |
+| 공통 런타임 | [package-lock.json](../package-lock.json): Capacitor Android/Core **8.5.3**, App **8.1.2**. Phaser **3.90.0**와 로컬 Fontsource를 사용합니다. App은 [main](../src/main.ts)에서 앱 활동 상태·뒤로가기·최소화를 처리합니다. [capacitor.settings.gradle](../android/capacitor.settings.gradle)·[capacitor.build.gradle](../android/app/capacitor.build.gradle)은 Capacitor Android/App 모듈을 연결합니다. | App 버전은 package.json의 범위 `^8.0.0`과 잠금 파일의 실제 해석 버전을 구분합니다. 이 목록만으로 SDK/AndroidX/플랫폼 내부 전체 데이터 동작을 확정하지 않습니다. |
+| debug 광고 | [app/build.gradle](../android/app/build.gradle): **GMA25.4.0·UMP4.0.0은 debugImplementation**. [debug manifest](../android/app/src/debug/AndroidManifest.xml)는 공개 시험 App ID·측정 초기화 지연·MobileAdsInitProvider 및 AD_ID/AdServices 권한 제거 지시를 둡니다. [TestAdsPlugin](../android/app/src/debug/java/com/choidaeyoung/pawblossompuzzle/TestAdsPlugin.java)은 수동 prepare 후 UMP 갱신/필요 양식·canRequestAds 확인·GMA 초기화/시험 광고 요청을 수행합니다. | 일반 게임의 운영/보상 광고가 아닙니다. 수동 시험 경로도 SDK 통신/저장 가능성을 별도 검증해야 하며, 권한 제거·아동 관련 시험 파라미터가 수집 없음이나 국가/연령별 동의 적합성을 보장하지 않습니다. |
+| debug 결제 | 같은 Gradle의 **Billing9.1.0은 debugImplementation**입니다. [TestBillingPlugin](../android/app/src/debug/java/com/choidaeyoung/pawblossompuzzle/TestBillingPlugin.java)은 조건을 만족하면 로드/복귀·명시적 복원에서 Play 조회, 상품/구매 처리와 서명·구매 토큰 검증/acknowledge를 수행합니다. [BillingLedger](../android/app/src/debug/java/com/choidaeyoung/pawblossompuzzle/BillingLedger.java)는 토큰·권한·중복/재시도 상태를 메모리에 둡니다. JS snapshot은 상태·권한·가격·오류 등을 전달하며 토큰/서명 필드는 없습니다. | 앱 자체 서버 전송/영속 구매 원장은 발견하지 못했으나 Play/SDK의 보관·통신과 다릅니다. 현재 `android/billing-test.properties`는 없으며 실상품/키/가격 설정·실구매/환불 검증은 미완료입니다. 토큰 값·키·개인 계정은 기록하지 않습니다. |
+| release | [release 광고 등록](../android/app/src/release/java/com/choidaeyoung/pawblossompuzzle/TestAdsRegistration.java)·[결제 등록](../android/app/src/release/java/com/choidaeyoung/pawblossompuzzle/TestBillingRegistration.java)은 no-op입니다. [vite.config.ts](../vite.config.ts)는 production에서 시험3flags=false, testing에서 true로 만들며 Gradle preReleaseBuild는 시험/누락/손상 마커를 차단합니다. GMA/UMP/Billing은 release 의존성으로 선언하지 않았습니다. | 현재 release의 운영 광고/결제 서비스는 미구현입니다. 이전 v0.1.7 산출물의 SDK/브리지/권한 제외 근거는 아래 과거 검사에 보존하며 이번 소스 조사와 최신 배포 검증을 합치지 않습니다. 최종 서명 배포의 merged manifest·RuntimeClasspath/DEX·웹 flags·전이 SDK·트래픽을 다시 확인해야 합니다. |
+
+Gradle의 Google services 플러그인 classpath/조건부 적용 코드도 확인했습니다. 현재 `android/app/google-services.json`·`android/google-services.json`은 없고 앱 작성 소스에서 Firebase 분석/푸시 연결은 발견하지 못했습니다. 빌드 도구 선언을 활성 운영 SDK로 세거나 반대로 미래 설정에서도 항상 제외된다고 단정하지 않습니다. UMP/Play 등 **SDK 내부 영속 저장·보유 기간·전송 대상/항목은 이번 정적 검색으로 확인하지 않았습니다.**
+
+### 공식 기준과 출시 전 결정/검증
+
+확인일 2026-10-16: [Google Play 데이터 보안 안내](https://support.google.com/googleplay/android-developer/answer/10787469?hl=en-GB)를 읽었습니다(`hl=en`은 총괄 조사에서500이었고 같은 문서의 en-GB 본문 확인). **필수**: 공개/비공개 테스트·production 등 해당 Play 앱은 데이터 보안 양식이 필요하고, 수집이 없더라도 양식과 개인정보처리방침 링크가 필요합니다. 내부 테스트 트랙에만 있는 앱은 안내상 예외입니다. 앱에 포함한 SDK·관리하는 WebView의 처리도 검토해야 하며 기기 밖으로 보내지 않고 순수 로컬 처리하는 데이터는 수집 신고 범위와 구분합니다. **권고**: 제출 전 앱 권한/API와 SDK 제공자의 데이터 처리 자료를 검토합니다. 이 원칙을 최종 설문의 수집/공유 없음 답변으로 대신하지 않습니다.
+
+- 실제 배포 변형·모든 활성 트랙·merged manifest/권한·SDK 전이/버전·네트워크 트래픽과 SDK의 저장/보유/전송/삭제를 확인하고 데이터 항목·목적·공유·암호화·선택/필수·삭제 답변을 결정합니다.
+- OS 클라우드 백업/D2D 방침, 규칙 필요성, 실제 WebView/SDK 파일 포함과 복원·초기화 후 거동을 #73에서 확인합니다. 현재 true를 유지하며 허용/제외 결정을 대신하지 않습니다.
+- 공개 운영 주체·지원 연락처/개인정보처리방침 URL·보유/삭제 절차, 실제 대상 연령·한국/미국 동의와 필요한 보호자 절차를 확정해야 합니다. 연락처/URL·생년월일 수집·연령 게이트·정책 본문을 임의로 만들지 않았습니다.
+- 운영 광고/결제 도입 여부·상품/가격/국가·서버 검증/권한 복원·환불/취소 운영을 먼저 결정하고 해당 SDK·스토어 고지를 검증해야 합니다. 현재 debug 시험 구현을 운영 서비스 완료로 표시하지 않습니다.
+
+검증은 기준 소스·심벌/설정/잠금 파일과 문장 수작업 대조, 문서 링크/앵커와 `git diff --check`입니다. 앱/에셋/Android/SDK/config/package/CI/dist/version/audio는 변경하지 않아349개/JVM/게임 브라우저 검사를 반복하지 않습니다. 최신 PR/main Node22·24 CI 결과는 PR에 별도 기록합니다. 단말 테스트·APK 전달 및 새 APK/AAB·Android 동기화·콘솔/Drive 작업은 계속 보류합니다.
+
 ## 2026-10-16 · 스토어 아이콘과 소재 자동 검사 (이슈 #79)
 
 `assets/store/play-icon-v1.png`에 **512×512, 32-bit RGBA PNG, sRGB, 불투명 배경, 12,527바이트** 초안을 보존했습니다. SHA256은 `21b8cd48bb2872f0dd5fb47d9f1052485d467fd6764f7fe37a7255968edd584c`입니다. 기존 자체 발바닥·꽃 원본을 확장했고 Android/브랜드 원본을 보존했습니다. [원본·정확한 내보내기·해시·검증](assets.ko.md#2026-10-16--google-play-스토어-아이콘과-소재-검증-이슈-79)을 기록했으며 **총괄 초안 시각 검수 완료(최종 사용자/출시 소재 승인 별도)**입니다. 별도 검수 SVG에서 32/48px 식별과 30% 모서리 마스크의 심벌 잘림 없음을 확인했습니다.
@@ -197,7 +253,7 @@ APK는 테스트 도구 포함 빌드, AAB는 테스트 도구 제외 unsigned �
 
 ### v0.1.4 테스트 선택 기능 (이슈 #28)
 
-개발 서버와 `build:test`에서만 스테이지 제목 옆 **테스트** 버튼을 표시합니다. 1~10스테이지를 잠금과 관계없이 바로 선택하며 시험 완료·실패·재시작·다음 스테이지는 시험 상태를 유지합니다. 시험 결과는 완료 기록·별·코인·잠금 해제를 바꾸지 않습니다. 선택 창에서 **일반 플레이로 돌아가기**를 누르면 저장된 진행 스테이지를 시작하고 정상 보상을 적용합니다. 선택 취소는 보드·이동을 유지하며, 연쇄·결과 대기·튜토리얼 중에는 창을 열지 않습니다. 앱 재실행에는 시험 상태를 저장하지 않습니다.
+개발 서버와 `build:test`에서만 스테이지 제목 옆 **테스트** 버튼을 표시합니다. **현재 기준은 1~30스테이지 초안**이며 도입 당시 v0.1.4는 1~10이었습니다([현재 levels](../src/levels.ts), `LEVEL_COUNT`). 잠금과 관계없이 바로 선택하며 시험 완료·실패·재시작·다음 스테이지는 시험 상태를 유지합니다. 시험 결과는 완료 기록·별·코인·잠금 해제를 바꾸지 않습니다. 선택 창에서 **일반 플레이로 돌아가기**를 누르면 일반 저장 회차 또는 진행 스테이지로 돌아가 정상 보상을 적용합니다. 선택 취소는 보드·이동을 유지하며, 연쇄·결과 대기·튜토리얼 중에는 창을 열지 않습니다. 앱 재실행에는 시험 상태를 저장하지 않습니다. 아래 빌드·73개 검사·산출물은 v0.1.4 당시 이력이며 현재 단말/APK 보류 지시가 우선합니다.
 
 테스트 APK를 만들 때는 `npm run android:sync:test` 후 `gradlew assembleDebug`를 사용합니다. 기본 `npm run android:sync`는 출시용 웹 에셋을 동기화합니다. `vite.config.ts`가 빌드 시 기능 여부와 `build-info.json`을 생성하며, 테스트 에셋으로 `preReleaseBuild`를 실행하면 실패합니다. 실제 테스트 에셋의 `bundleRelease` 차단과 일반 에셋 재동기화 후 성공을 확인했습니다. CI에서도 두 빌드의 기능 여부를 검사합니다.
 
