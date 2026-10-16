@@ -5,7 +5,7 @@ import { BoardEffects } from './BoardEffects';
 
 export const tileNames = ['strawberry','carrot','blueberry','acorn','leaf','flower'];
 type Notice='matched'|'chain'|'specialCreated'|'noMoves'|'rowClear'|'columnClear'|'bombClear'|'colorClear'|'comboClear'|'leafThinned'|'leavesCleared';
-interface Hooks { audio: AudioManager; onStart:()=>void; onMove:(collected:number[],score:number,chains:number,leavesCleared:number)=>void; onNotice:(kind:Notice)=>void; }
+interface Hooks { audio: AudioManager; onStart:()=>void; onReady?:()=>void; onMove:(collected:number[],score:number,chains:number,leavesCleared:number)=>void; onNotice:(kind:Notice)=>void; }
 const CELL = 56, PAD = 16;
 export class BoardScene extends Phaser.Scene {
   engine = new BoardEngine();
@@ -51,6 +51,8 @@ export class BoardScene extends Phaser.Scene {
     this.events.on(Phaser.Scenes.Events.SLEEP,cancelGesture);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>{cancelGesture();this.effects?.clear();this.leafObjects=[];});
     this.resetHint();
+    // CREATE는 에셋 로딩과 create()가 끝나고 Scene이 RUNNING이 된 뒤 발생합니다.
+    this.events.once(Phaser.Scenes.Events.CREATE,()=>this.hooks.onReady?.());
   }
   private position(x:number,y:number): Position|undefined {
     const col=Math.floor((x-PAD)/CELL),row=Math.floor((y-PAD)/CELL);

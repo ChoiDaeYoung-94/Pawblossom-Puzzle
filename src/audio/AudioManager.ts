@@ -54,8 +54,8 @@ export class AudioManager {
   private destroyed = false;
   private lastSfx = new Map<SoundName, number>();
 
-  constructor() {
-    if (typeof document !== 'undefined') {
+  constructor(private readonly manageVisibility=true) {
+    if (manageVisibility && typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', this.onVisibility);
     }
   }
@@ -166,7 +166,7 @@ export class AudioManager {
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;
-    if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', this.onVisibility);
+    if (this.manageVisibility && typeof document !== 'undefined') document.removeEventListener('visibilitychange', this.onVisibility);
     this.stopMusic();
     this.stopVoices();
     const ctx = this.context;

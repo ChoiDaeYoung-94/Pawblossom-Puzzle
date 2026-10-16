@@ -41,10 +41,14 @@ class ElementStub {
   close() { this.open = false; }
 }
 
-function mainHarness(storageFails = false, firstUse = false, testTools = false) {
+function mainHarness(storageFails = false, firstUse = false, testTools = false, native = false) {
   const elements = new Map<string, ElementStub>();
   const timers = new Map<number, { callback: () => void; ms: number }>();
   let timerId = 0, writes = 0;
+  const documentEvents:Record<string,()=>void>={};
+  const nativeEvents:Record<string,(state:{isActive:boolean})=>void>={};
+  let resolveNativeState!:(state:{isActive:boolean})=>void;
+  const nativeState=new Promise<{isActive:boolean}>(resolve=>{resolveNativeState=resolve;});
   let stored = JSON.stringify({ version: 1, language: 'en', highestLevel: 2, completed: [1], stars: 1, coins: 40, garden: 0, music: true, sfx: true });
   if(firstUse)stored='null';
   const element = (selector: string): ElementStub => {
@@ -52,25 +56,26 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false) 
     return elements.get(selector)!;
   };
   class SceneStub {
-    constructor(public hooks: { onMove(items: number[], points: number): void }) {}
+    constructor(public hooks: { onMove(items: number[], points: number): void; onReady():void }) {}
     configureLeaves() {}
     canLeave() { return true; }
     stopPlaying() {}
   }
   class GameStub {
     events = { once() {} };
-    paused=false;
-    scene = { isPaused: () => this.paused, isActive: () => !this.paused, pause:()=>{this.paused=true;}, resume:()=>{this.paused=false;} };
+    paused=false;pauses=0;resumes=0;
+    scene = { isPaused: () => this.paused, isActive: () => !this.paused, pause:()=>{this.paused=true;this.pauses++;}, resume:()=>{this.paused=false;this.resumes++;} };
     scale = { refresh() {} };
     destroy() {}
   }
   class AudioStub {
+    suspended=false;suspends=0;resumes=0;
     setMusicEnabled() {}
     setSfxEnabled() {}
     unlock() { return Promise.resolve(); }
     play() {}
-    suspend() {}
-    resume() {}
+    suspend() {this.suspended=true;this.suspends++;}
+    resume() {this.suspended=false;this.resumes++;}
   }
   const stateExports: Record<string, unknown> = {};
   const context = vm.createContext({
@@ -92,12 +97,13 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false) 
         ? Array.from({length:3},(_,i)=>{const test=selector.includes('test-');const button=element(`#${test?'test-':''}chapter-${i+1}`);button.dataset[test?'testChapter':'chapter']=String(i+1);return button;}) : selector === '#practice-board button'
         ? Array.from({length:9},(_,i)=>{const button=element(`#practice-cell-${Math.floor(i/3)}-${i%3}`);button.dataset={row:String(Math.floor(i/3)),col:String(i%3)};return button;}) : selector === '.view'
         ? ['puzzle', 'village', 'journal', 'settings'].map(name => element(`#${name}-view`)) : [],
-      documentElement: {}, addEventListener() {},
+      documentElement: {}, hidden:false, addEventListener:(name:string,callback:()=>void)=>{documentEvents[name]=callback;},
     },
     Phaser: { Game: GameStub, AUTO: 0, Scale: { FIT: 0, CENTER_BOTH: 0 } },
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     AudioManager: AudioStub, t: (_language: string, key: string) => key, icon: () => '',
-    Capacitor: { isNativePlatform: () => false }, confirm: () => true,
+    Capacitor: { isNativePlatform: () => native },
+    App:{addListener:(name:string,callback:(state:{isActive:boolean})=>void)=>{nativeEvents[name]=callback;return Promise.resolve({remove(){}});},getState:()=>nativeState,minimizeApp:()=>Promise.resolve()}, confirm: () => true,
     setTimeout: (callback: () => void, ms: number) => { timers.set(++timerId, { callback, ms }); return timerId; },
     clearTimeout: (id: number) => timers.delete(id),
   });
@@ -116,6 +122,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false) 
   Object.assign(context, stateExports);
   vm.runInContext(mainCode, context);
   return {
+    documentEvents,nativeEvents,resolveNativeState,
     element, run: (code: string) => vm.runInContext(code, context),
     resultTimers: () => [...timers.values()].filter(timer => timer.ms === 300),
     flushResults: () => [...timers.values()].filter(timer => timer.ms === 300).forEach(timer => timer.callback()),
@@ -471,5 +478,54 @@ describe('30스테이지 진행과 선택 묶음',()=>{
     expect(app.element('#test-level-dialog').innerHTML).toContain('data-test-level="30"');
     expect(app.element('#test-level-dialog').innerHTML).not.toContain('data-test-level="1"');
     app.element('#test-stage-30').onclick();app.run('finish(true)');expect(app.stored()).toEqual(before);
+  });
+});
+
+
+describe('문서·Android·모달 복귀',()=>{
+  it('문서 표시가 먼저 돌아와도 Android 비활성이면 보드와 소리를 재개하지 않습니다',async()=>{
+    const app=mainHarness(false,false,true,true);
+    await Promise.resolve();app.resolveNativeState({isActive:true});await new Promise(resolve=>setTimeout(resolve,0));
+    expect(app.run('game.paused')).toBe(false);
+    app.nativeEvents.appStateChange({isActive:false});
+    app.run('document.hidden=true');app.documentEvents.visibilitychange();
+    app.run('document.hidden=false');app.documentEvents.visibilitychange();
+    expect(app.run('game.paused')).toBe(true);expect(app.run('audio.suspended')).toBe(true);
+    app.nativeEvents.appStateChange({isActive:true});expect(app.run('game.paused')).toBe(false);expect(app.run('audio.suspended')).toBe(false);
+    const resumes=app.run('audio.resumes'), sceneResumes=app.run('game.resumes');
+    app.nativeEvents.appStateChange({isActive:true});app.documentEvents.visibilitychange();
+    expect(app.run('audio.resumes')).toBe(resumes);expect(app.run('game.resumes')).toBe(sceneResumes);
+  });
+  it('Android가 먼저 돌아와도 문서가 숨겨져 있으면 재개하지 않습니다',()=>{
+    const app=mainHarness(false,false,false,true);
+    app.run('document.hidden=true');app.documentEvents.visibilitychange();
+    app.nativeEvents.appStateChange({isActive:true});expect(app.run('game.paused')).toBe(true);expect(app.run('audio.suspended')).toBe(true);
+    app.run('document.hidden=false');app.documentEvents.visibilitychange();expect(app.run('game.paused')).toBe(false);
+  });
+  it('늦은 초기 Android 상태는 그 뒤 수신한 상태를 덮어쓰지 않습니다',async()=>{
+    const app=mainHarness(false,false,false,true);await Promise.resolve();
+    app.nativeEvents.appStateChange({isActive:true});app.resolveNativeState({isActive:false});await new Promise(resolve=>setTimeout(resolve,0));
+    expect(app.run('nativeActive')).toBe(true);expect(app.run('game.paused')).toBe(false);
+  });
+  it('안내·테스트·결과 창과 다른 화면에서는 복귀해도 보드를 멈춰 둡니다',()=>{
+    const app=mainHarness(false,false,true);
+    for(const modal of ['showTutorial()','showTestPicker()','finish(false)']){
+      app.run('startLevel(2);'+modal);expect(app.run('game.paused')).toBe(true);
+      app.run('document.hidden=true');app.documentEvents.visibilitychange();app.run('document.hidden=false');app.documentEvents.visibilitychange();
+      expect(app.run('game.paused')).toBe(true);
+      app.run("document.querySelector('#tutorial-dialog').close();document.querySelector('#test-level-dialog').close();document.querySelector('#result-dialog').close();syncActivity()");
+      expect(app.run('game.paused')).toBe(false);
+    }
+    app.run("switchView('settings');document.hidden=true");app.documentEvents.visibilitychange();app.run('document.hidden=false');app.documentEvents.visibilitychange();expect(app.run('game.paused')).toBe(true);
+    app.run("switchView('puzzle')");expect(app.run('game.paused')).toBe(false);
+  });
+  it('결과에서 선택창을 취소하면 보드가 결과창 아래에서 재개되지 않습니다',()=>{
+    const app=mainHarness(false,false,true);app.run('startLevel(6,true);finish(false)');app.element('#result-test').onclick();app.element('#test-close').onclick();
+    expect(app.element('#result-dialog').open).toBe(true);expect(app.run('game.paused')).toBe(true);
+  });
+  it('에셋 로딩이 늦게 끝나도 열린 안내와 다른 화면의 일시정지를 적용합니다',()=>{
+    const app=mainHarness(false,true,true);app.run('game.paused=false;scene.hooks.onReady()');expect(app.run('game.paused')).toBe(true);
+    app.run("closeTutorial();switchView('village');game.paused=false;scene.hooks.onReady()");expect(app.run('game.paused')).toBe(true);
+    const ready=app.run('scene.hooks.onReady');app.run("switchView('puzzle');startLevel(2)");ready();expect(app.run('game.paused')).toBe(false);
   });
 });

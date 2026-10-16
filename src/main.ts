@@ -28,7 +28,10 @@ let testingLevel=false;
 let pickerReturnToResult=false;
 let selectedChapter=chapterForLevel(save.highestLevel).id;
 let selectedTestChapter=chapterForLevel(currentLevel).id;
-const audio=new AudioManager();audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);
+let nativeActive=!Capacitor.isNativePlatform();
+let nativeRevision=0;
+let audioActive:boolean|undefined;
+const audio=new AudioManager(false);audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);
 const text=(key:TextKey)=>t(save.language,key);
 const label=(key:TextKey)=>`<span data-t="${key}">${text(key)}</span>`;
 const $=<T extends HTMLElement=HTMLElement>(selector:string)=>document.querySelector<T>(selector)!;
@@ -63,6 +66,16 @@ $('#app').innerHTML=`
   <div id="toast" role="status"></div><dialog id="result-dialog" aria-labelledby="result-title" aria-describedby="result-description"></dialog><dialog id="tutorial-dialog" aria-labelledby="tutorial-title" aria-describedby="tutorial-description"></dialog>${TEST_TOOLS_ENABLED?'<dialog id="test-level-dialog" aria-labelledby="test-level-title"></dialog>':''}
 `;
 
+// 문서와 Android 상태 중 하나라도 비활성이면 오디오와 진행을 멈춥니다.
+function syncActivity(){
+  const active=nativeActive&&!document.hidden;
+  if(audioActive!==active){audioActive=active;if(active)audio.resume();else audio.suspend();}
+  if(!game)return;
+  const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open);
+  const playing=active&&route==='puzzle'&&!modal;
+  if(playing){if(game.scene.isPaused('Board'))game.scene.resume('Board');}
+  else if(game.scene.isActive('Board'))game.scene.pause('Board');
+}
 function updateWallet(){
   $('.wallet.stars .sr-only').textContent=text('stars');$('.wallet.coins .sr-only').textContent=text('coins');
   $('#star-count').textContent=String(save.stars);$('#coin-count').textContent=String(save.coins);$('#garden-count').textContent=`${save.garden} / 5`;$('#garden-fill').style.width=`${save.garden*20}%`;
@@ -91,7 +104,7 @@ function startLevel(id:number,testPlay=false){
   $<HTMLDialogElement>('#result-dialog').close();
   currentLevel=id;moves=levels[id-1].moves;score=0;collected=Array(6).fill(0);shuffles=1;clearedLeaves=0;
   game?.destroy(true);
-  scene=new BoardScene({audio,onStart:()=>{void audio.unlock().catch(()=>{});},onNotice:key=>{
+  scene=new BoardScene({audio,onReady:()=>{if(activeRound===round)syncActivity();},onStart:()=>{void audio.unlock().catch(()=>{});},onNotice:key=>{
     $('#board-notice').textContent=text(key);$('#board-notice').classList.remove('pop');void $('#board-notice').offsetWidth;$('#board-notice').classList.add('pop');
   },onMove:(items,points,_chains,leavesCleared)=>{
     moves--;score+=points;clearedLeaves+=leavesCleared??0;items.forEach((n,i)=>collected[i]+=n);updateGoals();
@@ -102,7 +115,7 @@ function startLevel(id:number,testPlay=false){
   scene.configureLeaves(levels[id-1].leaves??[]);
   game=new Phaser.Game({type:Phaser.AUTO,width:480,height:480,parent:'game-canvas',backgroundColor:'#dae6d7',scene:[scene],transparent:false,
     scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true,roundPixels:false},audio:{noAudio:true},input:{activePointers:2}});
-  updateGoals();
+  updateGoals();syncActivity();
 }
 function notice(message:string){clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').classList.add('visible');toastTimer=setTimeout(()=>$('#toast').classList.remove('visible'),3200);}
 function renderTutorial(){
@@ -154,13 +167,11 @@ function bindPracticeInputs(){
 function showTutorial(){
   if(!scene.canLeave()||resultTimer||$<HTMLDialogElement>('#result-dialog').open)return;
   tutorialPage=0;practice=undefined;renderTutorial();$<HTMLDialogElement>('#tutorial-dialog').showModal();
-  if(game.scene.isActive('Board'))game.scene.pause('Board');
-  // The first guide may open before Phaser has booted its first scene.
-  game.events.once('poststep',()=>{if($<HTMLDialogElement>('#tutorial-dialog').open&&game.scene.isActive('Board'))game.scene.pause('Board');});
+  syncActivity();
 }
 function closeTutorial(){
   $<HTMLDialogElement>('#tutorial-dialog').close();save.tutorialSeen=true;persist();
-  if(route==='puzzle'&&game.scene.isPaused('Board'))game.scene.resume('Board');
+  syncActivity();
 }
 function chapterTabs(selected:number,test=false){
   const prefix=test?'test-':'';
@@ -190,14 +201,14 @@ function showTestPicker(fromResult=false){
   if(!TEST_TOOLS_ENABLED||!scene.canLeave()||resultTimer||$<HTMLDialogElement>('#result-dialog').open||$<HTMLDialogElement>('#tutorial-dialog').open)return;
   pickerReturnToResult=fromResult;selectedTestChapter=chapterForLevel(currentLevel).id;
   renderTestPicker();$<HTMLDialogElement>('#test-level-dialog').showModal();
-  if(game.scene.isActive('Board'))game.scene.pause('Board');
+  syncActivity();
 }
 function closeTestPicker(){
   if(!TEST_TOOLS_ENABLED)return;
   $<HTMLDialogElement>('#test-level-dialog').close();
   if(pickerReturnToResult){pickerReturnToResult=false;$<HTMLDialogElement>('#result-dialog').showModal();$('#result-next').focus();}
   else $('#test-level-button').focus();
-  if(route==='puzzle'&&game.scene.isPaused('Board'))game.scene.resume('Board');
+  syncActivity();
 }
 function finish(won:boolean){
   const first=won&&!testingLevel&&!save.completed.includes(currentLevel);
@@ -206,7 +217,7 @@ function finish(won:boolean){
   const done=won&&!testingLevel&&currentLevel===LEVEL_COUNT;
   const dialog=$<HTMLDialogElement>('#result-dialog');
   dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><img class="result-pip" src="/assets/pip.png" alt=""/><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p>${first?`<div class="result-rewards"><span>${icon('star',20)} +1</span><span>${icon('coin',20)} +40</span></div>`:''}<button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
-  dialog.showModal();
+  dialog.showModal();syncActivity();
   $('#result-next').focus();
   $('#result-next').onclick=()=>{dialog.close();startLevel(won?Math.min(LEVEL_COUNT,currentLevel+1):currentLevel,testingLevel);switchView('puzzle');};
   $('#result-home').onclick=()=>{dialog.close();switchView('village');};
@@ -231,7 +242,7 @@ function switchView(name:string){
   if(!scene.canLeave())return;
   route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
   document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(b=>{b.classList.toggle('active',b.dataset.route===name);if(b.dataset.route===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
-  if(name==='puzzle'){game.scale.refresh();if(game.scene.isPaused('Board'))game.scene.resume('Board');}else if(game.scene.isActive('Board'))game.scene.pause('Board');
+  if(name==='puzzle')game.scale.refresh();syncActivity();
 }
 document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(button=>button.onclick=()=>switchView(button.dataset.route!));
 $('#settings-button').onclick=()=>switchView(route==='settings'?'puzzle':'settings');
@@ -243,9 +254,14 @@ $('#shuffle').onclick=()=>{if(shuffles>0&&scene.shuffle()){shuffles--;updateGoal
 $<HTMLDialogElement>('#result-dialog').addEventListener('cancel',event=>{event.preventDefault();$<HTMLDialogElement>('#result-dialog').close();switchView('village');});
 $<HTMLDialogElement>('#tutorial-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTutorial();});
 document.addEventListener('pointerdown',()=>{void audio.unlock().catch(()=>{});},{passive:true,capture:true});
-document.addEventListener('visibilitychange',()=>{if(document.hidden)audio.suspend();else audio.resume();});
+document.addEventListener('visibilitychange',syncActivity);
 if(Capacitor.isNativePlatform()){
-  void App.addListener('appStateChange',({isActive})=>{if(isActive)audio.resume();else audio.suspend();});
+  void App.addListener('appStateChange',({isActive})=>{nativeRevision++;nativeActive=isActive;syncActivity();}).then(async()=>{
+    const revision=nativeRevision;
+    const state=await App.getState();
+    // 늦게 반환된 초기 상태가 이후의 복귀 이벤트를 덮어쓰지 않도록 합니다.
+    if(revision===nativeRevision){nativeActive=state.isActive;syncActivity();}
+  }).catch(()=>{ /* 네이티브 상태를 확인할 수 없으면 비활성 상태를 유지합니다. */ });
   void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('village');}else if(route!=='puzzle')switchView('puzzle');else void App.minimizeApp();});
 }
 if(typeof ResizeObserver!=='undefined'){
