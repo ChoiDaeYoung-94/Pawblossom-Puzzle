@@ -10,7 +10,7 @@ const checks=[];const errors=[];
 try {
   const context=await browser.newContext({viewport:{width:390,height:844}});
   const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
-  await page.route('**/src/main.ts',async route=>{
+  await page.route('**/src/main.ts*',async route=>{
     const response=await route.fetch();
     await route.fulfill({response,body:(await response.text())+'\nwindow.__qa={get scene(){return scene},get game(){return game},get moves(){return moves},get testing(){return testingLevel},get score(){return score},get cleared(){return clearedLeaves},setActive(value){nativeActive=value;syncActivity()}};'});
   });

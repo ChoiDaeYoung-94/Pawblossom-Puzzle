@@ -1,0 +1,211 @@
+{
+  "dateKst": "2026-10-15",
+  "browser": "155.0.8059.41",
+  "production": true,
+  "buildInfo": {
+    "testTools": false
+  },
+  "rows": [
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "ko",
+      "outline": {
+        "width": "3px",
+        "style": "solid"
+      },
+      "outlines": [
+        {
+          "id": "#settings-button",
+          "width": "3px",
+          "style": "solid",
+          "offset": "-3px"
+        },
+        {
+          "id": "[data-route=\"village\"]",
+          "width": "3px",
+          "style": "solid",
+          "offset": "-3px"
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "en",
+      "outline": {
+        "width": "3px",
+        "style": "solid"
+      },
+      "outlines": [
+        {
+          "id": "#settings-button",
+          "width": "3px",
+          "style": "solid",
+          "offset": "-3px"
+        },
+        {
+          "id": "[data-route=\"village\"]",
+          "width": "3px",
+          "style": "solid",
+          "offset": "-3px"
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "language": "ko",
+      "outline": {
+        "width": "3px",
+        "style": "solid"
+      },
+      "outlines": [
+        {
+          "id": "#settings-button",
+          "width": "3px",
+          "style": "solid",
+          "offset": "-3px"
+        },
+        {
+          "id": "[data-route=\"village\"]",
+          "width": "3px",
+          "style": "solid",
+          "offset": "-3px"
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "language": "en",
+      "outline": {
+        "width": "3px",
+        "style": "solid"
+      },
+      "outlines": [
+        {
+          "id": "#settings-button",
+          "width": "3px",
+          "style": "solid",
+          "offset": "-3px"
+        },
+        {
+          "id": "[data-route=\"village\"]",
+          "width": "3px",
+          "style": "solid",
+          "offset": "-3px"
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "language": "ko",
+      "outline": {
+        "width": "3px",
+        "style": "solid"
+      },
+      "outlines": [
+        {
+          "id": "#settings-button",
+          "width": "3px",
+          "style": "solid",
+          "offset": "-3px"
+        },
+        {
+          "id": "[data-route=\"village\"]",
+          "width": "3px",
+          "style": "solid",
+          "offset": "-3px"
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "language": "en",
+      "outline": {
+        "width": "3px",
+        "style": "solid"
+      },
+      "outlines": [
+        {
+          "id": "#settings-button",
+          "width": "3px",
+          "style": "solid",
+          "offset": "-3px"
+        },
+        {
+          "id": "[data-route=\"village\"]",
+          "width": "3px",
+          "style": "solid",
+          "offset": "-3px"
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "ko",
+      "outline": {
+        "width": "3px",
+        "style": "solid"
+      },
+      "outlines": [
+        {
+          "id": "#settings-button",
+          "width": "3px",
+          "style": "solid",
+          "offset": "-3px"
+        },
+        {
+          "id": "[data-route=\"village\"]",
+          "width": "3px",
+          "style": "solid",
+          "offset": "-3px"
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "en",
+      "outline": {
+        "width": "3px",
+        "style": "solid"
+      },
+      "outlines": [
+        {
+          "id": "#settings-button",
+          "width": "3px",
+          "style": "solid",
+          "offset": "-3px"
+        },
+        {
+          "id": "[data-route=\"village\"]",
+          "width": "3px",
+          "style": "solid",
+          "offset": "-3px"
+        }
+      ]
+    }
+  ],
+  "errors": []
+}
