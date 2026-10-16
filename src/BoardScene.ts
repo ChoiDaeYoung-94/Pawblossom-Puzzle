@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { BoardEngine, type Position, type Tile } from './core';
+import { BoardEngine, type Position, type Tile, type ResolveStep } from './core';
 import type { AudioManager } from './audio/AudioManager';
 
 export const tileNames = ['strawberry','carrot','blueberry','acorn','leaf','flower'];
@@ -50,10 +50,8 @@ export class BoardScene extends Phaser.Scene {
     return row>=0&&row<8&&col>=0&&col<8?{row,col}:undefined;
   }
   private point(p:Position) {return {x:PAD+p.col*CELL+CELL/2,y:PAD+p.row*CELL+CELL/2};}
-  private paint(board:Tile[][],fall=false) {
-    this.pieces.flat().forEach(p=>p.destroy());this.pieces=[];
-    board.forEach((row,r)=>{this.pieces[r]=[];row.forEach((tile,c)=>{
-      const point=this.point({row:r,col:c});const item=this.add.container(point.x,point.y);
+  private makePiece(tile:Tile,pos:Position) {
+      const point=this.point(pos);const item=this.add.container(point.x,point.y);
       if(tile.special){
         const halo=this.add.graphics();halo.fillStyle(tile.special==='rainbow'?0xf9dc9f:0xffe8a7,.95);halo.fillRoundedRect(-25,-25,50,50,13);halo.lineStyle(2,0xf6c364,.85);halo.strokeRoundedRect(-25,-25,50,50,13);item.add(halo);
       }
@@ -66,33 +64,60 @@ export class BoardScene extends Phaser.Scene {
         if(tile.special==='rainbow') {const colors=[0xe67883,0xe9bd62,0x8db87b,0x849ccc,0xbd93ce];colors.forEach((color,i)=>{mark.lineStyle(3,color);mark.strokeCircle(0,0,17+i*1.7);});}
         item.add(mark);
       }
-      this.pieces[r][c]=item;
-      if(fall){item.y-=20;item.alpha=.25;this.tweens.add({targets:item,y:point.y,alpha:1,duration:200,delay:c*12,ease:'Back.easeOut'});}
-    });});
+      return item;
+  }
+  private paint(board:Tile[][]) {
+    this.pieces.flat().forEach(p=>p.destroy());
+    this.pieces=board.map((row,r)=>row.map((tile,c)=>this.makePiece(tile,{row:r,col:c})));
+  }
+  /** 사라진 칸만 보충하고 남은 블록의 객체와 세로 순서를 유지합니다. */
+  private drop(step:ResolveStep) {
+    const removed=new Set(step.removed.map(p=>p.row*this.engine.cols+p.col));
+    step.removed.forEach(p=>this.pieces[p.row][p.col].destroy());
+    step.created?.forEach(p=>{
+      this.pieces[p.row][p.col].destroy();this.pieces[p.row][p.col]=this.makePiece(p.tile,p);
+    });
+    const next:Phaser.GameObjects.Container[][]=Array.from({length:this.engine.rows},()=>[]);
+    for(let col=0;col<this.engine.cols;col++){
+      const survivors=this.pieces.map(row=>row[col]).filter((_,row)=>!removed.has(row*this.engine.cols+col));
+      const missing=this.engine.rows-survivors.length;
+      for(let row=0;row<this.engine.rows;row++){
+        const pos={row,col},point=this.point(pos);
+        const item=row<missing?this.makePiece(step.after[row][col],{row:row-missing,col}):survivors[row-missing];
+        next[row][col]=item;
+        if(item.y!==point.y)this.tweens.add({targets:item,y:point.y,duration:280,ease:'Cubic.easeIn'});
+      }
+    }
+    this.pieces=next;
   }
   private tap(pos:Position) {
     this.resetHint();this.hooks.audio.play('tap');
     if(this.selected&&Math.abs(pos.row-this.selected.row)+Math.abs(pos.col-this.selected.col)===1){void this.attempt(this.selected,pos);return;}
+    if(this.engine.board[pos.row][pos.col].special){void this.attempt(pos);return;}
     this.clearSelection();this.selected=pos;this.pieces[pos.row][pos.col].setScale(1.12);
     this.tweens.add({targets:this.pieces[pos.row][pos.col],y:this.point(pos).y-3,duration:180,yoyo:true,repeat:1});
   }
   private clearSelection(){if(this.selected)this.pieces[this.selected.row]?.[this.selected.col]?.setScale(1);this.selected=undefined;}
   private wait(ms:number){return new Promise<void>(resolve=>this.time.delayedCall(ms,()=>resolve()));}
-  private async attempt(a:Position,b:Position) {
+  private async attempt(a:Position,b?:Position) {
     if(this.busy||this.finished)return;
     this.busy=true;this.hintTimer?.remove();this.clearSelection();this.hooks.onStart();
-    const x=this.pieces[a.row][a.col],y=this.pieces[b.row][b.col];
-    const result=this.engine.swap(a,b);
+    this.pieces.forEach((row,r)=>row.forEach((item,c)=>{this.tweens.killTweensOf(item);item.setScale(1);item.setPosition(this.point({row:r,col:c}).x,this.point({row:r,col:c}).y);}));
+    const x=this.pieces[a.row][a.col],y=b?this.pieces[b.row][b.col]:undefined;
+    const result=b?this.engine.swap(a,b):this.engine.activate(a);
     this.hooks.audio.play(result.valid?'swap':'invalid');
-    this.tweens.add({targets:x,...this.point(b),duration:130,ease:'Sine.easeInOut'});
-    this.tweens.add({targets:y,...this.point(a),duration:130,ease:'Sine.easeInOut'});
-    await this.wait(140);
+    if(b){
+      this.tweens.add({targets:x,...this.point(b),duration:130,ease:'Sine.easeInOut'});
+      this.tweens.add({targets:y,...this.point(a),duration:130,ease:'Sine.easeInOut'});
+      await this.wait(140);
+      if(result.valid){this.pieces[a.row][a.col]=y!;this.pieces[b.row][b.col]=x;}
+    }
     if(!result.valid){
-      this.tweens.add({targets:x,...this.point(a),duration:130});this.tweens.add({targets:y,...this.point(b),duration:130});await this.wait(150);
+      if(b){this.tweens.add({targets:x,...this.point(a),duration:130});this.tweens.add({targets:y,...this.point(b),duration:130});await this.wait(150);}
     }else {
       for(let i=0;i<result.steps.length;i++){
-        const step=result.steps[i];this.paint(step.before);
-        if(!step.removed.length){this.hooks.onNotice('noMoves');this.paint(step.after,true);await this.wait(250);continue;}
+        const step=result.steps[i];
+        if(!step.removed.length){this.hooks.onNotice('noMoves');this.paint(step.after);await this.wait(250);continue;}
         const special=step.created?.length||step.removed.some(p=>step.before[p.row][p.col].special);
         this.hooks.audio.play(special?'special':'match',i+1);
         this.hooks.onNotice(special?'special':i>0?'chain':'matched');
@@ -101,14 +126,14 @@ export class BoardScene extends Phaser.Scene {
           const dot=this.add.circle(item.x,item.y,5,[0xf7b0a7,0xf4d488,0xa6c88e][i%3]);
           this.tweens.add({targets:dot,y:item.y-30,alpha:0,scale:2,duration:400,onComplete:()=>dot.destroy()});
         });
-        await this.wait(200);this.paint(step.after,true);await this.wait(300);
+        await this.wait(200);this.drop(step);await this.wait(300);
       }
       this.hooks.onMove(result.collected,result.score,result.steps.length);
     }
     this.busy=false;if(!this.finished)this.resetHint();
   }
   stopPlaying(){this.finished=true;this.hintTimer?.remove();this.clearSelection();}
-  shuffle():boolean {if(this.busy||this.finished)return false;this.clearSelection();this.engine.shuffle();this.paint(this.engine.board,true);this.hooks.audio.play('special');this.resetHint();return true;}
+  shuffle():boolean {if(this.busy||this.finished)return false;this.clearSelection();this.engine.shuffle();this.paint(this.engine.board);this.hooks.audio.play('special');this.resetHint();return true;}
   canLeave(){return !this.busy;}
   private resetHint(){this.hintTimer?.remove();this.hintTimer=this.time.delayedCall(7500,()=>this.showHint());}
   private showHint(){

@@ -98,14 +98,39 @@ describe('BoardEngine', () => {
   });
   it('셔플 결과는 매치 없이 이동 가능하고 정상 구성의 타일을 보존합니다', () => {
     const engine = fixture();
+    expect(engine.hasMoves()).toBe(false);
     const signature = () => engine.board.flat().map(tile => `${tile.kind}:${tile.special ?? ''}`).sort();
     set(engine, 0, 0, 0, 'bomb');
     const before = signature();
-    expect(engine.hasMoves()).toBe(false);
+    expect(engine.hasMoves()).toBe(true); // 특수 블록은 매치 없이 사용할 수 있습니다.
     engine.shuffle();
     expect(signature()).toEqual(before);
     expect(engine.findMatches()).toEqual([]);
     expect(engine.hasMoves()).toBe(true);
+  });
+  it.each(['row','column','bomb','rainbow'] as const)('%s는 탭으로 즉시 발동하고 제거 범위와 수집량을 보존합니다', special => {
+    const engine=fixture();set(engine,3,3,3,special);
+    const before=engine.board.map(row=>row.map(tile=>({...tile})));
+    const result=engine.activate({row:3,col:3});
+    const expected=before.flatMap((row,r)=>row.flatMap((tile,c)=>
+      (special==='row'?r===3:special==='column'?c===3:special==='bomb'?Math.abs(r-3)<=1&&Math.abs(c-3)<=1:tile.kind===3)?[{row:r,col:c}]:[]));
+    expect(result.valid).toBe(true);expect(result.steps[0].removed).toEqual(expected);
+    expect(result.collected.reduce((a,b)=>a+b,0)).toBe(result.steps.reduce((a,b)=>a+b.removed.length,0));
+    expect(engine.findMatches()).toEqual([]);expect(engine.hasMoves()).toBe(true);
+  });
+  it.each(['row','column','bomb'] as const)('%s와 일반 블록 교환은 매치 없이 이동한 위치에서 발동합니다', special=>{
+    const engine=fixture();set(engine,3,3,3,special);
+    const result=engine.swap({row:3,col:3},{row:3,col:4});
+    expect(result.valid).toBe(true);
+    expect(result.steps[0].removed).toContainEqual({row:3,col:4});
+    expect(result.steps[0].removed).toContainEqual(special==='row'?{row:3,col:7}:special==='column'?{row:7,col:4}:{row:2,col:5});
+    expect(result.steps[0].created).toBeUndefined();
+    if(special==='column')expect(result.steps[0].removed).not.toContainEqual({row:3,col:3});
+  });
+  it('일반 블록과 보드 밖 탭은 진행·보드·난수를 소비하지 않습니다',()=>{
+    const engine=fixture(), before=JSON.stringify(engine.board);
+    for(const pos of [{row:0,col:0},{row:-1,col:0},{row:3.5,col:0}])expect(engine.activate(pos)).toMatchObject({valid:false,score:0,steps:[]});
+    expect(JSON.stringify(engine.board)).toBe(before);
   });
   it('낙하 순서를 보존하고 연쇄 단계의 스냅샷을 연결합니다', () => {
     const engine = fixture();

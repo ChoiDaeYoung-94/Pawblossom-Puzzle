@@ -4,7 +4,21 @@
 
 사용자님은 회사의 테스트 폰에서 Google Drive APK를 내려받아 확인합니다. 개발 PC에 바로 USB를 연결할 수 있다는 전제로 작업하지 않습니다. 배포 파일은 개인 Drive의 `Pawblossom Puzzle 테스트` 폴더에 관리하며, 다운로드 링크는 사용자님께 직접 전달합니다. 파일을 올린 것과 실기기 검증 완료를 구분합니다.
 
-## 전달할 빌드
+## 최신 전달 빌드 (v0.1.1)
+
+2026-10-14 실기기 피드백을 반영한 [PR #15](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/15)의 테스트 빌드를 기존 개인 Drive 테스트 폴더에 업로드했습니다. APK·날짜별 체크섬·테스트 안내문 3개 완료 표시와 파일 목록을 확인했습니다. Google Drive 커넥터는 다른 계정에 연결되어 폴더가 조회되지 않아 사용자님의 기존 작업용 Chrome Drive 탭을 사용했습니다. 새 Chrome 창을 만들지 않았습니다.
+
+- 파일: `Pawblossom-Puzzle-v0.1.1-2026-10-14-221a294-debug.apk`
+- 게임 코드 기준: `221a294` (후속 변경은 전달 기록 문서)
+- versionName 0.1.1 / versionCode 2, minSdk 24 / targetSdk 36
+- 크기: 9,320,204바이트
+- SHA256: `53387b253d11eda870bfd29630b8dbfec26b5337972e6ca4f79a14370aafcc00`
+- APK v2 서명 검증 통과, v0.1.0 전달 APK와 서명 인증서 SHA256 동일
+- 자동 테스트 55개·웹 빌드·APK/AAB 빌드 완료. AAB의 출시 키 서명은 미완료입니다.
+
+기존 앱 위에 업데이트 설치하면 진행·언어·음소거 설정을 유지합니다. 이전 영어 선택은 그대로이므로 한국어를 확인하려면 설정 또는 상단 언어 버튼으로 바꿉니다. 확인 목적으로 저장을 초기화할 필요가 없습니다. [수정 내역과 재시험 순서](mobile-play-feedback.ko.md)를 참고합니다.
+
+## 이전 전달 빌드 (v0.1.0)
 
 - 파일: `Pawblossom-Puzzle-v0.1.0-2026-10-13-efb45c0-debug.apk`
 - 앱: Pawblossom Puzzle, package `com.choidaeyoung.pawblossompuzzle`

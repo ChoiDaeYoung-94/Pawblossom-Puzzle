@@ -83,7 +83,7 @@ export class BoardEngine {
   private specialSwap(a: Position, b: Position): boolean {
     const x = this.board[a.row][a.col].special;
     const y = this.board[b.row][b.col].special;
-    return x === 'rainbow' || y === 'rainbow' || (!!x && !!y);
+    return Boolean(x || y);
   }
   /** 보드와 보충 난수를 소비하지 않는 합법 이동 조회입니다. */
   public legalMoves(): LegalMove[] { return [...this.scanMoves()]; }
@@ -158,16 +158,25 @@ export class BoardEngine {
     if (!this.inside(a) || !this.inside(b) || Math.abs(a.row - b.row) + Math.abs(a.col - b.col) !== 1) return result;
     const combined = this.specialSwap(a, b);
     this.exchange(a, b);
-    let runs = this.runs();
+    const runs = this.runs();
     if (!combined && !runs.some(run => run.cells.some(p => this.key(p) === this.key(a) || this.key(p) === this.key(b)))) {
       this.exchange(a, b);
       return result;
     }
-    result.valid = true;
+    return this.resolve(a,b,combined);
+  }
+  /** 특수블록은 매치 없이 탭으로 사용할 수 있습니다. rainbow 탭은 자체 색을 제거합니다. */
+  public activate(p:Position):SwapResult {
+    if(!this.inside(p)||!this.board[p.row][p.col].special)return {valid:false,steps:[],collected:[0,0,0,0,0,0],score:0};
+    return this.resolve(p,p,false,[p]);
+  }
+  private resolve(a:Position,b:Position,combined:boolean,trigger:Position[]=[]):SwapResult {
+    const result:SwapResult={valid:true,steps:[],collected:[0,0,0,0,0,0],score:0};
+    let runs=this.runs();
     let first = true;
-    while (runs.length || (first && combined)) {
+    while (runs.length || (first && (combined||trigger.length))) {
       const before = clone(this.board);
-      const created = first && combined ? [] : this.creations(runs, first ? [b, a] : []);
+      const created = first && (combined||trigger.length) ? [] : this.creations(runs, first ? [b, a] : []);
       const protectedKeys = new Set(created.map(p => this.key(p)));
       const removed = new Set<number>();
       const queue: Position[] = [];
@@ -179,9 +188,10 @@ export class BoardEngine {
         for (let row = p.row - radius; row <= p.row + radius; row++) for (let col = p.col - radius; col <= p.col + radius; col++) add({ row, col });
       };
       runs.forEach(run => run.cells.forEach(add));
+      if(first)trigger.forEach(add);
       if (first && combined) {
         const x = before[a.row][a.col], y = before[b.row][b.col];
-        add(a); add(b);
+        if(x.special)add(a);if(y.special)add(b);
         if (x.special === 'rainbow' || y.special === 'rainbow') {
           const other = x.special === 'rainbow' ? y : x;
           for (let row = 0; row < this.rows; row++) for (let col = 0; col < this.cols; col++) {
@@ -190,6 +200,8 @@ export class BoardEngine {
               add({ row, col });
             }
           }
+        } else if (!x.special || !y.special) {
+          // 단일 특수와 일반 블록의 교환은 해당 특수의 원래 범위를 발동합니다.
         } else if (x.special === 'bomb' && y.special === 'bomb') {
           area(a, 2); area(b, 2);
         } else if (x.special === 'bomb' || y.special === 'bomb') {
