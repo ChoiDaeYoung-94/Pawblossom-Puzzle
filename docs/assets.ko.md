@@ -94,3 +94,41 @@ One original adorable cream rabbit gardener, full body, front three-quarter view
 ### 2026-10-15 배경 요청 시점 보강 (이슈 #47)
 
 기존 meadow.png에 HTML 지연 로딩·비동기 디코딩 힌트를 적용했습니다. 핍은 첫 결과 반응을 위해 초기 준비를 유지합니다. 원본 PNG와 생성 프롬프트·이미지 해상도는 동일하며, 변경 전후 production 빌드의 두 PNG SHA256도 일치했습니다. 작은 화면에서 보이지 않는 배경 요청을 지연한 검증은 [브라우저 기록](browser-qa.ko.md)에 있습니다. 그림·폰트 삭제나 새 외부 에셋 도입은 없습니다. Nunito/Fraunces OFL 원문은 public과 dist에서 일치하며 기존 테스트 APK의 원문 해시도 읽기 점검에서 일치했습니다. 이는 최종 출시 아트·Android 검수 완료를 뜻하지 않습니다.
+
+### 2026-10-16 핍 성공·격려 전용 아트 (이슈 #62)
+
+제작 도구는 Codex 내장 `image_gen`이며 성공·격려 각각 1회, `transparent_background=true`로 생성했습니다. 자체 제작 `public/assets/pip.png`만 캐릭터·화풍 참조로 사용했습니다. 참조 SHA256은 `be54a5a265d05cff964eff3177e637a1540138c7680802ab0a553496e118bcba`, 1,166,317바이트이며 기존 원본·메인·친구 화면은 유지합니다. 기존 게임/캐릭터 모사나 외부 이미지 다운로드는 없습니다.
+
+생성 도구의 실제 출력 원본 경로는 다음과 같습니다. 동일 바이트를 `assets/source`에 각각 한 장씩 Git 보존하므로 프로젝트가 이 외부 경로에 의존하지 않습니다. 원본은 public/dist에 배포하지 않습니다.
+
+- 성공: `C:\Users\user\.codex\generated_images\01a11a8c-0d58-7790-9dc7-218775f5bdb2\exec-2d68cbb1-e452-4d5e-a857-f1df639717f3.png` → `assets/source/pip-win-v1.png`
+- 격려: `C:\Users\user\.codex\generated_images\01a11a8c-0d58-7790-9dc7-218775f5bdb2\exec-4a1f6847-d522-4416-be85-1e6c477ac70a.png` → `assets/source/pip-retry-v1.png`
+
+| 파일 | 치수 | 바이트 | SHA256 |
+| --- | --- | ---: | --- |
+| `assets/source/pip-win-v1.png` | 1254×1254 RGBA | 1,189,851 | `df3601c2c9015f403c42e95a817d3772c12fe977bfa4910d2dfae5afbbe4f7da` |
+| `assets/source/pip-retry-v1.png` | 1254×1254 RGBA | 1,175,952 | `32935dc9250a015c9b571db6631f041d0953b46bc163e4a4707acaac2271b2c8` |
+| `public/assets/pip-win-v1.webp` | 420×420 RGBA | 32,384 | `648cc94781553afc6cfc192fb179192c0712e554c0fd2456d8f4e1c889f51124` |
+| `public/assets/pip-retry-v1.webp` | 420×420 RGBA | 31,666 | `033655e3371509ae5bac05010257aa0c35c9eefa2188f0c2e56c8d2e9e3da9e3` |
+
+이미지 창작 수정은 내장 생성 도구에서만 했으며 후처리는 기존 번들 sharp 0.35.5/libwebp 1.6.0의 기술 변환입니다. 원본에 `sharp(source).resize({width:420,height:420,fit:'inside',withoutEnlargement:true,kernel:'lanczos3'}).webp({quality:90,alphaQuality:100,effort:6}).toFile(target)`를 적용했습니다. 크롭·배경 합성·그림 덧칠은 없습니다. 140 CSS px의 3배 해상도이며 이미지당 해독 RGBA 크기는 705,600바이트(원본 6,290,064바이트)입니다. 실제 GPU/브라우저 메모리 총량 측정과는 구분합니다. 새 프로젝트 의존성은 추가하지 않았습니다.
+
+변환 후 완전 투명/불투명/부분 알파 픽셀은 성공 111,568/1,083/63,749, 격려 111,262/1,081/64,057입니다. 원본과 사용 파일 모두 알파를 가지며 Chrome의 실제 해독·canvas 알파 검사도 수행합니다. 성공은 웃는 감은 눈과 큰 미소, 격려는 열린 갈색 눈과 작은 미소로 구분합니다. 크림색 털·분홍 긴 귀·샐비어 멜빵·나무 버튼·잎 포켓·당근·과슈 질감의 일관성과 작은 결과 화면을 육안 검토했습니다. 두 그림은 **시제품 검수 상태**이며 Android 실기기·저사양 WebView·글꼴 배율·최종 출시 권리/시각 검수는 남아 있습니다.
+
+사용 조건 참고: [OpenAI 이용약관 Content/Ownership](https://openai.com/policies/row-terms-of-use/), 발효 2026-01-01·확인 2026-10-16. 법이 허용하는 범위에서 OpenAI와 사용자 사이의 출력 권리 배정이 명시되지만 출력의 고유성·제3자 권리를 보장하는 것은 아닙니다. AI 생성 사실과 자체 참조 출처를 기록하며 출시 검수를 별도로 유지합니다.
+
+성공 프롬프트 전문:
+
+```text
+Use case: identity-preserve / game character variant.
+Input image 1 is the ORIGINAL PAWBLOSSOM PUZZLE character Pip, the sole identity and style reference. Create one sibling character pose asset for this same game. Keep the exact cream rabbit identity, head/body proportions, long peach-pink inner ears, round dark-brown eyes when open, peach cheeks, sage-green short gardening overalls, two wooden buttons, tiny leaf detail on the pocket, cream paws and small fluffy tail. Preserve the soft hand-painted gouache brushwork, warm ivory lighting, crisp readable cutout silhouette and existing palette. Keep one recognizable orange carrot with green leaves. Full body centered with both ears and both feet completely visible, comfortable transparent padding around all edges, no cropping. Readable at about 100–140 screen pixels tall. Single isolated rabbit only, genuinely transparent alpha background, no scene, no frame, no text, no symbols, no stars, no watermark, no added costume/brand or imitation of another character. Square composition.
+Primary request: SUCCESS expression and pose. Pip celebrates a completed harvest with a joyful open smile, eyes softly closed in happy upward crescents, ears lifted. Hold the carrot proudly upright in one paw close to the body; the free paw is raised in a small cheerful wave. Stable standing pose, a subtle lively lean, warm friendly delight. Preserve the original character design and clothing details. No jumping, props, extra paws or detached elements.
+```
+
+격려 프롬프트 전문:
+
+```text
+Use case: identity-preserve / game character variant.
+Input image 1 is the ORIGINAL PAWBLOSSOM PUZZLE character Pip, the sole identity and style reference. Create one sibling character pose asset for this same game. Keep the exact cream rabbit identity, head/body proportions, long peach-pink inner ears, round dark-brown eyes when open, peach cheeks, sage-green short gardening overalls, two wooden buttons, tiny leaf detail on the pocket, cream paws and small fluffy tail. Preserve the soft hand-painted gouache brushwork, warm ivory lighting, crisp readable cutout silhouette and existing palette. Keep one recognizable orange carrot with green leaves. Full body centered with both ears and both feet completely visible, comfortable transparent padding around all edges, no cropping. Readable at about 100–140 screen pixels tall. Single isolated rabbit only, genuinely transparent alpha background, no scene, no frame, no text, no symbols, no stars, no watermark, no added costume/brand or imitation of another character. Square composition.
+Primary request: ENCOURAGING TRY-AGAIN expression and pose. Pip looks directly toward the player with kind open dark-brown eyes, relaxed brows, a small gentle closed smile, head slightly tilted. Hold the carrot safely against the chest with one paw; the free paw gives a small reassuring open-paw wave close to the shoulder. Calm stable standing pose, patient and optimistic. No tears, sadness, shame, anger or failure symbols. Preserve the original character design and clothing details; no extra paws or detached elements.
+```
