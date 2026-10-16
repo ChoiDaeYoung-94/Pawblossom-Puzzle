@@ -5,13 +5,13 @@ $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $androidRoot = Join-Path $projectRoot 'android'
 $sdk = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { Join-Path $env:LOCALAPPDATA 'Android/Sdk' }
 $package = Get-Content -LiteralPath (Join-Path $projectRoot 'package.json') -Raw | ConvertFrom-Json
-$lock = Get-Content -LiteralPath (Join-Path $projectRoot 'package-lock.json') -Raw | ConvertFrom-Json
+$lock = Get-Content -LiteralPath (Join-Path $projectRoot 'package-lock.json') -Raw | ConvertFrom-Json -AsHashtable
 $gradle = Get-Content -LiteralPath (Join-Path $androidRoot 'app/build.gradle') -Raw
 if ($gradle -notmatch 'versionCode\s+(\d+)') { throw 'Android versionCode 선언 없음' }
 $versionCode = $Matches[1]
 if ($gradle -notmatch 'versionName\s+"([^"]+)"') { throw 'Android versionName 선언 없음' }
 $versionName = $Matches[1]
-if ($package.version -ne $versionName -or $lock.version -ne $versionName -or $lock.packages.''.version -ne $versionName) { throw 'package/lock/Android 버전 선언 불일치' }
+if ($package.version -ne $versionName -or $lock.version -ne $versionName -or $lock['packages']['']['version'] -ne $versionName) { throw 'package/lock/Android 버전 선언 불일치' }
 $dateKst = [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([DateTimeOffset]::UtcNow, 'Korea Standard Time').ToString('yyyy-MM-dd')
 if (-not $OutputPath) { $OutputPath = Join-Path $projectRoot ('docs/performance/billing-native-' + $dateKst.Replace('-', '') + '-v' + $versionName + '.json') }
 $OutputPath = [System.IO.Path]::GetFullPath($OutputPath)

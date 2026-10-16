@@ -1,0 +1,387 @@
+{
+  "dateKst": "2026-10-16",
+  "version": "0.1.7",
+  "sourceCommit": "c6b157826ba9e7fed79d1f748ef606131f2b0e1b",
+  "rawRoot": "C:/Users/user/Documents/ChatGPT/Pawblossom-builds/v0.1.7",
+  "environment": "새 headless Chrome 프로세스와 임시 격리 context. 사용자 Chrome 미사용. QA 출력 경로/기록 날짜만 메모리 치환, 과거 JSON/그림 보존.",
+  "limits": "실제 Android 설치·업데이트·WebView·OS 터치·전화/Bluetooth·오디오 포커스·광고 SDK·Play 결제 시험 아님.",
+  "suites": [
+    {
+      "dateKst": "2026-10-16",
+      "suite": "development",
+      "sourceCommit": "c6b157826ba9e7fed79d1f748ef606131f2b0e1b",
+      "scope": "격리 headless Chrome·기존 QA. Android 설치/OS 입력/오디오 포커스/광고 SDK/Play 결제 검증 아님.",
+      "scripts": [
+        {
+          "file": "scripts/board-keyboard-qa.mjs",
+          "sha256": "57de20c0e337868cf9e73290d4fe7e805c83c47322ce26820e388ec69496cc5b",
+          "args": [],
+          "passed": true
+        },
+        {
+          "file": "scripts/round-save-qa.mjs",
+          "sha256": "6d14ce7516617edfcce4cd58657fd4c4063730f9708bf7c693c0bed5e79ed3b1",
+          "args": [],
+          "passed": true
+        },
+        {
+          "file": "scripts/save-recovery-qa.mjs",
+          "sha256": "10db9add29bb2320712d45e0d226617b2f555cb68fe23b7bb3621e205d124eb4",
+          "args": [],
+          "passed": true
+        },
+        {
+          "file": "scripts/touch-cancellation-qa.mjs",
+          "sha256": "13d2cd824b41a9a883fc5f7774500a68685cfd5f29a7e649bbbd4fce9dd014f0",
+          "args": [],
+          "passed": true
+        },
+        {
+          "file": "scripts/readable-controls-qa.mjs",
+          "sha256": "89ad0430a218635e8aaf26913f1920ac15c8c692cd50cc70525713a2c43581c5",
+          "args": [],
+          "passed": true
+        },
+        {
+          "file": "scripts/audio-recovery-qa.mjs",
+          "sha256": "6f59f8a80a8f23f919bb2596a3144e656148fa4831cda4f930690249e3325aa5",
+          "args": [],
+          "passed": true
+        }
+      ],
+      "reports": [
+        {
+          "file": "browser-development/docs/performance/board-keyboard-20261015.json",
+          "bytes": 2890,
+          "sha256": "3919f8509f570d2c6d12d081b7485ee9ef14caff5bf601d6df5dc9081efafe42",
+          "browser": "155.0.8059.41",
+          "checks": [
+            "첫 안내/늦은 Board 준비는 일시정지·Tab 제외, 안내 키가 회차를 소비하지 않음",
+            "마우스/터치 첫 탭·키보드→포인터 전환은 일반 힌트 유지, 포인터 swipe 제스처 보존·Tab 재진입",
+            "실제 Tab/경계/Enter/Escape·선택 표시·Web Audio unlock, 저장/이동/보상 미소비",
+            "실제 Enter+Space 무효 교환은 보드·이동·저장 유지",
+            "실제 방향키 유효 교환·연쇄 중 반복키 차단·이동 1회·완료 checkpoint",
+            "실제 Enter 특수 사용·낙엽·저장 복원",
+            "KO/EN 현재 칸·특수·낙엽·선택·사용법 안내",
+            "blur/설정 select/안내/테스트 모달은 커서·선택 정리, UI 키·정상 회차 유지",
+            "Alt/Ctrl/Meta 조합 통과·window blur·PAUSE/RESUME 정리",
+            "100회 Scene 교체: DOM keydown 1개 유지·canvas/Scene 1개·이전 커서/선택 제거·시험 특수 무보상/정상 저장 보존",
+            "portrait/landscape gameplay body scroll 없음·이중 테두리/모서리 커서 화면 보존",
+            "키보드 승리/실패 즉시 settle·결과창 전 보상 저장·중복 보상 없음·재시도 자동 초점 탈취 없음"
+          ],
+          "sampleCount": 4,
+          "pageerrors": []
+        },
+        {
+          "file": "browser-development/docs/performance/readable-controls-20261015.json",
+          "bytes": 997681,
+          "sha256": "ec286a21b92e9056d4e02ace95e77d4aafeff9614f6027986e4fbb6aa7856bf1",
+          "browser": "155.0.8059.41",
+          "checks": [
+            "4개 화면 × KO/EN × 11개 화면: 실제 CSS 버튼 44px·겹침·body overflow 검사, 메뉴/설정/친구 하단 포함",
+            "320×568/640×360 KO/EN: 튜토리얼 처음/실습·각 하단·건너뛰기 닫기 접근",
+            "설정 토글 Space/Enter 및 언어 변경 후 포커스 유지",
+            "테스트 탭 ArrowRight/Home·결과 Enter 실행",
+            "일반 보상/테스트 승리/실패·비활성 버튼 스타일"
+          ],
+          "screenCount": 104,
+          "pageerrors": [],
+          "minimumTextContrast": 4.569133451699333,
+          "lowContrastCount": 0
+        },
+        {
+          "file": "browser-development/docs/performance/round-save.json",
+          "bytes": 638,
+          "sha256": "59ed2689651515f7dd1f19979af7d9fb68c21bff75a9e1d586ce591330e84698",
+          "checks": 8,
+          "pageerrors": [],
+          "details": [
+            "연쇄·앱 숨김 중 직전 안정 상태를 보존하고 새로고침 복원",
+            "특수 발동·낙엽 두 겹 제거·이동·수집·점수 실제 복원",
+            "무료 섞기 보드·사용 횟수 복원",
+            "시험 이동·일반 복귀·시험 중 재실행은 정상 회차 유지",
+            "손상 회차만 폐기하고 영구 기록 유지",
+            "영문 안내·저장 실패 시 이전 디스크 상태 유지",
+            "결과창 300ms 전 종료 후 완료 보상 유지·중복 지급 없음",
+            "실패 결과창 전 종료 후 종료된 회차 복원 방지"
+          ]
+        },
+        {
+          "file": "browser-development/docs/performance/save-recovery-20261016.json",
+          "bytes": 4810,
+          "sha256": "44dc4e5aa5a7de0dd59c8ab9fefdaa664e636203ead3c3bc2fb958f9f52dff78",
+          "browser": "155.0.8059.41",
+          "checks": 14,
+          "sampleCount": 8,
+          "pageerrors": [],
+          "details": [
+            "backup 실패 시 디스크 보존·반복 알림/토스트 없음·메모리 섞기 유지·KO/EN·Enter/Space 재시도 포커스·재실행",
+            "primary 실패 중 첫 보상·완료·회차 삭제 보존과 재시도 후 중복 지급 없음",
+            "정상 사본 복구·재실행 ({)",
+            "정상 사본 복구·재실행 ({\"version\":1})",
+            "손상·미지원 원본 보호 {\"primary\":\"{\"}",
+            "손상·미지원 원본 보호 {\"primary\":\"null\"}",
+            "손상·미지원 원본 보호 {\"primary\":\"{\",\"copy\":\"{\\\"version\\\":1}\"}",
+            "손상·미지원 원본 보호 {\"primary\":\"{\\\"version\\\":2}\",\"copy\":\"{\\\"version\\\":1,\\\"language\\\":\\\"ko\\\",\\\"highestLevel\\\":6,\\\"completed\\\":[1,2,3,4,5],\\\"stars\\\":3,\\\"coins\\\":200,\\\"garden\\\":1,\\\"music\\\":false,\\\"sfx\\\":true,\\\"tutorialSeen\\\":true}\"}",
+            "손상·미지원 원본 보호 {\"copy\":\"{\\\"version\\\":2}\"}",
+            "손상·미지원 원본 보호 {\"reset\":\"2\"}",
+            "정상 primary·backup 읽기 예외는 자동 쓰기 차단·읽기 회복 뒤 최신 회차 재시도",
+            "primary→backup 순차 읽기 실패→기존 기록 발견 충돌 보호·반복 재시도/명시 불러오기 취소 무변경",
+            "초기화 취소/marker 실패 무변경·primary 실패 뒤 종료·정상 재시도·옛 사본 부활 방지",
+            "4개 화면 크기×KO/EN 오류 설정·44px·키보드 포커스·body/퍼즐 스크롤 없음"
+          ]
+        },
+        {
+          "file": "browser-development/docs/performance/touch-cancellation-20261016.json",
+          "bytes": 28846,
+          "sha256": "cf5b0d94ee4ebdf2b5fc6bf19534b0ebc90282651ea32f585a847087aa8c3eed",
+          "browser": "155.0.8059.41",
+          "checks": [
+            "CDP touchcancel 일반/특수 탭·유효 swipe: 실제 wasCanceled pointerup 수신, 보드/선택/이동/점수/모든 저장 불변·다음 정상 입력 회복",
+            "실제 CDP 네 방향 정상 swipe는 점수·checkpoint·이동 1회 반영",
+            "실제 두 칸 tap 무효 교환은 이동·점수·보드·저장 불변",
+            "실제 일반 칸→인접 특수 두 칸 tap 교환·완료 저장",
+            "실제 Phaser DOM TouchEvent 다중 입력: 보조 취소는 주체 유지·주체 취소 후 보조 up 무실행·동시 시작/추가 손가락 거부",
+            "보드 밖 터치 종료·gameout/pointerupoutside·마우스 보조 버튼 무실행과 회복",
+            "CDP down 중 활동 PAUSE/RESUME·설정·SLEEP/WAKE·세로/가로 resize·Scene 교체: 지연 종료 무변경, 다음 특수 정상",
+            "실제 touch down 중 100회 Scene 교체: 오래된 up 무실행·이전 상태 정리·canvas/Scene/resize/pause/sleep listener 일정·일반 저장 보존",
+            "실제 캔버스 touchStart→DOM 무료 섞기/키보드 조작→이전 touchEnd 무실행·새 입력 회복",
+            "실습 실제 CDP touchcancel→합성 click 무실행·실제 mouse tap/자동 lostcapture는 정상 두 칸 교환",
+            "실습 실제 capture release/lostpointercapture→늦은 up·click 무실행, Enter/Space 접근성 유지",
+            "실습 보드 밖 긴 swipe·보조 버튼/다른 ID up·click은 무실행, 다른 ID cancel은 주체 정상 swipe 유지",
+            "연속 취소/스와이프 뒤 실습 실제 CDP 일반 tap 두 번은 정상 pointerup으로 첫 교환 완료 (native click 생략에도 회복)",
+            "실습 capture 예외·DOM 교체 뒤 지연 종료는 무실행, 새 실제 swipe 정상·본 게임 저장/보상/이동 불변"
+          ],
+          "sampleCount": 4,
+          "pageerrors": []
+        },
+        {
+          "file": "browser-development/docs/audio/recovery-browser-qa-20261016.json",
+          "bytes": 18322,
+          "sha256": "5882b2b983ce99290a5a2a42065b9c0a3264accec299d1b3a54102e6cef7cb6e",
+          "browser": "155.0.8059.41",
+          "checks": [
+            "CDP userGesture:false의 실제 pending resume 뒤 click unlock 복구",
+            "첫 gesture 지연 생성·실제 Web Audio 신호",
+            "음악/SFX OFF의 실시간 출력 0·자연 종료 노드 해제",
+            "visibility 주입+explicit pause 중첩·과거 SFX 재생 0",
+            "외부 close는 자동 재생성하지 않음·다음 click 재생성·OFF 보존·이전 이벤트 무시",
+            "중단 음성/타이머 정리·destroy 전체 노드 disconnect와 모든 context closed",
+            "실제 생성 7단계·curve setter·connect 오류 주입: 정리/close 및 다음 click 복구 9개",
+            "실제 resume/suspend/close의 Promise 전달 지연: destroy 뒤 부활 없음",
+            "실제 앱 설정 OFF 저장/새로고침 복원·설정 화면 pause gate·nativeActive false/true 연결",
+            "KO/EN 320×568·640×360 설정 토글/언어·가로 overflow·44px 조작 4개 표본",
+            "pageerror 0"
+          ],
+          "sampleCount": 17,
+          "layoutCount": 4,
+          "pageerrors": []
+        }
+      ]
+    },
+    {
+      "dateKst": "2026-10-16",
+      "suite": "testing",
+      "sourceCommit": "c6b157826ba9e7fed79d1f748ef606131f2b0e1b",
+      "scope": "격리 headless Chrome·기존 QA. Android 설치/OS 입력/오디오 포커스/광고 SDK/Play 결제 검증 아님.",
+      "scripts": [
+        {
+          "file": "scripts/result-art-qa.mjs",
+          "sha256": "ee8f91f01a1ffc6e475bf1b93a3d84664a9e38c079c281aebdb972baa553bfac",
+          "args": [],
+          "passed": true
+        },
+        {
+          "file": "scripts/touch-build-qa.mjs",
+          "sha256": "9203f0909e8d56a5b587f04da5b1680dba1f2dd579d1a99ec6de7df7e6f65967",
+          "args": [],
+          "passed": true
+        },
+        {
+          "file": "scripts/billing-qa.mjs",
+          "sha256": "e5b8d626b6143863dbe590652ea5c56283076bfe2fbf188912110d38ddea5b72",
+          "args": [
+            "--dist"
+          ],
+          "passed": true
+        },
+        {
+          "file": "scripts/test-ads-qa.mjs",
+          "sha256": "55cb7b0dbca029c8c750102809da368b8f2e9006c4f3928a5877e7afa0b38969",
+          "args": [
+            "--dist"
+          ],
+          "passed": true
+        }
+      ],
+      "reports": [
+        {
+          "file": "browser-testing/docs/performance/billing-testing-web-20261015.json",
+          "bytes": 295,
+          "sha256": "f41ba8f3d083723ade354107601b1db7a3e97ad7df00bb2064623a2ffdee73d2",
+          "browser": "155.0.8059.41",
+          "checks": [
+            "실제 웹 플랫폼: 결제 진입/모달 없음·Billing IPC 0회"
+          ],
+          "layoutCount": 0,
+          "pageerrors": []
+        },
+        {
+          "file": "browser-testing/docs/performance/result-art-testing-20261016.json",
+          "bytes": 95538,
+          "sha256": "c9132eb2b58dd3650649e835d6554ba43fb533cd5fe80a7282efc9a348439015",
+          "browser": "155.0.8059.41",
+          "caseCount": 30,
+          "boundaryCount": 4,
+          "pageerrors": [],
+          "flags": {
+            "testTools": true,
+            "androidTestAds": true,
+            "androidTestBilling": true
+          }
+        },
+        {
+          "file": "browser-testing/docs/performance/test-ads-testing-web-20261015.json",
+          "bytes": 294,
+          "sha256": "8f75bb183e2c4857b829340bb1afe9a7210bb64e28890502d71d8406ffb0922b",
+          "browser": "155.0.8059.41",
+          "checks": [
+            "실제 웹 플랫폼: 설정 광고 진입 없음·광고 IPC 0회"
+          ],
+          "layoutCount": 0,
+          "pageerrors": []
+        },
+        {
+          "file": "browser-testing/docs/performance/touch-testing-20261016.json",
+          "bytes": 2008,
+          "sha256": "ee19da6d7028ed3eb7cb2e2da78f48e7ae5ea7e79695826d02684e0c87984c66",
+          "browser": "155.0.8059.41",
+          "sampleCount": 4,
+          "pageerrors": [],
+          "flags": {
+            "testTools": true,
+            "androidTestAds": true,
+            "androidTestBilling": true
+          }
+        }
+      ]
+    },
+    {
+      "dateKst": "2026-10-16",
+      "suite": "production",
+      "sourceCommit": "c6b157826ba9e7fed79d1f748ef606131f2b0e1b",
+      "scope": "격리 headless Chrome·기존 QA. Android 설치/OS 입력/오디오 포커스/광고 SDK/Play 결제 검증 아님.",
+      "scripts": [
+        {
+          "file": "scripts/result-art-qa.mjs",
+          "sha256": "ee8f91f01a1ffc6e475bf1b93a3d84664a9e38c079c281aebdb972baa553bfac",
+          "args": [],
+          "passed": true
+        },
+        {
+          "file": "scripts/touch-build-qa.mjs",
+          "sha256": "9203f0909e8d56a5b587f04da5b1680dba1f2dd579d1a99ec6de7df7e6f65967",
+          "args": [],
+          "passed": true
+        },
+        {
+          "file": "scripts/billing-qa.mjs",
+          "sha256": "e5b8d626b6143863dbe590652ea5c56283076bfe2fbf188912110d38ddea5b72",
+          "args": [
+            "--dist"
+          ],
+          "passed": true
+        },
+        {
+          "file": "scripts/test-ads-qa.mjs",
+          "sha256": "55cb7b0dbca029c8c750102809da368b8f2e9006c4f3928a5877e7afa0b38969",
+          "args": [
+            "--dist"
+          ],
+          "passed": true
+        },
+        {
+          "file": "scripts/audio-recovery-qa.mjs",
+          "sha256": "6f59f8a80a8f23f919bb2596a3144e656148fa4831cda4f930690249e3325aa5",
+          "args": [
+            "--production"
+          ],
+          "passed": true
+        }
+      ],
+      "reports": [
+        {
+          "file": "browser-production/docs/performance/billing-production-20261015.json",
+          "bytes": 371,
+          "sha256": "5fbf89283d981b845671d929ea9dfd7d43ee695ddcb778c7fca15980e7867074",
+          "browser": "155.0.8059.41",
+          "checks": [
+            "실제 웹 플랫폼: 결제 진입/모달 없음·Billing IPC 0회",
+            "Android IPC 대역: 결제 진입/모달 없음·Billing IPC 0회"
+          ],
+          "layoutCount": 0,
+          "pageerrors": []
+        },
+        {
+          "file": "browser-production/docs/performance/result-art-production-20261016.json",
+          "bytes": 54822,
+          "sha256": "57e508cb6cf6727ec827990f96f02bbf47cfbb4f2a198865f616602323d61c34",
+          "browser": "155.0.8059.41",
+          "caseCount": 18,
+          "boundaryCount": 4,
+          "pageerrors": [],
+          "flags": {
+            "testTools": false,
+            "androidTestAds": false,
+            "androidTestBilling": false
+          }
+        },
+        {
+          "file": "browser-production/docs/performance/test-ads-production-20261015.json",
+          "bytes": 369,
+          "sha256": "1287d8586513f559ef3ae1d3c2af552a17f40b2a38eb7d5fc72890a00430b017",
+          "browser": "155.0.8059.41",
+          "checks": [
+            "실제 웹 플랫폼: 설정 광고 진입 없음·광고 IPC 0회",
+            "Android IPC 대역: 설정 광고 진입 없음·광고 IPC 0회"
+          ],
+          "layoutCount": 0,
+          "pageerrors": []
+        },
+        {
+          "file": "browser-production/docs/performance/touch-production-20261016.json",
+          "bytes": 2014,
+          "sha256": "007bebbf82c21e4e8bd9401b8e0dbd8d6f2605d4ecbde2e98858710a1e62f65a",
+          "browser": "155.0.8059.41",
+          "sampleCount": 4,
+          "pageerrors": [],
+          "flags": {
+            "testTools": false,
+            "androidTestAds": false,
+            "androidTestBilling": false
+          }
+        },
+        {
+          "file": "browser-production/docs/audio/recovery-production-qa-20261016.json",
+          "bytes": 1387,
+          "sha256": "83e658b42ed866387fe8fdba16530ebaca6548d821c74d4cece138614bf95328",
+          "browser": "155.0.8059.41",
+          "checks": [
+            "production 3 flags false·시험 선택 UI 없음",
+            "실제 gesture unlock·설정 OFF 저장/복원·visibility 주입 복귀",
+            "KO/EN 320×568·640×360 설정 4개 표본",
+            "pageerror 0"
+          ],
+          "sampleCount": 0,
+          "layoutCount": 4,
+          "pageerrors": [],
+          "flags": {
+            "testTools": false,
+            "androidTestAds": false,
+            "androidTestBilling": false
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,3 +1,19 @@
+## 2026-10-16 · v0.1.7 누적 빌드 회귀 (이슈 #66)
+
+앱 소스 **c6b157826ba9e7fed79d1f748ef606131f2b0e1b**를 실제 Chrome **155.0.8059.41**의 새 headless 프로세스와 임시 context로 검사했습니다. 사용자 Chrome에는 연결하지 않았습니다. 기존 QA 소스를 메모리에 읽어 **출력 경로와 기록 날짜만** 바꿔 실행하며 과거 JSON·스크린샷을 보존했습니다. [집계·원본 스크립트/결과 해시](performance/batched-browser-20261016-v0.1.7.json)에 15개 스크립트 실행과 범위를 기록합니다. 원본 보고서·화면·stdout은 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\v0.1.7\browser-{development,testing,production}`에 보존했습니다. 원본 파일명의 과거 날짜는 기존 스크립트 경로를 유지한 것이며 새 외부 폴더와 보고서 dateKst는 2026-10-16입니다.
+
+| 대상 | 이번 재검사 |
+| --- | --- |
+| Vite development | 실제 키보드/100회 Scene 교체 **12개**, 안정 회차 **8개**, 저장 오류·충돌 보호 **14개**, CDP/DOM 터치 취소 **14개**, 가독성 **104개 화면**, 실제 Web Audio 복구 **11개 묶음** |
+| testing dist | 핍 결과 **30개**+오류/지연 **4개**, KO/EN 세로·가로 실제 터치 **4개 표본**, 웹 광고/Billing 시험 진입 미노출 각각 **1개** |
+| production dist | 핍 결과 **18개**+오류/지연 **4개**, KO/EN 세로·가로 터치 **4개 표본**, 광고/Billing 마커·진입 미노출 각각 **2개**, 실제 Web Audio **4개 묶음** |
+
+104개 가독성 표본은 활성 일반 텍스트 최소 **4.569:1**, 보이는 조작 상자 **44×44px 이상**, 겹침·body overflow 0입니다. Infinity 측정이 JSON에서 null로 저장된 값은 집계 최솟값에서 제외하고, 원본 실행 stdout과 유한 수치의 최솟값을 대조했습니다. 비활성·장식·캔버스와 표본 밖 영역에 대한 전체 접근성 준수를 의미하지 않습니다. 결과/저장/터치·오디오 보고서에 pageerror 또는 오류는 없습니다. 한국어 320×568 성공과 영어 640×360 시험 재도전 화면을 직접 확인했고 버튼과 전용 아트가 화면 안에 표시됩니다. [한국어 화면](screenshots/v0.1.7-result-ko-320.png), [영어 가로 화면](screenshots/v0.1.7-result-en-640.png).
+
+재현은 `scripts/use-dev-tools.ps1` dot-source와 `PAWBLOSSOM_PLAYWRIGHT_MODULE=C:/Users/user/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs`를 설정한 셸에서 진행합니다. development는 포트 5173 Vite 서버, testing은 `npm run build:test`, production은 `npm run build`와 포트 4173 preview 서버 및 `PAWBLOSSOM_QA_ORIGIN=http://127.0.0.1:4173`를 준비합니다. 각 모드에 `node scripts/batched-browser-qa.mjs --suite=development|testing|production --output=<존재하지 않는 별도 폴더>`를 사용합니다. 모드 이름은 하나씩 전달합니다. 마지막 dist와 Android 에셋은 **production/세 flags false**입니다.
+
+Web Audio와 DOM/CDP 입력은 실제 브라우저 API지만 저장 read/write 실패·visibility/nativeActive 경계는 QA 주입입니다. 이번 웹 광고/Billing 검사는 실제 웹 플랫폼에서 진입/IPC 미노출을 확인한 것으로 SDK 실행이나 Android IPC 대역 검사의 새 실행이 아닙니다. 실제 Android 설치/업데이트·OS 다중 터치/회전·TalkBack·전화/Bluetooth·오디오 포커스·청취·광고/결제와 구분합니다. APK·AAB 정적 검증은 [Android 기록](android-release.ko.md)에 관리합니다.
+
 ## 2026-10-16 · 오디오 복구·중단 안정화 (이슈 #64)
 
 AudioManager 초기화 실패 시 생성한 노드와 컨텍스트를 정리하고, 외부 closed 상태는 다음 명시적 unlock에서 설정을 유지하여 재생성합니다. 이전 세대 이벤트·늦은 resume/suspend/close·destroy 뒤 완료는 새 자원을 건드리지 않으며, 자동 resume pending도 새 gesture 재시도를 막지 않습니다. 믹스·음형·엔벌로프는 그대로입니다.

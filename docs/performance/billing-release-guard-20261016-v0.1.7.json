@@ -1,0 +1,47 @@
+{
+  "restored": true,
+  "checks": [
+    {
+      "blocked": true,
+      "case": "시험 에셋"
+    },
+    {
+      "blocked": true,
+      "case": "누락"
+    },
+    {
+      "blocked": true,
+      "case": "손상 JSON"
+    },
+    {
+      "blocked": true,
+      "case": "광고 필드 누락"
+    },
+    {
+      "blocked": true,
+      "case": "문자열 false"
+    },
+    {
+      "blocked": true,
+      "case": "결제 필드 누락"
+    },
+    {
+      "blocked": true,
+      "case": "결제 문자열 false"
+    },
+    {
+      "blocked": true,
+      "case": "결제 문자열 true"
+    },
+    {
+      "blocked": true,
+      "case": "결제 숫자"
+    },
+    {
+      "blocked": true,
+      "case": "결제 시험만 활성"
+    }
+  ],
+  "version": "0.1.7",
+  "dateKst": "2026-10-16"
+}

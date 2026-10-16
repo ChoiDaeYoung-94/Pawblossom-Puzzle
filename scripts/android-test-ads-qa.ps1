@@ -40,3 +40,5 @@ try {
 }
 @{dateKst=$dateKst; version=$version; checks=$checks; restored=([Convert]::ToBase64String($original) -eq [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($marker)))} |
     ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $OutputPath -Encoding utf8
+# 모든 차단이 예상대로 확인된 경우에만 성공을 반환합니다. 마지막 Gradle의 의도된 1을 전파하지 않습니다.
+exit 0

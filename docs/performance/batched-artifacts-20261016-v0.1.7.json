@@ -1,0 +1,316 @@
+{
+  "scope": "정적 산출물·서명·웹 파일 전수 SHA256. 실기기 설치/업데이트/오디오 포커스/광고/Billing/스토어 시험은 미검증.",
+  "dateKst": "2026-10-16",
+  "productionFlags": {
+    "testTools": false,
+    "androidTestAds": false,
+    "androidTestBilling": false
+  },
+  "aab": {
+    "comparison": {
+      "matched": 29,
+      "extraEmptyCapacitorFiles": [
+        "cordova_plugins.js",
+        "cordova.js"
+      ]
+    },
+    "bytes": 7717275,
+    "web": {
+      "assets/nunito-latin-700-normal-Dort48En.woff2": {
+        "sha256": "fa89300b9bbb3bd0f60d6991aa055965d98e2ccca27bf8688fe0c39cdc796846",
+        "bytes": 16228
+      },
+      "assets/web-Bd_BiaZ2.js": {
+        "sha256": "f00a8959de2eac677af833b59a49e4a16bf799c6029df4db434b91a982aed5c2",
+        "bytes": 844
+      },
+      "assets/nunito-latin-600-normal-Br8yIETf.woff2": {
+        "sha256": "45f437de32ff5973eb5616b43c1308bf9fe897442f3d78a603c4cd0a06d66573",
+        "bytes": 16556
+      },
+      "assets/meadow.png": {
+        "sha256": "fdd7aa15f95518167d355d8aecb5952ee13d54d380956ed087d397a0ef4d4195",
+        "bytes": 3011327
+      },
+      "assets/nunito-latin-800-normal-D-J0wlBY.woff": {
+        "sha256": "0ca02785f0bf8aaabada9adc9b4e2bb4952e1c641fea02d12f34608ca89fe904",
+        "bytes": 20360
+      },
+      "cordova.js": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "cordova_plugins.js": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "licenses/Nunito-OFL.txt": {
+        "sha256": "40991bfa02ac620aae16dc527f3c47765a25e43f270d4c301ee6ab663a8d9015",
+        "bytes": 4491
+      },
+      "assets/tiles/blueberry.svg": {
+        "sha256": "9a0a9df83a396406b307c0f665ac356bf16bdbc7ec3e5270778c1f13a1e31fa5",
+        "bytes": 703
+      },
+      "assets/tiles/strawberry.svg": {
+        "sha256": "1401012bc1659e2ec522953e879aaeb38f523f0e773f947e70c7bfbb290247ba",
+        "bytes": 780
+      },
+      "assets/pip-win-v1.webp": {
+        "sha256": "648cc94781553afc6cfc192fb179192c0712e554c0fd2456d8f4e1c889f51124",
+        "bytes": 32384
+      },
+      "assets/nunito-latin-400-normal-r8SDr6Up.woff2": {
+        "sha256": "a5906e15ceb68f73d3b2c2076b4057c3f6ed401186d56283b45ce12944ca0735",
+        "bytes": 16316
+      },
+      "licenses/Fraunces-OFL.txt": {
+        "sha256": "cd3384cafac6f2bddc3955273958a2e029f97027c8037ac539ef5744a77b579e",
+        "bytes": 4504
+      },
+      "assets/tiles/acorn.svg": {
+        "sha256": "92f23e1bc90c310ba0952032d3f7942d62cfbdbec685a0b1a0063ebd429961bc",
+        "bytes": 640
+      },
+      "assets/fraunces-latin-600-normal-BFCDtZfi.woff2": {
+        "sha256": "3a1de7711d147bad4422825045f87597fd77cca72e7c96d3b0a81735d00dda82",
+        "bytes": 18096
+      },
+      "build-info.json": {
+        "sha256": "45356b36843207f374e2b0f5e979435917ebf7b435e419b4f53de31c1194b6e9",
+        "bytes": 70
+      },
+      "assets/tiles/leaf.svg": {
+        "sha256": "8a4abe59b352283e1dec658ac1a44821290d3a9e4926f469ce5e3e66f1a892b9",
+        "bytes": 541
+      },
+      "assets/obstacles/leaf-pile.svg": {
+        "sha256": "69928ed2db8ec69ffa8ff81796f25802db845e0294c9f2256ade7618adebf000",
+        "bytes": 591
+      },
+      "assets/nunito-latin-700-normal-OcDqTBcA.woff": {
+        "sha256": "ce9107dc33f5d3bb8237776799400f28b96aed4b114773d4fd7fbacb3b218509",
+        "bytes": 19988
+      },
+      "assets/nunito-latin-600-normal-Cd0eNu1l.woff": {
+        "sha256": "06a9c8b384b332423be9291e180dba15ec49c0c903303e03ea03e2ded06197e4",
+        "bytes": 20492
+      },
+      "assets/index-BI5a7hOc.js": {
+        "sha256": "cea12df02bc524fa42558eee7c85a34a063c61d4fca49d83c08db89252417553",
+        "bytes": 1294416
+      },
+      "assets/obstacles/leaf-single.svg": {
+        "sha256": "7c634bea5878c15fef49fba2e5cd856d58c4235abb42c3d16d949d64b2cd78a3",
+        "bytes": 367
+      },
+      "index.html": {
+        "sha256": "313cea0f3b490d36c74be92b233e1631f3b46998f61f77aca007a98d911aa164",
+        "bytes": 683
+      },
+      "assets/nunito-latin-800-normal-Dz8SOQK_.woff2": {
+        "sha256": "2363d3ed037283ebb961e8c4b4917e40a8bc8853cf9965cf1ea7b4daa1df630a",
+        "bytes": 16520
+      },
+      "assets/pip.png": {
+        "sha256": "be54a5a265d05cff964eff3177e637a1540138c7680802ab0a553496e118bcba",
+        "bytes": 1166317
+      },
+      "assets/fraunces-latin-600-normal-DL5QCzvS.woff": {
+        "sha256": "d78e988f844f474ce9b1cc10c72501add6c5056763bfe83ff2a8e2fcb6708ad0",
+        "bytes": 22512
+      },
+      "assets/pip-retry-v1.webp": {
+        "sha256": "033655e3371509ae5bac05010257aa0c35c9eefa2188f0c2e56c8d2e9e3da9e3",
+        "bytes": 31666
+      },
+      "assets/tiles/flower.svg": {
+        "sha256": "9b01d0e0fd432ff0d3a11454649489c147e06a5f7839499a1427243133ecff1c",
+        "bytes": 740
+      },
+      "assets/tiles/carrot.svg": {
+        "sha256": "fbc87bd4f02945e3d47318178d8c0dbd4d1c64d92f52054a83a93d8f70634dbb",
+        "bytes": 659
+      },
+      "assets/index-BpbVAY0C.css": {
+        "sha256": "9d1a89dc43f45c3fe08e6c4075756b8332c3435b37e0769e9acc07341387c927",
+        "bytes": 36005
+      },
+      "assets/nunito-latin-400-normal-DKg4f3fz.woff": {
+        "sha256": "b51e76356535ea73d5701b541f89a4f062a4d6c829c7d2d237ceb8a0a8f77123",
+        "bytes": 20332
+      }
+    },
+    "sha256": "ec4ccafbbcc9f4895948cc52d53d4083a2f02c24d9e0a0e558d2cf4b9b367210",
+    "filename": "app-release.aab"
+  },
+  "baseCommit": "850c1f6c066e432ac24cb2d6180d954856ba7dc1",
+  "certificateSha256": "3db1481f54ab024e442493713f4d5dd400b985e4c2a41852b4b389a6e2df47b3",
+  "targetSdk": 36,
+  "version": "0.1.7",
+  "finalProductionComparison": {
+    "matched": 29,
+    "extraEmptyCapacitorFiles": [
+      "cordova_plugins.js",
+      "cordova.js"
+    ]
+  },
+  "testingFlags": {
+    "testTools": true,
+    "androidTestAds": true,
+    "androidTestBilling": true
+  },
+  "sameCertificate": true,
+  "previousDeliveredApk": {
+    "version": "0.1.6",
+    "bytes": 8928012,
+    "sha256": "1fe585a3635dcf428a0f74e034806b269023b6c1898755f5f3c2be431095d818",
+    "certificateSha256": "3db1481f54ab024e442493713f4d5dd400b985e4c2a41852b4b389a6e2df47b3"
+  },
+  "apk": {
+    "comparison": {
+      "matched": 29,
+      "extraEmptyCapacitorFiles": [
+        "cordova_plugins.js",
+        "cordova.js"
+      ]
+    },
+    "bytes": 14044758,
+    "web": {
+      "assets/nunito-latin-700-normal-Dort48En.woff2": {
+        "sha256": "fa89300b9bbb3bd0f60d6991aa055965d98e2ccca27bf8688fe0c39cdc796846",
+        "bytes": 16228
+      },
+      "assets/tiles/blueberry.svg": {
+        "sha256": "9a0a9df83a396406b307c0f665ac356bf16bdbc7ec3e5270778c1f13a1e31fa5",
+        "bytes": 703
+      },
+      "assets/nunito-latin-600-normal-Br8yIETf.woff2": {
+        "sha256": "45f437de32ff5973eb5616b43c1308bf9fe897442f3d78a603c4cd0a06d66573",
+        "bytes": 16556
+      },
+      "assets/meadow.png": {
+        "sha256": "fdd7aa15f95518167d355d8aecb5952ee13d54d380956ed087d397a0ef4d4195",
+        "bytes": 3011327
+      },
+      "assets/nunito-latin-800-normal-D-J0wlBY.woff": {
+        "sha256": "0ca02785f0bf8aaabada9adc9b4e2bb4952e1c641fea02d12f34608ca89fe904",
+        "bytes": 20360
+      },
+      "cordova.js": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "cordova_plugins.js": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "licenses/Nunito-OFL.txt": {
+        "sha256": "40991bfa02ac620aae16dc527f3c47765a25e43f270d4c301ee6ab663a8d9015",
+        "bytes": 4491
+      },
+      "assets/index-D32Z6fLU.js": {
+        "sha256": "736357237be3d925c661241c72fc4ccdfe627b67d35190390bf7f1d515738ac7",
+        "bytes": 1311826
+      },
+      "assets/tiles/strawberry.svg": {
+        "sha256": "1401012bc1659e2ec522953e879aaeb38f523f0e773f947e70c7bfbb290247ba",
+        "bytes": 780
+      },
+      "assets/pip-win-v1.webp": {
+        "sha256": "648cc94781553afc6cfc192fb179192c0712e554c0fd2456d8f4e1c889f51124",
+        "bytes": 32384
+      },
+      "assets/nunito-latin-400-normal-r8SDr6Up.woff2": {
+        "sha256": "a5906e15ceb68f73d3b2c2076b4057c3f6ed401186d56283b45ce12944ca0735",
+        "bytes": 16316
+      },
+      "licenses/Fraunces-OFL.txt": {
+        "sha256": "cd3384cafac6f2bddc3955273958a2e029f97027c8037ac539ef5744a77b579e",
+        "bytes": 4504
+      },
+      "assets/tiles/acorn.svg": {
+        "sha256": "92f23e1bc90c310ba0952032d3f7942d62cfbdbec685a0b1a0063ebd429961bc",
+        "bytes": 640
+      },
+      "assets/fraunces-latin-600-normal-BFCDtZfi.woff2": {
+        "sha256": "3a1de7711d147bad4422825045f87597fd77cca72e7c96d3b0a81735d00dda82",
+        "bytes": 18096
+      },
+      "build-info.json": {
+        "sha256": "e0bb203c983ad8fba58e6e09f5bbc28b7b5cd322126bab76b1cf680ca729774c",
+        "bytes": 67
+      },
+      "assets/tiles/leaf.svg": {
+        "sha256": "8a4abe59b352283e1dec658ac1a44821290d3a9e4926f469ce5e3e66f1a892b9",
+        "bytes": 541
+      },
+      "assets/obstacles/leaf-pile.svg": {
+        "sha256": "69928ed2db8ec69ffa8ff81796f25802db845e0294c9f2256ade7618adebf000",
+        "bytes": 591
+      },
+      "assets/nunito-latin-700-normal-OcDqTBcA.woff": {
+        "sha256": "ce9107dc33f5d3bb8237776799400f28b96aed4b114773d4fd7fbacb3b218509",
+        "bytes": 19988
+      },
+      "assets/nunito-latin-600-normal-Cd0eNu1l.woff": {
+        "sha256": "06a9c8b384b332423be9291e180dba15ec49c0c903303e03ea03e2ded06197e4",
+        "bytes": 20492
+      },
+      "assets/obstacles/leaf-single.svg": {
+        "sha256": "7c634bea5878c15fef49fba2e5cd856d58c4235abb42c3d16d949d64b2cd78a3",
+        "bytes": 367
+      },
+      "index.html": {
+        "sha256": "393bcb618e70add8a64ecd41e1036003b172b18c6ec2ddbc417f6275bd73cfe0",
+        "bytes": 683
+      },
+      "assets/nunito-latin-800-normal-Dz8SOQK_.woff2": {
+        "sha256": "2363d3ed037283ebb961e8c4b4917e40a8bc8853cf9965cf1ea7b4daa1df630a",
+        "bytes": 16520
+      },
+      "assets/pip.png": {
+        "sha256": "be54a5a265d05cff964eff3177e637a1540138c7680802ab0a553496e118bcba",
+        "bytes": 1166317
+      },
+      "assets/web-Cp6u9yHm.js": {
+        "sha256": "7818bbb6f687ef5fa80c26856d40435e3b2e9ef41b8dd93e3c4ed415f63ed4df",
+        "bytes": 844
+      },
+      "assets/fraunces-latin-600-normal-DL5QCzvS.woff": {
+        "sha256": "d78e988f844f474ce9b1cc10c72501add6c5056763bfe83ff2a8e2fcb6708ad0",
+        "bytes": 22512
+      },
+      "assets/pip-retry-v1.webp": {
+        "sha256": "033655e3371509ae5bac05010257aa0c35c9eefa2188f0c2e56c8d2e9e3da9e3",
+        "bytes": 31666
+      },
+      "assets/tiles/flower.svg": {
+        "sha256": "9b01d0e0fd432ff0d3a11454649489c147e06a5f7839499a1427243133ecff1c",
+        "bytes": 740
+      },
+      "assets/tiles/carrot.svg": {
+        "sha256": "fbc87bd4f02945e3d47318178d8c0dbd4d1c64d92f52054a83a93d8f70634dbb",
+        "bytes": 659
+      },
+      "assets/index-BpbVAY0C.css": {
+        "sha256": "9d1a89dc43f45c3fe08e6c4075756b8332c3435b37e0769e9acc07341387c927",
+        "bytes": 36005
+      },
+      "assets/nunito-latin-400-normal-DKg4f3fz.woff": {
+        "sha256": "b51e76356535ea73d5701b541f89a4f062a4d6c829c7d2d237ceb8a0a8f77123",
+        "bytes": 20332
+      }
+    },
+    "sha256": "3c4952f544ce7391b6ae8427106a90c67d022eaa06fd9ab199617d792dea7220",
+    "filename": "Pawblossom-Puzzle-v0.1.7-2026-10-16-c6b1578-debug.apk"
+  },
+  "sourceCommit": "c6b157826ba9e7fed79d1f748ef606131f2b0e1b",
+  "apkV2": true,
+  "localProductConfigurationPresent": false,
+  "compileSdk": 36,
+  "versionCode": 8,
+  "aabSigned": false,
+  "appId": "com.choidaeyoung.pawblossompuzzle",
+  "minSdk": 24
+}
