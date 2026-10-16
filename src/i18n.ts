@@ -1,6 +1,12 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    tutorial: 'How to play', tutorialStep: 'Step', tutorialSkip: 'Skip guide', tutorialBack: 'Back', tutorialNext: 'Next', tutorialStart: 'Let’s grow!',
+    tutorialSwap: 'A little swap, a lovely match.', tutorialSwapDesc: 'Swipe a tile one space, or tap two neighbors, to make a row or column of 3 matching tiles. A swap without a match costs no moves.',
+    tutorialGoal: 'Gather Pip’s harvest.', tutorialGoalDesc: 'Collect the fruits shown above the board before your moves run out. The numbers show how many more you need. Each level gives you one free shuffle.',
+    tutorialMagic: 'Make a little magic.', tutorialMagicDesc: 'Match 4 in a line for a row or column clear, 5 in a line for a color clear, or a T or L for a burst. Match a special tile or swap two specials to activate them.',
+    tutorialFour: '4 in a line', tutorialFive: '5 in a line', tutorialShape: 'T or L', boardLabel: 'Match-3 board. Swipe a tile one space or tap two neighboring tiles.', navLabel: 'Main navigation',
+    strawberry: 'Strawberry', carrot: 'Carrot', blueberry: 'Blueberry', acorn: 'Acorn', leaf: 'Leaf', flower: 'Flower',
     tagline: 'A little match. A little magic.', chapter: 'CHAPTER 01 · BLOSSOM MEADOW',
     greeting: 'A little help for a little friend.', story: 'Pip’s garden needs a little love. Match the harvest and make this meadow feel like home.',
     pip: 'Pip the gardener', request: '“Let’s grow something lovely together!”',
@@ -29,6 +35,12 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    tutorial: '플레이 방법', tutorialStep: '단계', tutorialSkip: '안내 건너뛰기', tutorialBack: '이전', tutorialNext: '다음', tutorialStart: '함께 가꿔요!',
+    tutorialSwap: '살짝 바꾸면, 예쁘게 맞아요.', tutorialSwapDesc: '블록을 한 칸 밀거나 이웃한 두 블록을 차례로 눌러 같은 블록 3개를 가로 또는 세로로 맞춰요. 매치가 안 되는 교환은 이동을 쓰지 않아요.',
+    tutorialGoal: '핍의 수확을 도와주세요.', tutorialGoalDesc: '이동 횟수가 다 떨어지기 전에 보드 위에 표시된 열매를 모아요. 숫자는 더 모아야 할 개수예요. 스테이지마다 무료 섞기를 한 번 쓸 수 있어요.',
+    tutorialMagic: '작은 마법을 만들어 보세요.', tutorialMagicDesc: '일렬로 4개면 가로·세로 제거, 일렬로 5개면 같은 색 제거, T·L 모양이면 주변 폭발 블록이 생겨요. 특수블록을 매치하거나 특수블록 두 개를 바꿔 사용해 보세요.',
+    tutorialFour: '일렬로 4개', tutorialFive: '일렬로 5개', tutorialShape: 'T·L 모양', boardLabel: '매치3 보드. 블록을 한 칸 밀거나 이웃한 두 블록을 차례로 눌러 주세요.', navLabel: '주 메뉴',
+    strawberry: '딸기', carrot: '당근', blueberry: '블루베리', acorn: '도토리', leaf: '잎', flower: '꽃',
     tagline: '작은 매치가 피워내는 작은 행복.', chapter: '첫 번째 이야기 · 꽃잎 초원',
     greeting: '작은 친구에게 따뜻한 도움을.', story: '핍의 정원에 손길이 필요해요. 열매를 모으고 초원을 포근한 보금자리로 만들어 주세요.',
     pip: '정원사 토끼 핍', request: '“우리 함께 예쁜 정원을 가꿔요!”',

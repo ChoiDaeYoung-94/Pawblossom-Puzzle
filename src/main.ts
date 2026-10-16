@@ -17,6 +17,7 @@ let save=loadSave(), currentLevel=save.highestLevel, moves=0, score=0, collected
 let scene:BoardScene, game:Phaser.Game, route='puzzle', toastTimer:ReturnType<typeof setTimeout>;
 let resultTimer:ReturnType<typeof setTimeout>|undefined;
 let round=0;
+let tutorialPage=0;
 const audio=new AudioManager();audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);
 const text=(key:TextKey)=>t(save.language,key);
 const label=(key:TextKey)=>`<span data-t="${key}">${text(key)}</span>`;
@@ -49,16 +50,18 @@ $('#app').innerHTML=`
     </section>
   </main>
   <footer class="page-footer"><span>${label('tagline')}</span><span>${label('prototype')}</span></footer>
-  <div id="toast" role="status"></div><dialog id="result-dialog"></dialog>
+  <div id="toast" role="status"></div><dialog id="result-dialog"></dialog><dialog id="tutorial-dialog" aria-labelledby="tutorial-title" aria-describedby="tutorial-description"></dialog>
 `;
 
 function updateWallet(){
   $('#star-count').textContent=String(save.stars);$('#coin-count').textContent=String(save.coins);$('#garden-count').textContent=`${save.garden} / 5`;$('#garden-fill').style.width=`${save.garden*20}%`;
 }
 function updateGoals(){
+  $('#game-canvas').setAttribute('aria-label',text('boardLabel'));
+  $('.bottom-nav').setAttribute('aria-label',text('navLabel'));
   const level=levels[currentLevel-1];
   $('#level-number').textContent=String(currentLevel);$('#moves').textContent=String(moves);$('#score').textContent=score.toLocaleString(save.language==='ko'?'ko-KR':'en-US');
-  $('#goals').innerHTML=level.goals.map(goal=>{const remaining=Math.max(0,goal.count-collected[goal.kind]);return `<div class="goal-item ${remaining===0?'done':''}"><img src="/assets/tiles/${tileNames[goal.kind]}.svg" alt="${tileNames[goal.kind]}"/><strong>${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,collected[goal.kind]/goal.count*100)}%"></span></div>`;}).join('');
+  $('#goals').innerHTML=level.goals.map(goal=>{const remaining=Math.max(0,goal.count-collected[goal.kind]);return `<div class="goal-item ${remaining===0?'done':''}"><img src="/assets/tiles/${tileNames[goal.kind]}.svg" alt="${text(tileNames[goal.kind] as TextKey)}"/><strong>${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,collected[goal.kind]/goal.count*100)}%"></span></div>`;}).join('');
   $('#shuffle-count').textContent=String(shuffles);$('#shuffle').toggleAttribute('disabled',shuffles<1);
 }
 function startLevel(id:number){
@@ -72,13 +75,34 @@ function startLevel(id:number){
   },onMove:(items,points)=>{
     moves--;score+=points;items.forEach((n,i)=>collected[i]+=n);updateGoals();
     const won=levels[currentLevel-1].goals.every(g=>collected[g.kind]>=g.count);
-    if(won||moves<=0){scene.stopPlaying();resultTimer=setTimeout(()=>{if(activeRound===round)finish(won);},300);}
+    if(won||moves<=0){scene.stopPlaying();resultTimer=setTimeout(()=>{resultTimer=undefined;if(activeRound===round)finish(won);},300);}
   }});
   game=new Phaser.Game({type:Phaser.AUTO,width:480,height:480,parent:'game-canvas',backgroundColor:'#dae6d7',scene:[scene],transparent:false,
     scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true,roundPixels:false},audio:{noAudio:true},input:{activePointers:2}});
   updateGoals();
 }
 function notice(message:string){clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').classList.add('visible');toastTimer=setTimeout(()=>$('#toast').classList.remove('visible'),3200);}
+function renderTutorial(){
+  const headings:TextKey[]=['tutorialSwap','tutorialGoal','tutorialMagic'];
+  const descriptions:TextKey[]=['tutorialSwapDesc','tutorialGoalDesc','tutorialMagicDesc'];
+  const tile=(name:string)=>`<img src="/assets/tiles/${name}.svg" alt=""/>`;
+  const art=tutorialPage===0?`<div class="guide-swap" aria-hidden="true">${tile('strawberry')}${tile('strawberry')}<span>${tile('carrot')}<b>↕</b>${tile('strawberry')}</span></div>`:tutorialPage===1?`<div class="guide-goals" aria-hidden="true"><span>${tile('strawberry')} 12</span><span>${tile('carrot')} 10</span>${icon('leaf',24)}</div>`:`<div class="guide-specials">${(['tutorialFour','tutorialFive','tutorialShape'] as TextKey[]).map((key,i)=>`<div><span class="guide-special special-${i}" aria-hidden="true">${tile(['leaf','flower','blueberry'][i])}</span><small>${text(key)}</small></div>`).join('')}</div>`;
+  $('#tutorial-dialog').innerHTML=`<div class="guide-content"><div class="eyebrow">${text('tutorial')} · ${text('tutorialStep')} ${tutorialPage+1} / 3</div><h2 id="tutorial-title" tabindex="-1">${text(headings[tutorialPage])}</h2>${art}<p id="tutorial-description">${text(descriptions[tutorialPage])}</p><div class="guide-dots" aria-hidden="true">${[0,1,2].map(i=>`<i class="${i===tutorialPage?'active':''}"></i>`).join('')}</div><div class="guide-actions"><button id="guide-back" class="text-button" ${tutorialPage===0?'disabled':''}>${text('tutorialBack')}</button><button id="guide-next" class="primary">${text(tutorialPage===2?'tutorialStart':'tutorialNext')}${icon('arrow',18)}</button></div><button id="guide-skip" class="text-button">${text('tutorialSkip')}</button></div>`;
+  $('#guide-back').onclick=()=>{if(tutorialPage>0){tutorialPage--;renderTutorial();$('#tutorial-title').focus();}};
+  $('#guide-next').onclick=()=>{if(tutorialPage<2){tutorialPage++;renderTutorial();$('#tutorial-title').focus();}else closeTutorial();};
+  $('#guide-skip').onclick=closeTutorial;
+}
+function showTutorial(){
+  if(!scene.canLeave()||resultTimer||$<HTMLDialogElement>('#result-dialog').open)return;
+  tutorialPage=0;renderTutorial();$<HTMLDialogElement>('#tutorial-dialog').showModal();
+  if(game.scene.isActive('Board'))game.scene.pause('Board');
+  // The first guide may open before Phaser has booted its first scene.
+  game.events.once('poststep',()=>{if($<HTMLDialogElement>('#tutorial-dialog').open&&game.scene.isActive('Board'))game.scene.pause('Board');});
+}
+function closeTutorial(){
+  $<HTMLDialogElement>('#tutorial-dialog').close();save.tutorialSeen=true;persist();
+  if(route==='puzzle'&&game.scene.isPaused('Board'))game.scene.resume('Board');
+}
 function finish(won:boolean){
   const first=won&&!save.completed.includes(currentLevel);
   if(first){save.completed.push(currentLevel);save.stars++;save.coins+=40;save.highestLevel=Math.min(10,Math.max(save.highestLevel,currentLevel+1));persist();updateWallet();renderViews();}
@@ -97,12 +121,13 @@ function renderViews(){
   $('#grow').onclick=()=>{if(save.stars<2||save.garden>=5)return;save.stars-=2;save.garden++;persist();updateWallet();renderViews();audio.play('reward');notice(text('planted'));};
   document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach(button=>button.onclick=()=>{if(!scene.canLeave())return;startLevel(Number(button.dataset.level));switchView('puzzle');});
   $('#music-toggle').onclick=()=>{save.music=!save.music;audio.setMusicEnabled(save.music);persist();renderViews();};
+  const help=document.createElement('button');help.id='tutorial-help';help.className='primary guide-help';help.textContent=text('tutorial');help.onclick=showTutorial;$('#settings-view').append(help);
   $('#sfx-toggle').onclick=()=>{save.sfx=!save.sfx;audio.setSfxEnabled(save.sfx);persist();renderViews();};
   $<HTMLSelectElement>('#language').onchange=event=>changeLanguage((event.target as HTMLSelectElement).value==='ko'?'ko':'en');
-  $('#reset').onclick=()=>{if(!confirm(text('resetConfirm')))return;save=clearSave();persist();audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');};
+  $('#reset').onclick=()=>{if(!confirm(text('resetConfirm')))return;save=clearSave();persist();audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');showTutorial();};
 }
 function localize(){document.documentElement.lang=save.language;document.querySelectorAll<HTMLElement>('[data-t]').forEach(el=>el.textContent=text(el.dataset.t as TextKey));$('#language-toggle').textContent=save.language==='en'?'한국어':'EN';$('#settings-button').setAttribute('aria-label',text('settings'));$('#restart').setAttribute('aria-label',text('restart'));}
-function changeLanguage(language:'en'|'ko'){save.language=language;persist();localize();renderViews();updateGoals();}
+function changeLanguage(language:'en'|'ko'){save.language=language;persist();localize();renderViews();updateGoals();if($<HTMLDialogElement>('#tutorial-dialog').open)renderTutorial();}
 function switchView(name:string){
   if(!scene.canLeave())return;
   route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
@@ -116,10 +141,12 @@ $('#language-toggle').onclick=()=>changeLanguage(save.language==='en'?'ko':'en')
 $('#restart').onclick=()=>{if(scene.canLeave())startLevel(currentLevel);};
 $('#shuffle').onclick=()=>{if(shuffles>0&&scene.shuffle()){shuffles--;updateGoals();}};
 $<HTMLDialogElement>('#result-dialog').addEventListener('cancel',event=>{event.preventDefault();$<HTMLDialogElement>('#result-dialog').close();switchView('village');});
+$<HTMLDialogElement>('#tutorial-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTutorial();});
 document.addEventListener('pointerdown',()=>{void audio.unlock().catch(()=>{});},{passive:true});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)audio.suspend();else audio.resume();});
 if(Capacitor.isNativePlatform()){
   void App.addListener('appStateChange',({isActive})=>{if(isActive)audio.resume();else audio.suspend();});
-  void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if(dialog.open){dialog.close();switchView('village');}else if(route!=='puzzle')switchView('puzzle');else void App.minimizeApp();});
+  void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(dialog.open){dialog.close();switchView('village');}else if(route!=='puzzle')switchView('puzzle');else void App.minimizeApp();});
 }
 startLevel(currentLevel);updateWallet();renderViews();localize();
+if(!save.tutorialSeen)showTutorial();
