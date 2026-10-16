@@ -1,3 +1,16 @@
+## 2026-10-16 · 오디오 복구·중단 안정화 (이슈 #64)
+
+AudioManager 초기화 실패 시 생성한 노드와 컨텍스트를 정리하고, 외부 closed 상태는 다음 명시적 unlock에서 설정을 유지하여 재생성합니다. 이전 세대 이벤트·늦은 resume/suspend/close·destroy 뒤 완료는 새 자원을 건드리지 않으며, 자동 resume pending도 새 gesture 재시도를 막지 않습니다. 믹스·음형·엔벌로프는 그대로입니다.
+
+- `npm test` **284개**(새 오디오 경계 27개), `npm run build:test`, `npm run build` 통과. 최종 dist의 **testTools/androidTestAds/androidTestBilling 모두 false**. 기존 Phaser 500KB 번들 경고는 유지됩니다.
+- `scripts/audio-recovery-qa.mjs`: 실제 Chrome **155.0.8059.41**의 Web Audio·오실레이터·출력을 사용한 [11개 검사 묶음](audio/recovery-browser-qa-20261016.json). 생성 7단계/curve/connect 실패 주입→모든 생성 노드 disconnect·context closed→다음 실제 click 재시도를 확인했습니다. 첫 입력 지연 생성, 음악/SFX OFF 실제 출력 0, visibility+명시적 pause 중첩, 과거 SFX 0, 외부 close→명시적 재생성/OFF 보존, 중단 음성/타이머 0, destroy 전체 노드 disconnect·closed를 검사했습니다. 실제 resume/suspend/close의 완료 전달만 지연한 경우에도 destroy 뒤 부활이 없습니다.
+- 자동 재생 검사는 `document-user-activation-required`와 CDP `userGesture:false`로 준비·호출·관찰합니다. **hasBeenActive:false·suspended·resume 1회 미완료**를 먼저 assert하고, 실제 click 뒤 **resume 2회·running·음악 타이머 1개**를 확인했습니다. `user-gesture-required`는 이 Chrome의 문서 단위 Web Audio 제한을 재현하지 못했으므로 성공 근거로 사용하지 않았습니다.
+- 같은 스크립트의 `--production`은 실제 최종 dist에서 [4개 검사 묶음](audio/recovery-production-qa-20261016.json)을 실행했습니다. 세 flags false·시험 선택 UI 없음, gesture unlock, OFF 저장/복원, visibility 주입 후 suspended→running, KO/EN×320×568·640×360 4개 표본을 확인했습니다. 개발 서버에서도 같은 4개 설정 화면의 가로 overflow 없음과 음악/SFX/언어/설정 조작 치수 44px 이상을 검사했습니다. 작은 가로 화면의 설정 하단은 기존 내부 스크롤로 접근합니다. 화면은 `docs/audio/recovery-{ko,en}-{320x568,640x360}-20261016.png`로 보존했습니다.
+- `scripts/audio-output-qa.mjs --unchanged`는 기준 **2632d6e6342fa1ef142e596c0a4e87252d015303**와 동일 조건으로 [11개 표본](audio/recovery-output-qa-20261016.json)을 비교합니다. 48kHz·2초, RMS 변화 절댓값 ≤0.0001dB·샘플 차이 ≤0.000001, 무음 0·클리핑 0·동시음 20·극단 피크 약 0.95입니다. 기준 코드 반복 렌더의 대조 오차도 기록했으며 비트 동일성·LUFS·휴대폰 체감 측정은 아닙니다.
+- `scripts/audio-regression-qa.mjs`는 기존 스크립트를 메모리에서 날짜/출력 경로만 바꿔 실행하여 과거 기록을 보존합니다. [키보드 12개](audio/recovery-keyboard-20261016.json): 실제 Tab/방향키/Enter/Space·모달·KO/EN·100회 Scene 전환·보상 저장 통과. [회차 8개](audio/recovery-round-20261016.json): 앱 비활성/연쇄 직전 안정 상태·특수/낙엽/이동·무료 섞기·시험 무보상·손상 회차·저장 실패·결과 300ms 전 저장 통과. [실행 원본 SHA와 집계](audio/recovery-regression-20261016.json) 및 이번 날짜의 별도 스크린샷을 보존했습니다. 과거 keyboard/round 이미지와 20261015 JSON은 기준 커밋 바이트로 복구했습니다.
+
+모든 위 브라우저 검사에서 pageerror는 0개입니다. visibility는 document.hidden/이벤트 주입, 네이티브 앱 활동은 기존 nativeActive→syncActivity 경계 호출이며 OS 창 숨김·Android 홈/전화·오디오 포커스·Bluetooth·실제 청취를 대신하지 않습니다. 새 APK/AAB·버전·콘솔·Drive·광고/결제 변경은 없습니다. [오디오 동작 근거와 재현 명령](audio-direction.ko.md#2026-10-16--초기화-실패종료중단-복구-이슈-64)을 참고합니다.
+
 ## 2026-10-16 · 핍 성공·재도전 전용 아트 (이슈 #62)
 
 `ResultPip`은 결과 표시 후 해당 종류의 이미지만 요청합니다. 첫 화면/첫 결과 전에는 새 이미지 요청이 0개이며 성공·격려 각각 420×420 WebP 32,384/31,666바이트입니다. 기본 `pip.png`를 고정 영역 안에 계속 표시하다가 실제 이미지 해독을 마친 동일 노드로 교체합니다. 애니메이션은 그림 밖 고정 wrapper에 적용하여 교체 시 재시작하지 않습니다. 실패·해독 거부·동기 예외·decode 메서드 부재는 기본 그림을 유지하며 종류별 성공/실패 결과를 세션 안에서 캐시합니다. 초기 원본·메인/친구 그림은 그대로입니다.

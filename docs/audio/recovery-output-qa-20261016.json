@@ -1,0 +1,218 @@
+{
+  "sampleRate": 48000,
+  "seconds": 2,
+  "results": [
+    {
+      "scenario": "music",
+      "before": {
+        "rms": 0.09537207865168847,
+        "peak": 0.7179358005523682,
+        "clipped": 0,
+        "voices": 2
+      },
+      "after": {
+        "rms": 0.09537207865168847,
+        "peak": 0.7179358005523682,
+        "clipped": 0,
+        "voices": 2
+      },
+      "rmsGainDb": 0,
+      "maxSampleDifference": 0,
+      "baselineRepeatMaxSampleDifference": 0
+    },
+    {
+      "scenario": "tap",
+      "before": {
+        "rms": 0.010894883623877815,
+        "peak": 0.16298246383666992,
+        "clipped": 0,
+        "voices": 1
+      },
+      "after": {
+        "rms": 0.010894883623877815,
+        "peak": 0.16298246383666992,
+        "clipped": 0,
+        "voices": 1
+      },
+      "rmsGainDb": 0,
+      "maxSampleDifference": 0,
+      "baselineRepeatMaxSampleDifference": 0
+    },
+    {
+      "scenario": "swap",
+      "before": {
+        "rms": 0.04219896140614371,
+        "peak": 0.4834531545639038,
+        "clipped": 0,
+        "voices": 2
+      },
+      "after": {
+        "rms": 0.04219896140614371,
+        "peak": 0.4834531545639038,
+        "clipped": 0,
+        "voices": 2
+      },
+      "rmsGainDb": 0,
+      "maxSampleDifference": 0,
+      "baselineRepeatMaxSampleDifference": 0
+    },
+    {
+      "scenario": "invalid",
+      "before": {
+        "rms": 0.03251482103787021,
+        "peak": 0.33607614040374756,
+        "clipped": 0,
+        "voices": 2
+      },
+      "after": {
+        "rms": 0.03251482103787021,
+        "peak": 0.33607614040374756,
+        "clipped": 0,
+        "voices": 2
+      },
+      "rmsGainDb": 0,
+      "maxSampleDifference": 0,
+      "baselineRepeatMaxSampleDifference": 0
+    },
+    {
+      "scenario": "match",
+      "before": {
+        "rms": 0.04997098709544126,
+        "peak": 0.541836142539978,
+        "clipped": 0,
+        "voices": 2
+      },
+      "after": {
+        "rms": 0.04997098709544126,
+        "peak": 0.541836142539978,
+        "clipped": 0,
+        "voices": 2
+      },
+      "rmsGainDb": 0,
+      "maxSampleDifference": 0,
+      "baselineRepeatMaxSampleDifference": 0
+    },
+    {
+      "scenario": "special",
+      "before": {
+        "rms": 0.08939094039404562,
+        "peak": 0.7406678795814514,
+        "clipped": 0,
+        "voices": 4
+      },
+      "after": {
+        "rms": 0.08939094064771558,
+        "peak": 0.7406678199768066,
+        "clipped": 0,
+        "voices": 4
+      },
+      "rmsGainDb": 2.4648462663925056e-8,
+      "maxSampleDifference": 2.384185791015625e-7,
+      "baselineRepeatMaxSampleDifference": 2.384185791015625e-7
+    },
+    {
+      "scenario": "win",
+      "before": {
+        "rms": 0.12287498186083846,
+        "peak": 0.6427491903305054,
+        "clipped": 0,
+        "voices": 5
+      },
+      "after": {
+        "rms": 0.12287498185036344,
+        "peak": 0.6427490711212158,
+        "clipped": 0,
+        "voices": 5
+      },
+      "rmsGainDb": -7.404675241717028e-10,
+      "maxSampleDifference": 2.384185791015625e-7,
+      "baselineRepeatMaxSampleDifference": 2.384185791015625e-7
+    },
+    {
+      "scenario": "lose",
+      "before": {
+        "rms": 0.05408004526208541,
+        "peak": 0.3320643901824951,
+        "clipped": 0,
+        "voices": 4
+      },
+      "after": {
+        "rms": 0.05408004526208541,
+        "peak": 0.3320643901824951,
+        "clipped": 0,
+        "voices": 4
+      },
+      "rmsGainDb": 0,
+      "maxSampleDifference": 0,
+      "baselineRepeatMaxSampleDifference": 0
+    },
+    {
+      "scenario": "reward",
+      "before": {
+        "rms": 0.08271248929819502,
+        "peak": 0.6395049095153809,
+        "clipped": 0,
+        "voices": 3
+      },
+      "after": {
+        "rms": 0.08271248929819502,
+        "peak": 0.6395049095153809,
+        "clipped": 0,
+        "voices": 3
+      },
+      "rmsGainDb": 0,
+      "maxSampleDifference": 0,
+      "baselineRepeatMaxSampleDifference": 0
+    },
+    {
+      "scenario": "overlap",
+      "before": {
+        "rms": 0.14278727838327465,
+        "peak": 0.8717401027679443,
+        "clipped": 0,
+        "voices": 20
+      },
+      "after": {
+        "rms": 0.1427872800993123,
+        "peak": 0.8717401027679443,
+        "clipped": 0,
+        "voices": 20
+      },
+      "rmsGainDb": 1.0438824511834904e-7,
+      "maxSampleDifference": 3.5762786865234375e-7,
+      "baselineRepeatMaxSampleDifference": 4.76837158203125e-7
+    },
+    {
+      "scenario": "muted",
+      "before": {
+        "rms": 0,
+        "peak": 0,
+        "clipped": 0,
+        "voices": 0
+      },
+      "after": {
+        "rms": 0,
+        "peak": 0,
+        "clipped": 0,
+        "voices": 0
+      },
+      "rmsGainDb": null,
+      "maxSampleDifference": 0,
+      "baselineRepeatMaxSampleDifference": 0
+    }
+  ],
+  "limit": {
+    "rms": 0.6099385990226918,
+    "peak": 0.949999988079071,
+    "clipped": 0,
+    "voices": 0
+  },
+  "baseline": "2632d6e6342fa1ef142e596c0a4e87252d015303",
+  "mode": "unchanged-with-floating-point-tolerance",
+  "tolerance": {
+    "maxSampleDifference": 0.000001,
+    "maxRmsGainDb": 0.0001
+  },
+  "browser": "155.0.8059.41",
+  "sourceSha256": "ebe4d78e8e1dfe6d0dd422b088a996980bd5de11a856b8e7895de3221b429696"
+}
