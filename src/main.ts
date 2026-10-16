@@ -14,6 +14,7 @@ import { t,type TextKey } from './i18n';
 import { icon } from './icons';
 import { SwapPractice } from './SwapPractice';
 import { gardenArt } from './GardenArt';
+import { TEST_TOOLS_ENABLED } from './buildFlags';
 
 let save=loadSave(), currentLevel=save.highestLevel, moves=0, score=0, collected=Array(6).fill(0) as number[], shuffles=1;
 let scene:BoardScene, game:Phaser.Game, route='puzzle', toastTimer:ReturnType<typeof setTimeout>;
@@ -23,6 +24,7 @@ let tutorialPage=0;
 let practice:SwapPractice|undefined;
 let growing=false;
 let clearedLeaves=0;
+let testingLevel=false;
 const audio=new AudioManager();audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);
 const text=(key:TextKey)=>t(save.language,key);
 const label=(key:TextKey)=>`<span data-t="${key}">${text(key)}</span>`;
@@ -44,7 +46,7 @@ $('#app').innerHTML=`
     </section>
     <section class="game-panel">
       <div id="puzzle-view" class="view">
-        <div class="level-top"><div><div class="eyebrow">${label('chapter')}</div><h2><span data-t="level">${text('level')}</span> <span id="level-number">1</span><span class="level-flower">${icon('flower',21)}</span></h2></div><button id="restart" class="icon-button" aria-label="${text('restart')}">${icon('restart',20)}</button></div>
+        <div class="level-top"><div><div class="eyebrow">${label('chapter')}</div><h2><span data-t="level">${text('level')}</span> <span id="level-number">1</span><span class="level-flower">${icon('flower',21)}</span></h2></div><div class="level-actions">${TEST_TOOLS_ENABLED?`<button id="test-level-button" class="test-level-button">${label('testPick')}</button>`:''}<button id="restart" class="icon-button" aria-label="${text('restart')}">${icon('restart',20)}</button></div></div>
         <div class="mission-bar"><div class="moves-box"><strong id="moves">22</strong>${label('moves')}</div><div class="goal-box"><div class="goal-heading">${label('goal')}<span id="score">0</span></div><div id="goals"></div></div></div>
         <div class="board-wrap"><div id="game-canvas" aria-label="Match-3 puzzle board. Tap two neighboring tiles or swipe a tile." role="application"></div><div id="board-notice" aria-live="polite"></div></div>
         <p class="board-hint">${icon('leaf',15)} <span id="board-hint-text">${text('hint')}</span></p>
@@ -55,7 +57,7 @@ $('#app').innerHTML=`
     </section>
   </main>
   <footer class="page-footer"><span>${label('tagline')}</span><span>${label('prototype')}</span></footer>
-  <div id="toast" role="status"></div><dialog id="result-dialog"></dialog><dialog id="tutorial-dialog" aria-labelledby="tutorial-title" aria-describedby="tutorial-description"></dialog>
+  <div id="toast" role="status"></div><dialog id="result-dialog"></dialog><dialog id="tutorial-dialog" aria-labelledby="tutorial-title" aria-describedby="tutorial-description"></dialog>${TEST_TOOLS_ENABLED?'<dialog id="test-level-dialog" aria-labelledby="test-level-title"></dialog>':''}
 `;
 
 function updateWallet(){
@@ -71,12 +73,14 @@ function updateGoals(){
   const total=level.leaves?.length??0,remaining=Math.max(0,total-clearedLeaves);
   $('#goals').classList.toggle('has-leaves',total>0);
   if(total)$('#goals').innerHTML+=`<div class="goal-item ${remaining===0?'done':''}"><img src="/assets/obstacles/leaf-pile.svg" alt="${text('leafPile')}"/><strong>${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,clearedLeaves/total*100)}%"></span></div>`;
-  $('#board-hint-text').textContent=text(total?(level.leaves!.some(p=>p.layers===2)?'leafHintDouble':'leafHint'):'hint');
+  $('#board-hint-text').textContent=(testingLevel?text('testRound')+' · ':'')+text(total?(level.leaves!.some(p=>p.layers===2)?'leafHintDouble':'leafHint'):'hint');
   $('#shuffle-count').textContent=String(shuffles);$('#shuffle').toggleAttribute('disabled',shuffles<1);
 }
-function startLevel(id:number){
+function startLevel(id:number,testPlay=false){
+  if(!Number.isInteger(id)||id<1||id>levels.length)return;
   clearTimeout(resultTimer);resultTimer=undefined;round++;
   const activeRound=round;
+  testingLevel=TEST_TOOLS_ENABLED&&testPlay;
   $<HTMLDialogElement>('#result-dialog').close();
   currentLevel=id;moves=levels[id-1].moves;score=0;collected=Array(6).fill(0);shuffles=1;clearedLeaves=0;
   game?.destroy(true);
@@ -151,21 +155,42 @@ function closeTutorial(){
   $<HTMLDialogElement>('#tutorial-dialog').close();save.tutorialSeen=true;persist();
   if(route==='puzzle'&&game.scene.isPaused('Board'))game.scene.resume('Board');
 }
+function renderTestPicker(){
+  if(!TEST_TOOLS_ENABLED)return;
+  const dialog=$<HTMLDialogElement>('#test-level-dialog');
+  dialog.innerHTML=`<div class="test-picker"><h2 id="test-level-title">${text('testPickTitle')}</h2><p>${text('testPickDesc')}</p><div class="test-level-grid">${levels.map(level=>`<button data-test-level="${level.id}" class="test-stage"><strong>${text('level')} ${level.id}</strong><small>${text(!level.leaves?'testBasic':level.leaves.some(p=>p.layers===2)?'testDouble':'testSingle')}</small></button>`).join('')}</div><button id="test-normal" class="primary">${text('testNormal')}</button><button id="test-close" class="text-button">${text('testClose')}</button></div>`;
+  document.querySelectorAll<HTMLButtonElement>('[data-test-level]').forEach(button=>button.onclick=()=>{
+    if(!scene.canLeave()||resultTimer)return;
+    dialog.close();startLevel(Number(button.dataset.testLevel),true);switchView('puzzle');
+  });
+  $('#test-normal').onclick=()=>{if(!scene.canLeave()||resultTimer)return;dialog.close();startLevel(save.highestLevel);switchView('puzzle');};
+  $('#test-close').onclick=closeTestPicker;
+}
+function showTestPicker(){
+  if(!TEST_TOOLS_ENABLED||!scene.canLeave()||resultTimer||$<HTMLDialogElement>('#result-dialog').open||$<HTMLDialogElement>('#tutorial-dialog').open)return;
+  renderTestPicker();$<HTMLDialogElement>('#test-level-dialog').showModal();
+  if(game.scene.isActive('Board'))game.scene.pause('Board');
+}
+function closeTestPicker(){
+  if(!TEST_TOOLS_ENABLED)return;
+  $<HTMLDialogElement>('#test-level-dialog').close();
+  if(route==='puzzle'&&game.scene.isPaused('Board'))game.scene.resume('Board');
+}
 function finish(won:boolean){
-  const first=won&&!save.completed.includes(currentLevel);
+  const first=won&&!testingLevel&&!save.completed.includes(currentLevel);
   if(first){save.completed.push(currentLevel);save.stars++;save.coins+=40;save.highestLevel=Math.min(10,Math.max(save.highestLevel,currentLevel+1));persist();updateWallet();renderViews();}
   audio.play(won?'win':'lose');
-  const done=won&&currentLevel===10;
+  const done=won&&!testingLevel&&currentLevel===10;
   const dialog=$<HTMLDialogElement>('#result-dialog');
-  dialog.innerHTML=`<div class="result-content"><div class="result-badge ${won?'won':''}">${icon(won?'star':'leaf',42)}</div><div class="eyebrow">${text('level')} ${currentLevel}</div><h2>${text(done?'complete':won?'win':'lose')}</h2><p>${text(done?'completeDesc':won?'winDesc':'loseDesc')}</p>${first?`<div class="result-rewards"><span>${icon('star',20)} +1</span><span>${icon('coin',20)} +40</span></div>`:''}<button class="primary" id="result-next">${text(won?(done?'allDone':'next'):'retry')}${icon('arrow',19)}</button><button class="text-button" id="result-home">${text('home')}</button></div>`;
+  dialog.innerHTML=`<div class="result-content"><div class="result-badge ${won?'won':''}">${icon(won?'star':'leaf',42)}</div><div class="eyebrow">${text('level')} ${currentLevel}</div><h2>${text(done?'complete':won?'win':'lose')}</h2><p>${text(testingLevel?'testPickDesc':done?'completeDesc':won?'winDesc':'loseDesc')}</p>${first?`<div class="result-rewards"><span>${icon('star',20)} +1</span><span>${icon('coin',20)} +40</span></div>`:''}<button class="primary" id="result-next">${text(won?(done||currentLevel===10?'allDone':'next'):'retry')}${icon('arrow',19)}</button><button class="text-button" id="result-home">${text('home')}</button></div>`;
   dialog.showModal();
-  $('#result-next').onclick=()=>{dialog.close();startLevel(won?Math.min(10,currentLevel+1):currentLevel);switchView('puzzle');};
+  $('#result-next').onclick=()=>{dialog.close();startLevel(won?Math.min(10,currentLevel+1):currentLevel,testingLevel);switchView('puzzle');};
   $('#result-home').onclick=()=>{dialog.close();switchView('village');};
 }
 function renderViews(grew=false){
   $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">BLOSSOM MEADOW</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div><div class="garden-card"><div class="garden-picture"><div class="garden-illustration" role="img" aria-label="${text('gardenImage').replace('{count}',String(save.garden))}">${gardenArt(save.garden,grew)}</div><span class="garden-pill">${icon('flower',17)} ${save.garden} / 5</span></div><h3>${text('garden')}</h3><p class="garden-stage" role="status">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div><div class="level-picker"><h3>${text('levelSelect')}</h3><div class="level-grid">${levels.map(l=>`<button data-level="${l.id}" ${l.id>save.highestLevel?'disabled':''} class="level-node ${save.completed.includes(l.id)?'completed':''}" aria-label="${text('level')} ${l.id}">${l.id>save.highestLevel?icon('lock',19):l.id}${save.completed.includes(l.id)?`<span>${icon('star',13)}</span>`:''}</button>`).join('')}</div></div>`;
   $('#journal-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM FRIENDS</div><h2>${text('friendsTitle')}</h2><p>${text('friendsDesc')}</p></div><div class="journal-card"><span class="friend-number">01</span><img src="/assets/pip.png" alt="Pip"/><h3>${text('pip')}</h3><p>${text('pipDesc')}</p><span class="friend-tag">${icon('leaf',15)} Blossom Meadow</span></div><div class="coming-card">${icon('paw',28)}<div><strong>${text('upcoming')}</strong><p>${text('upcomingDesc')}</p></div></div>`;
-  $('#settings-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v0.1.3</p>`;
+  $('#settings-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v0.1.4</p>`;
   $('#grow').onclick=()=>{if(growing||save.stars<2||save.garden>=5)return;growing=true;save.stars-=2;save.garden++;const stored=persist();updateWallet();renderViews(true);audio.play('reward');if(stored)notice(text('planted'));setTimeout(()=>{growing=false;$('#grow').toggleAttribute('disabled',save.stars<2||save.garden>=5);},450);};
   document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach(button=>button.onclick=()=>{if(!scene.canLeave())return;startLevel(Number(button.dataset.level));switchView('puzzle');});
   $('#music-toggle').onclick=()=>{save.music=!save.music;audio.setMusicEnabled(save.music);persist();renderViews();};
@@ -175,7 +200,7 @@ function renderViews(grew=false){
   $('#reset').onclick=()=>{if(!confirm(text('resetConfirm')))return;save=clearSave();persist();audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');showTutorial();};
 }
 function localize(){document.documentElement.lang=save.language;document.querySelectorAll<HTMLElement>('[data-t]').forEach(el=>el.textContent=text(el.dataset.t as TextKey));$('#language-toggle').textContent=save.language==='en'?'한국어':'EN';$('#settings-button').setAttribute('aria-label',text('settings'));$('#restart').setAttribute('aria-label',text('restart'));}
-function changeLanguage(language:'en'|'ko'){save.language=language;persist();localize();updateWallet();renderViews();updateGoals();if($<HTMLDialogElement>('#tutorial-dialog').open)renderTutorial();}
+function changeLanguage(language:'en'|'ko'){save.language=language;persist();localize();updateWallet();renderViews();updateGoals();if($<HTMLDialogElement>('#tutorial-dialog').open)renderTutorial();if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)renderTestPicker();}
 function switchView(name:string){
   if(!scene.canLeave())return;
   route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
@@ -186,7 +211,8 @@ document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(button=>but
 $('#settings-button').onclick=()=>switchView(route==='settings'?'puzzle':'settings');
 $('.brand').onclick=e=>{e.preventDefault();switchView('puzzle');};
 $('#language-toggle').onclick=()=>changeLanguage(save.language==='en'?'ko':'en');
-$('#restart').onclick=()=>{if(scene.canLeave())startLevel(currentLevel);};
+$('#restart').onclick=()=>{if(scene.canLeave())startLevel(currentLevel,testingLevel);};
+if(TEST_TOOLS_ENABLED){$('#test-level-button').onclick=showTestPicker;$<HTMLDialogElement>('#test-level-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTestPicker();});}
 $('#shuffle').onclick=()=>{if(shuffles>0&&scene.shuffle()){shuffles--;updateGoals();}};
 $<HTMLDialogElement>('#result-dialog').addEventListener('cancel',event=>{event.preventDefault();$<HTMLDialogElement>('#result-dialog').close();switchView('village');});
 $<HTMLDialogElement>('#tutorial-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTutorial();});
@@ -194,7 +220,7 @@ document.addEventListener('pointerdown',()=>{void audio.unlock().catch(()=>{});}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)audio.suspend();else audio.resume();});
 if(Capacitor.isNativePlatform()){
   void App.addListener('appStateChange',({isActive})=>{if(isActive)audio.resume();else audio.suspend();});
-  void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(dialog.open){dialog.close();switchView('village');}else if(route!=='puzzle')switchView('puzzle');else void App.minimizeApp();});
+  void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('village');}else if(route!=='puzzle')switchView('puzzle');else void App.minimizeApp();});
 }
 if(typeof ResizeObserver!=='undefined'){
   new ResizeObserver(()=>{game?.scale.refresh();}).observe($('#game-canvas'));
