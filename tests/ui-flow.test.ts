@@ -14,6 +14,7 @@ const levelsCode = compile(read('../src/levels.ts'));
 const boardCode = compile(read('../src/BoardScene.ts'));
 const engineCode = compile(read('../src/core/BoardEngine.ts'));
 const practiceCode = compile(read('../src/SwapPractice.ts'));
+const i18nCode = compile(read('../src/i18n.ts'));
 
 class ElementStub {
   id: string;
@@ -101,6 +102,9 @@ function mainHarness(storageFails = false, firstUse = false) {
   vm.runInNewContext(engineCode,{exports:coreExports});
   vm.runInNewContext(practiceCode,{exports:practiceExports,require:()=>coreExports});
   Object.assign(context,practiceExports);
+  const i18nExports:Record<string,unknown>={};
+  vm.runInNewContext(i18nCode,{exports:i18nExports});
+  Object.assign(context,i18nExports);
   vm.runInContext(stateCode, context);
   Object.assign(context, stateExports);
   vm.runInContext(mainCode, context);
@@ -226,6 +230,19 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
 });
 
 describe('첫 플레이 안내', () => {
+  it('언어 전환 때 별·코인 보조 라벨이 갱신되며 지갑 숫자는 유지됩니다',()=>{
+    const h=mainHarness();
+    expect(h.element('.wallet.stars .sr-only').textContent).toBe('Stars');
+    expect(h.element('.wallet.coins .sr-only').textContent).toBe('Coins');
+    h.run("changeLanguage('ko')");
+    expect(h.element('.wallet.stars .sr-only').textContent).toBe('별');
+    expect(h.element('.wallet.coins .sr-only').textContent).toBe('코인');
+    expect(h.element('#star-count').textContent).toBe('1');
+    expect(h.element('#coin-count').textContent).toBe('40');
+    h.run("changeLanguage('en')");
+    expect(h.element('.wallet.coins .sr-only').textContent).toBe('Coins');
+    expect(h.stored()).toMatchObject({stars:1,coins:40,highestLevel:2,completed:[1]});
+  });
   it('첫 실행은 보드를 멈추고 설명·실습을 끝낸 뒤 저장하고 재개합니다', () => {
     const h=mainHarness(false,true);
     expect(h.element('#tutorial-dialog').open).toBe(true);
