@@ -1,0 +1,11 @@
+{
+  "dateKst": "2026-10-15",
+  "mode": "dist {\"testTools\":true,\"androidTestAds\":true}",
+  "browser": "155.0.8059.41",
+  "checks": [
+    "실제 웹 플랫폼: 설정 광고 진입 없음·광고 IPC 0회"
+  ],
+  "layouts": [],
+  "errors": [],
+  "external": []
+}

@@ -85,6 +85,13 @@ html:lang(ko) h1,html:lang(ko) h2,html:lang(ko) h3,html:lang(ko) .moves-box stro
 /* 작은 가로 화면에서도 두 자리 번호와 테스트 버튼 때문에 제목이 쪼개지지 않게 합니다. */
 @media(orientation:landscape) and (max-height:600px){.level-top h2{font-size:16px;gap:4px;white-space:nowrap}.level-top .level-flower{display:none}.level-top #level-number{font-size:21px}}
 
+/* Android 시험 광고는 별도 dialog 안에서만 사용하며 보상/구매와 연결하지 않습니다. */
+#test-ad-dialog{width:min(540px,calc(100vw - 24px));max-height:calc(100dvh - 24px)}
+.test-ad-content{padding:18px;display:grid;gap:10px}.test-ad-content h2{font-size:21px}
+.test-ad-content p{font-size:12px;line-height:1.5;overflow-wrap:anywhere}.test-ad-content #test-ad-status{font-weight:800}
+.test-ad-content #test-ad-error:empty{display:none}.test-ad-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.test-ad-actions button{min-height:44px;padding:8px;font-size:12px;word-break:keep-all}.test-ad-actions button[hidden]{display:none}
+@media(orientation:landscape) and (max-height:600px){.test-ad-content{padding:12px 16px;gap:6px}.test-ad-content h2{font-size:18px}.test-ad-content p{font-size:11px;line-height:1.4}}
 /* 보드 초점과 칸 커서는 선택 확대와 별도로 표시합니다. */
 #game-canvas:focus{outline:none}
 #game-canvas:focus-visible{outline:3px solid #294f40;outline-offset:-3px;border-radius:12px}

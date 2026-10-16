@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import ts from 'typescript';
 import { BoardEngine, seededRng, type BoardSnapshot } from '../src/core';
+import {TestAdsController,adCopy,type TestAdsBridge} from '../src/testAds';
 
 // 테스트에만 사용하는 Node API입니다. 별도 @types/node 설치 없이 런타임에서 읽습니다.
 const fsModule = 'node:fs', vmModule = 'node:vm';
@@ -23,6 +24,7 @@ class ElementStub {
   id: string;
   hidden: boolean;
   open = false;
+  tabIndex = -1;
   innerHTML = '';
   textContent = '';
   style: Record<string, string> = {};
@@ -36,6 +38,7 @@ class ElementStub {
   append() {}
   focus() {}
   matches(){return true;}
+  querySelector(selector:string){return this.innerHTML.includes(`id="${selector.slice(1)}"`)?new ElementStub(selector):null;}
   setPointerCapture() {}
   toggleAttribute() {}
   addEventListener(name: string, callback: (event: { preventDefault(): void }) => void) { this.listeners[name] = callback; }
@@ -43,7 +46,7 @@ class ElementStub {
   close() { this.open = false; }
 }
 
-function mainHarness(storageFails = false, firstUse = false, testTools = false, native = false, initial?:unknown, autoFrame=true) {
+function mainHarness(storageFails = false, firstUse = false, testTools = false, native = false, initial?:unknown, autoFrame=true, adsBridge?:TestAdsBridge) {
   const elements = new Map<string, ElementStub>();
   const timers = new Map<number, { callback: () => void; ms: number }>();
   let timerId = 0, writes = 0;
@@ -100,6 +103,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const stateExports: Record<string, unknown> = {};
   const context = vm.createContext({
     TEST_TOOLS_ENABLED:testTools,
+    ANDROID_TEST_ADS_ENABLED:Boolean(adsBridge),TestAdsController,adCopy,nativeTestAds:()=>adsBridge,
     exports: stateExports,
     localStorage: {
       getItem: () => stored,
@@ -110,6 +114,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
       },
     },
     document: {
+      body:{append(){}},
       createElement: () => new ElementStub('button'),
       querySelector:(selector:string)=>selector==='dialog[open]'?null:element(selector),
       querySelectorAll: (selector: string) => selector === '[data-test-level]'
@@ -123,7 +128,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     Phaser: { Game: GameStub, AUTO: 0, Scale: { FIT: 0, CENTER_BOTH: 0 }, Core:{Events:{POST_RENDER:'postrender'}} },
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     AudioManager: AudioStub, t: (_language: string, key: string) => key, icon: () => '',
-    Capacitor: { isNativePlatform: () => native },
+    Capacitor: { isNativePlatform: () => native,getPlatform:()=>native?'android':'web',isPluginAvailable:()=>Boolean(adsBridge) },
     App:{addListener:(name:string,callback:(state:{isActive:boolean})=>void)=>{nativeEvents[name]=callback;return Promise.resolve({remove(){}});},getState:()=>nativeState,minimizeApp:()=>Promise.resolve()}, confirm: () => true,
     setTimeout: (callback: () => void, ms: number) => { timers.set(++timerId, { callback, ms }); return timerId; },
     clearTimeout: (id: number) => timers.delete(id),
@@ -155,6 +160,58 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
 }
 
 type Pointer = { id: number; x: number; y: number };
+describe('시험 광고와 기존 게임 활동 상태 통합',()=>{
+  function setup(){
+    let value={available:true,state:'idle',revision:0,error:'',privacyRequired:false} as import('../src/testAds').AdSnapshot;
+    let callback!:(state:typeof value)=>void;
+    const emit=(state:typeof value.state)=>{value={...value,state,revision:value.revision+1};callback?.({...value});return {...value};};
+    const bridge:TestAdsBridge={getStatus:async()=>({...value}),prepare:async()=>emit('consent'),show:async()=>emit('presenting'),cancel:async()=>emit('cancelled'),privacyOptions:async()=>emit('privacy'),addListener:async(_name,listener)=>{callback=listener;return {remove:async()=>{}};}};
+    const h=mainHarness(false,false,true,true,undefined,true,bridge);
+    h.nativeEvents.appStateChange({isActive:true});
+    return {h,emit,bridge};
+  }
+  it('광고 표시 중 보드·오디오·키보드를 멈추고 닫힌 뒤 모달/화면 조건을 따릅니다',async()=>{
+    const {h,emit}=setup();const before=h.stored();
+    await h.run('showAdDialog()');emit('ready');await h.run("testAds.command('show')");emit('showing');
+    expect(h.run('game.paused')).toBe(true);expect(h.run('audio.suspended')).toBe(true);
+    expect(h.element('#game-canvas').tabIndex).toBe(-1);
+    emit('closed');expect(h.run('game.paused')).toBe(true); // 시험 dialog가 아직 열려 있습니다.
+    await h.run('closeAdDialog()');expect(h.run('game.paused')).toBe(false);expect(h.run('audio.suspended')).toBe(false);
+    expect(h.stored()).toEqual(before);
+  });
+  it('닫힘·실패 후에도 document/native 비활성 상태를 유지합니다',async()=>{
+    const {h,emit}=setup();await h.run('showAdDialog()');emit('showing');
+    h.nativeEvents.appStateChange({isActive:false});h.run('document.hidden=true');emit('failed');
+    await h.run('closeAdDialog()');expect(h.run('game.paused')).toBe(true);expect(h.run('audio.suspended')).toBe(true);
+    h.nativeEvents.appStateChange({isActive:true});expect(h.run('audio.suspended')).toBe(true);
+    h.run('document.hidden=false');h.documentEvents.visibilitychange();expect(h.run('game.paused')).toBe(false);expect(h.run('audio.suspended')).toBe(false);
+  });
+  it('표시 중 JS 뒤로가기는 네이티브 광고를 닫힌 것으로 처리하지 않습니다',async()=>{
+    const {h,emit}=setup();await h.run('showAdDialog()');emit('showing');await h.run('closeAdDialog()');
+    expect(h.element('#test-ad-dialog').open).toBe(true);expect(h.run('audio.suspended')).toBe(true);
+    emit('closed');await h.run('closeAdDialog()');expect(h.element('#test-ad-dialog').open).toBe(false);
+  });
+  it('준비된 광고 폐기 실패 때 창을 유지하며 취소 성공 뒤에만 닫습니다',async()=>{
+    const {h,emit,bridge}=setup();await h.run('showAdDialog()');emit('ready');
+    bridge.cancel=async()=>{throw Error('IPC');};await h.run('closeAdDialog()');
+    expect(h.element('#test-ad-dialog').open).toBe(true);expect(h.run('testAds.snapshot.state')).toBe('ready');
+    bridge.cancel=async()=>emit('cancelled');await h.run('closeAdDialog()');
+    expect(h.element('#test-ad-dialog').open).toBe(false);await h.run('showAdDialog()');
+    expect(h.run('testAds.snapshot.state')).toBe('cancelled');
+  });
+  it('SDK 시작 전 상태 조회가 실패해도 돌아갈 수 있습니다',async()=>{
+    const {h,bridge}=setup();bridge.getStatus=async()=>{throw Error('IPC');};await h.run('showAdDialog()');
+    expect(h.run('testAds.snapshot.available')).toBe(false);await h.run('closeAdDialog()');
+    expect(h.element('#test-ad-dialog').open).toBe(false);expect(h.run('game.paused')).toBe(false);
+  });
+  it('준비 취소와 재조회가 함께 실패해도 닫기 재시도로 폐기할 수 있습니다',async()=>{
+    const {h,emit,bridge}=setup();await h.run('showAdDialog()');emit('ready');
+    bridge.cancel=async()=>{throw Error('IPC');};bridge.getStatus=async()=>{throw Error('IPC');};
+    await h.run('closeAdDialog()');expect(h.element('#test-ad-dialog').open).toBe(true);
+    bridge.cancel=async()=>emit('cancelled');await h.run('closeAdDialog()');
+    expect(h.element('#test-ad-dialog').open).toBe(false);
+  });
+});
 type Position = { row: number; col: number };
 function boardHarness() {
   const handlers: Record<string, (pointer: Pointer) => void> = {};

@@ -31,6 +31,9 @@ repositories {
 }
 
 dependencies {
+    // 광고 브리지와 SDK는 debug에만 존재합니다. release에는 전이 의존성도 없습니다.
+    debugImplementation('com.google.android.gms:play-services-ads:25.4.0') { version { strictly '25.4.0' } }
+    debugImplementation('com.google.android.ump:user-messaging-platform:4.0.0') { version { strictly '4.0.0' } }
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
@@ -48,8 +51,11 @@ apply from: 'capacitor.build.gradle'
 tasks.matching { it.name == 'preReleaseBuild' }.configureEach {
     doFirst {
         def buildInfo = file('src/main/assets/public/build-info.json')
-        if (buildInfo.exists() && new groovy.json.JsonSlurper().parse(buildInfo).testTools == true) {
-            throw new GradleException('테스트 웹 빌드는 출시에 사용할 수 없습니다. npm run android:sync 후 다시 빌드해 주세요.')
+        try {
+            def info = new groovy.json.JsonSlurper().parse(buildInfo)
+            if (info.testTools != false || info.androidTestAds != false) throw new Exception('시험 기능 또는 불완전한 정보')
+        } catch (Exception e) {
+            throw new GradleException('출시 웹 에셋 검증 실패(시험/누락/손상). npm run android:sync 후 다시 빌드해 주세요.', e)
         }
     }
 }

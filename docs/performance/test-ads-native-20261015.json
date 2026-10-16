@@ -1,0 +1,45 @@
+{
+  "debug": {
+    "build": "assembleDebug successful",
+    "nativeExecuted": false,
+    "ump": "4.0.0",
+    "adServicesPermissions": false,
+    "lint": "0 errors, 15 warnings",
+    "gma": "25.4.0",
+    "webInfo": {
+      "testTools": true,
+      "androidTestAds": true
+    },
+    "adIdPermission": false,
+    "mobileAdsInitProvider": false,
+    "apkSHA256": "1788d0110e6540ab5ae73f93f103f52cdd5dca93d8130add568b1d076544e35c"
+  },
+  "dateKst": "2026-10-15",
+  "release": {
+    "dexFilesWithoutAdSdkOrPlugin": 1,
+    "adManifestEntries": false,
+    "productionDistNativeFilesMatched": 27,
+    "webInfo": {
+      "testTools": false,
+      "androidTestAds": false
+    },
+    "build": "bundleRelease successful (unsigned)",
+    "aabSHA256": "64f61a3e29b5be8352e3708312042567a7926f96a7415244498a66a76ae1e7d4",
+    "gmaDependency": false,
+    "umpDependency": false
+  },
+  "sdkAars": [
+    {
+      "file": "user-messaging-platform-4.0.0.aar",
+      "sha256": "429889c7108caf88207d5d078e8fa7655a0ec6aca718399f27455bebe5978621"
+    },
+    {
+      "file": "play-services-ads-api-25.4.0.aar",
+      "sha256": "42ec36e86a7f8e326f541c6dd2afd3fe738ef278712e4e5e4f0f071ca169869c"
+    },
+    {
+      "file": "play-services-ads-25.4.0.aar",
+      "sha256": "fc18d3cde6dec8c927cac5048b2dfff1fbe377a15474805a643b723d1e850219"
+    }
+  ]
+}
