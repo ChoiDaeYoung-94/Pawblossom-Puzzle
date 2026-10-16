@@ -1,0 +1,151 @@
+{
+  "dateKst": "2026-10-15",
+  "variant": "작업 트리 수정 후",
+  "environment": "실제 Phaser 3.90.0, 격리 headless Chrome, 소스 메모리 변환과 로컬 에셋 가상 route. 서버/HMR 없음, Capacitor 웹 조건, 폰트 import 생략. 강제 GC는 실기기 메모리·FPS 측정이 아님.",
+  "sourceHashes": {
+    "src/audio/AudioManager.ts": "292ffc2159246c30cc305430add55dafff34f8ac17b2bd9e9ee5a4632f86e611",
+    "src/BoardEffects.ts": "e1f7b5772d6d3fdb58c10c620c08bef2c9c65bb8223b330478f1d34e5e3240a7",
+    "src/BoardScene.ts": "7d3b9bac16f4ecb5ff6a392eacdbe8d42d162e1600cc75821d899789758d86b6",
+    "src/buildFlags.ts": "2d3548ef6f510a1ac2eee3823997f5f53fa8ac8e6fd52e2020caf0f72846a21b",
+    "src/core/BoardEngine.ts": "f07d4d5ae190b9a0ff28150e2c392adf7810a3eb84b17e1de25c3493269c293e",
+    "src/core/index.ts": "cbe12ac9bd8719811e5d64b6bba3ff047674e1ed20d7eec40dc178f1171d025d",
+    "src/GardenArt.ts": "67ed80704e7726a398010f8a56232c10a84aabfcbd32d68418baad9c01450424",
+    "src/i18n.ts": "3e414664f8f22b79e6379182cd9b70ea9ea947e0715036dbe33d6e2fde4698c3",
+    "src/icons.ts": "7bf5ee22508b9454cd0c19275b5da8d2d28b781f3bdfebb839eda5332f309e34",
+    "src/levels.ts": "d88db9132cddd84a280d548ca917fe1c1e430c9d58e43744e5935d69dba86166",
+    "src/main.ts": "21cf95ee8702e53541ab7b0a617d59803f25ebe3ba46e164a815fbe169dbd385",
+    "src/state.ts": "018c07c54c424ae7ae9bf1fb5c9b5a5e1d92f230f8f79ce93e8236b85fb859d1",
+    "src/SwapPractice.ts": "efbca489e4fdb8fa4d9d4c4375b23d3fe4916dec8d42ad2e09c9883dc90e5cd5"
+  },
+  "checks": [
+    "100회 전환: 리스너2·Game1·Scene1·canvas1·힌트1·효과/Tween0·이전 Scene GC0·텍스처20 유지",
+    "같은 task의 startLevel 직후 버튼/Scene 직접 섞기 거부·보드/무료 횟수 유지",
+    "한 task 연속 선택은 최종 30번 Scene 표시",
+    "실제 Scene UPDATE/isProcessing=true에서 연속 교체 후 중복 키·큐 충돌 없음",
+    "실제 힌트 Tween·낙엽 효과를 만든 Scene의 SHUTDOWN/DESTROY 정리와 GC",
+    "테스트·안내 모달 및 설정 화면에서 비활성/활성 복귀 gate 유지",
+    "연쇄 비활성 중 타일·이동 불변, 복귀 후 이동 한 번 차감과 새로고침 checkpoint 복원",
+    "초기 복원 저장 실패 경고 유지·메모리 보드 복원·이전 디스크 저장 보존",
+    "정상 첫 완료 보상 확정·결과 표시·다음 레벨 교체",
+    "실제 첫 부팅 전 빠른 선택은 최신 Board 1개만 시작",
+    "SVG 응답 지연 로딩 중 Scene 중단·제거·최신 선택, 이전 콜백 무시",
+    "pageerror 0"
+  ],
+  "samples": [
+    {
+      "label": "시작",
+      "visibilityListeners": 2,
+      "gameCreations": 1,
+      "gamesAlive": 1,
+      "scenes": 1,
+      "canvases": 1,
+      "oldScenesAlive": 0,
+      "hints": 1,
+      "effects": 0,
+      "tweens": 0,
+      "textures": 20,
+      "pendingAdds": 0,
+      "queuedOperations": 0,
+      "heap": {
+        "usedSize": 7732736,
+        "totalSize": 11067392,
+        "embedderHeapUsedSize": 2587032,
+        "backingStorageSize": 5107893
+      }
+    },
+    {
+      "label": "30회 전환",
+      "visibilityListeners": 2,
+      "gameCreations": 1,
+      "gamesAlive": 1,
+      "scenes": 1,
+      "canvases": 1,
+      "oldScenesAlive": 0,
+      "hints": 1,
+      "effects": 0,
+      "tweens": 0,
+      "textures": 20,
+      "pendingAdds": 0,
+      "queuedOperations": 0,
+      "heap": {
+        "usedSize": 7715072,
+        "totalSize": 12378112,
+        "embedderHeapUsedSize": 2638832,
+        "backingStorageSize": 5107899
+      }
+    },
+    {
+      "label": "60회 전환",
+      "visibilityListeners": 2,
+      "gameCreations": 1,
+      "gamesAlive": 1,
+      "scenes": 1,
+      "canvases": 1,
+      "oldScenesAlive": 0,
+      "hints": 1,
+      "effects": 0,
+      "tweens": 0,
+      "textures": 20,
+      "pendingAdds": 0,
+      "queuedOperations": 0,
+      "heap": {
+        "usedSize": 7202448,
+        "totalSize": 12378112,
+        "embedderHeapUsedSize": 2722256,
+        "backingStorageSize": 5107899
+      }
+    },
+    {
+      "label": "100회 전환",
+      "visibilityListeners": 2,
+      "gameCreations": 1,
+      "gamesAlive": 1,
+      "scenes": 1,
+      "canvases": 1,
+      "oldScenesAlive": 0,
+      "hints": 1,
+      "effects": 0,
+      "tweens": 0,
+      "textures": 20,
+      "pendingAdds": 0,
+      "queuedOperations": 0,
+      "heap": {
+        "usedSize": 7093636,
+        "totalSize": 12115968,
+        "embedderHeapUsedSize": 2651600,
+        "backingStorageSize": 5107899
+      }
+    },
+    {
+      "label": "힌트·효과 있는 Scene 교체 뒤",
+      "visibilityListeners": 2,
+      "gameCreations": 1,
+      "gamesAlive": 1,
+      "scenes": 1,
+      "canvases": 1,
+      "oldScenesAlive": 0,
+      "hints": 1,
+      "effects": 0,
+      "tweens": 0,
+      "textures": 12,
+      "pendingAdds": 0,
+      "queuedOperations": 0,
+      "heap": {
+        "usedSize": 7644476,
+        "totalSize": 12697600,
+        "embedderHeapUsedSize": 2907168,
+        "backingStorageSize": 5108005
+      }
+    }
+  ],
+  "pageerrors": [],
+  "warnings": [],
+  "browser": "155.0.8059.41",
+  "cleanup": {
+    "beforeEffects": 6,
+    "beforeTweens": 7,
+    "shutdown": true,
+    "effects": 0,
+    "destroy": true
+  }
+}

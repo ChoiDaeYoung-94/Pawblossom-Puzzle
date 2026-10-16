@@ -42,10 +42,11 @@ class ElementStub {
   close() { this.open = false; }
 }
 
-function mainHarness(storageFails = false, firstUse = false, testTools = false, native = false, initial?:unknown) {
+function mainHarness(storageFails = false, firstUse = false, testTools = false, native = false, initial?:unknown, autoFrame=true) {
   const elements = new Map<string, ElementStub>();
   const timers = new Map<number, { callback: () => void; ms: number }>();
   let timerId = 0, writes = 0;
+  let games=0, destroys=0, frame=()=>{};
   const documentEvents:Record<string,()=>void>={};
   const nativeEvents:Record<string,(state:{isActive:boolean})=>void>={};
   let resolveNativeState!:(state:{isActive:boolean})=>void;
@@ -59,18 +60,30 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   };
   class SceneStub {
     engine:BoardEngine;
-    constructor(public hooks: { onMove(items: number[], points: number): void; onReady():void },snapshot?:BoardSnapshot) {this.engine=new BoardEngine(8,8,seededRng(42),snapshot);}
+    stopped=false;
+    constructor(public hooks: { onMove(items: number[], points: number): void; onReady():void; onNotice(key:string):void },snapshot?:BoardSnapshot) {this.engine=new BoardEngine(8,8,seededRng(42),snapshot);}
     configureLeaves(piles:Parameters<BoardEngine['setLeaves']>[0]) {this.engine.setLeaves(piles);}
     shuffle(){this.engine.shuffle();return true;}
     canLeave() { return true; }
-    stopPlaying() {}
+    stopPlaying() {this.stopped=true;}
   }
   class GameStub {
-    events = { once() {} };
+    constructor(){games++;}
+    events = { on:(_name:string,callback:()=>void)=>{frame=callback;} };
     paused=false;pauses=0;resumes=0;
-    scene = { isPaused: () => this.paused, isActive: () => !this.paused, pause:()=>{this.paused=true;this.pauses++;}, resume:()=>{this.paused=false;this.resumes++;} };
+    scene = {
+      isBooted:true,isProcessing:false,board:undefined as SceneStub|undefined,stops:0,removes:0,adds:0,
+      getScene:()=>this.scene.board,
+      stop:()=>{this.scene.stops++;this.scene.board?.stopPlaying();},
+      remove:()=>{if(this.scene.isProcessing)throw Error('제거 큐 진입');this.scene.removes++;this.scene.board=undefined;},
+      add:(_key:string,board:SceneStub)=>{
+        if(!this.scene.isBooted||this.scene.isProcessing||this.scene.board)throw Error('추가 큐 진입 또는 중복 키');
+        this.scene.board=board;this.scene.adds++;this.paused=false;board.hooks.onReady();
+      },
+      isPaused: () => this.paused, isActive: () => !this.paused, pause:()=>{this.paused=true;this.pauses++;}, resume:()=>{this.paused=false;this.resumes++;},
+    };
     scale = { refresh() {} };
-    destroy() {}
+    destroy() {destroys++;}
   }
   class AudioStub {
     suspended=false;suspends=0;resumes=0;
@@ -103,7 +116,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
         ? ['puzzle', 'village', 'journal', 'settings'].map(name => element(`#${name}-view`)) : [],
       documentElement: {}, hidden:false, addEventListener:(name:string,callback:()=>void)=>{documentEvents[name]=callback;},
     },
-    Phaser: { Game: GameStub, AUTO: 0, Scale: { FIT: 0, CENTER_BOTH: 0 } },
+    Phaser: { Game: GameStub, AUTO: 0, Scale: { FIT: 0, CENTER_BOTH: 0 }, Core:{Events:{POST_RENDER:'postrender'}} },
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     AudioManager: AudioStub, t: (_language: string, key: string) => key, icon: () => '',
     Capacitor: { isNativePlatform: () => native },
@@ -125,9 +138,11 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   vm.runInContext(stateCode, context);
   Object.assign(context, stateExports);
   vm.runInContext(mainCode, context);
+  if(autoFrame)frame();
   return {
+    frame:()=>frame(),games:()=>games,destroys:()=>destroys,
     documentEvents,nativeEvents,resolveNativeState,
-    element, run: (code: string) => vm.runInContext(code, context),
+    element, run: (code: string) => {const result=vm.runInContext(code, context);if(autoFrame)frame();return result;},
     resultTimers: () => [...timers.values()].filter(timer => timer.ms === 300),
     flushResults: () => [...timers.values()].filter(timer => timer.ms === 300).forEach(timer => timer.callback()),
     flushGrowth: () => [...timers.values()].filter(timer => timer.ms === 450).forEach(timer => timer.callback()),
@@ -534,6 +549,36 @@ describe('문서·Android·모달 복귀',()=>{
   });
 });
 
+describe('Game 유지와 최신 Board 교체',()=>{
+  it('부팅 전 여러 선택을 합치고 첫 프레임에는 최신 보드만 추가합니다',()=>{
+    const app=mainHarness(false,false,true,false,undefined,false);
+    app.run('game.scene.isBooted=false;startLevel(4,true);startLevel(6,true)');app.frame();
+    expect(app.run('game.scene.adds')).toBe(0);
+    app.run('game.scene.isBooted=true');app.frame();
+    expect(app.run('game.scene.board===scene')).toBe(true);expect(app.run('currentLevel')).toBe(6);
+    expect(app.run('game.scene.adds')).toBe(1);expect(app.games()).toBe(1);expect(app.destroys()).toBe(0);
+  });
+  it('Scene 처리 중 교체는 큐를 건드리지 않고 종료 뒤 최신 선택을 stop/remove/add합니다',()=>{
+    const app=mainHarness(false,false,true,false,undefined,false);app.frame();
+    const previous=app.run('scene');
+    app.run('game.scene.isProcessing=true;startLevel(4,true);startLevel(30,true)');app.frame();
+    expect(previous.stopped).toBe(true);expect(app.run('game.scene.adds')).toBe(1);expect(app.run('game.scene.removes')).toBe(0);
+    app.run('game.scene.isProcessing=false');app.frame();
+    expect(app.run('game.scene.board===scene')).toBe(true);expect(app.run('currentLevel')).toBe(30);
+    expect(app.run('[game.scene.stops,game.scene.removes,game.scene.adds]')).toEqual([1,1,2]);
+    expect(app.games()).toBe(1);expect(app.destroys()).toBe(0);
+  });
+  it('로딩 중 재선택의 오래된 준비·알림·이동 콜백은 최신 모달과 저장을 바꾸지 않습니다',()=>{
+    const app=mainHarness(false,false,true,false,undefined,false);app.frame();const stale=app.run('scene.hooks');
+    app.run('startLevel(6,true);startLevel(10,true);showTutorial()');app.frame();
+    const saved=app.stored(),pauses=app.run('game.pauses');
+    stale.onReady();stale.onNotice('chain');stale.onMove([99,99,99,99,99,99],999);
+    expect(app.element('#board-notice').textContent).toBe('');expect(app.stored()).toEqual(saved);
+    expect(app.run('game.pauses')).toBe(pauses);expect(app.run('game.paused')).toBe(true);
+    expect(app.run('game.scene.board===scene')).toBe(true);expect(app.run('currentLevel')).toBe(10);
+  });
+});
+
 describe('정상 회차 복구와 종료 확정',()=>{
   it('엔진 판정 뒤 숨김·설정 저장은 직전 회차를 유지하고 이동 완료 뒤 재실행합니다',()=>{
     const app=mainHarness(),before=app.stored().inProgress;
@@ -583,5 +628,12 @@ describe('정상 회차 복구와 종료 확정',()=>{
   it('저장 실패는 안내하고 이전 디스크 회차를 유지합니다',()=>{
     const source=mainHarness().stored(),app=mainHarness(true,false,false,false,source);
     app.element('#shuffle').onclick();expect(app.stored()).toEqual(source);expect(app.element('#toast').textContent).toContain('Storage is unavailable');
+  });
+  it('초기 복원 저장 실패 경고를 복원 안내로 덮지 않고 메모리에서 플레이합니다',()=>{
+    const source=mainHarness().stored(),app=mainHarness(true,false,false,false,source);
+    expect(app.element('#toast').textContent).toContain('Storage is unavailable');
+    expect(app.run('scene.engine.board')).toEqual(source.inProgress.board);expect(app.stored()).toEqual(source);
+    app.run('scene.hooks.onMove([1,0,0,0,0,0],10)');expect(app.run('moves')).toBe(source.inProgress.moves-1);
+    expect(app.stored()).toEqual(source);expect(app.element('#toast').textContent).toContain('Storage is unavailable');
   });
 });

@@ -1,3 +1,31 @@
+## 2026-10-15 · 반복 플레이 리스너 누적 수정 (이슈 #41)
+
+Phaser 3.90.0의 `Game.start()`는 `VisibilityHandler`에서 `document.visibilitychange` 콜백을 등록하지만 `Game.runDestroy()`는 해당 콜백을 제거하지 않습니다. 회차마다 Game을 파괴·재생성하던 앱과 순수 Phaser 최소 재현에서 누적을 확인했습니다. 확인 범위는 문서 리스너와 이벤트 emitter의 잔류이며 이전 Scene이나 GPU 메모리의 대규모 누수로 해석하지 않습니다.
+
+Game은 문서 수명 동안 한 번만 생성합니다. 회차 요청 때 엔진·저장·목표를 준비하고, 최신 Board 하나를 `POST_RENDER`에서 `stop` → `remove` → `add`합니다. 설치된 `SceneManager.processQueue()`는 추가를 제거보다 먼저 처리하므로 같은 키의 교체를 처리 중 큐에 넣지 않습니다. `SceneManager.render()`가 `isProcessing=false`로 바꾼 뒤 Game이 `POST_RENDER`를 발생시키는 순서를 로컬 소스에서 확인했습니다. 이전 회차의 준비·알림·이동 콜백을 무시하고, SHUTDOWN/DESTROY 경로로 입력·효과·힌트·Tween을 정리합니다. 로드된 타일·낙엽 텍스처는 재사용합니다.
+
+동일한 격리 headless Chrome **155.0.8059.41**과 실제 Phaser를 사용해 수정 전 커밋 `0445cab`과 수정 후 소스를 각각 메모리에서 변환·실행했습니다. 기존 개발 서버 5173은 없어 가상 route로 로컬 에셋을 공급했습니다. HMR·서버·사용자 Chrome·Android를 사용하지 않았으며 Capacitor는 웹 조건입니다.
+
+| 관측값 | 수정 전 시작 → 30회 전환 | 수정 후 시작 → 30·60·100회 전환 |
+| --- | --- | --- |
+| document visibilitychange 리스너 | 2 → 32 | 2 → 2 |
+| Game 생성 누계 | 1 → 31 | 1 → 1 |
+| 생존 Game / 관리 Scene / canvas | 각각 1 | 각각 1 |
+| 이전 Scene WeakRef 강제 GC 후 생존 | 0 | 0 |
+| 현재 힌트 타이머 / 효과 / Tween | 1 / 0 / 0 | 1 / 0 / 0 |
+| 관리 텍스처 키 수 | 20 | 20 유지 |
+| Scene 추가 큐 / 작업 큐 | 0 / 0 | 0 / 0 |
+
+수정 후 브라우저 **12개 검사 항목**을 통과했습니다. 실제 첫 부팅 전 연속 선택, SVG 응답 지연 중 재선택과 이전 로더 제거, 같은 task의 빠른 선택, 실제 Scene UPDATE의 `isProcessing=true` 중 교체, 생성된 힌트 Tween·낙엽 효과의 SHUTDOWN/DESTROY와 GC를 확인했습니다. 교체 직후 버튼과 Scene 직접 호출의 섞기는 보드·남은 횟수를 바꾸지 않고 거부됩니다. 테스트/안내 모달·설정 화면은 활동 복귀 후에도 일시정지를 유지합니다. 연쇄 중 250ms 비활성 구간에서 타일·이동이 불변이고, 복귀 뒤 이동이 정확히 한 번 감소하며 안정된 checkpoint가 새로고침 후 복원됩니다. 정상 첫 완료 보상·결과 표시·다음 레벨 교체도 확인했고 **pageerror는 0개**입니다.
+
+초기 회차 복원 중 저장 실패 경고가 복원 성공 안내에 덮이는 문제도 수정 전 실행에서 재현했습니다. 저장 성공 때만 복원 안내를 표시하도록 보완했고 저장 실패에도 메모리 보드는 복원되어 플레이하며 이전 디스크 기록은 유지됩니다. Game 부팅 전 ResizeObserver/화면 복귀의 scale 갱신도 준비 상태를 검사합니다. 자동 검사 **128개**, `npm test`, `npm run build`, `npm run build:test`가 통과했습니다. 기존 Phaser 번들 크기 경고는 남습니다.
+
+재현 코드는 `scripts/game-lifecycle-qa.mjs`입니다. 설치된 Playwright 진입 파일을 `PAWBLOSSOM_PLAYWRIGHT_MODULE`에 지정하고 실행하며 `--baseline`은 `0445cab` 소스를 읽어 수정 전을 재현합니다. 결과는 [수정 전 JSON](performance/game-lifecycle-before-20261015.json), [수정 후 JSON](performance/game-lifecycle-after-20261015.json)에 소스 SHA256·브라우저·수치·검사·오류를 보존합니다. 모든 Chrome은 `finally`에서 닫습니다. 초기 조사에서 확인한 최소 Phaser 재현·연쇄·오디오·이미지 비용의 선택 원시 값은 [조사 JSON](performance/investigation-20261015.json)에 보존했습니다.
+
+초기 조사에서 효과·Tween·오디오 interval의 지속 누적은 발견하지 못했습니다. 오디오 50회 연속 중단/재개는 Chrome 명령 큐가 약 1.3초 동안 전환된 후 3초 대기 시 running으로 수렴했으므로 짧은 조기 표본을 영구 정지로 판단하지 않습니다. 당시 dist는 그림 PNG 2개가 약 73.4%였지만 이번 수정에는 그림 변환·오디오 믹스 변경을 포함하지 않습니다.
+
+강제 GC·headless 프레임 통계·힙 표본은 저사양 Android의 FPS·발열·배터리·프로세스/GPU 메모리 합격 근거가 아닙니다. 실제 Android의 반복 플레이·전화·홈·화면 잠금·복귀·강제 종료·업데이트 저장 유지 검증은 다음 묶음 APK 단계에 남습니다. 이번 작업에서는 APK/AAB를 만들거나 업로드하지 않았습니다.
+
 ## 2026-10-15 · 진행 중 회차 저장·복구 (이슈 #40)
 
 `pawblossom.save.v1` 키와 `SaveData.version:1`을 유지하고 선택 필드 `inProgress`에 자체 `schema:1`과 레벨 구성 서명을 추가했습니다. 8×8 타일 종류·특수, 고정 낙엽 위치·겹 수와 제거 목표, 이동·점수·수집·무료 섞기, 현재 해제 ID를 검증합니다. 안정되지 않은 매치·이동 없는 보드·이미 완료/실패한 회차·오래된 레벨 구성은 복원하지 않습니다. 잘못된 회차만 폐기하고 완료·별·코인·정원·설정은 유지합니다. 큰 배열은 크기로 거부하고 완료 ID는 최대 120개만 검사합니다. 검증과 스냅샷 복원은 초기 보드 생성 난수를 소비하지 않습니다.

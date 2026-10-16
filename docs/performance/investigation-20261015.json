@@ -1,0 +1,162 @@
+{
+  "dateKst": "2026-10-15",
+  "provenance": "이슈 #41 읽기 조사에서 생성한 ignored perf-* JSON의 선택 값. 당시 소스 해시와 실험 한계를 유지하며 현재 수정 후 수치와 구분합니다.",
+  "environment": "Chrome 155.0.8059.41 headless. 기존 127.0.0.1:5173 연결 불가. 로컬 소스 스냅샷을 메모리에서 CommonJS로 변환하고 설치된 Phaser 3.90.0과 함께 가상 route로 실행. 서버/HMR 없음. Capacitor는 웹 조건이며 CSS의 font import는 생략. Android/저사양/발열/실제 OS 복귀 성능 측정 아님.",
+  "sourceCaveat": "동시에 저장 복구 세션의 작업 파일이 추가됨. 각 실행의 sourceHashes/buildFiles SHA256을 기준으로 식별. 최종 앱 측정 실행 중 소스 변경 없음. Git HEAD만으로 작업 파일/기존 dist를 식별할 수 없음.",
+  "minimalPhaser": {
+    "browser": "155.0.8059.41",
+    "description": "Minimal local Phaser 3.90.0 Game create/destroy reproduction, Canvas renderer; no app, server, HMR, or Android.",
+    "initial": {
+      "round": 0,
+      "visibilityListeners": 0,
+      "listenerTypes": {},
+      "retainedEmitters": 0,
+      "retainedScenes": 0,
+      "canvases": 0,
+      "dom": {
+        "documents": 1,
+        "nodes": 9,
+        "jsEventListeners": 14
+      },
+      "heap": {
+        "usedSize": 3717216,
+        "totalSize": 5038080,
+        "embedderHeapUsedSize": 414088,
+        "backingStorageSize": 1196952
+      }
+    },
+    "settled": {
+      "round": "settled",
+      "visibilityListeners": 30,
+      "listenerTypes": {
+        "visibilitychange": 30
+      },
+      "retainedEmitters": 30,
+      "retainedScenes": 30,
+      "canvases": 0,
+      "dom": {
+        "documents": 1,
+        "nodes": 10,
+        "jsEventListeners": 76
+      },
+      "heap": {
+        "usedSize": 4730924,
+        "totalSize": 5562368,
+        "embedderHeapUsedSize": 366048,
+        "backingStorageSize": 1197358
+      }
+    }
+  },
+  "priorApp": {
+    "browser": "155.0.8059.41",
+    "head": "30a236df8d565bd2dcd3b557a411a57ffa22b18b",
+    "sourceHashes": {
+      "src/audio/AudioManager.ts": "292ffc2159246c30cc305430add55dafff34f8ac17b2bd9e9ee5a4632f86e611",
+      "src/BoardEffects.ts": "e1f7b5772d6d3fdb58c10c620c08bef2c9c65bb8223b330478f1d34e5e3240a7",
+      "src/BoardScene.ts": "3d7d408a56a6eff1b3bde02725f3d8872a6e5c0bad15d92e9336b6e1232f29b2",
+      "src/buildFlags.ts": "2d3548ef6f510a1ac2eee3823997f5f53fa8ac8e6fd52e2020caf0f72846a21b",
+      "src/core/BoardEngine.ts": "f07d4d5ae190b9a0ff28150e2c392adf7810a3eb84b17e1de25c3493269c293e",
+      "src/core/index.ts": "cbe12ac9bd8719811e5d64b6bba3ff047674e1ed20d7eec40dc178f1171d025d",
+      "src/GardenArt.ts": "67ed80704e7726a398010f8a56232c10a84aabfcbd32d68418baad9c01450424",
+      "src/i18n.ts": "3e414664f8f22b79e6379182cd9b70ea9ea947e0715036dbe33d6e2fde4698c3",
+      "src/icons.ts": "7bf5ee22508b9454cd0c19275b5da8d2d28b781f3bdfebb839eda5332f309e34",
+      "src/levels.ts": "d88db9132cddd84a280d548ca917fe1c1e430c9d58e43744e5935d69dba86166",
+      "src/main.ts": "9ed45e37c742cdb6d94a632cd58fd7451c95f811a4729a4556d58cbc1a78e00a",
+      "src/state.ts": "018c07c54c424ae7ae9bf1fb5c9b5a5e1d92f230f8f79ce93e8236b85fb859d1",
+      "src/SwapPractice.ts": "efbca489e4fdb8fa4d9d4c4375b23d3fe4916dec8d42ad2e09c9883dc90e5cd5"
+    },
+    "cascades": {
+      "attempts": 12,
+      "steps": 18,
+      "removed": 57,
+      "peaks": {
+        "effects": 12,
+        "displayList": 113,
+        "tweens": 18
+      },
+      "pause": {
+        "pausedUnchanged": true,
+        "status": 6
+      }
+    },
+    "audio": {
+      "rapidCycles": 50,
+      "resumed": {
+        "state": "running",
+        "intervals": 1,
+        "voices": 1
+      },
+      "peakTotalVoices": 15,
+      "paused": {
+        "state": "suspended",
+        "intervals": 0,
+        "voices": 0
+      },
+      "final": {
+        "state": "running",
+        "intervals": 1,
+        "voices": 2
+      }
+    },
+    "pageerrors": []
+  },
+  "audioRace": {
+    "browser": "155.0.8059.41",
+    "cycles50": {
+      "count": 50,
+      "start": {
+        "state": "running",
+        "paused": false,
+        "timer": 15,
+        "voices": 2
+      },
+      "end": {
+        "state": "running",
+        "paused": false,
+        "timer": 19,
+        "voices": 2
+      },
+      "log": [
+        {
+          "state": "suspended",
+          "paused": false,
+          "time": 4039.2999999523163
+        },
+        {
+          "state": "running",
+          "paused": false,
+          "time": 5355.400000095367
+        }
+      ],
+      "afterUnlock": {
+        "state": "running",
+        "paused": false,
+        "timer": 19,
+        "voices": 2
+      }
+    },
+    "separated": {
+      "state": "running",
+      "paused": false,
+      "timer": 42,
+      "voices": 2
+    }
+  },
+  "imageCosts": {
+    "priority": "P3 후보/성능 버그 미확정",
+    "title": "기존 dist 비용은 이미지 2개가 지배",
+    "totalDistBytes": 5690257,
+    "entryJsBytes": 1276878,
+    "entryJsGzipBytes": 345939,
+    "cssBytes": 32772,
+    "cssGzipBytes": 7998,
+    "pngTotalBytes": 4177644,
+    "pngSharePercent": 73.4174923909412,
+    "pngDecodedRgbaBytes": 12581520,
+    "fontWoffBytes": 103684,
+    "fontWoff2Bytes": 83716,
+    "interpretation": "meadow.png 1536×1024/3011327B, pip.png 1254×1254/1166317B. 두 이미지의 단순 RGBA 합은 약 12MiB이며 실제 프로세스/GPU 메모리와 동일하지 않음. gzip은 로컬 추정값이며 Capacitor APK 전송 크기나 서버 설정의 실측값이 아님. 기존 dist를 읽었으며 이 세션에서 빌드하지 않았음.",
+    "recommendation": "출시 용량/디코딩 검증이 필요할 때 표시 크기와 화질을 비교하며 이미지 크기/포맷을 먼저 검토. 현재 자료만으로 오브젝트 풀링, Phaser 교체, 임의 청크 분할을 도입할 근거는 없음."
+  },
+  "fpsInterpretation": "Phaser.loop.actualFps 값은 headless 호스트의 프레임 통계이며 짧은 표본 및 GC 영향을 받음. 저사양 Android 합격/불합격 기준으로 사용하지 않음."
+}

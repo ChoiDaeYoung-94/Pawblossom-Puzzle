@@ -23,6 +23,7 @@ class Graphic {
 }
 vi.mock('phaser',()=>{
   return {default:{Scene:class {
+    sys={isActive:()=>true};
     add={container:(x:number,y:number)=>new Piece(x,y),graphics:()=>new Graphic(),image:(x:number,y:number,texture:string)=>{const image=new Piece(x,y);image.texture=texture;return image;},text:(x:number,y:number,text:string)=>{const label=new Piece(x,y);label.text=text;return label;},circle:(x:number,y:number)=>new Piece(x,y)};
     tweens={killTweensOf(){},add(config:Record<string,unknown>){
       const targets=Array.isArray(config.targets)?config.targets:[config.targets];
@@ -34,6 +35,7 @@ vi.mock('phaser',()=>{
 });
 import { BoardScene } from '../src/BoardScene';
 interface RenderScene {
+  sys:{isActive():boolean};shuffle():boolean;
   pieces:Piece[][];engine:BoardEngine;
   paint(board:Tile[][]):void;drop(step:ResolveStep):void;
   attempt(a:Position,b?:Position):Promise<void>;tap(p:Position):void;resetHint():void;
@@ -50,6 +52,11 @@ function harness(){
   return {scene,onMove,onNotice};
 }
 describe('블록 객체 보존과 낙하 연출',()=>{
+  it('미준비·일시정지 Scene의 섞기는 그리기 전에 거부하고 보드를 유지합니다',()=>{
+    const {scene}=harness(),before=JSON.stringify(scene.engine.board);
+    scene.sys.isActive=()=>false;scene.paint=()=>{throw Error('미준비 Scene 그리기');};
+    expect(scene.shuffle()).toBe(false);expect(JSON.stringify(scene.engine.board)).toBe(before);
+  });
   it('두 겹은 겹잎·2, 한 겹은 작은 한 장·1을 표시하고 이전 바닥 객체만 정리합니다',()=>{
     const {scene}=harness();scene.paint(scene.engine.board);const pieces=scene.pieces.map(row=>row.slice());
     scene.engine.setLeaves([{row:3,col:3,layers:2}]);scene.paintLeaves(scene.engine.leaves);
