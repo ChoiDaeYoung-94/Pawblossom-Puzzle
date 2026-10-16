@@ -2,7 +2,7 @@ import {describe,it,expect,vi} from 'vitest';
 import {TestAdsController,adCopy,type AdSnapshot,type TestAdsBridge} from '../src/testAds';
 
 function harness(initial:Partial<AdSnapshot>={}){
-  let state:AdSnapshot={available:true,state:'idle',revision:0,error:'',privacyRequired:false,...initial};
+  let state:AdSnapshot={bridgeVersion:2,format:'interstitial',rewardEvents:0,available:true,state:'idle',revision:0,error:'',privacyRequired:false,...initial};
   let event!:(value:AdSnapshot)=>void;
   const remove=vi.fn(async()=>{}),changed=vi.fn();
   const transition=(patch:Partial<AdSnapshot>)=>{state={...state,...patch,revision:state.revision+1};event?.({...state});return {...state};};
@@ -12,6 +12,7 @@ function harness(initial:Partial<AdSnapshot>={}){
     show:vi.fn(async()=>transition({state:'presenting'})),
     cancel:vi.fn(async()=>transition({state:'cancelled'})),
     privacyOptions:vi.fn(async()=>transition({state:'privacy'})),
+    selectFormat:vi.fn(async({format})=>transition({format,state:'idle'})),
     addListener:vi.fn(async(_name,callback)=>{event=callback;return {remove};}),
   };
   const controller=new TestAdsController(bridge,changed);
@@ -102,5 +103,49 @@ describe('Android 시험 광고 상태 연결',()=>{
     for(const language of ['ko','en'] as const){const copy=adCopy(language);for(const text of Object.values(copy.states))expect(text.length).toBeGreaterThan(1);}
     expect(adCopy('ko').intro).toContain('보상 없음');expect(adCopy('en').intro).toContain('No reward');
     expect(adCopy('ko').notice).toContain('부모 동의');expect(adCopy('en').notice).toContain('parental consent');
+  });
+  it('형식은 네이티브 응답으로만 선택하며 준비/실행 중 변경하지 않습니다',async()=>{
+    const h=harness();await h.controller.connect();await h.controller.selectFormat('rewarded');
+    expect(h.controller.snapshot.format).toBe('rewarded');expect(h.bridge.prepare).not.toHaveBeenCalled();
+    for(const state of ['consent','privacy','loading','ready','presenting','showing'] as const){
+      h.transition({state});await h.controller.selectFormat('interstitial');
+    }
+    expect(h.bridge.selectFormat).toHaveBeenCalledTimes(1);
+    h.transition({state:'closed'});await h.controller.selectFormat('interstitial');
+    expect(h.controller.snapshot.format).toBe('interstitial');
+  });
+  it('빠른 형식 선택·종료 뒤 응답에도 pending/리스너 수명을 유지합니다',async()=>{
+    const h=harness();await h.controller.connect();let finish!:(value:AdSnapshot)=>void;
+    h.bridge.selectFormat=vi.fn(()=>new Promise<AdSnapshot>(resolve=>{finish=resolve;}));
+    const pending=h.controller.selectFormat('rewarded');await h.controller.selectFormat('rewarded');
+    expect(h.bridge.selectFormat).toHaveBeenCalledTimes(1);expect(h.controller.pausesGame).toBe(true);
+    await h.controller.dispose();finish({...h.state(),revision:1,format:'rewarded'});await pending;
+    expect(h.controller.snapshot.format).toBe('interstitial');
+  });
+  it('표시/클릭 대용/닫힘/실패/재요청은 JS에서 이벤트 수를 증가시키지 않습니다',async()=>{
+    const h=harness({format:'rewarded'});await h.controller.connect();await h.controller.command('prepare');
+    h.transition({state:'ready'});await h.controller.command('show');h.transition({state:'showing'});h.transition({state:'closed'});
+    await h.controller.command('prepare');h.transition({state:'failed'});await h.controller.command('cancel');
+    expect(h.controller.snapshot.rewardEvents).toBe(0);
+    h.transition({state:'showing',rewardEvents:1});const old=h.state();h.transition({state:'closed'});h.emit(old);
+    expect(h.controller.snapshot.rewardEvents).toBe(1);await h.controller.refresh();expect(h.controller.snapshot.rewardEvents).toBe(1);
+    const another=harness();await another.controller.connect();expect(another.controller.snapshot.rewardEvents).toBe(0);
+  });
+  it.each([
+    {bridgeVersion:undefined},{bridgeVersion:1},{format:undefined},{format:'video'},
+    {rewardEvents:undefined},{rewardEvents:'1'},{rewardEvents:-1},{rewardEvents:0.5},{rewardEvents:NaN},
+    {available:'true'},{privacyRequired:0},{error:null},{state:'unknown'},{revision:-1},{revision:'1'},
+  ])('손상/구형 snapshot은 실패 안전하게 차단합니다: %j',async patch=>{
+    const h=harness();await h.controller.connect();
+    h.emit({...h.state(),revision:1,...patch} as AdSnapshot);await h.controller.command('prepare');
+    expect(h.controller.snapshot.available).toBe(false);expect(h.bridge.prepare).not.toHaveBeenCalled();expect(h.controller.snapshot.rewardEvents).toBe(0);
+    await h.controller.refresh();expect(h.controller.snapshot.available).toBe(true);
+  });
+  it('역순 이벤트 수는 무시하고 최신 감소는 차단하며 overlay를 조기 해제하지 않습니다',async()=>{
+    const h=harness({format:'rewarded',state:'showing',revision:3,rewardEvents:2});await h.controller.connect();
+    h.emit({...h.state(),revision:2,rewardEvents:1});expect(h.controller.snapshot.available).toBe(true);
+    h.emit({...h.state(),revision:4,rewardEvents:1});expect(h.controller.snapshot.available).toBe(false);
+    expect(h.controller.overlay).toBe(true);expect(h.controller.snapshot.rewardEvents).toBe(2);
+    await h.controller.refresh();expect(h.controller.snapshot.available).toBe(true);
   });
 });

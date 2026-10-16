@@ -221,17 +221,17 @@ describe('광고 제거 조회·구매창과 게임 활동 상태',()=>{
   });
 });
 describe('시험 광고와 기존 게임 활동 상태 통합',()=>{
-  function setup(){
-    let value={available:true,state:'idle',revision:0,error:'',privacyRequired:false} as import('../src/testAds').AdSnapshot;
+  function setup(format:import('../src/testAds').AdFormat='interstitial'){
+    let value={bridgeVersion:2,format,rewardEvents:0,available:true,state:'idle',revision:0,error:'',privacyRequired:false} as import('../src/testAds').AdSnapshot;
     let callback!:(state:typeof value)=>void;
     const emit=(state:typeof value.state)=>{value={...value,state,revision:value.revision+1};callback?.({...value});return {...value};};
-    const bridge:TestAdsBridge={getStatus:async()=>({...value}),prepare:async()=>emit('consent'),show:async()=>emit('presenting'),cancel:async()=>emit('cancelled'),privacyOptions:async()=>emit('privacy'),addListener:async(_name,listener)=>{callback=listener;return {remove:async()=>{}};}};
+    const bridge:TestAdsBridge={getStatus:async()=>({...value}),selectFormat:async({format})=>{value={...value,format};return emit('idle');},prepare:async()=>emit('consent'),show:async()=>emit('presenting'),cancel:async()=>emit('cancelled'),privacyOptions:async()=>emit('privacy'),addListener:async(_name,listener)=>{callback=listener;return {remove:async()=>{}};}};
     const h=mainHarness(false,false,true,true,undefined,true,bridge);
     h.nativeEvents.appStateChange({isActive:true});
     return {h,emit,bridge};
   }
-  it('광고 표시 중 보드·오디오·키보드를 멈추고 닫힌 뒤 모달/화면 조건을 따릅니다',async()=>{
-    const {h,emit}=setup();const before=h.stored();
+  it.each(['interstitial','rewarded'] as const)('%s 표시 중 보드·오디오·키보드를 멈추고 닫힌 뒤 모달/화면 조건을 따릅니다',async format=>{
+    const {h,emit}=setup(format);const before=h.stored();
     await h.run('showAdDialog()');emit('ready');await h.run("testAds.command('show')");emit('showing');
     expect(h.run('game.paused')).toBe(true);expect(h.run('audio.suspended')).toBe(true);
     expect(h.element('#game-canvas').tabIndex).toBe(-1);

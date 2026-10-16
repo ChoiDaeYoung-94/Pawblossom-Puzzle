@@ -20,7 +20,7 @@ import { APP_VERSION } from './appVersion';
 import { TEST_TOOLS_ENABLED } from './buildFlags';
 import { ANDROID_TEST_ADS_ENABLED } from './buildFlags';
 import { ANDROID_TEST_BILLING_ENABLED } from './buildFlags';
-import { TestAdsController,nativeTestAds,adCopy } from './testAds';
+import { TestAdsController,nativeTestAds,adCopy,type AdFormat } from './testAds';
 import { TestBillingController,nativeTestBilling,billingCopy } from './testBilling';
 
 let save=loadSave(), currentLevel=save.highestLevel, moves=0, score=0, collected=Array(6).fill(0) as number[], shuffles=1;
@@ -325,7 +325,8 @@ function renderAdDialog(){
   if(!testAds)return;
   const copy=adCopy(save.language),dialog=$<HTMLDialogElement>('#test-ad-dialog');
   if(!dialog.querySelector('#test-ad-title')){
-    dialog.innerHTML='<div class="test-ad-content"><h2 id="test-ad-title" tabindex="-1"></h2><p id="test-ad-intro"></p><p id="test-ad-notice"></p><p id="test-ad-status" role="status" aria-live="polite"></p><p id="test-ad-error"></p><div class="test-ad-actions"><button id="test-ad-load" class="primary"></button><button id="test-ad-show" class="primary"></button><button id="test-ad-cancel" class="text-button"></button><button id="test-ad-privacy" class="text-button"></button><button id="test-ad-close" class="text-button"></button></div></div>';
+    dialog.innerHTML='<div class="test-ad-content"><h2 id="test-ad-title" tabindex="-1"></h2><p id="test-ad-intro"></p><p id="test-ad-notice"></p><label id="test-ad-format-label" for="test-ad-format"></label><select id="test-ad-format"><option value="interstitial"></option><option value="rewarded"></option></select><p id="test-ad-events" role="status" aria-live="polite"></p><p id="test-ad-status" role="status" aria-live="polite"></p><p id="test-ad-error"></p><div class="test-ad-actions"><button id="test-ad-load" class="primary"></button><button id="test-ad-show" class="primary"></button><button id="test-ad-cancel" class="text-button"></button><button id="test-ad-privacy" class="text-button"></button><button id="test-ad-close" class="text-button"></button></div></div>';
+    $<HTMLSelectElement>('#test-ad-format').onchange=event=>{void testAds!.selectFormat((event.target as HTMLSelectElement).value as AdFormat);};
     $('#test-ad-load').onclick=()=>{if(!testBilling?.blocksAds)void testAds!.command('prepare');};
     $('#test-ad-show').onclick=()=>{if(nativeActive&&!document.hidden&&!testBilling?.blocksAds)void testAds!.command('show');};
     $('#test-ad-cancel').onclick=()=>{void testAds!.command('cancel');};
@@ -334,6 +335,11 @@ function renderAdDialog(){
   }
   const state=testAds.snapshot;
   $('#test-ad-title').textContent=copy.title;$('#test-ad-intro').textContent=copy.intro;$('#test-ad-notice').textContent=copy.notice;
+  $('#test-ad-format-label').textContent=copy.format;
+  for(const format of ['interstitial','rewarded'] as const)$('#test-ad-format option[value="'+format+'"]').textContent=copy[format];
+  $<HTMLSelectElement>('#test-ad-format').value=state.format;
+  $('#test-ad-format').toggleAttribute('disabled',!testAds.canSelectFormat);
+  $('#test-ad-events').textContent=`${copy.events}: ${state.rewardEvents} · ${copy.eventNotice}`;
   $('#test-ad-status').textContent=state.available?copy.states[state.state]:copy.unavailable;
   $('#test-ad-error').textContent=testBilling?.blocksAds?(save.language==='ko'?'광고 제거 권한 확인 또는 적용 중 · 광고 보류':'Ad removal is active or being checked · Ads held'):state.error?(state.error.startsWith('consent')?copy.blocked:copy.recovery):'';
   $('#test-ad-load').textContent=copy.prepare;$('#test-ad-show').textContent=copy.show;$('#test-ad-cancel').textContent=copy.cancel;$('#test-ad-close').textContent=copy.close;$('#test-ad-privacy').textContent=copy.privacy;

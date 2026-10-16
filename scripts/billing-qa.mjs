@@ -28,7 +28,7 @@ async function open(native=false,configured=false){
     localStorage.setItem('pawblossom.save.v1',JSON.stringify({version:1,language:'ko',highestLevel:1,completed:[],stars:0,coins:0,garden:0,music:true,sfx:true,tutorialSeen:true,removeAds:true}));
     window.__billingCalls=[];window.__adCalls=[];window.__listeners=new Map();
     window.__billing={available:true,configured,state:'idle',entitlement:'unknown',revision:0,error:configured?'':'unconfigured',price:'',overlay:false,adsBlocked:configured,preparingPurchase:false};
-    window.__ads={available:true,state:'idle',revision:0,error:'',privacyRequired:false};
+    window.__ads={bridgeVersion:2,format:'interstitial',rewardEvents:0,available:true,state:'idle',revision:0,error:'',privacyRequired:false};
     window.__emitBilling=patch=>{window.__billing={...window.__billing,...patch,revision:window.__billing.revision+1};for(const {plugin,event,callback} of __listeners.values())if(plugin==='PawblossomTestBilling'&&event==='stateChange')callback({...__billing});return {...__billing};};
     window.__emitAd=patch=>{window.__ads={...window.__ads,...patch,revision:window.__ads.revision+1};for(const {plugin,event,callback} of __listeners.values())if(plugin==='PawblossomTestAds'&&event==='stateChange')callback({...__ads});return {...__ads};};
     window.__app=active=>{for(const {plugin,event,callback} of __listeners.values())if(plugin==='App'&&event==='appStateChange')callback({isActive:active});};

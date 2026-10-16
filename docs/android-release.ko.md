@@ -1,5 +1,17 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-16 · debug 보상형 시험 하네스 (이슈 #83)
+
+기준 `662c95aee9c9818c1579bb9d1b4b1bc86b4aec84`, 작업 `codex/rewarded-test-ads`입니다. 기존 GMA **25.4.0** 안의 `RewardedAd`를 debug 전용 `TestAdsPlugin`에 추가했습니다. UMP **4.0.0**, Billing **9.1.0**, AppID·Manifest·release 등록·버전 0.1.7/code 8·상품/콘솔은 그대로입니다. testing + Android debug에서만 수동 형식 선택/로드/표시를 허용하고 기본 꺼짐·동의 보호·billing 차단을 유지합니다.
+
+`RewardLedger`는 현재 plugin 실행의 SDK 콜백 수만 메모리에 기록합니다. 네이티브 `onUserEarnedReward`만 해당 attempt에 1회 기록하고, show/클릭/impression/dismiss/error/JS 명령으로 가산하지 않습니다. 취소/실패/폐기/TTL/파괴/새 attempt 뒤 늦은 응답과 중복 show/earn을 차단합니다. 표시 중 billing/동의 차단이면 기록 권한을 무효화하되 실제 SDK 전면창의 조기 가짜 닫힘은 만들지 않습니다. 게임 지급·저장·별·코인·이동·잠금과 연결하지 않습니다.
+
+공식 [Android Rewarded 안내](https://developers.google.com/admob/android/rewarded)(2026-10-15 갱신, 2026-10-16 확인)의 Legacy Java API와 Google 시험 단위 `ca-app-pub-3940256099942544/5224354917`를 사용합니다. main thread에서 호출하며 **Google 제공 광고의 보상→닫힘 순서만 지원**합니다. mediation 추가/일반 callback 순서 지원, 운영 보상 정책·SSV·서버 검증 완료를 의미하지 않습니다.
+
+`scripts/use-dev-tools.ps1` 환경에서 `gradlew.bat -p android --no-daemon --max-workers=2 :app:compileDebugJavaWithJavac :app:compileReleaseJavaWithJavac --dry-run`으로 의존 작업을 확인한 뒤 동일 명령에서 `--dry-run`만 빼고 컴파일했습니다. 최종 콜백 수정 후 재컴파일 통과입니다. 리소스 처리/compile용 라이브러리 JAR 작업은 포함하며 앱 APK/AAB package/assemble/bundle·Capacitor sync는 실행하지 않았습니다. releaseRuntimeClasspath에 광고/UMP/Billing 시험 SDK가 없고 release javac 클래스에 `TestAdsPlugin`/`RewardLedger`가 없는 것을 확인했습니다. 기존 APK/AAB의 수정 시각은 각각 2026-10-16 14:46/14:48 그대로입니다. dry-run/compile/release 의존성/JVM 원본 로그는 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\v0.1.7\issue-83-native`에 보존합니다.
+
+순수 Java ledger **5개**, 자동 **369개**, 타입 검사, testing/production 웹 빌드와 브라우저 IPC/주요 회귀 통과입니다. [상세 범위](browser-qa.ko.md#2026-10-16--보상형-시험-광고와-콜백-단발-기록-이슈-83). 실제 SDK/UMP/기기 OS 복귀·운영 보상 정책/서버 검증/SSV·실서비스/스토어는 [#73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73) 미완료로 유지합니다. 단말 테스트·APK 전달 보류와 오디오 믹스 변경 금지를 유지합니다.
+
 ## 2026-10-16 · 데이터·권한·SDK 기술 현황 (이슈 #81)
 
 **현재 소스의 기술 현황 작성만 완료했으며 개인정보처리방침·데이터 보안 설문·출시 적합성 확정은 미완료**입니다. 기준은 [main `fb199314475e5110628693a286a1230e37acd20e`](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/tree/fb199314475e5110628693a286a1230e37acd20e)입니다. 앱 `0.1.7`/code `8`, 한국·미국 준비와 어린이부터 중장년까지의 기획을 유지합니다. 실제 대상 연령·동의 설계는 아직 확정하지 않았습니다. 아래는 정적 소스 관찰이며, 최신 배포 APK/AAB의 merged manifest·전이 SDK·실제 네트워크/OS 저장 동작을 검증한 결과가 아닙니다. 이번 변경은 이 문서와 출시 체크리스트, [미완료 후속 #73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)의 백업 확인 항목뿐입니다.
