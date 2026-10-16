@@ -19,6 +19,7 @@ class Graphic {
   strokeRoundedRect(){return this;}fillCircle(){return this;}strokeCircle(){return this;}
   lineBetween(...values:number[]){this.lines.push(values);return this;}
   setName(){return this;}setPosition(){return this;}
+  clear(){return this;}
   destroy(){this.destroyed=true;}
 }
 vi.mock('phaser',()=>{
@@ -42,7 +43,10 @@ interface RenderScene {
   showEffect(step:ResolveStep):Graphic;
   paintLeaves(leaves:number[][]):void;
   leafObjects:(Piece|Graphic)[];
+  busy:boolean;finished:boolean;
+  keyboardState:BoardScene['keyboardState'];focusKeyboard:BoardScene['focusKeyboard'];keyboardKey:BoardScene['keyboardKey'];cancelInput:BoardScene['cancelInput'];stopPlaying:BoardScene['stopPlaying'];
 }
+const snapshot=(engine:BoardEngine)=>({board:engine.board.map(row=>row.map(tile=>({...tile}))),leaves:engine.leaves.map(row=>row.slice())});
 function harness(){
   const onMove=vi.fn(),onNotice=vi.fn();
   const scene=new BoardScene({audio:{play(){}} as never,onStart(){},onMove,onNotice}) as unknown as RenderScene;
@@ -135,5 +139,55 @@ describe('블록 객체 보존과 낙하 연출',()=>{
     await scene.attempt({row:3,col:3});await first;
     expect(onMove).toHaveBeenCalledOnce();expect(onNotice.mock.calls[0]).toEqual(['rowClear']);
     expect(overlays).toHaveLength(1);expect(overlays.every(overlay=>overlay.destroyed)).toBe(true);
+  });
+});
+
+describe('보드 키보드 입력과 읽기 상태',()=>{
+  it('8×8 경계를 넘지 않으며 커서 조회와 선택·취소는 난수와 이동을 소비하지 않습니다',()=>{
+    const {scene,onMove}=harness();scene.paint(scene.engine.board);
+    const rng=vi.fn(seededRng(42));scene.engine=new BoardEngine(8,8,rng,snapshot(scene.engine));rng.mockClear();
+    const before=snapshot(scene.engine);scene.focusKeyboard();
+    scene.keyboardKey('ArrowUp');scene.keyboardKey('ArrowLeft');expect(scene.keyboardState().cursor).toEqual({row:0,col:0});
+    for(let i=0;i<12;i++){scene.keyboardKey('ArrowDown',true);scene.keyboardKey('ArrowRight',true);}
+    expect(scene.keyboardState().cursor).toEqual({row:7,col:7});
+    scene.keyboardKey('Enter');expect(scene.keyboardState().selected).toEqual({row:7,col:7});
+    scene.keyboardKey('Escape');expect(scene.keyboardState().selected).toBeUndefined();
+    const state=scene.keyboardState();state.cursor!.row=0;state.tile!.kind=99;
+    expect(scene.keyboardState().cursor).toEqual({row:7,col:7});expect(snapshot(scene.engine)).toEqual(before);
+    expect(onMove).not.toHaveBeenCalled();expect(rng).not.toHaveBeenCalled();
+  });
+  it('Enter와 Space의 무효 교환은 기존 attempt를 사용하고 이동을 쓰지 않습니다',async()=>{
+    const {scene,onMove}=harness();scene.paint(scene.engine.board);scene.focusKeyboard();
+    const before=snapshot(scene.engine);const swap=vi.spyOn(scene.engine,'swap');
+    scene.keyboardKey('Enter');scene.keyboardKey('ArrowRight');scene.keyboardKey(' ');
+    await vi.waitFor(()=>expect(scene.busy).toBe(false));
+    expect(swap).toHaveBeenCalledExactlyOnceWith({row:0,col:0},{row:0,col:1});expect(onMove).not.toHaveBeenCalled();expect(snapshot(scene.engine)).toEqual(before);
+  });
+  it('방향키로 인접 칸을 선택한 유효 교환은 결과를 한 번 전달합니다',async()=>{
+    const {scene,onMove}=harness();for(const [r,c,k] of [[0,0,5],[0,1,5],[0,2,1],[1,2,5]])scene.engine.board[r][c]={kind:k};
+    scene.paint(scene.engine.board);scene.focusKeyboard();scene.keyboardKey('ArrowRight');scene.keyboardKey('ArrowRight');
+    scene.keyboardKey('Enter');scene.keyboardKey('ArrowDown');scene.keyboardKey(' ');
+    await vi.waitFor(()=>expect(scene.busy).toBe(false));expect(onMove).toHaveBeenCalledOnce();expect(onMove.mock.calls[0][1]).toBeGreaterThan(0);
+  });
+  it.each(['Enter',' '])('특수 바로 사용 %s 뒤 연쇄 중 반복 입력·섞기는 거부합니다',async key=>{
+    const {scene,onMove}=harness();scene.engine.board[0][0].special='row';scene.engine.setLeaves([{row:0,col:0,layers:2}]);scene.paint(scene.engine.board);
+    scene.focusKeyboard();expect(scene.keyboardState()).toMatchObject({tile:{special:'row'},layers:2});
+    expect(scene.keyboardKey(key,true)).toBe(true);expect(scene.busy).toBe(false);
+    scene.keyboardKey(key);const before=snapshot(scene.engine);
+    for(let i=0;i<20;i++){expect(scene.keyboardKey('ArrowDown',true)).toBe(false);expect(scene.keyboardKey(key,true)).toBe(false);expect(scene.shuffle()).toBe(false);}
+    expect(scene.keyboardState().cursor).toEqual({row:0,col:0});expect(snapshot(scene.engine)).toEqual(before);
+    await vi.waitFor(()=>expect(scene.busy).toBe(false));expect(onMove).toHaveBeenCalledOnce();
+  });
+  it('미준비·비활성·종료 상태는 선택·교환·섞기·커서 진입을 거부합니다',async()=>{
+    const {scene,onMove}=harness();const before=snapshot(scene.engine);scene.focusKeyboard();expect(scene.keyboardState().cursor).toBeUndefined();
+    await scene.attempt({row:0,col:0},{row:0,col:1});scene.tap({row:0,col:0});expect(scene.shuffle()).toBe(false);
+    scene.paint(scene.engine.board);scene.sys.isActive=()=>false;scene.focusKeyboard();await scene.attempt({row:0,col:0},{row:0,col:1});scene.tap({row:0,col:0});expect(scene.shuffle()).toBe(false);
+    scene.sys.isActive=()=>true;scene.focusKeyboard();scene.keyboardKey('Enter');scene.stopPlaying();
+    expect(scene.keyboardState()).toMatchObject({available:false,finished:true,cursor:undefined,selected:undefined});expect(scene.keyboardKey(' ')).toBe(false);
+    expect(snapshot(scene.engine)).toEqual(before);expect(onMove).not.toHaveBeenCalled();
+  });
+  it('선택과 커서를 정리하고 다시 초점이 들어오면 첫 칸에서 시작합니다',()=>{
+    const {scene}=harness();scene.paint(scene.engine.board);scene.focusKeyboard();scene.keyboardKey('ArrowDown');scene.keyboardKey('Enter');scene.cancelInput();
+    expect(scene.keyboardState()).toMatchObject({cursor:undefined,selected:undefined});scene.focusKeyboard();expect(scene.keyboardState().cursor).toEqual({row:0,col:0});
   });
 });

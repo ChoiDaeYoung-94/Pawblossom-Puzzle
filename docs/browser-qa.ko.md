@@ -1,3 +1,17 @@
+## 2026-10-15 · 보드 키보드 조작·초점·상태 안내 (이슈 #46)
+
+보드에 하나의 Tab 진입점을 두고 방향키로 8×8 커서를 이동합니다. Enter/Space는 기존 `BoardScene.tap/attempt`로 선택·인접 교환·특수 바로 사용을 처리하고 Escape는 선택만 취소합니다. 커서는 선택 확대와 구분되는 이중 테두리·모서리 모양입니다. 현재 열매·행/열·특수 종류·낙엽 남은 겹과 선택 칸을 한국어/영어 DOM live 상태로 안내합니다. 조회·이동·선택·취소는 판정·난수·이동 횟수·보상을 소비하지 않습니다.
+
+키보드 안내와 커서는 Tab 초점 또는 보드 키 입력 때 표시합니다. 마우스/터치 전환에서는 커서만 숨겨 진행 중인 Phaser 포인터 제스처를 유지하고 기존 게임 힌트를 보여 줍니다. 실제 키 이벤트에서 Web Audio를 unlock합니다. 보드 이외의 UI·입력창·조합키·모달은 키를 가로채지 않습니다. busy/finished/미준비/비활성 Scene은 조작을 거부하고, blur·PAUSE/RESUME/SLEEP·SHUTDOWN/DESTROY·회차 교체 때 커서·선택·제스처를 정리합니다. DOM 리스너는 문서 수명에 한 번만 등록하며 새 Scene이 재등록하지 않습니다. 재시작은 보드로 강제 focus하지 않고 결과 dialog의 기본 초점 복귀와 사용자의 버튼 흐름을 유지합니다.
+
+자동 검사 **142개**(기존 128개+키보드 회귀 14개), 일반·테스트 웹 빌드, 에셋 일치 검사와 TypeScript 검사를 통과했습니다. 기존 Phaser 번들 크기 경고는 남습니다. 기존 `activeRound` 콜백 guard, 정상 checkpoint, 시험 회차 분리와 결과 타이머 이전 즉시 settle 규칙을 유지했습니다.
+
+격리 headless Chrome **155.0.8059.41**의 실제 Phaser·키 입력 검사 **12개 시나리오**를 통과했습니다. 실제 Tab/Arrow/Enter/Space/Escape로 유효·무효 교환, 특수와 낙엽, 연쇄 중 반복키, KO/EN 네 특수 종류, 마우스/터치 탭·swipe 전환, 모달/설정/창 blur, 승리·실패와 저장·보상을 확인했습니다. 100회 전환 동안 보드 keydown 리스너는 1개, document 키 리스너는 0개, window keydown/keyup은 각각 1개로 유지됐고 canvas/Scene도 각각 1개였습니다. 세로 390×844와 가로 640×360에서 gameplay body scroll이 없으며 초점·커서를 직접 화면으로 확인했습니다. 원시 결과는 [검증 JSON](performance/board-keyboard-20261015.json), 화면은 [세로](screenshots/keyboard-portrait.png)·[가로](screenshots/keyboard-landscape.png)에 보존했습니다. 재현 도구는 `scripts/board-keyboard-qa.mjs`이며 QA 관찰자는 격리 브라우저의 main 응답에만 주입하고 `finally`에서 Chrome을 닫습니다.
+
+기존 회차 저장·복구 브라우저 **8개 시나리오**와 Game 생명주기 **12개 검사**도 다시 통과했습니다. 후자는 SVG 지연·부팅 전 선택·처리 중 Scene 교체·강제 GC·100회 전환을 포함합니다. 기존 결과 파일을 덮어쓰지 않도록 임시 QA 출력에 실행했고 pageerror는 모두 0개였습니다. 개발 서버가 없어 testing 모드 5173 서버를 시작했으며 사용자 Chrome을 조작하지 않았습니다.
+
+이는 접근성 기초 구현과 브라우저 검증입니다. 실제 Android TalkBack 발화·읽기 순서와 Android 외부 키보드·실기기 초점·회전은 미검증이며 전체 접근성 적합성을 판정하지 않습니다. APK/AAB 제작·업로드와 PR 병합은 수행하지 않았습니다.
+
 ## 2026-10-15 · 반복 플레이 리스너 누적 수정 (이슈 #41)
 
 Phaser 3.90.0의 `Game.start()`는 `VisibilityHandler`에서 `document.visibilitychange` 콜백을 등록하지만 `Game.runDestroy()`는 해당 콜백을 제거하지 않습니다. 회차마다 Game을 파괴·재생성하던 앱과 순수 Phaser 최소 재현에서 누적을 확인했습니다. 확인 범위는 문서 리스너와 이벤트 emitter의 잔류이며 이전 Scene이나 GPU 메모리의 대규모 누수로 해석하지 않습니다.

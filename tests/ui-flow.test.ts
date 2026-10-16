@@ -35,6 +35,7 @@ class ElementStub {
   removeAttribute() {}
   append() {}
   focus() {}
+  matches(){return true;}
   setPointerCapture() {}
   toggleAttribute() {}
   addEventListener(name: string, callback: (event: { preventDefault(): void }) => void) { this.listeners[name] = callback; }
@@ -66,6 +67,8 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     shuffle(){this.engine.shuffle();return true;}
     canLeave() { return true; }
     stopPlaying() {this.stopped=true;}
+    keyboardState(){return {available:!this.stopped,busy:false,finished:this.stopped};}
+    focusKeyboard() {} cancelInput() {} keyboardKey() {} hideKeyboardCursor() {}
   }
   class GameStub {
     constructor(){games++;}
@@ -108,7 +111,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     },
     document: {
       createElement: () => new ElementStub('button'),
-      querySelector: element,
+      querySelector:(selector:string)=>selector==='dialog[open]'?null:element(selector),
       querySelectorAll: (selector: string) => selector === '[data-test-level]'
         ? Array.from({length:30},(_,i)=>{const button=element(`#test-stage-${i+1}`);button.dataset.testLevel=String(i+1);return button;}) : selector === '[data-chapter]' || selector === '[data-test-chapter]'
         ? Array.from({length:3},(_,i)=>{const test=selector.includes('test-');const button=element(`#${test?'test-':''}chapter-${i+1}`);button.dataset[test?'testChapter':'chapter']=String(i+1);return button;}) : selector === '#practice-board button'
@@ -116,6 +119,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
         ? ['puzzle', 'village', 'journal', 'settings'].map(name => element(`#${name}-view`)) : [],
       documentElement: {}, hidden:false, addEventListener:(name:string,callback:()=>void)=>{documentEvents[name]=callback;},
     },
+    window:{addEventListener(){}},
     Phaser: { Game: GameStub, AUTO: 0, Scale: { FIT: 0, CENTER_BOTH: 0 }, Core:{Events:{POST_RENDER:'postrender'}} },
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     AudioManager: AudioStub, t: (_language: string, key: string) => key, icon: () => '',
@@ -158,6 +162,7 @@ function boardHarness() {
   const attempts: { a: Position; b: Position }[] = [], taps: Position[] = [];
   const graphics: object = new Proxy({}, { get: () => () => graphics });
   class PhaserSceneStub {
+    sys={isActive:()=>true};
     cameras = { main: { setBackgroundColor() {} } };
     add = { graphics: () => graphics };
     input = { on: (name: string, callback: (pointer: Pointer) => void) => { handlers[name] = callback; } };
@@ -173,17 +178,17 @@ function boardHarness() {
     exports: boardExports,
     require: (name: string) => name === 'phaser' ? { default: {
       Scene: PhaserSceneStub,
-      Scenes: { Events: { PAUSE: 'pause', RESUME: 'resume', SLEEP: 'sleep', SHUTDOWN: 'shutdown' } },
+      Scenes: { Events: { PAUSE: 'pause', RESUME: 'resume', SLEEP: 'sleep', SHUTDOWN: 'shutdown', DESTROY:'destroy', CREATE:'create' } },
     } } : name==='./BoardEffects'?effectsExports:engineExports,
   });
   const Constructor = boardExports.BoardScene as new (hooks: object) => {
-    create(): void; paint: () => void; resetHint: () => void;
+    create(): void; paint: () => void; resetHint: () => void; pieces:unknown[][];
     attempt: (a: Position, b: Position) => void; tap: (position: Position) => void;
-    selected?: Position; down?: { pointerId: number };
+    selected?: Position; down?: { pointerId: number };focusKeyboard():void;keyboardKey(key:string):boolean;keyboardState():{cursor?:Position;selected?:Position};
   };
   const scene = new Constructor({ audio: {}, onStart() {}, onMove() {}, onNotice() {} });
   // 실제 create()와 제스처 정리를 사용하고 표시/애니메이션만 생략합니다.
-  scene.paint = () => {}; scene.resetHint = () => {};
+  scene.paint = () => {scene.pieces=Array.from({length:8},()=>[]);}; scene.resetHint = () => {};
   scene.attempt = (a, b) => { attempts.push({ a, b }); };
   scene.tap = position => { taps.push(position); };
   scene.create();
@@ -191,6 +196,24 @@ function boardHarness() {
 }
 
 describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
+  it.each(['pause','resume','sleep','shutdown','destroy'])('%s는 보드 키보드 커서와 선택·포인터를 정리합니다',event=>{
+    const h=boardHarness();h.scene.focusKeyboard();h.scene.keyboardKey('ArrowRight');h.scene.selected={row:1,col:1};h.scene.down={pointerId:1};
+    expect(h.scene.keyboardState().cursor).toEqual({row:0,col:1});h.lifecycle[event]();
+    expect(h.scene.keyboardState()).toMatchObject({cursor:undefined,selected:undefined});expect(h.scene.down).toBeUndefined();
+  });
+  it('보드 초점의 순수 키만 전달하고 조합키·입력창·모달·다른 화면은 차단하지 않습니다',()=>{
+    const h=mainHarness(false,false,true);
+    h.run(`globalThis.keys=[];globalThis.blocked=0;const board=document.querySelector('#game-canvas');document.activeElement=board;scene.keyboardKey=(key,repeat)=>keys.push([key,repeat]);globalThis.sendKey=(overrides={})=>board.listeners.keydown({target:board,key:'ArrowRight',repeat:false,preventDefault(){blocked++},...overrides});sendKey();sendKey({key:' ',repeat:true});`);
+    expect(h.run('keys')).toEqual([['ArrowRight',false],[' ',true]]);expect(h.run('blocked')).toBe(2);
+    h.run(`sendKey({altKey:true});sendKey({ctrlKey:true});sendKey({metaKey:true});sendKey({isComposing:true});sendKey({target:document.querySelector('#language')});sendKey({key:'Tab'});document.activeElement=document.querySelector('#language');sendKey();document.activeElement=board;route='settings';sendKey();route='puzzle';boardPending=true;sendKey();`);
+    expect(h.run('keys.length')).toBe(2);expect(h.run('blocked')).toBe(2);
+    h.run(`boardPending=false;document.querySelector=(selector)=>selector==='dialog[open]'?{}:board;sendKey();`);
+    expect(h.run('keys.length')).toBe(2);expect(h.run('blocked')).toBe(2);
+  });
+  it('busy/finished 보드 키는 전달하지 않으며 대기 중 스크롤만 막습니다',()=>{
+    const h=mainHarness();h.run(`globalThis.keys=0;globalThis.blocked=0;const board=document.querySelector('#game-canvas');document.activeElement=board;scene.keyboardKey=()=>keys++;scene.keyboardState=()=>({available:false,busy:true});board.listeners.keydown({target:board,key:' ',preventDefault(){blocked++}});scene.keyboardState=()=>({available:false,finished:true});board.listeners.keydown({target:board,key:'Enter',preventDefault(){blocked++}});`);
+    expect(h.run('keys')).toBe(0);expect(h.run('blocked')).toBe(2);
+  });
   it.each([true,false])('테스트 결과 %s에서 선택 취소는 결과로 돌아가고 다른 스테이지는 기록을 쓰지 않습니다',won=>{
     const h=mainHarness(false,false,true),before=h.stored(),writes=h.writes();
     h.run(`startLevel(6,true);finish(${won})`);

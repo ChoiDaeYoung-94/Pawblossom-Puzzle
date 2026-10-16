@@ -5,7 +5,7 @@ import { BoardEffects } from './BoardEffects';
 
 export const tileNames = ['strawberry','carrot','blueberry','acorn','leaf','flower'];
 type Notice='matched'|'chain'|'specialCreated'|'noMoves'|'rowClear'|'columnClear'|'bombClear'|'colorClear'|'comboClear'|'leafThinned'|'leavesCleared';
-interface Hooks { audio: AudioManager; onStart:()=>void; onReady?:()=>void; onMove:(collected:number[],score:number,chains:number,leavesCleared:number)=>void; onNotice:(kind:Notice)=>void; }
+interface Hooks { audio: AudioManager; onStart:()=>void; onReady?:()=>void; onBoardState?:()=>void; onMove:(collected:number[],score:number,chains:number,leavesCleared:number)=>void; onNotice:(kind:Notice)=>void; }
 const CELL = 56, PAD = 16;
 export class BoardScene extends Phaser.Scene {
   engine: BoardEngine;
@@ -18,6 +18,8 @@ export class BoardScene extends Phaser.Scene {
   private hintTimer?: Phaser.Time.TimerEvent;
   private leafObjects:(Phaser.GameObjects.Graphics|Phaser.GameObjects.Image|Phaser.GameObjects.Text)[]=[];
   private effects?:BoardEffects;
+  private cursor?:Position;
+  private cursorMark?:Phaser.GameObjects.Graphics;
   constructor(hooks: Hooks, snapshot?:BoardSnapshot) {super('Board');this.hooks=hooks;this.engine=new BoardEngine(8,8,Math.random,snapshot);}
   configureLeaves(piles:LeafPile[]){this.engine.setLeaves(piles);}
   preload() {
@@ -35,11 +37,11 @@ export class BoardScene extends Phaser.Scene {
     this.paint(this.engine.board);
     this.paintLeaves(this.engine.leaves);
     this.input.on('pointerdown',(p:Phaser.Input.Pointer)=>{
-      if(this.busy||this.finished||this.down)return;
+      if(!this.canInteract()||this.down)return;
       const pos=this.position(p.x,p.y);if(pos)this.down={pos,x:p.x,y:p.y,pointerId:p.id};
     });
     this.input.on('pointerup',(p:Phaser.Input.Pointer)=>{
-      if(this.busy||this.finished||!this.down||this.down.pointerId!==p.id)return;
+      if(!this.canInteract()||!this.down||this.down.pointerId!==p.id)return;
       const d=this.down;this.down=undefined;
       const dx=p.x-d.x,dy=p.y-d.y;
       if(Math.hypot(dx,dy)>16){
@@ -48,14 +50,45 @@ export class BoardScene extends Phaser.Scene {
       }else this.tap(d.pos);
     });
     this.input.on('gameout',()=>{this.down=undefined;});
-    const cancelGesture=()=>{this.down=undefined;this.clearSelection();};
+    const cancelGesture=()=>this.cancelInput();
     this.events.on(Phaser.Scenes.Events.PAUSE,cancelGesture);
     this.events.on(Phaser.Scenes.Events.RESUME,cancelGesture);
     this.events.on(Phaser.Scenes.Events.SLEEP,cancelGesture);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>{cancelGesture();this.stopPlaying();this.effects?.clear();this.pieces=[];this.leafObjects=[];});
+    const dispose=()=>{this.stopPlaying();this.effects?.clear();this.cursorMark=undefined;this.pieces=[];this.leafObjects=[];};
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN,dispose);
+    this.events.once(Phaser.Scenes.Events.DESTROY,dispose);
     this.resetHint();
     // CREATE는 에셋 로딩과 create()가 끝나고 Scene이 RUNNING이 된 뒤 발생합니다.
-    this.events.once(Phaser.Scenes.Events.CREATE,()=>this.hooks.onReady?.());
+    this.events.once(Phaser.Scenes.Events.CREATE,()=>{this.hooks.onReady?.();this.changed();});
+  }
+  private canInteract(){return !this.busy&&!this.finished&&this.pieces.length===this.engine.rows&&this.sys.isActive();}
+  /** 조회는 엔진 판정/난수/이동을 소비하지 않습니다. */
+  keyboardState(){
+    const pos=this.cursor,tile=pos?this.engine.board[pos.row][pos.col]:undefined;
+    return {available:this.canInteract(),busy:this.busy,finished:this.finished,cursor:pos?{...pos}:undefined,
+      tile:tile?{...tile}:undefined,layers:pos?this.engine.leaves[pos.row][pos.col]:0,selected:this.selected?{...this.selected}:undefined};
+  }
+  private changed(){this.hooks.onBoardState?.();}
+  focusKeyboard(){if(!this.canInteract())return;this.cursor??={row:0,col:0};this.drawCursor();this.changed();}
+  hideKeyboardCursor(){this.cursor=undefined;this.cursorMark?.clear();this.changed();}
+  cancelInput(){this.down=undefined;this.hideKeyboardCursor();this.clearSelection();}
+  keyboardKey(key:string,repeat=false){
+    if(!this.canInteract()||!this.cursor)return false;
+    if(key==='Escape'){this.clearSelection();return true;}
+    if(key==='Enter'||key===' '){if(!repeat)this.tap({...this.cursor});return true;}
+    const delta=key==='ArrowUp'?[-1,0]:key==='ArrowDown'?[1,0]:key==='ArrowLeft'?[0,-1]:key==='ArrowRight'?[0,1]:undefined;
+    if(!delta)return false;
+    this.cursor={row:Math.max(0,Math.min(this.engine.rows-1,this.cursor.row+delta[0])),col:Math.max(0,Math.min(this.engine.cols-1,this.cursor.col+delta[1]))};
+    this.drawCursor();this.changed();return true;
+  }
+  private drawCursor(){
+    if(!this.cursor)return;
+    const {x,y}=this.point(this.cursor);
+    this.cursorMark??=this.add.graphics().setDepth(20);
+    // 선택의 확대 효과와 구분되는 이중 테두리와 네 모서리입니다.
+    const g=this.cursorMark.clear();g.lineStyle(5,0xfffdf5);g.strokeRoundedRect(x-26,y-26,52,52,9);
+    g.lineStyle(2,0x294f40);g.strokeRoundedRect(x-26,y-26,52,52,9);
+    for(const dx of [-1,1])for(const dy of [-1,1]){g.lineBetween(x+dx*19,y+dy*23,x+dx*23,y+dy*23);g.lineBetween(x+dx*23,y+dy*23,x+dx*23,y+dy*19);}
   }
   private position(x:number,y:number): Position|undefined {
     const col=Math.floor((x-PAD)/CELL),row=Math.floor((y-PAD)/CELL);
@@ -123,13 +156,15 @@ export class BoardScene extends Phaser.Scene {
     this.pieces=next;
   }
   private tap(pos:Position) {
+    if(!this.canInteract())return;
     this.resetHint();this.hooks.audio.play('tap');
     if(this.selected&&Math.abs(pos.row-this.selected.row)+Math.abs(pos.col-this.selected.col)===1){void this.attempt(this.selected,pos);return;}
     if(this.engine.board[pos.row][pos.col].special){void this.attempt(pos);return;}
     this.clearSelection();this.selected=pos;this.pieces[pos.row][pos.col].setScale(1.12);
     this.tweens.add({targets:this.pieces[pos.row][pos.col],y:this.point(pos).y-3,duration:180,yoyo:true,repeat:1});
+    this.changed();
   }
-  private clearSelection(){if(this.selected)this.pieces[this.selected.row]?.[this.selected.col]?.setScale(1);this.selected=undefined;}
+  private clearSelection(){if(this.selected)this.pieces[this.selected.row]?.[this.selected.col]?.setScale(1);this.selected=undefined;this.changed();}
   private effectNotice(step:ResolveStep):Notice {
     const effects=step.effects??[];
     if(effects.length>1)return 'comboClear';
@@ -155,7 +190,7 @@ export class BoardScene extends Phaser.Scene {
   }
   private wait(ms:number){return new Promise<void>(resolve=>this.time.delayedCall(ms,()=>resolve()));}
   private async attempt(a:Position,b?:Position) {
-    if(this.busy||this.finished)return;
+    if(!this.canInteract())return;
     this.busy=true;this.hintTimer?.remove();this.clearSelection();this.hooks.onStart();
     this.pieces.forEach((row,r)=>row.forEach((item,c)=>{this.tweens.killTweensOf(item);item.setScale(1);item.setPosition(this.point({row:r,col:c}).x,this.point({row:r,col:c}).y);}));
     const x=this.pieces[a.row][a.col],y=b?this.pieces[b.row][b.col]:undefined;
@@ -165,14 +200,15 @@ export class BoardScene extends Phaser.Scene {
       this.tweens.add({targets:x,...this.point(b),duration:130,ease:'Sine.easeInOut'});
       this.tweens.add({targets:y,...this.point(a),duration:130,ease:'Sine.easeInOut'});
       await this.wait(140);
+      if(this.finished)return;
       if(result.valid){this.pieces[a.row][a.col]=y!;this.pieces[b.row][b.col]=x;}
     }
     if(!result.valid){
-      if(b){this.tweens.add({targets:x,...this.point(a),duration:130});this.tweens.add({targets:y,...this.point(b),duration:130});await this.wait(150);}
+      if(b){this.tweens.add({targets:x,...this.point(a),duration:130});this.tweens.add({targets:y,...this.point(b),duration:130});await this.wait(150);if(this.finished)return;}
     }else {
       for(let i=0;i<result.steps.length;i++){
         const step=result.steps[i];
-        if(!step.removed.length){this.hooks.onNotice('noMoves');this.paint(step.after);await this.wait(250);continue;}
+        if(!step.removed.length){this.hooks.onNotice('noMoves');this.paint(step.after);await this.wait(250);if(this.finished)return;continue;}
         const special=step.created?.length||step.effects?.length;
         this.hooks.audio.play(special?'special':'match',i+1);
         this.hooks.onNotice(step.effects?.length?this.effectNotice(step):step.leaves?.hits.some(p=>p.after===0)?'leavesCleared':step.leaves?.hits.length?'leafThinned':step.created?.length?'specialCreated':i>0?'chain':'matched');
@@ -181,6 +217,7 @@ export class BoardScene extends Phaser.Scene {
         if(step.effects?.length){
           this.effects?.special(step);
           const overlay=this.showEffect(step);await this.wait(180);
+          if(this.finished)return;
           this.tweens.add({targets:overlay,alpha:0,duration:130,onComplete:()=>overlay.destroy()});
         }
         step.removed.forEach(p=>{
@@ -188,14 +225,14 @@ export class BoardScene extends Phaser.Scene {
           const dot=this.add.circle(item.x,item.y,5,[0xf7b0a7,0xf4d488,0xa6c88e][i%3]);
           this.tweens.add({targets:dot,y:item.y-30,alpha:0,scale:2,duration:400,onComplete:()=>dot.destroy()});
         });
-        await this.wait(200);this.drop(step);if(step.leaves)this.paintLeaves(step.leaves.after);await this.wait(300);
+        await this.wait(200);if(this.finished)return;this.drop(step);if(step.leaves)this.paintLeaves(step.leaves.after);await this.wait(300);if(this.finished)return;
       }
       this.hooks.onMove(result.collected,result.score,result.steps.length,result.leavesCleared??0);
     }
-    this.busy=false;if(!this.finished)this.resetHint();
+    this.busy=false;if(!this.finished)this.resetHint();this.changed();
   }
-  stopPlaying(){this.finished=true;this.hintTimer?.remove();this.clearSelection();}
-  shuffle():boolean {if(this.busy||this.finished||!this.sys.isActive())return false;this.clearSelection();this.engine.shuffle();this.paint(this.engine.board);this.hooks.audio.play('special');this.resetHint();return true;}
+  stopPlaying(){this.finished=true;this.hintTimer?.remove();this.cancelInput();}
+  shuffle():boolean {if(!this.canInteract())return false;this.clearSelection();this.engine.shuffle();this.paint(this.engine.board);this.hooks.audio.play('special');this.resetHint();this.changed();return true;}
   canLeave(){return !this.busy;}
   private resetHint(){this.hintTimer?.remove();this.hintTimer=this.time.delayedCall(7500,()=>this.showHint());}
   private showHint(){
