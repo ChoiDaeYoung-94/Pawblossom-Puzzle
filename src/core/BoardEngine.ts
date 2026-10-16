@@ -1,5 +1,6 @@
 export type Special = 'row' | 'column' | 'bomb' | 'rainbow';
 export interface Tile { kind: number; special?: Special }
+export interface BoardSnapshot { board: Tile[][]; leaves: number[][] }
 export interface Position { row: number; col: number }
 export interface LeafPile extends Position { layers: 1 | 2 }
 export interface LeafHit extends Position { before: number; after: number }
@@ -38,13 +39,14 @@ export function seededRng(seed: number): () => number {
 export class BoardEngine {
   public board: Tile[][];
   public leaves: number[][];
-  constructor(public readonly rows = 8, public readonly cols = 8, private readonly rng: () => number = Math.random) {
+  constructor(public readonly rows = 8, public readonly cols = 8, private readonly rng: () => number = Math.random, snapshot?: BoardSnapshot) {
     if (!Number.isInteger(rows) || !Number.isInteger(cols) || rows < 3 || cols < 3) {
       throw new RangeError('보드의 행과 열은 각각 3 이상의 정수여야 합니다.');
     }
-    this.board = [];
-    this.leaves = Array.from({length:rows},()=>Array(cols).fill(0));
-    this.generate();
+    // 저장 검증을 마친 스냅샷은 초기 생성 난수를 소비하지 않고 복원합니다.
+    this.board = snapshot ? clone(snapshot.board) : [];
+    this.leaves = snapshot ? snapshot.leaves.map(row=>row.slice()) : Array.from({length:rows},()=>Array(cols).fill(0));
+    if(!snapshot)this.generate();
   }
 
   /** 낙엽은 타일과 별개인 고정 바닥층입니다. 잘못된 설정은 기존 층을 바꾸지 않습니다. */
