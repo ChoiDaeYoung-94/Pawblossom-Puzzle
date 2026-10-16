@@ -1,0 +1,1731 @@
+{
+  "dateKst": "2026-10-16",
+  "integrationIssue": {
+    "number": 72,
+    "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/72"
+  },
+  "deferredIssue": {
+    "number": 73,
+    "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73"
+  },
+  "originalMain": "5d65205e575f612ffde5d9bb0c54f43c226d19b6",
+  "integratedApplicationMain": "116020bdd550fbc98f38ee998905c83ea1b933d5",
+  "originalFinalHead": "f1edcf6974e3408f0cb91a709b10324607172231",
+  "applicationContentPreserved": true,
+  "sourceDifferences": [
+    ".github/ISSUE_TEMPLATE/task.md",
+    ".github/pull_request_template.md",
+    "AGENTS.md"
+  ],
+  "totalOriginalPRs": 35,
+  "merged": 35,
+  "preapplied": 0,
+  "prs": [
+    {
+      "number": 3,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/3",
+      "originalHead": "d0436936600e508e0c792e5d50ef28447ea94ed0",
+      "originalBase": "5d65205e575f612ffde5d9bb0c54f43c226d19b6",
+      "integratedHead": "a2dc052a6e5c9565d96950df764122f0362ee4c2",
+      "mainBase": "5d65205e575f612ffde5d9bb0c54f43c226d19b6",
+      "mergeSha": "1138d0f79b48085de1b78faa5c377c42d6e88ba4",
+      "preapplied": null,
+      "checks": "도입 전, 미실행",
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": []
+    },
+    {
+      "number": 5,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/5",
+      "originalHead": "8539a0a0985489c79c7167ebedc393d81edb667c",
+      "originalBase": "5d65205e575f612ffde5d9bb0c54f43c226d19b6",
+      "integratedHead": "bd6e9fbaca1145616163700daf5b144f70796a26",
+      "mainBase": "1138d0f79b48085de1b78faa5c377c42d6e88ba4",
+      "mergeSha": "2cc331177862488c47f3809549af9173319ab991",
+      "preapplied": null,
+      "checks": [],
+      "localTests": "\n> pawblossom-puzzle@0.1.0 test\n> vitest run\n\n\n RUN  v4.1.11 D:/codex/worktrees/main-integration/match3\n\n\n Test Files  3 passed (3)\n      Tests  32 passed (32)\n   Start at  16:38:57\n   Duration  379ms (transform 134ms, setup 0ms, import 380ms, tests 75ms, environment 0ms)\n\n",
+      "treeMatches": true,
+      "conflictFiles": []
+    },
+    {
+      "number": 7,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/7",
+      "originalHead": "86f2e2e7c274ed268bd2a9246b6195bb529bfd21",
+      "originalBase": "8539a0a0985489c79c7167ebedc393d81edb667c",
+      "integratedHead": "958252ad3eb93b04802826b0320876930dbbb9de",
+      "mainBase": "2cc331177862488c47f3809549af9173319ab991",
+      "mergeSha": "1053e32f859e6669547829693fff4504e98120ec",
+      "preapplied": null,
+      "checks": [],
+      "localTests": "\n> pawblossom-puzzle@0.1.0 test\n> vitest run\n\n\n RUN  v4.1.11 D:/codex/worktrees/main-integration/match3\n\n\n Test Files  4 passed (4)\n      Tests  35 passed (35)\n   Start at  16:40:44\n   Duration  386ms (transform 122ms, setup 0ms, import 451ms, tests 108ms, environment 0ms)\n\n",
+      "treeMatches": true,
+      "conflictFiles": [
+        "README.md",
+        "docs/roadmap.ko.md",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 9,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/9",
+      "originalHead": "ee8861e77d2e18501f442ef0bc861aede051eed0",
+      "originalBase": "86f2e2e7c274ed268bd2a9246b6195bb529bfd21",
+      "integratedHead": "eb373bec72f94128e20156128d8d840522065f7d",
+      "mainBase": "1053e32f859e6669547829693fff4504e98120ec",
+      "mergeSha": "10b652c445584fa94408de392a8ff04200606bcc",
+      "preapplied": null,
+      "checks": [],
+      "localTests": "\n> pawblossom-puzzle@0.1.0 test\n> vitest run\n\n\n RUN  v4.1.11 D:/codex/worktrees/main-integration/match3\n\n\n Test Files  5 passed (5)\n      Tests  42 passed (42)\n   Start at  16:41:09\n   Duration  413ms (transform 202ms, setup 0ms, import 516ms, tests 149ms, environment 0ms)\n\n",
+      "treeMatches": true,
+      "conflictFiles": [
+        "README.md",
+        "docs/assets.ko.md",
+        "docs/roadmap.ko.md",
+        "docs/tutorial-qa.ko.md",
+        "src/i18n.ts",
+        "src/main.ts",
+        "src/style.css",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 11,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/11",
+      "originalHead": "efb45c0abf8d5fc2752b348ffc02ba761c7a53d0",
+      "originalBase": "ee8861e77d2e18501f442ef0bc861aede051eed0",
+      "integratedHead": "65762e223ac4edb5cd1325993d3bc36bc67cb480",
+      "mainBase": "10b652c445584fa94408de392a8ff04200606bcc",
+      "mergeSha": "6c3eee4a7dac8a38cd4added28b39f0b4a1c178d",
+      "preapplied": null,
+      "checks": [],
+      "localTests": "\n> pawblossom-puzzle@0.1.0 test\n> vitest run\n\n\n RUN  v4.1.11 D:/codex/worktrees/main-integration/match3\n\n\n Test Files  5 passed (5)\n      Tests  43 passed (43)\n   Start at  16:41:28\n   Duration  418ms (transform 212ms, setup 0ms, import 523ms, tests 151ms, environment 0ms)\n\n",
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/android-release.ko.md",
+        "docs/release-checklist.ko.md",
+        "src/main.ts",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 13,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/13",
+      "originalHead": "fe28f6fa8b1e1a7bd9394c14c871d525c57c8e52",
+      "originalBase": "efb45c0abf8d5fc2752b348ffc02ba761c7a53d0",
+      "integratedHead": "4cfb24f031d880ec538b23b6d639055be8f67d1f",
+      "mainBase": "6c3eee4a7dac8a38cd4added28b39f0b4a1c178d",
+      "mergeSha": "6c673925115c5e96fb2daad5b4672783e500f09b",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "4cfb24f031d880ec538b23b6d639055be8f67d1f",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38868881055/job/116868003244"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "4cfb24f031d880ec538b23b6d639055be8f67d1f",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38868881055/job/116868002759"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "README.md",
+        "docs/release-checklist.ko.md"
+      ]
+    },
+    {
+      "number": 15,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/15",
+      "originalHead": "7be89909f56846f14b7df6a9d9667102c94a31c4",
+      "originalBase": "fe28f6fa8b1e1a7bd9394c14c871d525c57c8e52",
+      "integratedHead": "ff141b85a7f9dc1bdf404e6e7f0d905d3a984482",
+      "mainBase": "6c673925115c5e96fb2daad5b4672783e500f09b",
+      "mergeSha": "7815e67d2a2c5582997b230687d2ec055b8401e4",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "ff141b85a7f9dc1bdf404e6e7f0d905d3a984482",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38868963543/job/116868269333"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "ff141b85a7f9dc1bdf404e6e7f0d905d3a984482",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38868963543/job/116868268939"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/release-checklist.ko.md",
+        "docs/remote-device-test.ko.md",
+        "src/i18n.ts",
+        "src/main.ts",
+        "src/state.ts",
+        "src/style.css",
+        "tests/state.test.ts"
+      ]
+    },
+    {
+      "number": 17,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/17",
+      "originalHead": "3c3dd6886a3dddd978658f75c2ea35fbcf6264c0",
+      "originalBase": "7be89909f56846f14b7df6a9d9667102c94a31c4",
+      "integratedHead": "2a906dd40d6b702072e7f9d9a6e7fa45021d2604",
+      "mainBase": "7815e67d2a2c5582997b230687d2ec055b8401e4",
+      "mergeSha": "410e762c8eab4b6aba8acb51b03892150e022407",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "2a906dd40d6b702072e7f9d9a6e7fa45021d2604",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869056940/job/116868566729"
+        },
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "2a906dd40d6b702072e7f9d9a6e7fa45021d2604",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869056940/job/116868566447"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/audio-direction.ko.md",
+        "src/audio/AudioManager.ts"
+      ]
+    },
+    {
+      "number": 19,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/19",
+      "originalHead": "900aa52f200c2cf1bc7b4959bee3b3a27d035a30",
+      "originalBase": "3c3dd6886a3dddd978658f75c2ea35fbcf6264c0",
+      "integratedHead": "44d024724284a3929b4d0dcd3c5617791c98efd7",
+      "mainBase": "410e762c8eab4b6aba8acb51b03892150e022407",
+      "mergeSha": "157ba8591d5872c9a2468a8b7cd76da8835336a5",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "44d024724284a3929b4d0dcd3c5617791c98efd7",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869142279/job/116868840844"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "44d024724284a3929b4d0dcd3c5617791c98efd7",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869142279/job/116868840643"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "README.md",
+        "android/app/build.gradle",
+        "docs/mobile-play-feedback.ko.md",
+        "docs/release-checklist.ko.md",
+        "package-lock.json",
+        "package.json",
+        "src/BoardScene.ts",
+        "src/i18n.ts",
+        "src/main.ts",
+        "tests/board-animation.test.ts",
+        "tests/core.test.ts"
+      ]
+    },
+    {
+      "number": 21,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/21",
+      "originalHead": "db2744b46352d057329380e6bef75e02f52a9b78",
+      "originalBase": "900aa52f200c2cf1bc7b4959bee3b3a27d035a30",
+      "integratedHead": "ffdac82443f69701c20eff8b833e93d5e2555797",
+      "mainBase": "157ba8591d5872c9a2468a8b7cd76da8835336a5",
+      "mergeSha": "0ed32a695642181cdf88267ac3d7be3d860c2d44",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "ffdac82443f69701c20eff8b833e93d5e2555797",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869229571/job/116869118726"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "ffdac82443f69701c20eff8b833e93d5e2555797",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869229571/job/116869118509"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/android-release.ko.md",
+        "docs/assets.ko.md",
+        "docs/release-checklist.ko.md",
+        "docs/remote-device-test.ko.md"
+      ]
+    },
+    {
+      "number": 23,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/23",
+      "originalHead": "02f736f214575607cbd2978d7a5b99926d29df29",
+      "originalBase": "db2744b46352d057329380e6bef75e02f52a9b78",
+      "integratedHead": "7f0bd47b43adb868f8721ec3db9afa671825059d",
+      "mainBase": "0ed32a695642181cdf88267ac3d7be3d860c2d44",
+      "mergeSha": "57bf8a4172680f77a5e7a2e56d1f4a0434151584",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "7f0bd47b43adb868f8721ec3db9afa671825059d",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869321733/job/116869416938"
+        },
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "7f0bd47b43adb868f8721ec3db9afa671825059d",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869321733/job/116869416631"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "scripts/audio-output-qa.mjs",
+        "src/audio/AudioManager.ts"
+      ]
+    },
+    {
+      "number": 25,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/25",
+      "originalHead": "492dbc6865c509d6c15ec2d2ba1c185379c05883",
+      "originalBase": "02f736f214575607cbd2978d7a5b99926d29df29",
+      "integratedHead": "99935b50f33d0e3dc71ccacb417c347d03b167ad",
+      "mainBase": "57bf8a4172680f77a5e7a2e56d1f4a0434151584",
+      "mergeSha": "ed00358b02c46d764894cb63870c4323af2f05ba",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "99935b50f33d0e3dc71ccacb417c347d03b167ad",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869401307/job/116869678036"
+        },
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "99935b50f33d0e3dc71ccacb417c347d03b167ad",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869401307/job/116869677803"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/assets.ko.md",
+        "src/main.ts",
+        "src/style.css",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 27,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/27",
+      "originalHead": "3f2a3f382b70ffb3d10f830a0a93f5c85e9be8d0",
+      "originalBase": "492dbc6865c509d6c15ec2d2ba1c185379c05883",
+      "integratedHead": "8e31e1845c2bf2d1e6aca197648cca654a0a56a3",
+      "mainBase": "ed00358b02c46d764894cb63870c4323af2f05ba",
+      "mergeSha": "4856d2229d3c9090150d95894ccbed36bc289ec7",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "8e31e1845c2bf2d1e6aca197648cca654a0a56a3",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869483098/job/116869941808"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "8e31e1845c2bf2d1e6aca197648cca654a0a56a3",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869483098/job/116869941519"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "android/app/build.gradle",
+        "docs/android-release.ko.md",
+        "docs/assets.ko.md",
+        "docs/level-balance.ko.md",
+        "docs/release-checklist.ko.md",
+        "docs/remote-device-test.ko.md",
+        "package-lock.json",
+        "package.json",
+        "scripts/balance-report.mjs",
+        "src/BoardScene.ts",
+        "src/core/BoardEngine.ts",
+        "src/core/index.ts",
+        "src/i18n.ts",
+        "src/levels.ts",
+        "src/main.ts",
+        "src/style.css",
+        "tests/board-animation.test.ts",
+        "tests/levels.test.ts",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 29,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/29",
+      "originalHead": "72e495ee663691e9a9f6c91043588e6f84a9286b",
+      "originalBase": "3f2a3f382b70ffb3d10f830a0a93f5c85e9be8d0",
+      "integratedHead": "0b61a324a2be133539d1c95df1b5f968a44d3699",
+      "mainBase": "4856d2229d3c9090150d95894ccbed36bc289ec7",
+      "mergeSha": "08605701011b4c0862c1f3441c7e9f1d2a9f1e15",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "0b61a324a2be133539d1c95df1b5f968a44d3699",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869568445/job/116870218206"
+        },
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "0b61a324a2be133539d1c95df1b5f968a44d3699",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869568445/job/116870217832"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        ".github/workflows/web-ci.yml",
+        "android/app/build.gradle",
+        "docs/android-release.ko.md",
+        "docs/release-checklist.ko.md",
+        "docs/remote-device-test.ko.md",
+        "package-lock.json",
+        "package.json",
+        "src/i18n.ts",
+        "src/main.ts",
+        "src/style.css",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 31,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/31",
+      "originalHead": "092a3e5f19dbeb5f77c1f3c720894687116fce10",
+      "originalBase": "72e495ee663691e9a9f6c91043588e6f84a9286b",
+      "integratedHead": "5f1cb70bf0468726324e34076ae84ecf997650b9",
+      "mainBase": "08605701011b4c0862c1f3441c7e9f1d2a9f1e15",
+      "mergeSha": "6ceb7b3802d390abe6e1d664a644379751d1e834",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "5f1cb70bf0468726324e34076ae84ecf997650b9",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869680752/job/116870576035"
+        },
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "5f1cb70bf0468726324e34076ae84ecf997650b9",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869680752/job/116870575779"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "android/app/build.gradle",
+        "docs/android-release.ko.md",
+        "docs/assets.ko.md",
+        "docs/mobile-play-feedback.ko.md",
+        "docs/release-checklist.ko.md",
+        "docs/remote-device-test.ko.md",
+        "package-lock.json",
+        "package.json",
+        "src/BoardScene.ts",
+        "src/i18n.ts",
+        "src/main.ts",
+        "tests/board-animation.test.ts",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 33,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/33",
+      "originalHead": "1f844a62274ef227cf28b1907f703a9b7cb1660b",
+      "originalBase": "092a3e5f19dbeb5f77c1f3c720894687116fce10",
+      "integratedHead": "406595f1084f7cf98e0e83adcc7053f4b23389a3",
+      "mainBase": "6ceb7b3802d390abe6e1d664a644379751d1e834",
+      "mergeSha": "91c85e544e1225e494cbbb7056f5f3573f837046",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "406595f1084f7cf98e0e83adcc7053f4b23389a3",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869792498/job/116870931649"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "406595f1084f7cf98e0e83adcc7053f4b23389a3",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869792498/job/116870931582"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/mobile-play-feedback.ko.md",
+        "src/BoardEffects.ts",
+        "src/i18n.ts",
+        "tests/board-effects.test.ts",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 35,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/35",
+      "originalHead": "2689209469cd5b00724662d8956c12d58a6d669d",
+      "originalBase": "1f844a62274ef227cf28b1907f703a9b7cb1660b",
+      "integratedHead": "60bdf802032fc93546f73933f00223f0bfc5df62",
+      "mainBase": "91c85e544e1225e494cbbb7056f5f3573f837046",
+      "mergeSha": "93318d91fec5e49b941b4dc3086032772782e46a",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "60bdf802032fc93546f73933f00223f0bfc5df62",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869875668/job/116871199327"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "60bdf802032fc93546f73933f00223f0bfc5df62",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869875668/job/116871199027"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "android/app/build.gradle",
+        "docs/android-release.ko.md",
+        "docs/assets.ko.md",
+        "docs/mobile-play-feedback.ko.md",
+        "docs/release-checklist.ko.md",
+        "docs/remote-device-test.ko.md",
+        "package-lock.json",
+        "package.json",
+        "src/i18n.ts",
+        "src/main.ts",
+        "src/style.css",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 37,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/37",
+      "originalHead": "25fc8bd0785b78eaf7818f16484ceb7ea8dc4cd1",
+      "originalBase": "2689209469cd5b00724662d8956c12d58a6d669d",
+      "integratedHead": "b0144290eefce50539c1e6d25b744fd5c6d41118",
+      "mainBase": "93318d91fec5e49b941b4dc3086032772782e46a",
+      "mergeSha": "f1be3f610dec6d125bae36a6ebb1df09d9ce148d",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "b0144290eefce50539c1e6d25b744fd5c6d41118",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869963811/job/116871478216"
+        },
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "b0144290eefce50539c1e6d25b744fd5c6d41118",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38869963811/job/116871477787"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/level-balance.ko.md",
+        "docs/release-checklist.ko.md",
+        "docs/roadmap.ko.md",
+        "src/i18n.ts",
+        "src/levels.ts",
+        "src/main.ts",
+        "src/state.ts",
+        "src/style.css",
+        "tests/levels.test.ts",
+        "tests/state.test.ts",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 39,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/39",
+      "originalHead": "30a236df8d565bd2dcd3b557a411a57ffa22b18b",
+      "originalBase": "25fc8bd0785b78eaf7818f16484ceb7ea8dc4cd1",
+      "integratedHead": "ebe854fad02cfbe9d160e9982c1d0d35ca141035",
+      "mainBase": "f1be3f610dec6d125bae36a6ebb1df09d9ce148d",
+      "mergeSha": "c59b7ce42b8d488bc2e87e9b856102a1dc076667",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "ebe854fad02cfbe9d160e9982c1d0d35ca141035",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870048670/job/116871749583"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "ebe854fad02cfbe9d160e9982c1d0d35ca141035",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870048670/job/116871749247"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/release-checklist.ko.md",
+        "src/BoardScene.ts",
+        "src/main.ts",
+        "src/style.css",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 42,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/42",
+      "originalHead": "0445cabff2340996006b459bd57af12b0591d236",
+      "originalBase": "30a236df8d565bd2dcd3b557a411a57ffa22b18b",
+      "integratedHead": "ea1bdeafd48fc2ba9d0b0a58d5ada9993e1d3e3b",
+      "mainBase": "c59b7ce42b8d488bc2e87e9b856102a1dc076667",
+      "mergeSha": "56e6067b751f3ec2f79ca2ae55d668782daaa2da",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "ea1bdeafd48fc2ba9d0b0a58d5ada9993e1d3e3b",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870135826/job/116872027395"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "ea1bdeafd48fc2ba9d0b0a58d5ada9993e1d3e3b",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870135826/job/116872027162"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/browser-qa.ko.md",
+        "docs/release-checklist.ko.md",
+        "docs/roadmap.ko.md",
+        "src/BoardScene.ts",
+        "src/core/BoardEngine.ts",
+        "src/core/index.ts",
+        "src/i18n.ts",
+        "src/main.ts",
+        "src/state.ts",
+        "tests/state.test.ts",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 43,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/43",
+      "originalHead": "d2339912cb3889f6d14cb93dce2d75b6bf735f20",
+      "originalBase": "0445cabff2340996006b459bd57af12b0591d236",
+      "integratedHead": "f2deb1259ebd661961e9d7de6e7f6c10db187356",
+      "mainBase": "56e6067b751f3ec2f79ca2ae55d668782daaa2da",
+      "mergeSha": "762d23f78d1bac95351eae3881ec7f8a19a72bc9",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "f2deb1259ebd661961e9d7de6e7f6c10db187356",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870219084/job/116872293937"
+        },
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "f2deb1259ebd661961e9d7de6e7f6c10db187356",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870219084/job/116872293707"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/browser-qa.ko.md",
+        "docs/release-checklist.ko.md",
+        "src/BoardScene.ts",
+        "src/main.ts",
+        "tests/board-animation.test.ts",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 45,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/45",
+      "originalHead": "a0d3e3c26e358e2191c774b864db521b5d38e5e1",
+      "originalBase": "d2339912cb3889f6d14cb93dce2d75b6bf735f20",
+      "integratedHead": "93aeab16d0c121980749a80b13dd1f9e6b10386b",
+      "mainBase": "762d23f78d1bac95351eae3881ec7f8a19a72bc9",
+      "mergeSha": "dc198d11352fa42d4aa19e2ca7022b74a3818206",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "93aeab16d0c121980749a80b13dd1f9e6b10386b",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870306110/job/116872573027"
+        },
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "93aeab16d0c121980749a80b13dd1f9e6b10386b",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870306110/job/116872572757"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": []
+    },
+    {
+      "number": 48,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/48",
+      "originalHead": "a2889aebf53987449cdc6792d0a981860d5baa29",
+      "originalBase": "a0d3e3c26e358e2191c774b864db521b5d38e5e1",
+      "integratedHead": "4548f46ffd8de9ae83d695e2e5b275127b8579ca",
+      "mainBase": "dc198d11352fa42d4aa19e2ca7022b74a3818206",
+      "mergeSha": "a40a32e645940d5d75a368dfa6488a53ca940007",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "4548f46ffd8de9ae83d695e2e5b275127b8579ca",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870415158/job/116872919000"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "4548f46ffd8de9ae83d695e2e5b275127b8579ca",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870415158/job/116872918779"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/browser-qa.ko.md",
+        "src/BoardScene.ts",
+        "src/i18n.ts",
+        "src/main.ts",
+        "src/style.css",
+        "tests/board-animation.test.ts",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 49,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/49",
+      "originalHead": "0b084d79951aef6e284785c9853b4755306c8b3e",
+      "originalBase": "a2889aebf53987449cdc6792d0a981860d5baa29",
+      "integratedHead": "316d92979237de4caebe96c8ae9dd3aa57979fd3",
+      "mainBase": "a40a32e645940d5d75a368dfa6488a53ca940007",
+      "mergeSha": "b5e10242c68297b9d27a99e4933d8d968bcf2f8e",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "316d92979237de4caebe96c8ae9dd3aa57979fd3",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870500247/job/116873188696"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "316d92979237de4caebe96c8ae9dd3aa57979fd3",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870500247/job/116873188092"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/assets.ko.md",
+        "docs/browser-qa.ko.md",
+        "docs/release-checklist.ko.md"
+      ]
+    },
+    {
+      "number": 52,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/52",
+      "originalHead": "0986accc476fc18ed35b1f23ec90c65044032d2b",
+      "originalBase": "0b084d79951aef6e284785c9853b4755306c8b3e",
+      "integratedHead": "3bedd131589c4c055c10ad1c250dc9cdc8fb3a62",
+      "mainBase": "b5e10242c68297b9d27a99e4933d8d968bcf2f8e",
+      "mergeSha": "a635a2529000e3d3fa484a2dbd347773269b2d9d",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "3bedd131589c4c055c10ad1c250dc9cdc8fb3a62",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870579590/job/116873448959"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "3bedd131589c4c055c10ad1c250dc9cdc8fb3a62",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870579590/job/116873448347"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/browser-qa.ko.md",
+        "docs/release-checklist.ko.md",
+        "scripts/round-save-qa.mjs",
+        "src/main.ts",
+        "src/style.css"
+      ]
+    },
+    {
+      "number": 53,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/53",
+      "originalHead": "3d60c0d0ea97f6bb523583436c66799efa8904c7",
+      "originalBase": "0986accc476fc18ed35b1f23ec90c65044032d2b",
+      "integratedHead": "20d7042a4e6e53e563f753fd2e43842631a533d8",
+      "mainBase": "a635a2529000e3d3fa484a2dbd347773269b2d9d",
+      "mergeSha": "9ed5c4e78407f85e29e7793746dbb32fd0a797f8",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "20d7042a4e6e53e563f753fd2e43842631a533d8",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870663143/job/116873719989"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "20d7042a4e6e53e563f753fd2e43842631a533d8",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870663143/job/116873719602"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/android-release.ko.md",
+        "docs/release-checklist.ko.md",
+        "docs/roadmap.ko.md"
+      ]
+    },
+    {
+      "number": 55,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/55",
+      "originalHead": "3a4d874d627cd0df85a8bfd723e1372617fad65c",
+      "originalBase": "3d60c0d0ea97f6bb523583436c66799efa8904c7",
+      "integratedHead": "9c42f6a1e1a26ca817e7cc56647fd42e8029c90a",
+      "mainBase": "9ed5c4e78407f85e29e7793746dbb32fd0a797f8",
+      "mergeSha": "79da8be3203cf28fdbfe39328f1b5f66a12e0361",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "9c42f6a1e1a26ca817e7cc56647fd42e8029c90a",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870744848/job/116873992430"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "9c42f6a1e1a26ca817e7cc56647fd42e8029c90a",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870744848/job/116873991973"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        ".github/workflows/web-ci.yml",
+        "android/app/build.gradle",
+        "docs/android-release.ko.md",
+        "docs/release-checklist.ko.md",
+        "docs/roadmap.ko.md",
+        "src/buildFlags.ts",
+        "src/main.ts",
+        "src/style.css",
+        "tests/ui-flow.test.ts",
+        "vite.config.ts"
+      ]
+    },
+    {
+      "number": 57,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/57",
+      "originalHead": "4990298cbadea23a4e5d7f5e7aafc991235305fc",
+      "originalBase": "3a4d874d627cd0df85a8bfd723e1372617fad65c",
+      "integratedHead": "9e3e7ba43bc96542a55f9a24b21e9f4de7948ac1",
+      "mainBase": "79da8be3203cf28fdbfe39328f1b5f66a12e0361",
+      "mergeSha": "e3d0ec32a518ced7c753e6651c673b0665df4547",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "9e3e7ba43bc96542a55f9a24b21e9f4de7948ac1",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870843183/job/116874298738"
+        },
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "9e3e7ba43bc96542a55f9a24b21e9f4de7948ac1",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870843183/job/116874298334"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        ".github/workflows/web-ci.yml",
+        "android/app/build.gradle",
+        "android/app/src/debug/java/com/choidaeyoung/pawblossompuzzle/TestAdsPlugin.java",
+        "android/app/src/main/java/com/choidaeyoung/pawblossompuzzle/MainActivity.java",
+        "docs/android-release.ko.md",
+        "docs/release-checklist.ko.md",
+        "docs/roadmap.ko.md",
+        "scripts/android-test-ads-qa.ps1",
+        "src/buildFlags.ts",
+        "src/main.ts",
+        "src/style.css",
+        "tests/ui-flow.test.ts",
+        "vite.config.ts"
+      ]
+    },
+    {
+      "number": 59,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/59",
+      "originalHead": "da180a294da75528bfdd4399ed90782ebdfd9148",
+      "originalBase": "4990298cbadea23a4e5d7f5e7aafc991235305fc",
+      "integratedHead": "accf4d1f3e9450166a05973651e6b427e40db4a5",
+      "mainBase": "e3d0ec32a518ced7c753e6651c673b0665df4547",
+      "mergeSha": "8f78895f0dad4f7b231b21100a0913c0e7f2ad84",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "accf4d1f3e9450166a05973651e6b427e40db4a5",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870962589/job/116874675923"
+        },
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "accf4d1f3e9450166a05973651e6b427e40db4a5",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38870962589/job/116874675540"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/browser-qa.ko.md",
+        "docs/release-checklist.ko.md",
+        "docs/roadmap.ko.md",
+        "scripts/round-save-qa.mjs",
+        "src/i18n.ts",
+        "src/main.ts",
+        "src/state.ts",
+        "src/style.css",
+        "tests/state.test.ts",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 61,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/61",
+      "originalHead": "3b93e4b27c47b1aba6736dab100f644f5370e61a",
+      "originalBase": "da180a294da75528bfdd4399ed90782ebdfd9148",
+      "integratedHead": "a2abeb0e76b5836b8686c05c163d0fe1af9c344a",
+      "mainBase": "8f78895f0dad4f7b231b21100a0913c0e7f2ad84",
+      "mergeSha": "a1e4249560d919c6191bfb1d855fcce1258bb4bb",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "a2abeb0e76b5836b8686c05c163d0fe1af9c344a",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38871054165/job/116874968909"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "a2abeb0e76b5836b8686c05c163d0fe1af9c344a",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38871054165/job/116874968800"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/release-checklist.ko.md",
+        "docs/roadmap.ko.md",
+        "scripts/game-lifecycle-qa.mjs",
+        "src/BoardScene.ts",
+        "src/main.ts",
+        "tests/board-animation.test.ts",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 63,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/63",
+      "originalHead": "2632d6e6342fa1ef142e596c0a4e87252d015303",
+      "originalBase": "3b93e4b27c47b1aba6736dab100f644f5370e61a",
+      "integratedHead": "82f1b933fa9c2d1b250a3f45f4f4b6dfa0d17645",
+      "mainBase": "a1e4249560d919c6191bfb1d855fcce1258bb4bb",
+      "mergeSha": "1d0e0700143bda7bef7dbe5601762f3a934163b3",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "82f1b933fa9c2d1b250a3f45f4f4b6dfa0d17645",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38871172029/job/116875352090"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "82f1b933fa9c2d1b250a3f45f4f4b6dfa0d17645",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38871172029/job/116875351638"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/assets.ko.md",
+        "docs/browser-qa.ko.md",
+        "docs/release-checklist.ko.md",
+        "docs/roadmap.ko.md",
+        "src/main.ts",
+        "src/style.css",
+        "tests/ui-flow.test.ts"
+      ]
+    },
+    {
+      "number": 65,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/65",
+      "originalHead": "850c1f6c066e432ac24cb2d6180d954856ba7dc1",
+      "originalBase": "2632d6e6342fa1ef142e596c0a4e87252d015303",
+      "integratedHead": "fb2575a4c9706ca801309703c6f5d752d5a6d226",
+      "mainBase": "1d0e0700143bda7bef7dbe5601762f3a934163b3",
+      "mergeSha": "3f985c75345f63b68e1dccafc7c833ad185cfab1",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "fb2575a4c9706ca801309703c6f5d752d5a6d226",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38871262409/job/116875646256"
+        },
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "fb2575a4c9706ca801309703c6f5d752d5a6d226",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38871262409/job/116875645852"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/browser-qa.ko.md",
+        "docs/release-checklist.ko.md",
+        "docs/roadmap.ko.md",
+        "scripts/audio-output-qa.mjs",
+        "src/audio/AudioManager.ts"
+      ]
+    },
+    {
+      "number": 67,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/67",
+      "originalHead": "e3a837393f7a5ed80d2e64e846827e3df3119df5",
+      "originalBase": "850c1f6c066e432ac24cb2d6180d954856ba7dc1",
+      "integratedHead": "46cb25d7f832cbb3a783c5604adbe6225768ec79",
+      "mainBase": "3f985c75345f63b68e1dccafc7c833ad185cfab1",
+      "mergeSha": "0a416de5a09f4112de6201fefca2903a1fbb7115",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "46cb25d7f832cbb3a783c5604adbe6225768ec79",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38871350148/job/116875931370"
+        },
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "46cb25d7f832cbb3a783c5604adbe6225768ec79",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38871350148/job/116875930865"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "android/app/build.gradle",
+        "docs/android-release.ko.md",
+        "docs/browser-qa.ko.md",
+        "docs/release-checklist.ko.md",
+        "docs/remote-device-test.ko.md",
+        "docs/roadmap.ko.md",
+        "package-lock.json",
+        "package.json",
+        "scripts/android-billing-qa.ps1",
+        "scripts/android-test-ads-qa.ps1"
+      ]
+    },
+    {
+      "number": 69,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/69",
+      "originalHead": "4f750dec9753473b2f369e87bc1bbd3ffa0e65d3",
+      "originalBase": "e3a837393f7a5ed80d2e64e846827e3df3119df5",
+      "integratedHead": "44905dec6db29cb4536c93a9409da6d22574ac7d",
+      "mainBase": "0a416de5a09f4112de6201fefca2903a1fbb7115",
+      "mergeSha": "c61bf98b0e97946b690e685ee9ad828bbb9ade61",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "44905dec6db29cb4536c93a9409da6d22574ac7d",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38871442536/job/116876224679"
+        },
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "44905dec6db29cb4536c93a9409da6d22574ac7d",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38871442536/job/116876224289"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "README.md",
+        "docs/browser-qa.ko.md",
+        "docs/release-checklist.ko.md",
+        "docs/roadmap.ko.md",
+        "src/i18n.ts",
+        "src/main.ts",
+        "tests/ui-flow.test.ts",
+        "vite.config.ts"
+      ]
+    },
+    {
+      "number": 71,
+      "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/71",
+      "originalHead": "f1edcf6974e3408f0cb91a709b10324607172231",
+      "originalBase": "4f750dec9753473b2f369e87bc1bbd3ffa0e65d3",
+      "integratedHead": "c3ca6437f981aeb566f867af447d8157b093a215",
+      "mainBase": "c61bf98b0e97946b690e685ee9ad828bbb9ade61",
+      "mergeSha": "116020bdd550fbc98f38ee998905c83ea1b933d5",
+      "preapplied": null,
+      "checks": [
+        {
+          "name": "Node 24 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "c3ca6437f981aeb566f867af447d8157b093a215",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38871566258/job/116876632085"
+        },
+        {
+          "name": "Node 22 검증",
+          "status": "completed",
+          "conclusion": "success",
+          "sha": "c3ca6437f981aeb566f867af447d8157b093a215",
+          "url": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38871566258/job/116876631785"
+        }
+      ],
+      "localTests": null,
+      "treeMatches": true,
+      "conflictFiles": [
+        "docs/assets.ko.md",
+        "docs/browser-qa.ko.md",
+        "docs/release-checklist.ko.md",
+        "docs/roadmap.ko.md",
+        "src/BoardEffects.ts",
+        "src/BoardScene.ts",
+        "src/main.ts",
+        "src/style.css",
+        "tests/board-animation.test.ts",
+        "tests/ui-flow.test.ts"
+      ]
+    }
+  ],
+  "localVerification": {
+    "tests": 349,
+    "node": "24.21.0",
+    "steps": [
+      {
+        "label": "final-npm-ci",
+        "exit": 0,
+        "logHash": "4d3d17bf87beba2f4c40f3d4a1179a8db16c19cce43fae4c452eb789c343bb6e"
+      },
+      {
+        "label": "final-test",
+        "exit": 0,
+        "logHash": "430c78b5bf11a41869a53697eec08db7f40aafa9c317311d8a5086e50f19a93f"
+      },
+      {
+        "label": "final-testing-build",
+        "exit": 0,
+        "logHash": "87ac0ebf563e8480207962884913e86b0d6be5fe9ed5ba0d14b0a4b3a62222a6"
+      },
+      {
+        "label": "final-testing-browser",
+        "exit": 0,
+        "logHash": "48436cc8b9852eb7b6a0ee8ebdb51af869dec1af4c994afe6e5e635e082d7682"
+      },
+      {
+        "label": "final-production-build",
+        "exit": 0,
+        "logHash": "64459f957ef41f11cf7ec6c405b2738a6ca6e895cd2b5e6b4211ac0c103792d0"
+      },
+      {
+        "label": "final-production-browser",
+        "exit": 0,
+        "logHash": "a0b8f67cd4d3012a5cfbbc8f5d95fa5d307ceb96fc74f8126949ae675922d25c"
+      }
+    ],
+    "finalFlags": {
+      "testTools": false,
+      "androidTestAds": false,
+      "androidTestBilling": false
+    }
+  },
+  "browser": [
+    {
+      "file": "docs/performance/main-integration-issue-68-localization-testing-20261016.json",
+      "variant": "testing",
+      "cases": 6,
+      "pageerrors": [],
+      "sha256": "1ecd6707648ba6cf7ba5c2cca2289d205b2fbded3a722df902b17ff3e11315c9"
+    },
+    {
+      "file": "docs/performance/main-integration-issue-70-reduced-motion-testing-20261016.json",
+      "variant": "testing",
+      "cases": 8,
+      "pageerrors": [],
+      "sha256": "f77ecbbb4c3f917a71241b50c7d388c7568875f06b24808d47af81db9fd67a40"
+    },
+    {
+      "file": "docs/performance/main-integration-issue-68-localization-production-20261016.json",
+      "variant": "production",
+      "cases": 6,
+      "pageerrors": [],
+      "sha256": "a4f31ba6f4511c10d9cd3768d470c37cf8d5e49763b8510366508153ae019bb4"
+    },
+    {
+      "file": "docs/performance/main-integration-issue-70-layout-smoke-production-20261016.json",
+      "variant": "production",
+      "cases": 4,
+      "pageerrors": [],
+      "sha256": "cd4182e7ed5179aa41216a108bd2b09652e19048114c78da9a076ed6af8de58d"
+    },
+    {
+      "file": "docs/performance/main-integration-issue-70-reduced-motion-production-20261016.json",
+      "variant": "production",
+      "cases": 8,
+      "pageerrors": [],
+      "sha256": "4e74a17df281896224080a27f64a7c850c255eb3c4dc09bccf433891891e6fb8"
+    }
+  ],
+  "jvm": {
+    "tests": 8,
+    "execution": "같은 원본의 순수 Java 3개·기존 BillingLogicTest를 JDK/JUnit으로 직접 컴파일·실행",
+    "gradleDryRunExit": 0,
+    "apkAabGenerated": false,
+    "androidSync": false,
+    "realPlayBillingVerified": false,
+    "runner": "PowerShell 7.6.5 · JDK 21 · JUnit 4.13.2"
+  },
+  "cleanup": {
+    "remoteBranches": [
+      "codex/1-issue-pr-workflow",
+      "codex/4-first-play-tutorial",
+      "codex/6-opening-level-balance",
+      "codex/8-first-swap-practice",
+      "codex/10-new-pc-environment",
+      "codex/12-remote-apk-and-web-ci",
+      "codex/14-mobile-play-feedback",
+      "codex/16-louder-audio",
+      "codex/18-special-effect-feedback",
+      "codex/20-android-branding",
+      "codex/22-final-audio-trim",
+      "codex/24-garden-growth-art",
+      "codex/26-leaf-obstacle",
+      "codex/28-test-level-picker",
+      "codex/30-leaf-hit-effects",
+      "codex/32-simple-leaf-feedback",
+      "codex/34-pip-result-reactions",
+      "codex/36-level-content-batch",
+      "codex/38-app-lifecycle-stability",
+      "codex/40-round-save-recovery",
+      "codex/41-persistent-game-lifecycle",
+      "codex/44-session-cleanup-policy",
+      "codex/46-board-keyboard-access",
+      "codex/47-defer-hidden-background",
+      "codex/50-readable-controls",
+      "codex/51-monetization-readiness",
+      "codex/54-android-test-ads",
+      "codex/56-remove-ads-billing",
+      "codex/58-save-recovery",
+      "codex/60-touch-cancellation",
+      "codex/62-pip-result-art",
+      "codex/64-audio-recovery",
+      "codex/66-batched-test-build",
+      "codex/68-localization-version",
+      "codex/70-reduced-motion-board"
+    ],
+    "localBranches": [
+      "codex/1-issue-pr-workflow",
+      "codex/4-first-play-tutorial",
+      "codex/6-opening-level-balance",
+      "codex/8-first-swap-practice",
+      "codex/10-new-pc-environment",
+      "codex/12-remote-apk-and-web-ci",
+      "codex/14-mobile-play-feedback",
+      "codex/16-louder-audio",
+      "codex/18-special-effect-feedback",
+      "codex/20-android-branding",
+      "codex/22-final-audio-trim",
+      "codex/24-garden-growth-art",
+      "codex/26-leaf-obstacle",
+      "codex/28-test-level-picker",
+      "codex/30-leaf-hit-effects",
+      "codex/32-simple-leaf-feedback",
+      "codex/34-pip-result-reactions",
+      "codex/36-level-content-batch",
+      "codex/38-app-lifecycle-stability",
+      "codex/40-round-save-recovery",
+      "codex/41-persistent-game-lifecycle",
+      "codex/44-session-cleanup-policy",
+      "codex/46-board-keyboard-access",
+      "codex/47-defer-hidden-background",
+      "codex/50-readable-controls",
+      "codex/51-monetization-readiness",
+      "codex/54-android-test-ads",
+      "codex/56-remove-ads-billing",
+      "codex/58-save-recovery",
+      "codex/60-touch-cancellation",
+      "codex/62-pip-result-art",
+      "codex/64-audio-recovery",
+      "codex/66-batched-test-build",
+      "codex/68-localization-version",
+      "codex/70-reduced-motion-board"
+    ],
+    "proof": [
+      {
+        "pr": 3,
+        "branch": "codex/1-issue-pr-workflow",
+        "originalHead": "d0436936600e508e0c792e5d50ef28447ea94ed0",
+        "integratedHead": "a2dc052a6e5c9565d96950df764122f0362ee4c2",
+        "mergeSha": "1138d0f79b48085de1b78faa5c377c42d6e88ba4",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 5,
+        "branch": "codex/4-first-play-tutorial",
+        "originalHead": "8539a0a0985489c79c7167ebedc393d81edb667c",
+        "integratedHead": "bd6e9fbaca1145616163700daf5b144f70796a26",
+        "mergeSha": "2cc331177862488c47f3809549af9173319ab991",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 7,
+        "branch": "codex/6-opening-level-balance",
+        "originalHead": "86f2e2e7c274ed268bd2a9246b6195bb529bfd21",
+        "integratedHead": "958252ad3eb93b04802826b0320876930dbbb9de",
+        "mergeSha": "1053e32f859e6669547829693fff4504e98120ec",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 9,
+        "branch": "codex/8-first-swap-practice",
+        "originalHead": "ee8861e77d2e18501f442ef0bc861aede051eed0",
+        "integratedHead": "eb373bec72f94128e20156128d8d840522065f7d",
+        "mergeSha": "10b652c445584fa94408de392a8ff04200606bcc",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 11,
+        "branch": "codex/10-new-pc-environment",
+        "originalHead": "efb45c0abf8d5fc2752b348ffc02ba761c7a53d0",
+        "integratedHead": "65762e223ac4edb5cd1325993d3bc36bc67cb480",
+        "mergeSha": "6c3eee4a7dac8a38cd4added28b39f0b4a1c178d",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 13,
+        "branch": "codex/12-remote-apk-and-web-ci",
+        "originalHead": "fe28f6fa8b1e1a7bd9394c14c871d525c57c8e52",
+        "integratedHead": "4cfb24f031d880ec538b23b6d639055be8f67d1f",
+        "mergeSha": "6c673925115c5e96fb2daad5b4672783e500f09b",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 15,
+        "branch": "codex/14-mobile-play-feedback",
+        "originalHead": "7be89909f56846f14b7df6a9d9667102c94a31c4",
+        "integratedHead": "ff141b85a7f9dc1bdf404e6e7f0d905d3a984482",
+        "mergeSha": "7815e67d2a2c5582997b230687d2ec055b8401e4",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 17,
+        "branch": "codex/16-louder-audio",
+        "originalHead": "3c3dd6886a3dddd978658f75c2ea35fbcf6264c0",
+        "integratedHead": "2a906dd40d6b702072e7f9d9a6e7fa45021d2604",
+        "mergeSha": "410e762c8eab4b6aba8acb51b03892150e022407",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 19,
+        "branch": "codex/18-special-effect-feedback",
+        "originalHead": "900aa52f200c2cf1bc7b4959bee3b3a27d035a30",
+        "integratedHead": "44d024724284a3929b4d0dcd3c5617791c98efd7",
+        "mergeSha": "157ba8591d5872c9a2468a8b7cd76da8835336a5",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 21,
+        "branch": "codex/20-android-branding",
+        "originalHead": "db2744b46352d057329380e6bef75e02f52a9b78",
+        "integratedHead": "ffdac82443f69701c20eff8b833e93d5e2555797",
+        "mergeSha": "0ed32a695642181cdf88267ac3d7be3d860c2d44",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 23,
+        "branch": "codex/22-final-audio-trim",
+        "originalHead": "02f736f214575607cbd2978d7a5b99926d29df29",
+        "integratedHead": "7f0bd47b43adb868f8721ec3db9afa671825059d",
+        "mergeSha": "57bf8a4172680f77a5e7a2e56d1f4a0434151584",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 25,
+        "branch": "codex/24-garden-growth-art",
+        "originalHead": "492dbc6865c509d6c15ec2d2ba1c185379c05883",
+        "integratedHead": "99935b50f33d0e3dc71ccacb417c347d03b167ad",
+        "mergeSha": "ed00358b02c46d764894cb63870c4323af2f05ba",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 27,
+        "branch": "codex/26-leaf-obstacle",
+        "originalHead": "3f2a3f382b70ffb3d10f830a0a93f5c85e9be8d0",
+        "integratedHead": "8e31e1845c2bf2d1e6aca197648cca654a0a56a3",
+        "mergeSha": "4856d2229d3c9090150d95894ccbed36bc289ec7",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 29,
+        "branch": "codex/28-test-level-picker",
+        "originalHead": "72e495ee663691e9a9f6c91043588e6f84a9286b",
+        "integratedHead": "0b61a324a2be133539d1c95df1b5f968a44d3699",
+        "mergeSha": "08605701011b4c0862c1f3441c7e9f1d2a9f1e15",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 31,
+        "branch": "codex/30-leaf-hit-effects",
+        "originalHead": "092a3e5f19dbeb5f77c1f3c720894687116fce10",
+        "integratedHead": "5f1cb70bf0468726324e34076ae84ecf997650b9",
+        "mergeSha": "6ceb7b3802d390abe6e1d664a644379751d1e834",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 33,
+        "branch": "codex/32-simple-leaf-feedback",
+        "originalHead": "1f844a62274ef227cf28b1907f703a9b7cb1660b",
+        "integratedHead": "406595f1084f7cf98e0e83adcc7053f4b23389a3",
+        "mergeSha": "91c85e544e1225e494cbbb7056f5f3573f837046",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 35,
+        "branch": "codex/34-pip-result-reactions",
+        "originalHead": "2689209469cd5b00724662d8956c12d58a6d669d",
+        "integratedHead": "60bdf802032fc93546f73933f00223f0bfc5df62",
+        "mergeSha": "93318d91fec5e49b941b4dc3086032772782e46a",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 37,
+        "branch": "codex/36-level-content-batch",
+        "originalHead": "25fc8bd0785b78eaf7818f16484ceb7ea8dc4cd1",
+        "integratedHead": "b0144290eefce50539c1e6d25b744fd5c6d41118",
+        "mergeSha": "f1be3f610dec6d125bae36a6ebb1df09d9ce148d",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 39,
+        "branch": "codex/38-app-lifecycle-stability",
+        "originalHead": "30a236df8d565bd2dcd3b557a411a57ffa22b18b",
+        "integratedHead": "ebe854fad02cfbe9d160e9982c1d0d35ca141035",
+        "mergeSha": "c59b7ce42b8d488bc2e87e9b856102a1dc076667",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 42,
+        "branch": "codex/40-round-save-recovery",
+        "originalHead": "0445cabff2340996006b459bd57af12b0591d236",
+        "integratedHead": "ea1bdeafd48fc2ba9d0b0a58d5ada9993e1d3e3b",
+        "mergeSha": "56e6067b751f3ec2f79ca2ae55d668782daaa2da",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 43,
+        "branch": "codex/41-persistent-game-lifecycle",
+        "originalHead": "d2339912cb3889f6d14cb93dce2d75b6bf735f20",
+        "integratedHead": "f2deb1259ebd661961e9d7de6e7f6c10db187356",
+        "mergeSha": "762d23f78d1bac95351eae3881ec7f8a19a72bc9",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 45,
+        "branch": "codex/44-session-cleanup-policy",
+        "originalHead": "a0d3e3c26e358e2191c774b864db521b5d38e5e1",
+        "integratedHead": "93aeab16d0c121980749a80b13dd1f9e6b10386b",
+        "mergeSha": "dc198d11352fa42d4aa19e2ca7022b74a3818206",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 48,
+        "branch": "codex/46-board-keyboard-access",
+        "originalHead": "a2889aebf53987449cdc6792d0a981860d5baa29",
+        "integratedHead": "4548f46ffd8de9ae83d695e2e5b275127b8579ca",
+        "mergeSha": "a40a32e645940d5d75a368dfa6488a53ca940007",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 49,
+        "branch": "codex/47-defer-hidden-background",
+        "originalHead": "0b084d79951aef6e284785c9853b4755306c8b3e",
+        "integratedHead": "316d92979237de4caebe96c8ae9dd3aa57979fd3",
+        "mergeSha": "b5e10242c68297b9d27a99e4933d8d968bcf2f8e",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 52,
+        "branch": "codex/50-readable-controls",
+        "originalHead": "0986accc476fc18ed35b1f23ec90c65044032d2b",
+        "integratedHead": "3bedd131589c4c055c10ad1c250dc9cdc8fb3a62",
+        "mergeSha": "a635a2529000e3d3fa484a2dbd347773269b2d9d",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 53,
+        "branch": "codex/51-monetization-readiness",
+        "originalHead": "3d60c0d0ea97f6bb523583436c66799efa8904c7",
+        "integratedHead": "20d7042a4e6e53e563f753fd2e43842631a533d8",
+        "mergeSha": "9ed5c4e78407f85e29e7793746dbb32fd0a797f8",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 55,
+        "branch": "codex/54-android-test-ads",
+        "originalHead": "3a4d874d627cd0df85a8bfd723e1372617fad65c",
+        "integratedHead": "9c42f6a1e1a26ca817e7cc56647fd42e8029c90a",
+        "mergeSha": "79da8be3203cf28fdbfe39328f1b5f66a12e0361",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 57,
+        "branch": "codex/56-remove-ads-billing",
+        "originalHead": "4990298cbadea23a4e5d7f5e7aafc991235305fc",
+        "integratedHead": "9e3e7ba43bc96542a55f9a24b21e9f4de7948ac1",
+        "mergeSha": "e3d0ec32a518ced7c753e6651c673b0665df4547",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 59,
+        "branch": "codex/58-save-recovery",
+        "originalHead": "da180a294da75528bfdd4399ed90782ebdfd9148",
+        "integratedHead": "accf4d1f3e9450166a05973651e6b427e40db4a5",
+        "mergeSha": "8f78895f0dad4f7b231b21100a0913c0e7f2ad84",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 61,
+        "branch": "codex/60-touch-cancellation",
+        "originalHead": "3b93e4b27c47b1aba6736dab100f644f5370e61a",
+        "integratedHead": "a2abeb0e76b5836b8686c05c163d0fe1af9c344a",
+        "mergeSha": "a1e4249560d919c6191bfb1d855fcce1258bb4bb",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 63,
+        "branch": "codex/62-pip-result-art",
+        "originalHead": "2632d6e6342fa1ef142e596c0a4e87252d015303",
+        "integratedHead": "82f1b933fa9c2d1b250a3f45f4f4b6dfa0d17645",
+        "mergeSha": "1d0e0700143bda7bef7dbe5601762f3a934163b3",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 65,
+        "branch": "codex/64-audio-recovery",
+        "originalHead": "850c1f6c066e432ac24cb2d6180d954856ba7dc1",
+        "integratedHead": "fb2575a4c9706ca801309703c6f5d752d5a6d226",
+        "mergeSha": "3f985c75345f63b68e1dccafc7c833ad185cfab1",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 67,
+        "branch": "codex/66-batched-test-build",
+        "originalHead": "e3a837393f7a5ed80d2e64e846827e3df3119df5",
+        "integratedHead": "46cb25d7f832cbb3a783c5604adbe6225768ec79",
+        "mergeSha": "0a416de5a09f4112de6201fefca2903a1fbb7115",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 69,
+        "branch": "codex/68-localization-version",
+        "originalHead": "4f750dec9753473b2f369e87bc1bbd3ffa0e65d3",
+        "integratedHead": "44905dec6db29cb4536c93a9409da6d22574ac7d",
+        "mergeSha": "c61bf98b0e97946b690e685ee9ad828bbb9ade61",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      },
+      {
+        "pr": 71,
+        "branch": "codex/70-reduced-motion-board",
+        "originalHead": "f1edcf6974e3408f0cb91a709b10324607172231",
+        "integratedHead": "c3ca6437f981aeb566f867af447d8157b093a215",
+        "mergeSha": "116020bdd550fbc98f38ee998905c83ea1b933d5",
+        "preapplied": null,
+        "proof": "PR 완료 상태·병합/선반영 tree 일치·원본 내용 통합·고유 변경 부재·worktree 미사용"
+      }
+    ]
+  },
+  "preservation": {
+    "localOnlyBackup": "C:/Users/user/Documents/ChatGPT/Pawblossom-builds/main-integration-20261016",
+    "originalBundle": "original-all-refs.bundle",
+    "integratedBundle": "integrated-all-refs-before-cleanup.bundle",
+    "originalBodiesAndChecks": true,
+    "archivePolicy": "기록 PR 병합·결과 보존 확인 뒤 관리 도구로 임시 worktree 정리"
+  },
+  "limitations": [
+    "실기기·감각 검수·광고 SDK·실제 Play 결제·한국/미국 스토어 검증 미완료",
+    "새 APK/AAB·Android 동기화·버전·Drive/콘솔·상품 설정·오디오 믹스 변경 없음",
+    "외부 원본 bundle·전체 로그·브라우저 스크린샷은 이 PC의 로컬 보존 자료"
+  ],
+  "verificationRunnerNotes": [
+    "통합 도구의 세션 변수 의존성을 외부 상태·로그 파일로 바꿔 재개 가능하게 했습니다. 제품 코드 검증 실패와 구분합니다.",
+    "JVM 실행 전 Windows PowerShell 5.1의 UTF-8 해석 및 기존 SDK XML warning의 NativeCommandError 처리로 중단됐습니다. 기본 PowerShell 7.6.5에서 실제 종료 코드를 구분하여 같은 원본/JUnit 8개를 성공적으로 재실행했습니다."
+  ]
+}

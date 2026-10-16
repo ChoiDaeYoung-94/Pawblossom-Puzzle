@@ -1,0 +1,119 @@
+{
+  "issue": 70,
+  "dateKst": "2026-10-16",
+  "flags": {
+    "testTools": false,
+    "androidTestAds": false,
+    "androidTestBilling": false
+  },
+  "browser": "155.0.8059.41",
+  "cases": [
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "language": "ko",
+      "reducedMotion": "reduce",
+      "canvas": {
+        "x": 23,
+        "y": 293.609375,
+        "width": 344,
+        "height": 344
+      },
+      "input": "touchscreen",
+      "selected": {
+        "row": 0,
+        "col": 4
+      },
+      "validSwap": true,
+      "moves": 33,
+      "score": 30,
+      "saveWarning": false
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "language": "en",
+      "reducedMotion": "reduce",
+      "canvas": {
+        "x": 714.890625,
+        "y": 199,
+        "width": 428.21875,
+        "height": 428.21875
+      },
+      "input": "mouse",
+      "selected": {
+        "row": 1,
+        "col": 1
+      },
+      "validSwap": true,
+      "moves": 33,
+      "score": 240,
+      "saveWarning": false
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "language": "ko",
+      "reducedMotion": "no-preference",
+      "canvas": {
+        "x": 23,
+        "y": 293.609375,
+        "width": 344,
+        "height": 344
+      },
+      "input": "touchscreen",
+      "selected": {
+        "row": 0,
+        "col": 4
+      },
+      "validSwap": true,
+      "moves": 33,
+      "score": 30,
+      "saveWarning": false
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "language": "en",
+      "reducedMotion": "no-preference",
+      "canvas": {
+        "x": 714.890625,
+        "y": 199,
+        "width": 428.21875,
+        "height": 428.21875
+      },
+      "input": "mouse",
+      "selected": {
+        "row": 0,
+        "col": 3
+      },
+      "validSwap": true,
+      "moves": 33,
+      "score": 30,
+      "saveWarning": false
+    }
+  ],
+  "pageerrors": [],
+  "fixtureSave": {
+    "scope": "검사 메모리에만 주입한 레벨 30 외 낙엽 (0,0) 2겹, 실제 특수 탭 뒤 checkpoint 검증 거부",
+    "saveWarning": true,
+    "previousNaturalCheckpointPreserved": true,
+    "normalSaveEvidence": false
+  },
+  "distHashes": {
+    "build-info.json": "45356b36843207f374e2b0f5e979435917ebf7b435e419b4f53de31c1194b6e9",
+    "index.html": "8c8b95719ce4d2dba2a258a23b0b9331ae268d95665a438235fc4a647040f982",
+    "assets/index-C1JnDi-n.js": "1aa3950bbadd758774c0b95486da0a63a5e50b215936a2caf7072a7d458a09cf",
+    "assets/index-CrVNYGe2.css": "f67ab3aea0f8f74738841ff1d07c71e0f31be390d999be4f778b2fda5c853c11",
+    "assets/web-q8WIOUgJ.js": "b400d3dcb18608c7a4607d87ecd875e83ac65850776da9e9c96de58f429de11b"
+  },
+  "scriptHash": "bf8c40e80442f077ba465c9a0837fa544112a5add5b7921c8e88b59d6342687b"
+}
