@@ -9,6 +9,8 @@
     "build:test": "npm run assets:check && tsc --noEmit && vite build --mode testing",
     "assets:generate": "node scripts/generate-launcher-assets.mjs",
     "assets:check": "node scripts/generate-launcher-assets.mjs --check",
+    "store:check": "node scripts/check-store-assets.mjs",
+    "store:test": "node --test scripts/store-assets-qa.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "balance:report": "node scripts/balance-report.mjs",
