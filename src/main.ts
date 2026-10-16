@@ -12,12 +12,14 @@ import { AudioManager } from './audio/AudioManager';
 import { loadSave,saveData,clearSave,levels } from './state';
 import { t,type TextKey } from './i18n';
 import { icon } from './icons';
+import { SwapPractice } from './SwapPractice';
 
 let save=loadSave(), currentLevel=save.highestLevel, moves=0, score=0, collected=Array(6).fill(0) as number[], shuffles=1;
 let scene:BoardScene, game:Phaser.Game, route='puzzle', toastTimer:ReturnType<typeof setTimeout>;
 let resultTimer:ReturnType<typeof setTimeout>|undefined;
 let round=0;
 let tutorialPage=0;
+let practice:SwapPractice|undefined;
 const audio=new AudioManager();audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);
 const text=(key:TextKey)=>t(save.language,key);
 const label=(key:TextKey)=>`<span data-t="${key}">${text(key)}</span>`;
@@ -83,18 +85,54 @@ function startLevel(id:number){
 }
 function notice(message:string){clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').classList.add('visible');toastTimer=setTimeout(()=>$('#toast').classList.remove('visible'),3200);}
 function renderTutorial(){
-  const headings:TextKey[]=['tutorialSwap','tutorialGoal','tutorialMagic'];
-  const descriptions:TextKey[]=['tutorialSwapDesc','tutorialGoalDesc','tutorialMagicDesc'];
+  const headings:TextKey[]=['tutorialSwap','tutorialGoal','tutorialMagic','practiceTitle'];
+  const descriptions:TextKey[]=['tutorialSwapDesc','tutorialGoalDesc','tutorialMagicDesc',practice?.completed?'practiceDone':'practiceDesc'];
   const tile=(name:string)=>`<img src="/assets/tiles/${name}.svg" alt=""/>`;
-  const art=tutorialPage===0?`<div class="guide-swap" aria-hidden="true">${tile('strawberry')}${tile('strawberry')}<span>${tile('carrot')}<b>↕</b>${tile('strawberry')}</span></div>`:tutorialPage===1?`<div class="guide-goals" aria-hidden="true"><span>${tile('strawberry')} 12</span><span>${tile('carrot')} 10</span>${icon('leaf',24)}</div>`:`<div class="guide-specials">${(['tutorialFour','tutorialFive','tutorialShape'] as TextKey[]).map((key,i)=>`<div><span class="guide-special special-${i}" aria-hidden="true">${tile(['leaf','flower','blueberry'][i])}</span><small>${text(key)}</small></div>`).join('')}</div>`;
-  $('#tutorial-dialog').innerHTML=`<div class="guide-content"><div class="eyebrow">${text('tutorial')} · ${text('tutorialStep')} ${tutorialPage+1} / 3</div><h2 id="tutorial-title" tabindex="-1">${text(headings[tutorialPage])}</h2>${art}<p id="tutorial-description">${text(descriptions[tutorialPage])}</p><div class="guide-dots" aria-hidden="true">${[0,1,2].map(i=>`<i class="${i===tutorialPage?'active':''}"></i>`).join('')}</div><div class="guide-actions"><button id="guide-back" class="text-button" ${tutorialPage===0?'disabled':''}>${text('tutorialBack')}</button><button id="guide-next" class="primary">${text(tutorialPage===2?'tutorialStart':'tutorialNext')}${icon('arrow',18)}</button></div><button id="guide-skip" class="text-button">${text('tutorialSkip')}</button></div>`;
+  const art=tutorialPage===3?practiceArt():tutorialPage===0?`<div class="guide-swap" aria-hidden="true">${tile('strawberry')}${tile('strawberry')}<span>${tile('carrot')}<b>↕</b>${tile('strawberry')}</span></div>`:tutorialPage===1?`<div class="guide-goals" aria-hidden="true"><span>${tile('strawberry')} 12</span><span>${tile('carrot')} 10</span>${icon('leaf',24)}</div>`:`<div class="guide-specials">${(['tutorialFour','tutorialFive','tutorialShape'] as TextKey[]).map((key,i)=>`<div><span class="guide-special special-${i}" aria-hidden="true">${tile(['leaf','flower','blueberry'][i])}</span><small>${text(key)}</small></div>`).join('')}</div>`;
+  $('#tutorial-dialog').innerHTML=`<div class="guide-content"><div class="eyebrow">${text('tutorial')} · ${text('tutorialStep')} ${tutorialPage+1} / 4</div><h2 id="tutorial-title" tabindex="-1">${text(headings[tutorialPage])}</h2>${art}<p id="tutorial-description">${text(descriptions[tutorialPage])}</p><div class="guide-dots" aria-hidden="true">${[0,1,2,3].map(i=>`<i class="${i===tutorialPage?'active':''}"></i>`).join('')}</div><div class="guide-actions"><button id="guide-back" class="text-button" ${tutorialPage===0?'disabled':''}>${text('tutorialBack')}</button><button id="guide-next" class="primary" ${tutorialPage===3&&!practice?.completed?'disabled':''}>${text(tutorialPage===3?'tutorialStart':tutorialPage===2?'tutorialTry':'tutorialNext')}${icon('arrow',18)}</button></div><button id="guide-skip" class="text-button">${text('tutorialSkip')}</button></div>`;
   $('#guide-back').onclick=()=>{if(tutorialPage>0){tutorialPage--;renderTutorial();$('#tutorial-title').focus();}};
-  $('#guide-next').onclick=()=>{if(tutorialPage<2){tutorialPage++;renderTutorial();$('#tutorial-title').focus();}else closeTutorial();};
+  $('#guide-next').onclick=()=>{if(tutorialPage<3){tutorialPage++;if(tutorialPage===3)practice=new SwapPractice();renderTutorial();$('#tutorial-title').focus();}else if(practice?.completed)closeTutorial();};
   $('#guide-skip').onclick=closeTutorial;
+  if(tutorialPage===3)bindPracticeInputs();
+}
+function practiceArt(){
+  const lesson=practice!;
+  return `<div id="practice-board" class="practice-board" role="group" aria-label="${text('practiceBoard')}">${lesson.board.map((row,r)=>row.map((block,c)=>{
+    const pos={row:r,col:c}, target=lesson.isTarget(pos), selected=lesson.selected?.row===r&&lesson.selected?.col===c;
+    const cleared=lesson.result?.steps[0].removed.some(p=>p.row===r&&p.col===c);
+    const name=text('practiceCell').replace('{tile}',text(tileNames[block.kind] as TextKey)).replace('{row}',String(r+1)).replace('{col}',String(c+1));
+    return `<button id="practice-cell-${r}-${c}" data-row="${r}" data-col="${c}" class="practice-cell ${target&&!lesson.completed?'practice-target':''} ${cleared?'practice-cleared':''}" aria-label="${name}" aria-pressed="${Boolean(selected)}" ${!target||lesson.completed?'disabled':''}><img src="/assets/tiles/${tileNames[block.kind]}.svg" alt=""/>${cleared?'<span aria-hidden="true">✓</span>':''}</button>`;
+  }).join('')).join('')}</div><div id="practice-feedback" class="practice-feedback" role="status">${text(lesson.completed?'practiceMatched':lesson.selected?'practiceSelected':'practicePrompt')}</div>`;
+}
+function bindPracticeInputs(){
+  let pointer:{id:number,x:number,y:number,row:number,col:number}|undefined;
+  const refresh=(done:boolean,pos:{row:number,col:number})=>{
+    renderTutorial();
+    if(done){audio.play('match');$('#guide-next').focus();}
+    else $(`#practice-cell-${pos.row}-${pos.col}`).focus();
+  };
+  document.querySelectorAll<HTMLButtonElement>('#practice-board button').forEach(button=>{
+    const pos={row:Number(button.dataset.row),col:Number(button.dataset.col)};let swiped=false;
+    button.onclick=()=>{if(swiped){swiped=false;return;}refresh(practice!.select(pos),pos);};
+    button.onpointerdown=event=>{
+      if(pointer||event.button!==0)return;
+      swiped=false;pointer={id:event.pointerId,x:event.clientX,y:event.clientY,...pos};button.setPointerCapture(event.pointerId);
+    };
+    button.onpointercancel=()=>{pointer=undefined;};
+    button.onpointerup=event=>{
+      if(!pointer||pointer.id!==event.pointerId)return;
+      const down=pointer;pointer=undefined;
+      const dx=event.clientX-down.x,dy=event.clientY-down.y;
+      if(Math.hypot(dx,dy)<=16)return;
+      swiped=true;event.preventDefault();
+      if(practice!.swipe(down,dx,dy))refresh(true,pos);
+      else $('#practice-feedback').textContent=text('practicePrompt');
+    };
+  });
 }
 function showTutorial(){
   if(!scene.canLeave()||resultTimer||$<HTMLDialogElement>('#result-dialog').open)return;
-  tutorialPage=0;renderTutorial();$<HTMLDialogElement>('#tutorial-dialog').showModal();
+  tutorialPage=0;practice=undefined;renderTutorial();$<HTMLDialogElement>('#tutorial-dialog').showModal();
   if(game.scene.isActive('Board'))game.scene.pause('Board');
   // The first guide may open before Phaser has booted its first scene.
   game.events.once('poststep',()=>{if($<HTMLDialogElement>('#tutorial-dialog').open&&game.scene.isActive('Board'))game.scene.pause('Board');});

@@ -2,6 +2,8 @@ export type Language = 'en' | 'ko';
 const strings = {
   en: {
     tutorial: 'How to play', tutorialStep: 'Step', tutorialSkip: 'Skip guide', tutorialBack: 'Back', tutorialNext: 'Next', tutorialStart: 'Let’s grow!',
+    tutorialTry: 'Try a match', practiceTitle: 'Your first little match.', practiceDesc: 'Tap the two glowing tiles, or swipe one toward the other, to line up 3 strawberries. This is a practice board: your level, moves and rewards stay the same.',
+    practiceDone: 'Lovely! You matched 3 strawberries. You’re ready to help Pip.', practiceBoard: 'Practice board', practiceCell: '{tile}, row {row}, column {col}', practicePrompt: 'Swap the glowing carrot and strawberry.', practiceSelected: 'One tile selected. Choose the other glowing tile.', practiceMatched: '3 strawberries matched!',
     tutorialSwap: 'A little swap, a lovely match.', tutorialSwapDesc: 'Swipe a tile one space, or tap two neighbors, to make a row or column of 3 matching tiles. A swap without a match costs no moves.',
     tutorialGoal: 'Gather Pip’s harvest.', tutorialGoalDesc: 'Collect the fruits shown above the board before your moves run out. The numbers show how many more you need. Each level gives you one free shuffle.',
     tutorialMagic: 'Make a little magic.', tutorialMagicDesc: 'Match 4 in a line for a row or column clear, 5 in a line for a color clear, or a T or L for a burst. Match a special tile or swap two specials to activate them.',
@@ -36,6 +38,8 @@ const strings = {
   },
   ko: {
     tutorial: '플레이 방법', tutorialStep: '단계', tutorialSkip: '안내 건너뛰기', tutorialBack: '이전', tutorialNext: '다음', tutorialStart: '함께 가꿔요!',
+    tutorialTry: '직접 맞춰 보기', practiceTitle: '첫 번째 매치를 해 볼까요?', practiceDesc: '빛나는 두 블록을 차례로 누르거나 서로를 향해 밀어 딸기 3개를 나란히 맞춰요. 연습용 보드라 현재 스테이지의 이동과 보상은 그대로예요.',
+    practiceDone: '잘했어요! 딸기 3개를 맞췄어요. 이제 핍을 도와줄 준비가 됐어요.', practiceBoard: '연습 보드', practiceCell: '{row}행 {col}열 {tile}', practicePrompt: '빛나는 당근과 딸기의 자리를 바꿔 주세요.', practiceSelected: '하나를 골랐어요. 다른 빛나는 블록을 눌러 주세요.', practiceMatched: '딸기 3개를 맞췄어요!',
     tutorialSwap: '살짝 바꾸면, 예쁘게 맞아요.', tutorialSwapDesc: '블록을 한 칸 밀거나 이웃한 두 블록을 차례로 눌러 같은 블록 3개를 가로 또는 세로로 맞춰요. 매치가 안 되는 교환은 이동을 쓰지 않아요.',
     tutorialGoal: '핍의 수확을 도와주세요.', tutorialGoalDesc: '이동 횟수가 다 떨어지기 전에 보드 위에 표시된 열매를 모아요. 숫자는 더 모아야 할 개수예요. 스테이지마다 무료 섞기를 한 번 쓸 수 있어요.',
     tutorialMagic: '작은 마법을 만들어 보세요.', tutorialMagicDesc: '일렬로 4개면 가로·세로 제거, 일렬로 5개면 같은 색 제거, T·L 모양이면 주변 폭발 블록이 생겨요. 특수블록을 매치하거나 특수블록 두 개를 바꿔 사용해 보세요.',
