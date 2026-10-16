@@ -1,5 +1,7 @@
 # 원격 Android 테스트
 
+2026-10-16 현재 상태: 단말 테스트·APK 전달은 보류합니다. 아래 APK/Drive/회사 폰 안내는 **과거 전달 이력**이며 새 전달 지시나 최신 단말 검수 완료를 뜻하지 않습니다. 폰 연결 후 총괄 일괄 점검 → 사용자 감각 검수와 변경 결정 → 후속 구현 순서이며 [보류 검증 #73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)에 남겼습니다. 이번 main 통합에서는 새 APK/AAB·Android 동기화·버전·Drive/콘솔·상품 설정을 변경하지 않았습니다.
+
 연결 이슈: [#12](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/12) · 2026-10-13
 
 사용자님은 회사의 테스트 폰에서 Google Drive APK를 내려받아 확인합니다. 개발 PC에 바로 USB를 연결할 수 있다는 전제로 작업하지 않습니다. 배포 파일은 개인 Drive의 `Pawblossom Puzzle 테스트` 폴더에 관리하며, 다운로드 링크는 사용자님께 직접 전달합니다. 파일을 올린 것과 실기기 검증 완료를 구분합니다.

@@ -1,0 +1,1368 @@
+{
+  "issue": 68,
+  "dateKst": "2026-10-16",
+  "variant": "testing",
+  "version": "0.1.7",
+  "flags": {
+    "testTools": true,
+    "androidTestAds": true,
+    "androidTestBilling": true
+  },
+  "browser": "155.0.8059.41",
+  "environment": "격리 headless Chrome·실제 dist. 헤더/설정은 실제 UI, 모달 내부 변경은 기존 onchange 관찰 호출. 결과 판정은 실제 Scene onMove를 통한 주입. Android·TalkBack·청취·출시 검증 아님.",
+  "cases": [
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "labels": [
+        {
+          "lang": "ko",
+          "art": "꽃잎 초원",
+          "pip": "정원사 토끼 핍",
+          "friend": "포블로섬 친구들",
+          "friendPip": "정원사 토끼 핍",
+          "friendMeadow": "꽃잎 초원",
+          "village": "꽃잎 초원",
+          "nav": "주 메뉴",
+          "music": "배경음",
+          "board": "매치3 보드. 블록을 한 칸 밀거나 이웃한 두 블록을 차례로 눌러 주세요. 특수 블록은 눌러서 사용해요.",
+          "version": "Pawblossom Puzzle · v0.1.7"
+        },
+        {
+          "lang": "en",
+          "art": "Blossom Meadow",
+          "pip": "Pip the gardener",
+          "friend": "Pawblossom Friends",
+          "friendPip": "Pip the gardener",
+          "friendMeadow": "Blossom Meadow",
+          "village": "Blossom Meadow",
+          "nav": "Main navigation",
+          "music": "Music",
+          "board": "Match-3 board. Swipe a tile one space or tap two neighboring tiles.",
+          "version": "Pawblossom Puzzle · v0.1.7"
+        }
+      ],
+      "layouts": [
+        {
+          "x": 23,
+          "y": 71,
+          "width": 274,
+          "height": 429,
+          "scrollWidth": 274,
+          "clientWidth": 274,
+          "pageWidth": 320,
+          "viewportWidth": 320
+        },
+        {
+          "x": 23,
+          "y": 71,
+          "width": 274,
+          "height": 429,
+          "scrollWidth": 274,
+          "clientWidth": 274,
+          "pageWidth": 320,
+          "viewportWidth": 320
+        },
+        {
+          "x": 23,
+          "y": 71,
+          "width": 274,
+          "height": 429,
+          "scrollWidth": 274,
+          "clientWidth": 274,
+          "pageWidth": 320,
+          "viewportWidth": 320
+        },
+        {
+          "x": 23,
+          "y": 71,
+          "width": 274,
+          "height": 429,
+          "scrollWidth": 274,
+          "clientWidth": 274,
+          "pageWidth": 320,
+          "viewportWidth": 320
+        }
+      ],
+      "results": [
+        {
+          "kind": "win",
+          "rewards": 1,
+          "requests": [
+            "/assets/pip-win-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 49.71875,
+            "width": 282,
+            "height": 468.5625,
+            "scrollWidth": 280,
+            "clientWidth": 280,
+            "pageWidth": 320,
+            "viewportWidth": 320
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 40,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "replay",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 74.71875,
+            "width": 282,
+            "height": 418.5625,
+            "scrollWidth": 280,
+            "clientWidth": 280,
+            "pageWidth": 320,
+            "viewportWidth": 320
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "retry",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 55.21875,
+            "width": 282,
+            "height": 457.5625,
+            "scrollWidth": 280,
+            "clientWidth": 280,
+            "pageWidth": 320,
+            "viewportWidth": 320
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "complete",
+          "rewards": 1,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 40.125,
+            "width": 282,
+            "height": 487.75,
+            "scrollWidth": 280,
+            "clientWidth": 280,
+            "pageWidth": 320,
+            "viewportWidth": 320
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 120
+        },
+        {
+          "kind": "test-win",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 48.71875,
+            "width": 282,
+            "height": 470.5625,
+            "scrollWidth": 280,
+            "clientWidth": 280,
+            "pageWidth": 320,
+            "viewportWidth": 320
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 120,
+          "coinsAfter": 120
+        },
+        {
+          "kind": "test-retry",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 29.21875,
+            "width": 282,
+            "height": 509.5625,
+            "scrollWidth": 280,
+            "clientWidth": 280,
+            "pageWidth": 320,
+            "viewportWidth": 320
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 120,
+          "coinsAfter": 120
+        }
+      ],
+      "playedProgress": {
+        "moves": 33,
+        "score": 30,
+        "shuffles": 0,
+        "swapVia": "실제 canvas 두 칸 click",
+        "inFlightLanguageVia": "실제 header click",
+        "settledCheckpointPreserved": true
+      },
+      "progressPreserved": true
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "labels": [
+        {
+          "lang": "ko",
+          "art": "꽃잎 초원",
+          "pip": "정원사 토끼 핍",
+          "friend": "포블로섬 친구들",
+          "friendPip": "정원사 토끼 핍",
+          "friendMeadow": "꽃잎 초원",
+          "village": "꽃잎 초원",
+          "nav": "주 메뉴",
+          "music": "배경음",
+          "board": "매치3 보드. 블록을 한 칸 밀거나 이웃한 두 블록을 차례로 눌러 주세요. 특수 블록은 눌러서 사용해요.",
+          "version": "Pawblossom Puzzle · v0.1.7"
+        },
+        {
+          "lang": "en",
+          "art": "Blossom Meadow",
+          "pip": "Pip the gardener",
+          "friend": "Pawblossom Friends",
+          "friendPip": "Pip the gardener",
+          "friendMeadow": "Blossom Meadow",
+          "village": "Blossom Meadow",
+          "nav": "Main navigation",
+          "music": "Music",
+          "board": "Match-3 board. Swipe a tile one space or tap two neighboring tiles.",
+          "version": "Pawblossom Puzzle · v0.1.7"
+        }
+      ],
+      "layouts": [
+        {
+          "x": 23,
+          "y": 71,
+          "width": 314,
+          "height": 501,
+          "scrollWidth": 314,
+          "clientWidth": 314,
+          "pageWidth": 360,
+          "viewportWidth": 360
+        },
+        {
+          "x": 23,
+          "y": 71,
+          "width": 314,
+          "height": 501,
+          "scrollWidth": 314,
+          "clientWidth": 314,
+          "pageWidth": 360,
+          "viewportWidth": 360
+        },
+        {
+          "x": 23,
+          "y": 71,
+          "width": 314,
+          "height": 501,
+          "scrollWidth": 314,
+          "clientWidth": 314,
+          "pageWidth": 360,
+          "viewportWidth": 360
+        },
+        {
+          "x": 23,
+          "y": 71,
+          "width": 314,
+          "height": 501,
+          "scrollWidth": 314,
+          "clientWidth": 314,
+          "pageWidth": 360,
+          "viewportWidth": 360
+        }
+      ],
+      "results": [
+        {
+          "kind": "win",
+          "rewards": 1,
+          "requests": [
+            "/assets/pip-win-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 95.3125,
+            "width": 322,
+            "height": 449.375,
+            "scrollWidth": 320,
+            "clientWidth": 320,
+            "pageWidth": 360,
+            "viewportWidth": 360
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 40,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "replay",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 110.71875,
+            "width": 322,
+            "height": 418.5625,
+            "scrollWidth": 320,
+            "clientWidth": 320,
+            "pageWidth": 360,
+            "viewportWidth": 360
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "retry",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 110.71875,
+            "width": 322,
+            "height": 418.5625,
+            "scrollWidth": 320,
+            "clientWidth": 320,
+            "pageWidth": 360,
+            "viewportWidth": 360
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "complete",
+          "rewards": 1,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 76.125,
+            "width": 322,
+            "height": 487.75,
+            "scrollWidth": 320,
+            "clientWidth": 320,
+            "pageWidth": 360,
+            "viewportWidth": 360
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 120
+        },
+        {
+          "kind": "test-win",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 94.3125,
+            "width": 322,
+            "height": 451.375,
+            "scrollWidth": 320,
+            "clientWidth": 320,
+            "pageWidth": 360,
+            "viewportWidth": 360
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 120,
+          "coinsAfter": 120
+        },
+        {
+          "kind": "test-retry",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 94.3125,
+            "width": 322,
+            "height": 451.375,
+            "scrollWidth": 320,
+            "clientWidth": 320,
+            "pageWidth": 360,
+            "viewportWidth": 360
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 120,
+          "coinsAfter": 120
+        }
+      ],
+      "playedProgress": {
+        "moves": 33,
+        "score": 510,
+        "shuffles": 0,
+        "swapVia": "실제 canvas 두 칸 click",
+        "inFlightLanguageVia": "실제 header click",
+        "settledCheckpointPreserved": true
+      },
+      "progressPreserved": true
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "labels": [
+        {
+          "lang": "ko",
+          "art": "꽃잎 초원",
+          "pip": "정원사 토끼 핍",
+          "friend": "포블로섬 친구들",
+          "friendPip": "정원사 토끼 핍",
+          "friendMeadow": "꽃잎 초원",
+          "village": "꽃잎 초원",
+          "nav": "주 메뉴",
+          "music": "배경음",
+          "board": "매치3 보드. 블록을 한 칸 밀거나 이웃한 두 블록을 차례로 눌러 주세요. 특수 블록은 눌러서 사용해요.",
+          "version": "Pawblossom Puzzle · v0.1.7"
+        },
+        {
+          "lang": "en",
+          "art": "Blossom Meadow",
+          "pip": "Pip the gardener",
+          "friend": "Pawblossom Friends",
+          "friendPip": "Pip the gardener",
+          "friendMeadow": "Blossom Meadow",
+          "village": "Blossom Meadow",
+          "nav": "Main navigation",
+          "music": "Music",
+          "board": "Match-3 board. Swipe a tile one space or tap two neighboring tiles.",
+          "version": "Pawblossom Puzzle · v0.1.7"
+        }
+      ],
+      "layouts": [
+        {
+          "x": 25,
+          "y": 63,
+          "width": 590,
+          "height": 241,
+          "scrollWidth": 590,
+          "clientWidth": 590,
+          "pageWidth": 640,
+          "viewportWidth": 640
+        },
+        {
+          "x": 25,
+          "y": 63,
+          "width": 590,
+          "height": 241,
+          "scrollWidth": 590,
+          "clientWidth": 590,
+          "pageWidth": 640,
+          "viewportWidth": 640
+        },
+        {
+          "x": 25,
+          "y": 63,
+          "width": 590,
+          "height": 241,
+          "scrollWidth": 590,
+          "clientWidth": 590,
+          "pageWidth": 640,
+          "viewportWidth": 640
+        },
+        {
+          "x": 25,
+          "y": 63,
+          "width": 590,
+          "height": 241,
+          "scrollWidth": 590,
+          "clientWidth": 590,
+          "pageWidth": 640,
+          "viewportWidth": 640
+        }
+      ],
+      "results": [
+        {
+          "kind": "win",
+          "rewards": 1,
+          "requests": [
+            "/assets/pip-win-v1.webp"
+          ],
+          "layout": {
+            "x": 40,
+            "y": 48.90625,
+            "width": 560,
+            "height": 262.1875,
+            "scrollWidth": 558,
+            "clientWidth": 558,
+            "pageWidth": 640,
+            "viewportWidth": 640
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 40,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "replay",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp"
+          ],
+          "layout": {
+            "x": 40,
+            "y": 49.515625,
+            "width": 560,
+            "height": 260.96875,
+            "scrollWidth": 558,
+            "clientWidth": 558,
+            "pageWidth": 640,
+            "viewportWidth": 640
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "retry",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 40,
+            "y": 49.515625,
+            "width": 560,
+            "height": 260.96875,
+            "scrollWidth": 558,
+            "clientWidth": 558,
+            "pageWidth": 640,
+            "viewportWidth": 640
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "complete",
+          "rewards": 1,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 40,
+            "y": 39.3125,
+            "width": 560,
+            "height": 281.375,
+            "scrollWidth": 558,
+            "clientWidth": 558,
+            "pageWidth": 640,
+            "viewportWidth": 640
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 120
+        },
+        {
+          "kind": "test-win",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 40,
+            "y": 47.90625,
+            "width": 560,
+            "height": 264.1875,
+            "scrollWidth": 558,
+            "clientWidth": 558,
+            "pageWidth": 640,
+            "viewportWidth": 640
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 120,
+          "coinsAfter": 120
+        },
+        {
+          "kind": "test-retry",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 40,
+            "y": 47.90625,
+            "width": 560,
+            "height": 264.1875,
+            "scrollWidth": 558,
+            "clientWidth": 558,
+            "pageWidth": 640,
+            "viewportWidth": 640
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 120,
+          "coinsAfter": 120
+        }
+      ],
+      "playedProgress": {
+        "moves": 33,
+        "score": 130,
+        "shuffles": 0,
+        "swapVia": "실제 canvas 두 칸 click",
+        "inFlightLanguageVia": "실제 header click",
+        "settledCheckpointPreserved": true
+      },
+      "progressPreserved": true
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "labels": [
+        {
+          "lang": "en",
+          "art": "Blossom Meadow",
+          "pip": "Pip the gardener",
+          "friend": "Pawblossom Friends",
+          "friendPip": "Pip the gardener",
+          "friendMeadow": "Blossom Meadow",
+          "village": "Blossom Meadow",
+          "nav": "Main navigation",
+          "music": "Music",
+          "board": "Match-3 board. Swipe a tile one space or tap two neighboring tiles.",
+          "version": "Pawblossom Puzzle · v0.1.7"
+        },
+        {
+          "lang": "ko",
+          "art": "꽃잎 초원",
+          "pip": "정원사 토끼 핍",
+          "friend": "포블로섬 친구들",
+          "friendPip": "정원사 토끼 핍",
+          "friendMeadow": "꽃잎 초원",
+          "village": "꽃잎 초원",
+          "nav": "주 메뉴",
+          "music": "배경음",
+          "board": "매치3 보드. 블록을 한 칸 밀거나 이웃한 두 블록을 차례로 눌러 주세요. 특수 블록은 눌러서 사용해요.",
+          "version": "Pawblossom Puzzle · v0.1.7"
+        }
+      ],
+      "layouts": [
+        {
+          "x": 23,
+          "y": 71,
+          "width": 274,
+          "height": 429,
+          "scrollWidth": 274,
+          "clientWidth": 274,
+          "pageWidth": 320,
+          "viewportWidth": 320
+        },
+        {
+          "x": 23,
+          "y": 71,
+          "width": 274,
+          "height": 429,
+          "scrollWidth": 274,
+          "clientWidth": 274,
+          "pageWidth": 320,
+          "viewportWidth": 320
+        },
+        {
+          "x": 23,
+          "y": 71,
+          "width": 274,
+          "height": 429,
+          "scrollWidth": 274,
+          "clientWidth": 274,
+          "pageWidth": 320,
+          "viewportWidth": 320
+        },
+        {
+          "x": 23,
+          "y": 71,
+          "width": 274,
+          "height": 429,
+          "scrollWidth": 274,
+          "clientWidth": 274,
+          "pageWidth": 320,
+          "viewportWidth": 320
+        }
+      ],
+      "results": [
+        {
+          "kind": "win",
+          "rewards": 1,
+          "requests": [
+            "/assets/pip-win-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 36.71875,
+            "width": 282,
+            "height": 494.5625,
+            "scrollWidth": 280,
+            "clientWidth": 280,
+            "pageWidth": 320,
+            "viewportWidth": 320
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 40,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "replay",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 61.71875,
+            "width": 282,
+            "height": 444.5625,
+            "scrollWidth": 280,
+            "clientWidth": 280,
+            "pageWidth": 320,
+            "viewportWidth": 320
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "retry",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 61.71875,
+            "width": 282,
+            "height": 444.5625,
+            "scrollWidth": 280,
+            "clientWidth": 280,
+            "pageWidth": 320,
+            "viewportWidth": 320
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "complete",
+          "rewards": 1,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 27.125,
+            "width": 282,
+            "height": 513.75,
+            "scrollWidth": 280,
+            "clientWidth": 280,
+            "pageWidth": 320,
+            "viewportWidth": 320
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 120
+        },
+        {
+          "kind": "test-win",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 35.71875,
+            "width": 282,
+            "height": 496.5625,
+            "scrollWidth": 280,
+            "clientWidth": 280,
+            "pageWidth": 320,
+            "viewportWidth": 320
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 120,
+          "coinsAfter": 120
+        },
+        {
+          "kind": "test-retry",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 35.71875,
+            "width": 282,
+            "height": 496.5625,
+            "scrollWidth": 280,
+            "clientWidth": 280,
+            "pageWidth": 320,
+            "viewportWidth": 320
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 120,
+          "coinsAfter": 120
+        }
+      ],
+      "playedProgress": {
+        "moves": 33,
+        "score": 30,
+        "shuffles": 0,
+        "swapVia": "실제 canvas 두 칸 click",
+        "inFlightLanguageVia": "실제 header click",
+        "settledCheckpointPreserved": true
+      },
+      "progressPreserved": true
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "labels": [
+        {
+          "lang": "en",
+          "art": "Blossom Meadow",
+          "pip": "Pip the gardener",
+          "friend": "Pawblossom Friends",
+          "friendPip": "Pip the gardener",
+          "friendMeadow": "Blossom Meadow",
+          "village": "Blossom Meadow",
+          "nav": "Main navigation",
+          "music": "Music",
+          "board": "Match-3 board. Swipe a tile one space or tap two neighboring tiles.",
+          "version": "Pawblossom Puzzle · v0.1.7"
+        },
+        {
+          "lang": "ko",
+          "art": "꽃잎 초원",
+          "pip": "정원사 토끼 핍",
+          "friend": "포블로섬 친구들",
+          "friendPip": "정원사 토끼 핍",
+          "friendMeadow": "꽃잎 초원",
+          "village": "꽃잎 초원",
+          "nav": "주 메뉴",
+          "music": "배경음",
+          "board": "매치3 보드. 블록을 한 칸 밀거나 이웃한 두 블록을 차례로 눌러 주세요. 특수 블록은 눌러서 사용해요.",
+          "version": "Pawblossom Puzzle · v0.1.7"
+        }
+      ],
+      "layouts": [
+        {
+          "x": 23,
+          "y": 71,
+          "width": 314,
+          "height": 501,
+          "scrollWidth": 314,
+          "clientWidth": 314,
+          "pageWidth": 360,
+          "viewportWidth": 360
+        },
+        {
+          "x": 23,
+          "y": 71,
+          "width": 314,
+          "height": 501,
+          "scrollWidth": 314,
+          "clientWidth": 314,
+          "pageWidth": 360,
+          "viewportWidth": 360
+        },
+        {
+          "x": 23,
+          "y": 71,
+          "width": 314,
+          "height": 501,
+          "scrollWidth": 314,
+          "clientWidth": 314,
+          "pageWidth": 360,
+          "viewportWidth": 360
+        },
+        {
+          "x": 23,
+          "y": 71,
+          "width": 314,
+          "height": 501,
+          "scrollWidth": 314,
+          "clientWidth": 314,
+          "pageWidth": 360,
+          "viewportWidth": 360
+        }
+      ],
+      "results": [
+        {
+          "kind": "win",
+          "rewards": 1,
+          "requests": [
+            "/assets/pip-win-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 89.21875,
+            "width": 322,
+            "height": 461.5625,
+            "scrollWidth": 320,
+            "clientWidth": 320,
+            "pageWidth": 360,
+            "viewportWidth": 360
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 40,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "replay",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 114.21875,
+            "width": 322,
+            "height": 411.5625,
+            "scrollWidth": 320,
+            "clientWidth": 320,
+            "pageWidth": 360,
+            "viewportWidth": 360
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "retry",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 123.8125,
+            "width": 322,
+            "height": 392.375,
+            "scrollWidth": 320,
+            "clientWidth": 320,
+            "pageWidth": 360,
+            "viewportWidth": 360
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "complete",
+          "rewards": 1,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 79.625,
+            "width": 322,
+            "height": 480.75,
+            "scrollWidth": 320,
+            "clientWidth": 320,
+            "pageWidth": 360,
+            "viewportWidth": 360
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 120
+        },
+        {
+          "kind": "test-win",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 88.21875,
+            "width": 322,
+            "height": 463.5625,
+            "scrollWidth": 320,
+            "clientWidth": 320,
+            "pageWidth": 360,
+            "viewportWidth": 360
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 120,
+          "coinsAfter": 120
+        },
+        {
+          "kind": "test-retry",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 19,
+            "y": 88.21875,
+            "width": 322,
+            "height": 463.5625,
+            "scrollWidth": 320,
+            "clientWidth": 320,
+            "pageWidth": 360,
+            "viewportWidth": 360
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 120,
+          "coinsAfter": 120
+        }
+      ],
+      "playedProgress": {
+        "moves": 33,
+        "score": 30,
+        "shuffles": 0,
+        "swapVia": "실제 canvas 두 칸 click",
+        "inFlightLanguageVia": "실제 header click",
+        "settledCheckpointPreserved": true
+      },
+      "progressPreserved": true
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "labels": [
+        {
+          "lang": "en",
+          "art": "Blossom Meadow",
+          "pip": "Pip the gardener",
+          "friend": "Pawblossom Friends",
+          "friendPip": "Pip the gardener",
+          "friendMeadow": "Blossom Meadow",
+          "village": "Blossom Meadow",
+          "nav": "Main navigation",
+          "music": "Music",
+          "board": "Match-3 board. Swipe a tile one space or tap two neighboring tiles.",
+          "version": "Pawblossom Puzzle · v0.1.7"
+        },
+        {
+          "lang": "ko",
+          "art": "꽃잎 초원",
+          "pip": "정원사 토끼 핍",
+          "friend": "포블로섬 친구들",
+          "friendPip": "정원사 토끼 핍",
+          "friendMeadow": "꽃잎 초원",
+          "village": "꽃잎 초원",
+          "nav": "주 메뉴",
+          "music": "배경음",
+          "board": "매치3 보드. 블록을 한 칸 밀거나 이웃한 두 블록을 차례로 눌러 주세요. 특수 블록은 눌러서 사용해요.",
+          "version": "Pawblossom Puzzle · v0.1.7"
+        }
+      ],
+      "layouts": [
+        {
+          "x": 25,
+          "y": 63,
+          "width": 590,
+          "height": 241,
+          "scrollWidth": 590,
+          "clientWidth": 590,
+          "pageWidth": 640,
+          "viewportWidth": 640
+        },
+        {
+          "x": 25,
+          "y": 63,
+          "width": 590,
+          "height": 241,
+          "scrollWidth": 590,
+          "clientWidth": 590,
+          "pageWidth": 640,
+          "viewportWidth": 640
+        },
+        {
+          "x": 25,
+          "y": 63,
+          "width": 590,
+          "height": 241,
+          "scrollWidth": 590,
+          "clientWidth": 590,
+          "pageWidth": 640,
+          "viewportWidth": 640
+        },
+        {
+          "x": 25,
+          "y": 63,
+          "width": 590,
+          "height": 241,
+          "scrollWidth": 590,
+          "clientWidth": 590,
+          "pageWidth": 640,
+          "viewportWidth": 640
+        }
+      ],
+      "results": [
+        {
+          "kind": "win",
+          "rewards": 1,
+          "requests": [
+            "/assets/pip-win-v1.webp"
+          ],
+          "layout": {
+            "x": 40,
+            "y": 51.90625,
+            "width": 560,
+            "height": 256.1875,
+            "scrollWidth": 558,
+            "clientWidth": 558,
+            "pageWidth": 640,
+            "viewportWidth": 640
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 40,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "replay",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp"
+          ],
+          "layout": {
+            "x": 40,
+            "y": 52.515625,
+            "width": 560,
+            "height": 254.96875,
+            "scrollWidth": 558,
+            "clientWidth": 558,
+            "pageWidth": 640,
+            "viewportWidth": 640
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "retry",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 40,
+            "y": 52.515625,
+            "width": 560,
+            "height": 254.96875,
+            "scrollWidth": 558,
+            "clientWidth": 558,
+            "pageWidth": 640,
+            "viewportWidth": 640
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 80
+        },
+        {
+          "kind": "complete",
+          "rewards": 1,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 40,
+            "y": 42.3125,
+            "width": 560,
+            "height": 275.375,
+            "scrollWidth": 558,
+            "clientWidth": 558,
+            "pageWidth": 640,
+            "viewportWidth": 640
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 80,
+          "coinsAfter": 120
+        },
+        {
+          "kind": "test-win",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 40,
+            "y": 50.90625,
+            "width": 560,
+            "height": 258.1875,
+            "scrollWidth": 558,
+            "clientWidth": 558,
+            "pageWidth": 640,
+            "viewportWidth": 640
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 120,
+          "coinsAfter": 120
+        },
+        {
+          "kind": "test-retry",
+          "rewards": 0,
+          "requests": [
+            "/assets/pip-win-v1.webp",
+            "/assets/pip-retry-v1.webp"
+          ],
+          "layout": {
+            "x": 40,
+            "y": 50.90625,
+            "width": 560,
+            "height": 258.1875,
+            "scrollWidth": 558,
+            "clientWidth": 558,
+            "pageWidth": 640,
+            "viewportWidth": 640
+          },
+          "pendingLanguagePreserved": true,
+          "focusAndNodesPreserved": true,
+          "modalHeaderBlocked": true,
+          "coinsBefore": 120,
+          "coinsAfter": 120
+        }
+      ],
+      "playedProgress": {
+        "moves": 33,
+        "score": 110,
+        "shuffles": 0,
+        "swapVia": "실제 canvas 두 칸 click",
+        "inFlightLanguageVia": "실제 header click",
+        "settledCheckpointPreserved": true
+      },
+      "progressPreserved": true
+    }
+  ],
+  "pageerrors": [],
+  "hashes": {
+    "src/main.ts": "720d0c18a20dccb3deace750cb8e45f4ee4e2b761c74e6a7efe13fca39d528d5",
+    "src/i18n.ts": "b81a787f37fde67065bfb574e3ac67f4409b9b2ee85a214aa634bbb57854dac2",
+    "src/appVersion.ts": "1350a6a13bb1b080fed5adfe3249e080786f921c3c8cb49058e30b2fbea31ca0",
+    "vite.config.ts": "86b9cad279721dd5f25a614e4b96a7435cc820bb0f03a072ac0d5763f585d9d9",
+    "package.json": "edfd8bc89efe7f61d4fd0f182d9fc680112b6eea1be86046f14f3f99b9278b35",
+    "scripts/localization-version-qa.mjs": "d30dd96604a8f681fb365f6f589e8f0aa32b42e1d301881556b397f97f078718"
+  }
+}
