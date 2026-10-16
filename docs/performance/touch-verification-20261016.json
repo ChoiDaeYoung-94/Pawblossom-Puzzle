@@ -1,0 +1,43 @@
+{
+  "dateKst": "2026-10-16",
+  "issue": 60,
+  "base": "da180a294da75528bfdd4399ed90782ebdfd9148",
+  "branch": "codex/60-touch-cancellation",
+  "node": "v24.21.0",
+  "unitTests": 249,
+  "web": {
+    "testing": true,
+    "production": true,
+    "finalFlags": {
+      "testTools": false,
+      "androidTestAds": false,
+      "androidTestBilling": false
+    },
+    "samplesPerVariant": 4
+  },
+  "browserChecks": {
+    "touch": 14,
+    "keyboard": 12,
+    "roundSave": 8,
+    "lifecycle": 12
+  },
+  "limits": [
+    "Android OS 제스처·물리회전·홈/전화/광고복귀·실기기 다중터치·TalkBack 미검증",
+    "기존 Phaser 큰 번들 경고",
+    "APK/AAB·버전·SDK·Drive/콘솔 변경 없음"
+  ],
+  "sourceHashes": {
+    "src/BoardScene.ts": "8485f6e05cd4d593f8cb403c2909d3e7a775a8004d6f8836c896527055111753",
+    "src/main.ts": "bed5124bff3b5cda40bc817f66003a3080b1a3ee891752ce6ada1a8cfa85a7ed",
+    "src/bindPracticeInputs.ts": "7c7502ae4ed8a70127b74259625fa4545dc050a1b27cf3cd0b920e9202272bd5",
+    "scripts/touch-cancellation-qa.mjs": "13d2cd824b41a9a883fc5f7774500a68685cfd5f29a7e649bbbd4fce9dd014f0",
+    "scripts/touch-build-qa.mjs": "9203f0909e8d56a5b587f04da5b1680dba1f2dd579d1a99ec6de7df7e6f65967",
+    "scripts/game-lifecycle-qa.mjs": "8963eddc4f5293f326c8ffcba66bcc160a5d3bc510b9e1aefa03d7447b7d55bd",
+    "tests/board-animation.test.ts": "0ab90b39cb062f3c26b63b68844b1cec1736c608e88c905aeaf54a458918dbae",
+    "tests/practice-inputs.test.ts": "cdb6307a6c58fd003897f0dab93b0a69786ddf2b08dba27ce8d3ce02355e2cfa",
+    "tests/ui-flow.test.ts": "c42a2abf1edad978d0a004104709fa9f322a2b3b7ada89572bda67328530f92b",
+    "node_modules/phaser/src/input/Pointer.js": "54de0b0e2f8f3ddc0a1f6b5e2deccd12fb927e42aaa8f9b01c09ca5d9526a7d1",
+    "node_modules/phaser/src/input/InputManager.js": "79793d816c885405de019c8660020f378765901cd56f552c43a93c7adc4f49b4",
+    "node_modules/phaser/src/input/InputPlugin.js": "95fb99b9d15a3861f4420cbd4393d146c6c17b894dcf2a0e08d00ffd23c4a691"
+  }
+}
