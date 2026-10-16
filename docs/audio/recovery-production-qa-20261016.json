@@ -1,0 +1,52 @@
+{
+  "dateKst": "2026-10-16",
+  "base": "2632d6e6342fa1ef142e596c0a4e87252d015303",
+  "environment": "격리 headless Chrome 실제 AudioContext/오실레이터. 생성/연결/속성 실패는 QA 주입. visibility는 document.hidden+이벤트 주입, 앱 pause는 앱의 nativeActive gate 호출. OS/전화/Bluetooth/Android 오디오 포커스 재현 아님.",
+  "sourceSha256": "ebe4d78e8e1dfe6d0dd422b088a996980bd5de11a856b8e7895de3221b429696",
+  "checks": [
+    "production 3 flags false·시험 선택 UI 없음",
+    "실제 gesture unlock·설정 OFF 저장/복원·visibility 주입 복귀",
+    "KO/EN 320×568·640×360 설정 4개 표본",
+    "pageerror 0"
+  ],
+  "samples": [],
+  "layouts": [
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      }
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      }
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      }
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      }
+    }
+  ],
+  "pageerrors": [],
+  "browser": "155.0.8059.41",
+  "build": "production dist",
+  "autoplayPolicy": "document-user-activation-required",
+  "flags": {
+    "testTools": false,
+    "androidTestAds": false,
+    "androidTestBilling": false
+  }
+}

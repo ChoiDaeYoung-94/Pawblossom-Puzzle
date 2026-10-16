@@ -1,0 +1,765 @@
+{
+  "dateKst": "2026-10-16",
+  "base": "2632d6e6342fa1ef142e596c0a4e87252d015303",
+  "environment": "격리 headless Chrome 실제 AudioContext/오실레이터. 생성/연결/속성 실패는 QA 주입. visibility는 document.hidden+이벤트 주입, 앱 pause는 앱의 nativeActive gate 호출. OS/전화/Bluetooth/Android 오디오 포커스 재현 아님.",
+  "sourceSha256": "ebe4d78e8e1dfe6d0dd422b088a996980bd5de11a856b8e7895de3221b429696",
+  "checks": [
+    "CDP userGesture:false의 실제 pending resume 뒤 click unlock 복구",
+    "첫 gesture 지연 생성·실제 Web Audio 신호",
+    "음악/SFX OFF의 실시간 출력 0·자연 종료 노드 해제",
+    "visibility 주입+explicit pause 중첩·과거 SFX 재생 0",
+    "외부 close는 자동 재생성하지 않음·다음 click 재생성·OFF 보존·이전 이벤트 무시",
+    "중단 음성/타이머 정리·destroy 전체 노드 disconnect와 모든 context closed",
+    "실제 생성 7단계·curve setter·connect 오류 주입: 정리/close 및 다음 click 복구 9개",
+    "실제 resume/suspend/close의 Promise 전달 지연: destroy 뒤 부활 없음",
+    "실제 앱 설정 OFF 저장/새로고침 복원·설정 화면 pause gate·nativeActive false/true 연결",
+    "KO/EN 320×568·640×360 설정 토글/언어·가로 overflow·44px 조작 4개 표본",
+    "pageerror 0"
+  ],
+  "samples": [
+    {
+      "label": "autoplay pending → 실제 click unlock",
+      "before": {
+        "state": "suspended",
+        "done": false,
+        "resumeCalls": 1,
+        "hasBeenActive": false
+      },
+      "after": {
+        "state": "running",
+        "voices": 2,
+        "musicVoices": 2,
+        "sfxVoices": 0,
+        "timer": true,
+        "contexts": [
+          {
+            "state": "running",
+            "nodes": 15,
+            "disconnected": 0,
+            "closeCalls": 0,
+            "resumeCalls": 2,
+            "resumeCompletions": 2
+          }
+        ]
+      }
+    },
+    {
+      "label": "첫 실제 click·실시간 출력",
+      "rms": 0.4128442036819942,
+      "state": "running",
+      "voices": 6,
+      "musicVoices": 2,
+      "sfxVoices": 4,
+      "timer": true,
+      "contexts": [
+        {
+          "state": "running",
+          "nodes": 31,
+          "disconnected": 0,
+          "closeCalls": 0,
+          "resumeCalls": 0,
+          "resumeCompletions": 0
+        }
+      ]
+    },
+    {
+      "label": "closed → 명시적 unlock, OFF 보존",
+      "state": "running",
+      "voices": 0,
+      "musicVoices": 0,
+      "sfxVoices": 0,
+      "timer": false,
+      "contexts": [
+        {
+          "state": "closed",
+          "nodes": 67,
+          "disconnected": 67,
+          "closeCalls": 1,
+          "resumeCalls": 1,
+          "resumeCompletions": 1
+        },
+        {
+          "state": "running",
+          "nodes": 7,
+          "disconnected": 0,
+          "closeCalls": 0,
+          "resumeCalls": 0,
+          "resumeCompletions": 0
+        }
+      ]
+    },
+    {
+      "label": "중단 자원 정리",
+      "state": "suspended",
+      "voices": 0,
+      "musicVoices": 0,
+      "sfxVoices": 0,
+      "timer": false,
+      "contexts": [
+        {
+          "state": "closed",
+          "nodes": 67,
+          "disconnected": 67,
+          "closeCalls": 1,
+          "resumeCalls": 1,
+          "resumeCompletions": 1
+        },
+        {
+          "state": "suspended",
+          "nodes": 15,
+          "disconnected": 8,
+          "closeCalls": 0,
+          "resumeCalls": 0,
+          "resumeCompletions": 0
+        }
+      ]
+    },
+    {
+      "label": "destroy 자원 정리",
+      "state": null,
+      "voices": 0,
+      "musicVoices": 0,
+      "sfxVoices": 0,
+      "timer": false,
+      "contexts": [
+        {
+          "state": "closed",
+          "nodes": 67,
+          "disconnected": 67,
+          "closeCalls": 1,
+          "resumeCalls": 1,
+          "resumeCompletions": 1
+        },
+        {
+          "state": "closed",
+          "nodes": 15,
+          "disconnected": 15,
+          "closeCalls": 1,
+          "resumeCalls": 0,
+          "resumeCompletions": 0
+        }
+      ]
+    },
+    {
+      "label": "부분 init 실패 1",
+      "failed": {
+        "state": null,
+        "voices": 0,
+        "musicVoices": 0,
+        "sfxVoices": 0,
+        "timer": false,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 0,
+            "disconnected": 0,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      },
+      "retried": {
+        "state": "running",
+        "voices": 2,
+        "musicVoices": 2,
+        "sfxVoices": 0,
+        "timer": true,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 0,
+            "disconnected": 0,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          },
+          {
+            "state": "running",
+            "nodes": 15,
+            "disconnected": 0,
+            "closeCalls": 0,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      }
+    },
+    {
+      "label": "부분 init 실패 2",
+      "failed": {
+        "state": null,
+        "voices": 0,
+        "musicVoices": 0,
+        "sfxVoices": 0,
+        "timer": false,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 1,
+            "disconnected": 1,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      },
+      "retried": {
+        "state": "running",
+        "voices": 2,
+        "musicVoices": 2,
+        "sfxVoices": 0,
+        "timer": true,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 1,
+            "disconnected": 1,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          },
+          {
+            "state": "running",
+            "nodes": 15,
+            "disconnected": 0,
+            "closeCalls": 0,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      }
+    },
+    {
+      "label": "부분 init 실패 3",
+      "failed": {
+        "state": null,
+        "voices": 0,
+        "musicVoices": 0,
+        "sfxVoices": 0,
+        "timer": false,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 2,
+            "disconnected": 2,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      },
+      "retried": {
+        "state": "running",
+        "voices": 2,
+        "musicVoices": 2,
+        "sfxVoices": 0,
+        "timer": true,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 2,
+            "disconnected": 2,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          },
+          {
+            "state": "running",
+            "nodes": 15,
+            "disconnected": 0,
+            "closeCalls": 0,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      }
+    },
+    {
+      "label": "부분 init 실패 4",
+      "failed": {
+        "state": null,
+        "voices": 0,
+        "musicVoices": 0,
+        "sfxVoices": 0,
+        "timer": false,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 3,
+            "disconnected": 3,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      },
+      "retried": {
+        "state": "running",
+        "voices": 2,
+        "musicVoices": 2,
+        "sfxVoices": 0,
+        "timer": true,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 3,
+            "disconnected": 3,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          },
+          {
+            "state": "running",
+            "nodes": 15,
+            "disconnected": 0,
+            "closeCalls": 0,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      }
+    },
+    {
+      "label": "부분 init 실패 5",
+      "failed": {
+        "state": null,
+        "voices": 0,
+        "musicVoices": 0,
+        "sfxVoices": 0,
+        "timer": false,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 4,
+            "disconnected": 4,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      },
+      "retried": {
+        "state": "running",
+        "voices": 2,
+        "musicVoices": 2,
+        "sfxVoices": 0,
+        "timer": true,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 4,
+            "disconnected": 4,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          },
+          {
+            "state": "running",
+            "nodes": 15,
+            "disconnected": 0,
+            "closeCalls": 0,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      }
+    },
+    {
+      "label": "부분 init 실패 6",
+      "failed": {
+        "state": null,
+        "voices": 0,
+        "musicVoices": 0,
+        "sfxVoices": 0,
+        "timer": false,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 5,
+            "disconnected": 5,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      },
+      "retried": {
+        "state": "running",
+        "voices": 2,
+        "musicVoices": 2,
+        "sfxVoices": 0,
+        "timer": true,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 5,
+            "disconnected": 5,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          },
+          {
+            "state": "running",
+            "nodes": 15,
+            "disconnected": 0,
+            "closeCalls": 0,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      }
+    },
+    {
+      "label": "부분 init 실패 7",
+      "failed": {
+        "state": null,
+        "voices": 0,
+        "musicVoices": 0,
+        "sfxVoices": 0,
+        "timer": false,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 6,
+            "disconnected": 6,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      },
+      "retried": {
+        "state": "running",
+        "voices": 2,
+        "musicVoices": 2,
+        "sfxVoices": 0,
+        "timer": true,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 6,
+            "disconnected": 6,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          },
+          {
+            "state": "running",
+            "nodes": 15,
+            "disconnected": 0,
+            "closeCalls": 0,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      }
+    },
+    {
+      "label": "부분 init 실패 curve",
+      "failed": {
+        "state": null,
+        "voices": 0,
+        "musicVoices": 0,
+        "sfxVoices": 0,
+        "timer": false,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 7,
+            "disconnected": 7,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      },
+      "retried": {
+        "state": "running",
+        "voices": 2,
+        "musicVoices": 2,
+        "sfxVoices": 0,
+        "timer": true,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 7,
+            "disconnected": 7,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          },
+          {
+            "state": "running",
+            "nodes": 15,
+            "disconnected": 0,
+            "closeCalls": 0,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      }
+    },
+    {
+      "label": "부분 init 실패 connect",
+      "failed": {
+        "state": null,
+        "voices": 0,
+        "musicVoices": 0,
+        "sfxVoices": 0,
+        "timer": false,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 7,
+            "disconnected": 7,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      },
+      "retried": {
+        "state": "running",
+        "voices": 2,
+        "musicVoices": 2,
+        "sfxVoices": 0,
+        "timer": true,
+        "contexts": [
+          {
+            "state": "closed",
+            "nodes": 7,
+            "disconnected": 7,
+            "closeCalls": 1,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          },
+          {
+            "state": "running",
+            "nodes": 15,
+            "disconnected": 0,
+            "closeCalls": 0,
+            "resumeCalls": 0,
+            "resumeCompletions": 0
+          }
+        ]
+      }
+    },
+    {
+      "label": "destroy 뒤 실제 resume의 Promise 완료 지연",
+      "state": null,
+      "voices": 0,
+      "musicVoices": 0,
+      "sfxVoices": 0,
+      "timer": false,
+      "contexts": [
+        {
+          "state": "closed",
+          "nodes": 23,
+          "disconnected": 23,
+          "closeCalls": 1,
+          "resumeCalls": 1,
+          "resumeCompletions": 1
+        }
+      ]
+    },
+    {
+      "label": "destroy 뒤 실제 suspend의 Promise 완료 지연",
+      "state": null,
+      "voices": 0,
+      "musicVoices": 0,
+      "sfxVoices": 0,
+      "timer": false,
+      "contexts": [
+        {
+          "state": "closed",
+          "nodes": 15,
+          "disconnected": 15,
+          "closeCalls": 1,
+          "resumeCalls": 0,
+          "resumeCompletions": 0
+        }
+      ]
+    },
+    {
+      "label": "destroy 뒤 실제 close의 Promise 완료 지연",
+      "state": null,
+      "voices": 0,
+      "musicVoices": 0,
+      "sfxVoices": 0,
+      "timer": false,
+      "contexts": [
+        {
+          "state": "closed",
+          "nodes": 15,
+          "disconnected": 15,
+          "closeCalls": 1,
+          "resumeCalls": 0,
+          "resumeCompletions": 0
+        }
+      ]
+    }
+  ],
+  "layouts": [
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "ko",
+      "bodyOverflow": false,
+      "controls": [
+        {
+          "id": "music-toggle",
+          "width": 52,
+          "height": 44,
+          "left": 227,
+          "right": 279
+        },
+        {
+          "id": "sfx-toggle",
+          "width": 52,
+          "height": 44,
+          "left": 227,
+          "right": 279
+        },
+        {
+          "id": "language",
+          "width": 77,
+          "height": 44,
+          "left": 202,
+          "right": 279
+        },
+        {
+          "id": "settings-button",
+          "width": 44,
+          "height": 44,
+          "left": 268,
+          "right": 312
+        }
+      ],
+      "image": "docs/audio/recovery-ko-320x568-20261016.png"
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "ko",
+      "bodyOverflow": false,
+      "controls": [
+        {
+          "id": "music-toggle",
+          "width": 52,
+          "height": 44,
+          "left": 545,
+          "right": 597
+        },
+        {
+          "id": "sfx-toggle",
+          "width": 52,
+          "height": 44,
+          "left": 545,
+          "right": 597
+        },
+        {
+          "id": "language",
+          "width": 77,
+          "height": 44,
+          "left": 520,
+          "right": 597
+        },
+        {
+          "id": "settings-button",
+          "width": 44,
+          "height": 44,
+          "left": 584,
+          "right": 628
+        }
+      ],
+      "image": "docs/audio/recovery-ko-640x360-20261016.png"
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "language": "en",
+      "bodyOverflow": false,
+      "controls": [
+        {
+          "id": "music-toggle",
+          "width": 52,
+          "height": 44,
+          "left": 227,
+          "right": 279
+        },
+        {
+          "id": "sfx-toggle",
+          "width": 52,
+          "height": 44,
+          "left": 227,
+          "right": 279
+        },
+        {
+          "id": "language",
+          "width": 77,
+          "height": 44,
+          "left": 202,
+          "right": 279
+        },
+        {
+          "id": "settings-button",
+          "width": 44,
+          "height": 44,
+          "left": 268,
+          "right": 312
+        }
+      ],
+      "image": "docs/audio/recovery-en-320x568-20261016.png"
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "language": "en",
+      "bodyOverflow": false,
+      "controls": [
+        {
+          "id": "music-toggle",
+          "width": 52,
+          "height": 44,
+          "left": 545,
+          "right": 597
+        },
+        {
+          "id": "sfx-toggle",
+          "width": 52,
+          "height": 44,
+          "left": 545,
+          "right": 597
+        },
+        {
+          "id": "language",
+          "width": 77,
+          "height": 44,
+          "left": 520,
+          "right": 597
+        },
+        {
+          "id": "settings-button",
+          "width": 44,
+          "height": 44,
+          "left": 584,
+          "right": 628
+        }
+      ],
+      "image": "docs/audio/recovery-en-640x360-20261016.png"
+    }
+  ],
+  "pageerrors": [],
+  "browser": "155.0.8059.41",
+  "build": "Vite development",
+  "autoplayPolicy": "document-user-activation-required"
+}

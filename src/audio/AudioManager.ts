@@ -52,6 +52,8 @@ export class AudioManager {
   private unlocked = false;
   private paused = false;
   private destroyed = false;
+  private resuming?: { context: AudioContext };
+  private suspending?: AudioContext;
   private lastSfx = new Map<SoundName, number>();
 
   constructor(private readonly manageVisibility=true) {
@@ -65,22 +67,27 @@ export class AudioManager {
 
   async unlock(): Promise<void> {
     if (this.destroyed || typeof window === 'undefined') return;
+    // A closed context cannot resume. Only an explicit gesture creates its replacement.
+    if (this.context?.state === 'closed') this.disposeContext();
     if (!this.context) {
       const AudioCtor = window.AudioContext ??
         (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (!AudioCtor) return;
+      let ctx: AudioContext | undefined;
+      const nodes: AudioNode[] = [];
+      // Register each node immediately, including failures in later property setters/connects.
+      const own = <T extends AudioNode>(node: T): T => { nodes.push(node); return node; };
       try {
-        const ctx = new AudioCtor({ latencyHint: 'interactive' });
-        this.context = ctx;
-        this.musicBus = ctx.createGain();
-        this.sfxBus = ctx.createGain();
-        const master = ctx.createGain();
-        const compressor = ctx.createDynamicsCompressor();
-        const makeup = ctx.createGain();
-        const limiter = ctx.createWaveShaper();
-        const peakGuard = ctx.createWaveShaper();
-        this.musicBus.gain.value = this.music ? AUDIO_LEVELS.music : 0;
-        this.sfxBus.gain.value = this.sfx ? AUDIO_LEVELS.sfx : 0;
+        ctx = new AudioCtor({ latencyHint: 'interactive' });
+        const musicBus = own(ctx.createGain());
+        const sfxBus = own(ctx.createGain());
+        const master = own(ctx.createGain());
+        const compressor = own(ctx.createDynamicsCompressor());
+        const makeup = own(ctx.createGain());
+        const limiter = own(ctx.createWaveShaper());
+        const peakGuard = own(ctx.createWaveShaper());
+        musicBus.gain.value = this.music ? AUDIO_LEVELS.music : 0;
+        sfxBus.gain.value = this.sfx ? AUDIO_LEVELS.sfx : 0;
         master.gain.value = AUDIO_LEVELS.master;
         compressor.threshold.value = -9;
         compressor.knee.value = 6;
@@ -88,8 +95,8 @@ export class AudioManager {
         compressor.attack.value = 0.004;
         compressor.release.value = 0.16;
         makeup.gain.value = AUDIO_LEVELS.makeup;
-        this.musicBus.connect(master);
-        this.sfxBus.connect(master);
+        musicBus.connect(master);
+        sfxBus.connect(master);
         master.connect(compressor);
         limiter.curve = outputCurve();
         limiter.oversample = '4x';
@@ -100,15 +107,20 @@ export class AudioManager {
         makeup.connect(limiter);
         limiter.connect(peakGuard);
         peakGuard.connect(ctx.destination);
-        this.outputNodes = [this.musicBus, this.sfxBus, master, compressor, makeup, limiter, peakGuard];
-        ctx.onstatechange = this.onStateChange;
+        const readyContext = ctx;
+        ctx.onstatechange = () => this.onStateChange(readyContext);
+        this.context = ctx;
+        this.musicBus = musicBus;
+        this.sfxBus = sfxBus;
+        this.outputNodes = nodes;
       } catch {
+        this.disposeGraph(ctx, nodes);
         // Audio is optional: unsupported/restricted WebViews still run the game.
         return;
       }
     }
     this.unlocked = true;
-    await this.activate();
+    await this.activate(true);
   }
 
   setMusicEnabled(enabled: boolean): void {
@@ -126,7 +138,7 @@ export class AudioManager {
 
   play(name: SoundName, chain = 1): void {
     const ctx = this.context;
-    if (!ctx || !this.sfx || !this.canPlay() || ctx.state !== 'running') return;
+    if (!ctx || !this.sfx || !this.canPlay() || this.suspending === ctx || ctx.state !== 'running') return;
     const now = ctx.currentTime;
     // Collapse repeated calls from the same cascade/frame; never replay a backlog.
     if (now - (this.lastSfx.get(name) ?? -Infinity) < 0.045) return;
@@ -167,19 +179,32 @@ export class AudioManager {
     if (this.destroyed) return;
     this.destroyed = true;
     if (this.manageVisibility && typeof document !== 'undefined') document.removeEventListener('visibilitychange', this.onVisibility);
+    this.disposeContext();
+  }
+
+  private disposeContext(): void {
+    const ctx = this.context;
+    const nodes = this.outputNodes;
     this.stopMusic();
     this.stopVoices();
-    const ctx = this.context;
-    if (ctx) {
-      ctx.onstatechange = null;
-      if (ctx.state !== 'closed') void ctx.close().catch(() => undefined);
-    }
-    this.outputNodes.forEach(node => node.disconnect());
-    this.outputNodes = [];
     this.context = undefined;
     this.musicBus = undefined;
     this.sfxBus = undefined;
+    this.outputNodes = [];
+    this.resuming = undefined;
+    this.suspending = undefined;
     this.lastSfx.clear();
+    this.disposeGraph(ctx, nodes);
+  }
+
+  private disposeGraph(ctx: AudioContext | undefined, nodes: AudioNode[]): void {
+    if (ctx) ctx.onstatechange = null;
+    for (const node of nodes) {
+      try { node.disconnect(); } catch { /* Continue cleaning the remaining nodes. */ }
+    }
+    try {
+      if (ctx && ctx.state !== 'closed') void ctx.close().catch(() => undefined);
+    } catch { /* Restricted implementations may also throw synchronously. */ }
   }
 
   private canPlay(): boolean {
@@ -187,16 +212,26 @@ export class AudioManager {
       (typeof document === 'undefined' || !document.hidden);
   }
 
-  private async activate(): Promise<void> {
+  private async activate(explicitUnlock = false): Promise<void> {
     const ctx = this.context;
-    if (!ctx || !this.canPlay() || ctx.state === 'closed') return;
+    if (!ctx || !this.canPlay() || ctx.state === 'closed' ||
+        (!explicitUnlock && (this.suspending === ctx || this.resuming?.context === ctx))) return;
+    const attempt = { context: ctx };
     try {
       // Invoked synchronously before the first await to preserve gesture activation.
-      if (ctx.state !== 'running') await ctx.resume();
-      if (this.context !== ctx || !this.canPlay()) return;
-      this.startMusic();
+      // Autoplay may leave an older resume pending indefinitely. A new explicit
+      // gesture must call resume again, even while an automatic request is pending.
+      if (ctx.state !== 'running') {
+        this.resuming = attempt;
+        await ctx.resume();
+      }
+      if (this.context !== ctx || this.destroyed) return;
+      if (this.canPlay()) this.startMusic();
+      else this.pauseContext();
     } catch {
       // Some mobile interruptions need another gesture. A later unlock retries.
+    } finally {
+      if (this.resuming === attempt) this.resuming = undefined;
     }
   }
 
@@ -205,11 +240,20 @@ export class AudioManager {
     this.stopVoices();
     this.lastSfx.clear();
     const ctx = this.context;
-    if (ctx && ctx.state !== 'closed') {
-      void ctx.suspend().then(() => {
+    if (ctx && ctx.state !== 'closed' && this.suspending !== ctx &&
+        (ctx.state === 'running' || this.resuming?.context === ctx)) {
+      this.suspending = ctx;
+      // Also queue suspend when an earlier resume is still pending.
+      try { void ctx.suspend().then(() => {
+        if (this.context !== ctx || this.destroyed) return;
+        this.suspending = undefined;
         // Resume may have been called while suspend was in flight.
         if (this.canPlay()) void this.activate();
-      }).catch(() => undefined);
+      }).catch(() => {
+        if (this.suspending === ctx) this.suspending = undefined;
+      }); } catch {
+        if (this.suspending === ctx) this.suspending = undefined;
+      }
     }
   }
 
@@ -218,15 +262,17 @@ export class AudioManager {
     else void this.activate();
   };
 
-  private readonly onStateChange = (): void => {
-    if (this.context?.state === 'running') {
-      if (this.canPlay()) this.startMusic();
+  private onStateChange(ctx: AudioContext): void {
+    if (this.context !== ctx || this.destroyed) return;
+    if (ctx.state === 'running') {
+      if (this.canPlay() && this.suspending !== ctx) this.startMusic();
       else this.pauseContext();
     } else {
       this.stopMusic();
       this.stopVoices();
+      this.lastSfx.clear();
     }
-  };
+  }
 
   private setBus(bus: GainNode | undefined, value: number): void {
     const ctx = this.context;
@@ -237,11 +283,11 @@ export class AudioManager {
 
   private startMusic(): void {
     const ctx = this.context;
-    if (!ctx || !this.music || !this.canPlay() || ctx.state !== 'running' || this.timer !== undefined) return;
+    if (!ctx || !this.music || !this.canPlay() || ctx.state !== 'running' || this.suspending === ctx || this.timer !== undefined) return;
     this.step = 0;
     this.nextNote = ctx.currentTime + 0.05;
     this.scheduleMusic();
-    this.timer = setInterval(() => this.scheduleMusic(), 25);
+    this.timer = setInterval(() => { if (this.context === ctx) this.scheduleMusic(); }, 25);
   }
 
   private scheduleMusic(): void {

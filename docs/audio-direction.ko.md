@@ -1,5 +1,32 @@
 # Pawblossom Puzzle 오디오 방향과 연결 안내
 
+## 2026-10-16 · 초기화 실패·종료·중단 복구 (이슈 #64)
+
+그래프를 만드는 동안 컨텍스트와 생성 즉시 등록한 노드는 지역 변수로 보관하며, 모든 설정·연결이 성공한 뒤에만 AudioManager 소유로 반영합니다. 생성·curve 설정·connect 실패는 이미 생성한 노드를 각각 disconnect하고 컨텍스트를 close한 뒤 다음 명시적 `unlock()`에서 다시 시도합니다. 외부에서 closed가 된 컨텍스트는 `resume()`이나 설정 변경으로 재생성하지 않고 다음 사용자 입력의 `unlock()`에서 교체합니다. 음악/SFX OFF 설정을 그대로 적용하며 이전 효과음을 큐에 보관하지 않습니다.
+
+statechange·재개/중단 Promise·스케줄러는 자신이 속한 컨텍스트만 다룹니다. 자동 재개 중복은 줄이되, 자동 재생 정책으로 과거 resume Promise가 계속 대기하더라도 새 명시적 unlock은 첫 await 이전에 resume를 다시 요청합니다. 같은 컨텍스트의 재개 시도에도 별도 identity를 두어 오래된 완료가 새 pending 상태를 지우지 않습니다. 중단이 아직 완료되지 않은 동안에는 음악과 효과음을 새로 예약하지 않습니다. destroy는 소유권을 해제하고 타이머·음성·노드·이벤트를 정리합니다.
+
+[W3C Web Audio 1.0의 resume](https://www.w3.org/TR/webaudio-1.0/#dom-audiocontext-resume)는 closed에서 재개할 수 없으며, allowed-to-start가 false면 Promise를 pending으로 보관한다고 정의합니다. [suspend](https://www.w3.org/TR/webaudio-1.0/#dom-audiocontext-suspend)·[close](https://www.w3.org/TR/webaudio-1.0/#dom-audiocontext-close)의 비동기 완료와 [Chrome Web Audio 자동 재생 안내](https://developer.chrome.com/blog/web-audio-autoplay)를 복구 경계의 근거로 사용했습니다.
+
+- 자동 검사: 기존 257개 + `tests/audio-recovery.test.ts` 27개 = **284개 통과**. 생성자/7개 노드 생성/curve/connect 실패, 이전 그래프의 늦은 close, pending/rejected resume와 명시적 재시도, 순서 역전·이전 세대·destroy, visibility 중첩, 음성 상한 6/14·자연 종료·OFF 감쇠를 검사합니다.
+- 실제 Chrome **155.0.8059.41** [브라우저 원시 기록](audio/recovery-browser-qa-20261016.json): 최초 입력, 실제 신호/무음, 실패 주입 9개 지점과 재시도, 외부 close 후 입력 재생성, 중단/destroy 정리, 완료 전달을 지연시킨 실제 resume/suspend/close를 확인했습니다. `--autoplay-policy=document-user-activation-required`와 CDP `userGesture:false`로 `hasBeenActive:false`, suspended, resume 1회 미완료를 먼저 관찰한 뒤 실제 버튼 click으로 resume 2회·running·타이머 1개 복구를 확인했습니다. Playwright evaluate를 사용자 활성화 없는 준비로 간주하지 않습니다.
+- 음량 불변: 기준 SHA **2632d6e6342fa1ef142e596c0a4e87252d015303**, 48kHz·2초·음악 첫 박/8종 SFX/겹침/무음의 11개 동일 표본 [출력 비교](audio/recovery-output-qa-20261016.json). 모든 표본의 RMS 변화 절댓값은 0.0001dB 이하, 샘플 최대 차이는 0.000001 이하입니다. 동일 기준 코드를 재렌더한 대조군의 차이도 함께 보존했습니다. 부동소수점 연산의 작은 차이를 허용하며 비트 동일성을 주장하지 않습니다. 무음 0, 겹침 20음, 클리핑 샘플 0, 극단 입력 피크 약 0.95입니다. `AUDIO_LEVELS`·곡·음형·출력곡선·엔벌로프·사용자 기본 믹스는 변경하지 않았습니다. 이전 확대/미세조정 JSON은 보존했습니다.
+- 앱 설정/회차/키보드 및 최종 production 결과는 [브라우저 검증 기록](browser-qa.ko.md)에 있습니다. 전화·Bluetooth·OS 외부 중단·Android 오디오 포커스·실제 스피커 청취는 이번 Chrome 검증에 포함하지 않습니다. 새 APK/AAB·버전·광고/결제 구현 변경은 없습니다.
+
+재현은 Node 24 환경, 설치된 Playwright 모듈 경로, 개발 서버 5173이 필요합니다. production 검사는 별도로 최종 dist를 preview 5174에서 제공합니다. QA 스크립트는 자신이 연 격리 Chrome만 닫습니다.
+
+```powershell
+. .\scripts\use-dev-tools.ps1
+$env:PAWBLOSSOM_PLAYWRIGHT_MODULE='C:/Users/user/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs'
+# 별도 셸: npm.cmd run dev -- --port 5173 --strictPort
+node scripts/audio-recovery-qa.mjs
+node scripts/audio-regression-qa.mjs
+node scripts/audio-output-qa.mjs --baseline=2632d6e6342fa1ef142e596c0a4e87252d015303 --unchanged --output=docs/audio/recovery-output-qa-20261016.json
+# npm.cmd run build 후 별도 셸: npm.cmd run preview -- --port 5174 --strictPort
+$env:PAWBLOSSOM_QA_ORIGIN='http://127.0.0.1:5174'
+node scripts/audio-recovery-qa.mjs --production
+```
+
 ## 현재 구현
 
 `src/audio/AudioManager.ts`의 `export class AudioManager`는 원본 Web Audio API만 사용하는 독립 모듈입니다. 외부 음원, 서버, API 키, 음악 다운로드, Phaser 오디오 플러그인에 의존하지 않습니다. 설정 기본값은 음악·효과음 모두 켜짐이며 실제 소리는 사용자 입력에서 `unlock()`을 호출한 뒤에만 시작됩니다.
