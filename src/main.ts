@@ -15,6 +15,7 @@ import { icon } from './icons';
 import { SwapPractice } from './SwapPractice';
 import { bindPracticeBoard } from './bindPracticeInputs';
 import { gardenArt } from './GardenArt';
+import { showResultPip } from './ResultPip';
 import { TEST_TOOLS_ENABLED } from './buildFlags';
 import { ANDROID_TEST_ADS_ENABLED } from './buildFlags';
 import { ANDROID_TEST_BILLING_ENABLED } from './buildFlags';
@@ -297,12 +298,13 @@ function finish(won:boolean){
   audio.play(won?'win':'lose');
   const done=won&&!testingLevel&&currentLevel===LEVEL_COUNT;
   const dialog=$<HTMLDialogElement>('#result-dialog');
-  dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><img class="result-pip" src="/assets/pip.png" alt=""/><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p>${first?`<div class="result-rewards"><span>${icon('star',20)} +1</span><span>${icon('coin',20)} +40</span></div>`:''}<button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
+  dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><span class="result-character"><img class="result-pip" src="/assets/pip.png" decoding="async" alt=""/></span><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p>${first?`<div class="result-rewards"><span>${icon('star',20)} +1</span><span>${icon('coin',20)} +40</span></div>`:''}<button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
   dialog.showModal();syncActivity();
   $('#result-next').focus();
   $('#result-next').onclick=()=>{dialog.close();startLevel(won?Math.min(LEVEL_COUNT,currentLevel+1):currentLevel,testingLevel);switchView('puzzle');};
   $('#result-home').onclick=()=>{dialog.close();switchView('village');};
   if(testingLevel)$('#result-test').onclick=()=>{dialog.close();showTestPicker(true);};
+  showResultPip($<HTMLImageElement>('.result-pip'),won);
 }
 function renderAdDialog(){
   if(!testAds)return;

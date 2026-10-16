@@ -1,0 +1,102 @@
+{
+  "dateKst": "2026-10-16",
+  "browser": "155.0.8059.41",
+  "environment": "격리 headless Chrome, Vite testing, 실제 Phaser/키 입력. 실제 TalkBack/Android 외부 키보드 미검증.",
+  "checks": [
+    "첫 안내/늦은 Board 준비는 일시정지·Tab 제외, 안내 키가 회차를 소비하지 않음",
+    "마우스/터치 첫 탭·키보드→포인터 전환은 일반 힌트 유지, 포인터 swipe 제스처 보존·Tab 재진입",
+    "실제 Tab/경계/Enter/Escape·선택 표시·Web Audio unlock, 저장/이동/보상 미소비",
+    "실제 Enter+Space 무효 교환은 보드·이동·저장 유지",
+    "실제 방향키 유효 교환·연쇄 중 반복키 차단·이동 1회·완료 checkpoint",
+    "실제 Enter 특수 사용·낙엽·저장 복원",
+    "KO/EN 현재 칸·특수·낙엽·선택·사용법 안내",
+    "blur/설정 select/안내/테스트 모달은 커서·선택 정리, UI 키·정상 회차 유지",
+    "Alt/Ctrl/Meta 조합 통과·window blur·PAUSE/RESUME 정리",
+    "100회 Scene 교체: DOM keydown 1개 유지·canvas/Scene 1개·이전 커서/선택 제거·시험 특수 무보상/정상 저장 보존",
+    "portrait/landscape gameplay body scroll 없음·이중 테두리/모서리 커서 화면 보존",
+    "키보드 승리/실패 즉시 settle·결과창 전 보상 저장·중복 보상 없음·재시도 자동 초점 탈취 없음"
+  ],
+  "samples": [
+    {
+      "label": "시작",
+      "listeners": {
+        "pointerdown": 1,
+        "focus": 1,
+        "blur": 1,
+        "keydown": 1
+      },
+      "globalKeys": {
+        "document": [],
+        "window": [
+          "blur",
+          "blur",
+          "keydown",
+          "keyup"
+        ]
+      },
+      "canvases": 1,
+      "scenes": 1
+    },
+    {
+      "label": "30회 전환",
+      "listeners": {
+        "pointerdown": 1,
+        "focus": 1,
+        "blur": 1,
+        "keydown": 1
+      },
+      "globalKeys": {
+        "document": [],
+        "window": [
+          "blur",
+          "blur",
+          "keydown",
+          "keyup"
+        ]
+      },
+      "canvases": 1,
+      "scenes": 1
+    },
+    {
+      "label": "60회 전환",
+      "listeners": {
+        "pointerdown": 1,
+        "focus": 1,
+        "blur": 1,
+        "keydown": 1
+      },
+      "globalKeys": {
+        "document": [],
+        "window": [
+          "blur",
+          "blur",
+          "keydown",
+          "keyup"
+        ]
+      },
+      "canvases": 1,
+      "scenes": 1
+    },
+    {
+      "label": "100회 전환",
+      "listeners": {
+        "pointerdown": 1,
+        "focus": 1,
+        "blur": 1,
+        "keydown": 1
+      },
+      "globalKeys": {
+        "document": [],
+        "window": [
+          "blur",
+          "blur",
+          "keydown",
+          "keyup"
+        ]
+      },
+      "canvases": 1,
+      "scenes": 1
+    }
+  ],
+  "pageerrors": []
+}

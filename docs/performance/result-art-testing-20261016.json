@@ -1,0 +1,4208 @@
+{
+  "dateKst": "2026-10-16",
+  "variant": "testing",
+  "flags": {
+    "testTools": true,
+    "androidTestAds": true,
+    "androidTestBilling": true
+  },
+  "browser": "155.0.8059.41",
+  "environment": "격리 headless Chrome·실제 dist·Game 참조만 응답에 노출. 결과는 실제 Scene onMove 콜백으로 종료 판정/300ms 타이머를 통과. Android 단말·WebView·강제 종료·APK 미검증.",
+  "assets": [
+    {
+      "file": "pip-win-v1.webp",
+      "bytes": 32384,
+      "sha256": "648cc94781553afc6cfc192fb179192c0712e554c0fd2456d8f4e1c889f51124"
+    },
+    {
+      "file": "pip-retry-v1.webp",
+      "bytes": 31666,
+      "sha256": "033655e3371509ae5bac05010257aa0c35c9eefa2188f0c2e56c8d2e9e3da9e3"
+    }
+  ],
+  "cases": [
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "kind": "win",
+      "reducedMotion": "no-preference",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 49.71875,
+          "width": 282,
+          "height": 468.5625,
+          "bottom": 518.28125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 70.71875,
+          "width": 236,
+          "height": 126,
+          "bottom": 196.71875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 467,
+          "height": 467,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 407.28125,
+            "width": 236,
+            "height": 47,
+            "bottom": 454.28125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 98.40625,
+            "y": 457.28125,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 501.28125,
+            "right": 221.578125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 49.71875,
+          "width": 282,
+          "height": 468.5625,
+          "bottom": 518.28125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 70.71875,
+          "width": 236,
+          "height": 126,
+          "bottom": 196.71875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 467,
+          "height": 467,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 407.28125,
+            "width": 236,
+            "height": 47,
+            "bottom": 454.28125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 98.40625,
+            "y": 457.28125,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 501.28125,
+            "right": 221.578125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 40,
+      "rewards": 1
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "kind": "retry",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-retry-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 55.21875,
+          "width": 282,
+          "height": 457.5625,
+          "bottom": 512.78125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 76.21875,
+          "width": 236,
+          "height": 126,
+          "bottom": 202.21875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 456,
+          "height": 456,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 401.78125,
+            "width": 236,
+            "height": 47,
+            "bottom": 448.78125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 98.40625,
+            "y": 451.78125,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 495.78125,
+            "right": 221.578125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 55.21875,
+          "width": 282,
+          "height": 457.5625,
+          "bottom": 512.78125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 76.21875,
+          "width": 236,
+          "height": 126,
+          "bottom": 202.21875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 456,
+          "height": 456,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip-retry-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 401.78125,
+            "width": 236,
+            "height": 47,
+            "bottom": 448.78125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 98.40625,
+            "y": 451.78125,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 495.78125,
+            "right": 221.578125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111262,
+        "opaque": 1081,
+        "partial": 64057
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "kind": "replay",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 74.71875,
+          "width": 282,
+          "height": 418.5625,
+          "bottom": 493.28125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 95.71875,
+          "width": 236,
+          "height": 126,
+          "bottom": 221.71875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 417,
+          "height": 417,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 382.28125,
+            "width": 236,
+            "height": 47,
+            "bottom": 429.28125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 98.40625,
+            "y": 432.28125,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 476.28125,
+            "right": 221.578125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 74.71875,
+          "width": 282,
+          "height": 418.5625,
+          "bottom": 493.28125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 95.71875,
+          "width": 236,
+          "height": 126,
+          "bottom": 221.71875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 417,
+          "height": 417,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 382.28125,
+            "width": 236,
+            "height": 47,
+            "bottom": 429.28125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 98.40625,
+            "y": 432.28125,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 476.28125,
+            "right": 221.578125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 40,
+      "coinsAfter": 40,
+      "rewards": 0
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "kind": "test-win",
+      "reducedMotion": "no-preference",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 48.71875,
+          "width": 282,
+          "height": 470.5625,
+          "bottom": 519.28125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 69.71875,
+          "width": 236,
+          "height": 126,
+          "bottom": 195.71875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 469,
+          "height": 469,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 356.28125,
+            "width": 236,
+            "height": 47,
+            "bottom": 403.28125,
+            "right": 278
+          },
+          {
+            "id": "result-test",
+            "x": 42,
+            "y": 411.28125,
+            "width": 236,
+            "height": 44,
+            "bottom": 455.28125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 98.40625,
+            "y": 458.28125,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 502.28125,
+            "right": 221.578125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 48.71875,
+          "width": 282,
+          "height": 470.5625,
+          "bottom": 519.28125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 69.71875,
+          "width": 236,
+          "height": 126,
+          "bottom": 195.71875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 469,
+          "height": 469,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 356.28125,
+            "width": 236,
+            "height": 47,
+            "bottom": 403.28125,
+            "right": 278
+          },
+          {
+            "id": "result-test",
+            "x": 42,
+            "y": 411.28125,
+            "width": 236,
+            "height": 44,
+            "bottom": 455.28125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 98.40625,
+            "y": 458.28125,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 502.28125,
+            "right": 221.578125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "kind": "test-retry",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-retry-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 29.21875,
+          "width": 282,
+          "height": 509.5625,
+          "bottom": 538.78125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 50.21875,
+          "width": 236,
+          "height": 126,
+          "bottom": 176.21875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 508,
+          "height": 508,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 375.78125,
+            "width": 236,
+            "height": 47,
+            "bottom": 422.78125,
+            "right": 278
+          },
+          {
+            "id": "result-test",
+            "x": 42,
+            "y": 430.78125,
+            "width": 236,
+            "height": 44,
+            "bottom": 474.78125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 98.40625,
+            "y": 477.78125,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 521.78125,
+            "right": 221.578125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 29.21875,
+          "width": 282,
+          "height": 509.5625,
+          "bottom": 538.78125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 50.21875,
+          "width": 236,
+          "height": 126,
+          "bottom": 176.21875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 508,
+          "height": 508,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip-retry-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 375.78125,
+            "width": 236,
+            "height": 47,
+            "bottom": 422.78125,
+            "right": 278
+          },
+          {
+            "id": "result-test",
+            "x": 42,
+            "y": 430.78125,
+            "width": 236,
+            "height": 44,
+            "bottom": 474.78125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 98.40625,
+            "y": 477.78125,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 521.78125,
+            "right": 221.578125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111262,
+        "opaque": 1081,
+        "partial": 64057
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "kind": "win",
+      "reducedMotion": "no-preference",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 95.3125,
+          "width": 322,
+          "height": 449.375,
+          "bottom": 544.6875,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 116.3125,
+          "width": 240,
+          "height": 126,
+          "bottom": 242.3125,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 447,
+          "height": 447,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 433.6875,
+            "width": 276,
+            "height": 47,
+            "bottom": 480.6875,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 118.40625,
+            "y": 483.6875,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 527.6875,
+            "right": 241.578125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 95.3125,
+          "width": 322,
+          "height": 449.375,
+          "bottom": 544.6875,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 116.3125,
+          "width": 240,
+          "height": 126,
+          "bottom": 242.3125,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 447,
+          "height": 447,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 433.6875,
+            "width": 276,
+            "height": 47,
+            "bottom": 480.6875,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 118.40625,
+            "y": 483.6875,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 527.6875,
+            "right": 241.578125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 40,
+      "rewards": 1
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "kind": "retry",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-retry-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 110.71875,
+          "width": 322,
+          "height": 418.5625,
+          "bottom": 529.28125,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 131.71875,
+          "width": 240,
+          "height": 126,
+          "bottom": 257.71875,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 417,
+          "height": 417,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 418.28125,
+            "width": 276,
+            "height": 47,
+            "bottom": 465.28125,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 118.40625,
+            "y": 468.28125,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 512.28125,
+            "right": 241.578125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 110.71875,
+          "width": 322,
+          "height": 418.5625,
+          "bottom": 529.28125,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 131.71875,
+          "width": 240,
+          "height": 126,
+          "bottom": 257.71875,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 417,
+          "height": 417,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip-retry-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 418.28125,
+            "width": 276,
+            "height": 47,
+            "bottom": 465.28125,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 118.40625,
+            "y": 468.28125,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 512.28125,
+            "right": 241.578125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111262,
+        "opaque": 1081,
+        "partial": 64057
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "kind": "replay",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 110.71875,
+          "width": 322,
+          "height": 418.5625,
+          "bottom": 529.28125,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 131.71875,
+          "width": 240,
+          "height": 126,
+          "bottom": 257.71875,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 417,
+          "height": 417,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 418.28125,
+            "width": 276,
+            "height": 47,
+            "bottom": 465.28125,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 118.40625,
+            "y": 468.28125,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 512.28125,
+            "right": 241.578125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 110.71875,
+          "width": 322,
+          "height": 418.5625,
+          "bottom": 529.28125,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 131.71875,
+          "width": 240,
+          "height": 126,
+          "bottom": 257.71875,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 417,
+          "height": 417,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 418.28125,
+            "width": 276,
+            "height": 47,
+            "bottom": 465.28125,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 118.40625,
+            "y": 468.28125,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 512.28125,
+            "right": 241.578125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 40,
+      "coinsAfter": 40,
+      "rewards": 0
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "kind": "test-win",
+      "reducedMotion": "no-preference",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 94.3125,
+          "width": 322,
+          "height": 451.375,
+          "bottom": 545.6875,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 115.3125,
+          "width": 240,
+          "height": 126,
+          "bottom": 241.3125,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 449,
+          "height": 449,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 382.6875,
+            "width": 276,
+            "height": 47,
+            "bottom": 429.6875,
+            "right": 318
+          },
+          {
+            "id": "result-test",
+            "x": 42,
+            "y": 437.6875,
+            "width": 276,
+            "height": 44,
+            "bottom": 481.6875,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 118.40625,
+            "y": 484.6875,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 528.6875,
+            "right": 241.578125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 94.3125,
+          "width": 322,
+          "height": 451.375,
+          "bottom": 545.6875,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 115.3125,
+          "width": 240,
+          "height": 126,
+          "bottom": 241.3125,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 449,
+          "height": 449,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 382.6875,
+            "width": 276,
+            "height": 47,
+            "bottom": 429.6875,
+            "right": 318
+          },
+          {
+            "id": "result-test",
+            "x": 42,
+            "y": 437.6875,
+            "width": 276,
+            "height": 44,
+            "bottom": 481.6875,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 118.40625,
+            "y": 484.6875,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 528.6875,
+            "right": 241.578125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "kind": "test-retry",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-retry-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 94.3125,
+          "width": 322,
+          "height": 451.375,
+          "bottom": 545.6875,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 115.3125,
+          "width": 240,
+          "height": 126,
+          "bottom": 241.3125,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 449,
+          "height": 449,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 382.6875,
+            "width": 276,
+            "height": 47,
+            "bottom": 429.6875,
+            "right": 318
+          },
+          {
+            "id": "result-test",
+            "x": 42,
+            "y": 437.6875,
+            "width": 276,
+            "height": 44,
+            "bottom": 481.6875,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 118.40625,
+            "y": 484.6875,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 528.6875,
+            "right": 241.578125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 94.3125,
+          "width": 322,
+          "height": 451.375,
+          "bottom": 545.6875,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 115.3125,
+          "width": 240,
+          "height": 126,
+          "bottom": 241.3125,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 449,
+          "height": 449,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip-retry-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 382.6875,
+            "width": 276,
+            "height": 47,
+            "bottom": 429.6875,
+            "right": 318
+          },
+          {
+            "id": "result-test",
+            "x": 42,
+            "y": 437.6875,
+            "width": 276,
+            "height": 44,
+            "bottom": 481.6875,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 118.40625,
+            "y": 484.6875,
+            "width": 123.171875,
+            "height": 44,
+            "bottom": 528.6875,
+            "right": 241.578125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111262,
+        "opaque": 1081,
+        "partial": 64057
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "kind": "win",
+      "reducedMotion": "no-preference",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 40,
+          "y": 48.90625,
+          "width": 560,
+          "height": 262.1875,
+          "bottom": 311.09375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.5,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.5,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 260,
+          "height": 260,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 204.09375,
+            "width": 365,
+            "height": 47,
+            "bottom": 251.09375,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 254.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 298.09375,
+            "right": 579
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 40,
+          "y": 48.90625,
+          "width": 560,
+          "height": 262.1875,
+          "bottom": 311.09375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.5,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.5,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 260,
+          "height": 260,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 204.09375,
+            "width": 365,
+            "height": 47,
+            "bottom": 251.09375,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 254.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 298.09375,
+            "right": 579
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 40,
+      "rewards": 1
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "kind": "retry",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-retry-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 40,
+          "y": 49.515625,
+          "width": 560,
+          "height": 260.96875,
+          "bottom": 310.484375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.609375,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.609375,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 259,
+          "height": 259,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 156.703125,
+            "width": 365,
+            "height": 47,
+            "bottom": 203.703125,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 206.703125,
+            "width": 365,
+            "height": 44,
+            "bottom": 250.703125,
+            "right": 579
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 40,
+          "y": 49.515625,
+          "width": 560,
+          "height": 260.96875,
+          "bottom": 310.484375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.609375,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.609375,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 259,
+          "height": 259,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip-retry-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 156.703125,
+            "width": 365,
+            "height": 47,
+            "bottom": 203.703125,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 206.703125,
+            "width": 365,
+            "height": 44,
+            "bottom": 250.703125,
+            "right": 579
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111262,
+        "opaque": 1081,
+        "partial": 64057
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "kind": "replay",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 40,
+          "y": 49.515625,
+          "width": 560,
+          "height": 260.96875,
+          "bottom": 310.484375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.609375,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.609375,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 259,
+          "height": 259,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 156.703125,
+            "width": 365,
+            "height": 47,
+            "bottom": 203.703125,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 206.703125,
+            "width": 365,
+            "height": 44,
+            "bottom": 250.703125,
+            "right": 579
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 40,
+          "y": 49.515625,
+          "width": 560,
+          "height": 260.96875,
+          "bottom": 310.484375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.609375,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.609375,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 259,
+          "height": 259,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 156.703125,
+            "width": 365,
+            "height": 47,
+            "bottom": 203.703125,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 206.703125,
+            "width": 365,
+            "height": 44,
+            "bottom": 250.703125,
+            "right": 579
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 40,
+      "coinsAfter": 40,
+      "rewards": 0
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "kind": "test-win",
+      "reducedMotion": "no-preference",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 40,
+          "y": 47.90625,
+          "width": 560,
+          "height": 264.1875,
+          "bottom": 312.09375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.5,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.5,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 262,
+          "height": 262,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 155.09375,
+            "width": 365,
+            "height": 47,
+            "bottom": 202.09375,
+            "right": 579
+          },
+          {
+            "id": "result-test",
+            "x": 214,
+            "y": 208.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 252.09375,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 255.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 299.09375,
+            "right": 579
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 40,
+          "y": 47.90625,
+          "width": 560,
+          "height": 264.1875,
+          "bottom": 312.09375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.5,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.5,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 262,
+          "height": 262,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 155.09375,
+            "width": 365,
+            "height": 47,
+            "bottom": 202.09375,
+            "right": 579
+          },
+          {
+            "id": "result-test",
+            "x": 214,
+            "y": 208.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 252.09375,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 255.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 299.09375,
+            "right": 579
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "ko",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "kind": "test-retry",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-retry-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 40,
+          "y": 47.90625,
+          "width": 560,
+          "height": 264.1875,
+          "bottom": 312.09375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.5,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.5,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 262,
+          "height": 262,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 155.09375,
+            "width": 365,
+            "height": 47,
+            "bottom": 202.09375,
+            "right": 579
+          },
+          {
+            "id": "result-test",
+            "x": 214,
+            "y": 208.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 252.09375,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 255.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 299.09375,
+            "right": 579
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 40,
+          "y": 47.90625,
+          "width": 560,
+          "height": 264.1875,
+          "bottom": 312.09375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.5,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.5,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 262,
+          "height": 262,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip-retry-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 155.09375,
+            "width": 365,
+            "height": 47,
+            "bottom": 202.09375,
+            "right": 579
+          },
+          {
+            "id": "result-test",
+            "x": 214,
+            "y": 208.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 252.09375,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 255.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 299.09375,
+            "right": 579
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111262,
+        "opaque": 1081,
+        "partial": 64057
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "kind": "win",
+      "reducedMotion": "no-preference",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 36.71875,
+          "width": 282,
+          "height": 494.5625,
+          "bottom": 531.28125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 57.71875,
+          "width": 236,
+          "height": 126,
+          "bottom": 183.71875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 493,
+          "height": 493,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 420.28125,
+            "width": 236,
+            "height": 47,
+            "bottom": 467.28125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 91.953125,
+            "y": 470.28125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 514.28125,
+            "right": 228.03125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 36.71875,
+          "width": 282,
+          "height": 494.5625,
+          "bottom": 531.28125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 57.71875,
+          "width": 236,
+          "height": 126,
+          "bottom": 183.71875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 493,
+          "height": 493,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 420.28125,
+            "width": 236,
+            "height": 47,
+            "bottom": 467.28125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 91.953125,
+            "y": 470.28125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 514.28125,
+            "right": 228.03125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 40,
+      "rewards": 1
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "kind": "retry",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-retry-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 61.71875,
+          "width": 282,
+          "height": 444.5625,
+          "bottom": 506.28125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 82.71875,
+          "width": 236,
+          "height": 126,
+          "bottom": 208.71875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 443,
+          "height": 443,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 395.28125,
+            "width": 236,
+            "height": 47,
+            "bottom": 442.28125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 91.953125,
+            "y": 445.28125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 489.28125,
+            "right": 228.03125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 61.71875,
+          "width": 282,
+          "height": 444.5625,
+          "bottom": 506.28125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 82.71875,
+          "width": 236,
+          "height": 126,
+          "bottom": 208.71875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 443,
+          "height": 443,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip-retry-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 395.28125,
+            "width": 236,
+            "height": 47,
+            "bottom": 442.28125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 91.953125,
+            "y": 445.28125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 489.28125,
+            "right": 228.03125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111262,
+        "opaque": 1081,
+        "partial": 64057
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "kind": "replay",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 61.71875,
+          "width": 282,
+          "height": 444.5625,
+          "bottom": 506.28125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 82.71875,
+          "width": 236,
+          "height": 126,
+          "bottom": 208.71875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 443,
+          "height": 443,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 395.28125,
+            "width": 236,
+            "height": 47,
+            "bottom": 442.28125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 91.953125,
+            "y": 445.28125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 489.28125,
+            "right": 228.03125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 61.71875,
+          "width": 282,
+          "height": 444.5625,
+          "bottom": 506.28125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 82.71875,
+          "width": 236,
+          "height": 126,
+          "bottom": 208.71875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 443,
+          "height": 443,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 395.28125,
+            "width": 236,
+            "height": 47,
+            "bottom": 442.28125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 91.953125,
+            "y": 445.28125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 489.28125,
+            "right": 228.03125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 40,
+      "coinsAfter": 40,
+      "rewards": 0
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "kind": "test-win",
+      "reducedMotion": "no-preference",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 35.71875,
+          "width": 282,
+          "height": 496.5625,
+          "bottom": 532.28125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 56.71875,
+          "width": 236,
+          "height": 126,
+          "bottom": 182.71875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 495,
+          "height": 495,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 369.28125,
+            "width": 236,
+            "height": 47,
+            "bottom": 416.28125,
+            "right": 278
+          },
+          {
+            "id": "result-test",
+            "x": 42,
+            "y": 424.28125,
+            "width": 236,
+            "height": 44,
+            "bottom": 468.28125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 91.953125,
+            "y": 471.28125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 515.28125,
+            "right": 228.03125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 35.71875,
+          "width": 282,
+          "height": 496.5625,
+          "bottom": 532.28125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 56.71875,
+          "width": 236,
+          "height": 126,
+          "bottom": 182.71875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 495,
+          "height": 495,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 369.28125,
+            "width": 236,
+            "height": 47,
+            "bottom": 416.28125,
+            "right": 278
+          },
+          {
+            "id": "result-test",
+            "x": 42,
+            "y": 424.28125,
+            "width": 236,
+            "height": 44,
+            "bottom": 468.28125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 91.953125,
+            "y": 471.28125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 515.28125,
+            "right": 228.03125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "kind": "test-retry",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-retry-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 35.71875,
+          "width": 282,
+          "height": 496.5625,
+          "bottom": 532.28125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 56.71875,
+          "width": 236,
+          "height": 126,
+          "bottom": 182.71875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 495,
+          "height": 495,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 369.28125,
+            "width": 236,
+            "height": 47,
+            "bottom": 416.28125,
+            "right": 278
+          },
+          {
+            "id": "result-test",
+            "x": 42,
+            "y": 424.28125,
+            "width": 236,
+            "height": 44,
+            "bottom": 468.28125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 91.953125,
+            "y": 471.28125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 515.28125,
+            "right": 228.03125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 35.71875,
+          "width": 282,
+          "height": 496.5625,
+          "bottom": 532.28125,
+          "right": 301
+        },
+        "stage": {
+          "x": 42,
+          "y": 56.71875,
+          "width": 236,
+          "height": 126,
+          "bottom": 182.71875,
+          "right": 278
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 495,
+          "height": 495,
+          "body": 568,
+          "viewport": 568
+        },
+        "image": {
+          "src": "/assets/pip-retry-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 369.28125,
+            "width": 236,
+            "height": 47,
+            "bottom": 416.28125,
+            "right": 278
+          },
+          {
+            "id": "result-test",
+            "x": 42,
+            "y": 424.28125,
+            "width": 236,
+            "height": 44,
+            "bottom": 468.28125,
+            "right": 278
+          },
+          {
+            "id": "result-home",
+            "x": 91.953125,
+            "y": 471.28125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 515.28125,
+            "right": 228.03125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111262,
+        "opaque": 1081,
+        "partial": 64057
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "kind": "win",
+      "reducedMotion": "no-preference",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 89.21875,
+          "width": 322,
+          "height": 461.5625,
+          "bottom": 550.78125,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 110.21875,
+          "width": 240,
+          "height": 126,
+          "bottom": 236.21875,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 460,
+          "height": 460,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 439.78125,
+            "width": 276,
+            "height": 47,
+            "bottom": 486.78125,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 111.953125,
+            "y": 489.78125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 533.78125,
+            "right": 248.03125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 89.21875,
+          "width": 322,
+          "height": 461.5625,
+          "bottom": 550.78125,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 110.21875,
+          "width": 240,
+          "height": 126,
+          "bottom": 236.21875,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 460,
+          "height": 460,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 439.78125,
+            "width": 276,
+            "height": 47,
+            "bottom": 486.78125,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 111.953125,
+            "y": 489.78125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 533.78125,
+            "right": 248.03125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 40,
+      "rewards": 1
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "kind": "retry",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-retry-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 123.8125,
+          "width": 322,
+          "height": 392.375,
+          "bottom": 516.1875,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 144.8125,
+          "width": 240,
+          "height": 126,
+          "bottom": 270.8125,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 390,
+          "height": 390,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 405.1875,
+            "width": 276,
+            "height": 47,
+            "bottom": 452.1875,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 111.953125,
+            "y": 455.1875,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 499.1875,
+            "right": 248.03125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 123.8125,
+          "width": 322,
+          "height": 392.375,
+          "bottom": 516.1875,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 144.8125,
+          "width": 240,
+          "height": 126,
+          "bottom": 270.8125,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 390,
+          "height": 390,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip-retry-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 405.1875,
+            "width": 276,
+            "height": 47,
+            "bottom": 452.1875,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 111.953125,
+            "y": 455.1875,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 499.1875,
+            "right": 248.03125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111262,
+        "opaque": 1081,
+        "partial": 64057
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "kind": "replay",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 114.21875,
+          "width": 322,
+          "height": 411.5625,
+          "bottom": 525.78125,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 135.21875,
+          "width": 240,
+          "height": 126,
+          "bottom": 261.21875,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 410,
+          "height": 410,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 414.78125,
+            "width": 276,
+            "height": 47,
+            "bottom": 461.78125,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 111.953125,
+            "y": 464.78125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 508.78125,
+            "right": 248.03125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 114.21875,
+          "width": 322,
+          "height": 411.5625,
+          "bottom": 525.78125,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 135.21875,
+          "width": 240,
+          "height": 126,
+          "bottom": 261.21875,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 410,
+          "height": 410,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 414.78125,
+            "width": 276,
+            "height": 47,
+            "bottom": 461.78125,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 111.953125,
+            "y": 464.78125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 508.78125,
+            "right": 248.03125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 40,
+      "coinsAfter": 40,
+      "rewards": 0
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "kind": "test-win",
+      "reducedMotion": "no-preference",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 88.21875,
+          "width": 322,
+          "height": 463.5625,
+          "bottom": 551.78125,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 109.21875,
+          "width": 240,
+          "height": 126,
+          "bottom": 235.21875,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 462,
+          "height": 462,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 388.78125,
+            "width": 276,
+            "height": 47,
+            "bottom": 435.78125,
+            "right": 318
+          },
+          {
+            "id": "result-test",
+            "x": 42,
+            "y": 443.78125,
+            "width": 276,
+            "height": 44,
+            "bottom": 487.78125,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 111.953125,
+            "y": 490.78125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 534.78125,
+            "right": 248.03125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 88.21875,
+          "width": 322,
+          "height": 463.5625,
+          "bottom": 551.78125,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 109.21875,
+          "width": 240,
+          "height": 126,
+          "bottom": 235.21875,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 462,
+          "height": 462,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 388.78125,
+            "width": 276,
+            "height": 47,
+            "bottom": 435.78125,
+            "right": 318
+          },
+          {
+            "id": "result-test",
+            "x": 42,
+            "y": 443.78125,
+            "width": 276,
+            "height": 44,
+            "bottom": 487.78125,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 111.953125,
+            "y": 490.78125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 534.78125,
+            "right": 248.03125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 360,
+        "height": 640
+      },
+      "kind": "test-retry",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-retry-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 19,
+          "y": 88.21875,
+          "width": 322,
+          "height": 463.5625,
+          "bottom": 551.78125,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 109.21875,
+          "width": 240,
+          "height": 126,
+          "bottom": 235.21875,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 462,
+          "height": 462,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 388.78125,
+            "width": 276,
+            "height": 47,
+            "bottom": 435.78125,
+            "right": 318
+          },
+          {
+            "id": "result-test",
+            "x": 42,
+            "y": 443.78125,
+            "width": 276,
+            "height": 44,
+            "bottom": 487.78125,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 111.953125,
+            "y": 490.78125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 534.78125,
+            "right": 248.03125
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 19,
+          "y": 88.21875,
+          "width": 322,
+          "height": 463.5625,
+          "bottom": 551.78125,
+          "right": 341
+        },
+        "stage": {
+          "x": 60,
+          "y": 109.21875,
+          "width": 240,
+          "height": 126,
+          "bottom": 235.21875,
+          "right": 300
+        },
+        "character": {
+          "width": 126,
+          "height": 124
+        },
+        "scroll": {
+          "client": 462,
+          "height": 462,
+          "body": 640,
+          "viewport": 640
+        },
+        "image": {
+          "src": "/assets/pip-retry-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 42,
+            "y": 388.78125,
+            "width": 276,
+            "height": 47,
+            "bottom": 435.78125,
+            "right": 318
+          },
+          {
+            "id": "result-test",
+            "x": 42,
+            "y": 443.78125,
+            "width": 276,
+            "height": 44,
+            "bottom": 487.78125,
+            "right": 318
+          },
+          {
+            "id": "result-home",
+            "x": 111.953125,
+            "y": 490.78125,
+            "width": 136.078125,
+            "height": 44,
+            "bottom": 534.78125,
+            "right": 248.03125
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111262,
+        "opaque": 1081,
+        "partial": 64057
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "kind": "win",
+      "reducedMotion": "no-preference",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 40,
+          "y": 51.90625,
+          "width": 560,
+          "height": 256.1875,
+          "bottom": 308.09375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.5,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.5,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 254,
+          "height": 254,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 201.09375,
+            "width": 365,
+            "height": 47,
+            "bottom": 248.09375,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 251.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 295.09375,
+            "right": 579
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 40,
+          "y": 51.90625,
+          "width": 560,
+          "height": 256.1875,
+          "bottom": 308.09375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.5,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.5,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 254,
+          "height": 254,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 201.09375,
+            "width": 365,
+            "height": 47,
+            "bottom": 248.09375,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 251.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 295.09375,
+            "right": 579
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 40,
+      "rewards": 1
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "kind": "retry",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-retry-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 40,
+          "y": 52.515625,
+          "width": 560,
+          "height": 254.96875,
+          "bottom": 307.484375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.609375,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.609375,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 253,
+          "height": 253,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 153.703125,
+            "width": 365,
+            "height": 47,
+            "bottom": 200.703125,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 203.703125,
+            "width": 365,
+            "height": 44,
+            "bottom": 247.703125,
+            "right": 579
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 40,
+          "y": 52.515625,
+          "width": 560,
+          "height": 254.96875,
+          "bottom": 307.484375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.609375,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.609375,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 253,
+          "height": 253,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip-retry-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 153.703125,
+            "width": 365,
+            "height": 47,
+            "bottom": 200.703125,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 203.703125,
+            "width": 365,
+            "height": 44,
+            "bottom": 247.703125,
+            "right": 579
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111262,
+        "opaque": 1081,
+        "partial": 64057
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "kind": "replay",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 40,
+          "y": 52.515625,
+          "width": 560,
+          "height": 254.96875,
+          "bottom": 307.484375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.609375,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.609375,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 253,
+          "height": 253,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 153.703125,
+            "width": 365,
+            "height": 47,
+            "bottom": 200.703125,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 203.703125,
+            "width": 365,
+            "height": 44,
+            "bottom": 247.703125,
+            "right": 579
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 40,
+          "y": 52.515625,
+          "width": 560,
+          "height": 254.96875,
+          "bottom": 307.484375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.609375,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.609375,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 253,
+          "height": 253,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 153.703125,
+            "width": 365,
+            "height": 47,
+            "bottom": 200.703125,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 203.703125,
+            "width": 365,
+            "height": 44,
+            "bottom": 247.703125,
+            "right": 579
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 40,
+      "coinsAfter": 40,
+      "rewards": 0
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "kind": "test-win",
+      "reducedMotion": "no-preference",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 40,
+          "y": 50.90625,
+          "width": 560,
+          "height": 258.1875,
+          "bottom": 309.09375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.5,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.5,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 256,
+          "height": 256,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 152.09375,
+            "width": 365,
+            "height": 47,
+            "bottom": 199.09375,
+            "right": 579
+          },
+          {
+            "id": "result-test",
+            "x": 214,
+            "y": 205.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 249.09375,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 252.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 296.09375,
+            "right": 579
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 40,
+          "y": 50.90625,
+          "width": 560,
+          "height": 258.1875,
+          "bottom": 309.09375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.5,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.5,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 256,
+          "height": 256,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip-win-v1.webp",
+          "decoded": true
+        },
+        "animation": "pip-cheer",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 152.09375,
+            "width": 365,
+            "height": 47,
+            "bottom": 199.09375,
+            "right": 579
+          },
+          {
+            "id": "result-test",
+            "x": 214,
+            "y": 205.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 249.09375,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 252.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 296.09375,
+            "right": 579
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111568,
+        "opaque": 1083,
+        "partial": 63749
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    },
+    {
+      "language": "en",
+      "viewport": {
+        "width": 640,
+        "height": 360
+      },
+      "kind": "test-retry",
+      "reducedMotion": "reduce",
+      "requestsBeforeResult": 0,
+      "requests": [
+        "/assets/pip-retry-v1.webp"
+      ],
+      "loading": {
+        "dialog": {
+          "x": 40,
+          "y": 50.90625,
+          "width": 560,
+          "height": 258.1875,
+          "bottom": 309.09375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.5,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.5,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 256,
+          "height": 256,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip.png",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 152.09375,
+            "width": 365,
+            "height": 47,
+            "bottom": 199.09375,
+            "right": 579
+          },
+          {
+            "id": "result-test",
+            "x": 214,
+            "y": 205.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 249.09375,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 252.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 296.09375,
+            "right": 579
+          }
+        ]
+      },
+      "loaded": {
+        "dialog": {
+          "x": 40,
+          "y": 50.90625,
+          "width": 560,
+          "height": 258.1875,
+          "bottom": 309.09375,
+          "right": 600
+        },
+        "stage": {
+          "x": 61,
+          "y": 78.5,
+          "width": 135,
+          "height": 148,
+          "bottom": 226.5,
+          "right": 196
+        },
+        "character": {
+          "width": 135,
+          "height": 140
+        },
+        "scroll": {
+          "client": 256,
+          "height": 256,
+          "body": 360,
+          "viewport": 360
+        },
+        "image": {
+          "src": "/assets/pip-retry-v1.webp",
+          "decoded": true
+        },
+        "animation": "none",
+        "focused": "result-next",
+        "buttons": [
+          {
+            "id": "result-next",
+            "x": 214,
+            "y": 152.09375,
+            "width": 365,
+            "height": 47,
+            "bottom": 199.09375,
+            "right": 579
+          },
+          {
+            "id": "result-test",
+            "x": 214,
+            "y": 205.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 249.09375,
+            "right": 579
+          },
+          {
+            "id": "result-home",
+            "x": 214,
+            "y": 252.09375,
+            "width": 365,
+            "height": 44,
+            "bottom": 296.09375,
+            "right": 579
+          }
+        ]
+      },
+      "alpha": {
+        "width": 420,
+        "height": 420,
+        "transparent": 111262,
+        "opaque": 1081,
+        "partial": 64057
+      },
+      "coinsBefore": 0,
+      "coinsAfter": 0,
+      "rewards": 0
+    }
+  ],
+  "boundaries": [
+    {
+      "failure": "blocked",
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "fallbackReady": true,
+      "usable": true
+    },
+    {
+      "failure": "404",
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "fallbackReady": true,
+      "usable": true
+    },
+    {
+      "failure": "corrupt",
+      "requests": [
+        "/assets/pip-win-v1.webp"
+      ],
+      "fallbackReady": true,
+      "usable": true
+    },
+    {
+      "failure": "held-until-next-result",
+      "requests": [
+        "/assets/pip-win-v1.webp",
+        "/assets/pip-retry-v1.webp"
+      ],
+      "oldImageDidNotReplaceRetry": true,
+      "buttonsAndPickerUsable": true,
+      "coins": 40
+    }
+  ],
+  "pageerrors": []
+}
