@@ -1,6 +1,20 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    saveConflict: 'An existing save is now readable. Both it and your current session are protected. Load the existing save to discard this session, or reset explicitly.',
+    saveReload: 'Load existing save', saveReloadConfirm: 'Discard this session’s unsaved progress and reload the existing device save?',
+    saveNew: 'No previous save. Progress is saved on this device.',
+    saveSaved: 'Progress saved on this device. One recovery copy is kept; it may be one save behind.',
+    saveRecovered: 'A verified recovery copy was loaded. The most recent changes may be missing.',
+    saveFailed: 'Storage is unavailable. Latest progress may be lost when you close the app. Retry here.',
+    saveBackupFailed: 'The recovery copy could not be written, so the previous save was kept. Latest progress may be lost when you close the app. Retry here.',
+    saveReadError: 'The previous save could not be read. Automatic saving is blocked to protect it. Retry saving your current session, or reset explicitly.',
+    saveCorrupt: 'The save is damaged and no verified recovery copy is available. Automatic saving is blocked. Retry after restoring the data, or reset explicitly.',
+    saveUnsupported: 'This save uses an unsupported format. It is protected from overwriting and older recovery copies. Use the matching app version, or reset explicitly.',
+    saveResetFailed: 'Reset could not be recorded. Your current progress is unchanged. Retry reset when storage is available.',
+    saveResetPending: 'Reset is recorded. Older saves will not return. Until saving succeeds, latest progress may be lost when you close the app. Retry here.',
+    saveRetry: 'Retry saving current progress', saveAttention: 'Check save status',
+
     boardKeyboardHelp: 'Tab to the board · Arrow keys: move · Enter/Space: select, swap or use power-up · Esc: cancel selection',
     boardCell: 'Row {row}, column {col}: {tile}. {special}. Leaf layers remaining: {layers}.',
     boardSelected: 'Selected: row {row}, column {col}.', boardUnselected: 'No tile selected.',
@@ -49,6 +63,20 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    saveConflict: '기존 기록을 읽을 수 있게 됐어요. 기존 기록과 이번 실행의 진행을 보호 중이에요. 현재 진행을 버리고 기존 기록을 불러오거나 직접 초기화해 주세요.',
+    saveReload: '기존 기록 불러오기', saveReloadConfirm: '이번 실행의 저장되지 않은 진행을 버리고 기기에 있는 기존 기록을 다시 불러올까요?',
+    saveNew: '이전 저장이 없어요. 진행은 이 기기에 저장해요.',
+    saveSaved: '이 기기에 저장했어요. 복구 사본 1개는 직전 저장일 수 있어요.',
+    saveRecovered: '검증된 복구 사본을 불러왔어요. 가장 최근 변경은 빠질 수 있어요.',
+    saveFailed: '저장 공간을 사용할 수 없어요. 최신 진행은 앱을 닫으면 사라질 수 있어요. 여기서 재시도해 주세요.',
+    saveBackupFailed: '복구 사본을 쓰지 못해 이전 저장을 유지했어요. 최신 진행은 앱을 닫으면 사라질 수 있어요. 여기서 재시도해 주세요.',
+    saveReadError: '이전 기록을 읽지 못해 보호를 위해 자동 저장을 막았어요. 현재 진행 저장을 재시도하거나 직접 초기화해 주세요.',
+    saveCorrupt: '저장이 손상됐고 정상 복구 사본이 없어 자동 저장을 막았어요. 기록을 복구한 뒤 재시도하거나 직접 초기화해 주세요.',
+    saveUnsupported: '지원하지 않는 저장 형식이라 덮어쓰기와 이전 사본 복원을 막았어요. 맞는 앱 버전을 사용하거나 직접 초기화해 주세요.',
+    saveResetFailed: '초기화를 기록하지 못했어요. 현재 진행은 그대로예요. 저장 공간을 사용할 수 있을 때 초기화를 다시 시도해 주세요.',
+    saveResetPending: '초기화는 기록됐으며 이전 저장은 되살아나지 않아요. 저장되기 전에 앱을 닫으면 최신 진행은 사라질 수 있어요. 재시도해 주세요.',
+    saveRetry: '현재 진행 저장 재시도', saveAttention: '저장 상태 확인 필요',
+
     boardKeyboardHelp: 'Tab: 보드 진입 · 방향키: 칸 이동 · Enter/Space: 선택·교환·특수 사용 · Esc: 선택 취소',
     boardCell: '{row}행 {col}열: {tile}. {special}. 낙엽 남은 겹: {layers}.',
     boardSelected: '선택한 칸: {row}행 {col}열.', boardUnselected: '선택한 칸 없음.',

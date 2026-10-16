@@ -1,0 +1,153 @@
+{
+  "dateKst": "2026-10-16",
+  "browser": "155.0.8059.41",
+  "method": "격리 headless Chrome, 실제 Storage.prototype read/write/remove fault injection. 실제 Android 저장소 소진·강제 종료 미검증.",
+  "checks": 14,
+  "details": [
+    "backup 실패 시 디스크 보존·반복 알림/토스트 없음·메모리 섞기 유지·KO/EN·Enter/Space 재시도 포커스·재실행",
+    "primary 실패 중 첫 보상·완료·회차 삭제 보존과 재시도 후 중복 지급 없음",
+    "정상 사본 복구·재실행 ({)",
+    "정상 사본 복구·재실행 ({\"version\":1})",
+    "손상·미지원 원본 보호 {\"primary\":\"{\"}",
+    "손상·미지원 원본 보호 {\"primary\":\"null\"}",
+    "손상·미지원 원본 보호 {\"primary\":\"{\",\"copy\":\"{\\\"version\\\":1}\"}",
+    "손상·미지원 원본 보호 {\"primary\":\"{\\\"version\\\":2}\",\"copy\":\"{\\\"version\\\":1,\\\"language\\\":\\\"ko\\\",\\\"highestLevel\\\":6,\\\"completed\\\":[1,2,3,4,5],\\\"stars\\\":3,\\\"coins\\\":200,\\\"garden\\\":1,\\\"music\\\":false,\\\"sfx\\\":true,\\\"tutorialSeen\\\":true}\"}",
+    "손상·미지원 원본 보호 {\"copy\":\"{\\\"version\\\":2}\"}",
+    "손상·미지원 원본 보호 {\"reset\":\"2\"}",
+    "정상 primary·backup 읽기 예외는 자동 쓰기 차단·읽기 회복 뒤 최신 회차 재시도",
+    "primary→backup 순차 읽기 실패→기존 기록 발견 충돌 보호·반복 재시도/명시 불러오기 취소 무변경",
+    "초기화 취소/marker 실패 무변경·primary 실패 뒤 종료·정상 재시도·옛 사본 부활 방지",
+    "4개 화면 크기×KO/EN 오류 설정·44px·키보드 포커스·body/퍼즐 스크롤 없음"
+  ],
+  "samples": [
+    {
+      "language": "ko",
+      "width": 320,
+      "height": 568,
+      "button": [
+        141.515625,
+        44
+      ],
+      "body": [
+        320,
+        320,
+        568,
+        568
+      ],
+      "text": "저장이 손상됐고 정상 복구 사본이 없어 자동 저장을 막았어요. 기록을 복구한 뒤 재시도하거나 직접 초기화해 주세요."
+    },
+    {
+      "language": "en",
+      "width": 320,
+      "height": 568,
+      "button": [
+        185.640625,
+        44
+      ],
+      "body": [
+        320,
+        320,
+        568,
+        568
+      ],
+      "text": "The save is damaged and no verified recovery copy is available. Automatic saving is blocked. Retry after restoring the data, or reset explicitly."
+    },
+    {
+      "language": "ko",
+      "width": 360,
+      "height": 640,
+      "button": [
+        141.515625,
+        44
+      ],
+      "body": [
+        360,
+        360,
+        640,
+        640
+      ],
+      "text": "저장이 손상됐고 정상 복구 사본이 없어 자동 저장을 막았어요. 기록을 복구한 뒤 재시도하거나 직접 초기화해 주세요."
+    },
+    {
+      "language": "en",
+      "width": 360,
+      "height": 640,
+      "button": [
+        185.640625,
+        44
+      ],
+      "body": [
+        360,
+        360,
+        640,
+        640
+      ],
+      "text": "The save is damaged and no verified recovery copy is available. Automatic saving is blocked. Retry after restoring the data, or reset explicitly."
+    },
+    {
+      "language": "ko",
+      "width": 390,
+      "height": 844,
+      "button": [
+        141.515625,
+        44
+      ],
+      "body": [
+        390,
+        390,
+        844,
+        844
+      ],
+      "text": "저장이 손상됐고 정상 복구 사본이 없어 자동 저장을 막았어요. 기록을 복구한 뒤 재시도하거나 직접 초기화해 주세요."
+    },
+    {
+      "language": "en",
+      "width": 390,
+      "height": 844,
+      "button": [
+        185.640625,
+        44
+      ],
+      "body": [
+        390,
+        390,
+        844,
+        844
+      ],
+      "text": "The save is damaged and no verified recovery copy is available. Automatic saving is blocked. Retry after restoring the data, or reset explicitly."
+    },
+    {
+      "language": "ko",
+      "width": 640,
+      "height": 360,
+      "button": [
+        141.515625,
+        44
+      ],
+      "body": [
+        640,
+        640,
+        360,
+        360
+      ],
+      "text": "저장이 손상됐고 정상 복구 사본이 없어 자동 저장을 막았어요. 기록을 복구한 뒤 재시도하거나 직접 초기화해 주세요."
+    },
+    {
+      "language": "en",
+      "width": 640,
+      "height": 360,
+      "button": [
+        185.640625,
+        44
+      ],
+      "body": [
+        640,
+        640,
+        360,
+        360
+      ],
+      "text": "The save is damaged and no verified recovery copy is available. Automatic saving is blocked. Retry after restoring the data, or reset explicitly."
+    }
+  ],
+  "pageerrors": []
+}

@@ -120,3 +120,6 @@ html:lang(ko) h1,html:lang(ko) h2,html:lang(ko) h3,html:lang(ko) .moves-box stro
 .result-content .text-button,.test-picker>.text-button,.test-picker>.primary,.test-picker .chapter-tabs button{min-height:44px}
 @media(max-width:360px){.topbar{padding:0 8px}.brand{font-size:17px;gap:5px}.brand-mark{width:28px;height:32px}.brand small{letter-spacing:2px}.header-right{gap:2px}}
 @media(orientation:landscape) and (max-height:600px){.bottom-nav{padding:2px 12px}.level-actions{gap:4px}.test-level-button{padding:7px 5px}.result-content{padding-top:12px;padding-bottom:12px}.result-content .text-button,.result-test-button{min-height:44px}}
+
+/* 저장 상태는 설정 내부에 유지하며 퍼즐 화면 높이를 바꾸지 않습니다. */
+.storage-card{border:1px solid var(--line);border-radius:13px;padding:12px;color:#41573f;background:#f5f3df;font-size:12px;line-height:1.6;margin:0 0 12px}.storage-card p{margin:0}.storage-card button{min-width:44px;min-height:44px;text-align:left;text-decoration:underline}.save-attention{position:relative}.save-attention:after{content:"!";position:absolute;right:0;top:0;border-radius:50%;background:#8a513b;color:#fffdf5;font-weight:800;font-size:11px;width:15px;height:15px;display:grid;place-items:center}

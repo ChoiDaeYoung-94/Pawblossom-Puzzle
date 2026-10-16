@@ -59,6 +59,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   let stored = JSON.stringify({ version: 1, language: 'en', highestLevel: 2, completed: [1], stars: 1, coins: 40, garden: 0, music: true, sfx: true });
   if(firstUse)stored='null';
   if(initial!==undefined)stored=JSON.stringify(initial);
+  const storageValues=new Map<string,string>(stored==='null'?[]:[['pawblossom.save.v1',stored]]);
   const element = (selector: string): ElementStub => {
     if (!elements.has(selector)) elements.set(selector, new ElementStub(selector));
     return elements.get(selector)!;
@@ -108,11 +109,12 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     ANDROID_TEST_BILLING_ENABLED:Boolean(billingBridge),TestBillingController,billingCopy,nativeTestBilling:()=>billingBridge,
     exports: stateExports,
     localStorage: {
-      getItem: () => stored,
+      removeItem:(key:string)=>storageValues.delete(key),
+      getItem: (key:string) => storageValues.get(key)??null,
       setItem: (_key: string, value: string) => {
         writes++;
         if (storageFails) throw new Error('Storage write rejected');
-        stored = value;
+        storageValues.set(_key,value);
       },
     },
     document: {
@@ -151,13 +153,14 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   vm.runInContext(mainCode, context);
   if(autoFrame)frame();
   return {
+    setStorageFails:(value:boolean)=>{storageFails=value;},disk:()=>[...storageValues],
     frame:()=>frame(),games:()=>games,destroys:()=>destroys,
     documentEvents,nativeEvents,resolveNativeState,
     element, run: (code: string) => {const result=vm.runInContext(code, context);if(autoFrame)frame();return result;},
     resultTimers: () => [...timers.values()].filter(timer => timer.ms === 300),
     flushResults: () => [...timers.values()].filter(timer => timer.ms === 300).forEach(timer => timer.callback()),
     flushGrowth: () => [...timers.values()].filter(timer => timer.ms === 450).forEach(timer => timer.callback()),
-    writes: () => writes, stored: () => JSON.parse(stored),
+    writes: () => writes, stored: () => JSON.parse(storageValues.get('pawblossom.save.v1')??'null'),
   };
 }
 
@@ -397,7 +400,7 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
   it('정원 저장 실패 안내는 성공 메시지로 덮어쓰지 않습니다',()=>{
     const h=mainHarness(true);h.run('save.stars=2;renderViews()');h.element('#grow').onclick();
     expect(h.run('save.garden')).toBe(1);
-    expect(h.element('#toast').textContent).toMatch(/Storage is unavailable/);
+    expect(h.element('#save-status').textContent).toMatch(/recovery copy could not be written/);
     expect(h.stored().garden).toBe(0);
   });
   it('새 회차 시작은 이전 결과 타이머를 취소하고 이미 추출한 콜백도 무시합니다', () => {
@@ -462,12 +465,12 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     }
   });
 
-  it('초기화 저장에 실패하면 세션은 초기화하되 저장 실패 안내를 표시합니다', () => {
+  it('초기화 의도 저장에 실패하면 세션과 기존 기록을 유지하고 안내합니다', () => {
     const h = mainHarness(true);
     h.element('#reset').onclick();
     expect(h.writes()).toBeGreaterThan(0);
-    expect(h.run('save.highestLevel')).toBe(1);
-    expect(h.element('#toast').textContent).toMatch(/기기 저장 공간을 사용할 수 없어요/);
+    expect(h.run('save.highestLevel')).toBe(2);
+    expect(h.element('#save-status').textContent).toMatch(/Reset could not be recorded/);
     expect(h.stored().highestLevel).toBe(2); // 저장 실패가 이전 데이터를 지우지는 않습니다.
     expect(h.run('loadSave().highestLevel')).toBe(2);
   });
@@ -750,13 +753,36 @@ describe('정상 회차 복구와 종료 확정',()=>{
   });
   it('저장 실패는 안내하고 이전 디스크 회차를 유지합니다',()=>{
     const source=mainHarness().stored(),app=mainHarness(true,false,false,false,source);
-    app.element('#shuffle').onclick();expect(app.stored()).toEqual(source);expect(app.element('#toast').textContent).toContain('Storage is unavailable');
+    app.element('#shuffle').onclick();expect(app.stored()).toEqual(source);expect(app.element('#save-status').textContent).toContain('recovery copy could not be written');
   });
   it('초기 복원 저장 실패 경고를 복원 안내로 덮지 않고 메모리에서 플레이합니다',()=>{
     const source=mainHarness().stored(),app=mainHarness(true,false,false,false,source);
-    expect(app.element('#toast').textContent).toContain('Storage is unavailable');
+    expect(app.element('#save-status').textContent).toContain('recovery copy could not be written');
     expect(app.run('scene.engine.board')).toEqual(source.inProgress.board);expect(app.stored()).toEqual(source);
     app.run('scene.hooks.onMove([1,0,0,0,0,0],10)');expect(app.run('moves')).toBe(source.inProgress.moves-1);
-    expect(app.stored()).toEqual(source);expect(app.element('#toast').textContent).toContain('Storage is unavailable');
+    expect(app.stored()).toEqual(source);expect(app.element('#save-status').textContent).toContain('recovery copy could not be written');
+  });
+});
+
+
+describe('저장 상태·초기화 UI 보호',()=>{
+  it('초기화 취소는 메모리·회차·모든 저장 키와 쓰기 횟수를 바꾸지 않습니다',()=>{
+    const h=mainHarness(),disk=h.disk(),writes=h.writes(),memory=h.run('JSON.stringify(save)'),board=h.run('scene');
+    h.run('confirm=()=>false');h.element('#reset').onclick();
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('JSON.stringify(save)')).toBe(memory);expect(h.run('scene')).toBe(board);
+  });
+  it('초기화는 marker와 새 회차를 한 번 쓰고 기존 사본을 교체합니다',()=>{
+    const h=mainHarness(),writes=h.writes();h.element('#reset').onclick();
+    expect(h.writes()-writes).toBe(3); // marker → 새 회차 backup → primary, 별도 기본값 persist 없음
+    const backup=JSON.parse(h.disk().find(([key])=>key.endsWith('.backup'))![1]);
+    expect(backup).toEqual(h.stored());expect(backup.coins).toBe(0);expect(backup.inProgress.levelId).toBe(1);
+    expect(h.disk().some(([key])=>key.endsWith('.reset'))).toBe(false);
+  });
+  it('장애 중 보상·정원 진행을 재시도하고 반복 실패로 토스트를 만들지 않습니다',()=>{
+    const h=mainHarness(true);h.run('finish(true)');const before=h.run('JSON.stringify(save)');
+    h.element('#save-retry').onclick();h.element('#save-retry').onclick();expect(h.element('#toast').textContent).toBe('');
+    h.setStorageFails(false);h.element('#save-retry').onclick();
+    expect(h.stored()).toEqual(JSON.parse(before));expect(h.stored().coins).toBe(80);expect(h.stored().completed).toEqual([1,2]);
+    h.element('#save-retry').onclick();expect(h.stored().coins).toBe(80);
   });
 });
