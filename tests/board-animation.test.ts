@@ -3,9 +3,12 @@ import { BoardEngine, seededRng, type Tile, type Position, type ResolveStep } fr
 
 class Piece {
   destroyed=false;alpha=1;scale=1;
+  name='';text='';texture='';width=0;height=0;
   constructor(public x:number,public y:number){}
   add(){return this;}setScale(value:number){this.scale=value;return this;}
   setDepth(){return this;}
+  setName(name:string){this.name=name;return this;}setOrigin(){return this;}
+  setAngle(){return this;}setDisplaySize(width:number,height:number){this.width=width;this.height=height;return this;}
   setPosition(x:number,y:number){this.x=x;this.y=y;return this;}
   destroy(){this.destroyed=true;}
 }
@@ -15,11 +18,12 @@ class Graphic {
   fillRoundedRect(...values:number[]){this.rectangles.push(values);return this;}
   strokeRoundedRect(){return this;}fillCircle(){return this;}strokeCircle(){return this;}
   lineBetween(...values:number[]){this.lines.push(values);return this;}
+  setName(){return this;}setPosition(){return this;}
   destroy(){this.destroyed=true;}
 }
 vi.mock('phaser',()=>{
   return {default:{Scene:class {
-    add={container:(x:number,y:number)=>new Piece(x,y),graphics:()=>new Graphic(),image:()=>({setDisplaySize(){return this;},setDepth(){return this;},destroy(){}}),circle:(x:number,y:number)=>new Piece(x,y)};
+    add={container:(x:number,y:number)=>new Piece(x,y),graphics:()=>new Graphic(),image:(x:number,y:number,texture:string)=>{const image=new Piece(x,y);image.texture=texture;return image;},text:(x:number,y:number,text:string)=>{const label=new Piece(x,y);label.text=text;return label;},circle:(x:number,y:number)=>new Piece(x,y)};
     tweens={killTweensOf(){},add(config:Record<string,unknown>){
       const targets=Array.isArray(config.targets)?config.targets:[config.targets];
       for(const target of targets)for(const key of ['x','y','scale','alpha'])if(config[key]!==undefined)target[key]=config[key];
@@ -35,6 +39,7 @@ interface RenderScene {
   attempt(a:Position,b?:Position):Promise<void>;tap(p:Position):void;resetHint():void;
   showEffect(step:ResolveStep):Graphic;
   paintLeaves(leaves:number[][]):void;
+  leafObjects:(Piece|Graphic)[];
 }
 function harness(){
   const onMove=vi.fn(),onNotice=vi.fn();
@@ -45,6 +50,17 @@ function harness(){
   return {scene,onMove,onNotice};
 }
 describe('블록 객체 보존과 낙하 연출',()=>{
+  it('두 겹은 겹잎·2, 한 겹은 작은 한 장·1을 표시하고 이전 바닥 객체만 정리합니다',()=>{
+    const {scene}=harness();scene.paint(scene.engine.board);const pieces=scene.pieces.map(row=>row.slice());
+    scene.engine.setLeaves([{row:3,col:3,layers:2}]);scene.paintLeaves(scene.engine.leaves);
+    const previous=scene.leafObjects.slice(),badge=previous.find(p=>p instanceof Piece&&p.texture==='leaf-pile') as Piece;
+    expect(badge.width).toBe(31);expect(previous.some(p=>p instanceof Piece&&p.text==='2')).toBe(true);
+    scene.engine.leaves[3][3]=1;scene.paintLeaves(scene.engine.leaves);
+    expect(previous.every(p=>p.destroyed)).toBe(true);
+    const single=scene.leafObjects.find(p=>p instanceof Piece&&p.texture==='leaf-single') as Piece;
+    expect(single.width).toBe(24);expect(scene.leafObjects.some(p=>p instanceof Piece&&p.text==='1')).toBe(true);
+    expect(scene.pieces).toEqual(pieces);expect(pieces.flat().every(p=>!p.destroyed)).toBe(true);
+  });
   it('낙엽은 각 연쇄의 이전·이후 상태를 표시하고 완료 수를 한 번 전달합니다',async()=>{
     const {scene,onMove}=harness();scene.engine.board[3][3].special='row';
     scene.engine.setLeaves([{row:3,col:5,layers:2}]);scene.paint(scene.engine.board);

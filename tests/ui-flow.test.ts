@@ -12,6 +12,7 @@ const mainCode = compile(read('../src/main.ts').replace(/^import .*;\r?\n/gm, ''
 const stateCode = compile(read('../src/state.ts'));
 const levelsCode = compile(read('../src/levels.ts'));
 const boardCode = compile(read('../src/BoardScene.ts'));
+const effectsCode = compile(read('../src/BoardEffects.ts'));
 const engineCode = compile(read('../src/core/BoardEngine.ts'));
 const practiceCode = compile(read('../src/SwapPractice.ts'));
 const i18nCode = compile(read('../src/i18n.ts'));
@@ -139,13 +140,14 @@ function boardHarness() {
     };
   }
   const engineExports: Record<string, unknown> = {}, boardExports: Record<string, unknown> = {};
+  const effectsExports:Record<string,unknown>={};vm.runInNewContext(effectsCode,{exports:effectsExports});
   vm.runInNewContext(engineCode, { exports: engineExports });
   vm.runInNewContext(boardCode, {
     exports: boardExports,
     require: (name: string) => name === 'phaser' ? { default: {
       Scene: PhaserSceneStub,
       Scenes: { Events: { PAUSE: 'pause', RESUME: 'resume', SLEEP: 'sleep', SHUTDOWN: 'shutdown' } },
-    } } : engineExports,
+    } } : name==='./BoardEffects'?effectsExports:engineExports,
   });
   const Constructor = boardExports.BoardScene as new (hooks: object) => {
     create(): void; paint: () => void; resetHint: () => void;
@@ -205,7 +207,7 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     h.run('startLevel(4);scene.hooks.onMove([0,0,0,14,12,0],260,1,4)');h.flushResults();
     expect(h.stored()).toMatchObject({completed:[1,4],stars:2,coins:80});
     h.run('startLevel(6)');expect(h.run('clearedLeaves')).toBe(0);
-    expect(h.element('#board-hint-text').textContent).toContain('Two dots');
+    expect(h.element('#board-hint-text').textContent).toContain('2 → 1');
     h.run("changeLanguage('ko')");expect(h.element('#board-hint-text').textContent).toContain('두 겹');
   });
   it('꽃밭 성장은 별 2개를 한 번만 쓰고 저장·그림·최대 5개 제한을 유지합니다',()=>{
