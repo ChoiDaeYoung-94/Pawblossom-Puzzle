@@ -1,0 +1,189 @@
+{
+  "sampleRate": 48000,
+  "seconds": 2,
+  "baseline": "221a294",
+  "results": [
+    {
+      "scenario": "music",
+      "before": {
+        "rms": 0.010248438768450996,
+        "peak": 0.09678935259580612,
+        "clipped": 0,
+        "voices": 2
+      },
+      "after": {
+        "rms": 0.08515805261630084,
+        "peak": 0.6425768136978149,
+        "clipped": 0,
+        "voices": 2
+      },
+      "rmsGainDb": 18.391360216341543
+    },
+    {
+      "scenario": "tap",
+      "before": {
+        "rms": 0.0015815238340309925,
+        "peak": 0.02956306003034115,
+        "clipped": 0,
+        "voices": 1
+      },
+      "after": {
+        "rms": 0.009727574221903748,
+        "peak": 0.14551997184753418,
+        "clipped": 0,
+        "voices": 1
+      },
+      "rmsGainDb": 15.778576238622119
+    },
+    {
+      "scenario": "swap",
+      "before": {
+        "rms": 0.0073645406384439316,
+        "peak": 0.12630695104599,
+        "clipped": 0,
+        "voices": 2
+      },
+      "after": {
+        "rms": 0.03767764354155748,
+        "peak": 0.431654691696167,
+        "clipped": 0,
+        "voices": 2
+      },
+      "rmsGainDb": 14.178761401063868
+    },
+    {
+      "scenario": "invalid",
+      "before": {
+        "rms": 0.006736256731062923,
+        "peak": 0.07912345975637436,
+        "clipped": 0,
+        "voices": 2
+      },
+      "after": {
+        "rms": 0.029031090266456304,
+        "peak": 0.3000680208206177,
+        "clipped": 0,
+        "voices": 2
+      },
+      "rmsGainDb": 12.688894311220917
+    },
+    {
+      "scenario": "match",
+      "before": {
+        "rms": 0.010169089279153502,
+        "peak": 0.1410074532032013,
+        "clipped": 0,
+        "voices": 2
+      },
+      "after": {
+        "rms": 0.04461695243128469,
+        "peak": 0.48378217220306396,
+        "clipped": 0,
+        "voices": 2
+      },
+      "rmsGainDb": 12.844356843536422
+    },
+    {
+      "scenario": "special",
+      "before": {
+        "rms": 0.020336402120193685,
+        "peak": 0.20274405181407928,
+        "clipped": 0,
+        "voices": 4
+      },
+      "after": {
+        "rms": 0.07982177392863272,
+        "peak": 0.6651464700698853,
+        "clipped": 0,
+        "voices": 4
+      },
+      "rmsGainDb": 11.876945087371437
+    },
+    {
+      "scenario": "win",
+      "before": {
+        "rms": 0.02879276177005758,
+        "peak": 0.17285758256912231,
+        "clipped": 0,
+        "voices": 5
+      },
+      "after": {
+        "rms": 0.10970980467949114,
+        "peak": 0.5738834142684937,
+        "clipped": 0,
+        "voices": 5
+      },
+      "rmsGainDb": 11.619242358843515
+    },
+    {
+      "scenario": "lose",
+      "before": {
+        "rms": 0.01139845676761513,
+        "peak": 0.0920599028468132,
+        "clipped": 0,
+        "voices": 4
+      },
+      "after": {
+        "rms": 0.04828575493169532,
+        "peak": 0.29648613929748535,
+        "clipped": 0,
+        "voices": 4
+      },
+      "rmsGainDb": 12.539459389583165
+    },
+    {
+      "scenario": "reward",
+      "before": {
+        "rms": 0.0186293242222386,
+        "peak": 0.16677765548229218,
+        "clipped": 0,
+        "voices": 3
+      },
+      "after": {
+        "rms": 0.0738504375901616,
+        "peak": 0.5709866285324097,
+        "clipped": 0,
+        "voices": 3
+      },
+      "rmsGainDb": 11.963119436656104
+    },
+    {
+      "scenario": "overlap",
+      "before": {
+        "rms": 0.04677458573591551,
+        "peak": 0.5118730068206787,
+        "clipped": 0,
+        "voices": 20
+      },
+      "after": {
+        "rms": 0.12888672436490992,
+        "peak": 0.8715157508850098,
+        "clipped": 0,
+        "voices": 20
+      },
+      "rmsGainDb": 8.803964729846044
+    },
+    {
+      "scenario": "muted",
+      "before": {
+        "rms": 0,
+        "peak": 0,
+        "clipped": 0,
+        "voices": 0
+      },
+      "after": {
+        "rms": 0,
+        "peak": 0,
+        "clipped": 0,
+        "voices": 0
+      },
+      "rmsGainDb": null
+    }
+  ],
+  "limit": {
+    "rms": 0.6099385990226918,
+    "peak": 0.949999988079071,
+    "clipped": 0,
+    "voices": 0
+  }
+}
