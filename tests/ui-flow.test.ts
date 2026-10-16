@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import ts from 'typescript';
+import packageInfo from '../package.json';
+import {APP_VERSION} from '../src/appVersion';
 import { BoardEngine, seededRng, type BoardSnapshot } from '../src/core';
 import {TestAdsController,adCopy,type TestAdsBridge} from '../src/testAds';
 import {TestBillingController,billingCopy,type TestBillingBridge,type BillingSnapshot} from '../src/testBilling';
@@ -57,6 +59,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const timers = new Map<number, { callback: () => void; ms: number }>();
   let timerId = 0, writes = 0;
   let games=0, destroys=0, frame=()=>{};
+  let resultArtCalls=0;
   const documentEvents:Record<string,()=>void>={};
   const nativeEvents:Record<string,(state:{isActive:boolean})=>void>={};
   let resolveNativeState!:(state:{isActive:boolean})=>void;
@@ -100,17 +103,18 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     destroy() {destroys++;}
   }
   class AudioStub {
+    plays:string[]=[];
     suspended=false;suspends=0;resumes=0;
     setMusicEnabled() {}
     setSfxEnabled() {}
     unlock() { return Promise.resolve(); }
-    play() {}
+    play(key:string) {this.plays.push(key);}
     suspend() {this.suspended=true;this.suspends++;}
     resume() {this.suspended=false;this.resumes++;}
   }
   const stateExports: Record<string, unknown> = {};
   const context = vm.createContext({
-    TEST_TOOLS_ENABLED:testTools,
+    APP_VERSION:packageInfo.version,TEST_TOOLS_ENABLED:testTools,
     ANDROID_TEST_ADS_ENABLED:Boolean(adsBridge),TestAdsController,adCopy,nativeTestAds:()=>adsBridge,
     ANDROID_TEST_BILLING_ENABLED:Boolean(billingBridge),TestBillingController,billingCopy,nativeTestBilling:()=>billingBridge,
     exports: stateExports,
@@ -138,7 +142,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     Phaser: { Game: GameStub, AUTO: 0, Scale: { FIT: 0, CENTER_BOTH: 0 }, Core:{Events:{POST_RENDER:'postrender'}} },
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     bindPracticeBoard,
-    showResultPip:()=>{},
+    showResultPip:()=>{resultArtCalls++;},
     AudioManager: AudioStub, t: (_language: string, key: string) => key, icon: () => '',
     Capacitor: { isNativePlatform: () => native,getPlatform:()=>native?'android':'web',isPluginAvailable:(name:string)=>Boolean(name==='PawblossomTestBilling'?billingBridge:adsBridge) },
     App:{addListener:(name:string,callback:(state:{isActive:boolean})=>void)=>{nativeEvents[name]=callback;return Promise.resolve({remove(){}});},getState:()=>nativeState,minimizeApp:()=>Promise.resolve()}, confirm: () => true,
@@ -162,11 +166,12 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   if(autoFrame)frame();
   return {
     setStorageFails:(value:boolean)=>{storageFails=value;},disk:()=>[...storageValues],
-    frame:()=>frame(),games:()=>games,destroys:()=>destroys,
+    resultArtCalls:()=>resultArtCalls,frame:()=>frame(),games:()=>games,destroys:()=>destroys,
     documentEvents,nativeEvents,resolveNativeState,
     element, run: (code: string) => {const result=vm.runInContext(code, context);if(autoFrame)frame();return result;},
     resultTimers: () => [...timers.values()].filter(timer => timer.ms === 300),
     flushResults: () => [...timers.values()].filter(timer => timer.ms === 300).forEach(timer => timer.callback()),
+    flushToasts: () => [...timers.values()].filter(timer => timer.ms === 3200).forEach(timer => timer.callback()),
     flushGrowth: () => [...timers.values()].filter(timer => timer.ms === 450).forEach(timer => timer.callback()),
     writes: () => writes, stored: () => JSON.parse(storageValues.get('pawblossom.save.v1')??'null'),
   };
@@ -796,4 +801,77 @@ describe('저장 상태·초기화 UI 보호',()=>{
     expect(h.stored()).toEqual(JSON.parse(before));expect(h.stored().coins).toBe(80);expect(h.stored().completed).toEqual([1,2]);
     h.element('#save-retry').onclick();expect(h.stored().coins).toBe(80);
   });
+});
+
+
+describe('언어 정합성과 버전 단일 원본',()=>{
+  it('KO/EN 키와 치환 변수가 같고 빈 번역이 없습니다',()=>{
+    const values:Record<string,any>={};vm.runInNewContext(i18nCode+'\nexports.messages=strings;', {exports:values});
+    const {en,ko}=values.messages;
+    expect(Object.keys(ko).sort()).toEqual(Object.keys(en).sort());
+    const placeholders=(value:string)=>[...value.matchAll(/\{(\w+)\}/g)].map(match=>match[1]).sort();
+    for(const key of Object.keys(en)){
+      expect(ko[key].trim(),key).not.toBe('');expect(en[key].trim(),key).not.toBe('');
+      expect(placeholders(ko[key]),key).toEqual(placeholders(en[key]));
+    }
+  });
+  it('빌드 정의와 실제 설정 표시가 package.json 버전과 같습니다',()=>{
+    expect(APP_VERSION).toBe(packageInfo.version);
+    const app=mainHarness();expect(app.element('#settings-view').innerHTML).toContain(`Pawblossom Puzzle · v${packageInfo.version}`);
+  });
+  it('한국어/영어 지역명·친구 제목·핍 설명을 실제 렌더에 연결합니다',()=>{
+    const app=mainHarness();app.run("changeLanguage('ko')");
+    expect(app.element('#village-view').innerHTML).toContain('꽃잎 초원');
+    expect(app.element('#journal-view').innerHTML).toContain('포블로섬 친구들');
+    expect(app.element('#journal-view').innerHTML).toContain('alt="정원사 토끼 핍"');
+    expect(app.element('#journal-view').innerHTML).not.toMatch(/Blossom Meadow|PAWBLOSSOM FRIENDS|alt="Pip"/);
+    app.run("changeLanguage('en')");expect(app.element('#journal-view').innerHTML).toContain('Pawblossom Friends');
+    expect(app.element('#journal-view').innerHTML).toContain('alt="Pip the gardener"');
+  });
+});
+
+describe('열린 화면의 언어 변경은 진행·결과 처리를 보존합니다',()=>{
+  it.each([
+    {id:2,won:true,test:false,replay:false,title:'풍성한 수확이에요!',description:'핍이 정말 기뻐해요.'},
+    {id:1,won:true,test:false,replay:true,title:'풍성한 수확이에요!',description:'다시 즐긴 스테이지예요.'},
+    {id:2,won:false,test:false,replay:false,title:'다시 시작해 볼까요?',description:'정원은 기다려 줄 거예요.'},
+    {id:30,won:true,test:false,replay:false,title:'초원을 완성했어요!',description:'시제품의 30개 스테이지'},
+    {id:30,won:true,test:true,replay:false,title:'풍성한 수확이에요!',description:'테스트가 끝났어요.'},
+    {id:30,won:false,test:true,replay:false,title:'다시 시작해 볼까요?',description:'테스트가 끝났어요.'},
+  ])('$id번 성공=$won 시험=$test 재완료=$replay 결과 문구만 바꿉니다',({id,won,test,title,description})=>{
+    const app=mainHarness(false,false,true);app.run(`startLevel(${id},${test});finish(${won})`);
+    const saved=app.stored(),memory=app.run('JSON.stringify({currentLevel,moves,score,collected,shuffles,firstReward,roundEnded,resultShown})');
+    const scene=app.run('scene'),dialog=app.element('#result-dialog'),html=dialog.innerHTML,next=app.element('#result-next').onclick,home=app.element('#result-home').onclick;
+    const sounds=app.run('audio.plays.slice()'),art=app.resultArtCalls();
+    app.run("document.activeElement=document.querySelector('#result-next');changeLanguage('ko')");
+    expect(app.element('#result-title').textContent).toBe(title);expect(app.element('#result-description').textContent).toContain(description);
+    expect(dialog.innerHTML).toBe(html);expect(dialog.open).toBe(true);
+    expect(app.element('#result-next').onclick).toBe(next);expect(app.element('#result-home').onclick).toBe(home);
+    expect(app.run("document.activeElement===document.querySelector('#result-next')")).toBe(true);
+    expect(app.run('scene')).toBe(scene);expect(app.run('game.paused')).toBe(true);
+    expect(app.run('audio.plays')).toEqual(sounds);expect(app.resultArtCalls()).toBe(art);expect(app.resultTimers()).toHaveLength(0);
+    expect(app.stored()).toEqual({...saved,language:'ko'});expect(app.run('JSON.stringify({currentLevel,moves,score,collected,shuffles,firstReward,roundEnded,resultShown})')).toBe(memory);
+    app.run("changeLanguage('en');changeLanguage('ko');finish(true)");expect(app.resultArtCalls()).toBe(art);expect(app.run('audio.plays')).toEqual(sounds);
+  });
+  it('300ms 결과 대기 중 전환은 저장된 보상을 한 번 유지하며 새 언어로 창을 엽니다',()=>{
+    const app=mainHarness();app.run('scene.hooks.onMove([99,99,99,99,99,99],220,1,0)');const timer=app.resultTimers()[0],saved=app.stored();
+    app.run("changeLanguage('ko')");expect(app.resultTimers()).toEqual([timer]);expect(app.stored()).toEqual({...saved,language:'ko'});
+    expect(app.resultArtCalls()).toBe(0);app.flushResults();expect(app.resultArtCalls()).toBe(1);expect(app.element('#result-dialog').innerHTML).toContain('풍성한 수확이에요!');
+    expect(app.stored()).toEqual({...saved,language:'ko'});
+  });
+  it('실습 선택과 시험 묶음, 일반 회차·저장 경고·짧은 안내를 유지하며 번역합니다',()=>{
+    const app=mainHarness(true,false,true);app.run("showTutorial();tutorialPage=3;practice=new SwapPractice();practice.select({row:0,col:2});renderTutorial()");
+    const lesson=app.run('practice'),board=app.run('scene');app.run("changeLanguage('ko')");
+    expect(app.run('practice')).toBe(lesson);expect(app.run('practice.selected')).toEqual({row:0,col:2});expect(app.run('scene')).toBe(board);
+    expect(app.element('#tutorial-dialog').innerHTML).toContain('하나를 골랐어요.');expect(app.element('#save-status').textContent).toContain('복구 사본을 쓰지 못해');
+    app.run("closeTutorial();showTestPicker();selectedTestChapter=3;renderTestPicker();notice('planted');scene.hooks.onNotice('chain');changeLanguage('en')");
+    expect(app.run('selectedTestChapter')).toBe(3);expect(app.element('#test-level-dialog').innerHTML).toContain('Level 30');
+    expect(app.element('#save-status').textContent).toContain('recovery copy could not be written');expect(app.element('#toast').textContent).toBe('A new patch is blooming!');expect(app.element('#board-notice').textContent).toBe('Keep it going!');
+  });
+});
+
+
+it('끝난 짧은 안내는 언어 변경으로 다시 발표하지 않습니다',()=>{
+  const app=mainHarness();app.run("notice('planted');scene.hooks.onNotice('chain')");app.flushToasts();app.element('#board-notice').listeners.animationend({preventDefault(){}});
+  app.run("changeLanguage('ko')");expect(app.element('#toast').textContent).toBe('A new patch is blooming!');expect(app.element('#board-notice').textContent).toBe('Keep it going!');
 });
