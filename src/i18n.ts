@@ -1,6 +1,7 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    chapterSelect: 'Level groups', chapterMeadow: 'Blossom Meadow', chapterPath: 'Flower Path', chapterSunshine: 'Sunny Stroll',
     pipWin: '“We did it! Thanks for your help!”', pipRetry: '“It’s okay. Let’s try together again.”', replayDesc: 'A lovely replay! New rewards are given on your first clear.', testOther: 'Test another level', testResultDesc: 'Test finished. Your progress and rewards stay the same.',
     leafThinned: 'One layer swept away!', leavesCleared: 'Leaves cleared!',
     testPick: 'Test', testPickTitle: 'Jump to a test level', testPickDesc: 'Choose any level. Test wins do not save completion, rewards or unlocks.', testRound: 'Test play · no rewards', testBasic: 'Basic puzzle', testSingle: 'Single-layer leaves', testDouble: 'Two-layer leaves', testNormal: 'Return to normal play', testClose: 'Close',
@@ -37,12 +38,13 @@ const strings = {
     ready: 'Your little adventure starts here', readyDesc: 'Harvest fruit, meet friends, and bring a cozy woodland village to life.',
     reset: 'Reset progress', resetConfirm: 'Reset your saved levels, stars and garden? This cannot be undone.',
     offline: 'Your progress stays on this device.', complete: 'Meadow complete!',
-    completeDesc: 'All 10 prototype levels are complete. You can replay your favorites while the next meadow grows.',
+    completeDesc: 'All {count} prototype levels are complete. You can replay your favorites while the next meadow grows.',
     specialCreated: 'Power-up ready!', rowClear: 'Across we go!', columnClear: 'Down we go!', bombClear: 'Big bloom!', colorClear: 'Color pop!', comboClear: 'Combo pop!',
     matched: 'Nice!', chain: 'Keep it going!', special: 'Pop, pop!', noMoves: 'A fresh board for you!',
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    chapterSelect: '스테이지 묶음', chapterMeadow: '꽃잎 초원', chapterPath: '꽃길 정원', chapterSunshine: '햇살 산책',
     pipWin: '“해냈어요! 도와줘서 고마워요!”', pipRetry: '“괜찮아요. 같이 다시 해봐요.”', replayDesc: '다시 즐긴 스테이지예요. 새 보상은 첫 완료 때 받아요.', testOther: '다른 스테이지 테스트', testResultDesc: '테스트가 끝났어요. 기록과 보상은 그대로예요.',
     leafThinned: '한 겹 치웠어요!', leavesCleared: '낙엽을 치웠어요!',
     testPick: '테스트', testPickTitle: '테스트 스테이지 바로 가기', testPickDesc: '원하는 스테이지를 바로 골라요. 테스트 완료는 기록·보상·잠금 해제에 반영되지 않아요.', testRound: '테스트 플레이 · 보상 없음', testBasic: '기본 퍼즐', testSingle: '낙엽 한 겹', testDouble: '낙엽 두 겹', testNormal: '일반 플레이로 돌아가기', testClose: '닫기',
@@ -79,7 +81,7 @@ const strings = {
     ready: '작은 모험이 여기서 시작돼요', readyDesc: '열매를 모으고 친구를 만나 포근한 숲속 마을을 완성해 보세요.',
     reset: '진행 상황 초기화', resetConfirm: '저장된 스테이지, 별, 정원을 초기화할까요? 되돌릴 수 없습니다.',
     offline: '진행 상황은 이 기기에 저장돼요.', complete: '초원을 완성했어요!',
-    completeDesc: '시제품의 10개 스테이지를 모두 완료했어요. 다음 초원이 자라는 동안 좋아하는 스테이지를 다시 즐겨 보세요.',
+    completeDesc: '시제품의 {count}개 스테이지를 모두 완료했어요. 다음 초원이 자라는 동안 좋아하는 스테이지를 다시 즐겨 보세요.',
     specialCreated: '특수 블록 등장!', rowClear: '가로로 쭉!', columnClear: '세로로 쭉!', bombClear: '주변도 팡!', colorClear: '같은 색이 쏙!', comboClear: '함께 팡팡!',
     matched: '잘했어요!', chain: '또 맞았어요!', special: '팡팡!', noMoves: '새 보드를 준비했어요!',
     planted: '새 꽃밭이 피어났어요!', allDone: '다시 즐기기', levelSelect: '스테이지 선택',
