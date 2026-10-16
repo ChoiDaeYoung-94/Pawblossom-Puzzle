@@ -1,5 +1,54 @@
 # 에셋 제작 기록
 
+## 2026-10-16 · Google Play 스토어 아이콘과 소재 검증 (이슈 #79)
+
+**스토어 아이콘 초안 제작·규격 검사 및 총괄 초안 시각 검수 완료, 최종 사용자/출시 소재 승인 별도**입니다. 총괄은 제출 PNG를 직접 확인하고 별도 headless Chrome에서 검수 SVG를 832×660/deviceScaleFactor=1로 렌더링하여 32/48px 식별성과 30% 모서리 반경 마스크의 심벌 잘림 없음을 확인했습니다. 실제 기기·Play Console 업로드/노출·최종 상업권리/독창성 검수는 [후속 #73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)에 계속 남습니다.
+
+![스토어 아이콘 초안](../assets/store/play-icon-v1.png)
+
+### 원본과 제작 판단
+
+- 자체 벡터 `assets/branding/pawblossom-mark.json`의 발바닥·꽃 path와 색상 네 가지를 그대로 사용했습니다. `pawblossom-color.svg`도 참조로 보존하며 기존 브랜드/Android 파일은 바꾸지 않았습니다. 외부 에셋·AI 이미지 생성·추가 폰트·새 프롬프트는 없습니다. 자체 도형의 기술적 확장이며 최종 권리/상업 사용 적합성 확정은 별도입니다.
+- 기존 launcher의 `legacyScale: 1.2`를 중심 (54,54)에 적용합니다. adaptiveScale 0.95보다 작은 화면의 심벌을 키우되, 새 도형/과도한 확대 없이 브랜드 배경 `#E7ECDC`가 정사각형 전체를 채웁니다. 외부 그림자·둥근 모서리·배지·홍보 문구는 없습니다.
+- 확인일 2026-10-16: [Google Play 아이콘 규격](https://developer.android.com/distribute/google-play/resources/icon-design-specifications)과 [미리보기 에셋 안내](https://support.google.com/googleplay/android-developer/answer/9866151?hl=en)를 읽었습니다. 제출 아이콘은 **512×512·32-bit PNG(with alpha)·sRGB·최대1024KB·full square**입니다. 모서리 반경 30%와 외부 그림자는 Play가 적용합니다. alpha 채널을 유지하면서 배경을 불투명하게 채울 수 있습니다.
+- 제출 파일은 `play-icon-v1.png` 하나입니다. `play-icon-preview-v1.svg`는 512px 정사각형, 256px 마스크, **실제48/32px** 정사각형/마스크를 함께 배치한 검수 전용이며 제출하지 않습니다. 실제 Play 출력/그림자 재현으로 단정하지 않습니다.
+
+### 내보내기와 해시
+
+Node **24.21.0**, sharp **0.35.5**, libvips **8.18.7**, librsvg **2.63.2**, lcms **2.19.1**에서 실행했습니다. sharp는 기존 번들로만 사용하며 프로젝트 의존성/잠금 파일은 추가하지 않았습니다. 내보내기 스크립트는 인자로 전달한 sharp 또는 별도 설치한 sharp를 사용하므로 저장소 코드에 외부 경로를 하드코딩하지 않습니다. 같은 버전/도구의 재내보내기 일치를 검사하며 다른 렌더러 버전의 동일 바이트까지 보장하지 않습니다.
+
+실행한 정확한 PowerShell 명령(내보내기만 sharp 필요):
+
+```powershell
+. ./scripts/use-dev-tools.ps1
+$sharpModule = 'C:/Users/user/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/sharp'
+node scripts/export-store-icon.mjs $sharpModule
+npm run store:check
+npm run store:test
+```
+
+실제 내보내기 연산은 `sharp(Buffer.from(svg)).toColourspace('srgb').ensureAlpha().withIccProfile('srgb').png({compressionLevel:9,palette:false}).toFile(output)`입니다. SVG는 `store-icon-source.mjs`에서 원본 JSON의 path/fill/legacyScale로 파생하며 `export-store-icon.mjs`가 SVG·PNG·검수 SVG를 보존합니다.
+
+| 파일/프로파일 | 규격·바이트 | SHA256 |
+| --- | --- | --- |
+| 브랜드 JSON (CRLF 작업 트리 원본) | 기존 파일 보존 | `067cd74c00d4ee2562bc81207f222089ec3b70d63de9c2f807cff39d36066079` |
+| 브랜드 JSON (LF 정규화, Git/CI 기준) | 내용 동일 | `2ca6a6b9f9321fa70e90bf69b4b9d568220ab9360e0f49178f6c978c4ef2e9bd` |
+| 브랜드 color SVG (LF) | 기존 파일 보존 | `5bac19d8d987895cd5ff5687557fc819ed733a03c19464ce0cf97ae0965dbbc5` |
+| `play-icon-source-v1.svg` (LF) | 512×512, 751바이트 | `3db10c2929ae7a6c5d024bcf4f6b8f6682b1de573adf5dd68fa9549e4162e0ec` |
+| `play-icon-v1.png` | **512×512, RGBA8 (32-bit), 12,527바이트** | `21b8cd48bb2872f0dd5fb47d9f1052485d467fd6764f7fe37a7255968edd584c` |
+| 내장 sRGB ICC 프로파일 | iCCP 해독 결과 | `c56e1685d888f5edb92fe07f2750f387f8fe8e91b32ff8fb0b56bfbbb9458353` |
+| `play-icon-preview-v1.svg` (LF) | 832×660, 101,339바이트 | `768a33fc8f4d4952251e8851149c740e46e688400c3b16269899efc08d621cd7` |
+
+sharp metadata/stats와 Node PNG 해독으로 color type 6·bit depth8·4채널·sRGB 프로파일·모든 alpha=255를 확인했습니다. 1,024KiB보다 작으며 네 모서리는 원본 배경색입니다. alpha 존재와 실제 투명 픽셀 존재를 구분합니다.
+
+### 반복 검증과 현재 검증 상태
+
+`assets/store/store-assets-v1.json`은 아이콘/기존 피처 그래픽의 규격·바이트·SHA256·source 및 9개 참조 원본 해시를 보존합니다. PNG는 원시 바이트, 텍스트 참조는 명시적 LF 정규화 해시를 사용해 Windows/CI 줄바꿈 차이를 허용합니다. `npm run store:check`는 필수 아이콘1+피처1·고정 경로·공식 크기/형식·아이콘 최대크기·sRGB 프로파일·필수 참조를 강제하고, SVG가 브랜드 JSON에서 파생되는지도 검사합니다. 피처 그래픽은 기존 1024×500 RGB PNG(1,313,700바이트)를 그대로 검사하며 아이콘 전용1024KB 한도를 피처 그래픽에 적용하지 않습니다.
+
+검증기는 Node 내장 기능만 사용하고 8-bit RGB/RGBA·non-interlaced PNG로 범위를 제한합니다. 전체 청크 CRC, IDAT 해독 길이·필터0–4, 알파/불투명, ICC 해독·해시, IEND·뒷바이트를 확인하며 `tRNS`와 지원하지 않는 critical chunk/인코딩은 거부합니다. 벡터를 직접 래스터화하거나 임의 PNG 전체 형식을 지원하지 않습니다. 픽셀의 예술성·권리·실제 Play 노출을 자동 판정하지 않습니다.
+
+기준 main `7c28da8a06429182d8b158ff93ba0a10b2b77504` 위 작업 트리에서 **기존349개·스토어 경계12개·타입 검사·launcher 원본 일치·store:check·git diff --check 통과**했습니다. 경계 검사는 손상/절단/CRC, RGB/RGBA tRNS, manifest 빈 목록/누락/중복/규격/참조 변경, 투명 픽셀, 한도/해시/프로파일 불일치를 포함합니다. Node test 파일을 Vitest 검색 패턴에 두어 최초 전체 검사에서 suite 충돌이 났고, 기존 QA 스크립트 위치로 분리한 뒤 전체349개와 별도12개를 다시 통과했습니다. CI Node22·24는 스토어 검사와 기존 production/testing 빌드를 함께 실행하도록 연결했으며 최신 PR/main 실행 결과는 PR에 기록합니다. 로컬 dist/기존 Vite 서버를 보존하므로 로컬 웹 빌드는 반복하지 않았습니다. runtime 화면 변경이 없어 새 게임 브라우저/Android 검증으로 합산하지 않습니다. APK/AAB·Android 동기화·버전·SDK·광고/결제·오디오·콘솔/Drive 변경은 없습니다.
+
 ## 2026-10-16 · Google Play 피처 그래픽 초안 (이슈 #77)
 
 **초안 제작·파일 규격 확인 완료, 총괄 초안 시각 검수 완료(최종 사용자/출시 소재 승인 별도)**입니다. 최종 출시 소재 승인·실제 기기 스크린샷·콘솔 업로드/노출 검증은 미완료입니다. 한 장의 소개 삽화이며 실제 게임 화면이나 추가 플레이 기능을 나타내지 않습니다. 원본과 최종본은 `assets/store`에만 보존하고 runtime/public/Android/audio/package/version/dist/서버는 변경하지 않았습니다.

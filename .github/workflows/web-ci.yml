@@ -36,6 +36,8 @@ jobs:
         run: npm ci
       - name: 자동 테스트
         run: npm test
+      - name: 스토어 초안과 원본 일치·PNG 손상 경계 확인
+        run: npm run store:check && npm run store:test
       - name: 타입 검사와 웹 빌드
         run: npm run build
       - name: 출시 빌드의 테스트 도구 제외 확인
