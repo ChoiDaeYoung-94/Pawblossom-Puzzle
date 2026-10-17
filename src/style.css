@@ -83,6 +83,10 @@ html:lang(ko) h1,html:lang(ko) h2,html:lang(ko) h3,html:lang(ko) .moves-box stro
 @media(orientation:landscape) and (max-height:600px){#result-dialog{width:min(560px,calc(100vw - 24px))}.result-content{display:grid;grid-template-columns:135px minmax(0,1fr);column-gap:18px;padding:16px 20px}.result-stage{grid-column:1;grid-row:1 / 6;width:135px;height:148px;align-self:center}.result-character{height:140px;width:135px}.result-symbol{right:0;top:10px}.result-content .result-pip-line{grid-column:1;grid-row:6 / 9;align-self:start;font-size:11px;margin:8px 0}.result-content>.eyebrow,.result-content>h2,.result-content>#result-description,.result-content>.result-rewards,.result-content>button{grid-column:2}.result-content h2{font-size:24px;margin:5px 0}.result-content .result-rewards{margin:5px 0}.result-content .primary{margin-top:6px}.result-content .text-button{padding:8px;min-height:36px}.result-test-button{margin-top:6px;min-height:38px}.result-sparkles i{left:3px}.result-sparkles i:nth-child(2){right:0}.result-sparkles i:nth-child(3){left:24px}}
 @media(prefers-reduced-motion:reduce){.result-character,.result-sparkles i{animation:none!important}#result-dialog{scroll-behavior:auto}}
 .result-content #result-description,.result-content .result-pip-line{word-break:keep-all}
+.result-content #result-continue-note{font-size:10px;line-height:1.5;margin:5px 0 0;color:#53634b;word-break:keep-all}
+.result-with-continue h2{word-break:keep-all}
+@media(max-width:359px) and (orientation:portrait){.result-with-continue{padding:14px 18px 10px}.result-with-continue .result-stage{height:108px}.result-with-continue .result-character{width:108px;height:106px}.result-with-continue h2{font-size:24px}.result-with-continue .result-pip-line{margin-bottom:8px}}
+@media(orientation:landscape) and (max-height:600px){.result-content>#result-continue-note{grid-column:2}}
 /* 작은 가로 화면에서도 두 자리 번호와 테스트 버튼 때문에 제목이 쪼개지지 않게 합니다. */
 @media(orientation:landscape) and (max-height:600px){.level-top h2{font-size:16px;gap:4px;white-space:nowrap}.level-top .level-flower{display:none}.level-top #level-number{font-size:21px}}
 

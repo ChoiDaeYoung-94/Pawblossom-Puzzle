@@ -1,5 +1,15 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-17 · 광고 없는 시험 이어하기 (이슈 #87)
+
+기준 main `9617bfed7e1b10498267e7968a574888afc3816f`, 작업 `codex/87-test-continue-moves`입니다. 사용자가 선택한 첫 보상형 광고 혜택 **이동 횟수 추가 이어하기**의 게임 핵심 처리를 시험 스테이지에서만 확인합니다. `TEST_TOOLS_ENABLED && testingLevel`인 실제 실패 결과에 **시험 이어하기 +5 / Test continue +5 moves**와 광고 없이 진행하는 시험 기능·회차당 한 번·기록/보상 유지 안내를 표시합니다. **광고 시청·실제 보상 지급 기능이 아니며** 수동 시험 광고 SDK·콜백 카운터·서버/SSV에 연결하지 않았습니다. 일반 플레이와 production에서는 버튼이 없습니다. +5는 초안이며 최종 사용자 감각 검수 후 조정할 수 있습니다.
+
+동일 round/Scene/engine/보드와 블록 Container·낙엽 층/표시·점수·목표 진척·셔플을 유지하며 이동만5 추가합니다. `startLevel`이나 전체 보드 재생성을 호출하지 않아 기존 `activeRound` hooks가 계속 동작합니다. 사용 여부는 새 라운드에서만 초기화되는 메모리 상태이며 저장 스키마/바이트를 변경하지 않습니다. 실패 확정·결과 모달 열림·현재 round/Scene/DOM 버튼 일치·이동0·결과 타이머 종료·보드 준비를 검사합니다. 성공·busy·unready/shutdown/destroy/sleep·이미 사용·일반 플레이·홈 이동·다른 Scene/round·오래된 DOM callback은 거절합니다. 안정된 PAUSED Scene은 복귀하되 모달을 닫은 뒤 `syncActivity`가 앱/문서 비활성 상태를 계속 존중합니다. 이전 포인터/선택/커서/힌트를 정리하고 힌트를 다시 예약합니다.
+
+자동 검사와 브라우저 근거는 [브라우저 QA의 #87 기록](browser-qa.ko.md#2026-10-17--시험-이어하기-이동-5-이슈-87)에 보존합니다. Node24.21.0 `npm test` **532개(기존492+신규40)**, `npm run store:check`, `npm run store:test` **12개**, `npm run build:test`와 `npm run build`(타입/launcher 검사 포함)가 통과했습니다. testing 이어하기6개 화면/경계1묶음·production 부재6개 화면, 결과 아트 testing30/production18개 화면과 각4개 경계가 통과했습니다. 마지막 dist 세 flags=false, `git diff --check` 통과입니다. 기존500kB chunk 경고는 남습니다.
+
+실제 광고/보상 정책·동의/SSV·중복/재시도/활동 복귀·실서비스·단말/스토어는 [#73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73) 미완료입니다. APK/AAB·Android 동기화/Java 빌드·버전/SDK·계정/콘솔·상품 설정·최종 오디오 믹스 변경과 단말 테스트/APK 전달 보류를 유지합니다.
+
 ## 2026-10-17 · 구매 서버 조회·판정 핵심 모듈 (이슈 #85)
 
 기준 main `3b52ea62fcf186238d82988592d71297009c0f04`, 작업 `codex/85-play-purchase-verification`입니다. [서버 전용 모듈](../server/commerce/googlePlayPurchase.ts)은 Google Play `purchases.productsv2.getproductpurchasev2` GET과 합성 응답 판정만 구현합니다. **운영 서버·앱 연결·인증/구매 원장·게임 권한 지급 구현 완료가 아닙니다.** `src`·Android·기존 Billing/Ads·런타임·에셋·오디오·버전·의존성은 변경하지 않습니다. `tsconfig`에서 server 타입 검사만 추가하며 웹 엔트리가 import하지 않습니다.

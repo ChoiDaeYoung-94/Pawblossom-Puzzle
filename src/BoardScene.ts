@@ -15,6 +15,7 @@ export class BoardScene extends Phaser.Scene {
   private down?: {pos:Position,x:number,y:number,pointerId:number,downTime:number};
   private busy = false;
   private finished = false;
+  private ready = false;
   private hooks: Hooks;
   private hintTimer?: Phaser.Time.TimerEvent;
   private leafObjects:(Phaser.GameObjects.Graphics|Phaser.GameObjects.Image|Phaser.GameObjects.Text)[]=[];
@@ -32,7 +33,7 @@ export class BoardScene extends Phaser.Scene {
     for(const name of ['leaf-pile','leaf-single'])if(!this.textures.exists(name))this.load.svg(name,`/assets/obstacles/${name}.svg`,{width:100,height:100});
   }
   create() {
-    this.finished=false;this.busy=false;this.motionReduced=reducedMotion();
+    this.ready=false;this.finished=false;this.busy=false;this.motionReduced=reducedMotion();
     this.effects=new BoardEffects(this);
     this.cameras.main.setBackgroundColor('#dae6d7');
     const g=this.add.graphics();
@@ -59,13 +60,13 @@ export class BoardScene extends Phaser.Scene {
       this.scale.off(Phaser.Scale.Events.RESIZE,cancelPointer);
       for(const event of [Phaser.Scenes.Events.PAUSE,Phaser.Scenes.Events.RESUME,Phaser.Scenes.Events.SLEEP,Phaser.Scenes.Events.WAKE])this.events.off(event,cancelGesture);
       this.events.off(Phaser.Scenes.Events.SHUTDOWN,dispose);this.events.off(Phaser.Scenes.Events.DESTROY,dispose);
-      this.stopPlaying();this.effects?.clear();this.cursorMark=undefined;this.selectionMark=undefined;this.hintMark=undefined;this.pieces=[];this.leafObjects=[];
+      this.ready=false;this.stopPlaying();this.effects?.clear();this.cursorMark=undefined;this.selectionMark=undefined;this.hintMark=undefined;this.pieces=[];this.leafObjects=[];
     };
     this.events.once(Phaser.Scenes.Events.SHUTDOWN,dispose);
     this.events.once(Phaser.Scenes.Events.DESTROY,dispose);
     this.resetHint();
     // CREATE는 에셋 로딩과 create()가 끝나고 Scene이 RUNNING이 된 뒤 발생합니다.
-    this.events.once(Phaser.Scenes.Events.CREATE,()=>{this.hooks.onReady?.();this.changed();});
+    this.events.once(Phaser.Scenes.Events.CREATE,()=>{this.ready=true;this.hooks.onReady?.();this.changed();});
   }
   private pointerDown(p:Phaser.Input.Pointer){
     if(!this.canInteract()||this.down||(!p.wasTouch&&p.button!==0))return;
@@ -296,6 +297,12 @@ export class BoardScene extends Phaser.Scene {
     this.busy=false;if(!this.finished)this.resetHint();this.changed();
   }
   stopPlaying(){this.finished=true;this.hintTimer?.remove();this.cancelInput();}
+  /** 현재 실패 보드의 안정 상태만 복귀합니다. 라운드 자격/1회 제한은 호출자가 검사합니다. */
+  resumeAfterFailure():boolean {
+    if(!this.ready||!this.finished||this.busy||(!this.sys.isActive()&&!this.sys.isPaused())
+      ||this.pieces.length!==this.engine.rows||this.pieces.some(row=>row.length!==this.engine.cols))return false;
+    this.cancelInput();this.finished=false;this.resetHint();this.changed();return true;
+  }
   shuffle():boolean {if(!this.canInteract())return false;this.cancelInput();this.engine.shuffle();this.paint(this.engine.board);this.hooks.audio.play('special');this.resetHint();this.changed();return true;}
   canLeave(){return !this.busy;}
   private resetHint(){this.clearHint();this.hintTimer?.remove();this.hintTimer=this.time.delayedCall(7500,()=>this.showHint());}

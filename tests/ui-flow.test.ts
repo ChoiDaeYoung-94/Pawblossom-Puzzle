@@ -69,7 +69,10 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   if(initial!==undefined)stored=JSON.stringify(initial);
   const storageValues=new Map<string,string>(stored==='null'?[]:[['pawblossom.save.v1',stored]]);
   const element = (selector: string): ElementStub => {
-    if (!elements.has(selector)) elements.set(selector, new ElementStub(selector));
+    if (!elements.has(selector)) {
+      elements.set(selector, new ElementStub(selector));
+      if(selector==='#result-dialog')elements.get(selector)!.querySelector=child=>elements.get(selector)!.innerHTML.includes(`id="${child.slice(1)}"`)?element(child):null;
+    }
     if(selector==='#practice-board')elements.get(selector)!.querySelectorAll=()=>Array.from({length:9},(_,i)=>{const button=element(`#practice-cell-${Math.floor(i/3)}-${i%3}`);button.dataset={row:String(Math.floor(i/3)),col:String(i%3)};return button;});
     return elements.get(selector)!;
   };
@@ -81,6 +84,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     shuffle(){this.engine.shuffle();return true;}
     canLeave() { return true; }
     stopPlaying() {this.stopped=true;}
+    resumeAfterFailure(){if(!this.stopped)return false;this.stopped=false;return true;}
     keyboardState(){return {available:!this.stopped,busy:false,finished:this.stopped};}
     focusKeyboard() {} cancelInput() {} keyboardKey() {} hideKeyboardCursor() {}
   }
@@ -171,7 +175,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     documentEvents,nativeEvents,resolveNativeState,
     element, run: (code: string) => {const result=vm.runInContext(code, context);if(autoFrame)frame();return result;},
     resultTimers: () => [...timers.values()].filter(timer => timer.ms === 300),
-    flushResults: () => [...timers.values()].filter(timer => timer.ms === 300).forEach(timer => timer.callback()),
+    flushResults: () => [...timers].filter(([,timer]) => timer.ms === 300).forEach(([id,timer]) => {timers.delete(id);timer.callback();}),
     flushToasts: () => [...timers.values()].filter(timer => timer.ms === 3200).forEach(timer => timer.callback()),
     flushGrowth: () => [...timers.values()].filter(timer => timer.ms === 450).forEach(timer => timer.callback()),
     writes: () => writes, stored: () => JSON.parse(storageValues.get('pawblossom.save.v1')??'null'),
@@ -179,6 +183,64 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
 }
 
 type Pointer = { id: number; x: number; y: number };
+describe('시험 실패 회차 이어하기',()=>{
+  const fail=(h:ReturnType<typeof mainHarness>)=>{h.run('moves=1;scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');h.flushResults();};
+  const setup=()=>{const h=mainHarness(false,false,true);h.run('startLevel(6,true)');fail(h);return h;};
+  it('같은 round/scene/engine과 목표·점수·낙엽·셔플을 유지하며 이동만5 추가하고 저장 바이트를 쓰지 않습니다',()=>{
+    const h=setup();h.run('score=321;collected=[2,3,4,5,6,7];clearedLeaves=2;shuffles=0');
+    const scene=h.run('scene'),engine=h.run('scene.engine'),round=h.run('round'),disk=h.disk(),writes=h.writes();
+    const before=h.run('JSON.stringify({score,collected,clearedLeaves,shuffles,board:scene.engine.board,leaves:scene.engine.leaves})');
+    const button=h.element('#result-continue');expect(h.element('#result-dialog').innerHTML).toContain('Test continue +5 moves');
+    expect(h.run('game.paused')).toBe(true);button.onclick();button.onclick();
+    expect(h.run('moves')).toBe(5);expect(h.run('round')).toBe(round);expect(h.run('scene')).toBe(scene);expect(h.run('scene.engine')).toBe(engine);
+    expect(h.run('JSON.stringify({score,collected,clearedLeaves,shuffles,board:scene.engine.board,leaves:scene.engine.leaves})')).toBe(before);
+    expect(h.run('({roundEnded,resultShown,resultWon,testContinueUsed})')).toEqual({roundEnded:false,resultShown:false,resultWon:undefined,testContinueUsed:true});
+    expect(h.run('game.paused')).toBe(false);expect(h.element('#result-dialog').open).toBe(false);
+    h.run('scene.hooks.onMove([1,0,0,0,0,0],20,1,0)');expect(h.run('moves')).toBe(4);expect(h.run('score')).toBe(341);
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it.each([false,true])('이어하기 후 두 번째 결과 won=%s는 원래 hooks로 처리하며 다시 이어하지 않습니다',won=>{
+    const h=setup(),disk=h.disk();h.element('#result-continue').onclick();
+    if(won)h.run('scene.hooks.onMove([99,99,99,99,99,99],1000,1,64)');else for(let i=0;i<5;i++)h.run('scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');
+    h.flushResults();expect(h.element('#result-dialog').open).toBe(true);expect(h.run('resultWon')).toBe(won);
+    expect(h.element('#result-dialog').innerHTML).not.toContain('id="result-continue"');expect(h.disk()).toEqual(disk);
+  });
+  it('모달 언어 갱신은 같은 버튼/callback을 유지하고 1회 제한을 초기화하지 않습니다',()=>{
+    const h=setup(),callback=h.element('#result-continue').onclick;
+    h.run("changeLanguage('ko')");expect(h.element('#result-continue').onclick).toBe(callback);expect(h.element('#result-continue').textContent).toBe('시험 이어하기 +5');
+    expect(h.element('#result-continue-note').textContent).toContain('광고 없이');
+    h.run("changeLanguage('en')");callback();expect(h.run('moves')).toBe(5);
+    fail(h);h.run("changeLanguage('ko')");callback();expect(h.run('moves')).toBe(0);expect(h.run('testContinueUsed')).toBe(true);
+  });
+  it.each(['normal','production','won','not-failed'])('%s는 이어하기 버튼/실행이 없습니다',reason=>{
+    const h=mainHarness(false,false,reason!=='production');h.run(`startLevel(6,${reason!=='normal'})`);
+    if(reason==='won')h.run('finish(true)');else if(reason==='not-failed')h.run('finish(false)');else fail(h);
+    expect(h.element('#result-dialog').innerHTML).not.toContain('id="result-continue"');
+    const moves=h.run('moves');expect(h.run("continueTestRound(round,scene,document.querySelector('#result-continue'))")).toBe(false);expect(h.run('moves')).toBe(moves);
+  });
+  it.each(['timer','closed','home','board-pending','wrong-scene','stale-node','resume-blocked'])('%s에서 오래된 callback은 이동/상태/저장을 바꾸지 않습니다',reason=>{
+    const h=setup(),callback=h.element('#result-continue').onclick;
+    if(reason==='timer')h.run('resultTimer=123');if(reason==='closed')h.element('#result-dialog').close();
+    if(reason==='home')h.element('#result-home').onclick();
+    if(reason==='wrong-scene')h.run('game.scene.board=undefined');if(reason==='resume-blocked')h.run('scene.resumeAfterFailure=()=>false');
+    if(reason==='stale-node')h.element('#result-dialog').querySelector=()=>new ElementStub('#result-continue');
+    const state=h.run('JSON.stringify({moves,roundEnded,resultShown,testContinueUsed})'),disk=h.disk();
+    if(reason==='board-pending')h.run("boardPending=true;document.querySelector('#result-continue').onclick()");else callback();
+    expect(h.run('JSON.stringify({moves,roundEnded,resultShown,testContinueUsed})')).toBe(state);expect(h.disk()).toEqual(disk);
+  });
+  it.each(['restart','new-test','normal'])('%s로 생성한 새 round에서는 오래된 callback을 차단하고 시험 새 회차만 사용 횟수를 초기화합니다',reason=>{
+    const h=setup(),callback=h.element('#result-continue').onclick;callback();
+    if(reason==='restart')h.element('#restart').onclick();else h.run(`startLevel(6,${reason==='new-test'})`);
+    fail(h);const currentRound=h.run('round'),moves=h.run('moves');callback();
+    expect(h.run('round')).toBe(currentRound);expect(h.run('moves')).toBe(moves);expect(h.run('testContinueUsed')).toBe(false);
+    if(reason!=='normal'){h.element('#result-continue').onclick();expect(h.run('moves')).toBe(5);}
+  });
+  it.each(['hidden','native'])('%s 비활성 중 복귀해도 syncActivity가 scene을 멈춘 상태로 유지합니다',reason=>{
+    const h=setup();if(reason==='hidden')h.run('document.hidden=true');else h.run('nativeActive=false');
+    h.element('#result-continue').onclick();expect(h.run('moves')).toBe(5);expect(h.run('game.paused')).toBe(true);expect(h.element('#game-canvas').tabIndex).toBe(-1);
+    h.run('document.hidden=false;nativeActive=true;syncActivity()');expect(h.run('game.paused')).toBe(false);
+  });
+});
 describe('광고 제거 조회·구매창과 게임 활동 상태',()=>{
   function setup(configured=true){
     let value:BillingSnapshot={available:true,configured,state:configured?'querying':'idle',entitlement:'unknown',revision:0,error:'',price:'',overlay:false,adsBlocked:configured,preparingPurchase:false};
