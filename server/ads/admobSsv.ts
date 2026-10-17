@@ -69,6 +69,10 @@ function parse(raw: unknown) {
   if (![unpadded,padded].includes(fields.signature) || !canonicalDer(signature)) return;
   return {fields: Object.freeze(fields), signature, content: raw.slice(0, raw.lastIndexOf('&signature='))};
 }
+/** 구조만 검사합니다. 서명/정책 검증 결과나 원문 필드는 반환하지 않습니다. */
+export function isAdmobCallbackStructure(raw: unknown): boolean {
+  try {return parse(raw)!==undefined;} catch {return false;}
+}
 function canonicalDer(b: Buffer) {
   if (b[0] !== 0x30 || b[1] !== b.length - 2 || b.length < 8 || b.length > 72) return false;
   let offset = 2;
