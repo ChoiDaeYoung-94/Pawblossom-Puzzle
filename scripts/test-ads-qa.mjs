@@ -23,7 +23,7 @@ if(built){
 }
 const origin=built?`http://127.0.0.1:${server.address().port}`:(process.env.PAWBLOSSOM_QA_ORIGIN??'http://127.0.0.1:5173');
 const browser=await chromium.launch({headless:true,channel:'chrome'});
-const report={dateKst:'2026-10-16',scope:'격리 Chrome의 IPC 대역. 네이티브 SDK/UMP/OS/Play 실제 검증이 아닙니다.',mode:built?`dist ${fs.readFileSync('dist/build-info.json','utf8').trim()}`:'testing 소스 + Android IPC 대역',browser:browser.version(),checks:[],layouts:[],errors:[],external:[],hashes:Object.fromEntries(['src/testAds.ts','src/main.ts','src/style.css','scripts/test-ads-qa.mjs','android/app/src/debug/java/com/choidaeyoung/pawblossompuzzle/TestAdsPlugin.java','android/app/src/debug/java/com/choidaeyoung/pawblossompuzzle/RewardLedger.java',...(built?['dist/build-info.json',...fs.readdirSync('dist/assets').filter(f=>/\.(js|css)$/.test(f)).map(f=>'dist/assets/'+f)]:[])].map(file=>[file,createHash('sha256').update(fs.readFileSync(file)).digest('hex')]))};
+const report={dateKst:new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul'}).format(new Date()),scope:'격리 Chrome의 IPC 대역. 네이티브 SDK/UMP/OS/Play 실제 검증이 아닙니다.',mode:built?`dist ${fs.readFileSync('dist/build-info.json','utf8').trim()}`:'testing 소스 + Android IPC 대역',browser:browser.version(),checks:[],layouts:[],errors:[],external:[],hashes:Object.fromEntries(['src/testAds.ts','src/main.ts','src/style.css','scripts/test-ads-qa.mjs','android/app/src/debug/java/com/choidaeyoung/pawblossompuzzle/TestAdsPlugin.java','android/app/src/debug/java/com/choidaeyoung/pawblossompuzzle/RewardLedger.java',...(built?['dist/build-info.json',...fs.readdirSync('dist/assets').filter(f=>/\.(js|css)$/.test(f)).map(f=>'dist/assets/'+f)]:[])].map(file=>[file,createHash('sha256').update(fs.readFileSync(file)).digest('hex')]))};
 async function open(native=false,language='ko'){
   const context=await browser.newContext({viewport:{width:390,height:844}}),page=await context.newPage();
   page.on('pageerror',e=>report.errors.push(e.message));
@@ -32,7 +32,7 @@ async function open(native=false,language='ko'){
     const Audio=window.AudioContext;window.__contexts=[];
     window.AudioContext=function(options){const context=new Audio(options);window.__contexts.push(context);return context;};
     localStorage.setItem('pawblossom.save.v1',JSON.stringify({version:1,language,highestLevel:1,completed:[],stars:0,coins:0,garden:0,music:true,sfx:true,tutorialSeen:true}));
-    window.__adCalls=[];window.__adListeners=new Map();window.__adFailCancel=false;window.__adState={bridgeVersion:2,format:'interstitial',rewardEvents:0,available:true,state:'idle',revision:0,error:'',privacyRequired:false};
+    window.__adCalls=[];window.__adListeners=new Map();window.__adFailCancel=false;window.__adState={bridgeVersion:3,receipt:null,format:'interstitial',rewardEvents:0,available:true,state:'idle',revision:0,error:'',privacyRequired:false};
     window.__billing={available:true,configured:true,state:'idle',entitlement:'not-owned',revision:0,error:'',price:'',overlay:false,adsBlocked:false,preparingPurchase:false};
     window.__billingEmit=patch=>{window.__billing={...window.__billing,...patch,revision:window.__billing.revision+1};for(const {plugin,event,callback} of __adListeners.values())if(plugin==='PawblossomTestBilling'&&event==='stateChange')callback({...__billing});};
     window.__app=active=>{for(const {plugin,event,callback} of __adListeners.values())if(plugin==='App'&&event==='appStateChange')callback({isActive:active});};

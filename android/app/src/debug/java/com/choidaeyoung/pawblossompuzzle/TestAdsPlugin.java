@@ -100,7 +100,13 @@ public class TestAdsPlugin extends Plugin {
         JSObject result = new JSObject();
         result.put("available", available()); result.put("state", state); result.put("revision", revision);
         result.put("error", error); result.put("privacyRequired", privacyRequired);
-        result.put("bridgeVersion", 2); result.put("format", format); result.put("rewardEvents", rewards.events());
+        result.put("bridgeVersion", 3); result.put("format", format); result.put("rewardEvents", rewards.events());
+        RewardLedger.Receipt receipt = rewards.receipt();
+        if (receipt == null) result.put("receipt", JSONObject.NULL);
+        else {
+            JSObject value = new JSObject(); value.put("requestId", receipt.requestId); value.put("attemptId", receipt.attemptId);
+            value.put("earned", receipt.earned); value.put("closed", receipt.closed); result.put("receipt", value);
+        }
         return result;
     }
     private void update(String next, String reason) {
@@ -108,10 +114,11 @@ public class TestAdsPlugin extends Plugin {
         TestCommerce.adOverlay = overlay();
         notifyListeners("stateChange", snapshot());
     }
-    private void discard() {
+    private void discard() { discard(false); }
+    private void discard(boolean preserveReceipt) {
         if (ad != null) ad.setFullScreenContentCallback(null);
         if (rewardedAd != null) rewardedAd.setFullScreenContentCallback(null);
-        rewards.invalidate(); ad = null; rewardedAd = null; readyAt = 0;
+        if (!preserveReceipt) rewards.invalidate(); ad = null; rewardedAd = null; readyAt = 0;
     }
     private void fail(String reason) {
         attempt++; stopTimer(); discard(); update("failed", reason);
@@ -254,23 +261,31 @@ public class TestAdsPlugin extends Plugin {
                 fail("expired"); call.resolve(snapshot()); return;
             }
             final long id = attempt;
+            final String requestId = call.getString("requestId");
+            if (requestId == null || !requestId.matches("[a-zA-Z0-9-]{16,80}")) { call.reject("표시 요청 식별자가 없습니다.", "request"); return; }
             FullScreenContentCallback callback = new FullScreenContentCallback() {
                 @Override public void onAdShowedFullScreenContent() {
                     if (current(id) && state.equals("presenting")) update("showing", "");
                 }
                 @Override public void onAdDismissedFullScreenContent() {
                     if (!current(id) || !(state.equals("presenting") || state.equals("showing"))) return;
-                    attempt++; stopTimer(); discard(); update("closed", "");
+                    // 보상 뒤 권한 철회도 닫힘 시 재확인합니다. 실제 overlay 닫힘만 closed로 기록합니다.
+                    try {
+                        if (!available() || TestCommerce.blocksAds(getContext()) || consent == null || !consent.canRequestAds()
+                            || consent.getConsentStatus() == ConsentInformation.ConsentStatus.UNKNOWN) rewards.invalidate();
+                    } catch (Exception ignored) { rewards.invalidate(); }
+                    if (format.equals("rewarded")) rewards.close(id);
+                    attempt++; stopTimer(); discard(true); update("closed", "");
                 }
                 @Override public void onAdFailedToShowFullScreenContent(AdError e) { if (current(id) && (state.equals("presenting") || state.equals("showing"))) fail("show:" + e.getCode()); }
             };
             stopTimer();
             if (format.equals("rewarded")) rewardedAd.setFullScreenContentCallback(callback);
             else ad.setFullScreenContentCallback(callback);
-            if (format.equals("rewarded") && !rewards.show(id)) { fail("show-used"); call.resolve(snapshot()); return; }
+            if (format.equals("rewarded") && !rewards.show(id, requestId)) { fail("show-used"); call.resolve(snapshot()); return; }
             update("presenting", "");
             if (format.equals("rewarded")) rewardedAd.show(getActivity(), item -> {
-                // Google 광고의 보상→닫힘 순서만 지원합니다. 게임 보상/재화/저장 API를 호출하지 않습니다.
+                // Google 광고의 보상→닫힘 순서만 지원합니다. 여기서는 보드를 재개하지 않습니다.
                 if (!current(id) || !(state.equals("presenting") || state.equals("showing"))) return;
                 try {
                     if (!available() || TestCommerce.blocksAds(getContext()) || consent == null || !consent.canRequestAds()

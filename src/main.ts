@@ -46,6 +46,7 @@ let nativeRevision=0;
 let audioActive:boolean|undefined;
 const androidAdEntry=typeof ANDROID_TEST_ADS_ENABLED!=='undefined'&&ANDROID_TEST_ADS_ENABLED&&Capacitor.isNativePlatform()&&Capacitor.getPlatform()==='android'&&Capacitor.isPluginAvailable('PawblossomTestAds');
 let testAds:TestAdsController|undefined;
+let rewardedContinue:{round:number;scene:BoardScene;button:HTMLButtonElement;requestId?:string;preparing:boolean}|undefined;
 const androidBillingEntry=typeof ANDROID_TEST_BILLING_ENABLED!=='undefined'&&ANDROID_TEST_BILLING_ENABLED&&Capacitor.isNativePlatform()&&Capacitor.getPlatform()==='android'&&Capacitor.isPluginAvailable('PawblossomTestBilling');
 let testBilling:TestBillingController|undefined;
 const audio=new AudioManager(false);audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);
@@ -108,6 +109,7 @@ function billingModal(){return Boolean(androidBillingEntry&&$<HTMLDialogElement>
 
 // 문서와 Android 상태 중 하나라도 비활성이면 오디오와 진행을 멈춥니다.
 function syncActivity(){
+  renderRewardContinue();
   const active=nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!billingModal();
   if(!active)practiceInputs?.cancel();
   if(audioActive!==active){audioActive=active;if(active)audio.resume();else audio.suspend();}
@@ -171,6 +173,7 @@ function replaceBoard(){
   game.scene.add('Board',scene,true);
 }
 function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
+  abandonRewardContinue();
   if(!Number.isInteger(id)||id<1||id>levels.length)return;
   clearTimeout(resultTimer);resultTimer=undefined;round++;
   roundEnded=false;resultShown=false;firstReward=false;resultWon=undefined;boardNoticeKey=undefined;testContinueUsed=false;
@@ -310,7 +313,21 @@ function finish(won:boolean){
   $('#result-home').onclick=()=>{dialog.close();switchView('village');};
   if(testingLevel)$('#result-test').onclick=()=>{dialog.close();showTestPicker(true);};
   const continueButton=dialog.querySelector<HTMLButtonElement>('#result-continue');
-  if(continueButton){const activeRound=round,activeScene=scene;continueButton.onclick=()=>{continueTestRound(activeRound,activeScene,continueButton);};}
+  if(continueButton){const activeRound=round,activeScene=scene;continueButton.onclick=()=>{if(!testAds?.busy&&!rewardedContinue?.preparing)continueTestRound(activeRound,activeScene,continueButton);};}
+  if(testContinue&&androidAdEntry&&continueButton){
+    const controls=document.createElement('div');controls.className='result-reward-controls';
+    controls.innerHTML=`<p id="result-ad-note"></p><p id="result-ad-status" role="status"></p><button class="result-test-button" id="result-ad-load"></button><button class="result-test-button" id="result-ad-show"></button><button class="text-button" id="result-ad-cancel"></button>`;
+    continueButton.before(controls);
+    rewardedContinue={round,scene,button:continueButton,preparing:false};
+    const context=rewardedContinue;
+    $('#result-ad-load').onclick=()=>{void prepareRewardContinue(context);};
+    $('#result-ad-show').onclick=()=>{
+      if(!context||!rewardContextValid(context)||!nativeActive||document.hidden||testBilling?.blocksAds||testAds?.busy||testAds?.snapshot.format!=='rewarded'||testAds.snapshot.state!=='ready')return;
+      context.requestId=crypto.randomUUID();void testAds.command('show',context.requestId);
+    };
+    $('#result-ad-cancel').onclick=()=>{if(!context||!rewardContextValid(context))return;context.requestId=undefined;void testAds?.command('cancel');};
+    ensureTestAds();renderRewardContinue();void testAds!.connect();
+  }
   showResultPip($<HTMLImageElement>('.result-pip'),won);
 }
 function continueTestRound(activeRound:number,activeScene:BoardScene,button:HTMLButtonElement):boolean {
@@ -320,11 +337,51 @@ function continueTestRound(activeRound:number,activeScene:BoardScene,button:HTML
     ||!roundEnded||!resultShown||resultWon!==false||moves!==0||!dialog.open
     ||dialog.querySelector('#result-continue')!==button)return false;
   if(!activeScene.resumeAfterFailure())return false;
+  abandonRewardContinue();
   testContinueUsed=true;moves+=5;roundEnded=false;resultShown=false;resultWon=undefined;firstReward=false;
   boardNoticeKey=undefined;$('#board-notice').textContent='';$('#board-notice').classList.remove('pop');
   dialog.close();updateGoals();syncActivity();
   const board=$('#game-canvas');if(board.tabIndex===0)board.focus();
   return true;
+}
+function ensureTestAds(){
+  if(!testAds)testAds=new TestAdsController(nativeTestAds(),()=>{renderAdDialog();syncActivity();});
+}
+function abandonRewardContinue(){
+  rewardedContinue=undefined;testAds?.abandonReward();
+  if(testAds?.needsCancellation&&!testAds.busy)void testAds.command('cancel');
+}
+function rewardContextValid(context:NonNullable<typeof rewardedContinue>){
+  return context===rewardedContinue&&TEST_TOOLS_ENABLED&&androidAdEntry&&testingLevel&&!testContinueUsed
+    &&context.round===round&&context.scene===scene&&game.scene.getScene('Board')===scene&&!boardPending&&resultTimer===undefined
+    &&route==='puzzle'&&roundEnded&&resultShown&&resultWon===false&&moves===0
+    &&$<HTMLDialogElement>('#result-dialog').open&&$<HTMLDialogElement>('#result-dialog').querySelector('#result-continue')===context.button;
+}
+async function prepareRewardContinue(context:typeof rewardedContinue){
+  if(!context||!rewardContextValid(context)||context.preparing||!testAds||testAds.busy||testBilling?.blocksAds||!nativeActive||document.hidden)return;
+  context.preparing=true;context.requestId=undefined;testAds.abandonReward();renderRewardContinue();
+  try{
+    if(testAds.snapshot.format!=='rewarded')await testAds.selectFormat('rewarded');
+    if(rewardContextValid(context)&&!testBilling?.blocksAds&&nativeActive&&!document.hidden&&testAds.snapshot.format==='rewarded')await testAds.command('prepare');
+  }finally{context.preparing=false;renderRewardContinue();}
+}
+function renderRewardContinue(){
+  const context=rewardedContinue;
+  if(!context||!testAds)return;
+  if(!rewardContextValid(context)){abandonRewardContinue();return;}
+  if(testBilling?.blocksAds){context.requestId=undefined;testAds.abandonReward();}
+  if(context.requestId&&nativeActive&&!document.hidden&&!testBilling?.blocksAds&&testAds.takeReward(context.requestId)){
+    const {round:activeRound,scene:activeScene,button}=context;
+    context.requestId=undefined;continueTestRound(activeRound,activeScene,button);return;
+  }
+  const copy=adCopy(save.language),value=testAds.snapshot,busy=testAds.busy||context.preparing;
+  $('#result-ad-note').textContent=text('testAdContinueNote');
+  $('#result-ad-status').textContent=testBilling?.blocksAds?text('testAdContinueBlocked'):!value.available?copy.unavailable:value.state==='closed'?text('testAdContinueNoReward'):copy.states[value.state];
+  $('#result-ad-load').textContent=text('testAdContinueLoad');$('#result-ad-show').textContent=text('testAdContinueShow');$('#result-ad-cancel').textContent=copy.cancel;
+  $('#result-ad-load').toggleAttribute('disabled',!value.available||busy||value.state==='ready'||Boolean(testBilling?.blocksAds)||!nativeActive||document.hidden);
+  $('#result-ad-show').toggleAttribute('disabled',!value.available||busy||value.state!=='ready'||value.format!=='rewarded'||Boolean(testBilling?.blocksAds)||!nativeActive||document.hidden);
+  $('#result-ad-cancel').toggleAttribute('disabled',testAds.pending||testAds.overlay||context.preparing);
+  for(const id of ['result-next','result-home','result-test','result-continue'])$('#'+id)?.toggleAttribute('disabled',busy);
 }
 // 문구만 갱신하여 결과 보상·타이머·아트 요청·버튼·초점을 유지합니다.
 function updateResultCopy(){
@@ -339,6 +396,7 @@ function updateResultCopy(){
   if(testingLevel)$('#result-test').textContent=text('testOther');
   const continueButton=$<HTMLDialogElement>('#result-dialog').querySelector<HTMLButtonElement>('#result-continue');
   if(continueButton){continueButton.textContent=text('testContinue');$('#result-continue-note').textContent=text('testContinueNote');}
+  renderRewardContinue();
 }
 function renderAdDialog(){
   if(!testAds)return;
@@ -372,9 +430,9 @@ function renderAdDialog(){
 }
 async function showAdDialog(){
   if(!androidAdEntry||testBilling?.pausesGame||!scene.canLeave()||document.querySelector('dialog[open]'))return;
-  if(!testAds)testAds=new TestAdsController(nativeTestAds(),()=>{renderAdDialog();syncActivity();});
+  ensureTestAds();
   renderAdDialog();$<HTMLDialogElement>('#test-ad-dialog').showModal();syncActivity();$('#test-ad-title').focus();
-  await testAds.connect();
+  await testAds!.connect();
 }
 async function closeAdDialog(){
   if(!testAds||testAds.busy)return;
@@ -449,6 +507,7 @@ function changeLanguage(language:'en'|'ko'){
   if(focusedId&&!focused?.isConnected)document.querySelector<HTMLElement>('#'+focusedId)?.focus();
 }
 function switchView(name:string){
+  if(name!=='puzzle')abandonRewardContinue();
   if(!scene.canLeave())return;
   route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
   document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(b=>{b.classList.toggle('active',b.dataset.route===name);if(b.dataset.route===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
@@ -464,7 +523,7 @@ $('#board-notice').addEventListener('animationend',()=>{boardNoticeKey=undefined
 $('#restart').onclick=()=>{if(scene.canLeave())startLevel(currentLevel,testingLevel);};
 if(TEST_TOOLS_ENABLED){$('#test-level-button').onclick=()=>showTestPicker();$<HTMLDialogElement>('#test-level-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTestPicker();});}
 $('#shuffle').onclick=()=>{if(!boardPending&&game.scene.isActive('Board')&&shuffles>0&&scene.shuffle()){shuffles--;updateGoals();checkpoint();}};
-$<HTMLDialogElement>('#result-dialog').addEventListener('cancel',event=>{event.preventDefault();$<HTMLDialogElement>('#result-dialog').close();switchView('village');});
+$<HTMLDialogElement>('#result-dialog').addEventListener('cancel',event=>{event.preventDefault();if(testAds?.busy||rewardedContinue?.preparing)return;$<HTMLDialogElement>('#result-dialog').close();switchView('village');});
 $<HTMLDialogElement>('#tutorial-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTutorial();});
 document.addEventListener('pointerdown',()=>{void audio.unlock().catch(()=>{});},{passive:true,capture:true});
 // 한 Game 동안 DOM에 한 번만 등록합니다. 회차 교체는 현재 scene을 조회합니다.

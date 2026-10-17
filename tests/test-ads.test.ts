@@ -2,7 +2,7 @@ import {describe,it,expect,vi} from 'vitest';
 import {TestAdsController,adCopy,type AdSnapshot,type TestAdsBridge} from '../src/testAds';
 
 function harness(initial:Partial<AdSnapshot>={}){
-  let state:AdSnapshot={bridgeVersion:2,format:'interstitial',rewardEvents:0,available:true,state:'idle',revision:0,error:'',privacyRequired:false,...initial};
+  let state:AdSnapshot={bridgeVersion:3,receipt:null,format:'interstitial',rewardEvents:0,available:true,state:'idle',revision:0,error:'',privacyRequired:false,...initial};
   let event!:(value:AdSnapshot)=>void;
   const remove=vi.fn(async()=>{}),changed=vi.fn();
   const transition=(patch:Partial<AdSnapshot>)=>{state={...state,...patch,revision:state.revision+1};event?.({...state});return {...state};};
@@ -132,7 +132,7 @@ describe('Android 시험 광고 상태 연결',()=>{
     const another=harness();await another.controller.connect();expect(another.controller.snapshot.rewardEvents).toBe(0);
   });
   it.each([
-    {bridgeVersion:undefined},{bridgeVersion:1},{format:undefined},{format:'video'},
+    {bridgeVersion:undefined},{bridgeVersion:1},{bridgeVersion:2},{receipt:undefined},{receipt:{}},{format:undefined},{format:'video'},
     {rewardEvents:undefined},{rewardEvents:'1'},{rewardEvents:-1},{rewardEvents:0.5},{rewardEvents:NaN},
     {available:'true'},{privacyRequired:0},{error:null},{state:'unknown'},{revision:-1},{revision:'1'},
   ])('손상/구형 snapshot은 실패 안전하게 차단합니다: %j',async patch=>{
@@ -147,5 +147,64 @@ describe('Android 시험 광고 상태 연결',()=>{
     h.emit({...h.state(),revision:4,rewardEvents:1});expect(h.controller.snapshot.available).toBe(false);
     expect(h.controller.overlay).toBe(true);expect(h.controller.snapshot.rewardEvents).toBe(2);
     await h.controller.refresh();expect(h.controller.snapshot.available).toBe(true);
+  });
+  const requestId='round-request-00000001';
+  const receipt=(patch:Partial<import('../src/testAds').AdReceipt>={})=>({requestId,attemptId:'17',earned:false,closed:false,...patch});
+  async function showing(){
+    const h=harness({state:'ready',format:'rewarded'});await h.controller.connect();
+    h.bridge.show=vi.fn(async options=>h.transition({state:'presenting',receipt:receipt({requestId:options.requestId})}));
+    await h.controller.command('show',requestId);return h;
+  }
+  it('이번 표시의 earned 단독은 지급하지 않고 같은 attempt 닫힘 뒤 한 번만 소비합니다',async()=>{
+    const h=await showing();h.transition({state:'showing',rewardEvents:1,receipt:receipt({earned:true})});
+    expect(h.controller.takeReward(requestId)).toBe(false);expect(h.controller.pausesGame).toBe(true);
+    const close=h.transition({state:'closed',receipt:receipt({earned:true,closed:true})});
+    expect(h.controller.takeReward(requestId)).toBe(true);h.emit(close);await h.controller.refresh();
+    expect(h.controller.takeReward(requestId)).toBe(false);
+    await h.controller.command('prepare');h.transition({state:'ready',receipt:null});await h.controller.command('show',requestId);
+    expect(h.bridge.show).toHaveBeenCalledTimes(1);
+  });
+  it.each(['no-reward','wrong-request','wrong-attempt','format','cancelled','failed','abandoned'])('%s는 누적 횟수가 늘어도 지급하지 않습니다',async reason=>{
+    const h=await showing();if(reason==='abandoned')h.controller.abandonReward();
+    h.transition(reason==='format'?{format:'interstitial',state:'closed',rewardEvents:9,receipt:null}:
+      reason==='cancelled'||reason==='failed'?{state:reason,receipt:null,rewardEvents:9}:
+      {state:'closed',rewardEvents:9,receipt:receipt({earned:reason!=='no-reward',closed:true,requestId:reason==='wrong-request'?'manual-request-00001':requestId,attemptId:reason==='wrong-attempt'?'18':'17'})});
+    expect(h.controller.takeReward(requestId)).toBe(false);
+  });
+  it('현재 show의 닫힘 조회가 이벤트보다 먼저 도착해도 복구하고 초기/새 컨트롤러 조회는 지급하지 않습니다',async()=>{
+    const h=await showing(),closed={...h.state(),revision:4,state:'closed' as const,rewardEvents:1,receipt:receipt({earned:true,closed:true})};
+    h.bridge.getStatus=vi.fn(async()=>closed);await h.controller.refresh();expect(h.controller.takeReward(requestId)).toBe(true);
+    h.emit(closed);expect(h.controller.takeReward(requestId)).toBe(false);
+    const other=harness(closed);await other.controller.connect();expect(other.controller.takeReward(requestId)).toBe(false);
+  });
+  it('show 응답 유실은 닫힘으로 간주하지 않고 일치 receipt 조회만 복구합니다',async()=>{
+    const h=harness({state:'ready',format:'rewarded'});await h.controller.connect();
+    h.bridge.show=vi.fn(async()=>{throw Error('lost response');});h.bridge.getStatus=vi.fn(async()=>{throw Error('offline');});
+    await h.controller.command('show',requestId);expect(h.controller.pausesGame).toBe(true);expect(h.controller.takeReward(requestId)).toBe(false);
+    h.bridge.getStatus=vi.fn(async()=>({...h.state(),revision:3,state:'closed' as const,rewardEvents:1,receipt:receipt({earned:true,closed:true})}));
+    await h.controller.refresh();expect(h.controller.takeReward(requestId)).toBe(true);
+  });
+  it.each([{requestId:''},{attemptId:'0'},{earned:'true'},{closed:false}])('손상 closed receipt %j는 기존 overlay·지급 차단을 유지합니다',async patch=>{
+    const h=await showing();h.emit({...h.state(),revision:5,state:'closed',receipt:receipt({earned:true,closed:true,...patch} as never)});
+    expect(h.controller.overlay).toBe(true);expect(h.controller.takeReward(requestId)).toBe(false);
+    h.transition({state:'closed',receipt:receipt({earned:true,closed:true})});await h.controller.refresh();expect(h.controller.takeReward(requestId)).toBe(false);
+  });
+  it('수동 표시와 종료 후 완료는 receipt가 있어도 게임 지급 대상이 아닙니다',async()=>{
+    const h=harness({state:'ready',format:'rewarded'});await h.controller.connect();await h.controller.command('show');
+    h.transition({state:'closed',rewardEvents:1,receipt:receipt({earned:true,closed:true})});expect(h.controller.takeReward(requestId)).toBe(false);
+    const own=await showing();await own.controller.dispose();own.transition({state:'closed',receipt:receipt({earned:true,closed:true})});expect(own.controller.takeReward(requestId)).toBe(false);
+  });
+  it('닫힘 이벤트 뒤 show Promise가 늦게 끝나도 pending 해제 후 한 번만 지급합니다',async()=>{
+    const h=harness({state:'ready',format:'rewarded'});await h.controller.connect();let resolve!:(value:AdSnapshot)=>void;
+    h.bridge.show=vi.fn(()=>new Promise<AdSnapshot>(done=>{resolve=done;}));
+    const pending=h.controller.command('show',requestId),shown=h.transition({state:'presenting',receipt:receipt()});
+    h.transition({state:'closed',rewardEvents:1,receipt:receipt({earned:true,closed:true})});expect(h.controller.takeReward(requestId)).toBe(false);
+    resolve(shown);await pending;expect(h.controller.snapshot.state).toBe('closed');expect(h.controller.takeReward(requestId)).toBe(true);expect(h.controller.takeReward(requestId)).toBe(false);
+  });
+  it('비활성 동안 보류한 완료도 이후 실패·사용 불가·다른 receipt가 오면 지급하지 않습니다',async()=>{
+    for(const patch of [{state:'failed' as const,receipt:null},{available:false},{receipt:null}]){
+      const h=await showing();h.transition({state:'closed',receipt:receipt({earned:true,closed:true})});h.transition(patch);
+      expect(h.controller.takeReward(requestId)).toBe(false);
+    }
   });
 });

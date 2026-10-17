@@ -84,6 +84,8 @@ html:lang(ko) h1,html:lang(ko) h2,html:lang(ko) h3,html:lang(ko) .moves-box stro
 @media(prefers-reduced-motion:reduce){.result-character,.result-sparkles i{animation:none!important}#result-dialog{scroll-behavior:auto}}
 .result-content #result-description,.result-content .result-pip-line{word-break:keep-all}
 .result-content #result-continue-note{font-size:10px;line-height:1.5;margin:5px 0 0;color:#53634b;word-break:keep-all}
+.result-reward-controls{margin-top:10px;padding:10px;border:1px solid #c6d4b7;border-radius:12px;background:#f5f8ee}.result-reward-controls p{font-size:11px;line-height:1.5;margin:0 0 6px;word-break:keep-all}.result-reward-controls .text-button{width:100%}
+@media(orientation:landscape) and (max-height:600px){.result-reward-controls{grid-column:2}}
 .result-with-continue h2{word-break:keep-all}
 @media(max-width:359px) and (orientation:portrait){.result-with-continue{padding:14px 18px 10px}.result-with-continue .result-stage{height:108px}.result-with-continue .result-character{width:108px;height:106px}.result-with-continue h2{font-size:24px}.result-with-continue .result-pip-line{margin-bottom:8px}}
 @media(orientation:landscape) and (max-height:600px){.result-content>#result-continue-note{grid-column:2}}

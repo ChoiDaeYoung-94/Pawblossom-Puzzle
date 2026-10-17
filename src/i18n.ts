@@ -2,6 +2,9 @@ export type Language = 'en' | 'ko';
 const strings = {
   en: {
     testContinue: 'Test continue +5 moves', testContinueNote: 'Test feature without ads. Once per round. Your progress and rewards stay the same.',
+    testAdContinueLoad:'Load rewarded test ad', testAdContinueShow:'Watch test ad for +5 moves',
+    testAdContinueNote:'Optional Google test ad. Complete it, then close it to continue this board with +5 moves. Once per round, shared with the no-ad test below. No saved rewards.',
+    testAdContinueBlocked:'Ads are blocked by the purchase status.',testAdContinueNoReward:'Ad closed without a verified completion. No moves added. You can try again or leave.',
     friendsHeading: 'Pawblossom Friends', switchLanguage: 'Switch to Korean',
     saveConflict: 'An existing save is now readable. Both it and your current session are protected. Load the existing save to discard this session, or reset explicitly.',
     saveReload: 'Load existing save', saveReloadConfirm: 'Discard this session’s unsaved progress and reload the existing device save?',
@@ -66,6 +69,9 @@ const strings = {
   },
   ko: {
     testContinue: '시험 이어하기 +5', testContinueNote: '광고 없이 진행하는 시험 기능이에요. 회차당 한 번, 기록과 보상은 그대로예요.',
+    testAdContinueLoad:'보상형 시험 광고 불러오기', testAdContinueShow:'시험 광고 보고 이동 +5',
+    testAdContinueNote:'선택 사항인 Google 시험 광고예요. 완료 후 닫으면 이 보드에서 이동 +5로 이어해요. 아래 무광고 시험과 합쳐 회차당 한 번, 저장 보상은 없어요.',
+    testAdContinueBlocked:'구매 상태에 따라 광고가 차단되었어요.',testAdContinueNoReward:'완료를 확인하지 못한 채 광고가 닫혔어요. 이동은 추가되지 않았어요. 다시 시도하거나 나갈 수 있어요.',
     friendsHeading: '포블로섬 친구들', switchLanguage: '영어로 바꾸기',
     saveConflict: '기존 기록을 읽을 수 있게 됐어요. 기존 기록과 이번 실행의 진행을 보호 중이에요. 현재 진행을 버리고 기존 기록을 불러오거나 직접 초기화해 주세요.',
     saveReload: '기존 기록 불러오기', saveReloadConfirm: '이번 실행의 저장되지 않은 진행을 버리고 기기에 있는 기존 기록을 다시 불러올까요?',
