@@ -1,5 +1,40 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-17 · 보상형 콜백 암호화 수신함·제한 재처리 (이슈 #105)
+
+기준 main `46b5df21bc09d2ffa0c0969e2c03b09cef64bf79`, 작업 `codex/105-rewarded-callback-inbox`, [이슈 #105](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/105)입니다. **구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.** 서버 전용 `callbackInbox.ts`·`callbackHttp.ts`, 실제 SQLite 테스트와 별도 프로세스/worker helper를 추가하고, 기존 SSV parser의 원문을 반환하지 않는 boolean 구조 검사만 공유했습니다. `RewardLedger`의 TTL·시계·거절·보상권 의미와 앱/native/콘솔 설정은 변경하지 않았습니다. 아래 #103의 수신함/HTTP 미구현 표현은 당시 이력이며 이번 구현은 실제 HTTP 배포 완료를 뜻하지 않습니다.
+
+### API·신뢰 경계·저장 정책
+
+- `new CallbackInbox(options)`에는 파일 SQLite 경로, 안정적인 별도32byte `encryptionKey`, 정책, 신뢰된 `rewardLedger` 경로/키/의존성과 서버 clock을 주입합니다. 환경·정책·SSV profile·한도·원장 경로/키 fingerprint·수신함 키 확인값을 meta에 결합하고 재시작 시 일치 여부와 PK/UNIQUE/CHECK까지 자체 스키마를 검사합니다. 구매/보상 DB와 분리하며 외부 verified/event/processor는 받지 않습니다. 키/배열/의존성은 snapshot하고 복제한 키는 실패/close에 지웁니다. 경로는 실경로(junction/symlink 포함)를 정규화하고 Windows에서만 대소문자를 정규화합니다. 경로/키 변경·키 회전·DB 이동은 자동 migration하지 않고 open을 거절합니다. 파일 접근권한·백업·키 저장소 운영은 별도 필요합니다.
+- `receive(rawQuery)`는 기존 ASCII profile 구조만 검사하고 서명/보상 판정을 미룹니다. 원래 query 문자열을 변환하지 않고 AES-256-GCM으로 암호화합니다. 행마다 random96bit IV와 UNIQUE 제약을 사용하며 terminal에도 IV를 보존합니다. AAD는 전체 profile·receipt·SHA-256 digest·수신시각을 결합하고, 처리 전 GCM 인증·복호화 원문 digest·구조를 다시 검사합니다. digest/receipt/시각/IV/tag/ciphertext 변조는 지급 없이 폐기합니다. 키/메타 오류는 open 또는 요청에서 실패로 차단합니다. 원문/nonce/user/signature/개인식별·오류 원문은 일반 결과/로그/DB 평문에 넣지 않습니다.
+- `BEGIN IMMEDIATE`→INSERT→`COMMIT` 성공 뒤에만 `{kind:'accepted',receipt}`입니다. 동일 원문 digest는 pending/processing/terminal 모두 같은 receipt를 반환하고 행수/시도를 늘리지 않습니다. 다른 유효서명 표현·같은 transaction/회차는 수신함이 합치지 않고 기존 원장이 판정합니다. **수신 성공은 서명 검증·보상권 저장·실게임 지급 성공이 아닙니다.**
+- 한도는 **terminal tombstone을 포함한 전체 행수** 기본10,000/최대100,000, 암호문 행당 최대4096byte입니다. 한도 도달 시 새 원문은 capacity/HTTP503, 기존 digest는 같은 receipt입니다. terminal에서 ciphertext/tag 참조를 NULL로 바꾸되 receipt/digest/IV를 보존합니다. 자동 tombstone 삭제는 없으며 기본 보존기한20분은 처리 가능 시간이지 DB행 삭제 주기가 아닙니다. 이는 논리적 행/암호문 상한이며 디스크 크기·SQLite freepage/journal/WAL·백업의 과거 암호문 물리적 완전 삭제를 보장하지 않습니다.
+
+### worker·HTTP·시간의 한계
+
+- `processNext()` 한 번은 최대1행을 처리합니다. transaction으로 pending due/만료 processing을 원자 선점하고, 시도수를 증가시키며 random 소유 토큰·기본30초 lease를 저장합니다. 유효 lease는 재시작 시에도 침범하지 않고 만료 후에만 회수합니다. 완료/재시도는 최신 토큰과 유효 lease를 확인하여 늦은 worker의 상태 변경을 차단합니다. 원장 commit 뒤 수신함 finalize 실패·중단·재시작이 있어도 `RewardLedger.processCallback`의 영구 transaction/회차 중복 검사로 신규 보상권을 다시 만들지 않습니다. 수신함과 원장은 별도 DB이며 하나의 분산 transaction으로 주장하지 않습니다.
+- 내부에서 생성한 실제 `RewardLedger`를 반드시 호출합니다. 보상권 저장은 completed, 서명/정책/claim/회차/시간/만료/중복transaction 거절은 discarded, key-unavailable/aborted/storage만 제한 retry입니다. 기본 지수 backoff1초→2→4→8→16→32→최대60초, 최대8시도, 처리기한20분이며 lease 재선점도 시도를 소모합니다. 한도/기한에 닿으면 원문 참조를 제거하고 폐기합니다. 잘못된 서버 시각/역행은 instance 및 DB high-water로 차단하고 오류를 성공/idle로 숨기지 않습니다. inbox와 원장에는 신뢰된 현재 서버 시각을 주입하며 callback 시각을 now로 사용하지 않습니다. 별도 scheduler/운영 감시는 없습니다.
+- `createCallbackHttpAdapter(inbox)`는 listen 없는 pure 함수입니다. host가 **실제로 수신한 method/raw request-target/body byte 수를 한 번 snapshot하여 제공**해야 합니다. `/callbacks/admob?원문`의 GET만 지원하고 decode/re-encode/정렬 객체를 받지 않습니다. body 없음·query4096자 이내, method405/path404/잘못된구조400/body·길이초과413, 저장·용량·시계·접근오류503을 고정 응답으로 매핑합니다. durable commit 뒤에만200 `received`, 그 밖에는 `rejected`/`unavailable`이며 receipt/query/오류를 echo하지 않습니다. stream/body/header 제한·TLS·실제 HTTP 수신·host 인증/구성은 아직 구현하지 않았습니다.
+- [Google 공식 SSV FAQ](https://developers.google.com/admob/android/ssv)는 HTTP200을 기대하고 실패 시1초 간격 최대5회 재시도한다고 설명합니다. 영구 저장 전 실패는 이 짧은 재시도 밖에서 영구 유실될 수 있습니다. 수신함은 저장 뒤 내부 재시도만 제공합니다. 공개 unauthenticated endpoint에서 서명이 잘못된 구조 적합 입력도 암호화 저장될 수 있어 **영구 수신함만으로 DoS·악의적 원문 보존 문제를 해결했다고 주장하지 않습니다.** rate limit·공개 수신 정책·감시·보존/운영 용량 정책은 #73 후속입니다.
+- 기존 `pawblossom-admob-ascii-v1`의 실제 Google callback 호환은 미검증이며 percent/plus 입력은 정상 escape여도 지원하지 않습니다. 원장 claim15분+도착유예5분·event age20분·미래허용30초는 그대로입니다. 따라서 지연처리·키 장애·회차 취소·시도/시간 한도로 이미 수신 성공한 callback도 **지급을 포기할 수 있습니다.** 영구 보관/지급 보장이나 실제 board+5 완료가 아닙니다.
+
+### 검증과 미완료 범위
+
+- 실제 파일 DB와 별도 process 재시작, 동시8worker 수신/선점, 원장commit→수신함finalize실패→재시작 신규1회, 늦은worker fencing/동일instance 경합/close 대기, 기본 verifier60초 cooldown과 동일instance63초 복구, 지수상한/기한/시도제한, 원장거절/storage/lock/INSERT실패/**실제 deferred FK COMMIT 실패 rollback과HTTP503**, 시계역행/메타/스키마/키/대상원장 변경, GCM/AAD/digest 변조·비노출·HTTP snapshot/bounds를 검사했습니다. 합성 키는 메모리에서만 생성하며 실제 네트워크 transport/Google 자격증명을 사용하지 않았습니다.
+- 전체 `npm test` **1198개(신규88개)**, `npm run store:check`, `npm run store:test` **12개**, `npm run typecheck`, `npm run build:test`→`npm run build`, `git diff --check`가 통과했습니다. 마지막 HTTP405 `Allow: GET` 반영 뒤 전체1198개와 testing→production 빌드를 재실행했습니다. 최종 production `testTools/androidTestAds/androidTestBilling=false`, `src`·`dist`의 `CallbackInbox/callback-inbox/RewardLedger/reward_vouchers/node:sqlite/node:crypto/aes-256-gcm/verifier-keys.json/rewardBinding/callback_meta` 마커 파일 **0건**을 확인했습니다. 기존 Vite500kB 청크 경고는 남아 있습니다. 최초 build:test는 실행 host PATH에 npm이 없어 중단되었고, 프로젝트용 Node `v24.21.0` 경로를 프로세스 PATH에 넣은 뒤 성공했습니다. 이 환경 오류를 빌드 성공으로 합산하지 않습니다.
+- 총괄 검수 완료 체크포인트: 변경8파일, 기준 main `46b5df21bc09d2ffa0c0969e2c03b09cef64bf79`입니다. 총괄이 Node24.21.0에서 `npx vitest run tests/admob-ssv.test.ts tests/reward-ledger.test.ts tests/callback-inbox.test.ts` 3파일285개, `npm run typecheck` 전체/앱/서버, `git diff --check`를 독립 재검증하고 blocker 없음을 확인했습니다. **285개는 전체1198개의 부분집합 재검증이며 합산하지 않습니다.** 검증한 코드의 LF 정규화 UTF-8 SHA-256은 아래와 같습니다. 최신 PR/main 검사·반영 근거는 GitHub에 기록하며 코드가 바뀌면 필요한 검증과 체크포인트를 갱신합니다.
+
+| 파일 | LF SHA-256 |
+| --- | --- |
+| `server/ads/admobSsv.ts` | `512c3c9b9db3df21f28c871511130398fd91c8191787d1e721823bfe539c53cc` |
+| `server/ads/callbackInbox.ts` | `7ca4b8b2966b080697d3276f0fb8bd6553706a52d9f0a7d94122c187cbe4bcb7` |
+| `server/ads/callbackHttp.ts` | `aeded5ac3d6ae5be7708fcf973d380db7657ddf18898b1064a626e6c9e3243a3` |
+| `tests/callback-inbox.test.ts` | `9d16368324628b70871be3b4811141b1b84ac3e31348d23acd9633f46b8fdaa1` |
+| `tests/helpers/callback-inbox-worker.mjs` | `99b30fcd733cf34a9ebecdb3e3eba7bbf4dd9b61b947cd60f98b63ca2d40f0df` |
+
+- [Node SQLite](https://nodejs.org/docs/latest-v22.x/api/sqlite.html)·[Node crypto](https://nodejs.org/docs/latest-v24.x/api/crypto.html)를 사용하는 로컬 핵심입니다. 총괄 검수는 완료했으며 최신 PR head/main의 Node22·24 CI·병합은 별도 확인하여 GitHub에 기록합니다. #73 실제 인증·신뢰된 서버round·실게임+5/소비·오프라인·SDK/실Google callback·HTTPS listen/TLS/호스팅·scheduler·rate limit/감시·ACL/키회전/백업/보존·어린이 동의·단말/스토어 검증은 미완료입니다. APK/AAB·Android sync·버전·최종 오디오 믹스·운영 AdMob/Drive/Play Console/상품 설정·폰 테스트/전달은 수행하지 않았습니다. 사용자 조치·질문은 없습니다.
+
 ## 2026-10-17 · 서버 보상형 SSV·요청 binding·영구 보상 원장 (이슈 #103)
 
 기준 main `99da38faefbefca97bb04b6974259d688dfe45cc`, 작업 `codex/103-rewarded-ssv-ledger`, [이슈 #103](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/103)입니다. **구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.** `server/ads/admobSsv.ts`와 구매 DB에서 분리한 `server/ads/rewardLedger.ts`를 추가했습니다. 보상권을 원장에 저장하는 핵심이며 실제 게임 이동+5 지급/소비, 앱/native/SDK, HTTP, 인증 서버, 배포와 연결하지 않았습니다. 아래 과거 SSV/원장 미구현 표현은 당시 이력입니다.
