@@ -1,5 +1,27 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-17 · 인증된 내부 게임 요청·보상 연결 (이슈 #113)
+
+기준 main `d890494e2f0c40314127ba288024de5d0fc910f9`, 작업 `codex/113-authenticated-game-service`, [이슈 #113](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/113)입니다. 현재 **구현·로컬 검증·총괄 독립 최종검수 완료/커밋·PR 제출 승인**입니다. `GameService`만 추가하고 기존 Auth/Round/Reward의 핵심 API·TTL·스키마와 앱은 유지했습니다. 아래 발급/소비 orchestration 미구현 표현은 당시 이력입니다.
+
+- `new GameService({auth,authTransport?,round,reward,rewardAdUnit,allowRewardClaim?})`는 세 인스턴스를 소유합니다. 생성 시 통신하거나 파일/env에서 키를 자동 조회하지 않습니다. 서버 구성을 한 번 복사하고 세 32바이트 키를 별도로 복제·분리하며 임시 사본은 성공/실패 모두 지웁니다. auth/round의 test·production과 reward의 synthetic·production을 대응시킵니다. round/reward DB는 절대 `.sqlite` 경로·실경로/기존 파일 inode를 비교해 동일 경로·symlink 별명·hardlink 공유를 거절합니다. 경로 검사는 생성 시점의 검사이며 외부 파일시스템 경합/ACL 보호를 대신하지 않습니다. 생성 도중 실패하면 이미 연 자원을 모두 정리하고 고정 오류만 냅니다.
+- `start({sessionTicket,requestId,levelId,signal?})`, `get({sessionTicket,roundId,signal?})`, `command({sessionTicket,roundId,operationId,expectedRevision,command,signal?})`, `issueRewardClaim({sessionTicket,roundId,expectedRevision,signal?})`, `applyReward({sessionTicket,roundId,signal?})`만 사용자 요청 API입니다. 허용 필드·형식·중첩 명령/좌표를 첫 await 전에 snapshot합니다. 추가 owner/context/board/score/grant/adUnit/동의·나이/verified/raw SSV, 상속·accessor·symbol·위조/Proxy signal은 거절합니다. 매 유효 작업에서 `auth.authenticate()`를 새로 호출하고 성공 context에서 `{ownerId}`만 projection합니다. 인증 성공 캐시/장기 세션을 발급하지 않습니다.
+- `issueRewardClaim`은 현재 소유권·TTL·failed/moves0·한도·보상 미사용·최신 revision을 확인한 뒤 신뢰된 동기 서버 gate가 정확히 `true`일 때만 고정 구성 adunit으로 발급합니다. gate 생략/false/throw/Promise/thenable은 기본 거절입니다. 잘못 주입한 실제 Promise의 reject는 관찰하여 미처리 오류를 남기지 않습니다. **이는 실제 어린이·한국/미국 국가·연령·동의 정책의 구현/검증 완료가 아닙니다.** 클라이언트 bool/연령을 gate로 전달하지 않습니다. 인증된 caller에게 반환하는 SDK용 opaque `customData/userId/expiresAt`만 의도된 예외이며 provider ID·ticket·키·내부 capability는 반환하지 않습니다.
+- `applyReward`는 자격 성공 또는 이미 적용된 `reward-used`에서만 실제 `redeemVoucher`→private WeakMap capability→`RoundLedger.applyReward`를 호출합니다. 신규 광고 gate를 다시 요구하지 않아 이미 얻은 보상을 박탈하지 않습니다. `voucher-missing`은 거절이며 성공으로 표시하지 않습니다. active/won/abandoned/expired 최초 소비는 차단하고, 성공한 같은 소비는 재시작·후속 이동/종료 뒤 최신 snapshot/`applied:false`로 복구합니다. 기존 원장 계약대로 TTL 만료 뒤에는 동일 재시도도 expired입니다.
+- 포기는 게임 command의 commit/중복 영수증 확인이 성공한 뒤 보상 `closeRound`를 호출합니다. 정리 성공에는 `rewardCleanup:'closed'`, 정리 거절/저장 실패/예외에는 원래 게임 결과와 `rewardCleanup:'retry-required'`를 반환합니다. 같은 operationId/원래 revision/명령 재전송은 `applied:false`로 게임 결과를 보존하면서 정리를 재시도합니다. 게임 revision conflict에는 보상 회차를 닫지 않습니다. **두 DB의 분산 원자성·정리 예약·자동 조정 스케줄러는 없습니다.** 소비 후 적용 전 실패도 소비 기록을 되돌리지 않고 같은 요청을 다시 인증/redeem/apply하여 복구합니다. 동시 다른 프로세스와의 자격 조회 이후 상태 변화는 적용 원장에서 다시 검사합니다.
+- `close()`는 닫힘을 먼저 표시하고 한 자원 정리가 실패해도 세 자원을 모두 정리하며 원문 오류를 숨깁니다. 인증 await 뒤 closed/aborted를 다시 검사하여 늦은 인증이 DB를 변경하지 못하게 합니다. 동기 SQLite 작업에 이미 진입한 뒤의 선점 취소/롤백이나 외부 비협조 JS 작업 강제 종료를 제공하지 않습니다.
+- `CallbackInbox`는 별도 보호된 서버 callback 경로에 남아 있습니다. 사용자 서비스에는 raw callback 처리/임의 verified 사실/임의 grant 접수 API가 없습니다. HTTP adapter/listen/TLS·호스팅·온라인 앱/SDK 연결은 이번 범위 밖이며 PlayFab 최종 provider 채택도 미확정입니다. #73의 진행/경제·인증 운영·실Google/키·연령/동의·공개 rate limit·보존/백업/회전·스케줄러/감시·실기기/스토어 검증은 계속 미완료입니다.
+- 검증은 합성 transport·기존 `ledger-v1-fixture.json`의 실제 실패 회차(합성 인증 owner로 fixture HMAC 재서명)·실제 파일 SQLite/별도 Inbox/실제 SSV 서명 검증·+5·중복/재시작/후속 이동·소비 commit 후 적용 실패 복구·실제 소비/정리 DB lock·위조 요청·구성 변경·close/abort 늦은 인증을 포함합니다. 최초 fixture 적재의 FK 순서 오류는 테스트 전용 적재 트랜잭션/FK 설정을 바로잡아 해결했습니다. signal 추가 시험에서 Node24의 정상 signal Proxy가 native getter/listener를 통과하여 기대값1건이 실패했고, 서비스 입력 경계에서 Proxy를 명시적으로 거절하도록 수정했습니다. 이때 전체 검사 **1733통과/1실패**는 성공으로 합산하지 않습니다. 기존 #109/#111의 worker 간헐 timeout/진단 이력은 그대로 보존합니다.
+- APK/AAB·Android sync·버전·최종 오디오 믹스·계정/실키/env·콘솔/Drive·폰 테스트/전달은 수행하지 않았습니다. 사용자 조치·질문은 없습니다. 최종 명령 결과와 LF SHA는 아래 체크포인트에 기록합니다.
+
+### #113 검증 체크포인트
+
+2026-10-17 KST **20:33:13 시작**, Node24.21.0 `npm test` **28파일/1734개(기존1673+신규61), 35.19초 통과**입니다. 신규 부분 검사를 전체와 합산하지 않습니다. `npm run store:check` 원본/규격·`npm run store:test` **12개**·`npm run typecheck` 전체/앱/서버·`npm run build:test`→`npm run build` 원본 에셋/타입/두 빌드·`git diff --check`와 신규2파일 no-index whitespace 검사를 통과했습니다. 최종 `dist/build-info.json`의 `testTools/androidTestAds/androidTestBilling=false`, src/dist의 서비스/인증/원장/SQLite/capability 마커 **0건**을 확인했습니다. 빌드의 기존 500kB chunk 경고는 남아 있습니다. 순수 서버 계층이어서 이번 경로에 브라우저/HTTP·실서비스 검증을 수행했다는 주장은 하지 않습니다.
+
+검증 코드 LF SHA-256: `server/game/gameService.ts` = `27884cba2ec509e5f27b04cbad13a4891f1deb658003b123763429e866e4a2de`, `tests/game-service.test.ts` = `bcc55be1d6bc211593a48c8bfdb85cd569896d58c97f328fd5263fd163ed8d64`. 기존 fixture/원장 소스는 변경하지 않았습니다. 커밋 전 fetch로 HEAD/origin/main이 기준 커밋과 일치하고 변경은 코드/테스트2+기존docs3의 **5파일**뿐임을 확인했습니다. 최신 PR/main Node22·24 CI와 반영 결과는 GitHub에 별도 기록합니다.
+
+총괄 독립 최종검수: KST **20:34:54 시작** `npm test` **28파일/1734개, 32.10초 통과**와 전체/앱/서버 타입·diff·최종 production 세 flags=false·src/dist 서버 마커0건을 확인했습니다. 코드2파일 LF SHA도 위 기록과 동일하여 코드 수정 없이 커밋/푸시/Ready PR 제출을 승인받았습니다. 독립 검사는 동일 1734개의 재검증이며 합산하지 않습니다. 총괄의 기존 개발 앱 부팅 확인(320×568/640×360, 캔버스1·문서 외부 스크롤0·console error0)은 앱의 읽기 회귀 확인만 뜻하며 신규 서버 경로의 실제 브라우저/HTTP 검증으로 합산하지 않습니다. 다음은 승인된 커밋·PR 제출이며 병합/정리는 총괄이 진행합니다.
+
 ## 2026-10-17 · 보상권 영구 소비·실패 회차 이동 추가 (이슈 #111)
 
 기준 main `d867e32f3a3a5fa3839878bfda1feffe165bcf35`, 작업 `codex/111-reward-redemption-continue`, [이슈 #111](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/111)입니다. **서버 내부 보상권 소비→런타임 권한→실패 회차 +5 구현·로컬 검증·총괄 최종검수를 마쳤고 커밋/PR 제출을 승인받았습니다.** 최신 PR/main의 Node22·24 CI와 반영 근거는 GitHub에 구분 기록합니다. 앱·엔진·30개 level·구매/인증·callback 수신함 설정과 기존 claim/SSV 시간 정책은 유지했습니다. 아래 #109의 보상 소비/+5 미구현 표현은 당시 이력입니다.
