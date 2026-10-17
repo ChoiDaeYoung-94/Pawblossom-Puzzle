@@ -1,0 +1,1984 @@
+{
+  "source": "d867e32f3a3a5fa3839878bfda1feffe165bcf35",
+  "epoch": 1792200000000,
+  "rounds": {
+    "failed": {
+      "roundId": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+      "revision": 34,
+      "createdAt": 1792200000000,
+      "expiresAt": 1792203600000,
+      "state": {
+        "level": {
+          "id": 30,
+          "moves": 34,
+          "goals": [
+            {
+              "kind": 0,
+              "count": 34
+            },
+            {
+              "kind": 5,
+              "count": 28
+            }
+          ],
+          "leaves": [
+            {
+              "row": 2,
+              "col": 2,
+              "layers": 2
+            },
+            {
+              "row": 2,
+              "col": 5,
+              "layers": 2
+            },
+            {
+              "row": 5,
+              "col": 2,
+              "layers": 2
+            },
+            {
+              "row": 5,
+              "col": 5,
+              "layers": 2
+            },
+            {
+              "row": 1,
+              "col": 3,
+              "layers": 2
+            },
+            {
+              "row": 1,
+              "col": 4,
+              "layers": 2
+            },
+            {
+              "row": 3,
+              "col": 1,
+              "layers": 2
+            },
+            {
+              "row": 4,
+              "col": 1,
+              "layers": 2
+            },
+            {
+              "row": 3,
+              "col": 6,
+              "layers": 2
+            },
+            {
+              "row": 4,
+              "col": 6,
+              "layers": 2
+            },
+            {
+              "row": 6,
+              "col": 3,
+              "layers": 2
+            },
+            {
+              "row": 6,
+              "col": 4,
+              "layers": 2
+            }
+          ]
+        },
+        "moves": 0,
+        "collected": [
+          21,
+          27,
+          15,
+          16,
+          18,
+          18
+        ],
+        "score": 1460,
+        "shuffles": 1,
+        "clearedLeaves": 7,
+        "status": "failed",
+        "board": [
+          [
+            {
+              "kind": 3
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 1
+            }
+          ],
+          [
+            {
+              "kind": 0
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 4
+            }
+          ],
+          [
+            {
+              "kind": 4
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 2
+            }
+          ],
+          [
+            {
+              "kind": 5
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 1
+            }
+          ],
+          [
+            {
+              "kind": 1
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 3,
+              "special": "bomb"
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 1
+            }
+          ],
+          [
+            {
+              "kind": 2
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 0
+            }
+          ],
+          [
+            {
+              "kind": 3
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 4
+            }
+          ],
+          [
+            {
+              "kind": 5
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 0
+            }
+          ]
+        ],
+        "leaves": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            2,
+            2,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "won": {
+      "roundId": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+      "revision": 16,
+      "createdAt": 1792200000000,
+      "expiresAt": 1792203600000,
+      "state": {
+        "level": {
+          "id": 1,
+          "moves": 26,
+          "goals": [
+            {
+              "kind": 0,
+              "count": 12
+            },
+            {
+              "kind": 1,
+              "count": 10
+            }
+          ]
+        },
+        "moves": 10,
+        "collected": [
+          12,
+          12,
+          3,
+          9,
+          6,
+          9
+        ],
+        "score": 540,
+        "shuffles": 1,
+        "clearedLeaves": 0,
+        "status": "won",
+        "board": [
+          [
+            {
+              "kind": 3
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 1
+            }
+          ],
+          [
+            {
+              "kind": 1
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 4
+            }
+          ],
+          [
+            {
+              "kind": 2
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 2
+            }
+          ],
+          [
+            {
+              "kind": 3
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 1
+            }
+          ],
+          [
+            {
+              "kind": 4
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 1
+            }
+          ],
+          [
+            {
+              "kind": 2
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 0
+            }
+          ],
+          [
+            {
+              "kind": 3
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 4
+            }
+          ],
+          [
+            {
+              "kind": 5
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 0
+            }
+          ]
+        ],
+        "leaves": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "active": {
+      "roundId": "CfrJ2uco-OFBTtM5yLyjTZbB1EXcuuzRQXEhIGZfzaI",
+      "revision": 1,
+      "createdAt": 1792200000000,
+      "expiresAt": 1792203600000,
+      "state": {
+        "level": {
+          "id": 4,
+          "moves": 26,
+          "goals": [
+            {
+              "kind": 3,
+              "count": 14
+            },
+            {
+              "kind": 4,
+              "count": 12
+            }
+          ],
+          "leaves": [
+            {
+              "row": 2,
+              "col": 2,
+              "layers": 1
+            },
+            {
+              "row": 2,
+              "col": 5,
+              "layers": 1
+            },
+            {
+              "row": 5,
+              "col": 2,
+              "layers": 1
+            },
+            {
+              "row": 5,
+              "col": 5,
+              "layers": 1
+            }
+          ]
+        },
+        "moves": 26,
+        "collected": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "score": 0,
+        "shuffles": 0,
+        "clearedLeaves": 0,
+        "status": "active",
+        "board": [
+          [
+            {
+              "kind": 4
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 0
+            }
+          ],
+          [
+            {
+              "kind": 5
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 4
+            }
+          ],
+          [
+            {
+              "kind": 0
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 4
+            }
+          ],
+          [
+            {
+              "kind": 1
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 0
+            }
+          ],
+          [
+            {
+              "kind": 3
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 1
+            }
+          ],
+          [
+            {
+              "kind": 1
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 1
+            }
+          ],
+          [
+            {
+              "kind": 4
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 5
+            }
+          ],
+          [
+            {
+              "kind": 4
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 5
+            }
+          ]
+        ],
+        "leaves": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "abandoned": {
+      "roundId": "URHOlxDTFd2Oa3NdqgrbckeJwNs6UP2Ucla7mgG-BEk",
+      "revision": 1,
+      "createdAt": 1792200000000,
+      "expiresAt": 1792203600000,
+      "state": {
+        "level": {
+          "id": 4,
+          "moves": 26,
+          "goals": [
+            {
+              "kind": 3,
+              "count": 14
+            },
+            {
+              "kind": 4,
+              "count": 12
+            }
+          ],
+          "leaves": [
+            {
+              "row": 2,
+              "col": 2,
+              "layers": 1
+            },
+            {
+              "row": 2,
+              "col": 5,
+              "layers": 1
+            },
+            {
+              "row": 5,
+              "col": 2,
+              "layers": 1
+            },
+            {
+              "row": 5,
+              "col": 5,
+              "layers": 1
+            }
+          ]
+        },
+        "moves": 26,
+        "collected": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "score": 0,
+        "shuffles": 1,
+        "clearedLeaves": 0,
+        "status": "abandoned",
+        "board": [
+          [
+            {
+              "kind": 3
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 4
+            }
+          ],
+          [
+            {
+              "kind": 2
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 0
+            }
+          ],
+          [
+            {
+              "kind": 2
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 2
+            }
+          ],
+          [
+            {
+              "kind": 3
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 1
+            }
+          ],
+          [
+            {
+              "kind": 4
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 1
+            }
+          ],
+          [
+            {
+              "kind": 2
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 0
+            }
+          ],
+          [
+            {
+              "kind": 3
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 2
+            },
+            {
+              "kind": 1
+            },
+            {
+              "kind": 4
+            }
+          ],
+          [
+            {
+              "kind": 5
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 3
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 5
+            },
+            {
+              "kind": 4
+            },
+            {
+              "kind": 0
+            },
+            {
+              "kind": 0
+            }
+          ]
+        ],
+        "leaves": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    }
+  },
+  "round": [
+    {
+      "name": "round_meta",
+      "sql": "CREATE TABLE round_meta (id INTEGER PRIMARY KEY CHECK(id=1),profile TEXT NOT NULL,high_water INTEGER NOT NULL CHECK(high_water>=0),meta_mac TEXT NOT NULL) STRICT",
+      "rows": [
+        {
+          "id": 1,
+          "profile": "{\"version\":1,\"environment\":\"test\",\"engine\":\"pawblossom-board-v1\",\"source\":\"f07d4d5ae190b9a0ff28150e2c392adf7810a3eb84b17e1de25c3493269c293e\",\"content\":\"54bf864a67ebd33c3e1647b059b2964ef2ff3f76895f0e38d11bbbdbf249204d\",\"rows\":1000,\"operations\":64,\"ttl\":3600000,\"keyCheck\":\"86fdda70f46b3791cb3834518e115dc759f71022d045c92626ee2dd91e651950\"}",
+          "high_water": 1792200000000,
+          "meta_mac": "97d62ba274ca4e3de09d6ac0cc828fa2a2da85b0a5785bf3e10711a0a4e80784"
+        }
+      ]
+    },
+    {
+      "name": "round_ops",
+      "sql": "CREATE TABLE round_ops (\n    round_id TEXT NOT NULL REFERENCES round_rounds(round_id), op_hash TEXT NOT NULL CHECK(length(op_hash)=64),\n    request_digest TEXT NOT NULL CHECK(length(request_digest)=64), revision INTEGER NOT NULL CHECK(revision BETWEEN 1 AND 128),\n    outcome TEXT NOT NULL CHECK(outcome IN('valid-swap','invalid-swap','valid-activation','invalid-activation','shuffled','abandoned')), receipt_mac TEXT NOT NULL CHECK(length(receipt_mac)=64),\n    PRIMARY KEY(round_id,op_hash), UNIQUE(round_id,revision)\n  ) STRICT",
+      "rows": [
+        {
+          "round_id": "CfrJ2uco-OFBTtM5yLyjTZbB1EXcuuzRQXEhIGZfzaI",
+          "op_hash": "1ca9ef086e46db5d94a3c442005fbfb67ffef13f7dc084ce1d9c81d8598c6d4c",
+          "request_digest": "b7a066e0613de8195d17913a55550e98d8a769f51fe6108678721fab5ac71ce2",
+          "revision": 1,
+          "outcome": "shuffled",
+          "receipt_mac": "3299a68a179963cfe4bfea015270704d61d710f1305ae8345a6cd6847d37a1cb"
+        },
+        {
+          "round_id": "URHOlxDTFd2Oa3NdqgrbckeJwNs6UP2Ucla7mgG-BEk",
+          "op_hash": "3267813ea25fd0ae3db77a85b4071bd9d998262c33fcef4080c74f0a1d7a76ec",
+          "request_digest": "df1c4e9742daea4511648565763d5ee48bf9736f053b5861f9cc4665d1e45df5",
+          "revision": 1,
+          "outcome": "abandoned",
+          "receipt_mac": "6f61d0b6914ce87b69aa9e97374b5be771f25de1cd88d57c84353ff461641764"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "2f91149ac7dad6d2d30b81fe04d0261128557fd56ed8d6b5cc1becd23552a096",
+          "request_digest": "7c957190312666d3cbde7cb863a9ca7da181eec2218be9329b7d86e5bac86b9f",
+          "revision": 1,
+          "outcome": "valid-swap",
+          "receipt_mac": "74d4e2f669e025cd4eacdd9d82dba90b55882e374c2f07bba4c788a241a9c87e"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "a0de326f1318d6ba3d39cca9d4dfbcc717453de118175795daa4fd735d326826",
+          "request_digest": "6d55eb6ef3ad7c92bb4691b2dc826fa2e16bda590abc5907677b0f075542e6cb",
+          "revision": 2,
+          "outcome": "valid-swap",
+          "receipt_mac": "e582e3c73469166d35f94841ca7898b7b95f3ce934a14aa1f5cd1bb31943e312"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "55be5cc63e365590c02a961ea40974a2c7d28e30f33c856f21a7e2a646418366",
+          "request_digest": "af925d1bf37f9cec8da994ef5d90fb66cb536dbe0ccdb1286d4a1642b36dd6c1",
+          "revision": 3,
+          "outcome": "valid-swap",
+          "receipt_mac": "2a0fa6b55136566c5a7884ac58f28415462fd372aea34b6a0e00da1d41eff379"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "df774976a32db29ee018eec5b485ff177792c50b9bbae8a2e48fab773448459a",
+          "request_digest": "bf2cb1dea0a353e87248c55ddf8a7029f78155f2ca386f2a1d69ec77eedb087b",
+          "revision": 4,
+          "outcome": "valid-swap",
+          "receipt_mac": "e024e0f7152a84908d42e7c3e021213c514681a509f85df4d242231b2c08cc17"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "26a23e43025c6d903a616f702e969f41edc676d5529b6ea43416ea7b7104f11b",
+          "request_digest": "799305b2048610bb755e66d30359e67ce3ee26c0a57ca7213f4c0647d252459d",
+          "revision": 5,
+          "outcome": "valid-swap",
+          "receipt_mac": "7a1c97ea7a5252eb380ad1ebc1d8562e841c116fc988061269cb39b4728c2363"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "98f2dfda0b6709f1e93f37b9042a17fc6ecb44a8cff509262208d19adb675ddd",
+          "request_digest": "569ab2f06e607c645bc64828fe16a51f716afde7af53c2327e5ac8004b4ed15f",
+          "revision": 6,
+          "outcome": "valid-swap",
+          "receipt_mac": "75c66fef04f9221f799da4aea3b2fb8d24ad6aab37c558381ef3075f0e8a1bae"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "b197352c5502885a5970303176a74ad6c1a519c4dd0be984a03f9fe2c4eac365",
+          "request_digest": "7c21c66c4d2d8af89c9bea4241e58c5ffc74484e1cdd9826e27ff5976c495eb3",
+          "revision": 7,
+          "outcome": "valid-swap",
+          "receipt_mac": "3a2df16ceaab35ae1dff65144f2c321b3fed2de5668299a20dbfd4bd9ffbc737"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "cf4ddd41aca981fe09c6c67a12a73c1fad271017c9a28d71cb2adef81506070f",
+          "request_digest": "2f21dd87b5f17c4c43c678efc46f8574dd2f28aa28f7fe7d684b545dd23702a6",
+          "revision": 8,
+          "outcome": "valid-swap",
+          "receipt_mac": "dda06aaf750889490d52d05872df709066006798fe970c69f7c48a4dedf70199"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "b4f196ccc43f608654455c6f227a880ca38c95143bdbe5e3df37bce7d328767d",
+          "request_digest": "ecc910a6f9b9edaf1429ba2ed45a5a25e35117ba9fcfb201348ac4026f9b1e86",
+          "revision": 9,
+          "outcome": "valid-swap",
+          "receipt_mac": "fcf0bbbff1832dc3f694883b9bd7684010ffdfa7e35f42eeefa4b76c86d4d2d8"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "36891b26ca1007363e944825461612fb0cbb04534dd86147bed8e0e192190301",
+          "request_digest": "276a2a19c44834cee135bf6e63a24d334b84b37df407967f8e2d986a13ff3cd3",
+          "revision": 10,
+          "outcome": "valid-swap",
+          "receipt_mac": "a2d12ba873c7a990f20f150082ccce65cab6cfe6a8eff0b54b6cedd48b8dc7cf"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "18f0d38dab2e52f233e4058586fcdc3b1986d5d1b5a94dc7f41b47547614000a",
+          "request_digest": "c8ff0834e80735280bc8096a79cbb489fb2ec16968a79bee06c4668a8e3215a3",
+          "revision": 11,
+          "outcome": "valid-swap",
+          "receipt_mac": "da03fc9659caa458c98845ca2971ee491c5f1f5bf1a8f53c782f449778e423be"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "89a5668749bc570ecbb44e98aa50f9e2d447e5c31d0cf8e84cd449963280505c",
+          "request_digest": "890208bb040160323f5a6728c43ba9dfd728a0a7a2ea5d799bb7b04f22dcf335",
+          "revision": 12,
+          "outcome": "valid-swap",
+          "receipt_mac": "ef4c3633a08555a9294732b4696bc6f9e3a52dc1f4fcf346b94fbd3e65012e8b"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "3b787bcf7ef7331a4dec82bd135c8889428ef85982bd27ed068b98771a2f468a",
+          "request_digest": "de6bc101e6083cceb7bdf0216d37ea5653a1945a82e76cea02896875d8a9b6c3",
+          "revision": 13,
+          "outcome": "valid-swap",
+          "receipt_mac": "8b57fc8a5bcd4e7773122d27866ef097cb962e4b93bf0aa314185271c916db1e"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "cb5f46412ad6043b2226d4b915433a52d9cc96d43cc3081bd9b83c5f413ef66c",
+          "request_digest": "f5e366373f42071477c4783fb9ca4f88421833b7dad156a2c22fea93f50eb165",
+          "revision": 14,
+          "outcome": "valid-swap",
+          "receipt_mac": "6a7351538cd880eb1ae8b130a5492fa5cee95d7921d5937d524c900c0c4a84cb"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "43696541e291cdc9b5f0ae99dba60a6bcc22924a9874875e6ea837075c3463ce",
+          "request_digest": "fd935ec175740d67a2bcbeabc669ea36f35a5d0f384d185ea58388f1e78bef2a",
+          "revision": 15,
+          "outcome": "valid-swap",
+          "receipt_mac": "6777023d16ba0f131199e1da1cccc50a1bf2436bc36f94f613d5664e3074706a"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "efbc4007eb77549bc2ab3f0420c3da6496eca1eeede62699538b8543d49765dd",
+          "request_digest": "91eec7b1b7c252fe7b25ad4ea799816e9ede45b7be948a99a81edcc1fa37a155",
+          "revision": 16,
+          "outcome": "valid-swap",
+          "receipt_mac": "37a2f7560ecc96510c9a6a8a1d7de054d704cdf4fcd509bfab43d35454d2a223"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "11aed4b6e9f1c4b8c1fbd1a376180a3381c00bbe7ab2060d2ba86d4e104a0459",
+          "request_digest": "3d607e11f24822918a5a07994d42ff00059fd263a43985cf7c2dfdfa1fb5351a",
+          "revision": 17,
+          "outcome": "valid-swap",
+          "receipt_mac": "daffbd45e4d7e95dd1587201d32488026924c10d64ec87860bb4de479ad20b67"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "318a7e69e1cca9568b431d34114bc836c8d7a71bb6608b4f758003973d2db52a",
+          "request_digest": "47986857e261ed3794cf40ca15014addf2cea57d9eb2aa05f991b010fde20289",
+          "revision": 18,
+          "outcome": "valid-swap",
+          "receipt_mac": "28a539281620361154258362aa90df19129b7c0e4d203d44ac31bcfa0b4b1a3d"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "ceaeec58abb971f72dfe4f13e853ddaf15a567937dee73d14f48fcebfceb237c",
+          "request_digest": "becc72d78d7791193b3a26779ce67d012168b7a6978cb827b97fbb4205ed0a5b",
+          "revision": 19,
+          "outcome": "valid-swap",
+          "receipt_mac": "9f2975933f9efc87f273891dd3ce743e842b8e655cfa02fe8bca160879dab8b1"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "a8539d481aa8597af1f4f1c61de56629b2e22aa86f807ce0ffeaa12d42b05bde",
+          "request_digest": "a610e447bdee887843831986b2da45857de753b6deff12267ed7c43d0f7aca6c",
+          "revision": 20,
+          "outcome": "valid-swap",
+          "receipt_mac": "fe8ac65de1a4797406ab7cd51a27f22853a3e2d861d1e0f2e40b61919292e3e8"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "633677a0ee095f526fdcfdc303ccd0c98f360b9df4605a6d0f70cf74f9fa7703",
+          "request_digest": "bbf34b9dbeb30af5be7c024437ccb78c0da0afc0c8d141dc55720ad3f1a68198",
+          "revision": 21,
+          "outcome": "valid-swap",
+          "receipt_mac": "e600fc0934e66bc8aba36f73ea66d44ae85220e3a09054b912cc6f1e1f068d8d"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "23301f5b9fe8291f2a7f72e50a897d13299390a67c001a5ae2b5d0edb69269dd",
+          "request_digest": "30058ffcf5ad34f197777a000f3cfe3684a26cf44e13a9b139df40faae10f160",
+          "revision": 22,
+          "outcome": "valid-swap",
+          "receipt_mac": "c5055048bffa0d4433d129c9909c9171be9ba353420db88134bee2cb8b8b5b95"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "45559873400748e01a35877b953549fb759c1b2f319604f9840978296b2b4164",
+          "request_digest": "a91ddea7cff69c80970186cc2cae251bd5becb4dc9dabb1ad7e742aa538b2526",
+          "revision": 23,
+          "outcome": "valid-swap",
+          "receipt_mac": "08375c4077667a0125330923af4d35b1986f140e097b36c5d1ff5a867348f2fa"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "04d159b96797bb7dc51dde28619f5d26ddfb676ed3cc75e95f795561e818ad85",
+          "request_digest": "6e9544ea58d49e61be5b1957d1e173c157bb3f4ceb483c0f341d914b5fdb9f6f",
+          "revision": 24,
+          "outcome": "valid-swap",
+          "receipt_mac": "95e148b9d06551a60e2d0ad1de0ecfc5505c698c850afe452c805163c8861bff"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "d85e2e1251c620f95dd4a18b0d1875f1d2b11b90d73e98b44c90f9da3aaa5f95",
+          "request_digest": "46b8ccaed06204ad0aa8a114e9836a27d8c77532f3c0c8a69ec18994bf20c502",
+          "revision": 25,
+          "outcome": "valid-swap",
+          "receipt_mac": "40c0ad749b07caa0cf4cfc828285e166a818ee2a31ee759422892eaa2636e822"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "2b8b518ed752adf764c065b60d28e62526b8ccf14531e34412407d4b4dd3422e",
+          "request_digest": "7d897aa8ba1e101d0ad297c6b0152341067149e84578d3bcae6ee6aa5102885f",
+          "revision": 26,
+          "outcome": "valid-swap",
+          "receipt_mac": "ba035f677e30849f6366885785c62b441cbb78e9cff52b0b97af57e4b2aa5a1e"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "e81b832fdc30d965ee5e0365699c6f13a66cadb8a6114748439fa26b0dcb06b2",
+          "request_digest": "a68a82f5b100151f0a35078f44ad0fcf8e944617982a198789a99f2303bbba2b",
+          "revision": 27,
+          "outcome": "valid-swap",
+          "receipt_mac": "a1a9d9e13a7ba53f646028af20ad30480183f6c86f2662a3af0ac68060b129c9"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "6cb2b93266c794452e2855fbb47352101a45b578d0ffaceb0a82eff8263b5e37",
+          "request_digest": "5a909c9e9d3fcc8763003b0503b7aee5277aa816450e0ad7e9f9a0afdbdf9370",
+          "revision": 28,
+          "outcome": "valid-swap",
+          "receipt_mac": "3b83049a0c643426b3eb00df7dcaede2842cf3ed5a7dfe2482c2bfb69c3887ea"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "0fc2fdcf213a56af1e3f82149b12d69f06876ae41df0366086478166515c292a",
+          "request_digest": "6870d2c116e976e654e4933924f1907586344ab5a1487597fafee8d82cedcbe5",
+          "revision": 29,
+          "outcome": "valid-swap",
+          "receipt_mac": "76908edcf0c84bacb14c9818b5ba5db05662743966fc009097634e75c8a57d57"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "9f79bd3702685b4be8e8e2d7827c0b76c267e2b369edeb9a7e48984089101691",
+          "request_digest": "eb4973a175f2cbb489f9b79c12e52df5966f47661ac0ebf505c44277e2e49b17",
+          "revision": 30,
+          "outcome": "valid-swap",
+          "receipt_mac": "7698426fbf55d3202e1543b857b459d3fc21c1fe34068423e02145617c233276"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "9610d20b3691c98a1a49fb2bfa2e5a0f14417c464dc6e7add7a6ae4b1a9f0ed6",
+          "request_digest": "32ad1082f2a916884f00420f6cc1c5501d1a3e1253db318d20eab875a782427a",
+          "revision": 31,
+          "outcome": "valid-swap",
+          "receipt_mac": "93e4bf60e5b0170994b3055ca514dbd6f540c76dc0af748df3f28a622bad3ea8"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "cb5492be566a7add6b636da0beaa88a2e86a4ec12799eef82aed51962ba8eb6d",
+          "request_digest": "e5e3e7b0476d2770d066a145f72ab995e8a51e460ed5327a215f27d3431e13fb",
+          "revision": 32,
+          "outcome": "valid-swap",
+          "receipt_mac": "e1f3137962ca807462f15f3089cfc24c3e241ffcf365bc1cecde38138d298fbf"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "0d9e9b7ae2a6329287eaa116239cb8c53f93f365061d0a58a63d8e6b6ad5dcf4",
+          "request_digest": "f1d6a554437fd0af680cf44acd47762bd94bef49b34bbcac294aa32a8ac7815d",
+          "revision": 33,
+          "outcome": "valid-swap",
+          "receipt_mac": "39efe5bdf22b842117cac689ec8d14e9081d6c61e9d11020ce438b666b2a7b63"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "op_hash": "ad101356a892f3d1b30256df3d7e8899e4a96c29f74c2e4f10c1027499497c51",
+          "request_digest": "d9acada5dfe62ce18e3e368473559b70cc82e3036c1d1a0f97bff056e89aa2b5",
+          "revision": 34,
+          "outcome": "valid-swap",
+          "receipt_mac": "85daf4b79b268449e653b592332531101cef71a8f5ac0740ce43bbe9192083c4"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "op_hash": "6a96751d61c1e5a7863db7cdb2fa9c6dcb56b9d19bbb340731173863234f1834",
+          "request_digest": "61ce21f6451967534fb1027365c65003b2b53a155a56907699a21a66a07a3d66",
+          "revision": 1,
+          "outcome": "valid-swap",
+          "receipt_mac": "707e5b677d2e2d302d665236992f26f4f01ba3941e511eb3363e66c95da08ab4"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "op_hash": "a9a1a95754000485d72bde3dc326224b9aea9fcefdb01270e0918d80464a5066",
+          "request_digest": "1048d4c0971704b41156d5b37d6f05f7bd310370578587d47526003b337d2d8e",
+          "revision": 2,
+          "outcome": "valid-swap",
+          "receipt_mac": "bdbf5b3cfb3655b2885732b5074818470a7dcc94ed0855787bab6dc484427730"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "op_hash": "697a6aae88bf9e03b3a0cce6de5599b43a3fb8a41573ac15fe1615abe1fbdb3e",
+          "request_digest": "c1c8fc0d22fe5af46569da29c0bf636d4b14e6f569ba9e9fe0f703af57de4942",
+          "revision": 3,
+          "outcome": "valid-swap",
+          "receipt_mac": "26ea2cc2fd7a86678743557383d3349308ecbd504ee0034fb02741acb5c2d923"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "op_hash": "c965e8d1fa802d658ff77835d4527f4d643d42eb336ac93a0a5feb3ef15e7ee4",
+          "request_digest": "b24411fe6bdec7b1020b44a8ea70505dfe61843ac73a1e183efa7686dea7353f",
+          "revision": 4,
+          "outcome": "valid-swap",
+          "receipt_mac": "099e80856046fd76d596d9fb0db3c85095c39355538bf26235d7a941112b35f2"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "op_hash": "5a3e47de9f9a24364698f1e99f541f0bb26b3b7e51104b535ac57475cba7a9f9",
+          "request_digest": "9afd9fd12056984eb7b3470e9e7e0624cfa26b96c698dee51a091fb7b71e61f4",
+          "revision": 5,
+          "outcome": "valid-swap",
+          "receipt_mac": "0100d781642c498ae2660b433c0f04467212adf2ba148b13bff7f262e1a0b8dd"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "op_hash": "e841d00687cccf27d9da84c3b1c36eea8c16aa8c07c8d1736e9dde58f2ecbab0",
+          "request_digest": "abe4dd71a6f258e9bea805137771ff95adab6f803454d70f3db5300e48ae6a4b",
+          "revision": 6,
+          "outcome": "valid-swap",
+          "receipt_mac": "d1cfd7ffb4a615186dae5233235008b4650a93fae73871d23d1f4aa563482b52"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "op_hash": "5ae296f104f2019e0231155e9e01031924fd7313eaf7233999f45de49f384cea",
+          "request_digest": "4b1df3c577e5d4eddd3e8bb53cca6650bcae0b7090cdaf506de91e6e1d746d00",
+          "revision": 7,
+          "outcome": "valid-swap",
+          "receipt_mac": "a54e05744cd35ace7c9ba35b3a5836c00f9e2b5b7f24ded35887bec02135bbc1"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "op_hash": "abcba32fa6b65a365e4d6cabe1554af14880be4636dd4932df733cb5536ce3d6",
+          "request_digest": "e422c0e8fa969b441b1d9272d46cd5d25e6bf453b29e0388f79fc220f1234247",
+          "revision": 8,
+          "outcome": "valid-swap",
+          "receipt_mac": "e4cf2ad317e75bbfc01e224613d76f907557db1524963023bd064f3d98bf034e"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "op_hash": "1d1d0a5a64576cb8a22b2847f4836ffcf3b15a10a91d2fca149467b445ba9f46",
+          "request_digest": "ff27c8d5bf448160fcd005eafe4fcef8920228ca6a9f724b939d8374b26a079c",
+          "revision": 9,
+          "outcome": "valid-swap",
+          "receipt_mac": "5031942584cecd1c106c4ebaafa214382b04d6d6b07f7a2d672fb60aeacf50a4"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "op_hash": "9457c7be84f2e33447a2903b0ef834fa30f0eed75a74bc2199f989c819ac3371",
+          "request_digest": "ab97af2b89ac98e99f893c784908f55ff7912fcc92b583c18584adcc4ffea8df",
+          "revision": 10,
+          "outcome": "valid-swap",
+          "receipt_mac": "791ff7da5ef8e3f0b9af93e74507920c06f39fc55d8af69b8ae4f6da4df390d6"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "op_hash": "d2c7f0651c442a8a965ae327d0d8bc7697f5b292ff020ae9afa936571855732d",
+          "request_digest": "1a9012fa0f2ced6fa00d93bbf3413fe9e72a81fc63a1441d15c7dedd16b774df",
+          "revision": 11,
+          "outcome": "valid-swap",
+          "receipt_mac": "1e252b3fa0263b012ce2004c753ed044c21b7cc472b6f95baa638f9f6e2150f6"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "op_hash": "c924650c6f407796786b0fed8e5b51668001f043d48391260dc06f465bc6f839",
+          "request_digest": "86776a029ca25c2991ca1487fe54373d0b5c439647801229bdbb4581c244652e",
+          "revision": 12,
+          "outcome": "valid-swap",
+          "receipt_mac": "8e386cf4fba448401e52e156a7bc5e4d0bd54b85a9840ed47ed2e78a8eed7e50"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "op_hash": "6826e79d8e4ec1d4086b20b54ae52a4d033d15d4e62faa40e7fadbafdfe00747",
+          "request_digest": "13496503f2294de43a5b8fa66319fe4920475eab5ee85df679cb5abcd14c545d",
+          "revision": 13,
+          "outcome": "valid-swap",
+          "receipt_mac": "ef6739044a0b4f5c0b26c2a7a7b19f6ea8d037f4d657463b1be18b31dc56a88b"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "op_hash": "9e03471ebd4d1a776e8cc3d6b32afe01b74a951f4fb3de19a2e1ff646d7e1a2f",
+          "request_digest": "51be7c9c298beea16e7e2f6778832bf58ee767f2cc96b5ec92ebfd8e0439b93f",
+          "revision": 14,
+          "outcome": "valid-swap",
+          "receipt_mac": "21476a22e6c88b4cc99f0e00001fefb052960b1910f9502c9618d9e139e60cc4"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "op_hash": "b5c6752fa8c5b2518ce7a7acf5fba77333b26910ba3488c95f7e0b331e6b69ca",
+          "request_digest": "21098ff23d54994f71e1197e2437d158a63954321c4eb9698acbdf99a82a931c",
+          "revision": 15,
+          "outcome": "valid-swap",
+          "receipt_mac": "038f754f065d6bdb16d8b21399289f2ddf64e9aa584b278f751d280c4828ff64"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "op_hash": "ccc26e08469e301b2003b3e5b0910b723a3ea66f6dd9590158e3d781babef17c",
+          "request_digest": "7a2efaa3e552a57acc48b02090166ccf1d60381c7b50f44d25014116ade820dc",
+          "revision": 16,
+          "outcome": "valid-swap",
+          "receipt_mac": "711f14e46f2f901c3a3d4752c8a7bc6369512f46480929c5ac486d7c3aa5765d"
+        }
+      ]
+    },
+    {
+      "name": "round_rounds",
+      "sql": "CREATE TABLE round_rounds (\n    round_id TEXT PRIMARY KEY CHECK(length(round_id)=43), owner_hash TEXT NOT NULL CHECK(length(owner_hash)=64),\n    create_hash TEXT NOT NULL CHECK(length(create_hash)=64), create_digest TEXT NOT NULL CHECK(length(create_digest)=64),\n    created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL CHECK(expires_at>created_at), revision INTEGER NOT NULL CHECK(revision BETWEEN 0 AND 128),\n    state_json TEXT NOT NULL CHECK(length(state_json) BETWEEN 1 AND 32768), state_mac TEXT NOT NULL CHECK(length(state_mac)=64),\n    UNIQUE(owner_hash,create_hash)\n  ) STRICT",
+      "rows": [
+        {
+          "round_id": "CfrJ2uco-OFBTtM5yLyjTZbB1EXcuuzRQXEhIGZfzaI",
+          "owner_hash": "4cfec84172defbbef291b0efbeb6a05c1308ae8234f5f5b0b0e8a15cff92639a",
+          "create_hash": "1bc7e522a64441fa8ff564e091d5407144c6416c5487c4212982a3fe1f5726be",
+          "create_digest": "e84f6d51ce546eab08721438183f51acc19d0aa188b3bacaa548541a519f84fd",
+          "created_at": 1792200000000,
+          "expires_at": 1792203600000,
+          "revision": 1,
+          "state_json": "{\"level\":{\"id\":4,\"moves\":26,\"goals\":[{\"kind\":3,\"count\":14},{\"kind\":4,\"count\":12}],\"leaves\":[{\"row\":2,\"col\":2,\"layers\":1},{\"row\":2,\"col\":5,\"layers\":1},{\"row\":5,\"col\":2,\"layers\":1},{\"row\":5,\"col\":5,\"layers\":1}]},\"rngState\":1522766926,\"moves\":26,\"collected\":[0,0,0,0,0,0],\"score\":0,\"shuffles\":0,\"clearedLeaves\":0,\"status\":\"active\",\"board\":[[{\"kind\":4},{\"kind\":3},{\"kind\":4},{\"kind\":4},{\"kind\":1},{\"kind\":0},{\"kind\":2},{\"kind\":0}],[{\"kind\":5},{\"kind\":0},{\"kind\":1},{\"kind\":5},{\"kind\":4},{\"kind\":5},{\"kind\":3},{\"kind\":4}],[{\"kind\":0},{\"kind\":2},{\"kind\":1},{\"kind\":1},{\"kind\":4},{\"kind\":2},{\"kind\":2},{\"kind\":4}],[{\"kind\":1},{\"kind\":2},{\"kind\":2},{\"kind\":0},{\"kind\":5},{\"kind\":1},{\"kind\":5},{\"kind\":0}],[{\"kind\":3},{\"kind\":0},{\"kind\":3},{\"kind\":2},{\"kind\":1},{\"kind\":5},{\"kind\":2},{\"kind\":1}],[{\"kind\":1},{\"kind\":0},{\"kind\":0},{\"kind\":4},{\"kind\":5},{\"kind\":3},{\"kind\":5},{\"kind\":1}],[{\"kind\":4},{\"kind\":1},{\"kind\":4},{\"kind\":1},{\"kind\":0},{\"kind\":4},{\"kind\":3},{\"kind\":5}],[{\"kind\":4},{\"kind\":2},{\"kind\":3},{\"kind\":3},{\"kind\":1},{\"kind\":2},{\"kind\":0},{\"kind\":5}]],\"leaves\":[[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,1,0,0,1,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,1,0,0,1,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]]}",
+          "state_mac": "a3cd71fc7aa181d9bd7229de2b894a7cda05753b57ddf6f649bb281255a39f4f"
+        },
+        {
+          "round_id": "URHOlxDTFd2Oa3NdqgrbckeJwNs6UP2Ucla7mgG-BEk",
+          "owner_hash": "4cfec84172defbbef291b0efbeb6a05c1308ae8234f5f5b0b0e8a15cff92639a",
+          "create_hash": "aec52740cc84db5290367a4060222efcb55b1edd9021c632cc0cea81c835371d",
+          "create_digest": "e84f6d51ce546eab08721438183f51acc19d0aa188b3bacaa548541a519f84fd",
+          "created_at": 1792200000000,
+          "expires_at": 1792203600000,
+          "revision": 1,
+          "state_json": "{\"level\":{\"id\":4,\"moves\":26,\"goals\":[{\"kind\":3,\"count\":14},{\"kind\":4,\"count\":12}],\"leaves\":[{\"row\":2,\"col\":2,\"layers\":1},{\"row\":2,\"col\":5,\"layers\":1},{\"row\":5,\"col\":2,\"layers\":1},{\"row\":5,\"col\":5,\"layers\":1}]},\"rngState\":1256095041,\"moves\":26,\"collected\":[0,0,0,0,0,0],\"score\":0,\"shuffles\":1,\"clearedLeaves\":0,\"status\":\"abandoned\",\"board\":[[{\"kind\":3},{\"kind\":0},{\"kind\":3},{\"kind\":5},{\"kind\":5},{\"kind\":1},{\"kind\":3},{\"kind\":4}],[{\"kind\":2},{\"kind\":5},{\"kind\":2},{\"kind\":2},{\"kind\":0},{\"kind\":2},{\"kind\":1},{\"kind\":0}],[{\"kind\":2},{\"kind\":0},{\"kind\":2},{\"kind\":4},{\"kind\":1},{\"kind\":1},{\"kind\":0},{\"kind\":2}],[{\"kind\":3},{\"kind\":4},{\"kind\":1},{\"kind\":1},{\"kind\":4},{\"kind\":3},{\"kind\":4},{\"kind\":1}],[{\"kind\":4},{\"kind\":2},{\"kind\":4},{\"kind\":5},{\"kind\":1},{\"kind\":4},{\"kind\":0},{\"kind\":1}],[{\"kind\":2},{\"kind\":1},{\"kind\":0},{\"kind\":4},{\"kind\":3},{\"kind\":0},{\"kind\":1},{\"kind\":0}],[{\"kind\":3},{\"kind\":5},{\"kind\":1},{\"kind\":5},{\"kind\":4},{\"kind\":2},{\"kind\":1},{\"kind\":4}],[{\"kind\":5},{\"kind\":5},{\"kind\":3},{\"kind\":5},{\"kind\":5},{\"kind\":4},{\"kind\":0},{\"kind\":0}]],\"leaves\":[[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,1,0,0,1,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,1,0,0,1,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]]}",
+          "state_mac": "5e184862817c0b803bfe8c117c933cdbe57e322f6287f7bde44ade7793c72fe8"
+        },
+        {
+          "round_id": "glM0GCh7kqdLseKI_LI4AdcZjoTZwoB4YdlkqepIlh0",
+          "owner_hash": "4cfec84172defbbef291b0efbeb6a05c1308ae8234f5f5b0b0e8a15cff92639a",
+          "create_hash": "458f3c9af78ebc67411d91c300260e91441886b19f97de8a609fee9f75d672da",
+          "create_digest": "da44ce2c6a24901bc5cebdb84659e41d7ff69dd176a338aebdc76e932b988eef",
+          "created_at": 1792200000000,
+          "expires_at": 1792203600000,
+          "revision": 34,
+          "state_json": "{\"level\":{\"id\":30,\"moves\":34,\"goals\":[{\"kind\":0,\"count\":34},{\"kind\":5,\"count\":28}],\"leaves\":[{\"row\":2,\"col\":2,\"layers\":2},{\"row\":2,\"col\":5,\"layers\":2},{\"row\":5,\"col\":2,\"layers\":2},{\"row\":5,\"col\":5,\"layers\":2},{\"row\":1,\"col\":3,\"layers\":2},{\"row\":1,\"col\":4,\"layers\":2},{\"row\":3,\"col\":1,\"layers\":2},{\"row\":4,\"col\":1,\"layers\":2},{\"row\":3,\"col\":6,\"layers\":2},{\"row\":4,\"col\":6,\"layers\":2},{\"row\":6,\"col\":3,\"layers\":2},{\"row\":6,\"col\":4,\"layers\":2}]},\"rngState\":1432766032,\"moves\":0,\"collected\":[21,27,15,16,18,18],\"score\":1460,\"shuffles\":1,\"clearedLeaves\":7,\"status\":\"failed\",\"board\":[[{\"kind\":3},{\"kind\":0},{\"kind\":0},{\"kind\":3},{\"kind\":0},{\"kind\":1},{\"kind\":5},{\"kind\":1}],[{\"kind\":0},{\"kind\":5},{\"kind\":3},{\"kind\":3},{\"kind\":0},{\"kind\":0},{\"kind\":3},{\"kind\":4}],[{\"kind\":4},{\"kind\":5},{\"kind\":3},{\"kind\":1},{\"kind\":3},{\"kind\":5},{\"kind\":2},{\"kind\":2}],[{\"kind\":5},{\"kind\":0},{\"kind\":2},{\"kind\":5},{\"kind\":0},{\"kind\":3},{\"kind\":4},{\"kind\":1}],[{\"kind\":1},{\"kind\":0},{\"kind\":3,\"special\":\"bomb\"},{\"kind\":5},{\"kind\":1},{\"kind\":4},{\"kind\":0},{\"kind\":1}],[{\"kind\":2},{\"kind\":1},{\"kind\":0},{\"kind\":4},{\"kind\":3},{\"kind\":0},{\"kind\":1},{\"kind\":0}],[{\"kind\":3},{\"kind\":5},{\"kind\":1},{\"kind\":5},{\"kind\":4},{\"kind\":2},{\"kind\":1},{\"kind\":4}],[{\"kind\":5},{\"kind\":5},{\"kind\":3},{\"kind\":5},{\"kind\":5},{\"kind\":4},{\"kind\":0},{\"kind\":0}]],\"leaves\":[[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,2,0],[0,0,0,0,0,0,2,0],[0,0,0,0,0,2,0,0],[0,0,0,2,2,0,0,0],[0,0,0,0,0,0,0,0]]}",
+          "state_mac": "c3fa73ad8b313237b34490a6c6ecd389a05f887591564e764141613b0a97ef04"
+        },
+        {
+          "round_id": "rcEnANdJ68Ey-d2J98t26Qi0U8XfDGpHpx5v6G8TQPc",
+          "owner_hash": "4cfec84172defbbef291b0efbeb6a05c1308ae8234f5f5b0b0e8a15cff92639a",
+          "create_hash": "eb8ccdb53c2247dc659fe90d40520c7ae7fc43178cb627b93ef3801546bf6856",
+          "create_digest": "5e097557317a54d285978013587165171572999a748b4f506bdf7c46ad1cc720",
+          "created_at": 1792200000000,
+          "expires_at": 1792203600000,
+          "revision": 16,
+          "state_json": "{\"level\":{\"id\":1,\"moves\":26,\"goals\":[{\"kind\":0,\"count\":12},{\"kind\":1,\"count\":10}]},\"rngState\":176670992,\"moves\":10,\"collected\":[12,12,3,9,6,9],\"score\":540,\"shuffles\":1,\"clearedLeaves\":0,\"status\":\"won\",\"board\":[[{\"kind\":3},{\"kind\":4},{\"kind\":5},{\"kind\":0},{\"kind\":1},{\"kind\":0},{\"kind\":5},{\"kind\":1}],[{\"kind\":1},{\"kind\":0},{\"kind\":3},{\"kind\":1},{\"kind\":5},{\"kind\":0},{\"kind\":3},{\"kind\":4}],[{\"kind\":2},{\"kind\":4},{\"kind\":1},{\"kind\":2},{\"kind\":5},{\"kind\":5},{\"kind\":2},{\"kind\":2}],[{\"kind\":3},{\"kind\":2},{\"kind\":0},{\"kind\":2},{\"kind\":0},{\"kind\":3},{\"kind\":4},{\"kind\":1}],[{\"kind\":4},{\"kind\":2},{\"kind\":4},{\"kind\":5},{\"kind\":1},{\"kind\":4},{\"kind\":0},{\"kind\":1}],[{\"kind\":2},{\"kind\":1},{\"kind\":0},{\"kind\":4},{\"kind\":3},{\"kind\":0},{\"kind\":1},{\"kind\":0}],[{\"kind\":3},{\"kind\":5},{\"kind\":1},{\"kind\":5},{\"kind\":4},{\"kind\":2},{\"kind\":1},{\"kind\":4}],[{\"kind\":5},{\"kind\":5},{\"kind\":3},{\"kind\":5},{\"kind\":5},{\"kind\":4},{\"kind\":0},{\"kind\":0}]],\"leaves\":[[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]]}",
+          "state_mac": "9ff7a0d21056195de65d9708c360adc347e562cdb318b29b378f09b2e85eb36b"
+        }
+      ]
+    }
+  ],
+  "reward": [
+    {
+      "name": "reward_claims",
+      "sql": "CREATE TABLE reward_claims (\n    nonce_hash TEXT PRIMARY KEY, user_hash TEXT NOT NULL UNIQUE, round_hash TEXT NOT NULL REFERENCES reward_rounds(round_hash),\n    ad_unit TEXT NOT NULL, issued_at INTEGER NOT NULL, expires_at INTEGER NOT NULL,\n    state TEXT NOT NULL CHECK(state IN('pending','used')), tx_hash TEXT\n  ) STRICT",
+      "rows": [
+        {
+          "nonce_hash": "3490f8e1f8d4cb789678f43ab86201f0fb0ab3bff493c73e395eb9f070b0d908",
+          "user_hash": "7418ad76ac6948ebac29597038a8726f28a9e6e5de0138090016a4f6022f74fb",
+          "round_hash": "8702bde5e35fcbaef13020fcb2d64451acff4bfa92eec180eddf36f63d40e9db",
+          "ad_unit": "1234567890",
+          "issued_at": 1792200000000,
+          "expires_at": 1792200900000,
+          "state": "used",
+          "tx_hash": "e2c973bf5bdfba4953b5526624fd6660dabda424bd787f0c6da279c040982e2d"
+        },
+        {
+          "nonce_hash": "b1a9e6f7cf6f85665e0ab48220d34d499b5927655619ced632d93881169f2689",
+          "user_hash": "cecd08b30b49a36f0156c4635238777d9a1ba7a2ff6becb1a46feb9bdaaa8ed3",
+          "round_hash": "8f224bd74fd3a16105883a933ad0c6650077e6ea9482b566665e6f4902f41135",
+          "ad_unit": "1234567890",
+          "issued_at": 1792200000000,
+          "expires_at": 1792200900000,
+          "state": "pending",
+          "tx_hash": null
+        }
+      ]
+    },
+    {
+      "name": "reward_meta",
+      "sql": "CREATE TABLE reward_meta (id INTEGER PRIMARY KEY CHECK(id=1),profile TEXT NOT NULL,high_water INTEGER NOT NULL) STRICT",
+      "rows": [
+        {
+          "id": 1,
+          "profile": "{\"version\":1,\"ssv\":\"pawblossom-admob-ascii-v1\",\"policy\":{\"environment\":\"synthetic\",\"rewardAmount\":\"5\",\"rewardItem\":\"moves\",\"adUnits\":[\"1234567890\",\"2345678901\"],\"adNetworks\":[\"5450213213286189855\",\"1215381445328257950\"]},\"ttl\":900000,\"arrival\":300000,\"age\":1200000,\"skew\":30000,\"attempts\":3,\"keyCheck\":\"6fb5485629ff04da7b97a35690fa2c2d500224f085a92eb4099e6c0cf976f57c\"}",
+          "high_water": 1792200000000
+        }
+      ]
+    },
+    {
+      "name": "reward_rounds",
+      "sql": "CREATE TABLE reward_rounds (\n    round_hash TEXT PRIMARY KEY, owner_hash TEXT NOT NULL, closed INTEGER NOT NULL CHECK(closed IN(0,1)), attempts INTEGER NOT NULL CHECK(attempts BETWEEN 0 AND 3)\n  ) STRICT",
+      "rows": [
+        {
+          "round_hash": "8702bde5e35fcbaef13020fcb2d64451acff4bfa92eec180eddf36f63d40e9db",
+          "owner_hash": "8e14f61d79bdc4e5954f655a986817352d2a40ab4808b4d60228aee5e7bd5f21",
+          "closed": 0,
+          "attempts": 1
+        },
+        {
+          "round_hash": "8f224bd74fd3a16105883a933ad0c6650077e6ea9482b566665e6f4902f41135",
+          "owner_hash": "8e14f61d79bdc4e5954f655a986817352d2a40ab4808b4d60228aee5e7bd5f21",
+          "closed": 0,
+          "attempts": 1
+        },
+        {
+          "round_hash": "e0d0222456bbf776e5a5be802e125ef9aa9be4489e238e11e0af433706f99862",
+          "owner_hash": "8e14f61d79bdc4e5954f655a986817352d2a40ab4808b4d60228aee5e7bd5f21",
+          "closed": 1,
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "name": "reward_vouchers",
+      "sql": "CREATE TABLE reward_vouchers (\n    tx_hash TEXT PRIMARY KEY, round_hash TEXT NOT NULL UNIQUE REFERENCES reward_rounds(round_hash),\n    nonce_hash TEXT NOT NULL UNIQUE REFERENCES reward_claims(nonce_hash), recorded_at INTEGER NOT NULL, amount INTEGER NOT NULL CHECK(amount=5), item TEXT NOT NULL CHECK(item='moves')\n  ) STRICT",
+      "rows": [
+        {
+          "tx_hash": "e2c973bf5bdfba4953b5526624fd6660dabda424bd787f0c6da279c040982e2d",
+          "round_hash": "8702bde5e35fcbaef13020fcb2d64451acff4bfa92eec180eddf36f63d40e9db",
+          "nonce_hash": "3490f8e1f8d4cb789678f43ab86201f0fb0ab3bff493c73e395eb9f070b0d908",
+          "recorded_at": 1792200000000,
+          "amount": 5,
+          "item": "moves"
+        }
+      ]
+    }
+  ]
+}

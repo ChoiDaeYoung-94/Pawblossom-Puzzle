@@ -31,10 +31,10 @@ function fixture() {
   return {path,rewardPath,dir,options,raw,claim,ledger,transport,open,conn,input,setTime:(n:number)=>time=n};
 }
 function close(b:CallbackInbox){b.close();inboxes.splice(inboxes.indexOf(b),1);}
-async function child(data:ReturnType<ReturnType<typeof fixture>['input']>) {
+async function child(data:ReturnType<ReturnType<typeof fixture>['input']>,onBusy?:()=>void) {
   const p=fork(workerUrl,[],{execArgv:['--experimental-strip-types'],stdio:['ignore','ignore','ignore','ipc']});
   const done=new Promise<void>(r=>p.once('exit',()=>r()));
-  const result=new Promise<any>((r,j)=>{p.once('message',r);p.once('error',j);p.once('exit',c=>{if(c)j(new Error('worker-failed'));});});
+  const result=new Promise<any>((r,j)=>{p.on('message',(v:any)=>{if(v?.kind==='worker-open-busy')onBusy?.();else r(v);});p.once('error',j);p.once('exit',c=>{if(c)j(new Error('worker-failed'));});});
   try{p.send(data);const output=await result;await done;return output;}finally{if(p.exitCode===null){p.kill();await done;}}
 }
 async function parallel(data:unknown[]) {
@@ -70,10 +70,27 @@ describe('암호화 수신·원장 내부검증·재시작',()=>{
     expect(d.prepare('SELECT state,attempts FROM callback_inbox').get()).toEqual({state:'completed',attempts:2});
   });
   it('8worker 동일수신 row1/receipt1, 동시처리는 원자선점1회',async()=>{
-    const f=fixture(),received=await parallel(Array.from({length:8},()=>f.input({action:'receive'})));
+    const f=fixture(),received=await parallel(Array.from({length:8},()=>f.input({action:'receive',openRetries:2,diagnostics:true})));
     expect(received.every(r=>r.kind==='accepted')).toBe(true);expect(new Set(received.map(r=>r.receipt)).size).toBe(1);
-    const results=await parallel(Array.from({length:8},()=>f.input()));expect(results.filter(r=>r.kind==='completed')).toHaveLength(1);expect(results.filter(r=>r.kind==='idle')).toHaveLength(7);
+    const results=await parallel(Array.from({length:8},()=>f.input({openRetries:2,diagnostics:true}))),safe=JSON.stringify(results.map(r=>({kind:r.kind,code:r.code,stage:r.stage,sqlite:r.sqlite,diagnostic:r.diagnostic})));
+    expect(results.filter(r=>r.kind==='completed'),safe).toHaveLength(1);expect(results.filter(r=>r.kind==='idle'),safe).toHaveLength(7);
+    for(const r of [...received,...results]){expect(r.diagnostic.openAttempts).toBeLessThanOrEqual(3);expect(r.diagnostic.failures.every((v:any)=>v.stage==='open'&&v.sqlite==='busy'),safe).toBe(true);}
     expect(f.conn().prepare('SELECT attempts FROM callback_inbox').get()?.attempts).toBe(1);expect(f.conn(f.rewardPath).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n).toBe(1);
+  });
+  it('worker 생성자 SQLite BUSY 진단→잠금 해제→같은 요청 제한 재시도',async()=>{
+    const f=fixture(),b=f.open();b.receive(f.raw);const lock=f.conn(f.rewardPath);lock.exec('BEGIN IMMEDIATE');let busy=0;
+    const result=await child(f.input({openRetries:2,diagnostics:true,notifyOpenBusy:true}),()=>{busy++;lock.exec('ROLLBACK');});
+    expect(busy).toBe(1);expect(result).toEqual({kind:'completed',diagnostic:{openAttempts:2,failures:[{stage:'open',sqlite:'busy'}]}});
+    expect(f.conn().prepare('SELECT state,attempts FROM callback_inbox').get()).toEqual({state:'completed',attempts:1});expect(f.conn(f.rewardPath).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n).toBe(1);
+  });
+  it('worker 생성자 BUSY는 최대3회 뒤 오류·무한 재시도/성공 위장 없음',async()=>{
+    const f=fixture();f.open();const lock=f.conn(f.rewardPath);lock.exec('BEGIN IMMEDIATE');
+    try{expect(await child(f.input({openRetries:2,diagnostics:true}))).toEqual({kind:'worker-error',stage:'open',code:'open-failed',sqlite:'busy',diagnostic:{openAttempts:3,failures:Array.from({length:3},()=>({stage:'open',sqlite:'busy'}))}});}finally{lock.exec('ROLLBACK');}
+    expect(f.conn(f.rewardPath).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n).toBe(0);
+  });
+  it.each(['hmac','schema'])('worker %s 영구 오류는 BUSY로 오인/재시도하지 않음',mode=>{
+    const f=fixture();f.open();const d=f.conn(f.rewardPath);if(mode==='hmac')d.prepare('UPDATE reward_auth SET state_mac=?').run('0'.repeat(64));else d.exec('ALTER TABLE reward_vouchers ADD COLUMN extra TEXT');
+    return child(f.input({openRetries:2,diagnostics:true})).then(result=>expect(result).toEqual({kind:'worker-error',stage:'open',code:'open-failed',sqlite:'none',diagnostic:{openAttempts:1,failures:[{stage:'open',sqlite:'none'}]}}));
   });
   it('외부 verified/event 객체와 processor 주입으로 지급할 수 없음',async()=>{
     const f=fixture(),fake=vi.fn(async()=>({kind:'voucher-recorded',newGrant:true})),b=f.open({processor:fake} as any);

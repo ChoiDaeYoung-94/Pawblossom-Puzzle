@@ -1,7 +1,8 @@
-/** 서버 전용 로컬 SQLite 회차 원장. HTTP·실제 인증·보상 지급은 연결하지 않습니다. */
+/** 서버 전용 로컬 SQLite 회차 원장. HTTP·실제 인증·앱은 연결하지 않습니다. */
 import {createHash,createHmac,randomBytes,timingSafeEqual} from 'node:crypto';
 import {isAbsolute} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
+import {readRedeemedGrant} from '../ads/rewardLedger.ts';
 import {advanceState,commandSnapshot,CONTENT_HASH,ENGINE_PROFILE,ENGINE_SOURCE_SHA256,exactRecord,freezeCopy,isLevelId,publicState,startState,validateState,
   type Command,type CommandOutcome,type PublicRoundState,type RoundState} from './roundState.ts';
 
@@ -15,7 +16,7 @@ export interface RoundLedgerOptions {
   readonly serverKey:Uint8Array;
   readonly environment:'test'|'production';
   readonly now?:()=>number;
-  /** meta 제외 round+operation 전체 행수. terminal과 오래된 영수증도 포함하며 자동 삭제하지 않습니다. */
+  /** meta 제외 round+operation+reward 전체 행수. terminal과 오래된 영수증도 포함하며 자동 삭제하지 않습니다. */
   readonly maxRows?:number;
   readonly maxOperations?:number;
   readonly ttlMs?:number;
@@ -29,14 +30,17 @@ export interface RoundSnapshot {
   readonly expiresAt:number;
   readonly state:PublicRoundState;
 }
-type Failure={readonly kind:'rejected';readonly code:'invalid-input'|'not-found'|'request-conflict'|'revision-conflict'|'round-terminal'|'shuffle-used'|'expired'|'capacity'|'operation-limit'|'invalid-time'}
+type Failure={readonly kind:'rejected';readonly code:'invalid-input'|'invalid-grant'|'reward-used'|'not-found'|'request-conflict'|'revision-conflict'|'round-terminal'|'shuffle-used'|'expired'|'capacity'|'operation-limit'|'invalid-time'}
   | {readonly kind:'service-error';readonly code:'storage-unavailable'};
 export type StartRoundResult={readonly kind:'round-started';readonly created:boolean;readonly snapshot:RoundSnapshot}|Failure;
 export type RoundCommandResult={readonly kind:'command-result';readonly applied:boolean;readonly outcome:CommandOutcome;readonly snapshot:RoundSnapshot}|Failure;
 export type GetRoundResult={readonly kind:'round-snapshot';readonly snapshot:RoundSnapshot}|Failure;
+export type RewardEligibilityResult={readonly kind:'reward-eligible';readonly snapshot:RoundSnapshot}|Failure;
+export type ApplyRewardResult={readonly kind:'reward-result';readonly applied:boolean;readonly snapshot:RoundSnapshot}|Failure;
 interface Row {round_id:string;owner_hash:string;create_hash:string;create_digest:string;created_at:number;expires_at:number;revision:number;state_json:string;state_mac:string;}
-interface Receipt {round_id:string;op_hash:string;request_digest:string;revision:number;outcome:CommandOutcome;receipt_mac:string;}
-const schema={
+interface Receipt {round_id:string;op_hash:string;request_digest:string;revision:number;outcome:CommandOutcome|'reward-applied';receipt_mac:string;}
+interface RewardRow {round_id:string;grant_id:string;revision:number;reward_mac:string;}
+const legacySchema={
   round_meta:'CREATE TABLE round_meta (id INTEGER PRIMARY KEY CHECK(id=1),profile TEXT NOT NULL,high_water INTEGER NOT NULL CHECK(high_water>=0),meta_mac TEXT NOT NULL) STRICT',
   round_rounds:`CREATE TABLE round_rounds (
     round_id TEXT PRIMARY KEY CHECK(length(round_id)=43), owner_hash TEXT NOT NULL CHECK(length(owner_hash)=64),
@@ -50,6 +54,14 @@ const schema={
     request_digest TEXT NOT NULL CHECK(length(request_digest)=64), revision INTEGER NOT NULL CHECK(revision BETWEEN 1 AND 128),
     outcome TEXT NOT NULL CHECK(outcome IN('valid-swap','invalid-swap','valid-activation','invalid-activation','shuffled','abandoned')), receipt_mac TEXT NOT NULL CHECK(length(receipt_mac)=64),
     PRIMARY KEY(round_id,op_hash), UNIQUE(round_id,revision)
+  ) STRICT`,
+};
+const schema={...legacySchema,
+  round_ops:legacySchema.round_ops.replace("'shuffled','abandoned'","'shuffled','abandoned','reward-applied'"),
+  round_rewards:`CREATE TABLE round_rewards (
+    round_id TEXT PRIMARY KEY REFERENCES round_rounds(round_id), grant_id TEXT NOT NULL UNIQUE CHECK(length(grant_id)=64),
+    revision INTEGER NOT NULL CHECK(revision BETWEEN 1 AND 128), reward_mac TEXT NOT NULL CHECK(length(reward_mac)=64),
+    FOREIGN KEY(round_id,revision) REFERENCES round_ops(round_id,revision)
   ) STRICT`,
 };
 const normalize=(sql:string)=>sql.replace(/\s+/g,' ').trim();
@@ -78,6 +90,8 @@ export class RoundLedger {
   #ttl=3_600_000;
   #last=0;
   #closed=false;
+  #modern=true;
+  #environment:'test'|'production'='test';
   constructor(input:RoundLedgerOptions) {
     let master:Buffer|undefined,db:DatabaseSync|undefined;
     let path:string;
@@ -92,10 +106,11 @@ export class RoundLedger {
       if(typeof path!=='string'||!isAbsolute(path)||!path.endsWith('.sqlite')||!(o.serverKey instanceof Uint8Array)||o.serverKey.byteLength!==32
         ||(o.environment!=='test'&&o.environment!=='production')||(o.now!==undefined&&typeof o.now!=='function'))throw new Error();
       master=Buffer.from(o.serverKey);
-      for(const domain of ['owner','create','operation','state','receipt','meta'])this.#keys[domain]=createHmac('sha256',master).update('pawblossom-round-v1\0'+domain).digest();
+      for(const domain of ['owner','create','operation','state','receipt','meta','reward'])this.#keys[domain]=createHmac('sha256',master).update('pawblossom-round-v1\0'+domain).digest();
       this.#rows=bounded(o.maxRows,1000,1,10000);this.#operations=bounded(o.maxOperations,64,1,128);this.#ttl=bounded(o.ttlMs,3_600_000,1000,86_400_000);
       this.#now=(o.now as (()=>number)|undefined)??Date.now;
-      this.#profile=JSON.stringify({version:1,environment:o.environment,engine:ENGINE_PROFILE,source:ENGINE_SOURCE_SHA256,content:CONTENT_HASH,
+      this.#environment=o.environment;
+      this.#profile=JSON.stringify({version:2,environment:o.environment,engine:ENGINE_PROFILE,source:ENGINE_SOURCE_SHA256,content:CONTENT_HASH,
         rows:this.#rows,operations:this.#operations,ttl:this.#ttl,keyCheck:this.#mac('meta','key-check')});
     }catch{this.#wipe();throw new Error('invalid-round-config');}
     finally{master?.fill(0);}
@@ -106,7 +121,19 @@ export class RoundLedger {
       db.exec('PRAGMA synchronous=FULL');
       this.#transaction(()=>{
         const entries=db!.prepare("SELECT type,name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY name").all();
-        if(entries.length && entries.map(r=>r.name).join()!=='round_meta,round_ops,round_rounds')throw new Error();
+        const modernProfile=this.#profile,oldProfile=modernProfile.replace('"version":2','"version":1');
+        if(entries.length&&db!.prepare('SELECT profile FROM round_meta WHERE id=1').get()?.profile===oldProfile){
+          // 구 profile로 먼저 전체 서명을 검증합니다. owner/create/operation 키 파생은 유지합니다.
+          this.#modern=false;this.#profile=oldProfile;this.#schema();const high=this.#metadata();this.#capacity(0);
+          (db!.prepare('SELECT * FROM round_rounds').all() as unknown as Row[]).forEach(r=>this.#readRow(r));
+          if(db!.prepare('PRAGMA foreign_key_check').all().length)throw new Error();
+          db!.exec('ALTER TABLE round_ops RENAME TO round_ops_v1');db!.exec(schema.round_ops);
+          db!.exec('INSERT INTO round_ops SELECT * FROM round_ops_v1');db!.exec('DROP TABLE round_ops_v1');db!.exec(schema.round_rewards);
+          this.#profile=modernProfile;this.#modern=true;
+          for(const r of db!.prepare('SELECT * FROM round_rounds').all() as unknown as Row[])db!.prepare('UPDATE round_rounds SET state_mac=? WHERE round_id=?').run(this.#rowMac(r),r.round_id);
+          for(const r of db!.prepare('SELECT * FROM round_ops').all() as unknown as Receipt[])db!.prepare('UPDATE round_ops SET receipt_mac=? WHERE round_id=? AND op_hash=?').run(this.#receiptMac(r),r.round_id,r.op_hash);
+          db!.prepare('UPDATE round_meta SET profile=?,meta_mac=? WHERE id=1').run(this.#profile,this.#metaMac(high));
+        }
         for(const [name,sql] of Object.entries(schema)){
           db!.exec(sql.replace('CREATE TABLE ','CREATE TABLE IF NOT EXISTS '));
           if(normalize(String(db!.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name=?").get(name)?.sql))!==normalize(sql))throw new Error();
@@ -114,7 +141,7 @@ export class RoundLedger {
         if(!entries.length)db!.prepare('INSERT INTO round_meta VALUES(1,?,0,?)').run(this.#profile,this.#metaMac(0));
         this.#schema();
         this.#metadata();
-        this.#capacity(false);
+        this.#capacity(0);
         const rows=db!.prepare('SELECT * FROM round_rounds').all() as unknown as Row[];
         rows.forEach(r=>this.#readRow(r));
         // 외부 연결이 FK를 끄고 삽입한 고아 영수증도 거절합니다.
@@ -129,15 +156,16 @@ export class RoundLedger {
     try{const r=work();this.#db.exec('COMMIT');return r;}
     catch(error){try{this.#db.exec('ROLLBACK');}catch{throw new RoundRollbackError();}throw error;}
   }
-  #run<T extends StartRoundResult|RoundCommandResult|GetRoundResult>(work:()=>T):T|Failure {
+  #run<T extends StartRoundResult|RoundCommandResult|GetRoundResult|RewardEligibilityResult|ApplyRewardResult>(work:()=>T):T|Failure {
     if(this.#closed)return unavailable();
-    try{return this.#transaction(()=>{this.#schema();this.#capacity(false);return work();});}
+    try{return this.#transaction(()=>{this.#schema();this.#capacity(0);return work();});}
     catch(error){if(error instanceof RoundIntegrityError||error instanceof RoundRollbackError){try{this.close();}catch{}}return unavailable();}
   }
   #schema():void {
     const entries=this.#db.prepare("SELECT type,name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY name").all();
-    if(entries.map(r=>r.name).join()!=='round_meta,round_ops,round_rounds')throw new RoundIntegrityError();
-    for(const entry of entries){const sql=schema[entry.name as keyof typeof schema];if(entry.type!=='table'||!sql||normalize(String(entry.sql))!==normalize(sql))throw new RoundIntegrityError();}
+    const expected:Record<string,string>=this.#modern?schema:legacySchema;
+    if(entries.map(r=>r.name).join()!==Object.keys(expected).sort().join())throw new RoundIntegrityError();
+    for(const entry of entries){const sql=expected[String(entry.name)];if(entry.type!=='table'||!sql||normalize(String(entry.sql))!==normalize(sql))throw new RoundIntegrityError();}
   }
   #metaMac(high:number){return this.#mac('meta',JSON.stringify([this.#profile,high]));}
   #metadata():number {
@@ -156,9 +184,9 @@ export class RoundLedger {
   #owner(input:unknown):string {
     const c=exactRecord(input,['ownerId']);if(!identity(c.ownerId))throw new Error();return this.#mac('owner',c.ownerId);
   }
-  #capacity(reserve:boolean):boolean {
-    const n=this.#db.prepare('SELECT (SELECT count(*) FROM round_rounds)+(SELECT count(*) FROM round_ops) AS n').get()?.n;
-    if(typeof n!=='number'||!Number.isSafeInteger(n)||n>this.#rows)throw new RoundIntegrityError();return n+(reserve?1:0)<=this.#rows;
+  #capacity(reserve:number):boolean {
+    const n=this.#db.prepare('SELECT (SELECT count(*) FROM round_rounds)+(SELECT count(*) FROM round_ops)'+(this.#modern?'+(SELECT count(*) FROM round_rewards)':'')+' AS n').get()?.n;
+    if(typeof n!=='number'||!Number.isSafeInteger(n)||n>this.#rows)throw new RoundIntegrityError();return n+reserve<=this.#rows;
   }
   #rowMac(r:Omit<Row,'state_mac'>):string {
     return this.#mac('state',JSON.stringify([this.#profile,r.round_id,r.owner_hash,r.create_hash,r.create_digest,r.created_at,r.expires_at,r.revision,r.state_json]));
@@ -166,6 +194,7 @@ export class RoundLedger {
   #receiptMac(r:Omit<Receipt,'receipt_mac'>):string {
     return this.#mac('receipt',JSON.stringify([this.#profile,r.round_id,r.op_hash,r.request_digest,r.revision,r.outcome]));
   }
+  #rewardMac(r:Omit<RewardRow,'reward_mac'>){return this.#mac('reward',JSON.stringify([this.#profile,r.round_id,r.grant_id,r.revision]));}
   #readRow(r:Row):RoundState {
     structural(()=>{exactRecord(r,['round_id','owner_hash','create_hash','create_digest','created_at','expires_at','revision','state_json','state_mac']);});
     if(!opaque(r.round_id)||![r.owner_hash,r.create_hash,r.create_digest].every(hex)||!timeValue(r.created_at)||!timeValue(r.expires_at)
@@ -179,12 +208,64 @@ export class RoundLedger {
     receipts.forEach((op,i)=>{
       structural(()=>{exactRecord(op,['round_id','op_hash','request_digest','revision','outcome','receipt_mac']);});
       if(op.round_id!==r.round_id||!hex(op.op_hash)||!hex(op.request_digest)||op.revision!==i+1
-        ||!['valid-swap','invalid-swap','valid-activation','invalid-activation','shuffled','abandoned'].includes(op.outcome)||!sameMac(op.receipt_mac,this.#receiptMac(op)))throw new RoundIntegrityError();
+        ||!['valid-swap','invalid-swap','valid-activation','invalid-activation','shuffled','abandoned',...(this.#modern?['reward-applied']:[])].includes(op.outcome)||!sameMac(op.receipt_mac,this.#receiptMac(op)))throw new RoundIntegrityError();
     });
+    const rewards=this.#modern?this.#db.prepare('SELECT * FROM round_rewards WHERE round_id=?').all(r.round_id) as unknown as RewardRow[]:[];
+    const rewardOps=receipts.filter(op=>op.outcome==='reward-applied');
+    if(rewards.length>1||rewards.length!==rewardOps.length)throw new RoundIntegrityError();
+    for(const reward of rewards){
+      structural(()=>{exactRecord(reward,['round_id','grant_id','revision','reward_mac']);});
+      const op=rewardOps[0];
+      if(reward.round_id!==r.round_id||!hex(reward.grant_id)||reward.revision!==op.revision||!sameMac(reward.reward_mac,this.#rewardMac(reward))
+        ||op.op_hash!==this.#mac('operation',JSON.stringify(['reward',r.round_id,reward.grant_id]))||op.request_digest!==hash(JSON.stringify(['reward',r.round_id,reward.grant_id]))
+        ||receipts.filter(v=>v.revision<reward.revision&&(v.outcome==='valid-swap'||v.outcome==='valid-activation')).length!==state.level.moves)throw new RoundIntegrityError();
+    }
     const valid=receipts.filter(op=>op.outcome==='valid-swap'||op.outcome==='valid-activation').length,shuffled=receipts.filter(op=>op.outcome==='shuffled').length;
-    if(state.moves!==state.level.moves-valid||state.shuffles!==1-shuffled||receipts.filter(op=>op.outcome==='abandoned').length!==(state.status==='abandoned'?1:0)
+    if(state.moves!==state.level.moves+5*rewards.length-valid||state.shuffles!==1-shuffled||receipts.filter(op=>op.outcome==='abandoned').length!==(state.status==='abandoned'?1:0)
       ||(state.status==='abandoned'&&receipts.at(-1)?.outcome!=='abandoned'))throw new RoundIntegrityError();
     return state;
+  }
+  #rewardCheck(row:Row,state:RoundState):Failure|undefined {
+    if(this.#db.prepare('SELECT 1 FROM round_rewards WHERE round_id=?').get(row.round_id))return rejected('reward-used');
+    if(state.status!=='failed'||state.moves!==0)return rejected('round-terminal');
+    if(row.revision>=this.#operations)return rejected('operation-limit');
+    if(!this.#capacity(2))return rejected('capacity');
+  }
+  #rewardInput(context:TrustedRoundOwner,request:{readonly roundId:string}){
+    const c=exactRecord(context,['ownerId']),owner=this.#owner(c as unknown as TrustedRoundOwner),r=exactRecord(request,['roundId']);
+    if(!opaque(r.roundId))throw new Error();return {owner,ownerId:c.ownerId as string,id:r.roundId};
+  }
+  rewardEligibility(context:TrustedRoundOwner,request:{readonly roundId:string}):RewardEligibilityResult {
+    if(this.#closed)return unavailable();let input:{owner:string;ownerId:string;id:string};
+    try{input=this.#rewardInput(context,request);}catch{return rejected('invalid-input');}
+    return this.#run(()=>{
+      const now=this.#time();if(now===undefined)return rejected('invalid-time');
+      const row=this.#db.prepare('SELECT * FROM round_rounds WHERE round_id=? AND owner_hash=?').get(input.id,input.owner) as unknown as Row|undefined;
+      if(!row)return rejected('not-found');const state=this.#readRow(row);
+      if(row.owner_hash!==input.owner)return rejected('not-found');if(now>=row.expires_at)return rejected('expired');
+      return this.#rewardCheck(row,state)??{kind:'reward-eligible',snapshot:this.#snapshot(row,state)};
+    }) as RewardEligibilityResult;
+  }
+  applyReward(context:TrustedRoundOwner,request:{readonly roundId:string},capability:unknown):ApplyRewardResult {
+    if(this.#closed)return unavailable();let input:{owner:string;ownerId:string;id:string},grant:ReturnType<typeof readRedeemedGrant>;
+    try{input=this.#rewardInput(context,request);grant=readRedeemedGrant(capability,{ownerId:input.ownerId,roundId:input.id},this.#environment);if(!grant)return rejected('invalid-grant');}catch{return rejected('invalid-input');}
+    const grantId=grant.opaqueGrantId;
+    return this.#run(()=>{
+      const now=this.#time();if(now===undefined)return rejected('invalid-time');
+      const row=this.#db.prepare('SELECT * FROM round_rounds WHERE round_id=? AND owner_hash=?').get(input.id,input.owner) as unknown as Row|undefined;
+      if(!row)return rejected('not-found');const state=this.#readRow(row);
+      if(row.owner_hash!==input.owner)return rejected('not-found');if(now>=row.expires_at)return rejected('expired');
+      const prior=this.#db.prepare('SELECT grant_id FROM round_rewards WHERE round_id=?').get(input.id);
+      if(prior)return prior.grant_id===grantId?{kind:'reward-result',applied:false,snapshot:this.#snapshot(row,state)}:rejected('reward-used');
+      const failure=this.#rewardCheck(row,state);if(failure)return failure;
+      state.moves=5;state.status='active';validateState(state);row.revision++;row.state_json=JSON.stringify(state);row.state_mac=this.#rowMac(row);
+      const op:Receipt={round_id:input.id,op_hash:this.#mac('operation',JSON.stringify(['reward',input.id,grantId])),request_digest:hash(JSON.stringify(['reward',input.id,grantId])),revision:row.revision,outcome:'reward-applied',receipt_mac:''};op.receipt_mac=this.#receiptMac(op);
+      const reward:RewardRow={round_id:input.id,grant_id:grantId,revision:row.revision,reward_mac:''};reward.reward_mac=this.#rewardMac(reward);
+      this.#db.prepare('UPDATE round_rounds SET revision=?,state_json=?,state_mac=? WHERE round_id=?').run(row.revision,row.state_json,row.state_mac,input.id);
+      this.#db.prepare('INSERT INTO round_ops VALUES(?,?,?,?,?,?)').run(input.id,op.op_hash,op.request_digest,op.revision,op.outcome,op.receipt_mac);
+      this.#db.prepare('INSERT INTO round_rewards VALUES(?,?,?,?)').run(input.id,grantId,reward.revision,reward.reward_mac);
+      return {kind:'reward-result',applied:true,snapshot:this.#snapshot(row,state)};
+    }) as ApplyRewardResult;
   }
   #snapshot(r:Row,state:RoundState):RoundSnapshot {
     return freezeCopy({roundId:r.round_id,revision:r.revision,createdAt:r.created_at,expiresAt:r.expires_at,state:publicState(state)});
@@ -199,7 +280,7 @@ export class RoundLedger {
       const createHash=this.#mac('create',JSON.stringify([owner,id])),digest=hash(JSON.stringify({levelId:level}));
       const old=this.#db.prepare('SELECT * FROM round_rounds WHERE owner_hash=? AND create_hash=?').get(owner,createHash) as unknown as Row|undefined;
       if(old){const state=this.#readRow(old);if(old.create_digest!==digest)return rejected('request-conflict');if(now>=old.expires_at)return rejected('expired');return {kind:'round-started',created:false,snapshot:this.#snapshot(old,state)};}
-      if(!this.#capacity(true))return rejected('capacity');
+      if(!this.#capacity(1))return rejected('capacity');
       const state=startState(level,randomBytes(4).readUInt32LE()),row:Row={round_id:randomBytes(32).toString('base64url'),owner_hash:owner,create_hash:createHash,
         create_digest:digest,created_at:now,expires_at:now+this.#ttl,revision:0,state_json:JSON.stringify(state),state_mac:''};
       row.state_mac=this.#rowMac(row);
@@ -213,7 +294,7 @@ export class RoundLedger {
     try{owner=this.#owner(context);const r=exactRecord(request,['roundId']);if(!opaque(r.roundId))throw new Error();id=r.roundId;}catch{return rejected('invalid-input');}
     return this.#run(()=>{
       const now=this.#time();if(now===undefined)return rejected('invalid-time');
-      const row=this.#db.prepare('SELECT * FROM round_rounds WHERE round_id=?').get(id) as unknown as Row|undefined;
+      const row=this.#db.prepare('SELECT * FROM round_rounds WHERE round_id=? AND owner_hash=?').get(id,owner) as unknown as Row|undefined;
       if(!row)return rejected('not-found');
       const state=this.#readRow(row);if(row.owner_hash!==owner)return rejected('not-found');if(now>=row.expires_at)return rejected('expired');
       return {kind:'round-snapshot',snapshot:this.#snapshot(row,state)};
@@ -229,18 +310,18 @@ export class RoundLedger {
     }catch{return rejected('invalid-input');}
     return this.#run(()=>{
       const now=this.#time();if(now===undefined)return rejected('invalid-time');
-      const row=this.#db.prepare('SELECT * FROM round_rounds WHERE round_id=?').get(id) as unknown as Row|undefined;
+      const row=this.#db.prepare('SELECT * FROM round_rounds WHERE round_id=? AND owner_hash=?').get(id,owner) as unknown as Row|undefined;
       if(!row)return rejected('not-found');
       const state=this.#readRow(row);if(row.owner_hash!==owner)return rejected('not-found');if(now>=row.expires_at)return rejected('expired');
       const opHash=this.#mac('operation',JSON.stringify([id,opId])),digest=hash(JSON.stringify([id,opId,revision,command]));
       // 오래된 revision·종료·한도보다 먼저 서명한 중복 영수증을 확인하고 현재 상태를 반환합니다.
       const receipt=this.#db.prepare('SELECT * FROM round_ops WHERE round_id=? AND op_hash=?').get(id,opHash) as unknown as Receipt|undefined;
-      if(receipt){if(receipt.request_digest!==digest)return rejected('request-conflict');return {kind:'command-result',applied:false,outcome:receipt.outcome,snapshot:this.#snapshot(row,state)};}
+      if(receipt){if(receipt.outcome==='reward-applied'||receipt.request_digest!==digest)return rejected('request-conflict');return {kind:'command-result',applied:false,outcome:receipt.outcome,snapshot:this.#snapshot(row,state)};}
       if(row.revision!==revision)return rejected('revision-conflict');
       if(state.status!=='active'&&!(state.status==='failed'&&command.type==='abandon'))return rejected('round-terminal');
       if(row.revision>=this.#operations)return rejected('operation-limit');
       if(command.type==='shuffle'&&!state.shuffles)return rejected('shuffle-used');
-      if(!this.#capacity(true))return rejected('capacity');
+      if(!this.#capacity(1))return rejected('capacity');
       const next=advanceState(state,command);row.revision++;row.state_json=JSON.stringify(next.state);row.state_mac=this.#rowMac(row);
       const op:Receipt={round_id:id,op_hash:opHash,request_digest:digest,revision:row.revision,outcome:next.outcome,receipt_mac:''};op.receipt_mac=this.#receiptMac(op);
       this.#db.prepare('UPDATE round_rounds SET revision=?,state_json=?,state_mac=? WHERE round_id=?').run(row.revision,row.state_json,row.state_mac,id);

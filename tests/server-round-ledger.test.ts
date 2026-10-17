@@ -275,7 +275,7 @@ describe('서버 영구 회차·멱등 명령 원장',()=>{
     if(mode==='meta')d.exec('DELETE FROM round_meta');if(mode==='extra'||mode==='otherdb')d.exec('CREATE TABLE unknown_meta(id INTEGER)');if(mode==='trigger')d.exec('CREATE TRIGGER unexpected AFTER INSERT ON round_ops BEGIN SELECT 1; END');
     expect(()=>open(path,patch)).toThrow('round-ledger-open-failed');
   });
-  it.each(['state','owner','request','digest','revision','expires','mac','opdigest','opmac','missingop','injectedop','meta','clock','schema'])('실행 중 DB %s 변조는 고정 storageerror·이후닫힘',mode=>{
+  it.each(['state','owner','request','digest','revision','expires','mac','opdigest','opmac','missingop','injectedop','meta','clock','schema'])('실행 중 DB %s 변조는 소유자 불일치/무결성 오류로 차단',mode=>{
     const {ledger,path}=open(),s=start(ledger),first=apply(ledger,command(ledger,s)),d=db(path);
     if(mode==='state')d.prepare('UPDATE round_rounds SET state_json=?').run('{}');if(mode==='owner')d.prepare('UPDATE round_rounds SET owner_hash=?').run('a'.repeat(64));
     if(mode==='request')d.prepare('UPDATE round_rounds SET create_hash=?').run('a'.repeat(64));if(mode==='digest')d.prepare('UPDATE round_rounds SET create_digest=?').run('a'.repeat(64));if(mode==='revision')d.exec('UPDATE round_rounds SET revision=2');
@@ -283,7 +283,8 @@ describe('서버 영구 회차·멱등 명령 원장',()=>{
     if(mode==='opdigest')d.prepare('UPDATE round_ops SET request_digest=?').run('a'.repeat(64));if(mode==='opmac')d.prepare('UPDATE round_ops SET receipt_mac=?').run('a'.repeat(64));
     if(mode==='missingop')d.exec('DELETE FROM round_ops');if(mode==='injectedop')d.prepare('INSERT INTO round_ops VALUES(?,?,?,?,?,?)').run(s.roundId,'a'.repeat(64),'b'.repeat(64),2,'invalid-swap','c'.repeat(64));
     if(mode==='meta')d.prepare('UPDATE round_meta SET meta_mac=?').run('a'.repeat(64));if(mode==='clock')d.exec('UPDATE round_meta SET high_water=0');if(mode==='schema')d.exec('ALTER TABLE round_rounds ADD COLUMN extra TEXT');
-    expect(ledger.get(owner,{roundId:s.roundId})).toEqual(unavailable);expect(ledger.command(owner,command(ledger,first.snapshot))).toEqual(unavailable);
+    const expected=mode==='owner'?denied('not-found'):unavailable;
+    expect(ledger.get(owner,{roundId:s.roundId})).toEqual(expected);expect(ledger.command(owner,command(ledger,first.snapshot))).toEqual(expected);
   });
   it.each(['tile','leaf','status','collected','level','moves','jsonduplicate','jsonspace','opscount'])('유효 HMAC이 있어도 구조/불변 조건 %s 오류는 닫힘',mode=>{
     const {ledger,path}=open(),s=start(ledger),d=db(path);

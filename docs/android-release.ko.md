@@ -1,5 +1,47 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-17 · 보상권 영구 소비·실패 회차 이동 추가 (이슈 #111)
+
+기준 main `d867e32f3a3a5fa3839878bfda1feffe165bcf35`, 작업 `codex/111-reward-redemption-continue`, [이슈 #111](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/111)입니다. **서버 내부 보상권 소비→런타임 권한→실패 회차 +5 구현·로컬 검증·총괄 최종검수를 마쳤고 커밋/PR 제출을 승인받았습니다.** 최신 PR/main의 Node22·24 CI와 반영 근거는 GitHub에 구분 기록합니다. 앱·엔진·30개 level·구매/인증·callback 수신함 설정과 기존 claim/SSV 시간 정책은 유지했습니다. 아래 #109의 보상 소비/+5 미구현 표현은 당시 이력입니다.
+
+- `RewardLedger.redeemVoucher(trustedOwnerRound)`는 저장된 실제 voucher만 소비합니다. owner-round/transaction에 UNIQUE인 `reward_redemptions`와 안정적인 HMAC grant ID를 같은 SQLite 트랜잭션에 영구 저장하고 COMMIT 성공 뒤에만 `{kind:'voucher-redeemed',consumed,grant:{opaqueGrantId}}`를 반환합니다. 같은 소비의 재시도·재시작은 같은 ID/`consumed:false`이며 새 런타임 참조를 만듭니다. 미발급·다른 owner/round·pending은 `voucher-missing`, 아직 소비하지 않은 closed 회차는 `round-closed`입니다. 이미 저장한 voucher와 소비 기록은 삭제하지 않으며 `hasVoucher`는 종전처럼 voucher 존재를 뜻합니다. 소비에 claim TTL을 새로 적용하지 않고, 실제 회차 만료는 회차 원장이 판단합니다.
+- 성공 소비만 모듈 private WeakMap에 실제 객체 참조와 owner/round/environment를 등록합니다. `readRedeemedGrant(grant,trustedOwnerRound,expectedEnvironment)`는 해당 참조·binding을 검사해 opaque ID만 반환합니다. synthetic 광고 환경은 test 회차, production은 production 회차에 대응합니다. string ID/verified 객체/JSON/spread/상속/Proxy 복제/다른 owner·round·환경은 권한이 아닙니다. 클라이언트 credential·직렬화 토큰·공개 암호학적 증명이 아니며 프로세스·worker 경계로 객체를 보내면 brand가 사라집니다. 같은 프로세스의 신뢰된 서버 계층이 현재 요청 안에서 전달해야 합니다. owner/round 타입·동결 객체 자체도 인증을 대신하지 않습니다.
+- **수명 정책:** 영구 소비 후 `closeRound()`는 해당 소비를 철회하지 않으며 같은 소비의 복구 참조 재발급을 허용합니다. `close()`는 원장 인스턴스를 닫고 내부 키 사본을 지우므로 해당 인스턴스의 모든 API는 `storage-unavailable`입니다. 이미 발급한 capability 참조는 취소하지 않으며, 같은 ID의 새 참조는 새 인스턴스로 DB를 reopen한 뒤 다시 redeem해야 합니다. 호출자는 요청 종료 시 참조를 폐기해야 합니다. 실제 취소·만료·지급 여부는 별도 회차 원장의 abandon/TTL/기존 보상 기록으로 통제합니다. 소비 후 abandon·만료·한도·저장 실패가 발생해도 소비 기록은 보존하며 새 보상을 만들지 않습니다.
+- `RoundLedger.rewardEligibility(trustedOwner,{roundId})`는 현재 소유자·회차 HMAC/스키마·시계/TTL·failed/moves0·보상 미사용·작업 한도·남은 전체행 두 개를 검사합니다. 신뢰된 서버가 광고 발급/소비 전에 조회할 계약이며 예약·두 DB의 분산 트랜잭션이 아닙니다. 조회 후 상태/한도는 달라질 수 있으므로 적용에서 모두 다시 검사합니다. 행수에는 round+모든 operation+reward를 포함합니다. 보상 적용은 operation 영수증1+reward행1, revision1을 소모합니다.
+- `RoundLedger.applyReward(trustedOwner,{roundId},capability)`는 failed/moves0에만 moves5/status active/서명 state/보상 영수증/`round_rewards`를 하나의 BEGIN IMMEDIATE→COMMIT에 저장합니다. board/RNG/score/수집/낙엽/셔플은 그대로입니다. 보상 receipt는 일반 swap/activate/shuffle/abandon command로 만들 수 없습니다. 불변 조건은 `기본 moves + 보상5 - 유효 swap/activation 수`이며 보상 직전 유효 이동 수도 기본 moves와 같아야 합니다. round당1회이며 다른 실제 grant는 `reward-used`입니다. 같은 grant는 후속 이동·종료·행수/작업 한도 뒤에도 현재 snapshot/`applied:false`를 반환하지만, 소유권·HMAC·시간/만료는 재검사합니다. 타인 행은 소유자 SQL 조건에서 제외하여 손상 여부도 노출하지 않습니다.
+- 두 파일 DB 사이에는 원자성이 없습니다. 소비 후 적용 전 중단은 다시 redeem→같은 ID의 새 capability→apply로 복구합니다. 적용 후 응답 유실은 같은 grant 재시도로 현재 상태를 돌려주며 +5를 반복하지 않습니다. 실패한 소비/적용·BEGIN/COMMIT 잠금은 성공으로 숨기지 않습니다. 보상 원장 전체행 서명·시간/참조 검사 실패는 고정 `storage-unavailable`, 회차 원장의 무결성/rollback 실패는 기존처럼 닫힘·키 사본 지우기입니다. DB의 과거 정상 전체 스냅샷 복원, 키/파일 접근권한, 외부 게임 경제/진행까지의 exactly-once를 보장하지 않습니다.
+
+### v1→v2 파일 이전과 보상 원장 검사 비용
+
+- 기존 reward v1은 개별 행 HMAC이 없었습니다. **신뢰된 기존 DB**의 정확한 DDL/PK/UNIQUE/FK/CHECK·단일 meta·키/환경/정책·시각·시도 수·pending/used/transaction/voucher 참조를 검사한 뒤 v2로 이전합니다. 과거 행의 존재하지 않던 서명을 복원하거나 과거 위변조까지 증명하는 작업이 아닙니다. v2는 새 redemption 테이블과 `reward_auth`의 전체 상태 HMAC을 추가하며 meta/high-water를 포함해 매 트랜잭션 전후 구조·참조를 검사하고 서명합니다. 임의 trigger/index/추가 table/혼합 스키마는 거절합니다.
+- 보상 원장은 원자적인 전량 HMAC을 단순하게 유지하기 위해 **round+claim+voucher+redemption 총 10,000행 고정 상한**을 v2 profile에 결합했습니다. legacy/modern 모두 전량 SELECT·HMAC 전에 COUNT로 상한을 검사하고, 초과 v1은 DDL/profile 변경 없이 거절합니다. Map/카운트로 참조 검사는 O(N)이며 매 요청 전량 읽기·정렬/직렬화·HMAC 비용과 SQLite 쓰기 잠금이 있습니다. 한도 초과 새 쓰기는 rollback/저장 오류이며 자동 삭제·예약·고처리량 서비스/공개 DoS 방어를 제공하지 않습니다. 운영 규모의 행별 MAC·인덱스/속도 제한·보존/이전은 #73 후속입니다.
+- round v1은 **OLD 전체 profile로 먼저 모든 state/receipt/meta HMAC·구조·불변 조건·FK를 검증**합니다. 새 outcome을 허용하는 round_ops를 재생성/복사하고 round_rewards를 추가한 뒤 NEW profile로 모든 state/receipt/meta를 재서명합니다. 원문 owner가 DB에 없으므로 기존 `pawblossom-round-v1` owner/create/operation 등 키 파생 prefix/domain은 유지하며 새 reward domain만 추가합니다. profile의 engine/source/content/환경/TTL/행수/작업 한도 변경을 동시에 이전하지 않습니다. 두 원장 각각의 스키마/행/서명/metadata 이전은 하나의 트랜잭션이며 실제 COMMIT 실패도 기존 v1으로 rollback합니다. 구매 DB 이전은 하지 않습니다.
+- **운영 이전 전에는 구 worker를 모두 중지하고 신뢰된 백업·키·경로·정책을 확인해야 합니다.** 이미 열린 구 worker와 새 worker의 동시 운용/롤백 배포는 지원하지 않으며 구 코드는 v2 reopen을 거절합니다. callbackInbox의 기존 target 경로 정규화/키 fingerprint·`callback-inbox-target-reward-v1` binding은 유지하여 기존 수신함 reopen→보상 DB 이전→새 callback 실제 처리 호환을 검사했습니다. 키 회전·DB 이동·온라인 이전/대용량 이전·운영 백업 복원은 완료하지 않았습니다.
+
+### 검증과 체크포인트
+
+- Node24.21.0에서 `npm test` **27파일/1673개(신규96개)**, `npm run store:check` 원본 일치, `npm run store:test` **12개**, `npm run typecheck` 전체/앱/서버, `npm run build:test`→`npm run build`, `git diff --check`를 통과했습니다. 각 8worker·파일 `maxWorkers:2`·개별 기본5초를 유지합니다. testing 세 flags=true, 최종 production 세 flags=false, src/dist의 서버 마커 **0건**입니다. 기존 Vite 큰 청크·Node 타입 변환 경고는 남아 있습니다. 브라우저 UI/Android/실서비스는 이번 서버 변경으로 새 검증하지 않았습니다.
+- 신규 검사는 실제 파일 SQLite·별도 프로세스·8worker의 동시 소비/소비+적용, 소비 후 중단·응답 전 중단·후속 이동 후 중복, 유효 특수 탭 차감, close/abandon/TTL/작업/전체행0·1·2 경계, wrong owner/environment/fakecap, BEGIN/COMMIT 잠금·HMAC/메타/참조/스키마 손상·키 사본 지우기·원문 비노출, v1 cap10,000/10,001·이전 COMMIT rollback·수신함 binding 호환을 포함합니다. 첫 전체 검사에서는 owner SQL 필터 변경에 대한 과거 기대값1건이 실패했고, 소유자 불일치만 not-found로 수정한 뒤 **1669개 전체 재검증**이 통과했습니다. 실패를 성공으로 합산하지 않습니다. #109의 간헐8worker 5초 timeout 이력은 아래에 보존합니다.
+- 총괄의 첫 독립 전체 검사(20:16:43 시작)는 **1668통과/1실패**였습니다. 수신함8worker 검사에서 completed1은 맞고 idle7이 0이었으며, 나머지7개의 상세 결과가 미기록이라 **원인은 확정하지 않았습니다.** 진단을 추가한 전체1669 재실행과 독립5회 반복은 통과했으나 이것만으로 원인 해결을 주장하지 않습니다. 테스트 worker가 SQL/인수/원문 오류 없이 stage·고정 code·SQLite 숫자 오류5/6(BUSY/LOCKED)만 분류하도록 보강했습니다. 8worker 검사는 실제 생성자 BUSY에만 최대3회/25ms 간격으로 같은 구성을 재시도하고, 처리 단계 저장 오류·HMAC/스키마 영구 오류는 성공으로 바꾸지 않습니다. 강제 생성자 잠금→2회차 복구/처리1회, 잠금 유지→3회 후 오류, HMAC/스키마→1회 즉시 실패 **4개**를 추가했습니다. 진단 필드가 기본 clock 응답에 포함된 helper 검사1건은 진단 옵션 경계로 수정했고, 최신 **20:21:19 전체27파일/1673개(30.77초) 및 전체/앱/서버 타입 검사가 통과**했습니다. 검사 기한·운영 원장500ms 잠금 정책·8worker·파일 상한2는 유지하며, 한 수신행·한 receipt·한 선점/attempt·한 voucher 조건을 계속 검사합니다. 이후 실패 시에도 안전한 상세 분류를 남깁니다.
+- 자동 CI용 `tests/helpers/ledger-v1-fixture.json`은 실제 `git show d867e32`의 v1 코드로 한 번 만든 DDL·profile·서명 state/receipt/보상 행을 저장한 정적 fixture입니다. 테스트 실행은 과거 Git 조회를 사용하지 않습니다. 별도로 총괄은 TEMP에 d867e32 실제 소스6파일을 복원하여 v1 실제34이동 실패/SSV voucher→두 DB v2 이전→보드/RNG 보존 +5→후속1이동/중복0→구 코드 reopen 거절→새 코드 restart sameID/newbrand 재적용0을 검증했습니다. 합성 seed1 상태를 테스트 HMAC으로 서명한 조건이며 운영 키/nonce/callback은 메모리에만 사용했습니다. 총괄 probe 스크립트 SHA-256은 `0d98a0550b8821d9f61d11d9b6cb3f572d2a7c3a98847d292b3879f7b5aaccb1`이고 임시 DB는 안전 정리했습니다. 총괄은 최종 코드에서도 이 probe를 재실행하여 이전·같은 ID 재소비·후속 이동4·재적용0·구 코드 reopen 거절·두 보상 기록 각1개를 확인했습니다. **최신 PR/main Node22/24 CI·반영 근거는 GitHub에 별도로 기록합니다.**
+
+총괄 최종 독립 검수는 **20:22:51 시작 전체27파일/1673개(31.66초)**·전체/앱/서버 타입·diff·최종 production 세 flags=false·실제 v1 소스 probe 재실행까지 통과했습니다. 아래 코드/테스트8개 LF SHA가 총괄 검증본과 모두 같음을 확인하고 커밋/PR 제출을 승인받았습니다. 부분/반복 검사는 전체1673개에 합산하지 않습니다.
+
+검증한 코드의 LF 정규화 UTF-8 SHA-256입니다. 코드가 바뀌면 필요한 검증과 SHA를 갱신합니다.
+
+| 파일 | SHA-256 |
+| --- | --- |
+| `server/ads/rewardLedger.ts` | `88f4fa1bc3f35b8297ca835fc3607cc6bd45ce3942063381ef6021d7e8d73c40` |
+| `server/game/roundLedger.ts` | `1a434c8a36bca6819758bb301d85f68a0e868f2d815e6ce9c516ba54660dfe71` |
+| `tests/reward-redemption.test.ts` | `021cac1cfa5ec1188acd5e03a1d1c31c94672bd4c9eb999b1ade4b4f7c7f2cc5` |
+| `tests/server-round-ledger.test.ts` | `6a6516f47839a87c5cc76e9c2b179fc3975df5b470d088df7c8d327b55ed06ef` |
+| `tests/helpers/reward-redemption-worker.mjs` | `b8fc846f6e5cf359940d9a8e88ff5877befec51a23fb4e663ba5a071067a3900` |
+| `tests/callback-inbox.test.ts` | `d854f308df5efaef0fd1ecc60ca60a7369fc3b42e0bd8a3d4099f5ca3ab69170` |
+| `tests/helpers/callback-inbox-worker.mjs` | `e0904d8aded16daed6fe0dcb45208510381a7bab7df75cf236396329bb3f70e1` |
+| `tests/helpers/ledger-v1-fixture.json` | `21be54d5287c146e6172a14b2e6de1c2c8aa083285c2a4bfad101915cf782673` |
+
+다음은 승인된 한국어 커밋/푸시/PR 제출과 최신 Node22/24 CI 확인·총괄 병합입니다. PR/main 검사와 반영 근거는 GitHub에 기록합니다. [후속 #73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)의 실제 provider/인증 HTTP·온라인 앱·발급/소비 orchestration·SDK/Google·호스팅/경제/진행·분산 원자성·키/ACL/보존/이전/속도 제한·어린이 포함 한국·미국 동의·단말/스토어는 미완료입니다. APK/AAB·Android sync·버전·최종 오디오 믹스·실계정/키/env/콘솔/Drive/폰/실서비스를 변경하지 않았습니다. 사용자 조치·질문은 없습니다.
+
 ## 2026-10-17 · 서버 퍼즐 회차·멱등 이동 원장 (이슈 #109)
 
 기준 main `de72bdd3b87de8eaa3a8a1dd9d8398235f7bce30`, 작업 `codex/109-server-round-ledger`, [이슈 #109](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/109)입니다. `server/game/roundState.ts`·`roundLedger.ts`와 파일/프로세스/worker 검증을 추가했습니다. **서버 내부 회차 원장 구현·로컬 검증·총괄 최종검수를 마쳤고 커밋/PR 제출을 승인받았습니다**입니다. 기존 앱·BoardEngine·30개 level·저장·RewardLedger/구매/인증 schema와 TTL은 수정하지 않았습니다. 아래 과거 round 미구현 표현은 당시 이력입니다.
