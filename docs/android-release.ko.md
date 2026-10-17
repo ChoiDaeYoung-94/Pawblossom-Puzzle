@@ -1,5 +1,29 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-17 · 선택형 PlayFab 세션 검증·소유자 binding (이슈 #107)
+
+기준 main `3174a3dbc38d4f4e6b996b8c7c838e5600a39ad7`, 작업 `codex/107-server-session-auth`, [이슈 #107](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/107)입니다. `server/auth/playfabSession.ts`·인증 응답 전용 `strictSessionJson.ts`와 합성 테스트를 추가했습니다. **PlayFab을 선택할 경우 사용할 서버 어댑터 준비이며 provider 최종 채택·운영 로그인 연결 완료가 아닙니다.** 구현·로컬 검증·총괄 읽기검수를 마쳤고 커밋/PR 제출을 허용받았습니다. 아래 과거 인증 미구현 표현은 당시 이력이며 실제 인증 서비스/앱 연결은 여전히 미완료입니다.
+
+- `new PlayFabSessionAuthenticator(config, transport)`는 통신하지 않습니다. title ID, `production/test` 환경, 서비스별 `bindingDomain`, 안정적인 별도32byte `bindingKey`, 서버 비밀 공급 함수 `getSecretKey(signal)`을 외부에서 주입합니다. 환경·파일·계정·실키를 자동으로 읽거나 생성/저장하지 않습니다. 구성 getter는 한 번 snapshot하고 키는 복제합니다. 생성 중 후속 구성 오류와 `close()`에서 내부 키를 지우고 caller 키는 보존합니다. 구매/보상 원장의 키와 별도로 관리해야 합니다.
+- `authenticate({sessionTicket, signal?})`만 통신합니다. 신뢰된 title로 고정한 `https://<title>.playfabapi.com/Server/AuthenticateSessionTicket`에 POST하고 `X-SecretKey`, JSON `{SessionTicket}`을 보냅니다. `redirect:error`·`credentials:omit`·`cache:no-store`이며 URL 객체의 canonical 주소를 fetch/응답 URL 비교에 함께 사용합니다. HMAC title은 대문자 정규화를 유지합니다. 입력 ticket/signal은 await 전에 snapshot하며 owner/context 등 추가 입력 필드를 거절합니다.
+- [Microsoft 공식 AuthenticateSessionTicket](https://learn.microsoft.com/en-us/rest/api/playfab/server/authentication/authenticate-session-ticket?view=playfab-rest)은 위 경로/키 헤더/SessionTicket과 `IsSessionTicketExpired`·`UserInfo.PlayFabId`를 설명하고 응답에 PII가 포함될 수 있음을 명시합니다. **title=hex1–16자, ticket=공백 없는 ASCII1–4096자, secret=공백 없는 ASCII1–8192자, provider ID=hex16자 규칙은 이 어댑터의 자체 엄격 profile이며 실제 API 호환 미검증**입니다. HTTP200와 JSON wrapper `code:200,status:"OK",data`를 요구하고 data에는 boolean 만료 여부와 객체 UserInfo만 허용합니다. wrapper/data의 알 수 없는 필드·오류 wrapper, 만료, ID 누락/오류, duplicate key(escape 등가 포함),32단계 초과 JSON, 잘못된 UTF-8은 닫습니다. 정상 UserInfo의 부가 PII는 허용하되 해석/반환/저장하지 않습니다.
+- 인증 성공 시 frozen `{kind:'authenticated',context:{ownerId,expectedObfuscatedAccountId}}`만 반환합니다. 두 값은 SHA-256 HMAC hex64자로, JSON 배열 `['pawblossom-session-v1',bindingDomain,정규화title,environment,용도,정규화PlayFabId]`를 안정적인 주입 키로 계산합니다. 용도는 `owner`와 `google-account`로 분리하며 원본 provider ID도 반환하지 않습니다. 같은 구성/키/계정의 새 ticket과 재시작은 동일 binding이고 title/environment/domain/key/계정 변경은 분리됩니다. 키 교체나 namespace 변경은 기존 원장 소유자를 자동 이전하지 않으므로 운영 키 보존/백업·회전/복구/이전 설계가 별도로 필요합니다.
+- **성공 context는 현재 요청 내부용**입니다. 성공 캐시·장기 세션 발급·클라이언트 인증 증명서가 아니며 매번 ticket 검증을 호출합니다. HTTP body의 owner/context 원문이나 타입/`Object.freeze`만으로 인증을 대체하면 안 됩니다. 신뢰된 서버 middleware가 성공 결과를 같은 요청의 구매 원장 context로 전달하고, 보상 원장에는 별도 신뢰된 게임 계층이 관리하는 roundId를 결합해야 합니다. 인증 성공만으로 round 소유권·게임 이동+5 지급/소비·오프라인 권한·동의가 검증되는 것은 아닙니다. 기존 원장의 API/TTL/schema는 변경하지 않았습니다.
+- 비밀 공급→fetch→본문 전체 읽기→cleanup을 호출당 기본5초/최대5초에 포함합니다. caller abort/close는 즉시 비공개 코드로 끝내고 공급/transport signal을 취소하며 늦은 secret 후 fetch와 늦은 response 후 read/HMAC을 시작하지 않습니다. 기본/최대64KiB, 기본/최대256회 read(EOF 포함), 기본8/최대32 동시 슬롯이며 대기 queue를 만들지 않고 초과 caller는 `busy`입니다. Content-Length 선언과 Fetch가 읽는 실제(해제된) body bytes를 독립 제한하며 압축 전후 길이를 동일시하지 않습니다. 상태/헤더/reader getter·read/cancel throw/reject도 원문 없이 처리합니다.
+- **비협조 공급/fetch/read/cancel promise가 남으면 caller가 timeout/abort되어도 그 작업의 슬롯을 보존**합니다. 새 transport 무한 누적을 막지만 슬롯이 모두 영구 정지하면 서비스가 `busy`로 남습니다. 외부 작업이 실제로 정리되면 슬롯이 복구되며 `close()` 뒤 새 호출은 `closed`입니다. 이는 장수 instance 내부 제한으로 프로세스/새 instance 전체 상한이나 재시작 복구가 아닙니다. 재시작은 외부 I/O의 종료를 보장하지 않습니다. 주입 함수/getter의 동기 무한루프·이벤트루프 정지는 JS timer로 끊을 수 없으므로 비차단 신뢰 의존성이 필요합니다. 키 Buffer 소거는 검증하지만 JS 문자열·외부 transport가 보관한 ticket/key/body·PII의 물리적 메모리 소거는 보장하지 않습니다. 로그/디스크에 원문을 쓰는 코드는 없습니다.
+
+Node24.21.0에서 최종 `npm test` **24파일1374개(신규176개)**, `npm run store:check`, `npm run store:test` **12개**, `npm run typecheck`(전체/앱/서버), `npm run build:test`→`npm run build`, `git diff --check`가 통과했습니다. 마지막 production 세 flags=false, `src`/`dist`의 기존 서버 마커와 `PlayFabSessionAuthenticator/AuthenticateSessionTicket/pawblossom-session-v1/strictSessionJson` 마커 파일 **0건**입니다. 기존 Vite500kB chunk 경고는 남아 있습니다. UI 변경이 없어 추가 브라우저/Android 검증은 하지 않았고 실제 서비스 검증과 합산하지 않습니다.
+
+총괄은 URL canonical·close/getter·timeout/slot·strictJSON·snapshot·HMAC/context 비노출을 읽기검수하여 blocker 없음을 확인했습니다. 전송 Content-Length와 Fetch 압축 해제 body 길이를 동일시하던 비교를 제거하고 합성 회귀1개를 추가한 최종 상태에서 작업자가 위 전체1374개와 두 빌드를 다시 통과했습니다. 총괄도 **최종 전체24파일1374개**, 인증·구매·보상3파일 **304개**, 전체/앱/서버 타입·diff를 독립 재검증하여 통과했습니다. **304개는 최종 전체1374개의 부분집합이며 합산하지 않습니다.** 앞선1373개 결과와 최종 결과는 실행 시점이 다르며 최신 기준은1374개입니다. 원격 main 재fetch 결과는 위 기준과 같으며 최신 PR head/main의 Node22·24 CI와 병합은 총괄이 별도로 확인합니다. 최종 코드의 LF 정규화 UTF-8 SHA-256 체크포인트는 다음과 같습니다.
+
+| 파일 | SHA-256 |
+| --- | --- |
+| `server/auth/playfabSession.ts` | `a3049d5cfaba8750407eca8279854005cbc737f6190da38f59e0afdd447b42b3` |
+| `server/auth/strictSessionJson.ts` | `fbc14be8cbea552e613ac50bb20387c9fe03d2a329fc5c2d7aa69a8d71f5e434` |
+| `tests/playfab-session.test.ts` | `eea688858a7ef1404c7a9313134d9f7b6d356c97bc09f485cd36bb767f244018` |
+
+**#73 실제 PlayFab/API/profile·provider 선택·앱 로그인 화면·게스트 진행 이전/복구·인증 HTTP/session/rate limit·신뢰된 서버 round·어린이 포함 실제 대상 연령/한국·미국 동의·키 저장/회전/백업·배포·단말/스토어는 미완료**입니다. APK/AAB·Android sync·버전·최종 오디오 믹스·실키/계정/운영 AdMob·Drive/Play Console/상품·폰 테스트/전달을 변경하지 않았습니다. 사용자 조치·질문은 없습니다.
+
 ## 2026-10-17 · 보상형 콜백 암호화 수신함·제한 재처리 (이슈 #105)
 
 기준 main `46b5df21bc09d2ffa0c0969e2c03b09cef64bf79`, 작업 `codex/105-rewarded-callback-inbox`, [이슈 #105](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/105)입니다. **구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.** 서버 전용 `callbackInbox.ts`·`callbackHttp.ts`, 실제 SQLite 테스트와 별도 프로세스/worker helper를 추가하고, 기존 SSV parser의 원문을 반환하지 않는 boolean 구조 검사만 공유했습니다. `RewardLedger`의 TTL·시계·거절·보상권 의미와 앱/native/콘솔 설정은 변경하지 않았습니다. 아래 #103의 수신함/HTTP 미구현 표현은 당시 이력이며 이번 구현은 실제 HTTP 배포 완료를 뜻하지 않습니다.
