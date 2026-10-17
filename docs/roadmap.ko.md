@@ -1,5 +1,29 @@
 # 출시까지의 개발 순서
 
+## 현재 통합 현황 · 2026-10-17 · #115
+
+서버 구현 기준은 main `b58f9c7da0b0c19393a26cd065be9b8e99e1cf6b`입니다. 아래 네 묶음은 병합되었으며, **내부 모듈·합성 통합 검증 완료**와 **실제 서비스·출시 완료**를 구분합니다.
+
+| 반영된 작업 | PR | main 커밋 |
+| --- | --- | --- |
+| 선택형 PlayFab 세션 검증·사용자 식별자 연결 | [#108](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/108) | `de72bdd` |
+| 서버 퍼즐 회차·특수 블록·중복 이동 방지 | [#110](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/110) | `d867e32` |
+| 보상권 영구 소비·같은 보드에 이동 5회 추가 | [#112](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/112) | `d890494` |
+| 매 요청 인증·회차·광고 요청/보상 적용 연결 | [#114](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/114) | `b58f9c7` |
+
+최신 로컬 전체 검사는 **28파일/1,734개**, 스토어 검사는 **12개**입니다. 타입·testing/production 빌드도 통과했으며, 같은 검사의 반복 실행이나 과거 버전 결과를 더한 수치가 아닙니다. 최종 production의 테스트 플래그 3개는 false이고 서버 모듈은 앱 번들에 포함되지 않습니다. PR과 main의 원격 검사 근거는 [Android 개발 기록](android-release.ko.md#현재-통합-상태--2026-10-17--115)에서 확인합니다.
+
+다음 우선순위는 다음과 같습니다.
+
+1. 실제 로그인 제공자·게스트 진행 이전/복구와 서버 실행 환경을 결정하고, 공개 API의 인증·속도 제한·보존·키 운영 설계를 검증합니다. 현재 파일 SQLite 모듈은 PlayFab CloudScript에 바로 배포할 수 있는 구현이 아닙니다.
+2. 공개 요청 계층과 앱을 연결하고, 오프라인 진행·경제/보상·요청 재시도를 설계합니다. 현재 `GameService`는 HTTP/listen·앱 연결이 없는 내부 모듈이며 신규 광고 정책은 기본 거절입니다.
+3. 어린이를 포함한 실제 대상 연령과 한국·미국의 동의/개인정보 조건, 실제 광고 SDK/SSV·구매/복원/환불을 검증합니다. AdMob 앱·단위 생성은 실제 광고 게재나 결제 검증 완료를 뜻하지 않습니다.
+4. 사용자가 폰을 연결하면 총괄의 일괄 단말 점검 → 사용자 감각 검수 → 개선 → 스토어 출시 검증 순서로 진행합니다.
+
+[후속 #73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)에 실제 서비스·단말·스토어 미검증을 보존합니다. APK/AAB·Android sync·버전 증가·최종 믹스·실계정/키·Drive/Play Console/결제 상품 변경은 계속 보류합니다. 현재 사용자 조치와 질문은 없습니다.
+
+아래 내용은 각 작업을 작성하던 당시의 이력입니다. 이전의 “현재 작업”, “PR 제출 전”, “미구현” 표현보다 위 통합 현황과 연결된 최신 GitHub 근거를 우선합니다.
+
 2026-10-17 현재 작업: [이슈 #113 인증된 내부 게임 요청·보상 연결](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/113), 기준 main `d890494e2f0c40314127ba288024de5d0fc910f9`, `codex/113-authenticated-game-service`입니다. 생성 무통신·세 원장 소유/구성·키/실경로 분리, 매 요청 인증/엄격 snapshot/owner projection, 신규 광고 기본 거절 gate·failed0/최신 revision claim 발급, 실제 redeem→capability→+5와 중복/재시작 복구, 포기 commit 후 보상 정리/명시 retry-required를 구현했습니다. **로컬 전체28파일/1734개(신규61)·스토어12개/원본·타입·testing→production 빌드/diff 통과, 최종 세 flags=false·서버 마커0건/총괄 독립 최종검수 완료·커밋/PR 제출 승인**입니다. [계약·실패/취소·분산 원자성 한계·검증과 LF SHA](android-release.ko.md#2026-10-17--인증된-내부-게임-요청보상-연결-이슈-113)을 보존합니다. 총괄도 20:34:54 시작 전체1734개(32.10초)·타입/diff/flags/마커·동일 코드 LF SHA를 독립 재검증했습니다. 다음은 승인된 커밋/PR·최신 Node22/24 CI와 총괄 반영입니다. #73 실제 provider 결정·HTTP/listen/온라인 앱·진행경제·연령/국가/동의·운영/키/보존/감시·단말/스토어는 미완료입니다. APK/AAB·sync·버전·믹스·실계정/키/env/콘솔·Drive·폰 보류 유지, 사용자 조치·질문은 없습니다. 아래 내부 연결 미구현 표현은 당시 이력입니다.
 
 2026-10-17 현재 작업: [이슈 #111 보상권 소비·실패 회차 이동 추가](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/111), 기준 main `d867e32f3a3a5fa3839878bfda1feffe165bcf35`, `codex/111-reward-redemption-continue`입니다. 실제 voucher의 영구 소비·안정 opaque ID·private WeakMap 요청 내부 권한과 failed/moves0 회차 +5/보상행/영수증/revision 원자 저장·재시작/후속 이동 후 중복 복구를 구현했습니다. reward/round v1→v2 원자 이전·구 profile 검증 후 재서명·전체행/작업 한도를 검사하며 [API·수명·1만행 O(N) 비용·정적 fixture/실구버전 근거·LF SHA](android-release.ko.md#2026-10-17--보상권-영구-소비실패-회차-이동-추가-이슈-111)를 기록했습니다. 자동 **27파일/1673개(신규96)**·스토어12개/원본·타입·testing→production 빌드/diff 통과, 최종 세 flags=false·서버 마커0건입니다. **구현·로컬 검증·총괄 최종검수 완료/커밋·PR 제출 승인**이며 총괄 독립 전체1673개·타입/diff·최종 flags·실제 v1 소스 probe 재실행도 통과했습니다. 다음은 승인된 커밋/푸시/한국어 PR·최신 Node22/24 CI·총괄 병합이며 최신 PR/main 검사·반영 근거는 GitHub에 구분 기록합니다. 두 파일 DB의 분산 원자성/실서비스 exactly-once/앱 연결을 뜻하지 않습니다. #73 실제 provider/HTTP·앱·발급/소비 orchestration·경제/진행·운영/키/보존/이전/속도 제한·동의/단말/스토어는 미완료입니다. APK/AAB·sync·버전·믹스·실계정/키/env/콘솔·Drive·폰 보류를 유지하며 사용자 조치·질문은 없습니다. 아래 소비/+5 미구현 표현은 당시 이력입니다.
