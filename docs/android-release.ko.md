@@ -1,5 +1,13 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-17 · 판매자 파일의 Windows 줄바꿈 재현성 (이슈 #93)
+
+#91의 검증 시점에는 원본/dist가 LF59바이트로 일치했지만 PR #92 병합 뒤 Windows `core.autocrlf=true` 체크아웃이 원본을 CRLF60바이트로 변환했습니다. 원문 의미와 Git blob은 같았으나 기존 dist/기록된 SHA와 작업 폴더 원본의 바이트가 달라지는 것을 최종 점검에서 발견했습니다. **검증 시점의 성공을 현재 파일 일치로 합산하지 않고** 별도 이슈로 보강합니다.
+
+`.gitattributes`에서 `/public/app-ads.txt text eol=lf` 한 파일만 지정하여 다른 파일의 줄바꿈 정책을 바꾸지 않습니다. 콘솔 스니펫·게시자·내용과 앱 실행 코드는 유지합니다. 기준 main `bef51cba37a5be414375dd941f3c690c50c0059e`, 작업 `codex/93-app-ads-lf`입니다.
+
+실제 `core.autocrlf=true` 환경에서 Git index를 별도 Git 밖 폴더로 체크아웃한 결과도 **LF59바이트·CR 없음**이며 원본/dist/index 체크아웃 세 파일의 SHA-256은 모두 `ffdd2b786a1f1ded678fe5dca9ca15c2f6ea765cd691f4b25b697ad06b97d167`입니다. Node24.21.0 `npm run build`(타입/launcher 검사 포함), `/app-ads.txt` HTTP200·text/plain·줄바꿈 포함 원문 일치, production 세 flags=false, `git diff --check`를 통과했습니다. 검사 사본은 Git 밖 `Pawblossom-builds/qa/issue-93/checkout`에 보존하며 기존 파일을 지우지 않았습니다. 최신 PR/main Node22·24 CI는 GitHub에 별도 기록합니다. 기존500kB chunk 경고와 공개 호스팅/스토어 연결/AdMob 인증 미완료, APK/단말 테스트 보류는 그대로입니다.
+
 ## 2026-10-17 · app-ads.txt 웹 원본 준비 (이슈 #91)
 
 AdMob 콘솔의 **모든 앱 → app-ads.txt 설정하기**에서 사용자 계정의 맞춤 판매자 코드를 직접 확인하고 [public/app-ads.txt](../public/app-ads.txt)에 보존했습니다. 게시자 ID는 앱/광고 단위의 게시자 부분과 같은 `pub-4045654268115042`이며, 콘솔이 제공한 `DIRECT` 관계와 인증기관 ID를 그대로 사용합니다. 이는 공개 판매자 선언이며 로그인·API 비밀키가 아닙니다. 다른 앱이나 타사 판매자 행을 임의로 추가하지 않았습니다.
