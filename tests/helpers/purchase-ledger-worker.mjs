@@ -12,6 +12,8 @@ async function run(data) {
     }) : async () => data.ackFailure ? 'retry' : 'acknowledged';
     ledger = new PurchaseLedger({databasePath: data.path, serverKey: new Uint8Array(data.key), purchase: data.policy,
       getAccessToken: async () => 'synthetic-oauth', acknowledge,
+      voidedTransport: async () => new Response(JSON.stringify({voidedPurchases: [{purchaseToken: data.token,
+        purchaseTimeMillis: String(Date.now() - 100_000), voidedTimeMillis: String(Date.now() - 50_000), voidedReason: 7, voidedSource: 2}]}), {headers: {'content-type': 'application/json'}}),
       lookupTransport: async () => new Response(JSON.stringify({
         purchaseStateContext: {purchaseState: 'PURCHASED'}, acknowledgementState: data.pending ? 'ACKNOWLEDGEMENT_STATE_PENDING' : 'ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED',
         obfuscatedExternalAccountId: data.account,
@@ -21,7 +23,8 @@ async function run(data) {
           consumptionState: 'CONSUMPTION_STATE_YET_TO_BE_CONSUMED',
         }}],
       }), {headers: {'content-type': 'application/json'}})});
-    return {result: data.action === 'retry' ? await ledger.retryPending() : await ledger.process(data.token, {ownerId: data.owner, expectedObfuscatedAccountId: data.account}),
+    return {result: data.action === 'void' ? await ledger.reconcileVoided({startTime: Date.now() - 86_400_000, endTime: Date.now()})
+      : data.action === 'retry' ? await ledger.retryPending() : await ledger.process(data.token, {ownerId: data.owner, expectedObfuscatedAccountId: data.account}),
       entitlement: ledger.hasEntitlement(data.owner), ...(data.httpAcknowledge ? {postCount} : {})};
   } catch { return {error: 'worker-failed'}; }
   finally { ledger?.close(); }
