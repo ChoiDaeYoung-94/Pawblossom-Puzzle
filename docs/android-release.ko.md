@@ -1,5 +1,28 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-17 · 구매 서버 조회·판정 핵심 모듈 (이슈 #85)
+
+기준 main `3b52ea62fcf186238d82988592d71297009c0f04`, 작업 `codex/85-play-purchase-verification`입니다. [서버 전용 모듈](../server/commerce/googlePlayPurchase.ts)은 Google Play `purchases.productsv2.getproductpurchasev2` GET과 합성 응답 판정만 구현합니다. **운영 서버·앱 연결·인증/구매 원장·게임 권한 지급 구현 완료가 아닙니다.** `src`·Android·기존 Billing/Ads·런타임·에셋·오디오·버전·의존성은 변경하지 않습니다. `tsconfig`에서 server 타입 검사만 추가하며 웹 엔트리가 import하지 않습니다.
+
+### 조회 경계와 엄격한 지원 profile
+
+- 서버 운영자가 검증한 단일 `packageName`/`productId`/`purchaseOptionId`를 명시 구성해야 합니다. 기본 실제 상품/패키지·환경변수/OAuth 읽기·자동 호출은 없습니다. 모듈 생성은 통신하지 않으며 반환 함수를 명시 호출할 때만 고정 Google HTTPS hostname/path에 GET합니다. 구매 토큰은 ASCII 1~4096자(단독 `.`/`..` 제외)로 제한하고 URL path encode합니다. access token은 서버 호출자가 `androidpublisher` scope로 취득해 전달해야 하며 취득/권한 설정은 구현하지 않습니다.
+- 공식 응답에는 packageName/token이 없습니다. 패키지는 서버 구성의 조회 route에 묶고 응답 상품·구매 옵션을 allowlist와 비교합니다. **정확히 한 줄·영구 비소모 상품·quantity=1·refundableQuantity=1·미소비 enum**만 지원하며 다른 상품/중복 줄·대여/선주문 필드의 존재·소비/전액 환불·알 수 없는 enum/필수 판정 필드 누락/형식 오류는 닫습니다. `quantity`/`refundableQuantity`/`purchaseOptionId` 존재와 값1 요구는 이 초안의 자체 엄격 제한이며 Google의 모든 상품/상태에서 필수라는 뜻이 아닙니다. 공식 스키마가 수치 필드를 지원하는 사실과 실제 설정 상품의 응답에서 해당 필드를 확인했다는 주장은 구분합니다. **실제 응답은 아직 확인하지 않았습니다.** 판정에 쓰지 않는 메타데이터는 출력하지 않습니다.
+- `expectedObfuscatedAccountId`는 **신뢰된 인증 context가 결정해야 하는 서버 전용 입력**입니다. client body의 userId를 그대로 믿는 것이 아니며 TypeScript 타입/문자열 형식 검사는 인증을 대신하지 않습니다. PURCHASED 응답의 `obfuscatedExternalAccountId`와 정확히 같아야 하고 누락/불일치는 차단합니다. 현재 앱의 binding과 인증 모델 선택·아동 데이터 정책은 미구현입니다. 이번 모듈은 로그인이나 PII 수집을 도입하지 않습니다.
+- production에서는 `testPurchaseContext`가 존재하면 차단합니다. 명시적 서버 test 모드에서만 정확한 `{fopType:'TEST'}`를 허용하고 누락 enum/unknown context도 차단합니다. 시험 모드에서 context가 없는 응답은 production 사실로 표시하며 시험 구매라고 바꾸지 않습니다. orderId는 없어도 허용하며 필수값·중복키로 사용하지 않습니다.
+- 정상 PURCHASED + ACK pending은 `purchase-fact`와 `durable-record-and-entitlement-review-then-ack`, ACK acknowledged는 `durable-record-and-restoration-review`입니다. **둘 다 후속 검토용 사실이며 광고 제거/복원 지급을 확정하지 않습니다.** 결과에는 token·계정 식별값·원문 응답을 넣지 않습니다. 후속 서비스는 기존 요청의 token과 인증 context를 안전하게 결합해 영구 원장에서 token 중복·기존 소유자·처리 이력·자격/위험 심사를 원자적으로 처리하고 권한을 저장한 뒤 필요한 ack를 해야 합니다. 기존 acknowledged도 다른 계정으로 옮겨 지급할 수 없습니다. 메모리 가짜 원장은 만들지 않았고 반복 조회는 같은 사실을 반환할 뿐 중복 처리를 해결하지 않습니다.
+- PENDING/CANCELLED는 상품/계정 검사 전에 비후보 상태로 분류합니다. **모든 rejected/lookup-error는 신규 지급 후보가 없다는 자료이며 기존 권한 자동 철회·환불·ack/consume 명령이 아닙니다.** 특히 상태 분류만으로 타 계정 권한을 취소하면 안 됩니다. 환불·RTDN·Voided Purchases 재조회와 신뢰된 소유자에 대한 권한 갱신은 별도 후속입니다.
+
+### 실패 처리·검사와 남은 검증
+
+주입 가능한 native fetch 기반이며 timeout 기본8초(최대30초), 본문 최대64KiB(구성 상한1MiB)입니다. deadline은 fetch 헤더와 streaming 본문 읽기 전체를 감싸고 caller abort·늦은 응답·중단을 무시하는 transport/cancel도 bounded하게 반환합니다. 선언 content-length와 실제 UTF8 바이트를 둘 다 제한합니다. `redirect:'error'`이며 native fetch는 redirect에서 거부해 안전한 `transport-error`가 됩니다. 주입 transport가 3xx/redirected 응답을 반환하면 `redirect-blocked`로 분류합니다. native fetch 예외의 원문/cause를 검사해 세부 원인을 추측하지 않습니다. 401/403/404/429/5xx·그 밖 HTTP·잘못된 JSON/content-type/UTF8/사용된 body·oversized body는 실패로 닫으며 URL/token/authorization/body/Error cause를 반환/로그에 넣지 않습니다. 서버 호출자도 요청/원문·민감 자격정보를 로그에 남기면 안 됩니다.
+
+[자동 검사](../tests/server-commerce.test.ts)는 공식 스키마를 따른 **합성 fixture와 주입 transport**만 사용하며 실제 Google API·네트워크·계정/비밀값을 사용하지 않습니다. Node **24.21.0**에서 `npm test` **492개(기존369+신규123)**, `npm run store:check`, `npm run store:test` **12개**, `npm run build`(launcher 원본·타입 검사 포함)를 통과했습니다. 빌드의 기존500kB chunk 경고는 남습니다. `git diff --check` 통과, 앱 엔트리/src와 dist의 서버 import/endpoint/판정 마커 검색0건, 최종 `dist/build-info.json`의 세 flags=false를 확인했습니다. 이 검사는 현재 작업 트리 기준이며 PR/main 최신 head의 Node22·24 CI는 GitHub에 별도 기록합니다. 웹 동작을 바꾸지 않아 브라우저/Android 반복 검증은 하지 않았고 root 5173 서버를 보존했습니다.
+
+공식 근거(2026-10-17 확인): [보안·중복 token/계정 binding](https://developer.android.com/google/play/billing/security), [일회 구매 처리 순서](https://developer.android.com/google/play/billing/lifecycle/one-time)(두 문서 2026-10-15 갱신), [GET 경로·빈 body·OAuth scope](https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.productsv2/getproductpurchasev2), [응답 필드/enum](https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.productsv2)(2026-09-28 갱신). 권한 심사/저장 뒤 ack 원칙과 선택적 orderId를 구현 범위와 분리해 적용했습니다.
+
+운영 서비스 배포·HTTP 인증 API·영구 DB/중복 원장·앱 인증/binding·OAuth 자격정보/API 권한·실상품 응답·실구매/복원/ack/consume/refund·환불/RTDN·한국/미국 연령/아동 데이터·스토어/실기기는 [#73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)에서 미완료입니다. 새 APK/AAB·Android sync/Java 빌드·버전 증가·Drive/콘솔·상품 설정·최종 오디오 믹스 변경과 단말 테스트/APK 전달은 계속 보류합니다.
+
 ## 2026-10-16 · debug 보상형 시험 하네스 (이슈 #83)
 
 기준 `662c95aee9c9818c1579bb9d1b4b1bc86b4aec84`, 작업 `codex/rewarded-test-ads`입니다. 기존 GMA **25.4.0** 안의 `RewardedAd`를 debug 전용 `TestAdsPlugin`에 추가했습니다. UMP **4.0.0**, Billing **9.1.0**, AppID·Manifest·release 등록·버전 0.1.7/code 8·상품/콘솔은 그대로입니다. testing + Android debug에서만 수동 형식 선택/로드/표시를 허용하고 기본 꺼짐·동의 보호·billing 차단을 유지합니다.
