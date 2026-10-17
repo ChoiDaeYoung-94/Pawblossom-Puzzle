@@ -40,6 +40,7 @@ class ElementStub {
   setAttribute() {}
   removeAttribute() {}
   append() {}
+  before() {}
   focus() {}
   matches(){return true;}
   querySelector(selector:string){return this.innerHTML.includes(`id="${selector.slice(1)}"`)?new ElementStub(selector):null;}
@@ -119,6 +120,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   }
   const stateExports: Record<string, unknown> = {};
   const context = vm.createContext({
+    crypto:globalThis.crypto,
     APP_VERSION:packageInfo.version,TEST_TOOLS_ENABLED:testTools,
     ANDROID_TEST_ADS_ENABLED:Boolean(adsBridge),TestAdsController,adCopy,nativeTestAds:()=>adsBridge,
     ANDROID_TEST_BILLING_ENABLED:Boolean(billingBridge),TestBillingController,billingCopy,nativeTestBilling:()=>billingBridge,
@@ -284,7 +286,7 @@ describe('광고 제거 조회·구매창과 게임 활동 상태',()=>{
 });
 describe('시험 광고와 기존 게임 활동 상태 통합',()=>{
   function setup(format:import('../src/testAds').AdFormat='interstitial'){
-    let value={bridgeVersion:2,format,rewardEvents:0,available:true,state:'idle',revision:0,error:'',privacyRequired:false} as import('../src/testAds').AdSnapshot;
+    let value={bridgeVersion:3,receipt:null,format,rewardEvents:0,available:true,state:'idle',revision:0,error:'',privacyRequired:false} as import('../src/testAds').AdSnapshot;
     let callback!:(state:typeof value)=>void;
     const emit=(state:typeof value.state)=>{value={...value,state,revision:value.revision+1};callback?.({...value});return {...value};};
     const bridge:TestAdsBridge={getStatus:async()=>({...value}),selectFormat:async({format})=>{value={...value,format};return emit('idle');},prepare:async()=>emit('consent'),show:async()=>emit('presenting'),cancel:async()=>emit('cancelled'),privacyOptions:async()=>emit('privacy'),addListener:async(_name,listener)=>{callback=listener;return {remove:async()=>{}};}};
@@ -335,6 +337,44 @@ describe('시험 광고와 기존 게임 활동 상태 통합',()=>{
   });
 });
 type Position = { row: number; col: number };
+describe('보상형 시험 이어하기 요청 문맥',()=>{
+  async function setup(){
+    let state:import('../src/testAds').AdSnapshot={bridgeVersion:3,format:'interstitial',receipt:null,rewardEvents:0,available:true,state:'idle',revision:0,error:'',privacyRequired:false};
+    let callback!:(value:typeof state)=>void;
+    const emit=(patch:Partial<typeof state>)=>{state={...state,...patch,revision:state.revision+1};callback?.({...state});return {...state};};
+    const bridge:TestAdsBridge={getStatus:async()=>({...state}),selectFormat:async({format})=>emit({format,state:'idle',receipt:null}),
+      prepare:async()=>emit({state:'loading',receipt:null}),show:async({requestId})=>emit({state:'presenting',receipt:{requestId,attemptId:'11',earned:false,closed:false}}),
+      cancel:async()=>emit({state:'cancelled',receipt:null}),privacyOptions:async()=>emit({state:'privacy'}),addListener:async(_name,listener)=>{callback=listener;return {remove:async()=>{}};}};
+    const h=mainHarness(false,false,true,true,undefined,true,bridge);h.nativeEvents.appStateChange({isActive:true});
+    h.run('startLevel(6,true);moves=1;scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');h.flushResults();await h.run('testAds.connect()');
+    const start=async()=>{await h.run('prepareRewardContinue(rewardedContinue)');emit({state:'ready'});h.element('#result-ad-show').onclick();await Promise.resolve();};
+    const earned=()=>emit({state:'showing',rewardEvents:state.rewardEvents+1,receipt:{...state.receipt!,earned:true}});
+    const closed=(reward=true)=>emit({state:'closed',receipt:{...state.receipt!,earned:reward,closed:true}});
+    return {h,bridge,emit,start,earned,closed,state:()=>state};
+  }
+  it('earned는 보드/저장을 건드리지 않고 닫힘 뒤 같은 보드·회차에 한 번만 +5를 적용합니다',async()=>{
+    const x=await setup(),{h}=x,disk=h.disk(),scene=h.run('scene'),engine=h.run('scene.engine'),round=h.run('round');
+    await x.start();x.earned();expect(h.run('moves')).toBe(0);expect(h.run('game.paused')).toBe(true);expect(h.disk()).toEqual(disk);
+    const done=x.closed();expect(h.run('moves')).toBe(5);expect(h.run('scene')).toBe(scene);expect(h.run('scene.engine')).toBe(engine);expect(h.run('round')).toBe(round);
+    x.emit(done);h.element('#result-continue').onclick();expect(h.run('moves')).toBe(5);expect(h.disk()).toEqual(disk);
+    h.run('scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');expect(h.run('moves')).toBe(4);
+  });
+  it.each(['home','new-round','stale-dom','billing','no-reward','failed','cancelled'])('%s는 지급0이고 회차 자격을 소모하지 않습니다',async reason=>{
+    const x=await setup(),{h}=x;await x.start();x.earned();
+    if(reason==='home')h.run("switchView('village')");if(reason==='new-round')h.run('startLevel(6,true)');
+    if(reason==='stale-dom')h.element('#result-dialog').querySelector=()=>new ElementStub('#result-continue');
+    if(reason==='billing')h.run('testBilling={blocksAds:true,pausesGame:false}');
+    const before=h.run('moves'),disk=h.disk();
+    if(reason==='failed'||reason==='cancelled')x.emit({state:reason,receipt:null});else x.closed(reason!=='no-reward');
+    expect(h.run('moves')).toBe(before);expect(h.run('testContinueUsed')).toBe(false);expect(h.disk()).toEqual(disk);
+  });
+  it('실패/취소 뒤 명시적 재시도로 받을 수 있고 비활성 닫힘은 복귀까지 보드가 멈춥니다',async()=>{
+    const x=await setup(),{h}=x;await x.start();x.closed(false);expect(h.run('testContinueUsed')).toBe(false);
+    await h.run("testAds.command('cancel')");await x.start();x.earned();h.nativeEvents.appStateChange({isActive:false});x.closed();
+    expect(h.run('moves')).toBe(0);expect(h.run('game.paused')).toBe(true);h.nativeEvents.appStateChange({isActive:true});
+    expect(h.run('moves')).toBe(5);expect(h.run('game.paused')).toBe(false);
+  });
+});
 function boardHarness() {
   const handlers: Record<string, (pointer: Pointer) => void> = {};
   const lifecycle: Record<string, () => void> = {};

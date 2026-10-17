@@ -1,5 +1,21 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-17 · 보상형 시험 광고와 실패 회차 이어하기 연결 (이슈 #95)
+
+기준 main `f55c6ee0b189aa272daaa0916333c9f6c4ce9a4c`, 작업 `codex/rewarded-test-continue`입니다. **Android debug + testing 시험 스테이지의 실패 결과**에서 사용자가 따로 누른 불러오기/표시 버튼으로 Google 공용 보상형 시험 광고를 요청합니다. 같은 표시의 완료와 실제 닫힘을 확인한 뒤 기존 실패 보드를 이동 **+5**로 이어갑니다. 광고 없는 시험 이어하기와 회차당 한 번을 공유합니다. 설정의 수동 시험 광고는 계속 게임 지급이 없습니다. 일반 회차/production에는 새 진입이나 지급이 없습니다.
+
+브리지 계약은 **v3**입니다. `show({requestId})`마다 웹에서 새 UUID를 발급하며 네이티브 `RewardLedger`가 `{requestId, attemptId, earned, closed}`를 반환합니다. `receipt:null`은 일치하는 표시 사실 없음이며, 필드 누락/구형/손상은 차단합니다. `rewardEvents`는 실행 중 콜백 수 표시로만 유지하고 지급에 사용하지 않습니다. `earned` 단독에서는 재개하지 않습니다. 실제 dismiss에서 권한/광고 제거 상태를 다시 확인하고 같은 attempt의 receipt를 닫은 뒤 전달합니다. 다음 요청·취소·실패·폐기에서는 receipt를 지웁니다. 사용한 requestId 이력은 각 controller/plugin 실행 메모리에만 두고 최대2048개에서 더 이상 표시하지 않으며 앱 재시작이 필요합니다. 이 한도에서 이전 ID를 제거하여 재사용시키지 않습니다.
+
+현재 컨트롤러가 명시 show한 요청이면 복귀 `getStatus`가 stateChange보다 먼저 반환해도 일치하는 earned+closed receipt를 한 번 복구합니다. 초기/다른 컨트롤러/수동 광고/이전 또는 다른 요청의 조회는 자격이 아닙니다. revision 중복/역순·show Promise의 늦은 응답·stale DOM/round/Scene·홈/새 회차·취소/만료/load/show 실패·무보상 닫힘·종료에서는 지급하지 않습니다. 손상 계약은 해당 claim을 폐기합니다. IPC 응답 유실은 overlay를 닫힘으로 추정하지 않으며, 현재 요청의 신뢰된 일치 receipt 조회가 없으면 지급/조기 재개를 막습니다. 실패/취소는 회차 자격을 소모하지 않습니다. 구매 상태가 unknown/pending/owned 등으로 `blocksAds`이면 요청/지급을 차단합니다. 비활성 중 닫힘이 확인되어도 앱/문서 활성 전에는 보드를 깨우지 않습니다.
+
+**+5는 앱의 시험 정책**입니다. Google 공용 시험 광고의 `RewardItem` 수량/type을 운영 광고 단위의 `5 moves` 설정 검증으로 세지 않습니다. 이 receipt는 클라이언트 네이티브 SDK 콜백 사실이며 **서버 인증·SSV·영구 지급/중복 원장**이 아닙니다. 일반 경제·저장 스키마·로그인·운영 ID·SDK 버전·동의/연령 정책을 확정하지 않았습니다.
+
+공식 근거는 2026-10-17 확인한 [Google rewarded Android 문서](https://developers.google.com/admob/android/rewarded)(갱신2026-10-15)의 main thread 호출·공용 시험 ID·Google 제공 광고 earn→dismiss 순서입니다. 이 순서만 지원하며 mediation의 일반 콜백 순서를 지원한다고 주장하지 않습니다. [보상형 광고 정책](https://support.google.com/admob/answer/7313578?hl=ko)의 사전 액션/보상 안내·명시 선택·거절 가능·완료 보상 요구에 맞춰 시험 UI에 +5/회차 한도/무광고 대안과 별도 준비·표시를 안내합니다. 이는 운영 정책·실제 대상 연령·한국/미국 동의 검증 완료가 아닙니다.
+
+검증은 자동561개·타입·스토어12개/원본 검사·testing/production 웹 빌드와 [격리 브라우저 QA](browser-qa.ko.md#2026-10-17--보상형-시험-이어하기-이슈-95)를 구분합니다. 순수 `javac` + JUnit4.13.2의 `RewardLedgerTest` **7개**가 통과했습니다. `:app:compileDebugJavaWithJavac --dry-run`은 성공했지만 의존 DAG에 `packageDebugResources`/`bundleLibCompileToJarDebug`가 있어 **Gradle 실제 실행은 보류**했습니다. 직접 plugin `javac`의 첫 classpath에는 LifecycleOwner가 없어 실패했고, 캐시 module JAR까지 명시한 두 번째 컴파일은 exit0입니다. 기존 Android36 SDK·Capacitor/앱 compiled classes·Gradle 캐시 의존성을 이용한 **변경 Java 소스의 직접 컴파일**이며 Android 빌드·SDK 실제 표시·기기 통과로 세지 않습니다. 로그/argfile/클래스는 Git 밖 `Pawblossom-builds/qa/issue-95`에 보존합니다.
+
+실제 SDK/UMP·광고 완료/닫힘/활동 복귀·운영 지급/SSV·서버 인증/영구 원장·서비스/스토어·사용자 감각 검수는 [#73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73) 미완료입니다. APK/AAB 생성·Android sync·버전 증가·폰 테스트/전달·Drive/Play Console/상품·운영 ID·최종 오디오 믹스 변경은 하지 않았습니다. 구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.
+
 ## 2026-10-17 · 판매자 파일의 Windows 줄바꿈 재현성 (이슈 #93)
 
 #91의 검증 시점에는 원본/dist가 LF59바이트로 일치했지만 PR #92 병합 뒤 Windows `core.autocrlf=true` 체크아웃이 원본을 CRLF60바이트로 변환했습니다. 원문 의미와 Git blob은 같았으나 기존 dist/기록된 SHA와 작업 폴더 원본의 바이트가 달라지는 것을 최종 점검에서 발견했습니다. **검증 시점의 성공을 현재 파일 일치로 합산하지 않고** 별도 이슈로 보강합니다.

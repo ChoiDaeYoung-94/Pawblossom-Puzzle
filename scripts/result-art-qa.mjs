@@ -10,7 +10,10 @@ const modulePath=process.env.PAWBLOSSOM_PLAYWRIGHT_MODULE;
 const {chromium}=await import(modulePath?pathToFileURL(path.resolve(modulePath)).href:'playwright');
 const root=path.resolve('dist'),flags=JSON.parse(await fs.readFile(path.join(root,'build-info.json'),'utf8'));
 const variant=flags.testTools?'testing':'production';
-const report={dateKst:'2026-10-16',variant,flags,browser:'',environment:'격리 headless Chrome·실제 dist·Game 참조만 응답에 노출. 결과는 실제 Scene onMove 콜백으로 종료 판정/300ms 타이머를 통과. Android 단말·WebView·강제 종료·APK 미검증.',assets:[],cases:[],boundaries:[],pageerrors:[]};
+const output=process.argv.find(arg=>arg.startsWith('--output='))?.slice(9);
+if(output)await fs.mkdir(output,{recursive:false});
+const artifact=name=>output?path.join(output,name):`docs/screenshots/${name}`;
+const report={dateKst:new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul'}).format(new Date()),variant,flags,browser:'',environment:'격리 headless Chrome·실제 dist·Game 참조만 응답에 노출. 결과는 실제 Scene onMove 콜백으로 종료 판정/300ms 타이머를 통과. Android 단말·WebView·강제 종료·APK 미검증.',assets:[],cases:[],boundaries:[],pageerrors:[]};
 const browser=await chromium.launch({headless:true,channel:'chrome'});report.browser=browser.version();
 const outcomePath=won=>`/assets/pip-${won?'win':'retry'}-v1.webp`;
 async function openCase({language='ko',viewport={width:320,height:568},replay=false,reducedMotion='reduce',failure,gateImages=true}={}){
@@ -96,7 +99,7 @@ try{
       assert.equal(await h.page.evaluate(()=>document.activeElement.id),testing?'result-home':'result-next');
       assert.ok(await h.page.evaluate(()=>document.querySelector('#result-dialog').contains(document.activeElement)));
       if(testing){await h.page.locator('#result-test').click();await h.page.locator('#test-close').click();assert.equal(await h.page.locator('#result-dialog').getAttribute('open'),'');assert.deepEqual(await h.saved(),before);assert.deepEqual(h.requests,[outcomePath(won)]);}
-      if(language==='ko'&&viewport.width===320&&['win','retry'].includes(kind)||language==='en'&&viewport.width===640&&testing){await h.page.screenshot({path:`docs/screenshots/result-art-${variant}-${language}-${viewport.width}-${kind}-20261016.png`,animations:'disabled'});}
+      if(language==='ko'&&viewport.width===320&&['win','retry'].includes(kind)||language==='en'&&viewport.width===640&&testing){await h.page.screenshot({path:artifact(`result-art-${variant}-${language}-${viewport.width}-${kind}-20261016.png`),animations:'disabled'});}
       report.cases.push({language,viewport,kind,reducedMotion,requestsBeforeResult:0,requests:h.requests,loading,loaded,alpha,coinsBefore:before.coins,coinsAfter:settled.coins,rewards});
     }finally{h.release();await h.context.close();}
   }
@@ -125,6 +128,6 @@ try{
     report.boundaries.push({failure:'held-until-next-result',requests:h.requests,oldImageDidNotReplaceRetry:true,buttonsAndPickerUsable:true,coins:current.coins});
   }finally{h.release();await h.context.close();}
   assert.deepEqual(report.pageerrors,[]);
-  await fs.writeFile(`docs/performance/result-art-${variant}-20261016.json`,JSON.stringify(report,null,2)+'\n');
+  await fs.writeFile(output?path.join(output,'summary.json'):`docs/performance/result-art-${variant}-20261016.json`,JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify({variant,cases:report.cases.length,boundaries:report.boundaries.length,pageerrors:report.pageerrors}));
 }finally{await browser.close();}

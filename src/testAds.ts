@@ -4,11 +4,12 @@ export const adStates=['idle','consent','privacy','loading','ready','presenting'
 export type AdState=typeof adStates[number];
 export const adFormats=['interstitial','rewarded'] as const;
 export type AdFormat=typeof adFormats[number];
-export interface AdSnapshot {bridgeVersion:2;available:boolean;state:AdState;revision:number;error:string;privacyRequired:boolean;format:AdFormat;rewardEvents:number}
+export interface AdReceipt {requestId:string;attemptId:string;earned:boolean;closed:boolean}
+export interface AdSnapshot {bridgeVersion:3;available:boolean;state:AdState;revision:number;error:string;privacyRequired:boolean;format:AdFormat;rewardEvents:number;receipt:AdReceipt|null}
 export interface TestAdsBridge {
   getStatus():Promise<AdSnapshot>;
   prepare():Promise<AdSnapshot>;
-  show():Promise<AdSnapshot>;
+  show(options:{requestId:string}):Promise<AdSnapshot>;
   cancel():Promise<AdSnapshot>;
   privacyOptions():Promise<AdSnapshot>;
   selectFormat(options:{format:AdFormat}):Promise<AdSnapshot>;
@@ -18,32 +19,63 @@ export const nativeTestAds=()=>registerPlugin<TestAdsBridge>('PawblossomTestAds'
 
 // 네이티브가 상태의 원본입니다. 중복/역순 콜백을 revision으로 걸러내고 재개 시 재조회합니다.
 export class TestAdsController {
-  snapshot:AdSnapshot={bridgeVersion:2,available:false,state:'idle',revision:-1,error:'',privacyRequired:false,format:'interstitial',rewardEvents:0};
+  snapshot:AdSnapshot={bridgeVersion:3,available:false,state:'idle',revision:-1,error:'',privacyRequired:false,format:'interstitial',rewardEvents:0,receipt:null};
   pending=false;
   needsCancellation=false;
   private disposed=false;
   private connection?:Promise<void>;
   private listener?:PluginListenerHandle;
   private localError=false;
+  private uncertainOverlay=false;
+  private claim?:{requestId:string;attemptId?:string};
+  private completed?:string;
+  private usedRequests=new Set<string>();
   constructor(private bridge:TestAdsBridge,private changed:()=>void){}
-  get overlay(){return ['privacy','presenting','showing'].includes(this.snapshot.state);}
-  get busy(){return this.pending||['consent','privacy','loading','presenting','showing'].includes(this.snapshot.state);}
-  get pausesGame(){return this.busy;}
+  get overlay(){return this.uncertainOverlay||['privacy','presenting','showing'].includes(this.snapshot.state);}
+  get busy(){return this.pending||this.overlay||['consent','loading'].includes(this.snapshot.state);}
+  get pausesGame(){return this.busy||this.overlay;}
   get canSelectFormat(){return this.snapshot.available&&!this.busy&&this.snapshot.state!=='ready';}
   private accept=(value:AdSnapshot,authoritative=false)=>{
     if(this.disposed)return;
-    if(!value||value.bridgeVersion!==2||typeof value.available!=='boolean'||typeof value.privacyRequired!=='boolean'||typeof value.error!=='string'||
+    if(!value||value.bridgeVersion!==3||typeof value.available!=='boolean'||typeof value.privacyRequired!=='boolean'||typeof value.error!=='string'||
       !adStates.includes(value.state)||!adFormats.includes(value.format)||!Number.isSafeInteger(value.rewardEvents)||value.rewardEvents<0||
-      !Number.isSafeInteger(value.revision)||value.revision<0){this.localFailure(true);return;}
+      !Number.isSafeInteger(value.revision)||value.revision<0||!this.validReceipt(value)){this.localFailure(true);return;}
     if(value.revision<this.snapshot.revision||
       (value.revision===this.snapshot.revision&&!(authoritative&&this.localError)))return;
     if(value.rewardEvents<this.snapshot.rewardEvents){this.localFailure(true);return;}
+    this.uncertainOverlay=false;
+    if(this.completed&&(value.state!=='closed'||!value.available||!value.receipt?.earned||!value.receipt.closed||value.receipt.requestId!==this.completed))this.completed=undefined;
+    // 조회 자체는 자격이 아닙니다. 이번 컨트롤러가 발급한 표시 요청의 일치 receipt만 복구할 수 있습니다.
+    if(this.claim){
+      const receipt=value.receipt;
+      if(value.format==='rewarded'&&receipt?.requestId===this.claim.requestId){
+        if(['presenting','showing'].includes(value.state)){
+          if(this.claim.attemptId&&this.claim.attemptId!==receipt.attemptId)this.claim=undefined;
+          else this.claim.attemptId=receipt.attemptId;
+        }else if(value.state==='closed'){
+          if((!this.claim.attemptId||this.claim.attemptId===receipt.attemptId)&&receipt.earned&&receipt.closed&&value.available)this.completed=this.claim.requestId;
+          this.claim=undefined;
+        }
+      }else if(['presenting','showing','closed','failed','cancelled','idle'].includes(value.state))this.claim=undefined;
+    }
     this.localError=false;
     this.needsCancellation=['consent','privacy','loading','ready','presenting','showing'].includes(value.state);
-    this.snapshot={bridgeVersion:2,available:value.available,state:value.state,revision:value.revision,error:value.error,
-      privacyRequired:value.privacyRequired,format:value.format,rewardEvents:value.rewardEvents};
+    this.snapshot={bridgeVersion:3,available:value.available,state:value.state,revision:value.revision,error:value.error,
+      privacyRequired:value.privacyRequired,format:value.format,rewardEvents:value.rewardEvents,receipt:value.receipt?{...value.receipt}:null};
     this.changed();
   };
+  private validReceipt(value:AdSnapshot){
+    const r=value.receipt;
+    if(r===null)return true;
+    return Boolean(r&&value.format==='rewarded'&&typeof r.requestId==='string'&&/^[a-zA-Z0-9-]{16,80}$/.test(r.requestId)
+      &&typeof r.attemptId==='string'&&/^[1-9][0-9]{0,18}$/.test(r.attemptId)&&typeof r.earned==='boolean'&&typeof r.closed==='boolean'
+      &&(['presenting','showing'].includes(value.state)?!r.closed:value.state==='closed'&&r.closed));
+  }
+  takeReward(requestId:string){
+    if(this.disposed||this.pending||this.overlay||this.localError||this.completed!==requestId)return false;
+    this.completed=undefined;return true;
+  }
+  abandonReward(){this.claim=undefined;this.completed=undefined;}
   async connect(){
     if(this.disposed)return;
     if(this.listener){await this.refresh();return;}
@@ -58,6 +90,7 @@ export class TestAdsController {
   private localFailure(invalid=false){
     // 불확실한 네이티브 전면창은 임의로 닫힌 것으로 처리하지 않습니다.
     this.localError=true;
+    if(invalid)this.abandonReward();
     if(invalid)this.snapshot={...this.snapshot,available:false};
     if(!this.overlay)this.snapshot={...this.snapshot,state:'failed',error:'bridge'};
     this.changed();
@@ -73,21 +106,31 @@ export class TestAdsController {
     catch{if(!this.disposed){this.localFailure(true);await this.refresh();}}
     finally{this.pending=false;if(!this.disposed)this.changed();}
   }
-  async command(action:'prepare'|'show'|'cancel'|'privacyOptions'){
-    if(this.disposed||this.pending)return;
+  async command(action:'prepare'|'show'|'cancel'|'privacyOptions',rewardRequestId?:string){
+    if(this.disposed||this.pending||this.uncertainOverlay)return;
     if(action==='prepare'&&(this.busy||this.snapshot.state==='ready'))return;
     if(action==='show'&&(this.busy||this.snapshot.state!=='ready'))return;
     if(action==='cancel'&&this.overlay)return;
     if(action==='privacyOptions'&&(this.busy||!this.snapshot.privacyRequired))return;
     if(!this.snapshot.available)return;
+    let requestId='';
+    if(action==='show'){
+      requestId=rewardRequestId??crypto.randomUUID();
+      if(!/^[a-zA-Z0-9-]{16,80}$/.test(requestId)||this.usedRequests.has(requestId))return;
+      if(this.usedRequests.size>=2048){this.localFailure(true);return;}
+      this.usedRequests.add(requestId);this.abandonReward();
+      if(rewardRequestId&&this.snapshot.format==='rewarded')this.claim={requestId};
+    }else this.abandonReward();
+    if(action==='show'||action==='privacyOptions')this.uncertainOverlay=true;
     this.pending=true;this.changed();
-    try{this.accept(await this.bridge[action]());}
+    try{this.accept(action==='show'?await this.bridge.show({requestId}):await this.bridge[action]());}
     catch{if(!this.disposed){this.localFailure();await this.refresh();}}
     finally{this.pending=false;if(!this.disposed)this.changed();}
   }
   async dispose(){
     if(this.disposed)return;
     this.disposed=true;
+    this.abandonReward();
     if(!this.overlay&&this.snapshot.available)void this.bridge.cancel().catch(()=>{});
     try{await this.listener?.remove();}catch{/* 종료 중 네이티브 브리지가 이미 해제되어도 재호출하지 않습니다. */}
     this.listener=undefined;

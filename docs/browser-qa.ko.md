@@ -1,3 +1,23 @@
+## 2026-10-17 · 보상형 시험 이어하기 (이슈 #95)
+
+기준 main `f55c6ee0b189aa272daaa0916333c9f6c4ce9a4c`, 작업 `codex/rewarded-test-continue`의 로컬 검증과 총괄 검수 결과입니다. **네이티브 SDK 실행과 Chrome IPC fixture를 구분합니다.** 신규 `scripts/rewarded-continue-qa.mjs`는 실제 dist를 격리 headless Chrome155.0.8059.80에 제공하고 Android plugin/앱/결제 상태만 명시적 IPC fixture로 공급합니다. 실제 광고·UMP·OS overlay·기기 검증이 아닙니다. 합성 준비는 seed42 보드/기존 낙엽 주입과 `onMove` 이동 축소이며, 실패 확정과 +5 이후 플레이는 실제 canvas 포인터 입력입니다. 앱의 목표·판정은 바꾸지 않습니다.
+
+| 검사 | 현재 결과/범위 |
+| --- | --- |
+| 자동/타입/빌드 | `npm test -- --reporter=dot` **561개(기존532+신규29)**, `tsc --noEmit`, `npm run store:check`, `npm run store:test`12개, `npm run build:test`, `npm run build` 통과. 기존500kB chunk 경고는 유지합니다. 총괄의 부분 독립 검사 수를 더하지 않습니다. |
+| 보상형 testing dist | `node scripts/rewarded-continue-qa.mjs --output=.../rewarded-testing-final` **KO/EN × 320×568·360×640·640×360=6개 화면 + 경계15개**, pageerror0. 초기 자동 load/show0·각 명시 버튼, earned 단독0·실제 closed 상태 fixture 뒤 +5·중복0·실제 canvas 재입력·동일 Scene/engine/pieces/leafObjects/개별 piece identity·점수/목표/셔플·보드/낙엽·저장 raw bytes 보존. |
+| 지급 경계 | 취소/load 실패/show 실패/무보상 닫힘/다른 requestId·attemptId/이전 revision/구형 계약/IPC 실패/비활성·현재 요청 조회 우선/홈·새 회차의 오래된 완료/결제 pending/일반 회차 부재를 검사했습니다. 실패/취소 뒤 명시적 새 요청은 같은 회차에서 가능하며 광고·무광고 경로가 1회를 공유합니다. VM은 stale DOM/Scene·저장 쓰기 수·언어 갱신과 추가 계약 경계를 담당합니다. |
+| 기존 무광고/아트 | `test-continue-qa.mjs` testing6개 화면+경계1묶음, production6개 화면; `result-art-qa.mjs` testing30개 화면+4개 경계, production18개 화면+4개 경계. 각 pageerror0. 아트 QA의 성공/실패 종료는 hooks fixture이며 자연 퍼즐 풀이와 구분합니다. |
+| 수동 광고/결제 회귀 | `test-ads-qa.mjs --dist` testing **120개 배치**와 전면/보상형 무지급·비활성·중복·Escape/back·AudioContext·billing unknown/pending/owned 보호 통과. `billing-qa.mjs`는 별도 testing Vite5195 **소스 + IPC**에서36개 배치와 구매창 활동 보호 통과; `--dist` testing 웹은 진입 없음만 확인한 별도 검사이며 네이티브36개 검사로 세지 않습니다. |
+| production 부재 | 보상형 fixture6개 일반 실패 화면에서 보상/무광고 버튼 부재·광고 IPC0, 수동 광고/결제의 실제 웹 및 Android IPC fixture 모두 진입·IPC0. 마지막 primary dist `testTools/androidTestAds/androidTestBilling=false`입니다. |
+| 화면/활동/저장 | body·게임 페이지 스크롤0/수평 넘침0, 44px 이상 버튼과 비겹침·모달 내부 스크롤로 모든 버튼 접근을 확인했습니다. KO320/EN640 top/control PNG를 직접 확인했습니다. 광고 earned만으로 보드/오디오를 재개하지 않고 닫힘 뒤에도 document/native 비활성을 유지합니다. |
+
+결과는 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-95`에 보존합니다. 최종 폴더는 `rewarded-testing-final`, `rewarded-production-final`, `no-ad-testing-final`, `no-ad-production-final`, `result-art-testing-final`, `result-art-production-final`, `manual-ads-testing-final`, `manual-ads-production-final`, `billing-source-ipc`, `billing-testing`, `billing-production-final`입니다. 신규 보상 QA summary는 소스/Java/해당 dist JS·CSS SHA-256을 포함합니다. 기존 수동 광고/결제/아트 QA는 `--output`과 실행 시 KST 날짜를 지원하도록 고쳐 과거 docs JSON/PNG를 덮어쓰지 않았습니다. 첫 `rewarded-testing-1` 실패는 fixture에 지원하지 않는 billing state `pending`을 넣어 이벤트가 거부된 원인이며, 실제 계약인 `state:idle, entitlement:pending`으로 수정한 최종 결과만 성공 근거로 사용합니다. 이전 중간 결과는 삭제하지 않습니다.
+
+`billing-testing`은 날짜 자동화 전의 중간 실행이라 JSON의 고정 `dateKst:2026-10-15`가 남아 있으며 실제 실행은2026-10-17입니다. 이 웹 진입 부재 결과를 최신 네이티브 전체 검증으로 합산하지 않습니다. 최종 광고/결제 소스IPC/아트 보고서는 실행 KST2026-10-17을 기록합니다. `local-verification-checkpoint.json`에 각 보고서·명령 결과·현재 소스와 두 변형 QA 소스 해시 일치·마지막 production dist 해시 일치를 보존합니다.
+
+기존 root Vite5173·사용자 Chrome/탭은 유지했고 이번에 연 testing5195는 종료했습니다. 각 headless browser는 finally에서 닫습니다. 광고 완료 receipt는 클라이언트 사실이며 Google `RewardItem`의 수량/type이나 AdMob 운영 `5 moves` 설정·SSV·서버 지급 검증이 아닙니다. [네이티브 계약/직접 Java 검사 범위](android-release.ko.md#2026-10-17--보상형-시험-광고와-실패-회차-이어하기-연결-이슈-95), 실제 단말·운영·정책/스토어 미완료 [#73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)을 보존합니다. APK/AAB·sync·폰 테스트/전달·버전·운영 ID·콘솔/상품·최종 믹스는 보류합니다. 구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.
+
 ## 2026-10-17 · 시험 이어하기 이동 +5 (이슈 #87)
 
 기준 main `9617bfed7e1b10498267e7968a574888afc3816f`, 작업 `codex/87-test-continue-moves`입니다. `TEST_TOOLS_ENABLED && testingLevel`인 실패 결과에만 광고 없는 **시험 이어하기 +5**를 추가했습니다. 동일 round/Scene/engine/블록 Container·보드/낙엽/점수/목표/셔플을 보존하고 이동만5 추가하며 회차당1회입니다. 사용 여부는 메모리 상태이며 새 라운드에서만 초기화합니다. SDK 광고·보상 콜백 카운터·실제 광고 지급/서버에는 연결하지 않았습니다.
