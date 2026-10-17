@@ -1,5 +1,62 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-17 · 서버 보상형 SSV·요청 binding·영구 보상 원장 (이슈 #103)
+
+기준 main `99da38faefbefca97bb04b6974259d688dfe45cc`, 작업 `codex/103-rewarded-ssv-ledger`, [이슈 #103](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/103)입니다. **구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.** `server/ads/admobSsv.ts`와 구매 DB에서 분리한 `server/ads/rewardLedger.ts`를 추가했습니다. 보상권을 원장에 저장하는 핵심이며 실제 게임 이동+5 지급/소비, 앱/native/SDK, HTTP, 인증 서버, 배포와 연결하지 않았습니다. 아래 과거 SSV/원장 미구현 표현은 당시 이력입니다.
+
+### 공식 근거와 자체 ASCII profile
+
+- [Google Android SSV 문서](https://developers.google.com/admob/android/ssv)의 ECDSA-SHA256/DER, 마지막 `signature`→`key_id` 순서, 나머지 필드 알파벳 순서, custom data percent escaping, 공개키 캐시 최대24시간을 확인했습니다. SSV ad_unit 예시는 full `ca-app-pub-.../...`가 아닌 숫자 ID입니다. 공식 AdMob Network `5450213213286189855`/Waterfall `1215381445328257950`은 Number 변환 없이 문자열로 취급합니다. 테스트 광고 단위는 합성이며 운영 ID/SDK 설정을 코드에 주입하지 않았습니다.
+- [공식 연결 Tink verifier](https://github.com/tink-crypto/tink-java-apps/blob/main/rewardedads/src/main/java/com/google/crypto/tink/apps/rewardedads/RewardedAdsVerifier.java)는 `URI.getQuery()`로 한 번 디코딩한 전체 query에서 substring을 검증합니다. [공식 테스트 `testShouldVerifyWithEncodedUrl`](https://github.com/tink-crypto/tink-java-apps/blob/main/rewardedads/src/test/java/com/google/crypto/tink/apps/rewardedads/RewardedAdsVerifierTest.java)는 wire `%20`/`%40`를 디코딩한 문자열에 서명합니다. raw query를 무조건 검증하는 것을 Google 전체 호환으로 부르지 않습니다.
+- 이번 `pawblossom-admob-ascii-v1`은 **signed 값이 URL-safe ASCII이고 percent/plus가 없는 범위**로 제한하여 raw=once-decoded를 보장합니다. query 원문 문자열만 받으며 전체 URL/`?`/fragment/percent(정상 escape도 포함)/`+`/비ASCII/공백/CRLF를 거절합니다. 웹 프레임워크의 정렬·decode/re-encode 객체를 전달하면 안 됩니다. 총4096자·정확히10필드·canonical 이름/순서, 중복/누락/extra/encoded 이름/구형 이름을 검사합니다. custom_data/user_id는 서버 발급32바이트의 unpadded base64url43자, transaction은 소문자 hex16~128자입니다.
+- signature는 nonce와 별도 규칙입니다. 첫 `=` 다음 전체를 값으로 받고 canonical base64url unpadded 또는 정확한 끝 padding0~2개만 허용합니다. [Tink Base64](https://github.com/tink-crypto/tink-java/blob/main/src/main/java/com/google/crypto/tink/subtle/Base64.java)의 urlSafeEncode는 padding 생략, decoder는 올바른 padding을 선택적으로 받습니다. DER8~72바이트·양의 최소 표현 정수2개를 검사한 뒤 crypto verify가 결정합니다. key_id는 자체 양의 uint32 profile(문자열 callback/정수 JSON), timestamp는 **13자리 안전한 epoch ms**입니다. Google 문서16자리 시각 예시는 이 자체 profile에서 거절하며 실제 Google 형태 미검증을 유지합니다.
+- Tink verifier 주석의 독립 공개 SPKI 예시를 import하여 P-256(`prime256v1`)/`secp256k1`임을 확인하고 두 곡선만 허용합니다. 공식 예시 public key import와 합성 두 곡선 sign/verify를 분리했습니다. **공식 Google 서명 callback fixture로 호환 검증한 것은 아닙니다.** 공식 테스트 개인키를 복사하거나 운영 키/계정/자격정보를 읽지 않았습니다.
+
+### 공개키 조회·캐시·실패 경계
+
+- 생성은 무통신이며 검증 시 고정 `https://www.gstatic.com/admob/reward/verifier-keys.json`만 GET합니다. callback/config로 URL을 받지 않습니다. redirect:error·credentials omit·no-referrer, 200+JSON, redirect/응답 URL 변경 거절(합성 Response 빈 URL만 허용), UTF8 fatal decode입니다. JSON 중복 object member·깊이4·keys1~16개·중복 keyId·미지 필드를 거절합니다. canonical base64/DER SPKI 재직렬화·PEM 동일 키, 비EC/P384/P521/손상 키를 검사합니다.
+- 본문32KiB·reader128회·fetch+read 전체5초(구성으로 단축 가능), cache 최대24시간, unknown-key 전체 공통 refresh cooldown 기본60초, refresh singleflight1개, 대기 caller128개로 제한합니다. 동기 CPU 점유를 중단하는 격리는 포함하지 않습니다. body getter/cancel throw·reject·hang은 안전하게 정리하고 원문/예외/cause를 결과/로그에 담지 않습니다.
+- caller 한 명의 abort는 공유 fetch를 취소하지 않습니다. 전체 timeout은 내부 abort를 수행하고 비협조 fetch/read가 실제 종결하기 전 새 transport를 시작하지 않아 누적을 막습니다. 늦은 응답은 버리며 실제 종결+cooldown 후 회복할 수 있습니다. 새 키 전체 검증 성공 때만 map을 교체합니다. 갱신 실패 시 아직 fresh한 기존 키는 유지하되 만료 키는 검증에 사용하지 않습니다. 잘못된 clock/시계 역행은 키를 지우고 해당 verifier 인스턴스를 영구 차단하므로 정상 clock에서 새 인스턴스가 필요합니다.
+- 검증 결과에는 raw query/서명/nonce/user/transaction 원문이 없습니다. frozen event의 nonceHash/userHash/transactionHash와 검증된 adUnit/adNetwork/ms만 원장 내부로 교환합니다. 원장은 외부 `verified:true`/fact를 받지 않고 자기 verifier를 직접 호출합니다. 구성·키·함수 참조는 생성 시 복사하며 비밀/OAuth/환경 파일을 자동으로 읽지 않습니다.
+
+### 서버 요청 binding·원자 저장·회차 종료
+
+- `TrustedRewardRound(ownerId, roundId)`는 **서버 인증 미들웨어와 신뢰된 게임 상태가 결정할 계약일 뿐 실제 인증이 아닙니다.** 현재 앱에 서버 round 모델은 없습니다. HTTP body의 owner/round를 단순 복사하면 안 됩니다. 인증 caller에만 issueClaim의 customData/opaque userId/expiresAt을 반환하는 의도된 예외를 두고, 원문 nonce/user/owner/round/서버 키는 DB·로그·일반 결과에 기록하지 않습니다.
+- 구매 DB와 별도 파일/테이블/metadata/profile/서버 키를 사용합니다. nonce/user SHA-256, 도메인 분리 owner·owner-round HMAC, 발급/만료·adunit·처리 상태를 저장합니다. policy·환경·시간/시도 규칙·키 확인 HMAC을 metadata에 고정하고 다른 환경/키/정책/구매 DB/UNIQUE·PK·FK·CHECK까지 다른 스키마는 reopen 거절합니다. 구매 migration·새 의존성은 없습니다.
+- 미발급·user 불일치(다른 owner/round 포함)·다른 adunit/amount/item/network·만료/미래/오래된 event를 거절합니다. 회차별 최대3개 독립 광고 시도와 **owner-round 보상권1회**입니다. 단순 광고 실패는 새 시도 발급 경계이고 `closeRound`는 서버의 영구 회차 종료입니다. 미발급 회차의 close도 보존하며 기존 모든 claim callback·후속 발급을 차단합니다. 이미 저장한 보상권의 철회는 아닙니다.
+- 실제 canonical transaction_id의 SHA-256을 전역 PRIMARY KEY로, owner-round·claim을 각각 UNIQUE로 보존합니다. BEGIN IMMEDIATE 안에서 claim used와 voucher INSERT를 함께 commit합니다. 동일 transaction/claim 재전송은 신규0회, 다른 claim에 같은 transaction은 거절, 여러 claim/다른 transaction의 같은round는 신규1회만 기록합니다. 서명 재생성·(r,n-s) 변형·padding이 transaction 중복 키를 바꾸지 못합니다.
+- DELETE/WAL journal·synchronous FULL·FK·로컬 영구 디스크가 대상입니다. 잠금/트랜잭션 실패는 storage-unavailable, 읽기 실패는 tagged error로 구분합니다. close 진입/async verify 뒤 폐기를 재확인하고 close 실패에도 키 copy를 지웁니다. DB/키 ACL·백업/복구·HMAC pseudonym 보유/삭제·분산 운영은 후속이며 영구 중복 기록을 안전 정책 없이 삭제하지 않습니다. `hasVoucher`는 **보상권 기록 조회**이고 현재 회차 소비 가능성·실보드+5·끝까지 exactly-once 적용 증명이 아닙니다.
+
+### 늦은 SSV 시간 정책과 운영 미검증
+
+| 구분 | 이번 자체 정책 |
+| --- | --- |
+| event 유효기간 | 발급 후15분까지 timestamp 허용 |
+| 시계 오차 | event ≥ 발급-30초, event ≤ 도착+30초 |
+| event 최대 나이 | 도착-event ≤20분 |
+| 도착 지연 | claim 만료 후5분까지 도착 허용(경계 포함) |
+| 예시 | 10분 시청→18분20초 도착 허용, 15분 시청→20분 도착 허용, 20분+1ms 도착 거절 |
+| 재시작/시계 역행 | 발급/만료·high-water 영구 보존, high-water 이전 clock의 발급/종료/기록 거절 |
+
+시청 event 유효기간과 callback 도착 기한은 별개입니다. 저장된 동일 transaction/claim 재전송은 신규 지급 없이 중복을 반환할 수 있으나 영구 close된 round는 재전송도 거절합니다. 실제 Google 지연/시각 profile·서버 clock 운영은 미검증입니다. **기본 cooldown60초·caller 한도·clock 역행 인스턴스 차단·24시간 캐시·percent 미지원은 Google의 공식 최대5회/1초 간격 HTTP 재시도 안에 자동 복구/보상 완료를 보장하지 않습니다.** HTTPS/HTTP200 매핑, 원문을 보호하는 영구 수신함/재처리·키 rotation/감시 운영은 후속 설계·실검증이 필요합니다.
+
+### 로컬 검증·총괄 검수와 체크포인트
+
+2026-10-17 `scripts/use-dev-tools.ps1`의 Node24.21.0, 기준 커밋+아래 체크포인트 파일 상태에서 **npm test1110개(기존913+신규197)**·store:check·store:test12개·typecheck·build:test 후 build를 모두 통과했습니다. 최종 dist 세 flags=false, src/production dist 서버 marker 각각0건입니다. 기존 Vite chunk 크기 경고는 남아 있습니다. UI 변경이 없어 광범위 브라우저 재검증은 하지 않았으며 Android/실서비스와 합산하지 않습니다. 로컬 결과와 원격 Node22·24 CI는 구분하며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다. 총괄의 독립 Node24.21.0 commerce+SSV/보상 원장7파일672개와 전체/앱/서버 타입 검사·diff 검사가 통과했습니다. **672개는 전체1110개의 부분집합 재검증이며 합산하지 않습니다.**
+
+합성 ECDSA/fetch만 사용했고 실제 광고 요청/실키 서버 응답은 받지 않았습니다. 공식 독립 public SPKI import(서명 fixture 아님), parser/DER/정책/키 경계·rotation/cooldown/singleflight/caller abort/비협조 timeout, 실제 파일 재시작·별도 프로세스 중복·8 worker 중복·3 claim 같은round·cancel 경합·TTL/도착/clock·rollback/lock·원문 미노출을 검사했습니다.
+
+| 체크포인트 파일 | SHA-256 |
+| --- | --- |
+| server/ads/admobSsv.ts | `67ab13477656a52d8197b9179a5ec78fc6e865db60a6f28a3aa440b43eaee63a` |
+| server/ads/rewardLedger.ts | `217e34129e8ecaaa43c6054daca6ba29151b5c4531e372306567c6b966640840` |
+| tests/admob-ssv.test.ts | `dac141ed50873d5547953a77f1b616305b89ca0eea6742ae1630d1f382a54e32` |
+| tests/reward-ledger.test.ts | `ac76418ee8309e02e7a726c5960db3bda1a0365cecd4ed3d29e6e80908f045c6` |
+| tests/helpers/ssvFixture.ts | `3224601add12abfd72bad78d863649284efe6766311aa0ee5fba14596c882e72` |
+| tests/helpers/reward-ledger-worker.mjs | `f0312ec39271996e3f8a084244e5aaa20d4dc8107eb34f18676a0a24d9d38bba` |
+
+**[후속 #73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)은 미완료로 유지합니다.** 실제 SSV/키 응답·곡선/percent/ms profile, SDK custom data/user·광고시도 binding, HTTPS callback·HTTP 상태/재시도·proxy 원문 보존/로그 차단, 실제 auth/round/board+5·보상 소비·오프라인, 어린이 포함 연령/동의·개인정보, 배포/운영/ACL/키·실기기/스토어는 미검증입니다. APK/AAB·Android sync·버전·최종 오디오 믹스·Drive/Play Console/상품·폰 테스트/APK 전달 보류를 유지했고 운영 AdMob 콘솔 변경도 하지 않았습니다. 다음 우선순위는 원문을 보호하는 callback 영구 수신함·HTTP 재시도·인증·실게임 연결의 후속 설계/검증이며 #73 미완료를 유지합니다. 사용자 조치·질문은 없습니다.
+
 ## 2026-10-17 · Google 전액 환불 조회와 영구 구매 회수 (이슈 #101)
 
 기준 main `46b9c76346f10822c51848ecc8635bd25c04a65a`, 작업 `codex/101-voided-purchase-reconciliation`, [이슈 #101](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/101)입니다. **구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.** `server/commerce/googlePlayVoidedPurchases.ts`의 전체 페이지 조회와 `PurchaseLedger.reconcileVoided`를 추가했습니다. 실제 계정/API/HTTP 서비스/앱에 연결하지 않았으며 아래 과거 기록의 환불 회수·migration 미구현은 당시 이력입니다. 이번 범위는 이미 검증·등록된 단일 수량 영구 비소모 구매의 회수 및 늦은 동일 토큰 지급 차단입니다.
