@@ -23,7 +23,7 @@ export interface PurchaseLedgerOptions {
   readonly purchase: PlayPurchaseServerConfig;
   /** 매 조회/재시도에 신선한 OAuth를 주입합니다. 반환값은 DB에 저장하지 않습니다. */
   readonly getAccessToken: () => Promise<string>;
-  /** 신뢰된 서버 전용 구현. 실제 Google POST transport는 별도 후속 구현입니다. */
+  /** 신뢰된 서버 전용 구현. createLedgerAcknowledger로 Google POST transport를 명시 주입할 수 있습니다. */
   readonly acknowledge: (input: PurchaseAcknowledgerInput) => Promise<'acknowledged' | 'retry'>;
   readonly lookupTransport?: typeof fetch;
 }

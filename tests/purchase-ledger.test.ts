@@ -6,6 +6,7 @@ import {fork} from 'node:child_process';
 import {Worker} from 'node:worker_threads';
 import {DatabaseSync} from 'node:sqlite';
 import {PurchaseLedger, type PurchaseLedgerOptions} from '../server/commerce/purchaseLedger';
+import {createLedgerAcknowledger} from '../server/commerce/googlePlayAcknowledge';
 
 // 실제 계정·키·구매가 아닌 합성 fixture만 사용합니다.
 const policy = {packageName: 'com.example.pawblossom', productId: 'remove_ads', purchaseOptionId: 'permanent', mode: 'production' as const};
@@ -145,6 +146,117 @@ describe('실제 SQLite 구매 원장과 권한', () => {
     if (kind === 'lookup-error') h.transport.mockRejectedValue(new Error('synthetic-private-error'));
     expect(await h.ledger.process(token, owner)).not.toMatchObject({kind: 'entitled'});
     expect(rows(h.path)).toHaveLength(0); expect(h.ack).not.toHaveBeenCalled();
+  });
+});
+
+describe('실제 파일 원장 + Google 승인 POST adapter', () => {
+  function httpOpen(transport: typeof fetch, databasePath?: string, body = fixture(), timeoutMs = 8_000) {
+    return open(databasePath, {acknowledge: createLedgerAcknowledger({...policy, timeoutMs}, transport)}, body);
+  }
+  it('독립 DB 연결에서 권한 commit을 확인한 뒤 POST 1회, 반복 요청은 재지급/POST하지 않습니다', async () => {
+    let h: ReturnType<typeof open>;
+    const transport = vi.fn<typeof fetch>(async (_url, request) => {
+      expect(request!.method).toBe('POST'); expect(h.ledger.hasEntitlement(owner.ownerId)).toBe(true);
+      expect(rows(h.path)[0]).toMatchObject({ack: 'pending', attempts: 1});
+      expect(db(h.path).prepare('SELECT * FROM entitlements').all()).toHaveLength(1);
+      return new Response(null);
+    });
+    h = httpOpen(transport);
+    expect(await h.ledger.process(token, owner)).toEqual({kind: 'entitled', newGrant: true, acknowledgement: 'acknowledged'});
+    expect(await h.ledger.process(token, owner)).toEqual({kind: 'entitled', newGrant: false, acknowledgement: 'acknowledged'});
+    expect(transport).toHaveBeenCalledTimes(1); expect(h.transport).toHaveBeenCalledTimes(3);
+    expect(rows(h.path)[0]).toMatchObject({ack: 'acknowledged', lease: null});
+  });
+  it.each(['initial', 'before-post'])('최신 GET가 이미 승인된 %s 상태면 POST를 생략합니다', async phase => {
+    const transport = vi.fn<typeof fetch>(async () => new Response(null));
+    const h = httpOpen(transport, undefined, fixture(phase === 'initial'));
+    if (phase === 'before-post') h.transport.mockResolvedValueOnce(new Response(JSON.stringify(fixture()), {headers: {'content-type': 'application/json'}}))
+      .mockImplementation(async () => new Response(JSON.stringify(fixture(true)), {headers: {'content-type': 'application/json'}}));
+    expect(await h.ledger.process(token, owner)).toMatchObject({newGrant: true, acknowledgement: 'acknowledged'});
+    expect(transport).not.toHaveBeenCalled();
+  });
+  it('권한 트랜잭션 실패 시 실제 POST도 실행하지 않습니다', async () => {
+    const transport = vi.fn<typeof fetch>(async () => new Response(null)); const h = httpOpen(transport);
+    db(h.path).exec("CREATE TRIGGER reject_http_grant BEFORE INSERT ON entitlements BEGIN SELECT RAISE(FAIL,'synthetic-private-error'); END;");
+    expect(await h.ledger.process(token, owner)).toEqual({kind: 'service-error', code: 'storage-unavailable'});
+    expect(rows(h.path)).toHaveLength(0); expect(transport).not.toHaveBeenCalled();
+  });
+  it.each([400, 409, 401, 403, 404, 429, 500, 503, 202, 302])('HTTP %s 실패는 영구 권한을 보존하고 pending으로 남깁니다', async status => {
+    const transport = vi.fn<typeof fetch>(async () => new Response('already acknowledged synthetic-private-upstream', {status}));
+    const h = httpOpen(transport);
+    expect(await h.ledger.process(token, owner)).toEqual({kind: 'entitled', newGrant: true, acknowledgement: 'pending'});
+    expect(h.ledger.hasEntitlement(owner.ownerId)).toBe(true);
+    expect(rows(h.path)[0]).toMatchObject({ack: 'pending', attempts: 1, lease: null});
+    expect(h.ledger.acknowledgementSummary()).toEqual({pending: 1, inFlight: 0, attention: 0});
+    expect(JSON.stringify(rows(h.path))).not.toContain('synthetic-private-upstream'); expect(transport).toHaveBeenCalledTimes(1);
+  });
+  it('400/409를 성공 추정하지 않고 재열기 뒤 최신 GET 승인 사실로만 수렴합니다', async () => {
+    for (const status of [400, 409]) {
+      const transport = vi.fn<typeof fetch>(async () => new Response('already acknowledged', {status}));
+      const h = httpOpen(transport); expect(await h.ledger.process(token, owner)).toMatchObject({acknowledgement: 'pending'});
+      close(h.ledger); const next = httpOpen(transport, h.path, fixture(true)); advance();
+      expect(await next.ledger.retryPending()).toEqual({kind: 'retry-result', processed: 1, acknowledged: 1, attention: 0});
+      expect(await next.ledger.process(token, owner)).toMatchObject({newGrant: false, acknowledgement: 'acknowledged'});
+      expect(transport).toHaveBeenCalledTimes(1); expect(db(h.path).prepare('SELECT * FROM entitlements').all()).toHaveLength(1);
+    }
+  });
+  it('실제 프로세스 재시작 뒤 최신 GET로 수렴하고 POST·재지급하지 않습니다', async () => {
+    const location = path();
+    const first = await child(data(location, {httpAcknowledge: true, postStatus: 409, pending: true}));
+    expect(first).toMatchObject({result: {newGrant: true, acknowledgement: 'pending'}, entitlement: true, postCount: 1});
+    db(location).exec('UPDATE purchases SET next_at=0');
+    const second = await child(data(location, {httpAcknowledge: true, action: 'retry'}));
+    expect(second).toMatchObject({result: {processed: 1, acknowledged: 1}, entitlement: true, postCount: 0});
+    const third = await child(data(location, {httpAcknowledge: true}));
+    expect(third).toMatchObject({result: {newGrant: false, acknowledgement: 'acknowledged'}, postCount: 0});
+    expect(rows(location)[0]).toMatchObject({ack: 'acknowledged', attempts: 2});
+    expect(db(location).prepare('SELECT * FROM entitlements').all()).toHaveLength(1);
+  });
+  it('실제 프로세스 재시작 뒤 아직 pending이면 최신 GET 후 다시 POST합니다', async () => {
+    const location = path();
+    expect(await child(data(location, {httpAcknowledge: true, postStatus: 503, pending: true}))).toMatchObject({result: {acknowledgement: 'pending'}, postCount: 1});
+    db(location).exec('UPDATE purchases SET next_at=0');
+    expect(await child(data(location, {httpAcknowledge: true, pending: true, action: 'retry'}))).toMatchObject({result: {acknowledged: 1}, postCount: 1});
+    expect(rows(location)[0]).toMatchObject({ack: 'acknowledged', attempts: 2});
+    expect(db(location).prepare('SELECT * FROM entitlements').all()).toHaveLength(1);
+  });
+  it('기존 토큰의 다른 소유자 요청은 승인/재지급하지 않습니다', async () => {
+    const transport = vi.fn<typeof fetch>(async () => new Response(null, {status: 503})); const h = httpOpen(transport);
+    await h.ledger.process(token, owner);
+    expect(await h.ledger.process(token, {...owner, ownerId: 'different-synthetic-owner'})).toEqual({kind: 'rejected', reason: 'owner-conflict'});
+    expect(h.ledger.hasEntitlement('different-synthetic-owner')).toBe(false); expect(transport).toHaveBeenCalledTimes(1);
+  });
+  it('transport 예외/비어 있지 않은 성공 본문도 pending으로 유지합니다', async () => {
+    for (const transport of [vi.fn<typeof fetch>(async () => {throw new Error(oauth, {cause: token});}), vi.fn<typeof fetch>(async () => new Response('{}'))]) {
+      const h = httpOpen(transport);
+      expect(await h.ledger.process(token, owner)).toMatchObject({newGrant: true, acknowledgement: 'pending'});
+      expect(h.ledger.hasEntitlement(owner.ownerId)).toBe(true); expect(rows(h.path)[0].ack).toBe('pending');
+    }
+  });
+  it.each([20, 30_000])('transport 기한 %s와 원장 10초 기한 후 늦은 HTTP 성공은 DB를 갱신하지 못합니다', async timeoutMs => {
+    vi.useFakeTimers(); let finish!: (response: Response) => void;
+    const transport = vi.fn<typeof fetch>(() => new Promise(resolve => {finish = resolve;}));
+    const h = httpOpen(transport, undefined, fixture(), timeoutMs); const pending = h.ledger.process(token, owner);
+    await vi.advanceTimersByTimeAsync(0); expect(transport).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(Math.min(timeoutMs, 10_000));
+    expect(await pending).toMatchObject({newGrant: true, acknowledgement: 'pending'});
+    expect(transport.mock.calls[0][1]!.signal!.aborted).toBe(true);
+    const nextTransport = vi.fn<typeof fetch>(async () => new Response(null, {status: 503}));
+    const next = httpOpen(nextTransport, h.path); await vi.advanceTimersByTimeAsync(60_000);
+    expect(await next.ledger.retryPending()).toMatchObject({processed: 1, acknowledged: 0});
+    finish(new Response(null)); await vi.advanceTimersByTimeAsync(0);
+    expect(rows(h.path)[0]).toMatchObject({ack: 'pending', attempts: 2, lease: null});
+    expect(next.ledger.hasEntitlement(owner.ownerId)).toBe(true); expect(vi.getTimerCount()).toBe(0);
+  });
+  it('본문 EOF가 기한 뒤 완료되어도 원장은 pending이며 최신 GET 수렴만 허용합니다', async () => {
+    vi.useFakeTimers(); let finish!: () => void;
+    const response = new Response(new ReadableStream({start(c) {finish = () => {try {c.close();} catch { /* 이미 취소된 fixture */ }};}, cancel() {return new Promise(() => {});}}));
+    const transport = vi.fn<typeof fetch>(async () => response); const h = httpOpen(transport, undefined, fixture(), 20);
+    const pending = h.ledger.process(token, owner); await vi.advanceTimersByTimeAsync(20);
+    expect(await pending).toMatchObject({acknowledgement: 'pending'}); finish(); await vi.advanceTimersByTimeAsync(0);
+    expect(rows(h.path)[0].ack).toBe('pending');
+    h.body.acknowledgementState = 'ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED'; await vi.advanceTimersByTimeAsync(60_000);
+    expect(await h.ledger.retryPending()).toMatchObject({acknowledged: 1}); expect(transport).toHaveBeenCalledTimes(1);
   });
 });
 

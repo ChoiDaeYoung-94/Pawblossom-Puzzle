@@ -1,5 +1,36 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-17 · 서버 Google 구매 승인 POST transport (이슈 #99)
+
+기준 main `fa2ccfc2b0b79f5b4a7529e311a9b9e9ebbdbb0f`, 작업 `codex/99-google-purchase-acknowledge`입니다. **구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.** `server/commerce/googlePlayAcknowledge.ts`에 `createPlayPurchaseAcknowledger`와 원장용 `createLedgerAcknowledger` adapter를 추가했습니다. 기존 원장의 callback 주석만 갱신하고 schema·지급·lease·재시도 semantics는 변경하지 않았습니다. 아래 #97의 POST 미구현 표현은 당시 이력이며 현재 POST 코드 준비와 실제 서비스 검증을 구분합니다.
+
+### 요청·응답과 비밀정보 경계
+
+- 신뢰된 서버가 검증한 단일 package/product allowlist를 생성 시 primitive snapshot으로 고정합니다. 호출 입력의 package/product가 일치해야 하며 외부 URL/host/path를 입력받지 않습니다. 공식 Google host와 `purchases.products.acknowledge` 경로에만 POST하고 토큰은 `encodeURIComponent`로 단일 경로에 넣습니다. 토큰은 최대4096 ASCII 가시문자·dot/dotdot 제외, OAuth는 최대8192 ASCII 가시문자와 bearer 안전 문자만 허용합니다. CR/LF·Unicode·공백·범위 초과를 거절하고 await 중 입력/config/signal 변경도 반영하지 않습니다.
+- 서버가 `androidpublisher` OAuth scope로 취득한 access token을 명시 주입해야 합니다. scope·권한을 로컬 문자열 검사가 증명하지는 않습니다. 요청 JSON은 빈 객체이며 optional `developerPayload`는 보내지 않습니다. 함수/adapter 구성만으로 네트워크·DB·자동 키 생성·환경변수/자격정보 읽기를 실행하지 않습니다.
+- 공식 API 문서는 **성공 본문이 비어 있음**을 명시하지만 성공 코드별 실제 응답 profile까지 열거하지 않습니다. 이번 자체 엄격 profile은 **HTTP 200 또는204 + 본문0바이트/EOF만 성공**입니다. Content-Type은 필수가 아니며 선택 Content-Length는 안전한 비음수 정수의0만 허용합니다. `{}`·공백·비어 있지 않은 본문·다른2xx·손상된 EOF는 실패입니다. `maxResponseBytes` 기본1024/설정1~1MiB는 **성공 본문 허용량이 아닌 크기 초과 오류 분류 상한**입니다. 상한 이하의1바이트도 invalid-response이며 초과 chunk/길이는 response-too-large입니다. 빈 chunk는 최대8개 뒤 EOF만 허용하며9개째는 invalid-response+cancel입니다. 즉시0바이트 chunk를 무한 반환하는 reader도 우리 read 루프를 무한 진행시키지 못하게 하는 자체 엄격 profile이며 임의 transport의 동기 CPU 점유를 중단하는 보장은 아닙니다. 실제 Google의200/204·헤더·빈본문/이상응답 profile은 아직 검증하지 않았습니다.
+- 3xx/redirected/opaqueredirect와 다른 응답 URL을 차단하고 native fetch에 `redirect:error`를 설정합니다. native redirect 거절 예외는 원인 비노출을 위해 transport-error입니다. 빈 응답 URL은 주입 합성 Response를 위해 허용하며 native fetch는 URL을 채웁니다. 401/403/404/429/5xx는 좁은 오류 코드, 400/409/기타4xx와 예기치 않은2xx는 unexpected-http입니다. **already acknowledged 같은 문구를 성공으로 추정하지 않습니다.** 실패 본문은 읽거나 파싱·축적하지 않고 취소하므로 실패 본문 크기/형식/문구도 승인 근거가 아닙니다. 오류 코드가 자동 재시도 가능성이나 운영 처리 완료를 보장하지 않습니다.
+- timeout 기본8초/설정1~30000ms는 **headers+본문 EOF 전체**에 적용합니다. caller abort도 지원하고 abort를 무시하는 fetch/read/cancel을 기다리지 않는 race로 반환합니다. cancel의 throw/reject/hang을 버리고 늦은 fetch 응답은 정리합니다. JS 이벤트 루프 자체의 동기 정지는 강제로 중단하지 못합니다. URL·토큰·OAuth·upstream 오류 원문·cause를 반환/로그/DB/문서에 기록하지 않으며 공개 결과는 acknowledged 또는 좁은 acknowledge-error 코드뿐입니다.
+
+### 원장과 명시 adapter 결합
+
+서버 조립 코드가 신뢰된 purchase 구성과 주입 fetch로 `createLedgerAcknowledger`를 만들어 기존 `PurchaseLedgerOptions.acknowledge`에 전달할 수 있습니다. adapter는 검증된 HTTP 성공만 acknowledged, 나머지는 retry로 변환하며 지급/DB 쓰기를 하지 않습니다. 현재 앱·HTTP 엔드포인트·운영 서버에는 연결하지 않았습니다.
+
+원장은 권한+원장 commit과 lease 기록 뒤 최신 GET를 수행하고, 이미 승인되었다면 POST를 생략합니다. POST 오류/유실은 권한을 철회·재지급하지 않고 pending으로 남기며, 재시작 뒤 최신 GET의 승인 사실로만 완료에 수렴합니다. transport 기한 또는 원장의 합계10초 기한 뒤 늦은 HTTP/EOF 성공은 ack 상태를 갱신하지 못합니다. 실제 외부 POST가 기한 뒤 처리될 수 있으므로 exactly-once 외부 전송을 보장하지 않습니다. 원장의 통산5회/cooldown/소진 조사·자동 스케줄러 부재는 #97과 같습니다.
+
+### 로컬 검증과 남은 범위
+
+`scripts/use-dev-tools.ps1`의 **Node24.21.0**에서 같은 작업 트리를 검증했습니다. 아래는 로컬 검증이며 최신 PR head/main의 Node22·24 원격 CI 결과는 GitHub에서 별도로 확인합니다. 총괄은 기존 GET·원장·승인 3개 파일328개와 전체/앱/서버 타입·diff 검사를 독립 재실행해 통과했습니다. 이328개는 전체766개의 부분 재검증이며 합산하지 않습니다.
+
+- `npm test`: **18개 파일·766개 통과(기존607+신규159)**. 신규 transport137개는 정확한 POST·생성 시 무통신·allowlist/입력/범위/인코딩/OAuth·config/입력/signal async 변경·200/204/빈본문/이상응답/길이/HTTP·redirect/URL·헤더/reader/cancel 오류·0byte chunk 8개/9개/무한 reader 경계·전체 기한/caller abort/abort 무시·늦은 완료·비밀정보 비노출·adapter를 검사합니다.
+- 신규 원장 결합22개는 독립 DB 연결로 commit 뒤 POST1회, 이미 승인 skip/중간 GET 승인, commit 실패 POST0, HTTP/본문/전송 오류 pending·권한 보존, 실제 별도 프로세스 재시작의 최신 GET 수렴/아직 pending 재POST·재지급0, 타소유자 차단, transport/원장 기한 뒤 늦은 HTTP/EOF가 새 lease 상태를 덮어쓰지 않는 것을 검사합니다. 모든 통신/계정/OAuth/키/구매 자료는 주입 합성 fixture이며 실제 Google API 호출은 없습니다.
+- `npm run store:check`, `npm run store:test`: 원본 일치와 **12개 통과**. `npm run typecheck`: 전체/앱/서버 타입 검사 통과.
+- `npm run build:test` 후 `npm run build`: testing 세 flags=true, 최종 production 세 flags=false. 앱 서버 import 참조·src/dist의 승인/원장/Publisher/server 마커0건을 확인했습니다. UI 변경이 없어 광범위 브라우저 재검증은 생략했습니다. 기존 큰 번들 경고는 유지됩니다.
+
+**#73의 실제 API/응답·OAuth/권한·서버 인증/계정 binding·배포/ACL·감시/스케줄러/소진 조사·키 운영·RTDN/환불·앱 연결·실제 상품/구매/복원·단말/스토어 검증은 미완료**입니다. 실제 API·자격정보 자동읽기/생성·계정/콘솔/상품/배포는 수행하지 않았습니다. APK/AAB·Android sync·버전·최종 오디오 믹스·Drive·Play Console·폰 테스트/전달 보류를 유지합니다.
+
+공식 근거(2026-10-17 확인): [상품 승인 API: POST/optional payload/빈 성공 본문/OAuth scope](https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.products/acknowledge), [Google 구매 보호: 서버 구매 검증·계정 대응 확인·권한 부여 뒤 승인](https://developer.android.com/google/play/billing/security).
+
 ## 2026-10-17 · 서버 영구 구매 원장과 승인 재시도 (이슈 #97)
 
 기준 main `ee86d96a85606ad3ad047976aaacd075c4674b3e`, 작업 `codex/97-durable-purchase-ledger`입니다. **구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.** `server/commerce/purchaseLedger.ts`는 #85의 GET 조회 함수를 직접 호출하는 서버 핵심 모듈이며 앱·HTTP 엔드포인트·운영 서버에 연결하지 않았습니다. 저장 권한은 서버 파일 원장 안의 광고 제거 권한이며 실제 앱의 광고 제거 완료가 아닙니다.
