@@ -37,6 +37,7 @@ let practiceInputs:ReturnType<typeof bindPracticeBoard>|undefined;
 let growing=false;
 let clearedLeaves=0;
 let testingLevel=false;
+let testContinueUsed=false;
 let pickerReturnToResult=false;
 let selectedChapter=chapterForLevel(save.highestLevel).id;
 let selectedTestChapter=chapterForLevel(currentLevel).id;
@@ -172,7 +173,7 @@ function replaceBoard(){
 function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
   if(!Number.isInteger(id)||id<1||id>levels.length)return;
   clearTimeout(resultTimer);resultTimer=undefined;round++;
-  roundEnded=false;resultShown=false;firstReward=false;resultWon=undefined;boardNoticeKey=undefined;
+  roundEnded=false;resultShown=false;firstReward=false;resultWon=undefined;boardNoticeKey=undefined;testContinueUsed=false;
   const activeRound=round;
   testingLevel=TEST_TOOLS_ENABLED&&testPlay;
   pickerReturnToResult=false;
@@ -300,14 +301,30 @@ function finish(won:boolean){
   const first=firstReward;
   audio.play(won?'win':'lose');
   const done=won&&!testingLevel&&currentLevel===LEVEL_COUNT;
+  const testContinue=TEST_TOOLS_ENABLED&&testingLevel&&!won&&!testContinueUsed&&moves===0;
   const dialog=$<HTMLDialogElement>('#result-dialog');
-  dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><span class="result-character"><img class="result-pip" src="/assets/pip.png" decoding="async" alt=""/></span><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line" id="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow" id="result-level">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p>${first?`<div class="result-rewards"><span>${icon('star',20)} +1</span><span>${icon('coin',20)} +40</span></div>`:''}<button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
+  dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}${testContinue?' result-with-continue':''}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><span class="result-character"><img class="result-pip" src="/assets/pip.png" decoding="async" alt=""/></span><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line" id="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow" id="result-level">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p>${first?`<div class="result-rewards"><span>${icon('star',20)} +1</span><span>${icon('coin',20)} +40</span></div>`:''}<button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${testContinue?`<button class="result-test-button" id="result-continue" aria-describedby="result-continue-note">${text('testContinue')}</button><p id="result-continue-note">${text('testContinueNote')}</p>`:''}${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
   dialog.showModal();syncActivity();
   $('#result-next').focus();
   $('#result-next').onclick=()=>{dialog.close();startLevel(won?Math.min(LEVEL_COUNT,currentLevel+1):currentLevel,testingLevel);switchView('puzzle');};
   $('#result-home').onclick=()=>{dialog.close();switchView('village');};
   if(testingLevel)$('#result-test').onclick=()=>{dialog.close();showTestPicker(true);};
+  const continueButton=dialog.querySelector<HTMLButtonElement>('#result-continue');
+  if(continueButton){const activeRound=round,activeScene=scene;continueButton.onclick=()=>{continueTestRound(activeRound,activeScene,continueButton);};}
   showResultPip($<HTMLImageElement>('.result-pip'),won);
+}
+function continueTestRound(activeRound:number,activeScene:BoardScene,button:HTMLButtonElement):boolean {
+  const dialog=$<HTMLDialogElement>('#result-dialog');
+  if(!TEST_TOOLS_ENABLED||!testingLevel||testContinueUsed||activeRound!==round||activeScene!==scene
+    ||route!=='puzzle'||boardPending||game.scene.getScene('Board')!==activeScene||resultTimer!==undefined
+    ||!roundEnded||!resultShown||resultWon!==false||moves!==0||!dialog.open
+    ||dialog.querySelector('#result-continue')!==button)return false;
+  if(!activeScene.resumeAfterFailure())return false;
+  testContinueUsed=true;moves+=5;roundEnded=false;resultShown=false;resultWon=undefined;firstReward=false;
+  boardNoticeKey=undefined;$('#board-notice').textContent='';$('#board-notice').classList.remove('pop');
+  dialog.close();updateGoals();syncActivity();
+  const board=$('#game-canvas');if(board.tabIndex===0)board.focus();
+  return true;
 }
 // 문구만 갱신하여 결과 보상·타이머·아트 요청·버튼·초점을 유지합니다.
 function updateResultCopy(){
@@ -320,6 +337,8 @@ function updateResultCopy(){
   $('#result-next').innerHTML=text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')+icon('arrow',19);
   $('#result-home').textContent=text('home');
   if(testingLevel)$('#result-test').textContent=text('testOther');
+  const continueButton=$<HTMLDialogElement>('#result-dialog').querySelector<HTMLButtonElement>('#result-continue');
+  if(continueButton){continueButton.textContent=text('testContinue');$('#result-continue-note').textContent=text('testContinueNote');}
 }
 function renderAdDialog(){
   if(!testAds)return;

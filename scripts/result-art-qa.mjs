@@ -35,7 +35,11 @@ async function openCase({language='ko',viewport={width:320,height:568},replay=fa
     }else await route.fulfill({path:file});
   });
   await page.goto('http://result.pawblossom.invalid');
-  const ready=()=>page.waitForFunction(()=>window.__resultGame?.scene.isActive('Board')&&JSON.parse(localStorage.getItem('pawblossom.save.v1')).inProgress);
+  // startLevel의 저장은 POST_RENDER 교체보다 먼저입니다. 이전 active Scene을 새 보드로 오인하지 않습니다.
+  const ready=()=>page.waitForFunction(()=>{
+    const scene=window.__resultGame?.scene.getScene('Board'),saved=JSON.parse(localStorage.getItem('pawblossom.save.v1')).inProgress;
+    return scene?.keyboardState().available&&saved&&JSON.stringify(scene.engine.board)===JSON.stringify(saved.board);
+  });
   await ready();await page.waitForLoadState('networkidle');assert.deepEqual(requests,[],'첫 결과 전 전용 아트 요청 0');
   const saved=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('pawblossom.save.v1')));
   const finish=async won=>{
@@ -54,9 +58,10 @@ const layout=page=>page.evaluate(()=>{
 });
 const assertLayout=(data,viewport)=>{
   assert.ok(data.dialog.x>=0&&data.dialog.y>=0&&data.dialog.right<=viewport.width+1&&data.dialog.bottom<=viewport.height+1);
-  assert.ok(data.scroll.height<=data.scroll.client+1,'결과는 내부 스크롤 없는 한 화면');
+  const testContinue=data.buttons.some(button=>button.id==='result-continue');
+  if(!testContinue)assert.ok(data.scroll.height<=data.scroll.client+1,'일반/시험 성공 결과는 내부 스크롤 없는 한 화면');
   assert.ok(data.scroll.body<=viewport.height,'body 스크롤 없음');
-  for(const b of data.buttons){assert.ok(b.width>=44&&b.height>=44,`${b.id} 44px`);assert.ok(b.y>=data.dialog.y&&b.bottom<=data.dialog.bottom);}
+  for(const b of data.buttons){assert.ok(b.width>=44&&b.height>=44,`${b.id} 44px`);assert.ok(b.x>=data.dialog.x&&b.right<=data.dialog.right);if(!testContinue)assert.ok(b.y>=data.dialog.y&&b.bottom<=data.dialog.bottom);}
   for(let i=1;i<data.buttons.length;i++)assert.ok(data.buttons[i-1].bottom<=data.buttons[i].y+.5,'버튼 겹침 없음');
 };
 try{
@@ -69,7 +74,7 @@ try{
     const h=await openCase({language,viewport,replay,reducedMotion});
     try{
       if(replay){await h.page.locator('[data-route="village"]').click();await h.page.locator('[data-level="1"]').click();await h.ready();}
-      if(testing){await h.page.locator('#test-level-button').click();await h.page.locator('[data-test-level="1"]').click();await h.page.waitForFunction(()=>__resultGame.scene.isActive('Board'));}
+      if(testing){await h.page.locator('#test-level-button').click();await h.page.locator('[data-test-level="1"]').click();await h.page.waitForFunction(()=>__resultGame.scene.getScene('Board')?.keyboardState().available);}
       const before=await h.saved();await h.finish(won);
       // 이미지 요청·표시보다 먼저 회차와 보상이 저장됩니다.
       assert.equal(await h.page.locator('#result-dialog').getAttribute('open'),null);assert.deepEqual(h.requests,[]);
@@ -83,6 +88,7 @@ try{
       const alpha=await h.page.locator('.result-pip').evaluate(img=>{const canvas=document.createElement('canvas');canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0);const data=ctx.getImageData(0,0,canvas.width,canvas.height).data;let transparent=0,opaque=0,partial=0;for(let i=3;i<data.length;i+=4){if(!data[i])transparent++;else if(data[i]===255)opaque++;else partial++;}return {width:canvas.width,height:canvas.height,transparent,opaque,partial};});
       assert.ok(alpha.transparent>0&&alpha.opaque>0&&alpha.partial>0,'실제 이미지 알파/해독');
       const rewards=await h.page.locator('.result-rewards').count();assert.equal(rewards,won&&!testing&&!replay?1:0);
+      if(testing&&!won){await h.page.keyboard.press('Tab');assert.equal(await h.page.evaluate(()=>document.activeElement.id),'result-continue');}
       await h.page.keyboard.press('Tab');assert.equal(await h.page.evaluate(()=>document.activeElement.id),testing?'result-test':'result-home');
       await h.page.keyboard.press('Tab');
       // Chrome의 modal 끝 sentinel은 body를 잠시 선택할 수 있으며 다음 Tab은 modal로 순환합니다.
@@ -110,7 +116,7 @@ try{
   try{
     await h.finish(true);await h.page.locator('#result-dialog[open]').waitFor();assert.equal((await h.saved()).coins,40);
     await h.page.locator('#result-next').click();await h.ready();assert.equal(await h.page.locator('#result-dialog').getAttribute('open'),null);
-    if(flags.testTools){await h.page.locator('#test-level-button').click();await h.page.locator('[data-test-level="1"]').click();await h.page.waitForFunction(()=>__resultGame.scene.isActive('Board'));}
+    if(flags.testTools){await h.page.locator('#test-level-button').click();await h.page.locator('[data-test-level="1"]').click();await h.page.waitForFunction(()=>__resultGame.scene.getScene('Board')?.keyboardState().available);}
     // 일반 2번은 24이동입니다. 실패 콜백이 이동 상한을 넘어도 종료 보호를 적용합니다.
     await h.finish(false);await h.page.locator('#result-dialog[open]').waitFor();const current=await h.saved();
     if(flags.testTools){await h.page.locator('#result-test').click();await h.page.locator('#test-close').click();assert.deepEqual(await h.saved(),current);}

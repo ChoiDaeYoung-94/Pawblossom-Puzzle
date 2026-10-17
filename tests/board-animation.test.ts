@@ -26,7 +26,7 @@ vi.mock('phaser',async()=>{
   const {default:Events}=await import('eventemitter3');
   return {default:{Scenes:{Events:{PAUSE:'pause',RESUME:'resume',SLEEP:'sleep',WAKE:'wake',SHUTDOWN:'shutdown',DESTROY:'destroy',CREATE:'create'}},Scale:{Events:{RESIZE:'resize'}},Scene:class {
     input=new Events();events=new Events();scale=new Events();cameras={main:{setBackgroundColor(){}}};
-    sys={isActive:()=>true};
+    sys={isActive:()=>true,isPaused:()=>false};
     add={container:(x:number,y:number)=>new Piece(x,y),graphics:()=>new Graphic(),image:(x:number,y:number,texture:string)=>{const image=new Piece(x,y);image.texture=texture;return image;},text:(x:number,y:number,text:string)=>{const label=new Piece(x,y);label.text=text;return label;},circle:(x:number,y:number)=>new Piece(x,y)};
     tweens={killTweensOf(){},add(config:Record<string,unknown>){
       const targets=Array.isArray(config.targets)?config.targets:[config.targets];
@@ -38,7 +38,7 @@ vi.mock('phaser',async()=>{
 });
 import { BoardScene } from '../src/BoardScene';
 interface RenderScene {
-  sys:{isActive():boolean};shuffle():boolean;
+  sys:{isActive():boolean;isPaused():boolean};shuffle():boolean;resumeAfterFailure():boolean;
   pieces:Piece[][];engine:BoardEngine;
   paint(board:Tile[][]):void;drop(step:ResolveStep):void;
   attempt(a:Position,b?:Position):Promise<void>;tap(p:Position):void;resetHint():void;
@@ -138,6 +138,31 @@ function harness(){
   return {scene,onMove,onNotice};
 }
 describe('블록 객체 보존과 낙하 연출',()=>{
+  it.each([false,true])('실패 복귀는 살아 있는 paused=%s 보드·엔진·낙엽·컨테이너를 그대로 유지합니다',paused=>{
+    const {scene,onMove}=harness();scene.engine.setLeaves([{row:2,col:3,layers:2}]);
+    scene.create();scene.events.emit('create');scene.focusKeyboard();scene.keyboardKey('Enter');scene.stopPlaying();
+    scene.sys.isActive=()=>!paused;scene.sys.isPaused=()=>paused;
+    const engine=scene.engine,pieces=scene.pieces,leaves=scene.leafObjects,items=scene.pieces.flat(),before=snapshot(engine);
+    const hint=vi.spyOn(scene,'resetHint');
+    expect(scene.resumeAfterFailure()).toBe(true);expect(scene.engine).toBe(engine);expect(scene.pieces).toBe(pieces);
+    expect(scene.leafObjects).toBe(leaves);expect(scene.pieces.flat()).toEqual(items);expect(items.every(item=>!item.destroyed)).toBe(true);
+    expect(snapshot(engine)).toEqual(before);expect(scene.keyboardState()).toMatchObject({finished:false,available:!paused,cursor:undefined,selected:undefined});
+    expect(hint).toHaveBeenCalledOnce();expect(onMove).not.toHaveBeenCalled();expect(scene.resumeAfterFailure()).toBe(false);
+    scene.sys.isActive=()=>true;scene.sys.isPaused=()=>false;scene.focusKeyboard();scene.keyboardKey('Enter');
+    expect(scene.keyboardState().selected).toEqual({row:0,col:0});
+  });
+  it.each(['unready','busy','sleep','shutdown','destroy','missing-row','missing-piece','not-finished'])('복귀 불가 상태 %s는 종료 상태와 기존 객체를 바꾸지 않습니다',reason=>{
+    const {scene}=harness();scene.create();if(reason!=='unready')scene.events.emit('create');
+    scene.stopPlaying();
+    if(reason==='busy')scene.busy=true;
+    if(reason==='sleep'){scene.sys.isActive=()=>false;scene.sys.isPaused=()=>false;}
+    if(reason==='shutdown'||reason==='destroy')scene.events.emit(reason);
+    if(reason==='missing-row')scene.pieces.pop();if(reason==='missing-piece')scene.pieces[0].pop();
+    if(reason==='not-finished')scene.finished=false;
+    const pieces=scene.pieces,before=snapshot(scene.engine),finished=scene.finished,hint=vi.spyOn(scene,'resetHint');
+    expect(scene.resumeAfterFailure()).toBe(false);expect(scene.finished).toBe(finished);expect(scene.pieces).toBe(pieces);
+    expect(snapshot(scene.engine)).toEqual(before);expect(hint).not.toHaveBeenCalled();
+  });
   it('미준비·일시정지 Scene의 섞기는 그리기 전에 거부하고 보드를 유지합니다',()=>{
     const {scene}=harness(),before=JSON.stringify(scene.engine.board);
     scene.sys.isActive=()=>false;scene.paint=()=>{throw Error('미준비 Scene 그리기');};

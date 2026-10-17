@@ -1,3 +1,23 @@
+## 2026-10-17 · 시험 이어하기 이동 +5 (이슈 #87)
+
+기준 main `9617bfed7e1b10498267e7968a574888afc3816f`, 작업 `codex/87-test-continue-moves`입니다. `TEST_TOOLS_ENABLED && testingLevel`인 실패 결과에만 광고 없는 **시험 이어하기 +5**를 추가했습니다. 동일 round/Scene/engine/블록 Container·보드/낙엽/점수/목표/셔플을 보존하고 이동만5 추가하며 회차당1회입니다. 사용 여부는 메모리 상태이며 새 라운드에서만 초기화합니다. SDK 광고·보상 콜백 카운터·실제 광고 지급/서버에는 연결하지 않았습니다.
+
+| 검사 | 결과와 범위 |
+| --- | --- |
+| 자동 검사 | Node24.21.0 `npm test` **532개(기존492+신규40)** 통과. 현재 라운드/Scene/engine/Container identity, 저장 원문 바이트와 쓰기 수 유지, 기존 hooks로 재실패/성공, 1회 제한·새 라운드 초기화·언어 갱신·빠른 중복/stale DOM/round, 성공/일반/production·busy/unready/shutdown/destroy/sleep 차단, paused 허용과 문서/앱 비활성 유지. 총괄의 독립211개 검사/타입 성공은 이 수에 추가 합산하지 않습니다. |
+| 빌드·스토어 | `npm run store:check`, `npm run store:test` **12개**, `npm run build:test`, `npm run build`(타입/launcher 원본 검사 포함) 통과. 기존500kB chunk 경고는 남습니다. 마지막 dist는 production으로 복구했고 세 flags=false와 `git diff --check` 통과를 확인했습니다. |
+| 신규 브라우저 QA | `scripts/test-continue-qa.mjs`, 격리 Chrome **155.0.8059.80** 실제 dist. KO/EN 각각320×568·360×640·640×360, testing **6개 화면+경계1묶음**, production **6개 화면**. 실패 직전과 이어하기 뒤 실제 canvas 마우스 입력, 두 번째 실패 버튼 부재, 새 회차의1회 사용, 빠른 이중 DOM click·이전 callback 재호출 차단, Scene/엔진/보드/낙엽 표시/각 piece identity·진척과 저장 raw bytes 유지. 일반/production에서 버튼 없음, pageerror0. |
+| 결과 아트 회귀 | `scripts/result-art-qa.mjs`의 시험 실패 Tab 순서를 새 버튼에 맞추고 시험 이어하기 모달 내부 스크롤을 허용했습니다. 일반/시험 성공의 기존 한 화면 기준·44px 버튼·수평 경계·버튼 비겹침·아트/보상/이미지 해독/실패/지연 경계를 유지합니다. testing **30개 화면+4개 경계**, production **18개 화면+4개 경계**, pageerror0. |
+| 화면·스크롤 | 시험 버튼/안내의 KO/EN6개 화면을 확인했습니다. 320px 시험 실패 화면만 캐릭터/여백·제목을 다듬었습니다. EN640×360은 모달 내부7px 스크롤이 있으며 모든 버튼에 접근 가능합니다. 나머지 시험 이어하기 표본은 내부 스크롤0, 모든 표본에서 body/페이지 스크롤0·겹침 없음입니다. |
+
+**합성 준비와 실제 입력을 구분합니다.** 신규 QA는 dist JS 응답에 Game 관찰 참조만 노출합니다. 격리 QA 문맥에서 seed42 엔진/보드와 기존 낙엽을 주입·paint하고 `onMove`로 이동을1로 줄여 빠른 실패를 준비합니다. 그다음 실패 확정·이어하기 후 실제 플레이·두 번째 실패는 실제 canvas 포인터 입력으로 검증합니다. 성공 분기는 이어하기 뒤 실제 이동을 한 뒤 목표 수집/낙엽 완료를 `onMove`에 주입한 fixture이며 자연 플레이로 성공까지 푼 검증이 아닙니다. 게임 본체의 목표·판정은 완화하지 않았고 identity 비교는 준비가 끝난 현재 실패 보드를 기준으로 합니다. 동적 언어 갱신은 `ui-flow`의 VM에서 `changeLanguage`를 직접 호출하여 같은 버튼 callback·문구·1회 제한을 확인한 자동 검사입니다. 신규 브라우저의 KO/EN 화면 검증은 언어별 별도 문맥이며 이 VM 결과를 브라우저의 동적 언어/초점 유지 검증 근거로 합산하지 않습니다. 과거 localization 언어 검증은 해당 이력에 보존합니다. 기존 결과 아트 QA의 종료도 Scene hooks fixture이며 실제 퍼즐 풀이로 세지 않습니다.
+
+production 결과 아트의 첫 실행에서 POST_RENDER 교체 전에 이전 active Scene을 준비 완료로 보는 QA 대기 조건의 경합이 드러났습니다. 현재 Scene의 입력 가능 상태와 저장 checkpoint/보드 일치를 확인하도록 고친 뒤 두 변형을 다시 검사했습니다. 앱의 교체 순서·성공/실패 판정은 변경하지 않았습니다. 테스트 main harness도 실행된 결과 타이머를 큐에서 제거하도록 수정해 한 번만 실행되는 실제 setTimeout 의미를 따릅니다.
+
+이번 JSON/PNG/로그는 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-87`에 보존합니다. 최종 결과 폴더는 `testing-ready-final`, `production-final`, `result-art-testing-final`, `result-art-production-final`입니다. 과거 `docs/performance/result-art-*-20261016.json`/스크린샷은 덮어쓰지 않았습니다. 기존 아트 스크립트는 출력 경로와 날짜만 메모리에서 새 폴더로 치환해 실행했습니다. 새 안내 문서는 만들지 않았고 사용자 Chrome/기존 탭/서버를 조작하지 않았으며 생성한 headless context/browser는 모두 닫았습니다.
+
+실제 광고 시청/보상형 지급·동의/SSV·네이티브 중복/활동 복귀·단말·서비스/스토어와 최종 사용자 감각 검수는 [#73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73) 미완료입니다. +5는 초안입니다. APK/AAB·Android sync/Java 빌드·버전/SDK·계정/콘솔·최종 오디오 믹스 변경과 단말 테스트/APK 전달 보류를 유지합니다.
+
 ## 2026-10-16 · 보상형 시험 광고와 콜백 단발 기록 (이슈 #83)
 
 기준 main `662c95aee9c9818c1579bb9d1b4b1bc86b4aec84`에서 `codex/rewarded-test-ads`로 작업했습니다. debug + testing의 기존 수동 광고 모달에 전면/보상형 선택과 **시험 보상 이벤트 (현재 실행)**를 추가했습니다. 숫자는 네이티브 `onUserEarnedReward` 콜백을 해당 표시 시도에 한 번 기록한 것으로, 서버 검증된 운영 보상이나 게임 지급이 아닙니다. 별·코인·이동·보상·잠금·회차·저장 스키마·오디오 믹스·버전은 변경하지 않았습니다. 보상량/type을 임의 설정하거나 상품처럼 표시하지 않습니다.
