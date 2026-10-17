@@ -1,5 +1,24 @@
 # Android 빌드와 출시 준비
 
+## 현재 통합 상태 · 2026-10-17 · #115
+
+내부 서버 구현의 main 기준은 `b58f9c7da0b0c19393a26cd065be9b8e99e1cf6b`입니다. [#108](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/108) 인증(`de72bdd`), [#110](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/110) 회차(`d867e32`), [#112](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/112) 보상권 소비/+5(`d890494`), [#114](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/114) 인증된 서비스 연결(`b58f9c7`)을 Squash merge했습니다. 이 절 아래의 작업별 기록·실패 이력·검증 SHA는 작성 당시 근거로 보존합니다.
+
+최신 코드 로컬 검증은 #114 head `00cdf77d6b13ffdd8e78ee11e942349f80952fc6` 기준 전체 **28파일/1,734개**, 스토어 **12개**, 전체/앱/서버 타입, testing→production 빌드입니다. 총괄 독립 재검증은 KST20:34:54 시작 전체1,734개/32.10초·타입/diff·최종 production 플래그3개 false·src/dist 서버 마커0건이며, 코드2 LF SHA가 아래 #113 기록과 같았습니다. 반복·부분 검사를 전체 수치에 더하지 않습니다.
+
+| 반영 | PR 원격 검사 | main 원격 검사 |
+| --- | --- | --- |
+| #108 | [39025884135](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39025884135) | [39025948445](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39025948445) |
+| #110 | [39027286517](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39027286517) | [39027369369](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39027369369) |
+| #112 | [39028589982](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39028589982) | [39028682313](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39028682313) |
+| #114 | [39029359948](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39029359948) | [39029459766](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39029459766) |
+
+표의 8개 실행 모두 해당 main/PR head에서 Node22·24 두 검사가 completed/success임을 확인했습니다. #114의 main tree는 검증한 PR head와 일치합니다. 문서 정리 #115는 위 코드 기준에 현재 상태를 덧붙이는 작업이며, 정리 PR/main 자체의 검사 결과는 해당 GitHub에 별도 기록합니다.
+
+실제 PlayFab provider/로그인·게스트 이전·공개 HTTP/호스팅·앱/SDK 연결·경제/진행·연령/한국·미국 동의·운영/키/보존/분산 조정·실Google/결제·단말/스토어는 [#73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73) 후속입니다. 현재 `GameService`는 내부 모듈이고 신규 광고 gate는 기본 거절이며 실제 지급/출시를 보장하지 않습니다. APK/AAB·Android sync·버전·최종 믹스·실계정/키·Drive/Play Console/결제 상품·폰 테스트/전달을 수행하지 않았습니다. 현재 사용자 조치·질문은 없습니다.
+
+아래 “현재 작업”, “커밋/PR 전”, “미구현” 등은 당시 이력으로 읽으며 위 통합 상태를 우선합니다. 자세한 다음 우선순위는 [개발 순서](roadmap.ko.md#현재-통합-현황--2026-10-17--115)를 따릅니다.
+
 ## 2026-10-17 · 인증된 내부 게임 요청·보상 연결 (이슈 #113)
 
 기준 main `d890494e2f0c40314127ba288024de5d0fc910f9`, 작업 `codex/113-authenticated-game-service`, [이슈 #113](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/113)입니다. 현재 **구현·로컬 검증·총괄 독립 최종검수 완료/커밋·PR 제출 승인**입니다. `GameService`만 추가하고 기존 Auth/Round/Reward의 핵심 API·TTL·스키마와 앱은 유지했습니다. 아래 발급/소비 orchestration 미구현 표현은 당시 이력입니다.
