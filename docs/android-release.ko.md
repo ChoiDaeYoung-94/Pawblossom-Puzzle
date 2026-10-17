@@ -1,5 +1,23 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-17 · app-ads.txt 웹 원본 준비 (이슈 #91)
+
+AdMob 콘솔의 **모든 앱 → app-ads.txt 설정하기**에서 사용자 계정의 맞춤 판매자 코드를 직접 확인하고 [public/app-ads.txt](../public/app-ads.txt)에 보존했습니다. 게시자 ID는 앱/광고 단위의 게시자 부분과 같은 `pub-4045654268115042`이며, 콘솔이 제공한 `DIRECT` 관계와 인증기관 ID를 그대로 사용합니다. 이는 공개 판매자 선언이며 로그인·API 비밀키가 아닙니다. 다른 앱이나 타사 판매자 행을 임의로 추가하지 않았습니다.
+
+원본은 다음 한 줄의 일반 텍스트입니다.
+
+```text
+google.com, pub-4045654268115042, DIRECT, f08c47fec0942fa0
+```
+
+Vite의 기존 public 복사 동작으로 웹 빌드 루트의 `/app-ads.txt`를 준비합니다. **로컬 파일/빌드 준비는 공개 호스팅·AdMob 인증 완료가 아닙니다.** [Google 공식 설정 안내](https://support.google.com/admob/answer/9363762?hl=ko)에 따라 실제 개발자 웹사이트 루트에 파일을 공개하고 스토어 등록정보의 개발자 웹사이트와 연결한 뒤 크롤링/확인 상태를 검증해야 합니다. 아직 해당 도메인/호스팅·스토어 등록을 설정하지 않았고 재크롤링도 요청하지 않았습니다. 로컬 주소나 GitHub 소스 파일 URL만으로 공개 인증이 끝났다고 표시하지 않습니다.
+
+기존 AdMob 앱 목록의 Pawblossom Puzzle은 미출시·스토어/패키지 연결 전으로 **검토 필요 / 광고 게재가 제한됨**을 확인했습니다. 이는 계정 승인 및 광고 단위 생성 완료와 별개입니다. 맞춤 스니펫 화면은 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-89\admob-app-ads-snippet.png`에 보존했고 기존 AdMob 탭은 완료된 두 광고 단위 목록으로 복귀했습니다. 추가 창·탭·웹사이트/Firebase는 생성하지 않았습니다.
+
+기준 main `a96b059f147e314fa69a20ad2ecbd3d19e6fe04c`, 작업 `codex/91-app-ads-source`입니다. Node24.21.0 `npm run build`(타입/launcher 원본 검사 포함)와 `git diff --check`가 통과했습니다. 원본은 BOM 없는 UTF-8 **59바이트**, source/dist SHA-256은 모두 `ffdd2b786a1f1ded678fe5dca9ca15c2f6ea765cd691f4b25b697ad06b97d167`입니다. 기존 Vite5173의 `/app-ads.txt`는 **HTTP200 / text/plain / 원문 일치**, primary dist의 세 시험 flags는 false입니다. 기존500kB chunk 경고는 남습니다. 게임 동작을 바꾸지 않는 정적 파일이므로 새 회귀 테스트를 만들지 않았으며 최신 PR/main 필수 Node22·24 검사 결과는 GitHub에 기록합니다.
+
+운영 광고 ID의 SDK 연결·실제 광고/보상·SSV·대상 연령/동의·공개 호스팅·스토어/단말 검증은 #73 미완료입니다. APK/AAB·Android 동기화·버전·폰 테스트/전달·Drive·Play Console·결제 상품·최종 오디오 믹스 변경 보류를 유지합니다.
+
 ## 2026-10-17 · AdMob 앱·광고 단위 콘솔 설정 (이슈 #89)
 
 사용자의 후속 지시로 **AdMob 계정의 앱·광고 단위 설정 보류만 해제**했습니다. 총괄이 단독 Git 작성자로 기존 작업용 Chrome의 AdMob 탭에서 로그인 계정을 확인하고, 기존 앱 목록에 같은 이름이 없음을 확인한 뒤 **Pawblossom Puzzle / Android / 미출시** 앱을 추가했습니다. 계정 화면은 승인 상태였지만 이는 이번 앱의 준비 상태 심사·스토어 연결 완료를 뜻하지 않습니다. 개인 이메일·로그인 정보·비밀키는 이 기록에 남기지 않습니다.
