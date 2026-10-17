@@ -15,3 +15,9 @@ keystore.properties
 !.env.example
 playwright-report/
 test-results/
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+*.key
+server/private/

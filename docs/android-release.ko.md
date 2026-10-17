@@ -1,5 +1,39 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-17 · 서버 영구 구매 원장과 승인 재시도 (이슈 #97)
+
+기준 main `ee86d96a85606ad3ad047976aaacd075c4674b3e`, 작업 `codex/97-durable-purchase-ledger`입니다. **구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.** `server/commerce/purchaseLedger.ts`는 #85의 GET 조회 함수를 직접 호출하는 서버 핵심 모듈이며 앱·HTTP 엔드포인트·운영 서버에 연결하지 않았습니다. 저장 권한은 서버 파일 원장 안의 광고 제거 권한이며 실제 앱의 광고 제거 완료가 아닙니다.
+
+### 저장·인증·환경 경계
+
+- Node 내장 `node:sqlite` 실제 파일 DB입니다. 절대경로 `.sqlite`만 허용하며 메모리 저장을 영구 저장으로 부르지 않습니다. 새 파일은 기본 DELETE journal·`synchronous=FULL`·외래키·`BEGIN IMMEDIATE`를 사용합니다. 기존 WAL도 허용하되 동시 open에서 journal 모드를 변경하지 않습니다. 네트워크 공유 디스크/분산 DB/운영 성숙도는 검증하지 않았습니다.
+- 소유자와 무관한 구매 토큰 SHA-256 식별값을 unique 기본키로 사용하며 orderId는 사용하지 않습니다. 원장·소유자·영구 권한·pending 승인 자료를 한 트랜잭션으로 기록한 뒤에만 승인합니다. 같은 소유자의 반복/이미 승인된 복원과 추가 토큰은 영구 권한을 재지급하지 않으며 다른 소유자는 거절합니다.
+- **신뢰된 서버 인증 context**가 소유자와 예상 obfuscated account binding을 결정해야 합니다. 타입/문자열 검사는 인증이 아니며 client body userId 복사는 안 됩니다. 현재 앱에는 이 인증 모델이 없습니다. 공개 HTTP 요청에 바로 노출하거나 boolean 조회를 앱 권한으로 연결하지 않습니다. `hasEntitlement`도 서버 인증·인가를 거친 용도입니다.
+- 직접 조회의 PURCHASED·상품·영구 옵션·수량1/미소비/미환불 profile·계정 binding을 통과하고 원장 mode와 구매 environment가 정확히 같아야 저장합니다. 시험 원장은 운영 구매도 거절하고 환경별 파일을 분리합니다. schema version/환경/패키지/상품/옵션/키 확인값을 metadata에 고정해 다른 구성/키로 다시 열지 못합니다. 기존 구매 테이블의 metadata 누락·미래 version도 차단합니다. pending/cancelled/조회 실패는 기존 권한 철회 근거가 아닙니다.
+- 영구 재시도에 필요한 토큰·account binding은 서버 주입32바이트 키의 AES-256-GCM으로 암호화하고 토큰 식별값을 AAD로 결합합니다. 소유자는 domain을 구분한 HMAC으로 저장합니다. OAuth·계정/소유자/토큰 원문·서버키·upstream 오류는 DB/결과/로그에 기록하지 않습니다. 자동 키 생성·환경변수 자동읽기는 없으며 키는 DB와 분리해 보존해야 합니다. `.gitignore`는 DB/journal/WAL/키/private 경로를 보호하지만 접근 통제/비밀 저장소를 대신하지 않습니다. 암호화가 권한 테이블 전체의 변조 방지를 대신하지 않으므로 DB 접근은 신뢰된 서버로 제한해야 합니다.
+
+### 승인·재시도와 운영 제약
+
+승인은 필수 주입하는 **신뢰된 서버 callback 경계**입니다. 실제 Google `purchases.products.acknowledge` POST transport는 이번에 구현하지 않았고 외부 API를 호출하지 않았습니다. 실제 Google 성공을 확인한 서버 구현만 `acknowledged`를 반환해야 합니다. 고정 URL/redirect·기한·응답 판정/오류 비노출과 실서비스 검증은 후속입니다. OAuth는 매 조회/승인에 서버 공급자가 주입하며 저장하지 않습니다.
+
+승인마다 lease·attempts·다음 가능 시각을 DB에 원자적으로 기록하고 **최신 GET 조회를 다시 수행**합니다. 이미 승인된 응답이면 POST 없이 원장을 완료로 수렴시킵니다. 실패/응답 유실/timeout은 권한 재지급/철회 없이 pending으로 남습니다. 독립 연결의 활성 lease는 중복 승인을 막고, 종료된 프로세스의 lease는60초 후 재회수할 수 있습니다. 승인 작업 한 번의 OAuth/재조회/callback 대기는 합계10초 제한입니다. `process`의 최초 구매 조회는 별도10초 제한이므로 최초 조회와 후속 승인 전체를10초로 보장하지 않습니다. DB 잠금 대기도 별도이며, 비협조 callback의 늦은 성공은 새 lease를 덮어쓰지 않습니다. 외부 통신의 늦은 성공까지 exactly-once POST라고 보장하지 않으며 다음 최신 조회로 수렴시키는 구조입니다.
+
+`retryPending(limit)`는 명시 호출당 최대100건·구매마다 통산5회·1/2/4/8분 등 점증 cooldown을 적용합니다. 반복 요청/재시작이 한도를 초기화하지 않습니다. 자동 반복/스케줄러는 없습니다. `acknowledgementSummary()`는 식별자 없이 전체 pending/inFlight/attention 건수를 반환하며 재시작 뒤 시도 소진 작업을 숨기지 않습니다. `retryPending` attention도 전체 소진 집계입니다. **5회 소진 후 조사/재처리·환불 결정 경로와 실제 감시/스케줄러는 미구현**이며 운영 전에 Google 승인 기한 내 처리/알림을 검증해야 합니다. 키 분리/백업/회전·schema migration도 후속입니다.
+
+### 현재 작업 트리의 로컬 검증
+
+`scripts/use-dev-tools.ps1`의 **Node24.21.0**에서 실행했습니다. 다른 버전의 성공을 합산하지 않습니다. 아래는 로컬 검증이며 최신 PR head/main의 Node22·24 원격 CI 결과는 GitHub에서 별도로 확인합니다. 총괄은 기존 조회123개+신규 원장46개=169개와 전체/앱/서버 타입·diff 검사를 독립 재실행해 통과했습니다. 이169개는 전체607개에 포함되는 부분 재검증이며 합산하지 않습니다.
+
+- `npm test`: **17개 파일·607개 통과(기존561+신규46)**. 실제 별도 프로세스 종료/재시작과 암호화 pending 복구, 전체 ready barrier 뒤6worker 동일토큰/4worker 소유자 충돌, 독립 연결 lease, 권한 INSERT 실패/DB잠금의 원자적 롤백, 반복/추가토큰/복원, 환경/key/schema/config, 재조회, 실패/응답 유실/기한 후 늦은 성공/stale completion, 통산5회·집계·배치 한도, 암호문 변조, async 입력/키/구성/함수 변경, close 뒤 안전 오류, DB/journal/결과/로그 원문 미노출을 검증합니다. fixture는 전부 합성이며 실제 계정/구매/자격정보가 아닙니다.
+- `npm run store:check`, `npm run store:test`: 원본 검사·**12개 통과**.
+- `npm run typecheck`: 전체 검사와 앱 `types:[]`·서버 `types:[node]` 검사 통과. Node24 API를 위해 `@types/node@24.10.1` 개발 의존성을 고정했고 런타임 의존성은 추가하지 않았습니다. 앱 `types:[]`는 Node 전역 자동 주입을 줄이며 명시적 서버/Node import를 금지하는 장치는 아닙니다.
+- `npm run build:test`, `npm run build`: testing 세 flags=true, 마지막 production 세 flags=false. 앱 엔트리 서버 import 참조와 `src`/최종 `dist`의 원장/암호화/Publisher URL/server marker **0건**. UI 변경이 없어 광범위 브라우저 재검증은 생략했습니다. 기존 번들 크기 경고는 유지됩니다.
+- `git check-ignore`: DB/journal/WAL/키/private 보호 확인. 실제 키/운영 DB 생성은 없습니다. 최신 fetch 후 origin/main은 위 기준 커밋과 같습니다.
+
+실제 인증/계정 binding·Google 승인 transport·배포/영구 디스크 ACL·키 운영·스케줄러/감시/소진 조사·환불/RTDN 권한 회수·앱 연결·실제 상품/구매/복원·단말·정책/스토어는 **#73 미완료**입니다. Node SQLite API의 active development 상태도 운영 검증과 구분합니다. APK/AAB·Android sync·버전·최종 믹스·계정/콘솔/상품·Drive 변경은 없으며 단말 테스트/APK 전달 보류를 유지합니다.
+
+공식 근거(2026-10-17 확인): [Google 구매 보호](https://developer.android.com/google/play/billing/security), [상품 승인 API](https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.products/acknowledge), [Node24 DatabaseSync](https://nodejs.org/download/release/v24.10.0/docs/api/sqlite.html), [Node22.21.1 DatabaseSync/timeout](https://nodejs.org/download/release/v22.21.1/docs/api/sqlite.html). 실행 검증은 설치된 Node24.21.0이며 API 사용 범위는 Node22.16+/Node24의 DatabaseSync·timeout·기본 SQL입니다.
+
 ## 2026-10-17 · 보상형 시험 광고와 실패 회차 이어하기 연결 (이슈 #95)
 
 기준 main `f55c6ee0b189aa272daaa0916333c9f6c4ce9a4c`, 작업 `codex/rewarded-test-continue`입니다. **Android debug + testing 시험 스테이지의 실패 결과**에서 사용자가 따로 누른 불러오기/표시 버튼으로 Google 공용 보상형 시험 광고를 요청합니다. 같은 표시의 완료와 실제 닫힘을 확인한 뒤 기존 실패 보드를 이동 **+5**로 이어갑니다. 광고 없는 시험 이어하기와 회차당 한 번을 공유합니다. 설정의 수동 시험 광고는 계속 게임 지급이 없습니다. 일반 회차/production에는 새 진입이나 지급이 없습니다.

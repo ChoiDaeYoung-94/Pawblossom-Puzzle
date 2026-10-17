@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "npm run assets:check && tsc --noEmit && vite build",
-    "build:test": "npm run assets:check && tsc --noEmit && vite build --mode testing",
+    "build": "npm run assets:check && npm run typecheck && vite build",
+    "build:test": "npm run assets:check && npm run typecheck && vite build --mode testing",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.app.json && tsc -p tsconfig.server.json",
     "assets:generate": "node scripts/generate-launcher-assets.mjs",
     "assets:check": "node scripts/generate-launcher-assets.mjs --check",
     "store:check": "node scripts/check-store-assets.mjs",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "8.4.3",
+    "@types/node": "24.10.1",
     "typescript": "~5.9.3",
     "vite": "8.3.3",
     "vitest": "^4.0.0"
