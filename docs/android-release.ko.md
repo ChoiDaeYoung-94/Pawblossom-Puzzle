@@ -1,5 +1,43 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-17 · 서버 퍼즐 회차·멱등 이동 원장 (이슈 #109)
+
+기준 main `de72bdd3b87de8eaa3a8a1dd9d8398235f7bce30`, 작업 `codex/109-server-round-ledger`, [이슈 #109](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/109)입니다. `server/game/roundState.ts`·`roundLedger.ts`와 파일/프로세스/worker 검증을 추가했습니다. **서버 내부 회차 원장 구현·로컬 검증·총괄 최종검수를 마쳤고 커밋/PR 제출을 승인받았습니다**입니다. 기존 앱·BoardEngine·30개 level·저장·RewardLedger/구매/인증 schema와 TTL은 수정하지 않았습니다. 아래 과거 round 미구현 표현은 당시 이력입니다.
+
+- 생성자는 절대 `.sqlite` 경로·별도 안정적인 32byte 키·`test/production` 환경을 명시적으로 받습니다. 실제 계정/키/파일/env를 읽거나 통신하지 않습니다. master 사본으로 owner/create/operation/state/receipt/meta의 HMAC 키를 용도 분리한 뒤 master는 지웁니다. 구성/DB 열기 실패·명시 close·무결성/rollback 실패는 내부 키를 지우고 닫으며 caller 키는 유지합니다. 안전하게 rollback한 일시 잠금/COMMIT 오류는 `storage-unavailable`을 반환하고 동일 인스턴스 재시도를 허용합니다. 오류 원문·키·경로를 반환/로그에 넣지 않습니다.
+- `start(trustedOwner,{requestId,levelId})`는 서버 256bit random roundId와 32bit Mulberry32 상태로 생성합니다. 매 난수 호출마다 `(state+0x6d2b79f5)>>>0`를 저장하며 복원은 초기 보드 난수를 소비하지 않습니다. 응답 snapshot은 roundId/revision/생성·만료 시각과 보드/낙엽/목표/이동/수집/점수/셔플/상태의 깊은 복제·동결 사본입니다. 원본 owner/RNG/seed/키/요청 ID는 응답에 없으며 DB에는 owner/요청/operation HMAC과 내부 RNG 진행 상태를 보관합니다. RNG의 비암호학적 예측 가능성이나 DB 암호화/ACL까지 해결하지 않습니다.
+- `TrustedRoundOwner`는 **현재 요청의 서버 인증 계층에서 만든 `{ownerId}`만** 받습니다. 타입·동결·roundId 자체는 인증 수단이 아닙니다. PlayFab 어댑터를 선택한다면 성공 뒤 서버 내부에서 `{ownerId:authenticated.context.ownerId}`로 projection합니다. `expectedObfuscatedAccountId`까지 포함한 전체 context는 거절하며 합성 통합 시험으로 확인했습니다. **HTTP body의 caller owner를 복사하면 안 됩니다.** `get(trustedOwner,{roundId})`는 타인/없는 회차 모두 `not-found`이고 후속 서비스에서 소유권과 `failed`를 확인할 수 있습니다. 조회→RewardLedger 발급/소비 사이의 원자 결합은 이번 범위 밖입니다.
+- 생성 owner+requestId 중복은 같은 level이면 `created:false`·현재 snapshot, 다른 level이면 `request-conflict`입니다. `command(trustedOwner,{roundId,operationId,expectedRevision,command})`는 swap/activate/shuffle/abandon만 받고 고정 순서 snapshot의 digest와 서명 영수증을 저장합니다. 같은 ID/내용은 현재 snapshot·`applied:false`, 같은 ID/다른 내용은 충돌입니다. 중복 조회는 revision/종료/한도보다 먼저지만 소유권/만료/무결성 검사는 생략하지 않습니다. 동일 revision의 다른 ID 경쟁은 한 명령만 수락합니다.
+- **revision은 영수증을 저장한 수락 명령 수**이며 불성립 인접 교환도 영수증/revision을 1 증가시킵니다. `outcome:'invalid-swap'`은 이동/보드/RNG/점수/수집/낙엽 불변이며 `applied:true`는 새로운 영수증 기록을 뜻합니다. 뒤의 다른 보드에서 재시도한 불성립 교환이 유효해지는 일을 막습니다. 유효 교환만 이동 1 차감 및 기존 엔진 결과를 반영하고 목표+낙엽 완료를 이동 0 실패보다 우선합니다. 셔플은 회차당1회·이동 불변, won/abandoned는 최종 종료, failed는 swap/activate/shuffle 거절·abandon 허용입니다. 특수 탭은 기존 `BoardEngine.activate(at)`를 재사용하며 코인/별/진행 잠금은 연결하지 않았습니다.
+- 총괄의 PR 전 범위 보강으로 `{type:'activate',at:{row,col}}`도 엄격히 snapshot합니다. 특수 타일만 `valid-activation`으로 이동1/점수/수집/낙엽/승패를 반영하고 일반 타일은 `invalid-activation`으로 상태/RNG/이동을 보존합니다. 두 결과 모두 영수증/revision을 저장하며 중복/경합/한도 규칙은 교환과 같습니다. `round_ops` CHECK enum과 영수증의 유효 이동 수 불변 조건에도 활성화 결과를 반영했습니다. 아직 미반영 v1이라 migration은 추가하지 않았고 이전 개발용 schema DB는 거절합니다. 순수 상태 시험은 seed1~3의 정상 생성/실제 교환으로 만든 row/column/bomb/rainbow를 기준 엔진 탭과 비교합니다. 파일 시험은 합성 키로 고정 seed의 정상 초기 상태를 서명한 뒤 **실제 교환으로 특수를 생성**하며 특수 직접 주입은 하지 않습니다. 유효/일반 탭·점수/낙엽/RNG·마지막 이동 승패·재시작/중복·8worker 동일 탭·탭/교환 경쟁·서명된 잘못된 차감 영수증도 확인했습니다.
+- 기본/최대 전체 행수는 **1000/10000**, meta 1행 제외 회차+명령 합계이고 terminal/만료도 포함합니다. 기본/최대 회차당 명령 **64/128**, 기본 TTL **1시간**, 구성 범위 1초~24시간이며 `now>=expiresAt`에서 만료됩니다. 불성립 교환/일반 타일 탭/포기도 명령 한도를 쓰고 자동 삭제하지 않습니다. 한도 뒤 새 명령(포기 포함)은 차단하되 유효한 기존 중복은 조회 가능합니다. 이는 자체 논리 상한이며 실제 조작감/보존 정책 최종 검수는 남았습니다. 반복 시작/불성립 교환으로 정상 진행도 막힐 수 있어 운영별 용량·보존·사용자별 제한이 필요합니다.
+- schema/PK/UNIQUE/FK/CHECK·추가 객체는 생성 및 각 호출에서 검사합니다. metadata는 환경·전체 콘텐츠 hash·엔진 profile/LF source SHA-256·설정·키 확인값을 고정하고 high-water를 서명합니다. **상태/영수증 HMAC에도 전체 profile을 결합**해 동일 master 키의 환경 간 이식도 거절합니다. 시작 시 전체 행/영수증, 조회 시 해당 회차의 HMAC/연속 revision/이동·셔플·포기 수/정착 보드/목표·낙엽·종료 상태를 검사합니다. 저장 JSON은 최대32KiB·재직렬화 일치로 duplicate key/비canonical JSON을 거절합니다. 추가 board/score/rng/owner·getter/toJSON/symbol/상속·비인접/범위 밖 좌표도 거절합니다.
+- 시각은 `1_000_000_000_000..9_999_999_999_999−ttlMs`의 안전한 정수, 만료는 전체 상한까지 허용합니다. 서명 persisted high-water와 인스턴스 high-water보다 시각이 후퇴하면 거절합니다. SQLite `BEGIN IMMEDIATE`·`synchronous=FULL`로 상태/영수증/시계를 한 트랜잭션에 저장하며 두 연결의 COMMIT 잠금에서 전체 rollback·동일 인스턴스 복구를 시험했습니다. 같은 호스트의 한 파일/프로세스·worker 범위이며 분산 transaction·별도 원장 원자성은 아닙니다. 과거 유효 DB 전체의 rollback/삭제, 시각/키 자체 신뢰, 물리 디스크 용량·완전 삭제를 보장하지 않습니다.
+- [Node22 공식 TypeScript 실행 조건](https://nodejs.org/docs/latest-v22.x/api/typescript.html)에 따라 parameter properties는 타입 변환, 직접 import는 `.ts` 확장자가 필요합니다. 기존 엔진 constructor를 유지해 별도 process/worker는 **`--experimental-transform-types`**로 실행합니다. 실제 Node 실행과 Vitest 변환 결과를 구분합니다. SQLite 영구 디스크/Node 호스트용이며 PlayFab CloudScript에 그대로 배포 가능한 것으로 표시하지 않습니다. provider/호스팅 선택은 미정입니다.
+
+특수 탭 보강 전 KST19:54 체크포인트는 신규 **182개(상태64/원장118)**·전체 **1556개** 통과였습니다. 첫 전체 실행은 회차/기존 구매 테스트 각1개가 5초 제한을 초과했습니다. 파일 원장의 반복 무작위 종료 회차를12→2로 줄이고 제한 시간/기존 테스트는 변경하지 않은 뒤 기본 `npm test` 전체1556개를 통과했습니다. 이후 파일 원장 종료 시험도 테스트 전용 합성 키로 **seed1의 유효 초기 상태를 서명**하여 level1 승리·level30 실패/실패 후 포기를 반드시 거치도록 바꾸고 전체1556개를 다시 통과했습니다. 운영 seed 입력 경로는 추가하지 않았고 다른 생성/경쟁 시험은 실제 서버 randomBytes를 사용합니다. 순수 상태의30level 기준 엔진 비교와 파일 원장 고정2회차를 구분합니다.
+
+최종 로컬 검사(2026-10-17 KST20:00 기준, Node24.21.0): 특수 탭 포함 신규 **203개(상태78/원장125)**, 기본 `npm test` **26파일/1577개**, `npm run store:check`·`npm run store:test` **원본/12개**, `npm run typecheck` **전체/앱/서버**, `npm run build:test` → `npm run build` **모두 통과**입니다. `assets:check` 원본 일치, testing 세 flags=true, 마지막 production 세 flags=false, src/dist 서버 마커(`RoundLedger|round-ledger|roundState|node:sqlite|PlayFabSessionAuthenticator|RewardLedger|PurchaseLedger|SSV_PROFILE|BEGIN IMMEDIATE|server/game`) **0건**을 확인했습니다. 기존 Phaser 큰 청크·Node 타입 변환 경고는 남습니다. 브라우저 UI/실서비스/Android는 새로 검증하지 않았으며 최신 PR head Node22/24 CI는 **아직 미실행**입니다. 과거 main/보강 전 성공과 최신 검증을 합산하지 않습니다.
+
+검증 실행 상한: 특수 탭 보강 뒤 기존 무제한 파일 병렬 전체 실행에서 timeout3건(회차/콜백/구매)과 8worker 특수 결과 검사1건이 실패했습니다. 당시 개별 worker 응답을 bool로 축약해 정확한 오류 kind는 보존하지 못했으며 storage 오류로 단정하지 않습니다. 재발 시 응답이 출력되도록 assertion을 보강했고 helper 재시도/실패 무시는 추가하지 않았습니다. 동일203개 회차 검사와 전체 `--maxWorkers=4`·`--maxWorkers=2`는 각각1577개 통과했습니다. 총괄의 명시 허용에 따라 `vite.config.ts`에 **파일 단위 `test.maxWorkers:2`**를 추가하고 typed 설정의 defineConfig를 `vitest/config`에서 가져옵니다. 개별 시험의 **8worker·경합·효과 멱등 검사·5초 제한은 유지**합니다. 설정 반영 직후 전체 실행은 기존 callback-inbox 잠금 시험1건이 5초를 넘었고, 이후 같은 기본 `npm test`가 **26파일/1577개·22.29초·실패0**으로 통과했습니다. 모든 호스트 부하/timeout의 완전한 해결을 주장하지 않으며 최신 Node22/24 CI를 별도 확인해야 합니다.
+
+총괄 독립 최종검수: 동일 코드/설정6파일 LF 결합 SHA를 확인한 Node24.21.0에서 **2026-10-17 KST20:02:11 시작 기본 `npm test` 26파일/1577개·22.98초·실패0**, `npm run typecheck` 전체/앱/서버·`git diff --check` 통과와 production 세 flags=false를 확인했고 커밋/PR 제출을 승인했습니다. activate 추가 전 부분506개는 과거 검사이며 이 최신1577개와 합산하지 않습니다. 구현/로컬/총괄 검수 완료와 최신 PR/main Node22·24 CI/병합 근거는 구분하고 후자는 GitHub에 기록합니다.
+
+보강 전 코드5파일 전체 LF SHA `1a4a6d46a369bda6d647af61678ba85776a91d3de80bd965b27db33f8c607b94`는 과거 체크포인트입니다. 아래는 최신 코드/검증 설정 **6파일**의 커밋 전 LF SHA-256이며, 아래 순서의 `경로 + 공백 + 해시 + LF`를 연결한 전체 SHA-256은 `84cb6d4bf8f2252a4bf697073197be6b1130eefb1613d8e16f9c37df5a997528`입니다.
+
+| 파일 | SHA-256 (UTF-8/LF) |
+| --- | --- |
+| `server/game/roundState.ts` | `b22bb59a220d1f0103c59d226bd1216b0a69972d9c572793d677a33cf453e1cb` |
+| `server/game/roundLedger.ts` | `41aab053988f9e9b3295faf4abff32902d467d0f32c84958626e782657380b08` |
+| `tests/server-round-state.test.ts` | `c837dddabe85a0ecfd1f18057d6bc03f45df1355e80b3a2ceec5c2c0b8b71699` |
+| `tests/server-round-ledger.test.ts` | `773c4f651ca7c78576f41460cdd3b876fc1bc04687c11b52129195503c24967b` |
+| `tests/helpers/round-ledger-worker.mjs` | `2d2dff69318fe127d601c9d2a2d7b1f7095f8dcbbfb70333d7d9d28306eb338d` |
+| `vite.config.ts` | `b28e0a4943753394a519a406c26083d53050a89403c4d0b610cbb1d957d36af4` |
+
+제출 전 마지막 fetch에서 HEAD/origin/main 모두 기준 `de72bdd3b87de8eaa3a8a1dd9d8398235f7bce30`을 확인했습니다. 총괄 최종검수 승인에 따라 이 브랜치에 한국어 커밋·push·PR+attach를 수행합니다. 최신 PR/main CI와 실제 반영 근거는 GitHub에 보존하며 병합/브랜치/세션 정리는 총괄이 담당합니다.
+
+실제 provider/HTTP·앱/로그인·게스트 이전/복구·경제/진행 잠금·온라인 동기화·보상 claim 결합/소비/+5·배포/ACL/백업/보존/키 회전/콘텐츠 migration·동의/한국·미국 단말/스토어는 [#73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73) 미완료입니다. APK/AAB·Android sync·버전 증가·최종 믹스·실계정/키/콘솔/상품·Drive·폰 테스트/전달은 수행하지 않았습니다.
+
 ## 2026-10-17 · 선택형 PlayFab 세션 검증·소유자 binding (이슈 #107)
 
 기준 main `3174a3dbc38d4f4e6b996b8c7c838e5600a39ad7`, 작업 `codex/107-server-session-auth`, [이슈 #107](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/107)입니다. `server/auth/playfabSession.ts`·인증 응답 전용 `strictSessionJson.ts`와 합성 테스트를 추가했습니다. **PlayFab을 선택할 경우 사용할 서버 어댑터 준비이며 provider 최종 채택·운영 로그인 연결 완료가 아닙니다.** 구현·로컬 검증·총괄 읽기검수를 마쳤고 커밋/PR 제출을 허용받았습니다. 아래 과거 인증 미구현 표현은 당시 이력이며 실제 인증 서비스/앱 연결은 여전히 미완료입니다.
