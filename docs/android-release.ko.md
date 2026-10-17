@@ -1,5 +1,46 @@
 # Android 빌드와 출시 준비
 
+## 2026-10-17 · Google 전액 환불 조회와 영구 구매 회수 (이슈 #101)
+
+기준 main `46b9c76346f10822c51848ecc8635bd25c04a65a`, 작업 `codex/101-voided-purchase-reconciliation`, [이슈 #101](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/101)입니다. **구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.** `server/commerce/googlePlayVoidedPurchases.ts`의 전체 페이지 조회와 `PurchaseLedger.reconcileVoided`를 추가했습니다. 실제 계정/API/HTTP 서비스/앱에 연결하지 않았으며 아래 과거 기록의 환불 회수·migration 미구현은 당시 이력입니다. 이번 범위는 이미 검증·등록된 단일 수량 영구 비소모 구매의 회수 및 늦은 동일 토큰 지급 차단입니다.
+
+### 조회 profile과 전체 페이지 검증
+
+- 고정 `androidpublisher.googleapis.com` 호스트의 `purchases.voidedpurchases.list` GET만 사용합니다. `type=0`과 `includeQuantityBasedPartialRefund=false`를 고정하며 구독·부분 수량 환불을 지원하지 않습니다. 2026-10-17 공개 공식 Discovery를 직접 읽어 **flat `maxResults`/`token`/`startTime`/`endTime`** 이름을 확인했습니다. REST 설명의 `pageSelection.*` 표기와 구분합니다. 조회를 수행하는 OAuth는 매 페이지 서버 공급자에서 새로 주입하며 URL에 넣지 않습니다. 구성 생성은 무통신이고 실제 자격정보 읽기/생성도 없습니다.
+- 신뢰된 서버 작업만 시작/종료 시각을 지정합니다. 호출 시각 기준30일 안의 안전한 정수이며 `startTime < endTime <= now`이어야 합니다. Google의 필터는 **시스템이 void를 관측한 시각**으로, 응답 `voidedTimeMillis`의 창 범위 일치를 요구하지 않습니다. 구매·void 시각은 양의 안전한 정수 밀리초 문자열·구매≤void≤호출시각 profile로 검증하므로40일 전 void가 최근 관측된 합성 사례도 통과합니다. continuation token 뒤 Google이 시각 필터를 무시한다는 Discovery 설명을 따르며 최초 창과 continuation을 함께 유지합니다.
+- 기본 페이지1000개(설정1~1000), 최대20페이지(1~100), 총10000항목(1~100000), 응답1MiB(1~1MiB), 합계8MiB(1~16MiB), 전체 reader 호출4096회(1~16384), OAuth+전체 페이지/본문 합계30초(1~60000ms)로 제한합니다. 항목 수는 중복 제거 전 응답 수이며 총 read/바이트는 페이지를 넘어 누적합니다. 이어질 페이지가 있는데 페이지/항목 한도에 닿거나 token이 순환하면 완료로 보지 않습니다. 즉시0byte 무한 reader도 read 상한에서 끝나며 비협조 fetch/read/OAuth/cancel도 반환 기한을 기다리지 않습니다. 임의 주입 함수의 동기 CPU 점유까지 중단하지는 못합니다.
+- UTF8 fatal decode와 JSON 문법·중복 키·최대32단계 구조를 검사합니다. 목록/항목/페이지의 알려진 필드만 허용하고, 토큰·source0~2/reason0~8·선택 kind/orderId·시각을 엄격 검증합니다. **`voidedQuantity`는 값이0/1/null이어도 필드가 있으면 전체 실패**입니다. 전액 profile은 해당 필드가 없는 응답만 받습니다. 목록 부재는 빈 목록, 명시 null은 실패입니다. orderId는 선택 정보이며 키로 쓰지 않습니다. `nextPageToken`은 유효한 문자열일 때만 이어지고 **필드 부재만 종료**입니다. null/빈 문자열은 오류이며 공식 sample의 `previousPageToken:null`만 이전 페이지 부재로 허용합니다.
+- 공개 Discovery의 PageInfo 이름은 **`resultPerPage`(단수)**/`startIndex`/`totalResults`입니다. 선택 메타가 있으면 비음수 int32, 시작 index=지금까지 관측 항목, 페이지 최대≥실제 항목, total의 일관성과 최종 관측 항목 일치를 요구하는 자체 엄격 profile입니다. backend 수 변화/메타 모순은 추가 검토가 필요한 실패로 닫습니다. 이 제한을 모든 실제 Google 응답이 반드시 만족한다고 주장하지 않으며 실제 profile 확인은 후속입니다.
+- 200+JSON 본문만 검사하고 HTTP 오류 본문은 읽거나 성공으로 추정하지 않습니다. 3xx/redirect/opaqueredirect·응답 URL 변경을 거절하며 native fetch는 `redirect:error`입니다. 합성 Response의 빈 URL만 허용합니다. OAuth·구매 토큰·pageToken·URL·응답 원문·예외/cause는 결과/로그/DB/문서에 남기지 않습니다. 조회 결과의 토큰은 내부 교환용 SHA-256 식별값뿐이며 운영 batch 결과는 건수만 반환합니다.
+
+### 원자적 회수·영구 차단·복수 구매
+
+모든 페이지 검증 성공 뒤에만 `BEGIN IMMEDIATE`로 반영합니다. 하나라도 조회/본문/페이지/상한 검증이 실패하면 기존 권한·승인·차단 기록은 모두 그대로입니다. 기존 원장 profile에 고정된 패키지/상품/옵션/환경 및 기존 토큰의 소유자 binding으로만 구매를 찾습니다. **Voided API 응답에는 상품·환경·소유자 필드가 없으며 이를 새로 검증했다고 주장하지 않습니다.**
+
+등록 토큰은 `purchases.revoked=1`과 회수 시각을 기록하고 lease/다음 승인 시각을 무효화합니다. 회수 행과 `voided_tokens` SHA-256 거부 기록은 영구 보존합니다. 같은 소유자에게 다른 유효 구매가 남아 있으면 entitlement가 그 토큰을 가리키도록 바꾸며, 마지막 유효 토큰이 없을 때만 권한을 제거합니다. pending/소진 집계와 retry 대상은 회수 토큰을 제외합니다. 재시작·중복·지연 조회·다른 소유자 요청·오래된 PURCHASED·목록 부재가 같은 토큰을 재지급/재승인하거나 회수를 되돌리지 못합니다. 회수 후 다른 새로운 정상 구매는 기존 검증을 거쳐 권한을 다시 받을 수 있습니다.
+
+미등록 토큰은 **소유자·구매·상품·환경·권한을 생성하지 않고 hash 거부 기록만 저장**합니다. 최초 `process` GET가 대기하는 동안 전액 void가 먼저 확인되고 나중에 오래된 PURCHASED가 도착하는 경합을 차단하기 위한 기록입니다. unknown 건수는 이번 조회에서 기존 구매 binding이 없는 고유 토큰 수이며 중복 unknown을 재조회해도 거부 기록은 한 행입니다. 등록/회수/권한 갱신/거부 기록 중 어느 쓰기라도 실패하면 전체 롤백합니다.
+
+`process`의 시작·조회 뒤·commit 안·최종 응답, 승인 claim·최신 GET 뒤·신선 OAuth 뒤 POST 직전·completion·최종 응답을 재점검합니다. completion은 현재 lease+미회수 조건만 갱신하고 뒤 토큰 await 중 앞 토큰이 회수되면 retry 최종 승인 건수도 다시 집계합니다. **이미 출발한 외부 POST의 취소는 보장하지 않습니다.** 외부의 늦은 성공이 서버 권한/lease/tombstone을 덮어쓰지 못하게 하며 실제 Google 상태 수렴/운영 감시는 후속입니다.
+
+### v1→v2 migration과 운영 전환 경계
+
+정확히 일치하는 v1 profile(키 확인값·패키지·상품·옵션·환경)과 기존 컬럼 구성을 검사한 뒤, revoked 두 컬럼·거부 테이블·version2 profile을 동일 트랜잭션으로 전환합니다. 기존 암호문·owner hash·권한·승인·카운터·lease를 보존합니다. 다른 키/구성·미래 version·추가 profile 키·metadata 누락·잘못된 컬럼·**v1에 이미 거부 table이 섞인 부분 전환**은 거절합니다. migration 중 실패하면 DDL/profile도 롤백합니다. v2 재열기는 거부 table 컬럼도 확인하며 자동 하향 전환은 없습니다.
+
+구 v1 코드는 exact profile 불일치로 v2를 다시 열지 못합니다. 기준 `46b9c76`의 **실제 원본 코드를 임시 합성 파일로 실행**하여 v1 기록→현 코드 migration/회수→구코드 재열기 실패→현 코드 재시작의 회수 보존을 추가 확인했습니다. 다만 **이미 열린 구 v1 프로세스는 새 metadata를 재검사하지 않으므로 롤링 호환을 보장하지 않습니다.** 운영 전환은 구 worker 종료·진행 작업 정리→DB/키 분리 백업→migration→신버전 worker만 시작하는 배리어가 필요합니다. 실제 배포/운영 DB 전환은 수행하지 않았습니다.
+
+### 로컬 검증과 미완료 범위
+
+`scripts/use-dev-tools.ps1`의 **Node24.21.0**, 위 기준 커밋+현재 미커밋 작업 트리에서 아래를 완료했습니다. 최신 원격 main도 `46b9c76`이며 PR/head의 Node22·24 CI 결과는 GitHub에서 별도로 확인·기록합니다. 총괄은 조회/원장/승인/voided/회수 **5개 파일·475개**와 전체/앱/서버 타입·diff 검사를 독립 재실행해 통과했습니다. 이475개는 전체913개의 부분 재검증이며 합산하지 않습니다.
+
+- `npm test`: **20개 파일·913개 통과(기존766+신규147)**. 신규 조회105개는 공식 flat query, 창/부분 환불/입력/응답/HTTP/URL/순환/페이지·항목·바이트·read/기한·UTF8/JSON 중복키/메타/비밀정보 경계를 검증합니다. 신규 원장42개는 실제 SQLite·프로세스 재시작·독립 worker 동시 open/지급/회수·기존 v1 migration/rollback·중복/unknown·다중 정상 토큰·쓰기 실패 전체 rollback·늦은 최초 GET/승인 GET/OAuth/POST/타임아웃 completion과 최종 집계를 검사합니다. 모든 계정/키/OAuth/구매/통신은 합성 fixture입니다.
+- `npm run store:check`, `npm run store:test`: 원본 일치 및 **12개 통과**. `npm run typecheck`: 전체/앱/서버 검사 통과.
+- `npm run build:test` 후 `npm run build`: testing 세 flags=true, 최종 production 세 flags=false. 앱/src/dist의 서버 import/Publisher/SQLite/crypto/회수 원장 마커 **0건**. UI 변경이 없어 광범위 브라우저 재검증은 생략했습니다. 기존 큰 번들 경고는 유지됩니다. `git diff --check` 통과입니다.
+
+알림 원문·클라이언트 취소 주장·기존 GET의 binding 판정 전 cancelled/pending/rejected는 회수 근거로 사용하지 않습니다. 부분 수량 환불·미지원 profile·30일 밖/조회 누락·실패는 자동 환불/권한 조작 명령이 아닙니다. **developer가 revoke 없이 환불한 주문은 이 API에 나오지 않으므로 모든 환불을 감지한다고 주장하지 않습니다.** 서버가 주기적으로 조회하는 구현·조회 커서/겹치는 창 운영·RTDN/PubSub 수신 인증·HTTP·실제 OAuth/API·배포/ACL/백업/키 운영·계정 binding·앱 연결·실제 상품/구매/단말/스토어는 **#73 미완료**입니다. APK/AAB·Android sync·버전·최종 오디오 믹스·Drive·Play Console·결제 상품 설정·폰 테스트/전달 보류를 유지합니다.
+
+공식 근거(2026-10-17): [list 요청/관측 시각/OAuth](https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.voidedpurchases/list), [VoidedPurchase 필드](https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.voidedpurchases), [전체 환불 필드 부재·30일·revoke 없는 환불의 누락](https://developers.google.com/android-publisher/voided-purchases), [공개 Discovery의 query와 PageInfo](https://androidpublisher.googleapis.com/$discovery/rest?version=v3), [일회성 구매 lifecycle](https://developer.android.com/google/play/billing/lifecycle/one-time), [RTDN 종류·full/partial 구분](https://developer.android.com/google/play/billing/rtdn-reference). RTDN 참고자료 확인은 수신 인증/처리 구현 완료를 뜻하지 않습니다.
+
 ## 2026-10-17 · 서버 Google 구매 승인 POST transport (이슈 #99)
 
 기준 main `fa2ccfc2b0b79f5b4a7529e311a9b9e9ebbdbb0f`, 작업 `codex/99-google-purchase-acknowledge`입니다. **구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.** `server/commerce/googlePlayAcknowledge.ts`에 `createPlayPurchaseAcknowledger`와 원장용 `createLedgerAcknowledger` adapter를 추가했습니다. 기존 원장의 callback 주석만 갱신하고 schema·지급·lease·재시도 semantics는 변경하지 않았습니다. 아래 #97의 POST 미구현 표현은 당시 이력이며 현재 POST 코드 준비와 실제 서비스 검증을 구분합니다.
