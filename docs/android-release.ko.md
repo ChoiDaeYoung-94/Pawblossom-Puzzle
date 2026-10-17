@@ -14,7 +14,7 @@
 
 Node24.21.0에서 최종 `npm test` **24파일1374개(신규176개)**, `npm run store:check`, `npm run store:test` **12개**, `npm run typecheck`(전체/앱/서버), `npm run build:test`→`npm run build`, `git diff --check`가 통과했습니다. 마지막 production 세 flags=false, `src`/`dist`의 기존 서버 마커와 `PlayFabSessionAuthenticator/AuthenticateSessionTicket/pawblossom-session-v1/strictSessionJson` 마커 파일 **0건**입니다. 기존 Vite500kB chunk 경고는 남아 있습니다. UI 변경이 없어 추가 브라우저/Android 검증은 하지 않았고 실제 서비스 검증과 합산하지 않습니다.
 
-총괄은 앞선1373개 체크포인트에서 인증·구매·보상3파일 **304개**, 전체/앱/서버 타입·diff를 독립 재검증하고 URL canonical·close/getter·timeout/slot·strictJSON·snapshot·HMAC/context 비노출을 읽기검수하여 blocker 없음을 확인했습니다. 이후 전송 Content-Length와 Fetch 압축 해제 body 길이를 동일시하던 비교를 제거하고 합성 회귀1개를 추가한 최종 상태에서 작업자가 위 전체1374개와 두 빌드를 다시 통과했습니다. **304개는 앞선 전체1373개의 부분집합이며 합산하거나 최신 변경의 독립 재검증으로 표현하지 않습니다.** 원격 main 재fetch 결과는 위 기준과 같으며 최신 PR head/main의 Node22·24 CI와 병합은 총괄이 별도로 확인합니다. 최종 코드의 LF 정규화 UTF-8 SHA-256 체크포인트는 다음과 같습니다.
+총괄은 URL canonical·close/getter·timeout/slot·strictJSON·snapshot·HMAC/context 비노출을 읽기검수하여 blocker 없음을 확인했습니다. 전송 Content-Length와 Fetch 압축 해제 body 길이를 동일시하던 비교를 제거하고 합성 회귀1개를 추가한 최종 상태에서 작업자가 위 전체1374개와 두 빌드를 다시 통과했습니다. 총괄도 **최종 전체24파일1374개**, 인증·구매·보상3파일 **304개**, 전체/앱/서버 타입·diff를 독립 재검증하여 통과했습니다. **304개는 최종 전체1374개의 부분집합이며 합산하지 않습니다.** 앞선1373개 결과와 최종 결과는 실행 시점이 다르며 최신 기준은1374개입니다. 원격 main 재fetch 결과는 위 기준과 같으며 최신 PR head/main의 Node22·24 CI와 병합은 총괄이 별도로 확인합니다. 최종 코드의 LF 정규화 UTF-8 SHA-256 체크포인트는 다음과 같습니다.
 
 | 파일 | SHA-256 |
 | --- | --- |
