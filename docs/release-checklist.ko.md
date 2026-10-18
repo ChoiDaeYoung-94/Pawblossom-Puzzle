@@ -1,6 +1,20 @@
 # 출시까지 남은 작업
 
-## 현재 판단 기준 · 2026-10-18 · #122 원장 후속
+## 현재 판단 기준 · 2026-10-18 · #121
+
+기준 main `f1660bda2c797f62bf5119eb642c4f4fbb5e4aba`, 브랜치 `codex/121-game-node-listener`입니다. [검증·실패 이력·수명 계약](android-release.ko.md#현재-작업-상태--2026-10-18--121)을 우선합니다.
+
+- [x] 서버 생성/listen 없는 trusted 게임 adapter용 RequestListener factory와 close():void 취소 요청 구현
+- [x] rawHeaders/8KiB·절대 기한·수신부터 queue0·adapter 실제 settle/응답 종료 뒤 슬롯 반환·정상 keep-alive·조기 단절/고정 오류·HEAD/204 검증
+- [x] Node24.21 실제 최적화 빈 요청·microtask 전 중단·조기 거절 후 슬롯 회수와 Node22.20 listener78개 별도 확인
+- [x] 최종 관련327개·최신 전체30파일2,143개 한 번·전체/앱/서버 타입·스토어12개·에셋 원본·testing→production 빌드·flags3개false·서버 마커0·whitespace 확인
+- [ ] 커밋 전 총괄 독립검수·승인된 커밋/푸시/PR와 정확한 최신 PR/main Node22·24 CI
+- [ ] #126 SSV 별도 callback 경계·#73 외부 호스트/TLS/parser/Expect/로그/속도 제한·실서비스/SDK·단말/스토어 검증
+- [ ] #122 과거 callback timeout/별도 간헐 실패의 미확정 원인 확인
+
+close는 drain/외부 DB 안전 종료 보장이 아니고 timeout은 이미 끝난 동기 commit을 취소하지 않습니다. 실제 wire·호스트 부분 응답 주입·합성 쓰기/프레이밍 fixture를 구분합니다. 새 커밋/PR은 아직 없으며 사용자 조치·질문은 없음, 오늘18시 총괄 취합입니다. APK/AAB·sync·버전·최종 믹스·계정/키/env·Drive/콘솔/상품·폰·공개 배포 보류를 유지합니다. 아래 #122 표현은 당시 기록이며 PR#130으로 위 main에 반영된 범위와 원인 미확정 후속을 구분합니다.
+
+## 이전 판단 기준 · 2026-10-18 · #122 원장 후속
 
 기준 main `75773eb9b94c865e90bfc44831ca94e57bc26cc0`, `codex/122-reward-open-busy`입니다. **최종 관련521개 통과·전체2,064통과/기존 callback timeout1, 총괄 독립검수 완료·Draft 제출 승인**입니다. [두 phase 후속과 실패](android-release.ko.md#현재-작업-상태--2026-10-18--122-원장-후속)를 우선하며 아래 보상 한정 단계 성공과 합산하지 않습니다.
 

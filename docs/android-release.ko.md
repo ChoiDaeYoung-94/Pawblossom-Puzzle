@@ -1,4 +1,55 @@
-## 현재 작업 상태 · 2026-10-18 · #122 원장 후속
+## 현재 작업 상태 · 2026-10-18 · #121
+
+기준 main/origin main은 `f1660bda2c797f62bf5119eb642c4f4fbb5e4aba`, 작업 브랜치는 `codex/121-game-node-listener`입니다. [제한된 게임 Node 요청 수신 #121](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/121)의 **구현·로컬 검사 완료 / 커밋 전 총괄 독립검수 대기**입니다. 관련3파일327/327·최신 전체30파일2,143/2,143 한 번·전체/앱/서버 타입·스토어12개·에셋 원본·testing→production 빌드가 통과했습니다. 기존2,065개에 listener 신규78개를 더한 최신 전체이며 부분/이전 검사 횟수를 합산하지 않았습니다. 이전 #122는 PR#130으로 기준 main에 반영되었고, 아래 Draft/후속 CI 대기 표현은 당시 기록입니다. #122의 나머지 과거 callback timeout/다른 원인 미확정 실패는 열린 상태로 유지합니다.
+
+### 구현 계약과 소유 범위
+
+`server/game/gameNodeListener.ts`의 `createGameNodeListener(adapter, options)`는 trusted `GameNodeAdapter`를 받아 `{listener, close}`만 반환합니다. 구현 모듈은 서버 생성/listen·CLI·환경 조회·TLS/계정/키·앱 연결을 하지 않습니다. 기존 `gameHttp.ts`·GameService/Auth/Round/Reward·스키마/TTL·POST/OPTIONS 의미는 변경하지 않았으며 SSV callback #126과도 분리합니다.
+
+| 항목 | 현재 계약 |
+| --- | --- |
+| 입장 제한 | factory 전체 `maxConcurrent` 기본8, 정수1..32. 본문 수신부터 슬롯 확보·대기열0. `deadlineMs` 기본10,000ms, 정수1..30,000ms. 허용 범위 밖/알 수 없는 설정은 고정 설정 오류입니다. 공개 호스트 운영값을 확정한 것은 아닙니다. |
+| 원문 snapshot | 첫 await 전에 method/url과 native rawHeaders를 쌍·순서·대소문자·중복 그대로 복사합니다. req.headers/Object.fromEntries로 합치거나 URL을 정규화하지 않습니다. target128·header32개/총16,384·이름64/값8,192와 body8,192는 기존 GAME_HTTP_LIMITS를 사용합니다. |
+| 본문 완료 | 실제 Buffer byte 합계를 복사 전에 검사하고 문자열 변환/압축 해제를 하지 않습니다. `end && complete` 뒤 호출하며 raw trailer도 거절합니다. TE/content-encoding/trailer는 기존 금지를 유지하고 미디어·인증·엄격 JSON/CORS/Origin은 기존 adapter가 처리합니다. |
+| 빈 요청 | Node24 최적화 요청은 이미 readableEnded/closed/destroyed이고 end/close가 생략될 수 있습니다. 이미 닫힌 수신 수명은 별도로 기록하고, request callback 뒤 complete가 설정되는 경우 microtask에서 readableEnded&&complete를 재확인합니다. req.destroyed만으로 정상 완료를 취소하지 않으며 실제 socket/res 중단과 terminal 상태를 확인합니다. |
+| 슬롯 수명 | 수신/응답 수명 종료 **AND adapter 실제 settle** 뒤 반환합니다. timeout 응답·disconnect·close·Promise.race 완료로 미협조 promise의 슬롯을 재사용하지 않습니다. adapter가 끝나도 응답 finish/close가 안 끝났으면 기한까지 관리합니다. 늦은 resolve/reject는 관찰하고 두 번째 응답은 쓰지 않습니다. |
+| 절대 기한 | performance.now 기준 진입 시점부터 고정하며 chunk가 연장하지 않습니다. 본문 완료·호출 전·await 후·쓰기 전에 재확인하여 timer callback보다 결과가 먼저 실행되는 event-loop 지연도 거절합니다. 이미 끝난 동기 SQLite commit은 abort/timeout으로 rollback되지 않으므로 timeout을 ‘변경 없음’으로 해석하지 않습니다. |
+| 전송 종료 | 정상 req.close는 취소하지 않고 불완전 close만 취소합니다. res.close는 !writableFinished일 때만 조기 중단입니다. 정상 응답 뒤 req.destroy를 호출하지 않아 keep-alive를 보존합니다. writableEnded/finish/클라이언트 수신 확인은 서로 다릅니다. |
+| 응답·오류 | terminal 응답 선택은 한 번입니다. admission의 포화/닫힘/기한/내부 오류는503 unavailable, 상한 초과는413 request-too-large, 잘못된 transport 입력은400 invalid-request입니다. admission 오류에 임의 Origin을 반사하지 않습니다. 미전송 상태에서만 고정 오류를 한 번 시도하고 headersSent/end/destroyed 상태에는 오류 JSON을 추가하지 않습니다. 동기 setHeader/writeHead/end와 비동기 error를 처리하며 UTF-8 CL·204 body/CL 생략·HEAD 무본문을 지킵니다. |
+| 조기 거절 | Connection:close/재사용 금지 후 수신·응답을 종료하며 무제한 drain하지 않습니다. 오류 JSON 전달이나 같은 socket의 pipelined 요청 보존은 보장하지 않습니다. |
+| close():void | 멱등 취소 요청입니다. 신규 거절·활성 abort·수신/응답 종료·타이머 정리를 수행하며 drain 완료를 뜻하지 않습니다. 외부 server/GameService/DB를 닫지 않으며 미협조 작업이 settle하기 전에 외부 DB를 안전하게 닫아도 된다고 보장하지 않습니다. |
+
+TLS·parser maxHeaderSize/headersTimeout/requestTimeout·연결/socket/per-IP 제한·Expect/checkContinue/checkExpectation·clientError·upgrade/CONNECT·감사 로그 마스킹과 배포는 외부 호스트 책임입니다. checkContinue/checkExpectation을 처리하면 일반 request 이벤트가 생기지 않는 경로도 호스트가 소유합니다. 작은 Content-Length 뒤 초과 byte가 다음 요청으로 해석될 수 있으므로 listener가 요청 smuggling 전체를 차단한다고 주장하지 않습니다. 원문 토큰·target/body·예외를 로그/응답에 기록하지 않습니다.
+
+공식 근거: [Node22 HTTP](https://nodejs.org/download/release/v22.20.0/docs/api/http.html), [Node24 HTTP](https://nodejs.org/docs/latest-v24.x/api/http.html), Node24.21의 [빈 readable 종료](https://github.com/nodejs/node/blob/v24.21.0/lib/_http_incoming.js#L466), [호스트 빈 요청 처리](https://github.com/nodejs/node/blob/v24.21.0/lib/_http_server.js#L1134), [parser 완료 순서](https://github.com/nodejs/node/blob/v24.21.0/lib/_http_common.js#L134)를 대조했습니다.
+
+### 실제 wire·합성 fixture와 검증 근거
+
+테스트에서만 127.0.0.1:0과 synthetic adapter/토큰·입력 거절 전용 service prototype fixture를 사용했습니다. 정상 req.close/destroyed 뒤 지연 성공·동일 keep-alive socket의 두 요청, 본문 도중/완료 뒤 응답 전 peer 단절, rawHeaders 중복 Authorization과 기존 adapter 거절, 모든 크기 정확한 상한/초과, 느린 body·기한·수신부터 포화·timeout/단절 뒤 늦은 성공/거절의 슬롯 유지, 멱등 close/외부 자원 미종료, HEAD/204 rejectNonStandardBodyWrites와 UTF-8 byte 길이를 확인했습니다.
+
+응답 중 단절은 OS loopback 버퍼 크기에 의존하지 않도록 **호스트가 실제 부분 응답을 먼저 쓰는 주입** 뒤 실제 peer socket을 끊습니다. end 이후 finish 전 응답 정체·쓰기 예외·비동기 error·8192 뒤 추가1 byte·절대 기한의 event-loop 지연은 제어 가능한 **합성 transport**입니다. 실제 ServerResponse.end 내부 writeHead 첫 예외는 별도 실제 wire 검사로 고정 오류 복구를 확인합니다. Node parser의 TE+CL 거절은 listener 이전 경로로 구분합니다. CL8193은 수신 전 거절하고 TE도 금지하므로 native framing을 무시한 임의 8193 byte 분할 수신은 합성 fixture로 검사합니다. 각 검사 종료에서는 finally 역할의 afterEach에서 미완료 gate를 settle시키고 client/server socket·agent·server·timer를 정리합니다.
+
+| 실행 단계·기준 | 결과 |
+| --- | --- |
+| 최초 관련 초안·16:01:07 KST | 3파일310개 중308통과/2실패. optimizeEmptyRequests:true의 complete 설정 순서로5초 timeout, paused client만으로 res.writableFinished=false를 보장하지 못한 fixture 기대 실패입니다. 빈 요청 microtask 처리와 명시적인 부분 응답 주입으로 보완했습니다. |
+| 추가 수명 검사 초안·16:03:13 | 3파일318개 중317통과/1실패. 정상 finish의 합성 microtask를 fake timer에서 기다리는 시점 오류입니다. 수동 finish fixture로 이벤트를 명시한 뒤 timer0을 확인하며 assertion/기본5초/worker를 완화하지 않았습니다. |
+| 최종 관련·16:05:11 | **3파일327/327**, Node24.21.0. listener78+기존 game-http188+game-service61. 약9.17초입니다. |
+| 최신 전체·16:05:24 시작 | **30파일2,143/2,143**, Node24.21.0, JSON 기준 약47.14초. 최신 코드 전체를 한 번 실행했고 전체/CI rerun은 하지 않았습니다. |
+| Node22 추가 호환·16:06:54 | **listener1파일78/78**, Node22.20.0 약1.22초. 공식 Windows ZIP을 Git 밖 QA 폴더에만 풀어 사용하고 SHASUMS256과 SHA256 `bb819d6eb8f5bfda294bbc83a7e4ec6539da67c4233d54b0d655b9248b15e29d`를 대조했습니다. Node22에는 optimizeEmptyRequests가 없어 옵션 true 표본도 보통 빈 stream 경로이며 Node24의 최적화 수명 검증과 구분합니다. 전체 Node22 성공이나 최신 PR CI 성공으로 확대하지 않습니다. |
+| 타입/원본/스토어/빌드·16:06:19 이후 | 전체/앱/서버 tsc·store:check·store:test12/12·assets:check·testing→production Vite 빌드 모두 exit0. 최종 flags3개 false·src/dist 서버 마커0건·diff/신규 파일 whitespace 검사 통과입니다. 기존500kB chunk 경고와 Node의 SQLite/타입 변환 실험 경고는 남습니다. |
+
+실행은 현재 셸에만 `scripts/use-dev-tools.ps1`을 적용한 Node24.21.0입니다. `node node_modules/vitest/vitest.mjs run tests/game-node-listener.test.ts tests/game-http.test.ts tests/game-service.test.ts` → `node node_modules/vitest/vitest.mjs run` → tsc `--noEmit`/`-p tsconfig.app.json`/`-p tsconfig.server.json` → store/asset scripts → `node node_modules/vite/bin/vite.js build --mode testing` → `build` 순서입니다. package.json의 같은 설치 CLI를 직접 호출했으며 추가 프로덕션 의존성/worker/검사 timeout/운영 재시도 정책을 바꾸지 않았습니다.
+
+기준 SHA는 모든 단계에서 위 main이며, 초기 두 실패는 당시 미커밋 초안으로 최종 소스 SHA와 동일한 버전의 실패로 합산하지 않습니다. 원문 로그와 JSON, 명령·UTC 시작/끝·Node 버전·exit code 및 최종 소스 LF SHA는 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-121`의 `related-initial.*`, `related-final.*`, `listener-corrected.*`, `listener-optimized-lifetime.*`, `related-complete.*`, `related-latest.*`, `full.*`, `wire-node22.*`, `*-commands.json`, `verify.mjs`, `checkpoint.json`에 보존합니다. 최초 두 초안의 별도 소스 LF SHA는 수집하지 않았으며 원문 출력과 단계/기준 main으로 구분합니다. 정적 체크 도우미의 첫 실행은 신규 파일 no-index diff의 차이 exit1을 오류로 오인했으며 `checkpoint-initial.log`에 보존했습니다. 명령에만 autocrlf=false를 적용하고 허용 exit0/1과 stdout/stderr 공백을 함께 검사하여 실제 whitespace 진단이 없음을 확인합니다. 저장소 설정을 변경하지 않았습니다.
+
+| 최종 소스 LF SHA-256 | 값 |
+| --- | --- |
+| server/game/gameNodeListener.ts | `9bbb6e63c960031276ccfffc3ae7cdc5887098b4b8a074e3632d1d8936184a7c` |
+| tests/game-node-listener.test.ts | `8996c1dfd133f05f3916fb06b85cb3ff7174344affe2010da740c2fd64fb88ac` |
+
+다음은 총괄의 독립검수와 커밋/푸시/PR 제출 승인입니다. 아직 새 커밋·PR·최신 PR/main CI는 없으며 병합/정리는 총괄이 담당합니다. 이번 성공은 공개 host/실서비스·브라우저 UI·광고 SDK·보상 지급·실기기/스토어 검증 완료가 아닙니다. 사용자 조치/질문은 없고 오늘18시 총괄이 취합합니다. APK/AAB·Android sync·버전·폰/전달·Drive/콘솔/상품·실계정/키/env·최종 오디오 믹스·공개 배포 보류를 유지합니다.
+
+## 이전 작업 상태 · 2026-10-18 · #122 원장 후속
 
 기준 main `75773eb9b94c865e90bfc44831ca94e57bc26cc0`, 브랜치 `codex/122-reward-open-busy`입니다. **보상·Round 검사 생성자 exact BUSY5의 제한 재개방 구현 / 최종 관련521/521 통과·전체2,064통과/기존 callback timeout1 / 총괄 독립검수 완료·Draft 제출 승인**입니다. [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)는 열린 상태이며 제품 원장/operation 오류 수정이나 전체 통과로 보고하지 않습니다. 아래 `#122 후속`은 보상에만 적용했던 이전 코드 단계의 기록입니다.
 
