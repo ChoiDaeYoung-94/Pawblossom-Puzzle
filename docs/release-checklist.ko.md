@@ -1,5 +1,21 @@
 # 출시까지 남은 작업
 
+## 현재 판단 기준 · 2026-10-18 · #118
+
+기준 main `fdfc242f81723bc5dd0d34962b57517f7d3c589e`, `codex/118-save-source-conflict`, [저장 전 외부 원문 변경 차단 #118](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/118)입니다. 정상 저장 직전 primary/backup/reset 원문 비교·본인 부분 쓰기 추적・sticky conflict와 기존 메모리 재시도를 구현했습니다. **저장/UI171개·최종 타입/스토어12/두 웹 빌드/production 두 탭 통과, 최신 전체1958통과/기존 구매1실패를 보존하고 총괄 관련 독립검수 완료·Draft 제출 승인·최신 head 원격 전체 Node22/24 대기**입니다. [상세 계약/실패/한계](android-release.ko.md#2026-10-18--저장-전-외부-원문-변경-차단-이슈-118), [production 두 탭 브라우저](browser-qa.ko.md#2026-10-18--저장-전-외부-원문-변경-차단-이슈-118)를 우선하며 아래 #117/과거 현재 표현은 당시 이력입니다.
+
+- [x] 외부 저장·완료 초기화·미래 형식·삭제·backup만 변경의 무쓰기 conflict 및 반복 retry 보호 구현
+- [x] 원문/정규화 백업 분리, 본인 부분 쓰기/marker 제거 실패·읽기 실패 회복·초기화 의도/최신 메모리 보존 회귀 추가
+- [x] 기존 KO/EN UI 재사용과 pending 초기화보다 conflict 안내 우선, 실제 두 탭 순차 production 브라우저 최초 확인
+- [x] 최종 코드 이후 전체/앱/서버 타입·스토어12개/원본·두 빌드·whitespace·최종 flags3개 false/서버 마커0건·실제 브라우저7개 확인
+- [ ] 최종 전체1959개 전부 통과(현재1958통과/기존 구매 재시작1실패5273.40ms, 단독1690.62ms 통과와 구분)
+- [x] 총괄 저장/UI171개·전체/앱/서버 타입·diff·production flags·동일 소스/검사5개 LF SHA·최종 브라우저/화면 독립검수 및 Draft 제출 승인
+- [ ] 승인된 fix 커밋/푸시/Draft PR → 최신 head 원격 전체 Node22/24 CI → 총괄 Ready/반영 검토
+- [ ] #122 및 새로 관찰한 HTTP/8worker 실패의 원인 확인(분리 통과를 원인 해결로 처리하지 않음)
+- [ ] check→write/ABA·자동 병합/클라우드/기기간 복구 및 실제 Android·TalkBack·업데이트/강제 종료·출시 검증
+
+최초 전체1956통과/2실패·분리280통과·새 UI 기대 언어 오류1개 수정은 단계별로 기록합니다. 기본5초/worker·운영 정책 변경은 없습니다. 지금 사용자 조치·질문은 없고 미결정은 오늘18시 총괄 보고에 모읍니다. APK/AAB·sync·버전·최종 믹스·계정/키/env·Drive/콘솔/상품·폰 테스트/전달 보류를 유지합니다.
+
 ## 현재 판단 기준 · 2026-10-18 · #117
 
 기준 main `cfe9d32b47567056864ab09789818643d668248b`, `codex/117-game-http-boundary`에서 [제한된 게임 HTTP 요청/응답 #117](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/117)을 구현·로컬 검증했고 **총괄 최종 독립검수 완료/커밋·푸시·Ready PR 제출 승인**입니다. 기존 핵심 계약/TTL/스키마·앱은 변경하지 않았습니다. [API/HTTP·CORS 계약·검증과 한계](android-release.ko.md#2026-10-18--제한된-게임-http-요청응답과-preflight-이슈-117), [다음 순서](roadmap.ko.md#현재-작업-현황--2026-10-18--117)를 우선하며 아래 #115/이전 현재 상태는 당시 이력입니다.

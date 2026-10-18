@@ -58,7 +58,7 @@ let announcedSave='';
 function updateSaveStatus(){
   const status=saveStatus();
   const problem=status.write==='reset-failed'||status.write==='blocked'||status.write==='failed'||status.write==='backup-failed'||status.resetPending||['corrupt','unsupported','read-error','conflict'].includes(status.load);
-  const key:TextKey=status.write==='reset-failed'?'saveResetFailed':status.resetPending?'saveResetPending':status.load==='conflict'?'saveConflict':status.load==='unsupported'?'saveUnsupported':status.load==='read-error'?'saveReadError':status.load==='corrupt'?'saveCorrupt':status.write==='backup-failed'?'saveBackupFailed':status.write==='failed'?'saveFailed':status.load==='recovered'?'saveRecovered':status.write==='saved'?'saveSaved':'saveNew';
+  const key:TextKey=status.write==='reset-failed'?'saveResetFailed':status.load==='conflict'?'saveConflict':status.resetPending?'saveResetPending':status.load==='unsupported'?'saveUnsupported':status.load==='read-error'?'saveReadError':status.load==='corrupt'?'saveCorrupt':status.write==='backup-failed'?'saveBackupFailed':status.write==='failed'?'saveFailed':status.load==='recovered'?'saveRecovered':status.write==='saved'?'saveSaved':'saveNew';
   const message=text(key), detail=document.querySelector('#save-status');
   if(detail)detail.textContent=message;
   const retry=document.querySelector<HTMLButtonElement>('#save-retry');

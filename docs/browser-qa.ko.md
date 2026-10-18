@@ -1,3 +1,13 @@
+## 2026-10-18 · 저장 전 외부 원문 변경 차단 (이슈 #118)
+
+기준 main `fdfc242f81723bc5dd0d34962b57517f7d3c589e`, `codex/118-save-source-conflict`, [이슈 #118](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/118)입니다. `SaveStore`는 load 때 관찰한 primary/backup/reset **원문**과 본인이 성공한 부분 쓰기를 추적하고, 저장 직전에 이미 달라진 키를 발견하면 디스크를 쓰지 않고 conflict로 차단합니다. 정규화한 백업 기준과 원문은 분리하며, 읽지 못한 키와 실제 없는 키도 구분합니다. 현재 메모리는 유지하고 확정된 충돌은 반복 재시도·외부 삭제/원문 복원으로 풀지 않습니다. 명시적인 기존 기록 불러오기 또는 사용자 초기화만 새 기준을 만듭니다. 초기화 대기 상태에서도 충돌 안내를 먼저 표시합니다.
+
+아래 #58의 “매치마다 디스크를 다시 읽지 않는다/동시 다중 창 충돌 해결 범위 밖”은 당시 이력입니다. 이번 범위는 **저장 전에 이미 관찰 가능한 외부 변경의 차단**이며, 여러 키의 읽기/쓰기 전체는 원자적이지 않습니다. 검사와 쓰기 사이 경쟁, 관찰 전 변경, ABA, 동시 merge·다른 기기/클라우드 복구는 해결하지 않습니다. [HTML Web Storage 표준](https://html.spec.whatwg.org/multipage/webstorage.html#the-localstorage-attribute)은 여러 agent cluster 사이 locking을 가정하지 않도록 설명합니다. storage 이벤트를 잠금이나 필수 검증으로 사용하지 않습니다.
+
+격리된 실제 headless Chrome **155.0.8059.80**, production dist, **390×844**, 별도 Vite preview loopback 임시 포트/새 origin·합성 프로필의 두 탭으로 검증했습니다. 시작 checkpoint가 backup 원문을 정규화하므로 B 부팅 뒤 A를 명시 재로드하여 두 탭을 같은 원문 기준에 맞췄습니다. 이후 A 음악 설정 실제 클릭 저장 → B 오래된 언어 설정 실제 select → 영어 conflict·새로 불러오기 표시/primary·backup·reset 원문 불변/메모리의 영어·기존 음악 설정 유지 → Enter/Space 반복 재시도 무쓰기·포커스 유지 → 새로 불러오기 취소 무변경 → 수락 후 A 설정·진행 복원/충돌 해제 → B 새 설정 저장 성공을 확인했습니다. pageerror0입니다. 사용자 5173/기존 Chrome 창·진행을 사용하거나 초기화하지 않았고 harness의 context/browser/preview 서버는 finally에서 정리했습니다. 최종 실행 근거는 아래 저장 기록에 연결합니다. 실제 Android·폰/TalkBack 또는 사용자 진행 복구 검증이 아닙니다.
+
+근거는 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-118`의 `two-tabs.mjs`, `summary.json`, `conflict-en.png`이며 최초 검증을 보존합니다. UI 우선순위 최종 변경 뒤 production 재빌드의 최종 근거는 **`checkpoint/browser-checkpoint`의 harness/summary/EN390px·KO320px PNG**입니다. 최초320px 사진은 비활성 탭의 갱신 전 화면이 남아 접근 근거로 사용하지 않았습니다. 최종 harness는 A를 bringToFront한 뒤 실제 click·visible 상태·retry bounds141.52×44/화면 안 center hit test·수평320=320을 확인하고 사진을 직접 검토했습니다.7개 순차 확인/pageerror0, 최종 production flags3개 false입니다. 중간 `checkpoint`/`browser-final` 결과와 원본은 보존하고 최종 근거와 구분합니다. 최종 자동 검사·실패 이력·LF SHA와 총괄 관련 독립검수 완료·Draft 제출 승인·최신 head 원격 전체 Node22/24 대기 상태는 [개발 기록](android-release.ko.md#2026-10-18--저장-전-외부-원문-변경-차단-이슈-118)에 관리합니다. APK/AAB·Android sync·버전·최종 오디오 믹스·계정/키/env·Drive/콘솔/상품·폰 테스트/전달은 수행하지 않습니다.
+
 ## 2026-10-17 · 보상형 시험 이어하기 (이슈 #95)
 
 기준 main `f55c6ee0b189aa272daaa0916333c9f6c4ce9a4c`, 작업 `codex/rewarded-test-continue`의 로컬 검증과 총괄 검수 결과입니다. **네이티브 SDK 실행과 Chrome IPC fixture를 구분합니다.** 신규 `scripts/rewarded-continue-qa.mjs`는 실제 dist를 격리 headless Chrome155.0.8059.80에 제공하고 Android plugin/앱/결제 상태만 명시적 IPC fixture로 공급합니다. 실제 광고·UMP·OS overlay·기기 검증이 아닙니다. 합성 준비는 seed42 보드/기존 낙엽 주입과 `onMove` 이동 축소이며, 실패 확정과 +5 이후 플레이는 실제 canvas 포인터 입력입니다. 앱의 목표·판정은 바꾸지 않습니다.

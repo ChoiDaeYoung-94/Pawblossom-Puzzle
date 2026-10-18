@@ -1,5 +1,41 @@
 # Android 빌드와 출시 준비
 
+## 현재 작업 상태 · 2026-10-18 · #118
+
+기준 main `fdfc242f81723bc5dd0d34962b57517f7d3c589e`, `codex/118-save-source-conflict`, [저장 원문 충돌 보호 #118](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/118)입니다. 저장 전 이미 달라진 외부 primary/backup/reset 원문을 무쓰기 conflict로 차단하고 최신 메모리·기존 부분 실패 재시도를 유지하도록 구현했습니다. **저장/UI171개·최종 타입/스토어12/두 웹 빌드/production 두 탭 검증 완료, 최신 전체는1958통과/기존 구매1실패이며 총괄 관련 독립검수 완료·Draft 제출 승인·최신 head 원격 전체 Node22/24 대기**입니다. 코드 변경 없이 한국어 fix 커밋/푸시/Draft PR 제출을 승인받았습니다. Ready/merge는 최신 head 원격 전체 검사 뒤 총괄 검토 대상입니다. 아래 #117의 현재/CI 대기 표현은 당시 이력이며 #117은 [PR #123](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/123)과 위 main에 반영된 기준입니다.
+
+총괄 독립검수: 저장/UI2파일171/171·전체/앱/서버 타입·diff 통과, production3flags=false·소스/검사5개 LF SHA 체크포인트 일치입니다. 최종 browser-checkpoint의 A320×568/B390×844·44px/좌표·7개/pageerror0와 한국어 PNG를 총괄이 직접 대조했습니다. 보고서 `C:\Users\user\AppData\Local\Temp\pawblossom-118-root-related-ab96e8769fd14c7186ab11eb2e35e25d.json`을 근거로 **관련 독립검수 완료·Draft 제출 승인**을 받았으며 로컬 전체1958통과/1실패는 그대로입니다. 최신 head의 원격 전체 Node22/24 CI는 제출 후 총괄 확인 대상이고 Ready/merge 승인은 아직 없습니다.
+## 2026-10-18 · 저장 전 외부 원문 변경 차단 (이슈 #118)
+
+- 정규화한 `baseline`은 백업 데이터로 유지하고 원문 관찰값과 분리합니다. primary/backup/reset 각각 성공한 읽기와 본인 쓰기/제거만 기대값을 갱신합니다. 손상 primary→정상 backup 복구·구형 선택 필드 정규화·본인 backup 성공/primary 실패·marker 제거 실패를 외부 충돌로 오판하지 않습니다.
+- 저장 직전 재읽기 실패는 무쓰기 read-error이며, 독립 probe의 재검증 결과를 현재 메모리 기준으로 자동 승격하지 않습니다. 기존 최초/순차 읽기 실패 보호·정상 primary/backup 읽기 장애 회복·marker1 초기화 의도/기본 메모리·초기화 중 읽기 실패/본인 부분 쓰기 뒤 최신 메모리 retry를 유지합니다.
+- 외부 저장/완료 초기화/미래 형식/삭제/backup만 변경/동일 의미의 다른 원문을 발견하면 `false`, load=conflict/write=blocked이며 모든 키와 메모리를 보존합니다. 확정 conflict는 반복 retry/외부 삭제·복원으로 풀지 않습니다. 명시 load 또는 사용자 reset만 새 기준을 만듭니다. pending marker만 있던 상태를 이전 구현에서 즉시 부활했다고 표현하지 않습니다.
+- 기존 KO/EN 상태/재시도/확인 후 새로 불러오기를 재사용하고 충돌 안내 문구·초기화 대기보다 충돌 안내 우선순위만 조정했습니다. 전체 persist 비동기화·잠금/스키마/클라우드/자동 병합은 추가하지 않았습니다.
+- 여러 키 원자성·check→write 경쟁·ABA/관찰하지 못한 변경은 보장 밖입니다. [HTML 표준의 locking 비가정 근거](https://html.spec.whatwg.org/multipage/webstorage.html#the-localstorage-attribute), [실제 두 탭 순차 브라우저 검증](browser-qa.ko.md#2026-10-18--저장-전-외부-원문-변경-차단-이슈-118)을 보존합니다.
+
+검증 이력(Node24.21.0, file maxWorkers2/내부8worker/기본5초·운영 정책 유지):
+
+1. 초기 부분 `npx vitest run tests/save-recovery.test.ts tests/ui-flow.test.ts` 134개 → 저장 회귀36개 추가 후170개 및 `npm run typecheck` 전체/앱/서버 통과.
+2. 첫 전체 KST **14:21:51 시작**, JSON 기준29파일/54.09초, **1956통과/2실패(총1958)**입니다. HTTP `실제 단독 Uint8Array 외 본문 0 거절` 5105.80ms/STACK_TRACE_ERROR와 보상 `8worker 소비+적용 동시 실행은 이동5/적용1회·보상행1·영수증1` 3491.16ms/expected false to be true입니다. 후자는 worker 반환 종류 assertion 실패로 원본이 SQL 오류인지 확인할 수 없습니다. 빌드와 병행한 실행이나 원인 인과는 미확정입니다. 신규 저장 검사와 별개이며, 실패를 통과로 합산하지 않습니다.
+3. 분리 진단 KST **14:23:03 시작**, `npx vitest run tests/game-http.test.ts tests/reward-redemption.test.ts --reporter=json ...`, **280개/19.40초 통과**. 위 HTTP47.75ms/8worker343.87ms였습니다. 원인 수정 완료를 뜻하지 않습니다. [#122 기존 구매 배치 간헐 timeout](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)과 이 두 실패의 공통 원인도 미확정입니다.
+
+   총괄의 읽기 진단: HTTP 케이스0의 setup에는 실제 SQLite fixture/FULL commit/migration 동기 I/O가 포함되어 기본5초 초과 가능성이 있으나 네트워크/인증 대기로 단정하지 않습니다. 8worker는 8개 메시지를 받은 뒤 첫 every(kind) assertion이 실패했고 결과 배열이 남지 않아 worker-error/service-error/rejected를 구분할 수 없습니다. helper/원장의 예외 마스킹으로 실제 BUSY 여부를 확정하지 못하며 DB 경로 충돌/잔존 worker 누수 근거도 없습니다. 공유 I/O 지연은 미입증 가설이며 이번 제품 코드에 관련 수정을 추가하지 않습니다. 후속 #122의 테스트 전용 단계/결과 계측으로 추적합니다.
+4. pending conflict UI 변경이 후반에 포함된 두 번째 전체는1959개 중1958통과/새 UI1실패입니다. 초기화가 언어도 한국어로 돌리는데 검사만 영어 문구를 기대한 오류였으며 한국어 기대값으로 수정했습니다. 이 실행은 최종 전체 근거가 아닙니다.
+5. 한국어 기대값 수정 후 부분171개 통과. 최종 코드 전체 KST **14:25:01 시작**, **29파일/1959개(기존1922+신규37) 중1958통과/1실패**입니다. JSON testResults 범위247.62초, 총괄이 관찰한 전체 명령282.7초를 구분합니다. 실패는 기존 purchase-ledger `실제 프로세스 재시작 뒤 최신 GET로 수렴하고 POST·재지급하지 않습니다` 5273.40ms/STACK_TRACE_ERROR입니다. 저장/UI와 이전 HTTP/8worker 항목은 이 실행에서 통과했습니다. 전체 성공으로 표시하지 않고 추가 전체 반복은 중지했습니다.
+6. 위 구매 재시작 항목만 고정 분리한 진단 KST **14:31:08 시작**은 **1개1690.62ms 통과/나머지67개 선택 제외**입니다. 이 결과를 전체 통과나 원인 해결로 합산하지 않습니다. 최종 빌드/브라우저·정적 검증을 마친 뒤 총괄 독립검수 대기하며 Ready/merge 승인은 아직 없습니다.
+
+최종 코드 체크포인트의 SHA-256은 UTF-8/LF 기준입니다. `checkpoint/source-lf-sha256.json`에도 보존합니다.
+
+| 파일 | LF SHA-256 |
+| --- | --- |
+| `src/state.ts` | `04ec2f6864c4d6335af7451a85260ccbbfeecbcb6df87ae3b71382f8cdf4cc1c` |
+| `src/i18n.ts` | `5ca81271a682c3ab68c3bbebd5e42135b04e357151f47996bd0210f5508c5b76` |
+| `src/main.ts` | `4e5aa10739ed32dff5c28ef45ef82e82f510272624b3418f8b74420677b64579` |
+| `tests/save-recovery.test.ts` | `3d93d9feef9c66ed43f1c31af66865dbf2877f3d894b2fb6cd7a6f5f6c3956cc` |
+| `tests/ui-flow.test.ts` | `f8fb7c61aa55a99693b9381feac88d1034e767cd973b3d129e104e313dc33019` |
+
+최종 코드 이후 `npm run store:check`/스토어12개, `npm run build:test`→`npm run build`(각 전체/앱/서버 typecheck·원본 에셋 검사 포함) 통과, 최종 production 세 flags=false·src/dist 서버 마커0건·whitespace 통과입니다. 최종 브라우저는 `checkpoint/browser-checkpoint/summary.json`의7개 순차 확인, KO/EN390×844/KO320×568, pageerror0,320px 수평 넘침0·실제 재시도 click/44px·화면 안 hit test를 검증했습니다. 모든 QA context/browser/preview는 종료했으며 기존5173/사용자 창은 보존했습니다. 기존500kB chunk/Node 타입 변환 경고는 남습니다. 원본 JSON과 브라우저 harness/화면은 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-118`에 보존하며 사용자 테스트 안내 문서는 만들지 않습니다. 후속 실제 API/공개 호스트/앱/SDK/연령·국가/운영·단말/스토어는 #73이며 APK/AAB·sync·버전·믹스·실계정/키/env·Drive/콘솔·폰 보류를 유지합니다. 중간 사용자 질문·조치는 없으며 미결정은 총괄의 오늘18시 종합 보고에 모읍니다.
+
 ## 현재 작업 상태 · 2026-10-18 · #117
 
 기준 main `cfe9d32b47567056864ab09789818643d668248b`, 작업 브랜치 `codex/117-game-http-boundary`, [이슈 #117](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/117)입니다. **제한된 순수 게임 HTTP 요청/응답·OPTIONS 어댑터 구현·로컬 검증·총괄 최종 독립검수 완료, 커밋/푸시/Ready PR 제출 승인**입니다. 승인 시점의 기록이며 최신 PR/main 원격 검사·반영 결과는 GitHub에 별도 기록합니다. 아래 #115 및 날짜별 “현재” 표현은 당시 이력입니다. 기존 GameService/Auth/Round/Reward의 핵심 API·스키마·TTL과 앱/광고 콜백 경로는 수정하지 않았습니다.

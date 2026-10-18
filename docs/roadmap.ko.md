@@ -1,5 +1,11 @@
 # 출시까지의 개발 순서
 
+## 현재 작업 현황 · 2026-10-18 · #118
+
+기준 main `fdfc242f81723bc5dd0d34962b57517f7d3c589e`, `codex/118-save-source-conflict`에서 [저장 전 외부 원문 변경 차단 #118](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/118)을 구현했습니다. **저장/UI171개·최종 타입/스토어12/두 웹 빌드/production 두 탭 검증 완료, 최신 전체는1958통과/기존 구매1실패이며 총괄 관련 독립검수 완료·Draft 제출 승인·최신 head 원격 전체 Node22/24 대기**입니다. 정상 두 실행 사이의 오래된 메모리 덮어쓰기·완료 초기화 부활·미래 형식/삭제/backup 단독 변경을 저장 직전 원문 비교로 차단합니다. 본인 부분 쓰기·초기화 marker·최신 메모리 재시도는 유지하고, 확정 conflict는 명시 load/reset만 해제합니다. [계약·한계·실패를 포함한 검증](android-release.ko.md#2026-10-18--저장-전-외부-원문-변경-차단-이슈-118), [production 실제 두 탭 순차 검증](browser-qa.ko.md#2026-10-18--저장-전-외부-원문-변경-차단-이슈-118)을 우선합니다. check→write 경쟁·ABA·자동 병합을 완전히 해결한 것은 아닙니다.
+
+총괄의 관련 독립검수와 Draft PR 제출 승인을 받았습니다. 다음은 코드 변경 없이 한국어 fix 커밋/푸시/Draft PR 제출과 최신 head 원격 전체 Node22/24 CI 대기입니다. Ready/merge는 별도 검토하며 이후 #119·#120 순서를 유지합니다. 첫 전체1958개 중2실패·분리280통과·UI 기대 언어 오류1개 수정·최신 전체1959개 중기존 구매 재시작1실패5273.40ms·동항목 단독1690.62ms 통과를 구분해 보존하고 전체를 더 반복하거나 timeout/worker를 늘리지 않았습니다. #122의 원인 미확정 상태를 유지합니다. 사용자 조치·질문은 없고 결정은 오늘18시에 모읍니다. APK/AAB·sync·버전·최종 믹스·계정/키/env·Drive/콘솔·폰 테스트/전달은 보류합니다. 아래 #117 및 이전 현재 표현은 당시 이력입니다.
+
 ## 현재 작업 현황 · 2026-10-18 · #117
 
 기준 main `cfe9d32b47567056864ab09789818643d668248b`, `codex/117-game-http-boundary`에서 [게임 HTTP 어댑터 #117](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/117)를 구현·로컬 검증했고 **총괄 최종 독립검수 완료/커밋·푸시·Ready PR 제출 승인**입니다. 정확한5개 POST 경로·엄격 raw header/8KiB body/UTF-8/JSON/자격·공개 응답/오류 매핑과 제한된 OPTIONS preflight만 추가했습니다. 기존 서비스/인증/회차/보상 스키마·TTL과 앱은 그대로입니다. [상세 계약·호스트 책임·검증/SHA](android-release.ko.md#2026-10-18--제한된-게임-http-요청응답과-preflight-이슈-117)를 보존합니다.
