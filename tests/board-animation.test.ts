@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createRequire } from 'node:module';
+import type Phaser from 'phaser';
 import { BoardEngine, seededRng, type Tile, type Position, type ResolveStep } from '../src/core';
 
 class Piece {
@@ -37,6 +39,8 @@ vi.mock('phaser',async()=>{
   }}};
 });
 import { BoardScene } from '../src/BoardScene';
+// 렌더링은 대역을 유지하되 예약/만료/제거는 설치된 Phaser 3.90 Clock 원본을 사용합니다.
+const Clock=createRequire(import.meta.url)('phaser/src/time/Clock.js') as new(scene:unknown)=>Phaser.Time.Clock&{start():void};
 interface RenderScene {
   sys:{isActive():boolean;isPaused():boolean};shuffle():boolean;resumeAfterFailure():boolean;
   pieces:Piece[][];engine:BoardEngine;
@@ -137,6 +141,88 @@ function harness(){
   scene.resetHint=()=>{};
   return {scene,onMove,onNotice};
 }
+
+describe('유휴 힌트 (실제 Phaser Clock)',()=>{
+  function timed(){
+    const h=harness(),scene=h.scene as RenderScene&{time:Phaser.Time.Clock;hintTimer?:Phaser.Time.TimerEvent;ready:boolean;hooks:{onReady?:()=>void}};
+    delete (scene as Partial<RenderScene>).resetHint;
+    let active=false,paused=false,now=0;
+    Object.assign(scene.sys,{events:scene.events,game:{loop:{time:0}},isActive:()=>active,isPaused:()=>paused});
+    const clock=scene.time=new Clock(scene);scene.events.emit('boot');clock.start();
+    for(const [r,c,k] of [[3,0,5],[3,1,5],[3,2,1],[4,2,5]])scene.engine.board[r][c]={kind:k};
+    const transition=(event:string)=>{active=['create','resume','wake'].includes(event);paused=event==='pause';scene.events.emit(event);};
+    const advance=(ms:number)=>{if(active){clock.preUpdate(now,ms);clock.update(now+=ms,ms);}};
+    const start=()=>{scene.create();transition('create');};
+    const live=()=>{
+      const queues=clock as unknown as {_active:Phaser.Time.TimerEvent[];_pendingInsertion:Phaser.Time.TimerEvent[]};
+      return [...queues._active,...queues._pendingInsertion].filter(timer=>!timer.hasDispatched).length;
+    };
+    const shown=()=>reduced?(scene.hintMark?.strokes.length??0)>0:scene.hintPieces.length===2;
+    return {...h,scene,clock,transition,advance,start,live,shown};
+  }
+  it('CREATE 전에는 예약하지 않고 RUNNING 뒤 처음 7.5초에 표시합니다',()=>{
+    const h=timed();h.scene.create();expect(h.live()).toBe(0);h.scene.resetHint();expect(h.live()).toBe(0);
+    h.transition('create');expect(h.live()).toBe(1);h.advance(7499);expect(h.shown()).toBe(false);
+    h.advance(1);expect(h.shown()).toBe(true);expect(h.live()).toBe(1);
+  });
+  it('onReady에서 pause하면 예약하지 않고 resume 뒤 7.5초를 기다립니다',()=>{
+    const h=timed();h.scene.hooks.onReady=()=>h.transition('pause');h.start();
+    expect(h.live()).toBe(0);h.advance(20000);expect(h.shown()).toBe(false);
+    h.transition('resume');h.advance(7499);expect(h.shown()).toBe(false);h.advance(1);expect(h.shown()).toBe(true);
+  });
+  it.each(['Escape','cancelInput'])('선택 중 만료한 뒤 %s 해제부터 새 7.5초를 기다립니다',action=>{
+    const h=timed();h.start();h.scene.focusKeyboard();h.scene.keyboardKey('Enter');
+    h.advance(7500);expect(h.shown()).toBe(false);expect(h.live()).toBe(0);
+    if(action==='Escape')h.scene.keyboardKey('Escape');else h.scene.cancelInput();
+    expect(h.scene.keyboardState().selected).toBeUndefined();expect(h.live()).toBe(1);
+    h.advance(7499);expect(h.shown()).toBe(false);h.advance(1);expect(h.shown()).toBe(true);expect(h.live()).toBe(1);
+  });
+  it.each([['pause','resume'],['sleep','wake']])('%s에서 남은 시간을 취소하고 %s부터 다시 셉니다',(away,back)=>{
+    const h=timed();h.start();h.advance(7000);h.transition(away);expect(h.live()).toBe(0);
+    h.advance(30000);expect(h.shown()).toBe(false);h.transition(back);expect(h.live()).toBe(1);
+    h.advance(7499);expect(h.shown()).toBe(false);h.advance(1);expect(h.shown()).toBe(true);
+  });
+  it('입력 취소·섞기 반복 뒤 유효 예약은 하나이며 이전 콜백은 새 표시를 지우지 않습니다',()=>{
+    const h=timed();h.start();const old=h.scene.hintTimer!.callback!;
+    for(let i=0;i<5;i++){h.scene.cancelInput();h.scene.shuffle();expect(h.live()).toBe(1);}
+    h.advance(7500);expect(h.shown()).toBe(true);const timer=h.scene.hintTimer;
+    old();expect(h.shown()).toBe(true);expect(h.scene.hintTimer).toBe(timer);expect(h.live()).toBe(1);
+    h.advance(7500);expect(h.shown()).toBe(true);expect(h.live()).toBe(1);
+  });
+  it.each([false,true])('교환 valid=%s 완료 뒤 7.5초 힌트가 복구됩니다',async valid=>{
+    const h=timed();h.start();vi.spyOn(h.scene,'wait').mockResolvedValue();
+    await h.scene.attempt(valid?{row:4,col:2}:{row:0,col:0},valid?{row:3,col:2}:{row:0,col:1});
+    expect(h.onMove).toHaveBeenCalledTimes(valid?1:0);expect(h.live()).toBe(1);
+    h.advance(7499);expect(h.shown()).toBe(false);h.advance(1);expect(h.shown()).toBe(true);
+  });
+  it.each(['busy','finished','unready','pause','sleep','shutdown','destroy'])('만료 직전 %s 상태에서는 엔진·효과·블록을 읽지 않습니다',reason=>{
+    const h=timed();h.start();const old=h.scene.hintTimer!.callback!;
+    if(reason==='busy')h.scene.busy=true;else if(reason==='finished')h.scene.stopPlaying();else if(reason==='unready')h.scene.ready=false;else h.transition(reason);
+    const moves=vi.spyOn(h.scene.engine,'legalMoves').mockImplementation(()=>{throw Error('비활성 엔진 접근');});
+    Object.defineProperty(h.scene,'pieces',{get(){throw Error('비활성 블록 접근');}});
+    Object.defineProperty(h.scene,'effects',{get(){throw Error('비활성 효과 접근');}});
+    expect(()=>old()).not.toThrow();expect(()=>h.advance(7500)).not.toThrow();expect(moves).not.toHaveBeenCalled();
+  });
+  it('실패 복귀가 paused 상태이면 resume까지 예약하지 않습니다',()=>{
+    const h=timed();h.start();h.scene.stopPlaying();h.transition('pause');
+    expect(h.scene.resumeAfterFailure()).toBe(true);expect(h.live()).toBe(0);
+    h.transition('resume');expect(h.live()).toBe(1);h.advance(7500);expect(h.shown()).toBe(true);
+  });
+  it.each(['shutdown','destroy'])('CREATE 이전 %s도 ready 콜백과 입력 리스너를 정리합니다',event=>{
+    const h=timed();h.scene.create();const ready=vi.fn();h.scene.hooks.onReady=ready;h.transition(event);
+    for(const name of ['create','pause','resume','sleep','wake','shutdown','destroy'])expect(h.scene.events.listenerCount(name)).toBe(event==='shutdown'&&name==='destroy'?1:0);
+    h.transition('create');expect(ready).not.toHaveBeenCalled();expect(h.scene.ready).toBe(false);expect(h.live()).toBe(0);
+  });
+  it('shutdown/restart 뒤 이전 콜백을 불러도 현재 예약·표시·리스너를 보존합니다',()=>{
+    const h=timed();h.start();const old=h.scene.hintTimer!.callback!;
+    h.transition('shutdown');expect(h.live()).toBe(0);h.clock.start();h.start();old();
+    expect(h.live()).toBe(1);expect(h.shown()).toBe(false);h.advance(7500);expect(h.shown()).toBe(true);
+    const timer=h.scene.hintTimer;old();expect(h.scene.hintTimer).toBe(timer);expect(h.shown()).toBe(true);
+    for(const name of ['pause','resume','sleep','wake'])expect(h.scene.events.listenerCount(name)).toBe(1);
+    expect(h.scene.input.listenerCount('pointerdown')).toBe(1);expect(h.scene.events.listenerCount('create')).toBe(0);
+    h.transition('shutdown');expect(h.live()).toBe(0);expect(h.scene.input.listenerCount('pointerdown')).toBe(0);
+  });
+});
 describe('블록 객체 보존과 낙하 연출',()=>{
   it.each([false,true])('실패 복귀는 살아 있는 paused=%s 보드·엔진·낙엽·컨테이너를 그대로 유지합니다',paused=>{
     const {scene,onMove}=harness();scene.engine.setLeaves([{row:2,col:3,layers:2}]);
@@ -301,7 +387,7 @@ describe('보드 키보드 입력과 읽기 상태',()=>{
 
 describe('모션 설정 경계와 정적 표시',()=>{
   it('선택·힌트·무효/유효 교환·낙하는 설정에 맞고 단계 대기·결과·오디오는 같습니다',async()=>{
-    const {scene,onMove}=harness();for(const [r,c,k] of [[3,0,5],[3,1,5],[3,2,1],[4,2,5]])scene.engine.board[r][c]={kind:k};scene.paint(scene.engine.board);
+    const {scene,onMove}=harness();for(const [r,c,k] of [[3,0,5],[3,1,5],[3,2,1],[4,2,5]])scene.engine.board[r][c]={kind:k};scene.create();scene.events.emit('create');
     const tweens=vi.spyOn(scene.tweens,'add'),wait=vi.spyOn(scene,'wait').mockResolvedValue();
     scene.showHint();
     if(reduced){expect(scene.hintMark?.strokes).toHaveLength(2);expect(scene.hintMark?.lines).toHaveLength(3);}
@@ -322,7 +408,7 @@ describe('모션 설정 경계와 정적 표시',()=>{
     else {expect(tweens.mock.calls.some(([c])=>c.duration===280&&c.y!==undefined)).toBe(true);expect(tweens.mock.calls.some(([c])=>c.scale===.25)).toBe(true);}
   });
   it('현재 보드에서 설정 반전은 다음 포인터/키/힌트부터 이전 확대와 정적 표시를 정리합니다',()=>{
-    const {scene}=harness();for(const [r,c,k] of [[3,0,5],[3,1,5],[3,2,1],[4,2,5]])scene.engine.board[r][c]={kind:k};scene.create();scene.showHint();scene.tap({row:0,col:0});
+    const {scene}=harness();for(const [r,c,k] of [[3,0,5],[3,1,5],[3,2,1],[4,2,5]])scene.engine.board[r][c]={kind:k};scene.create();scene.events.emit('create');scene.showHint();scene.tap({row:0,col:0});
     vi.stubGlobal('window',{matchMedia:()=>({matches:!reduced})});scene.focusKeyboard();
     expect(scene.pieces[0][0].scale).toBe(reduced?1.12:1);expect(scene.pieces[0][0].y).toBe(44);
     expect(scene.hintMark?.strokes??[]).toEqual([]);expect(scene.hintPieces).toEqual([]);

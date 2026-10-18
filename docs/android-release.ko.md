@@ -1,5 +1,31 @@
 # Android 빌드와 출시 준비
 
+## 현재 작업 상태 · 2026-10-18 · #119
+
+기준 main `00dfc3b0b8ff77f6f40aa3376e710a4a6ed251bc`, `codex/119-idle-hint-recovery`, [유휴 힌트 복구 #119](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/119)입니다. 선택 중 7.5초가 지나 소진된 힌트는 Escape·입력 취소·화면 복귀 후 새 7.5초 유휴 시간을 기다려 다시 표시합니다. 선택 중에는 표시하지 않습니다. 최초 예약은 RUNNING 이후 CREATE에서 onReady의 활동 상태 반영 뒤 실행합니다. pause/sleep/finished/unready에서는 예약하지 않고, 종료 시 CREATE/입력/수명 리스너와 타이머를 정리합니다. 취소된 타이머 객체와 현재 예약을 비교하여 종료·재시작 이전의 늦은 callback이 효과·블록·새 예약에 접근하지 않게 했습니다. 매 프레임 polling이나 상태 구조 변경은 없습니다.
+
+### 2026-10-18 · 선택 해제·화면 복귀 후 유휴 힌트 복구 (이슈 #119)
+
+로컬 **29파일/1,999개(기존1,959+신규40), 14:43:04 시작/41.19초** 전체 자동 검사 한 번이 통과했습니다. 관련 보드 검사는 **154개**이며 실제 설치된 Phaser3.90.0의 Clock/TimerEvent로 pending insertion/removal·remove(false)·7,499+1ms·pause/resume·sleep/wake·onReady 내 pause·정상/무효 교환·섞기·반복 취소·실패 복귀·shutdown/restart/destroy·이전 callback과 리스너 수를 확인합니다. 렌더링/입력 대역과 실제 브라우저 검증은 구분합니다. 기존 worker2/내부8worker/5초 timeout을 바꾸지 않았고 전체를 반복하지 않았습니다. 기존 간헐 실패 [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)는 원인 미확정으로 유지합니다.
+
+전체/앱/서버 타입 검사, 스토어 원본 검사·12개, launcher 원본 검사, testing→production 웹 빌드가 통과했습니다. 현재 세션 PATH에는 npm 실행 파일이 없어 package.json의 동일 설치 CLI를 `node node_modules/vitest/vitest.mjs run`, `node node_modules/typescript/bin/tsc --noEmit`/`-p tsconfig.app.json`/`-p tsconfig.server.json`, `node scripts/check-store-assets.mjs`, `node --test scripts/store-assets-qa.mjs`, `node scripts/generate-launcher-assets.mjs --check`, `node node_modules/vite/bin/vite.js build --mode testing`→`build`로 호출했습니다. 명령·Node24.19.0·exit code·원문 로그는 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-119`의 `verify.mjs`, `full-commands.json`, `full.json`, `full.log`, `checks-commands.json`과 각 log에 보존합니다. 500kB 번들 경고와 기존 Node 타입 변환 실험 경고는 남습니다.
+
+검사 준비 중 최초 관련 검사의2실패는 실제 Clock의 BOOT/destroy 연결을 빠뜨린 fixture였고, 타입 진단3개는 Phaser 공개 타입에 없는 내부 start 및 preUpdate 인자 문제였습니다. BOOT 이벤트·좁은 start 타입·명시 인자를 사용한 뒤 관련154개/타입/전체가 통과했습니다. 첫 브라우저 실행은 일반 모드의 Escape·설정 복귀를 확인한 뒤 재시작 리스너 기대값에서 멈췄습니다. 실제 InputPlugin도 pause/sleep을 구독하므로 개수를 임의로1로 고정하지 않고 최초 생성과 재시작의 전체 수를 비교하도록 QA만 수정했습니다. 최초 실패 `browser-production/summary.json`과 최종 결과는 별도로 보존합니다. 이 실패들을 제품 결함이나 #122 원인 해결로 세지 않습니다.
+
+실제 Chrome 자연 시간 검증·최종 viewport 근거와 최종 정적 검사/SHA는 아래 완료 체크포인트 및 [브라우저 기록](browser-qa.ko.md#2026-10-18--유휴-힌트-자연-만료와-복귀-이슈-119)에 기록합니다. 총괄 독립검수 완료·Ready PR 제출 승인을 받았으며 최신 PR/main Node22·24 CI는 제출 후 별도 확인 대상입니다. APK/AAB·Android sync·버전·최종 오디오 믹스·실계정/키/env·Drive/콘솔/상품·폰/TalkBack/전달은 수행하지 않습니다. 이전 #118 및 아래 현재 표현은 당시 이력이며 #118의 후속 병합/CI 상태는 PR#124와 현재 기준 main으로 구분합니다.
+
+최종 체크포인트: 실제 Chrome **155.0.8059.80**, production dist, 일반/모션 감소 **각5개 확인=10개**, pageerror0, 실제390×844 viewport PNG8개가 통과했습니다. 선택 만료·Escape·설정 복귀·shutdown/restart 후 자연 힌트·destroy 이전 callback 무접근, 최초/재시작 리스너 수 동일(create0/pause2/resume1/sleep2/wake1, 자체 pointerdown1)을 확인했습니다. 실제 InputPlugin이 포함된 수이며 대역의 자체 리스너 수1과 구분합니다. 화면 안 canvas·center hit test·수평 넘침0을 검사했고 최종 일반 재시작/모션 감소 설정 복귀 PNG를 직접 검토했습니다. `browser-production-final/summary.json`의 wall 측정7,480~7,508ms는 실제 handler 이후 응답/ready 관찰에서 측정을 시작하므로 정확한 timer 기한 측정이 아닙니다. 새 timer delay7500과 7초 미표시/이후 표시, 실제 Clock의7,499+1ms 경계 검사를 함께 근거로 사용합니다. 임시 서버 없이 새 headless context/browser를 finally에서 정리했으며 사용자 origin/Chrome은 보존했습니다.
+
+`checkpoint.json`에 최종 source LF SHA·production JS/CSS SHA·정적 검사 근거를 보존했습니다. `git diff --check`와 신규 QA 파일의 no-index whitespace 검사, QA 구문 검사 통과, production flags3개 false, src/dist에서 `createGameHttpAdapter|game-http-input|PlayFabSessionAuthenticator|RoundLedger|RewardLedger|PurchaseLedger|node:sqlite|readRedeemedGrant|BEGIN IMMEDIATE|ledger.lock` **0건**입니다. 파일명과 소스를 검색한 배제 검사이며 실제 서버/서비스 검증으로 세지 않습니다. 변경 범위는 BoardScene1·보드 검사1·QA script1·기존 docs4의7파일이고 API·서비스·저장·오디오·Android·버전·빌드 설정은 변경하지 않았습니다. 총괄 독립검수를 마쳤고 승인된7파일의 커밋·푸시·Ready PR 제출 단계입니다. 최신 PR/main Node22·24 CI는 아직 실행하지 않았습니다.
+
+총괄 독립검수는 Node24.21에서 관련1파일154/154·전체/앱/서버 타입·diff·신규 QA 구문/후행공백 검사 통과, source/tests/QA LF SHA3개 체크포인트 일치, full.json의29파일1,999/1,999를 확인했습니다. 실제 브라우저10개/pageerror0·390×844 PNG8개 근거와 모션 감소 설정 복귀의 정적 두 칸 힌트/레이아웃도 총괄이 직접 확인했습니다. 보고서는 `C:\Users\user\AppData\Local\Temp\pawblossom-119-root-related-05990c059148473fac37cb3a037b84be.json`입니다. 읽기 점검자도 확정 문제 없음으로 보고하여 **총괄 독립검수 완료·Ready PR 제출 승인**을 받았습니다. 관련 검사를 전체 수에 추가 합산하지 않으며 최신 PR/main Node22·24 원격 검사와 병합·정리는 총괄이 확인합니다.
+
+| 최종 LF SHA-256 | 값 |
+| --- | --- |
+| `src/BoardScene.ts` | `cdb07ddf83aa931dbdad41dac510cdf01cba456a9247eb29fcb028c873be4b05` |
+| `tests/board-animation.test.ts` | `dc641b7cf2f4b3843e09e87446051369dbc32e1c9a6fb7f1219cff8f5646405f` |
+| `scripts/idle-hint-qa.mjs` | `5a8653eec0d1ca8fa2c8ad053ef435fae922124b85446dc73c4706835a5f4149` |
+
 ## 현재 작업 상태 · 2026-10-18 · #118
 
 기준 main `fdfc242f81723bc5dd0d34962b57517f7d3c589e`, `codex/118-save-source-conflict`, [저장 원문 충돌 보호 #118](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/118)입니다. 저장 전 이미 달라진 외부 primary/backup/reset 원문을 무쓰기 conflict로 차단하고 최신 메모리·기존 부분 실패 재시도를 유지하도록 구현했습니다. **저장/UI171개·최종 타입/스토어12/두 웹 빌드/production 두 탭 검증 완료, 최신 전체는1958통과/기존 구매1실패이며 총괄 관련 독립검수 완료·Draft 제출 승인·최신 head 원격 전체 Node22/24 대기**입니다. 코드 변경 없이 한국어 fix 커밋/푸시/Draft PR 제출을 승인받았습니다. Ready/merge는 최신 head 원격 전체 검사 뒤 총괄 검토 대상입니다. 아래 #117의 현재/CI 대기 표현은 당시 이력이며 #117은 [PR #123](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/123)과 위 main에 반영된 기준입니다.

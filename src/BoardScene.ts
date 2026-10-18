@@ -54,19 +54,20 @@ export class BoardScene extends Phaser.Scene {
     this.events.on(Phaser.Scenes.Events.RESUME,cancelGesture);
     this.events.on(Phaser.Scenes.Events.SLEEP,cancelGesture);
     this.events.on(Phaser.Scenes.Events.WAKE,cancelGesture);
+    const onCreate=()=>{this.ready=true;this.hooks.onReady?.();this.resetHint();this.changed();};
     const dispose=()=>{
       this.input.off('pointerdown',this.pointerDown,this);this.input.off('pointerup',this.pointerUp,this);
       this.input.off('pointerupoutside',this.pointerOutside,this);this.input.off('gameout',cancelPointer);
       this.scale.off(Phaser.Scale.Events.RESIZE,cancelPointer);
       for(const event of [Phaser.Scenes.Events.PAUSE,Phaser.Scenes.Events.RESUME,Phaser.Scenes.Events.SLEEP,Phaser.Scenes.Events.WAKE])this.events.off(event,cancelGesture);
       this.events.off(Phaser.Scenes.Events.SHUTDOWN,dispose);this.events.off(Phaser.Scenes.Events.DESTROY,dispose);
+      this.events.off(Phaser.Scenes.Events.CREATE,onCreate);
       this.ready=false;this.stopPlaying();this.effects?.clear();this.cursorMark=undefined;this.selectionMark=undefined;this.hintMark=undefined;this.pieces=[];this.leafObjects=[];
     };
     this.events.once(Phaser.Scenes.Events.SHUTDOWN,dispose);
     this.events.once(Phaser.Scenes.Events.DESTROY,dispose);
-    this.resetHint();
     // CREATE는 에셋 로딩과 create()가 끝나고 Scene이 RUNNING이 된 뒤 발생합니다.
-    this.events.once(Phaser.Scenes.Events.CREATE,()=>{this.ready=true;this.hooks.onReady?.();this.changed();});
+    this.events.once(Phaser.Scenes.Events.CREATE,onCreate);
   }
   private pointerDown(p:Phaser.Input.Pointer){
     if(!this.canInteract()||this.down||(!p.wasTouch&&p.button!==0))return;
@@ -99,11 +100,14 @@ export class BoardScene extends Phaser.Scene {
   private changed(){this.hooks.onBoardState?.();}
   focusKeyboard(){if(!this.canInteract())return;this.syncMotion();this.cursor??={row:0,col:0};this.drawCursor();this.changed();}
   hideKeyboardCursor(){this.cursor=undefined;this.cursorMark?.clear();this.changed();}
-  cancelInput(){this.down=undefined;this.hideKeyboardCursor();this.clearHint();this.clearSelection();}
+  cancelInput(){
+    this.down=undefined;this.hideKeyboardCursor();this.clearHint();this.clearSelection();
+    if(this.ready&&this.canInteract())this.resetHint();else this.stopHintTimer();
+  }
   keyboardKey(key:string,repeat=false){
     if(!this.canInteract()||!this.cursor)return false;
     this.syncMotion();
-    if(key==='Escape'){this.down=undefined;this.clearSelection();return true;}
+    if(key==='Escape'){this.down=undefined;this.clearSelection();this.resetHint();return true;}
     if(key==='Enter'||key===' '){this.down=undefined;if(!repeat)this.tap({...this.cursor});return true;}
     const delta=key==='ArrowUp'?[-1,0]:key==='ArrowDown'?[1,0]:key==='ArrowLeft'?[0,-1]:key==='ArrowRight'?[0,1]:undefined;
     if(!delta)return false;
@@ -252,7 +256,7 @@ export class BoardScene extends Phaser.Scene {
     if(!this.canInteract())return;
     const reduced=this.syncMotion();this.clearHint();
     this.down=undefined;
-    this.busy=true;this.hintTimer?.remove();this.clearSelection();this.hooks.onStart();
+    this.busy=true;this.stopHintTimer();this.clearSelection();this.hooks.onStart();
     this.pieces.forEach((row,r)=>row.forEach((item,c)=>{this.tweens.killTweensOf(item);item.setScale(1);item.setPosition(this.point({row:r,col:c}).x,this.point({row:r,col:c}).y);}));
     const x=this.pieces[a.row][a.col],y=b?this.pieces[b.row][b.col]:undefined;
     const result=b?this.engine.swap(a,b):this.engine.activate(a);
@@ -296,7 +300,7 @@ export class BoardScene extends Phaser.Scene {
     }
     this.busy=false;if(!this.finished)this.resetHint();this.changed();
   }
-  stopPlaying(){this.finished=true;this.hintTimer?.remove();this.cancelInput();}
+  stopPlaying(){this.finished=true;this.stopHintTimer();this.cancelInput();}
   /** 현재 실패 보드의 안정 상태만 복귀합니다. 라운드 자격/1회 제한은 호출자가 검사합니다. */
   resumeAfterFailure():boolean {
     if(!this.ready||!this.finished||this.busy||(!this.sys.isActive()&&!this.sys.isPaused())
@@ -305,9 +309,20 @@ export class BoardScene extends Phaser.Scene {
   }
   shuffle():boolean {if(!this.canInteract())return false;this.cancelInput();this.engine.shuffle();this.paint(this.engine.board);this.hooks.audio.play('special');this.resetHint();this.changed();return true;}
   canLeave(){return !this.busy;}
-  private resetHint(){this.clearHint();this.hintTimer?.remove();this.hintTimer=this.time.delayedCall(7500,()=>this.showHint());}
+  private stopHintTimer(){this.hintTimer?.remove();this.hintTimer=undefined;}
+  private resetHint(){
+    this.stopHintTimer();
+    if(!this.ready||!this.canInteract())return;
+    this.clearHint();
+    const timer=this.time.delayedCall(7500,()=>{
+      // 취소·종료·재시작 이전의 콜백은 현재 장면의 표시나 새 예약을 건드리지 않습니다.
+      if(this.hintTimer!==timer)return;
+      this.hintTimer=undefined;this.showHint();
+    });
+    this.hintTimer=timer;
+  }
   private showHint(){
-    if(this.busy||this.finished||this.selected)return;
+    if(!this.ready||!this.canInteract()||this.selected)return;
     const move=this.engine.legalMoves()[0];
     if(move){const {a,b}=move,reduced=this.syncMotion();this.resetHint();
       if(reduced){
