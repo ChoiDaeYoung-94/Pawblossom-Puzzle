@@ -1,4 +1,47 @@
-## 현재 작업 상태 · 2026-10-18 · #126
+## 현재 작업 상태 · 2026-10-18 · #122 callback 자식 정리
+
+기준 main/origin main은 `4938d3ff515f06369fa793279497e2cd86d591f3`, 작업 브랜치는 `codex/122-callback-child-cleanup`, 연결 이슈는 [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)입니다. **callback fork 수명 정리 구현·관련113/113 통과, 최신 전체32파일2,265통과/2실패 보존, 커밋 전 총괄 독립검수 대기**입니다. 새 커밋·푸시·PR은 아직 없습니다. 총괄 확인 기준 [PR #132](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/132) 및 위 main의 Node22·24 CI와 기존2,246개 성공은 이번 미커밋 소스의 전체 결과와 구분합니다. 아래 #126 및 이전 현재/제출 대기 표현은 당시 이력입니다.
+
+### 확인한 정리 공백과 제한된 변경
+
+기존 `child()`는 fork를 공유 정리 목록에 등록하지 않고 본문의 결과 대기 뒤 finally에서만 종료를 기다렸습니다. 검사 timeout 이후 afterEach가 자식을 기다리지 않고 부모 DB와 폴더를 정리할 수 있는 순서 공백을 확인했습니다. Git 밖 기존 `pawblossom-122-round-open-full.json`의 BUSY 잠금 해제 회귀는5,113.0861ms·failureMessages2개이며, 첫 STACK_TRACE_ERROR와 두 번째 rmSync EPERM(`callback-inbox.test.ts:48`)을 함께 보존합니다. **최초 timeout의 내부 단계와 실제 EPERM 핸들 소유자는 미확정**입니다. 자식이 실제 EPERM 소유자였다고 확정하거나 과거 Round/보상 실패를 모두 같은 원인으로 묶지 않습니다.
+
+- fork 직후 공유 scope에 등록하고 결과 `result`, 실제 `close`의 `done`, 호출자가 받는 `output`을 분리했습니다. 정상 결과는 기존 객체 그대로 반환하며 close 전에는 완료하지 않습니다.
+- 멱등 `cancelAndWait()`는 BUSY 콜백을 먼저 차단하고 pending 결과를 고정 오류로 정산한 뒤, 소유한 살아 있는 자식에만 종료를 한 번 요청합니다. 본문/output을 다시 기다리지 않고 공유 done만 기다리므로 순환 대기가 없습니다. kill 반환값·killed 상태를 실제 종료로 간주하지 않습니다.
+- 송신 throw/콜백 오류·spawn/process 오류·비정상/signal 종료·결과 없는 IPC 종료를 고정 오류로 처리하고 거부를 즉시 관측합니다. exit 없는 spawn 실패도 close를 기다립니다. 정상 exit(0) 뒤 마지막 IPC가 drain될 수 있으므로 무결과는 close에서 판정합니다. [Node child_process의 close·error·kill 계약](https://nodejs.org/docs/latest-v24.x/api/child_process.html)을 기준으로 구분했습니다.
+- afterEach는 **자식 close 조인→기존 Worker terminate→잠금 단발 해제→부모 DB/Inbox/원장 close→소유 임시 폴더 삭제** 순서입니다. 종료가 미확인인 동안 뒤 정리로 넘어가지 않고, 부모 정리 오류가 있으면 폴더를 보존합니다. BUSY 알림/본문 finally/afterEach는 같은 ROLLBACK 단발 가드를 공유하여 늦은 finally가 닫힌 DB에 접근하지 않습니다.
+- 합성 EventEmitter20개는 결과 수신 전/후 취소, exit만 도착한 상태의 삭제0회, 늦은 BUSY 무시, 중복/재진입 취소와 kill1회, 정상 payload 동일성/kill0, exit0 뒤 IPC→close, 무결과·오류·signal·kill false/throw·부모 정리 실패를 확인합니다. 실제 SQLite BUSY를 알림으로 관측한 뒤 명시 취소하고 소유 DB/폴더를 정리하는 회귀1개를 추가했습니다. 의도적인5초 timeout 검사는 만들지 않았습니다.
+
+제품 `src/server`, callback worker의 run/SQLite hook/IPC 최종 송신, 생성자 재시도 총3회/25ms, 기존 업무 결과/assertion, SQLite500ms·검사 기본5초·file worker2·내부8worker·CI는 변경하지 않았습니다. 기존 parallel Worker ready 이후 error 처리 공백은 이번 범위 밖으로 남깁니다. 새 task metadata·원문 SQL/토큰/키/DB 내용 진단 출력은 추가하지 않았습니다.
+
+### 검증·실패 보존·체크포인트
+
+로컬 Node24.21.0, 같은 기준 main에서 실행했습니다. 최종 코드3개 LF SHA는 관련/전체/타입/스토어/에셋/두 빌드 명령마다 수집하여 동일함을 확인합니다.
+
+| 단계(KST) | 결과 |
+|---|---|
+| 초기 관련 | 110/110 통과. 이후 결과 뒤 오류 취소·exit0/close·마지막 IPC drain 회귀를 보강했으므로 최종 버전의 성공과 합산하지 않습니다. 초안 소스 SHA/정확한 실행 시각은 별도 미수집이며 원문 JSON을 보존했습니다. |
+| 초기 타입 실행기 | 저장소 `node_modules/npm/bin/npm-cli.js`로 잘못 지정해 MODULE_NOT_FOUND/exit1. Node 설치 폴더의 npm CLI로 수정한 전체/앱/서버 타입이 통과했습니다. 제품·환경 파일 변경은 없으며 명령·원인·실행 결과를 보존합니다. |
+| drain 추가 전 관련 | 112/112 통과. 최종 추가 전 소스의 결과로 보존합니다. |
+| 최종 관련16:33:37~16:33:48 | 2파일113/113(callback child20+기존 Inbox92+실제 취소1), exit0. |
+| 최종 전체16:33:48~16:34:35 | **32파일2,267개 중2,265통과/2실패·pending0, exit1**. 이 최종 소스 전체를 한 번 실행했고 재실행하지 않았습니다. callback 두 파일113개는 전체에서도 모두 통과했습니다. |
+| 전체 실패1 | game-service `실제 보상 DB lock으로 cleanup 실패해도 게임 commit·동일 재시도 복구`,5,531.6698ms. 총괄은5초 timeout으로 확인했으며 원문은 STACK_TRACE_ERROR/위치170:3만 있습니다. 내부 phase는 미계측입니다. |
+| 전체 실패2 | reward-ledger `cancel/callback 경합 순서와 무관하게 후속 지급/발급 차단`,2,195.649ms. 기대 rejected 또는 voucher-recorded와 달리 worker-error를 받았습니다. 원문 assertion은 kind만 드러내며 stage/native code가 없어 exact BUSY5라고 추정하지 않습니다. |
+| 타입/스토어/에셋16:35:09~16:35:13 | 전체/앱/서버 타입·store:check·store:test12/12·assets:check, 모두 exit0. |
+| 두 빌드16:35:13~16:35:23 | build:test→build 모두 exit0, 각각 flags3개 true/false. 최종 production은 모두false이며 기존 Vite500kB 청크 경고는 남습니다. |
+| 정적 검증 | src/dist 서버·검사 helper 마커0건, tracked/new LF snapshot whitespace 진단0건. 제품·worker·설정·Android 경로의 기준 main 대비 diff0을 확인합니다. |
+
+| 최종 코드 파일 | LF UTF-8 SHA-256 |
+|---|---|
+| `tests/helpers/callbackChild.ts` | `9e43b9558409f688cd7a4852d95c7f87f9a93c4618f63d4305c71af50a63c546` |
+| `tests/callback-child.test.ts` | `fd8d0457198c91419039898933ba26ae70daa236b4880ab7d24add960d7e6e83` |
+| `tests/callback-inbox.test.ts` | `6753890889896468e7adac54d4e5ec0d9c681bb7093d660c1a2fb968fcca12ce` |
+
+Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-122-callback-child-cleanup`에 초기/중간/최종 관련 JSON·최신 전체 JSON·이전 실패 JSON 사본·명령/UTC 시작/끝/exit/소스 SHA·단계별 로그·testing/production flags·최종7파일 SHA/체크포인트를 보존합니다. 재현 명령은 `node node_modules/vitest/vitest.mjs run tests/callback-child.test.ts tests/callback-inbox.test.ts --reporter=json --outputFile=<Git 밖 JSON>`와 최종 전체의 파일 인수 없는 `run`, 이후 npm의 typecheck/store:check/store:test/assets:check/build:test/build 순서입니다. 실행기에만 Node 폴더 PATH를 설정했습니다.
+
+다음은 총괄 독립검수이며 **커밋 전 STOP** 상태입니다. 실패2개와 최초 timeout/실제 EPERM 소유자/과거 Round 원인은 [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)에 열린 상태로 남기고 Refs로 연결합니다. 최신 PR/main Node22·24 CI는 후속 제출 뒤 별도 확인 대상입니다. 브라우저 UI·Android·실서비스·광고/보상 지급·스토어 검증 완료로 확대하지 않습니다. 사용자 조치/질문은 없고18시 총괄 취합입니다. APK/AAB·Android sync·버전·폰/전달·Drive/콘솔/상품·실계정/키/env·최종 오디오 믹스·공개 배포 보류를 유지합니다.
+
+## 이전 작업 상태 · 2026-10-18 · #126
 
 기준 main/origin main은 `c995a001db98ef1219a71dff6fe53c10c83a9872`, 작업 브랜치는 `codex/126-ssv-node-listener`, 연결 이슈는 [#126 SSV GET 콜백 Node 수신](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/126)입니다. **SSV 동기 adapter 전용 listener와 회귀를 구현했고, 최종 관련392개·Node22 listener103개·전체31파일2,246개·전체/앱/서버 타입·스토어12개·에셋 원본·testing→production 빌드·flags3false/서버 마커0·whitespace 확인을 마쳤습니다. 커밋 전 총괄 독립검수 대기**입니다. #121은 [PR #131](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/131)에서 위 main에 반영되었고, 아래 #121 커밋/CI 대기 표현은 당시 이력입니다. 이번 작업에서 기존 game/callback HTTP·Inbox/SSV·원장·정책·CI 설정은 수정하지 않았습니다.
 
