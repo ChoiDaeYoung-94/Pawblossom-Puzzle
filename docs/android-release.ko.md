@@ -1,3 +1,38 @@
+## 현재 통합 상태 · 2026-10-18 · #129
+
+구현 검증 기준은 main `dc210437bc3ec02b07cc2e86cd4ebb430ac891bc`입니다. [main CI39108513692](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39108513692)의 **Node22·24가 각각32파일2,267개와 타입·스토어12개·두 웹 빌드 검사를 통과**했습니다. 실행 로그의 각2,267 passed를 직접 확인했습니다. 아래 제출 전·현재·미구현 표현은 각 작업 당시의 이력이며 이 통합 현황과 GitHub 최신 근거를 우선합니다. 현재 #129는 누적 브라우저 확인과 기존 기록 정리이며 제품·Android·의존성·버전·오디오를 변경하지 않습니다.
+
+| 오늘 반영한 목적 | PR | 실제 main squash |
+|---|---|---|
+| 게임의 엄격한 HTTP snapshot 경계 | [#123](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/123) | `fdfc242` |
+| 외부 저장 원문 변경 시 덮어쓰기 차단 | [#124](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/124) | `00dfc3b` |
+| 선택 해제·복귀 뒤 유휴 힌트 재예약 | [#125](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/125) | `013188d` |
+| 한국어·영어 목표 완료/남음과 보드 상태 읽기 | [#127](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/127) | `b9782b6` |
+| 검사 전용 원장 오류 진단 | [#128](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/128) | `75773eb` |
+| 관측된 exact BUSY5 생성자만 제한 재개방 | [#130](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/130) | `f1660bd` |
+| 제한된 게임 Node 요청·응답 수명 | [#131](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/131) | `c995a00` |
+| 별도 SSV 동기 Node 수신·내구 ACK 경계 | [#132](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/132) | `4938d3f` |
+| 검사 자식 프로세스 close 뒤 DB·폴더 정리 | [#133](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/133) | `dc21043` |
+
+모든 head와 실제 squash tree, 각 최신 PR 검사와 병합 main 검사를 구분해서 확인했습니다. PR#127의 당시 [main CI39102714284](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39102714284)는 Node24 실패, PR#128의 당시 [main CI39103936163](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39103936163)는 Node22 실패였습니다. 후속 main 성공으로 이 과거 실행을 성공으로 바꾸거나 실패 원인을 모두 해결했다고 처리하지 않습니다. 완료 브랜치는 원격/로컬 tip·실제 tree·종속 PR·worktree 사용 여부를 확인한 뒤 정리했습니다. 총괄은 맨 위, 미해결 #122 세션은 유지합니다. 정리한 완료 세션은 보관이며 영구 삭제로 보고하지 않습니다.
+
+### 같은 배포 파일의 누적 브라우저 확인
+
+16:38~16:40 KST에 격리된 headless Chrome155.0.8059.80에서 **힌트10·목표20·두 탭 저장7 = 37개 순차 확인**, 각 pageerror0을 확인했습니다. 목표는 KO/EN ×320×568·640×360, 힌트는390×844 일반/모션 감소입니다. 목표 영역 Chrome AX 스냅샷20개와 실제 viewport PNG를 대조했습니다. [구체적 입력·fixture·사진·접근성 범위](browser-qa.ko.md#2026-10-18--누적-통합-확인-이슈-129)를 참조합니다.
+
+시작 head는 PR#133의 `3d3b52f8cec63cbb24ea8ef8aa586cd49e608558`이고 실제 병합 main의 전체 tree `5f16300b2d0cf085ece502bcbd0805d1ee723cdd`와 같습니다. 이후 `src` tree `ee84c38eb23f5a14cb3ad6f7ed3fd8807cb73957`, `public` tree `b5ad8ad523c3a88df34503c6e482672aa2efff72` 및 production JS/CSS3개의 byte hash가 변하지 않았음을 확인했습니다. 서로 다른 앱 버전의 성공을 누적 합산한 결과가 아닙니다. production 세 flags는 모두false이며 서버/검사 helper 마커는 앱에 포함되지 않습니다.
+
+Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-129`에 pre-browser.json, 각 browser-hint/goals/two-tabs의 summary·AX·PNG·로그와 main-133-ci.log를 보존합니다. 두 탭 QA는 기존 #118의 올바른 작은 화면 스크립트를 복사해 **결과 폴더와 시작 head 표기만** 바꿨습니다. 원본 SHA256 `0310d682b64fa92fa0c5d873a85536f075a37d490bce4a42081cdb012cb05515`, 사본 `091b674069d56b9824d52661286359bd43d50c58d9f51e64c403c54127760898`입니다. 사용자5173·기존 Chrome·실제 저장을 사용하지 않고 모든 임시 browser/context/preview server를 finally에서 닫았습니다.
+
+### 성공으로 합치지 않은 실패와 남은 경계
+
+- PR#133 최종 로컬 전체는2,265통과/2실패입니다. game-service 잠금 복구5,531.6698ms timeout과 reward cancel/callback 경합의 worker-error를 보존했습니다. 그 코드의 독립 callback113개·타입과 이후 정확한 PR/main Node22·24 전체 성공은 각각 별도 실행입니다. 최초 callback timeout·EPERM 핸들 소유자·과거 Round 등의 원인 미확정과 기존 parallel ready 뒤 error 처리 공백은 [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)에 남습니다. 검사 기본5초/file2/내부8worker·제품500ms·업무 assertion을 완화하지 않았고 CI rerun은 하지 않았습니다.
+- 게임·SSV listener는 서버 생성/listen·TLS/parser/slow-header·Expect/clientError/upgrade/CONNECT·공개 속도 제한·배포·운영 worker를 완성한 호스트가 아닙니다. SSV200은 내구 수신 ACK이며 서명 검증/보상 지급 완료가 아닙니다. SQLite 논리 상한·전체 상태 검사 비용·보존/백업/키/감시는 공개 운영 용량 검증이 필요합니다.
+- npm audit 읽기 검사에서 알려진 advisory0을 확인했고 의존성을 설치/수정하지 않았습니다. 에셋 생성 프롬프트·자체 음원·폰트 OFL·스토어 원본 기록에 새 확정 누락은 없었습니다. 이를 앱/Android 전체 보안·최종 권리/독창성·상표 조사·사용자 아트 승인으로 확대하지 않습니다.
+- 복원 토스트가3.2초 동안 하단 메뉴 글자를 일부 가리는 시각 후보를 발견했습니다. pointer-events:none이고 포커스를 바꾸지 않아 입력 차단으로 확인된 것은 아닙니다. 단순 위치 상승은 가로 보드를 가릴 수 있어 이번 기록 작업에서 UI를 바꾸지 않고 최종 감각 검수 후보로 남깁니다.
+
+실서비스/실제 Google·UMP/GMA/SSV·구매/복원/환불·Android OS 백업·폰/TalkBack·스토어 검증은 [#73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)에 미완료입니다. 연령/공개 개발자·지원 정보/선택형 로그인·진행 복구/서버 예산/광고 제거 범위·KR/US 가격은 오늘18시 총괄이 사용자님께 취합합니다. 지금 별도 조치를 요청하지 않습니다. APK/AAB·Android sync·버전·폰/전달·Drive/Play Console/상품·실계정/키/env·최종 믹스·공개 배포 보류를 유지합니다. #129 문서 PR 및 그 최신 CI/병합 근거는 연결 이슈에 추가하며 아래 구현 버전 성공과 구분합니다.
+
 ## 현재 작업 상태 · 2026-10-18 · #122 callback 자식 정리
 
 기준 main/origin main은 `4938d3ff515f06369fa793279497e2cd86d591f3`, 작업 브랜치는 `codex/122-callback-child-cleanup`, 연결 이슈는 [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)입니다. **callback fork 수명 정리 구현·관련113/113 통과, 최신 전체32파일2,265통과/2실패 보존, 커밋 전 총괄 독립검수 대기**입니다. 새 커밋·푸시·PR은 아직 없습니다. 총괄 확인 기준 [PR #132](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/132) 및 위 main의 Node22·24 CI와 기존2,246개 성공은 이번 미커밋 소스의 전체 결과와 구분합니다. 아래 #126 및 이전 현재/제출 대기 표현은 당시 이력입니다.

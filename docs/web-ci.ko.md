@@ -1,5 +1,13 @@
 # 웹 자동 검증
 
+## 최신 통합 근거 · 2026-10-18 · #129
+
+검증 기준 main은 `dc210437bc3ec02b07cc2e86cd4ebb430ac891bc`입니다. [PR#133 CI39108385256](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39108385256)와 [정확한 main CI39108513692](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39108513692)의 Node22·24가 모두 성공했고 main 로그의32파일2,267 passed를 각각 확인했습니다. 스토어12개·타입·production/testing 두 빌드와 각 플래그 검사도 성공했습니다. 서버 모듈과 검사 helper는 앱 번들에 포함되지 않으며 로컬 최종 production 세 flags는false입니다.
+
+같은 코드의 로컬 전체2,265통과/2실패(game-service 잠금 복구 timeout·reward cancel/callback worker-error)는 실패로 보존합니다. 이전 PR#127 main Node24 실패/PR#128 main Node22 실패도 이력으로 유지합니다. 최신 원격 성공을 모든 과거 원인 해결로 해석하지 않습니다. #122의 원인 미확정 항목과 실제 기기/서비스/스토어 #73은 계속 열려 있습니다. 기본5초·file2·내부8worker·제품500ms·assertion/CI를 완화하거나 rerun하지 않았습니다.
+
+[누적 브라우저 확인](browser-qa.ko.md#2026-10-18--누적-통합-확인-이슈-129)은 실제 production dist의37개 확인/목표 AX20개/pageerror0입니다. 격리 context·fixture와 실제 입력/자연 시간의 범위를 나눴으며 Android/TalkBack 성공으로 합산하지 않습니다. #129는 이 근거를 기존 문서 상단에 정리하는 변경으로, 코드가 같은 전체 로컬 검사를 불필요하게 반복하지 않습니다. 문서 PR의 최신 head/base·필수 CI·실제 squash tree와 그 main CI는 제출/병합 뒤 별도로 확인하고 연결 이슈에 기록합니다. 아래 현재/미커밋 표현은 당시 기록입니다.
+
 2026-10-18 #122 callback 자식 정리 현재: 기준 main `4938d3ff515f06369fa793279497e2cd86d591f3`·`codex/122-callback-child-cleanup`입니다. **최종 관련113/113·최신 전체32파일2,265통과/기존 game-service·reward-ledger2실패, 타입/스토어12/에셋/testing→production·최종 flags3false/마커0·diff 확인, 커밋 전 총괄 독립검수 대기**입니다. fork 즉시 등록·result/실제 close·멱등 취소/정리 순서만 보강했고 제품/worker run·재시도·SQLite500ms·기본5초·file worker2/내부8worker·CI는 그대로입니다. 전체를 한 번 실행하고 실패 원문을 보존했으며 전체/CI rerun은 하지 않았습니다. [실패2개·과거 EPERM/timeout·단계별 검증과 SHA](android-release.ko.md#현재-작업-상태--2026-10-18--122-callback-자식-정리)를 우선합니다. #122는 열린 상태이며 새 커밋/PR과 최신 PR/main CI는 없습니다. 총괄 확인 기준 PR#132/위 main의 Node22·24 성공 및 아래 선행 성공을 이번 미커밋 전체 성공으로 합산하지 않습니다.
 
 2026-10-18 #126 현재: 기준 main `c995a001db98ef1219a71dff6fe53c10c83a9872`·`codex/126-ssv-node-listener`에서 SSV 동기 adapter 전용 Node listener를 구현했습니다. **최종 관련392/392·Node22.20 listener103/103·전체31파일2,246/2,246·전체/앱/서버 타입·스토어12개·에셋·testing→production·flags3false/서버 마커0·whitespace 확인을 마쳤으며 커밋 전 총괄 독립검수 대기**입니다. 정리 보강 전 전체2,246개 성공과 최종 소스 검증은 별도 기록합니다. 최초 타입 오류와 하위 npm PATH/정적 도우미 CRLF 오판은 실패 근거를 보존했고 제품 정책을 바꾸지 않고 바로잡았습니다. #121 PR#131은 위 main에 반영되었으며 아래 선행 작업의 대기 표현은 당시 이력입니다. [#126 계약·실패/단계별 검증·소스 SHA](android-release.ko.md#현재-작업-상태--2026-10-18--126)를 우선합니다. 기본5초/file worker2/내부8worker·운영 SQLite500ms·재시도/assertion·CI를 변경하거나 rerun하지 않았습니다. Node22 일부 성공을 Node22 전체나 최신 PR/main CI 성공으로 확대하지 않습니다.

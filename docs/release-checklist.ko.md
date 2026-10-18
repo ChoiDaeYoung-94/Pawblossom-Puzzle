@@ -1,5 +1,20 @@
 # 출시까지 남은 작업
 
+## 현재 통합 판단 · 2026-10-18 · #129
+
+구현 검증 기준 main `dc210437bc3ec02b07cc2e86cd4ebb430ac891bc`, [원격 CI39108513692](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39108513692)의 Node22·24 각각2,267개·타입·스토어12개·두 웹 빌드 성공입니다. [오늘9개 PR과 실패 보존 근거](android-release.ko.md#현재-통합-상태--2026-10-18--129)를 우선합니다. 아래 현재/제출 전 표현은 각 당시 이력입니다.
+
+- [x] 저장 원문 충돌 차단·유휴 힌트 복귀·KO/EN 목표/이동 읽기 반영
+- [x] 게임 Node listener와 별도 SSV 동기 listener의 제한·단절·기한·내구 ACK 구현
+- [x] 검사 전용 좁은 생성자 BUSY5 처리·자식 close 뒤 DB/폴더 정리 보강
+- [x] 같은 production 파일의 누적 Chrome37개·목표 AX20개·pageerror0 확인, 검사 도구/서버 앱 제외 확인
+- [ ] #122 별도 간헐 실패·최초 callback timeout/EPERM 주체와 기존 parallel 결과 수신 공백 확인
+- [ ] 실제 로그인/운영 호스트·용량/보존·백업/키/감시·SDK/Google·권한/구매/환불 연동 검증
+- [ ] 어린이 포함 실제 연령·공개 개발자/지원 정보·복구 방식·예산·광고 제거 범위/가격 결정
+- [ ] #73 폰 연결 후 일괄 입력/저장/복귀/로그·OS 백업·실제 광고/결제·최종 사용자 감각 검수·스토어 확인
+
+복원 안내의 일시적 메뉴 글자 가림은 입력 차단으로 관측된 것은 아니며 감각 검수 후보입니다. 에셋·음원·폰트 출처 기록/규격 자동 성공은 최종 권리·상표·아트 승인·기기 스크린샷을 대신하지 않습니다. AdMob 앱/광고 단위 생성 완료와 실제 광고 게재/보상 지급은 구분합니다. APK/AAB·Android sync·버전·폰/전달·Drive/Play Console/상품·실계정/키/env·최종 믹스·공개 배포 보류를 유지하며 오늘18시 사용자 결정 사항을 총괄이 취합합니다.
+
 ## 현재 판단 기준 · 2026-10-18 · #122 callback 자식 정리
 
 기준 main `4938d3ff515f06369fa793279497e2cd86d591f3`, 브랜치 `codex/122-callback-child-cleanup`, [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)입니다. [계약·검증 단계/실패·LF SHA](android-release.ko.md#현재-작업-상태--2026-10-18--122-callback-자식-정리)를 우선합니다.

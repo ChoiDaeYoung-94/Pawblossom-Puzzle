@@ -1,3 +1,21 @@
+## 2026-10-18 · 누적 통합 확인 (이슈 #129)
+
+검증 대상은 PR#133 head `3d3b52f8cec63cbb24ea8ef8aa586cd49e608558`와 전체 tree가 같은 main `dc210437bc3ec02b07cc2e86cd4ebb430ac891bc`의 **production dist**입니다. 세 flags 모두false이고 시작/완료 시 src/public tree·JS/CSS3개 hash가 같았습니다. [최신 통합·각 PR/main 검사·과거 실패 구분](android-release.ko.md#현재-통합-상태--2026-10-18--129)을 우선하며 아래 제출 전/현재 표현은 당시 이력입니다.
+
+Chrome155.0.8059.80, 새 headless context·합성 저장을 사용했습니다. 실제 실행은 다음 순서이며 Android/실제폰/TalkBack 검증이 아닙니다.
+
+| 범위 | 실제 확인과 준비 경계 | 결과 |
+|---|---|---|
+| 유휴 힌트 | 기존 idle-hint-qa.mjs,390×844·일반/모션 감소. 실제 선택/Escape·설정 복귀·자연7.5초. Scene restart/remove와 옛 callback 호출만 수명 fixture | 두 모드 각5개=10, 오류0·viewport PNG8개 |
+| 목표 읽기 | 기존 goal-accessibility-qa.mjs,KO/EN×320×568·640×360. seed42 저장/목표·낙엽 경계는 fixture, 키보드 이동·실제 Phaser 콜백·재로드·언어 전환·Chrome AX를 확인 | 4화면 각5개=20, 오류0·AX20개·viewport PNG8개 |
+| 두 탭 저장 | 기존 #118 스크립트의 출력 경로/시작 SHA만 바꾼 사본. 실제 두 탭의 설정 변경·Enter/Space 재시도·불러오기 취소/수락·320×568 버튼 hit test | 7개, 오류0·기록 원문 불변과 명시 복원 뒤 저장 성공 |
+
+총37개 순차 확인을 통과했습니다. `#goals` 하위 비무시 StaticText는 목표당 기대 문장 하나이며 장식 image0을 확인했습니다. 별도 board 상태의 동일 목표 요약은 의도된 안내이고 페이지 전체 문자열1회를 주장하지 않습니다. 두 겹→한 겹은 더미 수가 유지되고 칸의 겹이 줄어드는 것을 fixture와 구분해 기록했습니다. production에는 무광고 시험 이어하기가 없으므로 testing 전용 +5 확인을 이번20개로 합산하지 않았습니다.
+
+Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-129`에 summary/AX/PNG/로그와 시작 tree·bundle hash를 보존했습니다. 두 탭 그림3개 중 KO320은 실제 viewport, EN은 fullPage, KO 안내는 부분 crop으로 서로 구분합니다. KO320 목표 일부완료·EN640 일부완료·일반 모드 재시작 힌트 PNG를 직접 읽었고 canvas/목표 전체와 중앙 hit test·수평 넘침0을 확인했습니다. 저장의 재시도 버튼은44px 이상/화면 안 hit test를 확인합니다. 사용자5173·기존 Chrome/진행을 사용하지 않고 browser/context/임시 preview server를 finally에서 닫았습니다.
+
+수동 사진 검토에서 복원 toast가3.2초 동안 하단 메뉴 글자를 일부 가리는 시각 후보가 있습니다. pointer-events:none·포커스 불변이므로 입력 차단이나 접근성 전체 실패로 보고하지 않습니다. 공통 bottom을 올리면 짧은 가로의 보드를 가릴 수 있어 자동으로 위치를 바꾸지 않았습니다. 복원 안내를 기존 힌트 영역에 표시하는 선택지는 언어/회차/키보드·만료 복구와 함께 별도 감각 검수 후 판단합니다. 표본 밖 UI·Android 글꼴 배율·실제 터치/청취·TalkBack은 여전히 미검증입니다.
+
 ## 2026-10-18 · 목표 완료·남은 이동 접근성 (이슈 #120)
 
 기준 main `013188d3286166d2bd187c6372ff1773a7449cb8`, `codex/120-goal-accessibility`의 **로컬 검증·총괄 독립검수 완료·Ready PR 제출 승인** 상태입니다. 최신 PR/main Node22·24 CI는 제출 뒤 별도 확인 대상입니다. 총괄이 AX 추출의 목표 영역 StaticText1회/장식 이미지 제외와 production4화면 각5확인·5AX·pageerror0을 독립 대조하고 KO320×568 일부완료 PNG의 체크·더미3·화면 배치를 직접 검토했습니다. 각 목표는 KO/EN 남음 또는 완료 문장 하나를 sr-only로 제공하고, 그림은 빈 alt·시각 숫자/체크는 aria-hidden으로 둡니다. 기존 board-keyboard-status는 available일 때 현재 칸/선택 뒤에 남은 이동·목표 요약을 붙입니다. 목표 영역의 문장 한 번과 별도 보드 요약의 같은 문장은 각각 의도된 탐색/상태 안내이며, 페이지 전체 문자열 출현 수 한 번을 요구하지 않습니다.
