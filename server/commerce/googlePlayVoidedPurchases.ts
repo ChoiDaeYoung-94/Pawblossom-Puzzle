@@ -1,5 +1,6 @@
 /** 서버 전용. 실제 자격정보를 읽지 않으며 명시 호출만 GET합니다. 앱 import 금지. */
 import {createHash} from 'node:crypto';
+import {completedOperation, trackedCallable} from './operationLifetime.ts';
 
 export interface PlayVoidedPurchasesConfig {
   readonly packageName: string;
@@ -82,22 +83,45 @@ export function createPlayVoidedPurchasesLookup(config: PlayVoidedPurchasesConfi
       || !integer(p.maxResponseBytes, 1, 1024 * 1024) || !integer(p.maxTotalBytes, 1, 16 * 1024 * 1024)
       || !integer(p.maxReads, 1, 16_384)) throw new Error();
   } catch {throw new Error('invalid-voided-config');}
-  return async (input: VoidedPurchasesWindow): Promise<VoidedPurchasesResult> => {
+  return trackedCallable((input: VoidedPurchasesWindow) => {
     let startTime: number, endTime: number, signal: AbortSignal | undefined;
     const now = Date.now();
     try {
       ({startTime, endTime, signal} = input);
       if (!integer(startTime, Math.max(0, now - 30 * DAY), now) || !integer(endTime, startTime + 1, now)
-        || (signal !== undefined && !(signal instanceof AbortSignal))) return failure('invalid-input');
-    } catch {return failure('invalid-input');}
-    if (signal?.aborted) return failure('aborted');
+        || (signal !== undefined && !(signal instanceof AbortSignal))) return completedOperation(failure('invalid-input'));
+    } catch {return completedOperation(failure('invalid-input'));}
+    if (signal?.aborted) return completedOperation(failure('aborted'));
     const controller = new AbortController();
     let stopped: 'aborted' | 'timeout' | undefined;
-    let response: Response | undefined, reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
-    const cancel = () => {try {void (reader ? reader.cancel() : response?.body?.cancel())?.catch(() => {});} catch { /* 비공개 */ }};
+    // 현재 페이지가 바뀌어도 앞 페이지의 취소/lock 정리를 잃지 않습니다. 수는 maxPages로 제한됩니다.
+    const cleanups: Promise<void>[] = [];
+    const pageContext = () => {
+      let cancellation: Promise<void> | undefined, finished = false;
+      const page: {response?: Response; reader?: ReadableStreamDefaultReader<Uint8Array>; cancel(): Promise<void>; finish(): void} = {
+        cancel() {
+          if (cancellation) return cancellation;
+          try {
+            const target = page.reader ?? page.response?.body;
+            if (target) cancellation = Promise.resolve().then(() => target.cancel()).then(() => {}, () => {});
+          } catch {cancellation = Promise.resolve(); /* 비공개 */}
+          return cancellation ?? Promise.resolve();
+        },
+        // 페이지의 실제 fetch/read가 끝난 finally에서만 호출합니다. cancel만 끝나면 lock을 풀지 않습니다.
+        finish() {
+          if (finished) return;
+          finished = true;
+          cleanups.push(page.cancel().then(() => {
+            try {page.reader?.releaseLock();} catch { /* 합성/손상 reader 오류 원문 비공개 */ }
+          }));
+        },
+      };
+      return page;
+    };
+    let current: ReturnType<typeof pageContext> | undefined;
     let stop!: (code: 'aborted' | 'timeout') => void;
     const expired = new Promise<VoidedPurchasesResult>(resolve => {stop = code => {
-      if (stopped) return; stopped = code; resolve(failure(code)); controller.abort(); cancel();
+      if (stopped) return; stopped = code; resolve(failure(code)); controller.abort(); void current?.cancel();
     };});
     const onAbort = () => stop('aborted'); signal?.addEventListener('abort', onAbort, {once: true});
     if (signal?.aborted) stop('aborted');
@@ -117,84 +141,92 @@ export function createPlayVoidedPurchasesLookup(config: PlayVoidedPurchasesConfi
           url.searchParams.set('type', '0'); url.searchParams.set('includeQuantityBasedPartialRefund', 'false');
           url.searchParams.set('startTime', String(startTime)); url.searchParams.set('endTime', String(endTime));
           url.searchParams.set('maxResults', String(p.pageSize)); if (token) url.searchParams.set('token', token);
-          reader = undefined;
-          response = await transport(url.href, {method: 'GET', headers: {Authorization: `Bearer ${accessToken}`, Accept: 'application/json'}, redirect: 'error', signal: controller.signal});
-          if (stopped) {cancel(); return failure(stopped);}
-          if (response.redirected || response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) return failure('redirect-blocked');
-          if (response.url && response.url !== url.href) return failure('invalid-response');
-          if (response.status === 401) return failure('unauthenticated');
-          if (response.status === 403) return failure('forbidden');
-          if (response.status === 429) return failure('rate-limited');
-          if (response.status >= 500 && response.status <= 599) return failure('upstream-unavailable');
-          if (response.status !== 200) return failure('unexpected-http');
-          if (!/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type') ?? '') || !response.body) return failure('invalid-response');
-          const length = response.headers.get('content-length');
-          if (length !== null) {
-            if (!/^\d+$/.test(length) || !Number.isSafeInteger(Number(length))) return failure('invalid-response');
-            if (Number(length) > p.maxResponseBytes || totalBytes + Number(length) > p.maxTotalBytes) return failure('response-too-large');
-          }
-          reader = response.body.getReader(); const decoder = new TextDecoder('utf-8', {fatal: true});
-          let bytes = 0, body = '';
-          while (true) {
-            if (++reads > p.maxReads) return failure('limit-exceeded');
-            const chunk = await reader.read(); if (stopped) return failure(stopped);
-            if (!chunk || typeof chunk !== 'object') return failure('invalid-response');
-            if (chunk.done === true && chunk.value === undefined) break;
-            if (chunk.done !== false || !(chunk.value instanceof Uint8Array)) return failure('invalid-response');
-            bytes += chunk.value.byteLength; totalBytes += chunk.value.byteLength;
-            if (bytes > p.maxResponseBytes || totalBytes > p.maxTotalBytes) return failure('response-too-large');
-            try {body += decoder.decode(chunk.value, {stream: true});} catch {return failure('invalid-json');}
-          }
-          let parsed: unknown;
-          try {body += decoder.decode(); parsed = strictJson(body);} catch {return failure('invalid-json');}
-          cancel(); reader = undefined; response = undefined;
-          if (!object(parsed) || Object.keys(parsed).some(k => !['voidedPurchases', 'tokenPagination', 'pageInfo'].includes(k))) return failure('invalid-response');
-          const list = Object.hasOwn(parsed, 'voidedPurchases') ? parsed.voidedPurchases : [];
-          if (!Array.isArray(list) || list.length > p.pageSize) return failure('invalid-response');
-          if (items + list.length > p.maxItems) return failure('limit-exceeded');
-          for (const item of list) {
-            if (!object(item) || Object.keys(item).some(k => !['kind', 'purchaseToken', 'purchaseTimeMillis', 'voidedTimeMillis', 'orderId', 'voidedSource', 'voidedReason'].includes(k))
-              || (Object.hasOwn(item, 'kind') && item.kind !== 'androidpublisher#voidedPurchase')
-              || !bounded(item.purchaseToken, 4096) || item.purchaseToken === '.' || item.purchaseToken === '..'
-              || !integer(item.voidedSource, 0, 2) || !integer(item.voidedReason, 0, 8)
-              || (Object.hasOwn(item, 'orderId') && !bounded(item.orderId, 256))) return failure('invalid-response');
-            const purchase = item.purchaseTimeMillis, voided = item.voidedTimeMillis;
-            if (typeof purchase !== 'string' || !/^[1-9]\d*$/.test(purchase) || !integer(Number(purchase), 1, now)
-              || typeof voided !== 'string' || !/^[1-9]\d*$/.test(voided) || !integer(Number(voided), Number(purchase), now)) return failure('invalid-response');
-            tokenIds.add(createHash('sha256').update(item.purchaseToken).digest('hex'));
-          }
-          if (Object.hasOwn(parsed, 'pageInfo')) {
-            if (!object(parsed.pageInfo) || Object.entries(parsed.pageInfo).some(([k,v]) => !['totalResults', 'startIndex', 'resultPerPage'].includes(k) || !integer(v, 0, 0x7fffffff))) return failure('invalid-response');
-            const info = parsed.pageInfo;
-            if (Object.hasOwn(info, 'startIndex') && info.startIndex !== items) return failure('invalid-response');
-            if (Object.hasOwn(info, 'resultPerPage') && (info.resultPerPage as number) < list.length) return failure('invalid-response');
-            if (Object.hasOwn(info, 'totalResults')) {
-              if (expectedTotal !== undefined && expectedTotal !== info.totalResults) return failure('invalid-response');
-              expectedTotal = info.totalResults as number;
-              if (expectedTotal < items + list.length) return failure('invalid-response');
+          const page = pageContext(); current = page;
+          try {
+            const response = page.response = await transport(url.href, {method: 'GET', headers: {Authorization: `Bearer ${accessToken}`, Accept: 'application/json'}, redirect: 'error', signal: controller.signal});
+            if (stopped) return failure(stopped);
+            if (response.redirected || response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) return failure('redirect-blocked');
+            if (response.url && response.url !== url.href) return failure('invalid-response');
+            if (response.status === 401) return failure('unauthenticated');
+            if (response.status === 403) return failure('forbidden');
+            if (response.status === 429) return failure('rate-limited');
+            if (response.status >= 500 && response.status <= 599) return failure('upstream-unavailable');
+            if (response.status !== 200) return failure('unexpected-http');
+            if (!/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type') ?? '') || !response.body) return failure('invalid-response');
+            const length = response.headers.get('content-length');
+            if (length !== null) {
+              if (!/^\d+$/.test(length) || !Number.isSafeInteger(Number(length))) return failure('invalid-response');
+              if (Number(length) > p.maxResponseBytes || totalBytes + Number(length) > p.maxTotalBytes) return failure('response-too-large');
             }
-          }
-          token = undefined;
-          if (Object.hasOwn(parsed, 'tokenPagination')) {
-            const pagination = parsed.tokenPagination;
-            // 공식 sample의 previousPageToken:null은 이전 페이지 부재입니다. next는 부재만 종료입니다.
-            if (!object(pagination) || Object.entries(pagination).some(([k,v]) => !['nextPageToken', 'previousPageToken'].includes(k)
-              || !(k === 'previousPageToken' && v === null) && !bounded(v, 4096))) return failure('invalid-response');
-            token = pagination.nextPageToken as string | undefined;
-          }
-          pages++; items += list.length;
-          if (!token) {
-            if (expectedTotal !== undefined && expectedTotal !== items) return failure('invalid-response');
-            return {kind: 'voided-facts', tokenIds: [...tokenIds], pages, items};
-          }
-          if (items >= p.maxItems) return failure('limit-exceeded');
-          if (seenPages.has(token)) return failure('invalid-response');
-          seenPages.add(token);
+            const reader = page.reader = response.body.getReader(); const decoder = new TextDecoder('utf-8', {fatal: true});
+            let bytes = 0, body = '';
+            while (true) {
+              if (++reads > p.maxReads) return failure('limit-exceeded');
+              const chunk = await reader.read(); if (stopped) return failure(stopped);
+              if (!chunk || typeof chunk !== 'object') return failure('invalid-response');
+              if (chunk.done === true && chunk.value === undefined) break;
+              if (chunk.done !== false || !(chunk.value instanceof Uint8Array)) return failure('invalid-response');
+              bytes += chunk.value.byteLength; totalBytes += chunk.value.byteLength;
+              if (bytes > p.maxResponseBytes || totalBytes > p.maxTotalBytes) return failure('response-too-large');
+              try {body += decoder.decode(chunk.value, {stream: true});} catch {return failure('invalid-json');}
+            }
+            let parsed: unknown;
+            try {body += decoder.decode(); parsed = strictJson(body);} catch {return failure('invalid-json');}
+            void page.cancel();
+            if (!object(parsed) || Object.keys(parsed).some(k => !['voidedPurchases', 'tokenPagination', 'pageInfo'].includes(k))) return failure('invalid-response');
+            const list = Object.hasOwn(parsed, 'voidedPurchases') ? parsed.voidedPurchases : [];
+            if (!Array.isArray(list) || list.length > p.pageSize) return failure('invalid-response');
+            if (items + list.length > p.maxItems) return failure('limit-exceeded');
+            for (const item of list) {
+              if (!object(item) || Object.keys(item).some(k => !['kind', 'purchaseToken', 'purchaseTimeMillis', 'voidedTimeMillis', 'orderId', 'voidedSource', 'voidedReason'].includes(k))
+                || (Object.hasOwn(item, 'kind') && item.kind !== 'androidpublisher#voidedPurchase')
+                || !bounded(item.purchaseToken, 4096) || item.purchaseToken === '.' || item.purchaseToken === '..'
+                || !integer(item.voidedSource, 0, 2) || !integer(item.voidedReason, 0, 8)
+                || (Object.hasOwn(item, 'orderId') && !bounded(item.orderId, 256))) return failure('invalid-response');
+              const purchase = item.purchaseTimeMillis, voided = item.voidedTimeMillis;
+              if (typeof purchase !== 'string' || !/^[1-9]\d*$/.test(purchase) || !integer(Number(purchase), 1, now)
+                || typeof voided !== 'string' || !/^[1-9]\d*$/.test(voided) || !integer(Number(voided), Number(purchase), now)) return failure('invalid-response');
+              tokenIds.add(createHash('sha256').update(item.purchaseToken).digest('hex'));
+            }
+            if (Object.hasOwn(parsed, 'pageInfo')) {
+              if (!object(parsed.pageInfo) || Object.entries(parsed.pageInfo).some(([k,v]) => !['totalResults', 'startIndex', 'resultPerPage'].includes(k) || !integer(v, 0, 0x7fffffff))) return failure('invalid-response');
+              const info = parsed.pageInfo;
+              if (Object.hasOwn(info, 'startIndex') && info.startIndex !== items) return failure('invalid-response');
+              if (Object.hasOwn(info, 'resultPerPage') && (info.resultPerPage as number) < list.length) return failure('invalid-response');
+              if (Object.hasOwn(info, 'totalResults')) {
+                if (expectedTotal !== undefined && expectedTotal !== info.totalResults) return failure('invalid-response');
+                expectedTotal = info.totalResults as number;
+                if (expectedTotal < items + list.length) return failure('invalid-response');
+              }
+            }
+            token = undefined;
+            if (Object.hasOwn(parsed, 'tokenPagination')) {
+              const pagination = parsed.tokenPagination;
+              // 공식 sample의 previousPageToken:null은 이전 페이지 부재입니다. next는 부재만 종료입니다.
+              if (!object(pagination) || Object.entries(pagination).some(([k,v]) => !['nextPageToken', 'previousPageToken'].includes(k)
+                || !(k === 'previousPageToken' && v === null) && !bounded(v, 4096))) return failure('invalid-response');
+              token = pagination.nextPageToken as string | undefined;
+            }
+            pages++; items += list.length;
+            if (!token) {
+              if (expectedTotal !== undefined && expectedTotal !== items) return failure('invalid-response');
+              return {kind: 'voided-facts', tokenIds: [...tokenIds], pages, items};
+            }
+            if (items >= p.maxItems) return failure('limit-exceeded');
+            if (seenPages.has(token)) return failure('invalid-response');
+            seenPages.add(token);
+          } finally {page.finish(); if (current === page) current = undefined;}
         }
       } catch {return failure(stopped ?? 'transport-error');}
-      finally {cancel();}
+      finally {current?.finish();}
     };
-    try {return await Promise.race([work(), expired]);}
-    finally {clearTimeout(timer); signal?.removeEventListener('abort', onAbort);}
-  };
+    const actual = work();
+    // work 종료 때는 각 페이지 finally가 이미 정리를 등록했습니다. 공개 facts는 정리를 기다리지 않습니다.
+    const settled = actual.then(() => Promise.all(cleanups), () => Promise.all(cleanups)).then(() => {});
+    const result = (async () => {
+      try {return await Promise.race([actual, expired]);}
+      finally {clearTimeout(timer); signal?.removeEventListener('abort', onAbort);}
+    })();
+    return {result, settled};
+  });
 }

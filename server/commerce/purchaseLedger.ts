@@ -30,7 +30,7 @@ export interface PurchaseLedgerOptions {
   readonly lookupTransport?: typeof fetch;
   readonly voided?: Omit<PlayVoidedPurchasesConfig, 'packageName' | 'getAccessToken'>;
   readonly voidedTransport?: typeof fetch;
-  /** 인스턴스별 process/재시도 처리 그룹 한도. 기본8, 1..32, 대기열 없음. DB profile과 무관합니다. */
+  /** 인스턴스별 process/재시도/회수 조회의 공유 그룹 한도. 기본8, 1..32, 대기열 없음. DB profile과 무관합니다. */
   readonly maxPendingOperations?: number;
 }
 type Fact = Extract<PurchaseLookupResult, {kind: 'purchase-fact'}>['fact'];
@@ -360,7 +360,16 @@ export class PurchaseLedger {
     | {kind: 'voided-error'; code: VoidedErrorCode}
     | {kind: 'service-error'; code: 'storage-unavailable'}> {
     if (this.#closed) return {kind: 'service-error', code: 'storage-unavailable'};
-    const result = await this.#voided(input);
+    const operation = this.#acquire();
+    if (!operation) return {kind: 'voided-error', code: 'transport-error'};
+    try {return await this.#reconcileVoided(input, operation);}
+    finally {operation.finish();}
+  }
+
+  async #reconcileVoided(input: VoidedPurchasesWindow, operation: OperationGroup): ReturnType<PurchaseLedger['reconcileVoided']> {
+    const lookup = startOperation(this.#voided, input);
+    operation.track(lookup.settled);
+    const result = await lookup.result;
     if (result.kind !== 'voided-facts') return result;
     try {
       return this.#transaction(() => {

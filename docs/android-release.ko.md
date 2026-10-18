@@ -1,3 +1,39 @@
+## 현재 작업 상태 · 2026-10-18 · #137
+
+[회수 조회 수명 #137](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/137)는 기준 main `2e4e3451903a56c4febf94e7b8fba9ac320e0119`의 `codex/137-voided-operation-lifetime`에서 구현했습니다. **관련5파일274개, 최신 전체34파일2,326개, 전체/앱/서버 타입·스토어12개·에셋·testing→production 빌드와 총괄 독립검수를 마쳤으며 한국어 커밋·푸시·Ready PR 제출 승인 상태**입니다. 현재 변경은 생산 코드2개·새 회귀1개·이 기존 문서의4파일입니다. 기존 #134 helper/GET/ACK/수량 설정·DB schema/profile을 변경하지 않았습니다. 아래 #134의 voided 제외 등은 당시 이력이며 현재 범위는 이 상단을 우선합니다.
+
+기준 main은 양쪽 CI 성공 상태가 아닙니다. #134의 [PR #136 CI39109664442](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39109664442)는 Node22/24 성공 후 병합했지만, 정확한 [main CI39109768855](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39109768855)는 Node24 성공·Node22 실패입니다. 원문에서 기존 `reward-redemption.test.ts:163:19`의 「남은 전체 행수0」 검사가 기본5000ms timeout으로1건 실패하고2,302/2,303 통과한 것을 확인했습니다. 내부 phase 원인은 미확정이고 이번 회수 조회 수정 때문이라고 확정하지 않습니다. #122를 열어 두고 CI rerun 없이 원문을 보존하며 #134 완료 브랜치도 총괄의 후속 정확 main CI 확인 전까지 보존합니다. 아래 최신 로컬 성공으로 이 실패를 성공으로 바꾸거나 합산하지 않습니다. 이번 #137 PR/main CI는 아직 실행하지 않았습니다.
+
+### 회수 조회와 모든 페이지의 실제 종료
+
+`reconcileVoided`도 기존 `maxPendingOperations` 공유 그룹을 최초 OAuth/DB 변경 전에 확보하고, 포화는 기존 voided-error/transport-error로 반환합니다. 새 cap·공개 kind·schema/profile은 없습니다. process/재시도/회수 조회가 같은 그룹을 사용하며 포화된 호출은 OAuth·DB·attempt/lease/cooldown을 소비하지 않습니다. 회수 조회에는 원장의10초를 덧씌우지 않고 기존 전체 기본30초/최대60초를 유지합니다.
+
+기존 `trackedCallable/startOperation/OperationGroup`을 재사용해 공개 result와 실제 settled를 분리했습니다. 페이지마다 고유 response/reader와 한 번 메모한 cancel Promise를 보존하고, raw fetch/read를 await하는 페이지 finally에서만 정리를 등록합니다. cancel이 먼저 끝나도 read가 미완료이면 lock을 풀지 않습니다. cancel Promise 선등록으로 동기 abort 재진입을 막고, 응답 전 빈 취소는 메모하지 않아 늦은 Response도 한 번 취소합니다. 현재 페이지 참조가 바뀌어도 이전 페이지의 정리 Promise를 전체 join에 남겨, OAuth·진행 중 fetch/read와 모든 페이지 cancel/lock 정리가 실제 종료되어야 그룹을 반환합니다. 공개 결과의 timer/listener 정리는 이와 별개입니다.
+
+모든 페이지 검증이 정상 완료되면 cleanup이 미완료여도 기존 원자 회수 트랜잭션을 그대로 수행합니다. timeout·중단·뒷페이지 오류·늦은 작업은 부분 회수나 추가 DB 갱신을 하지 않습니다. 최초30일 창/now snapshot·페이지마다 fresh OAuth·페이지/항목/바이트/읽기 상한·단일수량 전액 회수 profile과 결과·소유자/권한 의미를 유지했습니다. 그룹8은 Promise/소켓 총8개나 프로세스 전체/성능 보장이 아니며, 한 그룹은 설정된 maxPages 이내 여러 페이지 정리를 포함할 수 있습니다. standalone adapter·다른 원장 인스턴스/프로세스 및 외부 함수의 숨긴 별도 작업은 보장 범위 밖입니다. 내부 등록은 수명 전달이며 인증/권한 증명이 아닙니다. 현재 공개 서비스·앱/SDK 미연결이고 실제 Google/운영 사고를 관측한 것은 아닙니다.
+
+### 검증과 실패 보존
+
+새23개 회귀는 미협조 OAuth/fetch/read의 timeout 후 late resolve/reject, 기존30초/60초 경계와10초 미종료, process/retry/reconcile max1 상호 포화와 OAuth/DB 불변, 최초 창/now snapshot과 fresh OAuth, 늦은 Response의 cancel1회/대기, read-first/cancel-first의 resolve/reject, 한 페이지 및 앞/뒤/양쪽 cancel pending 중 정상 원자 회수, 뒷페이지 timeout/abort/HTTP/JSON 실패의 부분 회수 금지와 동기 abort 재진입을 확인합니다. 기존 회수/중복/재시작·비밀정보 비노출 검사는 관련/전체에 포함했습니다. 가짜 시간만 진행하며 실제30초/60초 대기를 추가하지 않았습니다.
+
+| 단계 | 결과와 구분 |
+|---|---|
+| 최초 타입 추출 | 내부 분리 메서드의 결과 kind가 string으로 넓어진 TS2322 1건, exit1. 기존 공개 결과형을 참조하는 반환형을 명시하여 수정했습니다. 당시 별도 SHA/원문 파일은 미수집이며 도구 출력과 단계 기록을 보존합니다. |
+| 최초 관련 · 17:04:57 KST 시작 | 5파일 중1파일 실패,272 passed/1 failed. 창 snapshot fixture에서 구매 등록 없이 revoked1을 기대해 실제0을 받은 오류였습니다. 구매 등록 단계를 추가하고 OAuth 총3회(등록1+페이지2)로 확인했습니다. 원문 related-initial.log를 보존하고 최종 성공으로 합산하지 않습니다. |
+| 최종 관련 · 17:05:31 KST 시작 | `npm test -- tests/voided-operation-lifetime.test.ts tests/google-play-voided.test.ts tests/purchase-revocation.test.ts tests/purchase-operation-lifetime.test.ts tests/purchase-ledger.test.ts` · 5파일274/274, exit0. 늦은 Response의 cancel-only 대기 회귀1개도 추가한 최종 소스입니다. |
+| 최신 전체 · 17:06:13 KST 시작 | `npm test` · 34파일2,326/2,326, exit0,49.70초. 이 최종 소스의 전체 실행은1회이며 이전 CI/실행과 합산하지 않습니다. |
+| 타입·원본·스토어·빌드 | `typecheck` 전체/앱/서버, `store:check`, `store:test`12/12, `assets:check`, `build:test→build` 모두 exit0. 두 빌드 flags3개는 각각true/false이며 최종 production은 모두false입니다. 기존 청크/Node 실험 경고는 유지합니다. |
+
+검사 기본5초·file worker2·기존 내부 경합8·제품/업무 assertion/retry/CI를 변경하거나 rerun하지 않았습니다. 구매 SQLite5000ms와 Reward/Round/Inbox500ms, 구매 query/attempt 각10초·lease60초·통산5회/cooldown도 기존값입니다. 최종 diff/신규 파일 후행공백·변경4파일·기존 문서 전체 보존·src/dist 서버 마커0과 소스/빌드 SHA 일치를 checkpoint에서 확인했습니다.
+
+| 전체 실행 전부터 유지한 소스 LF SHA-256 | 값 |
+|---|---|
+| `server/commerce/purchaseLedger.ts` | `df74a394ea75aeafd648e63a9572cf990ad43a1a46c5ed835016bdafd0d53e1a` |
+| `server/commerce/googlePlayVoidedPurchases.ts` | `936644eba52c4091a7a1ac51112fbb48d5b31e45023f42cbcfb8fe58ed0184b3` |
+| `tests/voided-operation-lifetime.test.ts` | `34d154e0d027f10aa0a27a99f6dc8ac6cd973b37c846a0e3077dacbd4ebc2baa` |
+
+Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-137`에 related-initial/final·full-tests·타입/스토어/에셋/두 빌드 원문 로그와 최초 타입 실패 단계 기록, 이전 main136 실패 원문 사본, source-before-checks/두 flags/checkpoint/검사 도우미를 보존합니다. 소스 LF SHA는 전체 실행 직전17:06:12 KST에 수집하여 정적/빌드/최종 checkpoint와 비교합니다. 최초 관련 실패의 별도 SHA는 수집하지 않았고 최종 성공과 구분합니다. checkpoint 뒤 커밋 전 STOP했으며 총괄이 관련 정확5파일274/274와 전체/앱/서버 타입, 생산2+검사1+재사용helper LF SHA 일치, production3bundle byte 동일·diff/소스를 독립 확인하여 확정 결함 없이 제출을 승인했습니다. 독립 관련 JSON은 `C:\Users\user\AppData\Local\Temp\pawblossom-137-root-related.json`입니다. 이 승인으로 문서 현재 상태만 갱신하여 한국어 커밋·푸시·Ready PR을 제출하며 최신 PR/main CI와 병합/정리는 총괄이 담당합니다. APK/AAB·Android sync·버전·폰/전달·실계정/키/env·Drive/Play Console/상품·최종 오디오·공개 배포는 수행하지 않았습니다. 실제 Google/SDK·운영·단말·스토어/출시는 #73 미검증이며 사용자 조치와 질문은 없습니다.
+
 ## 현재 작업 상태 · 2026-10-18 · #134
 
 [구매 작업 수명 #134](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/134)는 기준 main `74ae081d87ac15efb0baef25f487af5843b7ebe1`의 `codex/134-purchase-operation-lifetime`에서 구현했습니다. **관련5파일406개, 최신 전체33파일2,303개, 전체/앱/서버 타입·스토어12개·에셋 원본·testing→production 빌드 검증과 총괄 독립검수를 마쳤으며 한국어 커밋·푸시·Ready PR 제출 승인 상태**입니다. 총괄이 전달한 이전 기준 [main CI39109057700](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39109057700)의 Node22/24 성공과 이번 소스의 로컬 검증은 별도입니다. 이번 변경의 새 PR/main CI는 제출 후 별도로 확인합니다. 아래 #129 이하 기록과 실패 이력은 당시 상태 그대로 보존합니다.
