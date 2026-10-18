@@ -1,5 +1,11 @@
 # 출시까지의 개발 순서
 
+## 현재 작업 현황 · 2026-10-18 · #122 callback parallel 수명
+
+기준 main `aa7e3ca0e437080536a9d8e5916f7a0d51c11bb7`, `codex/122-callback-parallel-lifecycle`에서 검사 전용 준비/결과/실제 exit 분리·첫 오류의 batch 전체 대기 거절·생성 직후 등록·실제 종료 뒤 부모 정리를 구현했습니다. **최종 관련136개·최신 전체35파일2,349개 한 번·타입/스토어12/에셋/두 빌드·최종 flags3false/마커0·diff/7파일 SHA 확인**이며 [단계별 검증·SHA·과거 실패](android-release.ko.md#현재-작업-상태--2026-10-18--122-callback-parallel-수명)를 우선합니다. 정상 결과는 exit를 기다리지 않고 기존8worker/go 순서/입출력/assertion·5초/file2/SQLite500ms·제품/CI를 유지합니다.
+
+총괄은 정확한 같은 소스 관련136개·전체/앱/서버 타입·7파일 SHA/production bundle 동일·변경 범위를 독립 확인했고 한국어 test 커밋·푸시·Ready PR 제출을 승인했습니다. 다음은 승인된 제출과 최신 PR/main Node22·24 CI이며 병합/정리는 총괄이 담당합니다. 최종 소스 전체를 한 번 실행했으며 go 이후 회귀 보강 전 성공과 합산하지 않습니다. 이전 main136 Node22 reward-redemption:163 timeout·최초 callback/EPERM/과거 Round 원인은 미확정이며 #122를 열어 둡니다. 사용자 조치/질문은 없고18시 총괄 취합입니다. Android/APK·계정·오디오·배포 보류를 유지하며 아래 선행 현재/제출 대기 표현은 당시 이력입니다.
+
 ## 현재 통합 현황 · 2026-10-18 · #129
 
 main `dc210437bc3ec02b07cc2e86cd4ebb430ac891bc`까지 오늘9개 PR을 반영했습니다. 최신 main Node22·24 각각2,267개·타입/스토어/빌드 성공과 같은 배포 파일의 Chrome37개/목표 AX20개/pageerror0을 확인했습니다. [PR·실제 squash·과거 실패·정확한 범위](android-release.ko.md#현재-통합-상태--2026-10-18--129)를 우선하며 아래 현재/제출 대기 표현은 당시 이력입니다. 이번 #129는 기존 기록 정리이며 제품/Android/버전/의존성/오디오는 바꾸지 않습니다.
