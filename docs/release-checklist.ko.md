@@ -1,5 +1,17 @@
 # 출시까지 남은 작업
 
+## 현재 판단 기준 · 2026-10-18 · #126
+
+기준 main `c995a001db98ef1219a71dff6fe53c10c83a9872`, 브랜치 `codex/126-ssv-node-listener`, [#126](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/126)입니다. [계약·단계별 검증·LF SHA](android-release.ko.md#현재-작업-상태--2026-10-18--126)를 우선합니다. #121은 PR#131로 위 main에 반영되었으며 아래 대기 표현은 당시 이력입니다.
+
+- [x] 기존 동기 callback adapter 전용 `{listener,close}`·원문 GET/본문0·독립 caps·queue0·절대 단조 기한·정상 keep-alive 구현
+- [x] Node24 최적화 빈 요청과 이미 closed인 조기 거절의 슬롯 반환·동기 COMMIT/timeout 의미·외부 Inbox/server 비소유 검증
+- [x] 실제 COMMIT 실패503/행0·재시작 terminal 중복200/행 증가0·오서명 수신200→discarded/보상0 확인
+- [x] 테스트 자원 정리 보강 후 관련392개·Node22.20 listener103개 통과
+- [x] 최종 소스 전체31파일2,246개 한 번·타입/스토어12/에셋·testing→production·flags3false/서버 마커0·diff 확인
+- [ ] 커밋 전 총괄 독립검수·승인된 커밋/푸시/PR 및 최신 head/main Node22·24 CI
+- [ ] #73 실제 Google query/키 통신·공개 호스트/TLS/parser/Expect/로그/속도·한국/미국/연령·실서비스/SDK·기기/스토어 검증
+
 ## 현재 판단 기준 · 2026-10-18 · #121
 
 기준 main `f1660bda2c797f62bf5119eb642c4f4fbb5e4aba`, 브랜치 `codex/121-game-node-listener`입니다. [검증·실패 이력·수명 계약](android-release.ko.md#현재-작업-상태--2026-10-18--121)을 우선합니다.
