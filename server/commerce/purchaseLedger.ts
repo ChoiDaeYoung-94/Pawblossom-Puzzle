@@ -4,6 +4,7 @@ import {isAbsolute} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
 import {createPlayPurchaseLookup, type PlayPurchaseServerConfig, type PurchaseLookupResult} from './googlePlayPurchase.ts';
 import {createPlayVoidedPurchasesLookup, type PlayVoidedPurchasesConfig, type VoidedPurchasesWindow, type VoidedErrorCode} from './googlePlayVoidedPurchases.ts';
+import {OperationGroup, startOperation} from './operationLifetime.ts';
 
 export interface TrustedPurchaseOwner {
   /** 인증 미들웨어가 결정해야 합니다. HTTP body userId를 복사하는 것은 인증이 아닙니다. */
@@ -29,6 +30,8 @@ export interface PurchaseLedgerOptions {
   readonly lookupTransport?: typeof fetch;
   readonly voided?: Omit<PlayVoidedPurchasesConfig, 'packageName' | 'getAccessToken'>;
   readonly voidedTransport?: typeof fetch;
+  /** 인스턴스별 process/재시도 처리 그룹 한도. 기본8, 1..32, 대기열 없음. DB profile과 무관합니다. */
+  readonly maxPendingOperations?: number;
 }
 type Fact = Extract<PurchaseLookupResult, {kind: 'purchase-fact'}>['fact'];
 type NotPurchased = Exclude<PurchaseLookupResult, {kind: 'purchase-fact'}>;
@@ -61,13 +64,19 @@ export class PurchaseLedger {
   #acknowledge: PurchaseLedgerOptions['acknowledge'];
   #voided: ReturnType<typeof createPlayVoidedPurchasesLookup>;
   #closed = false;
+  #maxPendingOperations: number;
+  #operations = new Set<OperationGroup>();
 
   constructor(options: PurchaseLedgerOptions) {
+    const configuredLimit = options?.maxPendingOperations;
+    const maxPendingOperations = configuredLimit === undefined ? 8 : configuredLimit;
     if (!options || typeof options.databasePath !== 'string' || !isAbsolute(options.databasePath) || !/\.sqlite$/.test(options.databasePath)
       || !(options.serverKey instanceof Uint8Array) || options.serverKey.byteLength !== 32
-      || typeof options.getAccessToken !== 'function' || typeof options.acknowledge !== 'function') {
+      || typeof options.getAccessToken !== 'function' || typeof options.acknowledge !== 'function'
+      || !Number.isInteger(maxPendingOperations) || maxPendingOperations < 1 || maxPendingOperations > 32) {
       throw new Error('invalid-ledger-config');
     }
+    this.#maxPendingOperations = maxPendingOperations;
     this.#key = Buffer.from(options.serverKey);
     this.#policy = {...options.purchase};
     this.#lookup = createPlayPurchaseLookup(this.#policy, options.lookupTransport);
@@ -165,7 +174,14 @@ export class PurchaseLedger {
     return fact.environment === this.#policy.mode && fact.packageName === this.#policy.packageName
       && fact.productId === this.#policy.productId && fact.purchaseOptionId === this.#policy.purchaseOptionId;
   }
-  async #query(token: string, account: string, signal?: AbortSignal): Promise<PurchaseLookupResult> {
+  #acquire(): OperationGroup | undefined {
+    if (this.#closed || this.#operations.size >= this.#maxPendingOperations) return;
+    const operation = new OperationGroup(() => this.#operations.delete(operation));
+    this.#operations.add(operation);
+    return operation;
+  }
+
+  async #query(token: string, account: string, operation: OperationGroup, signal?: AbortSignal): Promise<PurchaseLookupResult> {
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout> | undefined;
     let stop!: (code: 'timeout' | 'aborted') => void;
@@ -180,11 +196,15 @@ export class PurchaseLedger {
       try {
         const accessToken = await this.#accessToken();
         if (controller.signal.aborted) return {kind: 'lookup-error', code: 'aborted'};
-        return await this.#lookup({purchaseToken: token, expectedObfuscatedAccountId: account, accessToken, signal: controller.signal});
+        const lookup = startOperation(this.#lookup, {purchaseToken: token, expectedObfuscatedAccountId: account, accessToken, signal: controller.signal});
+        operation.track(lookup.settled);
+        return await lookup.result;
       } catch { return {kind: 'lookup-error', code: 'transport-error'}; }
     };
+    const actual = work();
+    operation.track(actual);
     try {
-      return await Promise.race([work(), expired]);
+      return await Promise.race([actual, expired]);
     } finally { clearTimeout(timer); signal?.removeEventListener('abort', onAbort); }
   }
 
@@ -196,10 +216,17 @@ export class PurchaseLedger {
     }
     // await 도중 호출자 객체 변경이 인증 context에 섞이지 않도록 복사합니다.
     const owner = context.ownerId, account = context.expectedObfuscatedAccountId;
+    const operation = this.#acquire();
+    if (!operation) return {kind: 'lookup-error', code: 'transport-error'};
+    try {return await this.#process(purchaseToken, owner, account, operation);}
+    finally {operation.finish();}
+  }
+
+  async #process(purchaseToken: string, owner: string, account: string, operation: OperationGroup): Promise<PurchaseProcessResult> {
     const id = tokenId(purchaseToken);
     try {if (this.#isRevoked(id)) return {kind: 'rejected', reason: 'token-revoked'};}
     catch {return {kind: 'service-error', code: 'storage-unavailable'};}
-    const verified = await this.#query(purchaseToken, account);
+    const verified = await this.#query(purchaseToken, account, operation);
     try {if (this.#isRevoked(id)) return {kind: 'rejected', reason: 'token-revoked'};}
     catch {return {kind: 'service-error', code: 'storage-unavailable'};}
     if (verified.kind !== 'purchase-fact') return verified;
@@ -222,7 +249,7 @@ export class PurchaseLedger {
       if ('revoked' in recorded && recorded.revoked) return {kind: 'rejected', reason: 'token-revoked'};
       if (recorded.conflict) return {kind: 'rejected', reason: 'owner-conflict'};
       // 트랜잭션 성공 뒤에만 승인하며, 승인 실패가 영구 권한을 되돌리지 않습니다.
-      const acknowledgement = await this.#attempt(id);
+      const acknowledgement = await this.#attempt(id, operation);
       if (acknowledgement === 'revoked' || this.#isRevoked(id)) return {kind: 'rejected', reason: 'token-revoked'};
       return {kind: 'entitled', newGrant: recorded.newGrant, acknowledgement};
     } catch { return {kind: 'service-error', code: 'storage-unavailable'}; }
@@ -251,7 +278,7 @@ export class PurchaseLedger {
     return !!row && !this.#isRevoked(id) && row.lease === lease && row.lease_until > Date.now();
   }
 
-  async #attempt(id: string): Promise<'acknowledged' | 'pending' | 'attention' | 'revoked'> {
+  async #attempt(id: string, operation: OperationGroup): Promise<'acknowledged' | 'pending' | 'attention' | 'revoked'> {
     const now = Date.now(), lease = randomUUID();
     const claimed = this.#transaction(() => {
       const row = this.#row(id);
@@ -272,20 +299,24 @@ export class PurchaseLedger {
       try {
         const payload = this.#unseal(claimed.row);
         // 응답 유실 뒤에도 재조회하며, 이미 승인되었다면 POST를 재전송하지 않습니다.
-        const result = await this.#query(payload.token, payload.account, controller.signal);
+        const result = await this.#query(payload.token, payload.account, operation, controller.signal);
         if (controller.signal.aborted || !this.#leaseCurrent(id, lease) || result.kind !== 'purchase-fact' || !this.#matches(result.fact)) return false;
         if (result.fact.acknowledgement === 'acknowledged') return true;
         const accessToken = await this.#accessToken();
         if (controller.signal.aborted || !this.#leaseCurrent(id, lease) || !bounded(accessToken, 8192) || !/^[A-Za-z0-9._~+\/-]+=*$/.test(accessToken)) return false;
-        return await this.#acknowledge({packageName: this.#policy.packageName, productId: this.#policy.productId,
-          purchaseToken: payload.token, accessToken, signal: controller.signal}) === 'acknowledged';
+        const acknowledgement = startOperation(this.#acknowledge, {packageName: this.#policy.packageName, productId: this.#policy.productId,
+          purchaseToken: payload.token, accessToken, signal: controller.signal});
+        operation.track(acknowledgement.settled);
+        return await acknowledgement.result === 'acknowledged';
       } catch { return false; }
     };
     const expired = new Promise<boolean>(resolve => {
       timer = setTimeout(() => { controller.abort(); resolve(false); }, ATTEMPT_TIMEOUT);
     });
     let success: boolean;
-    try { success = await Promise.race([work(), expired]); }
+    const actual = work();
+    operation.track(actual);
+    try { success = await Promise.race([actual, expired]); }
     finally { clearTimeout(timer); }
     // 만료된 작업의 늦은 결과는 다른 lease를 갱신할 수 없습니다. 오류 본문은 저장하지 않습니다.
     this.#transaction(() => {
@@ -300,16 +331,24 @@ export class PurchaseLedger {
   /** 최대100건, 구매마다 통산5회. 초과 시 운영자 조사가 필요하며 자동 실행은 없습니다. */
   async retryPending(limit = 20): Promise<{kind: 'retry-result'; processed: number; acknowledged: number; attention: number} | {kind: 'service-error'; code: 'invalid-input' | 'storage-unavailable'}> {
     if (!Number.isInteger(limit) || limit < 1 || limit > 100) return {kind: 'service-error', code: 'invalid-input'};
+    if (this.#closed) return {kind: 'service-error', code: 'storage-unavailable'};
     try {
       const now = Date.now();
       const rows = this.#db.prepare("SELECT token_id FROM purchases WHERE ack='pending' AND revoked=0 AND attempts<5 AND next_at<=? AND lease_until<=? ORDER BY next_at,token_id LIMIT ?").all(now, now, limit);
       const completed: string[] = [];
+      let processed = 0;
       for (const row of rows) {
-        const state = await this.#attempt(row.token_id as string);
-        if (state === 'acknowledged') completed.push(row.token_id as string);
+        // 포화 거절은 lease/attempt/cooldown을 소비하지 않습니다. 중첩 query도 이 그룹을 빌립니다.
+        const operation = this.#acquire();
+        if (!operation) break;
+        try {
+          const state = await this.#attempt(row.token_id as string, operation);
+          processed++;
+          if (state === 'acknowledged') completed.push(row.token_id as string);
+        } finally {operation.finish();}
       }
       // 다음 토큰의 await 중 앞 토큰이 회수될 수 있으므로 반환 직전에 다시 집계합니다.
-      return this.#transaction(() => ({kind: 'retry-result' as const, processed: rows.length,
+      return this.#transaction(() => ({kind: 'retry-result' as const, processed,
         acknowledged: completed.filter(id => !this.#isRevoked(id) && this.#row(id)?.ack === 'acknowledged').length,
         attention: this.acknowledgementSummary().attention}));
     } catch { return {kind: 'service-error', code: 'storage-unavailable'}; }

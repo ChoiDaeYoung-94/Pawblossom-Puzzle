@@ -1,3 +1,41 @@
+## 현재 작업 상태 · 2026-10-18 · #134
+
+[구매 작업 수명 #134](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/134)는 기준 main `74ae081d87ac15efb0baef25f487af5843b7ebe1`의 `codex/134-purchase-operation-lifetime`에서 구현했습니다. **관련5파일406개, 최신 전체33파일2,303개, 전체/앱/서버 타입·스토어12개·에셋 원본·testing→production 빌드 검증과 총괄 독립검수를 마쳤으며 한국어 커밋·푸시·Ready PR 제출 승인 상태**입니다. 총괄이 전달한 이전 기준 [main CI39109057700](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39109057700)의 Node22/24 성공과 이번 소스의 로컬 검증은 별도입니다. 이번 변경의 새 PR/main CI는 제출 후 별도로 확인합니다. 아래 #129 이하 기록과 실패 이력은 당시 상태 그대로 보존합니다.
+
+### 실제 종료까지 유지하는 구매 처리 한도
+
+`PurchaseLedgerOptions.maxPendingOperations`는 인스턴스별 `process`/재시도 처리 그룹의 실행 수명 설정입니다. 기본8·정수1..32·대기열0이며 생성자에서 한 번 복사/검증하고 잘못된 한도는 DB를 열기 전에 거절합니다. 상품 정책이나 DB schema/profile에 넣지 않습니다. `process`는 입력 검사 뒤 첫 OAuth/DB 변경 전에 확보하고, `process→query→attempt→query`는 그룹 하나를 공유하여 max1에서도 정상 처리합니다. 재시도는 후보마다 DB 선점 전에 별도 그룹을 확보하고 포화 시 즉시 중단합니다. 거절 후보는 processed에서 제외하며 attempts/lease/next_at/cooldown을 소비하지 않습니다. 포화 process는 기존 lookup-error/transport-error, 재시도는 기존 retry-result 형식을 사용하고 공개 kind를 추가하지 않았습니다.
+
+내부 `TrackedOperation.result/settled`와 WeakMap의 동일 함수 등록으로 공개 결과와 실제 종료를 분리했습니다. 원장 실제 work는 OAuth 반환 Promise와 외부 승인 callback을 관찰하고, 내장 GET/ACK 및 `createLedgerAcknowledger`는 raw fetch/read와 취소 정리가 모두 끝난 settled까지 전달합니다. timeout/abort/공개 결과만으로 슬롯을 회수하지 않으며 늦은 resolve/reject도 관찰합니다. 기존 catch가 이미 늦은 오류를 관찰하던 경로를 무조건적인 unhandled 오류라고 설명하지 않습니다.
+
+취소 Promise를 먼저 등록하고 대상의 cancel을 호출하여 동기 abort 재진입도 대상별 한 번으로 제한합니다. 아직 응답이 없을 때 빈 취소를 메모하지 않아 늦은 Response도 한 번 취소합니다. read와 cancel 양쪽 종료 후 reader lock을 해제하며 공개 결과의 timer/listener 정리는 별개입니다. 늦은 결과가 신규 read/승인/DB 갱신으로 이어지지 않도록 기존 중단·lease 검사를 유지합니다. 정리 Promise가 영구 미완료이면 해당 슬롯도 남아 추가 누적을 막습니다. `close()`는 외부 작업을 강제로 끝내거나 drain 완료를 보장하는 API가 아닙니다. [Node 공식 Web Streams의 cancel/reader/lock 계약](https://nodejs.org/api/webstreams.html#class-readablestreamdefaultreader)을 참고했습니다.
+
+이 한도8은 개별 Promise/소켓 총8개나 성능 보장이 아닙니다. process 그룹에서 내장 GET 최대2회/ACK 최대1회, 재시도 그룹에서 GET 최대1회/ACK 최대1회이며 이들 정리가 같은 그룹에 속합니다. 독립 cap들을 합쳐 전체8이라고 표현하는 구조가 아닙니다. 임의 async wrapper나 외부 주입 함수가 내부 작업을 분리하고 먼저 반환하면 반환 Promise까지만 관찰할 수 있습니다. WeakMap 등록은 수명 전달 방식이며 인증/권한 보장이 아닙니다. standalone adapter 호출·`reconcileVoided`·다른 원장 인스턴스·다른 프로세스는 이 상한의 대상이 아닙니다. 공개 CommerceService/HTTP·앱/SDK에는 연결하지 않았고 운영 사고 관측이나 실제 Google OAuth/구매 검증 완료도 아닙니다.
+
+### 검증 범위와 보존 근거
+
+새36개 회귀는 합성 deferred와 fake timer로 OAuth/외부 ACK/ACK 직전 OAuth·내장 GET/ACK fetch/read/cancel의 미협조와 늦은 resolve/reject, read-first/cancel-first, 정상 결과 뒤 cancel만 미완료, 늦은 Response의 취소1회와 lock 해제, 동기 abort 재진입, 포화 시 DB/시도 불변과 배치 processed, 기본8/설정 경계·snapshot/profile·max1 중첩 및 외부 wrapper 신뢰 경계를 확인합니다. 기존 구매 중복·프로세스 재시작·통산5회/lease·회수 회귀도 관련/전체에 포함했습니다. 9,999+1ms는 [Vitest 공식 fake timer/비동기 시간 진행](https://vitest.dev/api/vi.html#vi-advancetimersbytimeasync)을 사용하며 실제10초 대기를 추가하지 않았습니다.
+
+| 단계 | 결과 |
+|---|---|
+| 최초 타입·관련 초안 | 타입 통과, 관련5파일402개 통과. 재진입/OAuth 회귀4개 추가 전 결과이며 최종 성공 개수에 합산하지 않습니다. |
+| 최종 관련 · 16:53:33 KST 시작 | `npm test -- tests/purchase-operation-lifetime.test.ts tests/server-commerce.test.ts tests/google-play-acknowledge.test.ts tests/purchase-ledger.test.ts tests/purchase-revocation.test.ts` · 5파일406/406, exit0. |
+| 최신 전체 · 16:53:59 KST 시작 | `npm test` · 33파일2,303/2,303, exit0, 45.59초. 이 소스의 전체 실행은1회이며 이전 실행/CI와 합산하지 않습니다. |
+| 타입·원본·스토어 | `npm run typecheck`, `store:check`, `store:test`12/12, `assets:check` 모두 exit0. 전체/앱/서버 타입을 포함합니다. |
+| 빌드·정적 확인 | `build:test→build` 모두 exit0, 각각 flags3개 true/false. 최종 production flags3false와 src/dist 서버 마커0, diff와 신규 파일 후행공백, 변경 범위6파일/기존 문서 전체 보존을 checkpoint에서 확인했습니다. 기존 Vite500kB 청크 경고와 Node 타입 변환 실험 경고는 남습니다. |
+
+검사 기본5초·파일 worker2·기존 내부 경합8, 업무 assertion/retry/CI는 변경하지 않았습니다. **SQLite 잠금 대기는 원장별 기존값을 유지합니다: 구매5000ms, Reward/Round/Inbox500ms**이며 일반 테스트 기본5초와 별개입니다. 원장 query/attempt 공개 기한은 각각10초, lease60초, 통산5회와 기존 cooldown·상품/환경/소유자·DB schema/profile·승인/환불 정책도 유지했습니다. #122의 과거 PR/main 실패 및 간헐 원장 문제는 미해결 기록으로 보존하고 이번1회 전체 성공으로 해결 처리하지 않습니다.
+
+| 최종 소스 LF SHA-256 | 값 |
+|---|---|
+| `server/commerce/purchaseLedger.ts` | `963ae44a79df034510e101c2f216c801e0c3b7e4af37666c111bb55e03992d5a` |
+| `server/commerce/googlePlayPurchase.ts` | `a78ee10bd8f32fd5f0c2306f7f4bc63fbf9018b1fc2cc8c1a0ac01230e77fe0b` |
+| `server/commerce/googlePlayAcknowledge.ts` | `31985f96536d15f2b52c21dbde644674b8a1e08f3507270f4881977675f54c5e` |
+| `server/commerce/operationLifetime.ts` | `37a25cb54d2f15a3d224429e46680ca2d60b5842258579744120104db0080dff` |
+| `tests/purchase-operation-lifetime.test.ts` | `7830ec8778606761de41bca5130ef3a543482e4cdc3abe6b6336dd20adb05692` |
+
+Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-134`에 전체/정적/스토어/에셋/빌드 원문 로그·두 빌드 flags·소스 LF SHA·최종 checkpoint/번들 byte SHA를 보존합니다. `source-before-checks.json`의 최초 LF SHA 수집은 관련/전체 뒤16:55:05 KST이며 이후 정적/빌드 검사와 최종 checkpoint에서 일치를 확인합니다. 그 전 관련/전체는 위 명령·시각·기준 main/미커밋 변경으로 구분하고 실행 시작 시점 SHA를 수집했다고 주장하지 않습니다. 코드·검사 소스는 최종 관련 이후 변경하지 않았습니다. checkpoint에서 멈춘 뒤 총괄이 같은 소스5개 LF SHA, 관련5파일406/406과 전체/앱/서버 타입, 기존 배포3개 bundle byte 일치·diff 및 소스/별도 읽기 검토에서 확정 결함 없음을 독립 확인했습니다. 이 승인에 따라 한국어 커밋·푸시·Ready PR을 제출하며 병합/정리는 총괄이 담당합니다. APK/AAB·Android sync·버전·폰/전달·Drive/Play Console·상품·실계정/키/env·최종 오디오 믹스·공개 배포는 수행하지 않았습니다. 단말·실서비스·스토어/출시 검증은 #73 미완료이며 현재 사용자 조치와 질문은 없습니다.
+
 ## 현재 통합 상태 · 2026-10-18 · #129
 
 구현 검증 기준은 main `dc210437bc3ec02b07cc2e86cd4ebb430ac891bc`입니다. [main CI39108513692](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39108513692)의 **Node22·24가 각각32파일2,267개와 타입·스토어12개·두 웹 빌드 검사를 통과**했습니다. 실행 로그의 각2,267 passed를 직접 확인했습니다. 아래 제출 전·현재·미구현 표현은 각 작업 당시의 이력이며 이 통합 현황과 GitHub 최신 근거를 우선합니다. 현재 #129는 누적 브라우저 확인과 기존 기록 정리이며 제품·Android·의존성·버전·오디오를 변경하지 않습니다.
