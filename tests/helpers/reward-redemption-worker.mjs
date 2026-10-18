@@ -3,10 +3,18 @@ import {parentPort,workerData} from 'node:worker_threads';
 import {RewardLedger} from '../../server/ads/rewardLedger.ts';
 import {RoundLedger} from '../../server/game/roundLedger.ts';
 import {createTrace,step,recordError,resultAt,withSqliteDiagnostics} from './ledgerDiagnostics.ts';
+import {retryLedgerOpen} from './ledgerOpenRetry.ts';
 function execute(data,diagnostic){
   let reward,round;
   try{
-    reward=step(diagnostic,'reward-open',()=>new RewardLedger({databasePath:data.rewardPath,serverKey:new Uint8Array(data.rewardKey),policy:data.policy,dependencies:{now:()=>data.now,transport:async()=>{throw new Error('통신 금지');}}}));
+    const retryEnabled=!!parentPort&&data.diagnostics===true&&data.retryConstructorBusy===true;
+    const onRetry=retryEnabled&&data.notifyConstructorBusy===true?attempt=>{
+      const shared=data.constructorReleaseGate;if(!(shared instanceof SharedArrayBuffer)||shared.byteLength!==4)return false;
+      const gate=new Int32Array(shared);parentPort.postMessage({kind:'synthetic-open-busy',attempt});
+      // 전용 잠금 회귀만 사용합니다. 일반8worker에는 이 gate/추가 메시지가 없습니다.
+      Atomics.wait(gate,0,0,500);return Atomics.load(gate,0)===1;
+    }:undefined;
+    reward=retryLedgerOpen(diagnostic,'reward-open',retryEnabled,()=>new RewardLedger({databasePath:data.rewardPath,serverKey:new Uint8Array(data.rewardKey),policy:data.policy,dependencies:{now:()=>data.now,transport:async()=>{throw new Error('통신 금지');}}}),ms=>Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,ms),onRetry);
     const redeemed=step(diagnostic,'redeem',()=>reward.redeemVoucher(data.context));
     if(data.action==='redeem')return resultAt(diagnostic,redeemed);
     if(redeemed.kind!=='voucher-redeemed')return resultAt(diagnostic,redeemed);

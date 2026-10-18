@@ -1,5 +1,11 @@
 # 웹 자동 검증
 
+2026-10-18 #122 원장 후속 현재: 기준 main `75773eb9b94c865e90bfc44831ca94e57bc26cc0`·`codex/122-reward-open-busy`, 보상/Round 두 phase의 검사 전용 생성자 exact5 gate를 명시 opt-in 호출에만 적용했습니다. **최종 관련521/521·전체2,064통과/기존 callback timeout1·타입/스토어/빌드 통과, 총괄 독립검수 완료·Draft 제출 승인**입니다. 총괄 관련521개·타입/diff·6개 LF SHA/metadata·production 기준 동일 검수를 마쳤고 최신 PR/main Node22·24는 제출 후 별도 확인 대상입니다. 최신 전체는 한 번 실행했고 callback timeout의 결과/원인은 미관측으로 보존했습니다. CI rerun·기본5초/worker·운영 정책 변경은 없습니다. [두 phase 검증과 제약](android-release.ko.md#현재-작업-상태--2026-10-18--122-원장-후속)을 우선합니다. Node22 새 getter/close의 실제 동작은 후속 CI 전 미확인이며 아래 보상 한정 단계의 성공을 최신 전체 성공으로 합산하지 않습니다.
+
+2026-10-18 #122 후속 현재: 기준 main `75773eb9b94c865e90bfc44831ca94e57bc26cc0`, `codex/122-reward-open-busy`입니다. PR#128 Node22·24 성공 뒤 같은 tree의 main CI39103936163에서 Node22가2실패했고 Node24는 성공했습니다. 실제 reward-open/database-exec/native5와 정리/트랜잭션 상태를 확인한 경우에만 보상 테스트 helper 생성자를 opt-in 총3회/25ms로 재개방합니다. Round에는 재시도 없이 concurrent5개 진단을 명시했습니다. **최종 관련505/505·전체2,049/2,049·타입/스토어/빌드 통과, 커밋 전 검수 대기**이며 [단계별 실패·후속 계약](android-release.ko.md#현재-작업-상태--2026-10-18--122-후속)을 보존합니다.
+
+새 metadata는 native receiver를 WeakMap에만 두고 transactionActive/connectionClosed를 Boolean/null로, 생성 시도를 최대3개 고정 레코드로 투영합니다. 실제 로컬 Node24.21.0의 own getter·close 정상 반환과 실제 닫힘의 구분·관측 null 차단을 검사했으며 Node22 새 속성의 실제 실행은 후속 CI 전 미확인입니다. 기존5초/worker 수/CI 워크플로·운영 원장은 그대로이고 CI rerun은 하지 않았습니다. 아래 #122 최초 설명의 검증/제출 상태는 첫 진단 PR 당시 기록입니다.
+
 2026-10-18 현재 [#122 원장 검사 진단](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)은 기준 main `b9782b6c36b8abba88511cb937e80a2e07daff32`의 Node22 성공/Node24 Round 동시 생성 실패를 보존합니다. 최종 로컬 관련475개는 통과했지만 전체1회는2,018통과/기존 Round 특수 탭1실패입니다. 총괄 관련475개·타입/diff・SHA/metadata 독립검수를 마쳐 Draft 제출을 승인받았으며 최신 PR/main Node22·24는 제출 후 별도 확인 대상입니다. 이전 PR/main·다른 코드 단계·부분/단독 성공을 최신 전체 성공으로 합산하지 않습니다. 상세 근거는 [개발 기록](android-release.ko.md#현재-작업-상태--2026-10-18--122)에 있습니다.
 
 지정11개 검사는 준비 전에 `task.meta.ledgerDiagnostic`를 연결합니다. JSON이 필요하면 기존 CLI에 `--reporter=json --outputFile=<Git 밖 결과 경로>`를 지정합니다. 고정 phase·단조 상대시간·허용 kind/code/errorName 및 진단 단발 worker의 SQLite5메서드 오류 코드/설치·복원 상태만 남깁니다. 원문 SQL/인자/오류/본문/계정/키/result/snapshot/grant는 추가 출력하지 않습니다. 최종 worker 결과 미수신이면 내부 단계는 미관측이며 native 오류 없음도 저장 정상 증거가 아닙니다. Node24.21.0 실제 동작·부분 설치/복원 실패와 원래 return/throw 참조 유지를 확인했지만 Node22 실제 실행은 아직 없습니다. 원장 정책·기본5초·worker 수·CI 설정을 바꾸거나 CI를 rerun하지 않았습니다.

@@ -1,6 +1,18 @@
 # 출시까지의 개발 순서
 
-## 현재 작업 현황 · 2026-10-18 · #122
+## 현재 작업 현황 · 2026-10-18 · #122 원장 후속
+
+기준 main `75773eb9b94c865e90bfc44831ca94e57bc26cc0`, `codex/122-reward-open-busy`입니다. 확인된 Round 특수 탭7worker의 생성자 exact5 증거에 따라 보상/Round 두 phase의 검사 전용 `ledgerOpenRetry.ts` gate를 재사용했습니다. **최종 관련521/521·전체2,064통과/기존 callback timeout1·타입/스토어12/두 빌드 통과, 총괄 독립검수 완료·Draft 제출 승인**입니다. [최신 범위·실패·제약](android-release.ko.md#현재-작업-상태--2026-10-18--122-원장-후속)을 우선합니다.
+
+Round concurrent5개만 명시 opt-in이며 child/start/command/get과 보상 worker의 두 번째 RoundLedger는 재시도하지 않습니다. active/unknown/실제 닫힘 미확인은 그대로 실패합니다. 총괄은 관련521개·타입/diff·code6개 LF SHA·21metadata/56worker·실제 최대시도3/steps6/native8과 production JS/CSS 기준 동일·제품/설정 무변경을 독립 확인했습니다. 다음은 승인된10파일의 한국어 test 커밋·푸시·Draft 제출이며 최신 원격 검사·Ready/병합·정리·다음 작성권은 총괄이 담당합니다. 전체/CI 반복·테스트 조건 완화 없이 #122를 열린 상태로 둡니다. callback timeout 원인은 미확정이고 과거 Round 동일 명령 실패와 이번 생성자5를 같은 원인으로 확정하지 않습니다. Node22 새 속성의 실제 동작도 미확인입니다. 사용자 조치·질문은 없으며18시 총괄 취합입니다. Android/계정/오디오/배포 보류를 유지하며 아래 #122 후속은 이전 보상 한정 단계 기록입니다.
+
+## 현재 작업 현황 · 2026-10-18 · #122 후속
+
+기준 main `75773eb9b94c865e90bfc44831ca94e57bc26cc0`, `codex/122-reward-open-busy`입니다. 확인된 보상 생성자 BUSY5에만 검사 전용 opt-in 최대3회/추가 시도 전25ms를 적용하고, 실제 오류 당시 트랜잭션 없음·실패 연결 닫힘·close 관측/복원을 모두 확인하도록 제한했습니다. Round concurrent5개는 재시도 없이 안전 진단만 확대했습니다. **최종 관련505/505·전체29파일2,049/2,049·타입/스토어12/두 빌드 통과, 커밋 전 총괄 검수 대기**입니다. [상세 계약·모든 단계 실패·제약](android-release.ko.md#현재-작업-상태--2026-10-18--122-후속)을 우선합니다.
+
+PR#128의 두 Node 성공 후 같은 tree의 정확한 main CI39103936163은 Node22 2,017통과/2실패·Node24 성공이었습니다. worker1/5의 reward-open native5 증거와 미계측 Round 동일 명령 실패를 보존합니다. 이번 최초 관련에서도 다른 Round 특수 탭의7worker 생성자5를 관측했고 재시도/기대는 바꾸지 않았습니다. 이후 전체 성공을 과거 실패 원인 해결로 합산하지 않습니다. 다음은 source5개 LF SHA·18metadata/53worker·close/상태 음성 검증의 총괄 독립 검수이며 #122는 열린 상태입니다. Node22 새 속성 관측은 실제 CI 전 미확인입니다. 사용자 조치·질문은 없고18시 총괄 취합입니다. Android/APK/AAB/sync·버전·믹스·실계정/키/env·콘솔/상품·Drive·폰·공개 배포 보류를 유지하며 아래 현재 표현은 당시 기록입니다.
+
+## 이전 작업 현황 · 2026-10-18 · #122
 
 기준 main `b9782b6c36b8abba88511cb937e80a2e07daff32`, `codex/122-ledger-test-diagnostics`에서 [원장 실패 관측 #122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)의 테스트 전용 단계/시간/안전 결과·native SQLite 분류를 구현했습니다. **관련4파일475개 통과·최종 전체2,018통과/기존 Round 특수 탭1실패·원인 미확정·총괄 독립검수 완료·Draft 제출 승인**입니다. #120 PR#127의 두 Node 성공과 달리 정확한 병합 main CI39102714284는 Node22 성공/Node24 Round 동시 생성1실패였으며 이전 성공으로 덮지 않습니다. [단계별 실패·범위·한계·검증](android-release.ko.md#현재-작업-상태--2026-10-18--122)을 우선합니다.
 
