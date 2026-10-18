@@ -1,4 +1,55 @@
-## 현재 작업 상태 · 2026-10-18 · #121
+## 현재 작업 상태 · 2026-10-18 · #126
+
+기준 main/origin main은 `c995a001db98ef1219a71dff6fe53c10c83a9872`, 작업 브랜치는 `codex/126-ssv-node-listener`, 연결 이슈는 [#126 SSV GET 콜백 Node 수신](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/126)입니다. **SSV 동기 adapter 전용 listener와 회귀를 구현했고, 최종 관련392개·Node22 listener103개·전체31파일2,246개·전체/앱/서버 타입·스토어12개·에셋 원본·testing→production 빌드·flags3false/서버 마커0·whitespace 확인을 마쳤습니다. 커밋 전 총괄 독립검수 대기**입니다. #121은 [PR #131](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/131)에서 위 main에 반영되었고, 아래 #121 커밋/CI 대기 표현은 당시 이력입니다. 이번 작업에서 기존 game/callback HTTP·Inbox/SSV·원장·정책·CI 설정은 수정하지 않았습니다.
+
+### SSV 전용 입력·응답 계약
+
+| 항목 | #126 계약 |
+|---|---|
+| 소유 범위 | `createCallbackNodeListener(syncAdapter, options)`의 `{listener,close():void}`만 제공합니다. 서버 생성/listen·CLI·env/키 읽기·Inbox 생성/종료·processNext/worker/scheduler·외부 자원 소유권은 없습니다. |
+| 독립 상한 | `maxConcurrent` 기본8/정수1..32, `deadlineMs` 기본10,000/정수1..30,000, queue0입니다. 옵션은 생성 시 data descriptor로 snapshot/검증하며 getter/proxy/추가 필드는 고정 오류로 거절합니다. 게임 listener와 별도 cap이므로 서버 전체 합산 제한으로 주장하지 않습니다. |
+| 원문·본문 | method/raw `req.url`을 진입 시 snapshot하고 URL/URLSearchParams/decode/정렬/재인코딩하지 않습니다. 본문은0, target은 `CALLBACK_PATH.length+1+4096` 이하입니다. 정상 end/complete 전에는 adapter를 호출하지 않습니다. 게임 POST·JSON·CORS·Bearer·8KiB 본문 정책은 적용하지 않습니다. |
+| 헤더·프레이밍 | native rawHeaders에서32쌍·합계8,192byte·이름64·값4,096을 검사합니다. 합계는 이름+값+구분자4byte의 합이며 Node가 제거한 wire 공백 전체의 계측이 아닙니다. 배열 복사 전에 개수를 제한하고 불필요한 전체 복사는 하지 않습니다. CL 없음/단일 canonical `0`만 허용하고 양수413, 중복(양수 포함)/형식불량·TE·Content-Encoding·Trailer·수신 trailer는400입니다. parser의 선행 거절은 factory 판정과 구분합니다. |
+| 수신200 | 기존 adapter의 구조 적합+Inbox 내구 COMMIT 뒤200 `received`, 구조불량400 `rejected`, 저장/capacity/clock/닫힘/예외503 `unavailable`을 유지합니다. 동일 원문 digest는 terminal을 포함해 같은 ACK이며 행/attempt/보상권을 늘리지 않습니다. 다른 원문을 임의 정규화해 중복으로 합치지 않습니다. |
+| 서명·보상 | 구조 적합 오서명은 먼저200으로 저장되고 이후 worker discarded·보상권0일 수 있습니다. **수신200은 서명 검증·보상 지급 완료가 아닙니다.** 새 즉시 서명400이나 중복 전용 응답을 만들지 않았습니다. 원문 URL/서명/user_id/custom_data/키/SQL/예외를 응답·console에 노출하지 않습니다. |
+
+### 수명·취소·호스트 책임
+
+- 진입→수신 완료 대기→동기 adapter 실행→응답 종료 대기→해제를 구분합니다. `req.closed`는 수신 수명 초기값과 terminate 뒤 재확인에 쓰며, 정상 최적화의 `req.closed/destroyed`만으로 실행을 막지 않습니다. 실제 req.aborted/socket/res 중단·terminal은 별도로 검사합니다.
+- Node24.21 `optimizeEmptyRequests`는 listener 전에 readableEnded/closed/destroyed를 설정하고 data/end/close를 생략할 수 있습니다. 이미 끝난 빈 stream은 complete를 확인하고, parser callback 뒤 설정되는 경우 microtask1회에서 readableEnded&&complete를 재확인합니다. 조기 target/header 거절에서도 이미 닫힌 req의 미래 close를 기다리지 않으므로 슬롯이 남지 않습니다. [빈 readable 종료](https://github.com/nodejs/node/blob/v24.21.0/lib/_http_incoming.js#L466), [호스트 최적화 순서](https://github.com/nodejs/node/blob/v24.21.0/lib/_http_server.js#L1134), [parser complete](https://github.com/nodejs/node/blob/v24.21.0/lib/_http_common.js#L134)를 대조했습니다.
+- 절대 기한은 performance.now 기준으로 수신/호출 전후/응답 대기에 적용하며 chunk로 연장하지 않습니다. 동기 adapter에는 Promise나 AbortSignal을 전달하지 않습니다. 실행 중 COMMIT을 선점 중단하거나 완료된 COMMIT을 timeout으로 rollback하지 않으며, 실제 저장 뒤 기한 초과503이어도 동일 원문 재수신 ACK200으로 수습할 수 있음을 검사합니다.
+- 슬롯은 수신 수명+동기 실행 종료+응답 finish/close 뒤 한 번 반환합니다. 포화 검사는 지연 Promise 대신 미완료 수신/지연 finish 합성 fixture로 확인합니다. 정상 finish/정상 req.close는 keep-alive를 파괴하지 않으며, 조기 거절은 Connection: close와 단절로 무한 drain을 피합니다. 조기 오류 본문 전달과 pipelining 보존은 보장하지 않습니다.
+- 응답 선택/해제는 단발이며 UTF-8 CL과 HEAD 무본문을 적용합니다. 미전송 setHeader/실제 end 내부 writeHead/end 예외만 고정503으로 한 번 복구하고, 부분 응답·writableEnded·destroyed에는 본문을 덧붙이지 않습니다. 비동기 error/조기 res.close·중복 이벤트·멱등 close를 처리하며 close는 외부 Inbox/server를 닫지 않습니다.
+- TLS·listener 진입 전 slow header/parser 상한·연결 수·Expect/clientError/upgrade/CONNECT·공개 per-IP/속도 제한·프록시 원문 보존·로그 마스킹은 호스트 책임입니다. 실제 Google query/키 URL 통신·운영 정책/보존·한국/미국 및 연령/동의·SDK·실서비스·기기/스토어는 [#73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)에 미완료로 남깁니다.
+
+### 검증 단계와 체크포인트
+
+기준 main은 위 SHA이며 검사 기본5초·file worker2·내부8worker·제품 SQLite500ms와 재시도/assertion/CI를 완화하지 않았습니다. wire는127.0.0.1:0의 Node HTTP/raw TCP이며 브라우저·Android·실서비스 검증과 구분합니다. 합성 키/합성 transport만 사용합니다.
+
+| 단계 | 결과와 범위 |
+|---|---|
+| 최초 초안 | 관련383개 통과 후 타입4건 실패. native framing each 매개변수·mock 인수 추론·동적 메서드 indexing을 수정했습니다. 최초383개는 올바른 framing matrix/최종 소스의 성공으로 합산하지 않습니다. 당시 미커밋 LF SHA·정확한 시작/끝은 미수집이며 기준 main/단계·JSON·타입 원문을 보존했습니다. |
+| 상한/중복CL 보강 | 실제 wire의 상한±1/정확값과 양수 포함 중복CL400 우선을 추가한 관련392/392, Node22.20 listener103/103 통과입니다. 제품 LF SHA는 아래와 같고 당시 검사 SHA는 `b04e532917bfd04a68d0a203d561fcdbd3d31e981b7a190168bfd0ebdecd73cd`입니다. |
+| 정리 보강 전 전체 | 16:19:16~16:20:01, 전체31파일2,246/2,246 통과입니다. 아래 최종 정리 보강 후 검사와 별도 버전이며 합산하지 않습니다. |
+| 실패 경로 정리 보강 | 읽기 검수의 테스트 helper 보강입니다. 실제 누수 관측/제품 결함이 아닙니다. 폴더 생성 직후 cleanup을 등록해 키/원장/claim/Inbox 중간 실패에도 자원을 정리하고, raw/send client와 accepted server socket을 생성 시 추적하여 destroy·close 관찰 뒤 server.close를 완료합니다. |
+| 정리 보강 후 관련·Node22 | 16:20:21~16:20:34 관련392/392, 16:20:34~16:20:36 Node22.20 listener103/103 통과입니다. Node22에는 optimizeEmptyRequests가 없어 true 옵션도 일반 빈 stream 경로이며 Node24 최적화 수명 검증과 구분합니다. Node22 전체/최신 PR CI 성공으로 확대하지 않습니다. |
+| 정리 보강 후 최종 전체 | 16:20:47~16:21:34, 최신31파일2,246/2,246 통과입니다. 이 최종 검사 소스로 전체를 한 번 실행했으며 정리 보강 전 전체 성공과 합산하지 않습니다. |
+| 타입·스토어·에셋 | 16:21:34~16:21:38 전체/앱/서버 타입·store:check·store:test12개·assets:check 통과입니다. |
+| 빌드 실행기 실패·복구 | 최초 build:test는 하위 npm의 PATH 누락으로 exit1/약0.16초에 중단했습니다. 제품/환경 파일을 바꾸지 않고 QA 자식 프로세스 PATH만 보완하여 16:21:53~16:22:02 testing→production 빌드가 통과했습니다. 두 빌드 각각 flags3개 true/false를 보존했고 마지막 production은 모두false입니다. 기존 Vite500kB 청크 경고는 남습니다. |
+| 정적 체크포인트 | src/dist의 서버 마커 파일0건, tracked diff 및 신규 파일 LF snapshot whitespace 진단0건을 확인했습니다. QA 첫 정적 도우미가 tracked CRLF 문서에도 core.autocrlf=false를 적용해 CR을 trailing whitespace로 오인한 실패를 별도 보존했습니다. tracked는 저장소 기본 diff, 신규 파일은 Git 밖 LF snapshot no-index diff(exit0/1·진단없음)로 확인했으며 저장소 설정은 변경하지 않았습니다. |
+
+신규 listener103개는 실제 빈 GET 최적화 on/off·CL 없음/0·keep-alive·microtask 전 factory/socket 중단·조기 cap 거절 후 슬롯 회수, 원문 query/순서/%/+·native framing과 factory 경계·wire/합성 상한±1/정확값, 실제 COMMIT 실패 rollback/503/행0·Inbox 재시작 terminal 중복·오서명200→discarded/보상0, 동기 실행 후 timeout에도 저장행 보존, 수신/응답/동기 재진입 close·포화·기한·쓰기 실패·비노출을 포함합니다.
+
+최종 제품/검사 LF 정규화 UTF-8 SHA-256은 다음과 같습니다. 관련·전체·타입·빌드 결과를 다른 소스 버전의 성공으로 합산하지 않습니다.
+
+| 파일 | LF SHA-256 |
+|---|---|
+| `server/ads/callbackNodeListener.ts` | `06ae948f1b6d13b3dbe7e958cd93b07dbadc08f3291d556162d647096c514020` |
+| `tests/callback-node-listener.test.ts` | `909dce993aff4bfa8f681af2407eed98aac9989b6e8172a9b11cb5f884a10169` |
+
+Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-126`에 원문 로그·각 JSON·명령/UTC 시작/끝/exit·단계별 소스 LF SHA와 checkpoint를 보존합니다. `initial-typecheck.log`, `related-initial/typed.json`, `related/related-final/related-cleanup`, `node22/node22-cleanup`, `full/full-cleanup`, `checks-*`/`builds-*`/`build-info-*`, `whitespace-config-initial.log`는 서로 다른 단계입니다. 커밋·푸시·PR은 총괄 독립검수/승인 전 수행하지 않습니다. APK/AAB·Android sync·버전·폰/전달·Drive/Play Console·상품·실계정/키/env·최종 오디오 믹스 변경은 하지 않았으며 사용자 조치/질문은 없습니다.
+
+## 이전 작업 상태 · 2026-10-18 · #121
 
 기준 main/origin main은 `f1660bda2c797f62bf5119eb642c4f4fbb5e4aba`, 작업 브랜치는 `codex/121-game-node-listener`입니다. [제한된 게임 Node 요청 수신 #121](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/121)의 **구현·로컬 검사 완료 / 커밋 전 총괄 독립검수 대기**입니다. 관련3파일327/327·최신 전체30파일2,143/2,143 한 번·전체/앱/서버 타입·스토어12개·에셋 원본·testing→production 빌드가 통과했습니다. 기존2,065개에 listener 신규78개를 더한 최신 전체이며 부분/이전 검사 횟수를 합산하지 않았습니다. 이전 #122는 PR#130으로 기준 main에 반영되었고, 아래 Draft/후속 CI 대기 표현은 당시 기록입니다. #122의 나머지 과거 callback timeout/다른 원인 미확정 실패는 열린 상태로 유지합니다.
 
