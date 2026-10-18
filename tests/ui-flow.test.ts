@@ -185,6 +185,73 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
 }
 
 type Pointer = { id: number; x: number; y: number };
+describe('목표·남은 이동 접근성 안내',()=>{
+  const sentences=(h:ReturnType<typeof mainHarness>)=>Array.from(h.element('#goals').innerHTML.matchAll(/<span class="sr-only">([^<]+)<\/span>/g),match=>match[1]);
+  const observe=(h:ReturnType<typeof mainHarness>)=>h.run(`globalThis.liveWrites=[];globalThis.statusValue=document.querySelector('#board-keyboard-status').textContent;Object.defineProperty(document.querySelector('#board-keyboard-status'),'textContent',{get:()=>statusValue,set:value=>{statusValue=value;liveWrites.push(value);}});`);
+  it.each(['ko','en'])('%s 목표마다 남음·완료 문장 하나만 제공하고 그림·시각 숫자·체크를 장식으로 둡니다',language=>{
+    const h=mainHarness();h.run(`startLevel(1);changeLanguage('${language}')`);
+    expect(sentences(h)).toEqual(language==='ko'?['딸기 12개 남음.','당근 10개 남음.']:['Strawberry: 12 remaining.','Carrot: 10 remaining.']);
+    h.run('scene.hooks.onMove([12,0,0,0,0,0],120,1,0)');
+    expect(sentences(h)).toEqual(language==='ko'?['딸기 목표 완료.','당근 10개 남음.']:['Strawberry: complete.','Carrot: 10 remaining.']);
+    h.run('startLevel(6);scene.hooks.onMove([0,0,0,0,0,16],160,1,3)');
+    expect(sentences(h)).toEqual(language==='ko'?['꽃 목표 완료.','딸기 12개 남음.','낙엽 더미 1개 남음.']:['Flower: complete.','Strawberry: 12 remaining.','Leaf pile: 1 remaining.']);
+    h.run('scene.hooks.onMove([12,0,0,0,0,0],120,1,1)');
+    expect(sentences(h)).toEqual(language==='ko'?['꽃 목표 완료.','딸기 목표 완료.','낙엽 더미 목표 완료.']:['Flower: complete.','Strawberry: complete.','Leaf pile: complete.']);
+    const html=h.element('#goals').innerHTML;
+    expect(html.match(/alt=""/g)).toHaveLength(3);expect(html.match(/<strong aria-hidden="true">/g)).toHaveLength(3);expect(html).not.toMatch(/aria-live|role="status"/);
+  });
+  it.each(['ko','en'])('%s 최종 이동 집계 뒤에만 요약하고 같은 상태는 다시 쓰지 않습니다',language=>{
+    const h=mainHarness();h.run(`startLevel(1);changeLanguage('${language}');globalThis.stateReads=0;globalThis.access={available:false,busy:true};scene.keyboardState=()=>{stateReads++;return access;};updateBoardAccess();`);observe(h);const reads=h.run('stateReads');
+    h.run('scene.hooks.onMove([3,0,0,0,0,0],30,2,0)');
+    expect(h.run('liveWrites')).toEqual([]);expect(h.run('stateReads')).toBe(reads);
+    h.run('scene.hooks.onBoardState()');
+    expect(h.run('liveWrites')).toEqual([]);
+    h.run('access={available:true,busy:false,cursor:{row:0,col:0},tile:{kind:0},layers:0,selected:{row:1,col:2}};scene.hooks.onBoardState()');
+    const status=h.element('#board-keyboard-status').textContent;
+    expect(status).toContain(language==='ko'?'남은 이동 25회. 딸기 9개 남음. 당근 10개 남음.':'Moves remaining: 25. Strawberry: 9 remaining. Carrot: 10 remaining.');
+    expect(status).toContain(language==='ko'?'선택한 칸: 2행 3열.':'Selected: row 2, column 3.');
+    expect(h.run('liveWrites')).toEqual([status]);
+    h.run('updateGoals();updateBoardAccess();scene.hooks.onBoardState();syncActivity()');expect(h.run('liveWrites')).toEqual([status]);
+  });
+  it.each(['ko','en'])('%s 낙엽 두 겹에서 한 겹이 되어도 남은 더미 수를 줄이지 않습니다',language=>{
+    const h=mainHarness();h.run(`startLevel(6);changeLanguage('${language}');scene.engine.leaves[2][2]=1;scene.hooks.onMove([0,0,0,0,0,0],0,1,0);scene.keyboardState=()=>({available:true,cursor:{row:2,col:2},tile:{kind:0},layers:scene.engine.leaves[2][2]});scene.hooks.onBoardState()`);
+    expect(sentences(h).at(-1)).toBe(language==='ko'?'낙엽 더미 4개 남음.':'Leaf pile: 4 remaining.');
+    expect(h.element('#board-keyboard-status').textContent).toContain(language==='ko'?'낙엽 남은 겹: 1.':'Leaf layers remaining: 1.');
+    expect(h.element('#board-keyboard-status').textContent).toContain(language==='ko'?'낙엽 더미 4개 남음.':'Leaf pile: 4 remaining.');
+    h.run('scene.engine.leaves[2][2]=0;scene.hooks.onMove([0,0,0,0,0,0],0,1,1);scene.hooks.onBoardState()');
+    expect(sentences(h).at(-1)).toBe(language==='ko'?'낙엽 더미 3개 남음.':'Leaf pile: 3 remaining.');
+  });
+  it.each(['busy','finished','modal','hidden','pending','settings'])('%s에서는 요약을 배제하고 기존 짧은 상태·입력 차단을 유지합니다',reason=>{
+    const h=mainHarness(false,false,false,false,undefined,false);h.frame();h.run(`scene.keyboardState=()=>({available:${reason!=='busy'&&reason!=='finished'},busy:${reason==='busy'},finished:${reason==='finished'}});`);
+    if(reason==='modal')h.element('#tutorial-dialog').open=true;
+    if(reason==='hidden')h.run('document.hidden=true');if(reason==='pending')h.run('boardPending=true');if(reason==='settings')h.run("route='settings'");
+    h.run('updateBoardAccess()');expect(h.element('#board-keyboard-status').textContent).toBe(reason==='busy'?'Resolving the move. Please wait.':reason==='finished'?'Round finished.':'Board is not available.');
+    expect(h.element('#game-canvas').tabIndex).toBe(reason==='busy'?0:-1);
+  });
+  it.each(['ko','en'])('%s 저장 복원과 언어 전환이 같은 회차의 이동·목표를 안내합니다',language=>{
+    const h=mainHarness();h.run(`save.highestLevel=6;startLevel(6);changeLanguage('${language}');moves=8;collected=[12,0,0,0,0,5];clearedLeaves=2;scene.engine.leaves[2][2]=0;scene.engine.leaves[2][5]=0;checkpoint()`);
+    const next=mainHarness(false,false,false,false,h.stored());
+    expect(next.element('#board-keyboard-status').textContent).toContain(language==='ko'?'남은 이동 8회. 꽃 11개 남음. 딸기 목표 완료. 낙엽 더미 2개 남음.':'Moves remaining: 8. Flower: 11 remaining. Strawberry: complete. Leaf pile: 2 remaining.');
+    const before=next.run('JSON.stringify({moves,collected,clearedLeaves,round})');next.run(`changeLanguage('${language==='ko'?'en':'ko'}')`);
+    expect(next.run('JSON.stringify({moves,collected,clearedLeaves,round})')).toBe(before);
+    expect(next.element('#board-keyboard-status').textContent).toContain(language==='ko'?'Moves remaining: 8.':'남은 이동 8회.');
+    expect(sentences(next).at(-1)).toBe(language==='ko'?'Leaf pile: 2 remaining.':'낙엽 더미 2개 남음.');
+  });
+  it.each(['ko','en'])('%s +5 이어하기의 이른 상태 콜백은 요약하지 않고 창을 닫은 뒤 새 값만 읽습니다',language=>{
+    const h=mainHarness(false,false,true);h.run(`startLevel(6,true);changeLanguage('${language}');moves=1;scene.hooks.onMove([0,0,0,0,0,0],0,1,0)`);h.flushResults();observe(h);
+    h.run('scene.resumeAfterFailure=()=>{scene.stopped=false;scene.hooks.onBoardState();globalThis.earlyStatus=document.querySelector("#board-keyboard-status").textContent;return true;}');
+    h.element('#result-continue').onclick();
+    expect(h.run('earlyStatus')).toBe(language==='ko'?'지금은 보드를 조작할 수 없어요.':'Board is not available.');
+    const status=h.element('#board-keyboard-status').textContent;
+    expect(status).toContain(language==='ko'?'남은 이동 5회. 꽃 16개 남음.':'Moves remaining: 5. Flower: 16 remaining.');
+    expect(h.run('liveWrites').filter((value:string)=>value.includes(language==='ko'?'남은 이동':'Moves remaining'))).toEqual([status]);
+  });
+  it.each(['ko','en'])('%s 마지막 이동으로 완료하면 목표 문장은 남기고 보드에는 종료만 안내합니다',language=>{
+    const h=mainHarness();h.run(`startLevel(1);changeLanguage('${language}');moves=1;scene.hooks.onMove([12,10,0,0,0,0],220,1,0);scene.hooks.onBoardState()`);
+    expect(h.run('moves')).toBe(0);expect(h.element('#board-keyboard-status').textContent).toBe(language==='ko'?'회차가 끝났어요.':'Round finished.');
+    expect(sentences(h)).toEqual(language==='ko'?['딸기 목표 완료.','당근 목표 완료.']:['Strawberry: complete.','Carrot: complete.']);
+  });
+});
 describe('시험 실패 회차 이어하기',()=>{
   const fail=(h:ReturnType<typeof mainHarness>)=>{h.run('moves=1;scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');h.flushResults();};
   const setup=()=>{const h=mainHarness(false,false,true);h.run('startLevel(6,true)');fail(h);return h;};

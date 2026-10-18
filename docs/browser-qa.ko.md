@@ -1,3 +1,13 @@
+## 2026-10-18 · 목표 완료·남은 이동 접근성 (이슈 #120)
+
+기준 main `013188d3286166d2bd187c6372ff1773a7449cb8`, `codex/120-goal-accessibility`의 **로컬 검증·총괄 독립검수 완료·Ready PR 제출 승인** 상태입니다. 최신 PR/main Node22·24 CI는 제출 뒤 별도 확인 대상입니다. 총괄이 AX 추출의 목표 영역 StaticText1회/장식 이미지 제외와 production4화면 각5확인·5AX·pageerror0을 독립 대조하고 KO320×568 일부완료 PNG의 체크·더미3·화면 배치를 직접 검토했습니다. 각 목표는 KO/EN 남음 또는 완료 문장 하나를 sr-only로 제공하고, 그림은 빈 alt·시각 숫자/체크는 aria-hidden으로 둡니다. 기존 board-keyboard-status는 available일 때 현재 칸/선택 뒤에 남은 이동·목표 요약을 붙입니다. 목표 영역의 문장 한 번과 별도 보드 요약의 같은 문장은 각각 의도된 탐색/상태 안내이며, 페이지 전체 문자열 출현 수 한 번을 요구하지 않습니다.
+
+신규 `scripts/goal-accessibility-qa.mjs`는 실제 dist를 별도 headless Chrome context/합성 origin `http://goals.pawblossom.invalid`에 제공하며 응답에 Game 관찰 참조만 추가합니다. seed42 정상6스테이지 저장 복원, 열매 수집/낙엽2→1·제거/전체완료 및 시험 실패 준비는 명시적 fixture입니다. 앱의 판정·상태 콜백을 대체하지 않으며 이후 Tab·Enter·Escape·방향키·Space 교환/연쇄/입력 차단, 언어 버튼, 시험 이어하기 버튼은 실제 입력입니다. 두 겹→한 겹의 더미4 유지와 현재 칸 겹1, 일부완료/더미3, 저장 재로드, 언어 왕복, 최종 이동1회 차감·busy 요약 배제와 같은 상태 재통지의 DOM 무쓰기를 확인했습니다. VM은 updateGoals의 live 무쓰기/상태 재조회 없음, 마지막 이동 완료와 +5 초기 콜백의 모달 차단을 추가 확인합니다.
+
+Chrome **155.0.8059.80**, KO/EN × **320×568·640×360** 각4화면에서 testing **24개 순차 확인**, production **20개 순차 확인**, pageerror 각0입니다. 각 화면의 초기/겹감소/일부완료/재로드/전체완료 **5개 AX 스냅샷=총40개**에서 `#goals` 하위 비무시 StaticText가 기대 목표 문장과 정확히 같고 장식 image가0인 것을 Chrome CDP Accessibility 트리로 검사했습니다. live MutationObserver로 busy 안내와 최종 요약, 같은 상태 무쓰기를 관찰했습니다. testing의 +5는 실제 무광고 시험 버튼 경로이며 네이티브 광고/보상 SDK를 실행한 결과가 아닙니다.
+
+사진은 fullPage 없이 실제 viewport로 **testing12장·production8장**을 저장했습니다. 화면 안 canvas·목표 전체·중앙 hit test·수평 넘침0을 함께 확인했으며 KO320 일부완료/EN640 +5 화면을 직접 검토했습니다. 결과는 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-120\browser-testing` 및 `browser-production`의 summary/AX JSON/PNG입니다. context/browser는 finally에서 닫고 임시 서버를 만들지 않았습니다. 사용자5173·기존 Chrome·사용자 진행은 사용하지 않았습니다. DOM 대역과 Chrome AX 성공은 Android·폰·TalkBack 기기 검증이 아닙니다. 전체 자동/빌드/해시와 실패 이력은 [개발 기록](android-release.ko.md#현재-작업-상태--2026-10-18--120)에 보존합니다. 아래 #119 이하 기록은 당시 이력입니다.
+
 ## 2026-10-18 · 유휴 힌트 자연 만료와 복귀 (이슈 #119)
 
 기준 main `00dfc3b0b8ff77f6f40aa3376e710a4a6ed251bc`, `codex/119-idle-hint-recovery`입니다. 신규 `scripts/idle-hint-qa.mjs`는 실제 production dist를 새 headless Chrome context/합성 origin `http://hint.pawblossom.invalid`에 제공하고 Game 관찰 참조만 응답에 노출합니다. KO 합성 저장의 tutorialSeen/music/sfx만 준비하며 실제 앱의 보드/판정/타이머/시간은 대체하지 않습니다. 키보드 Enter 선택→자연7.9초 만료→Escape→7초 동안 힌트 없음→자연7.5초 이후 힌트와 선택 중 자연 만료→실제 설정 클릭/pause→복귀→새7.5초 흐름을 일반/모션 감소에서 검사합니다. Scene restart/remove와 보관한 이전 callback 재호출은 수명 경계 fixture입니다.
