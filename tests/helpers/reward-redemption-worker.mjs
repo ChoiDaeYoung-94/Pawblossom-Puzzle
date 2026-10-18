@@ -2,20 +2,22 @@
 import {parentPort,workerData} from 'node:worker_threads';
 import {RewardLedger} from '../../server/ads/rewardLedger.ts';
 import {RoundLedger} from '../../server/game/roundLedger.ts';
-function run(data){
+import {createTrace,step,recordError,resultAt,withSqliteDiagnostics} from './ledgerDiagnostics.ts';
+function execute(data,diagnostic){
   let reward,round;
   try{
-    reward=new RewardLedger({databasePath:data.rewardPath,serverKey:new Uint8Array(data.rewardKey),policy:data.policy,dependencies:{now:()=>data.now,transport:async()=>{throw new Error('통신 금지');}}});
-    const redeemed=reward.redeemVoucher(data.context);
-    if(data.action==='redeem')return redeemed;
-    if(redeemed.kind!=='voucher-redeemed')return redeemed;
-    if(data.action==='consume-stop')return {kind:'consumed',opaqueGrantId:redeemed.grant.opaqueGrantId};
-    round=new RoundLedger({databasePath:data.roundPath,serverKey:new Uint8Array(data.roundKey),environment:'test',now:()=>data.now});
-    const result=round.applyReward({ownerId:data.context.ownerId},{roundId:data.context.roundId},redeemed.grant);
+    reward=step(diagnostic,'reward-open',()=>new RewardLedger({databasePath:data.rewardPath,serverKey:new Uint8Array(data.rewardKey),policy:data.policy,dependencies:{now:()=>data.now,transport:async()=>{throw new Error('통신 금지');}}}));
+    const redeemed=step(diagnostic,'redeem',()=>reward.redeemVoucher(data.context));
+    if(data.action==='redeem')return resultAt(diagnostic,redeemed);
+    if(redeemed.kind!=='voucher-redeemed')return resultAt(diagnostic,redeemed);
+    if(data.action==='consume-stop')return resultAt(diagnostic,{kind:'consumed',opaqueGrantId:redeemed.grant.opaqueGrantId});
+    round=step(diagnostic,'round-open',()=>new RoundLedger({databasePath:data.roundPath,serverKey:new Uint8Array(data.roundKey),environment:'test',now:()=>data.now}));
+    const result=step(diagnostic,'apply',()=>round.applyReward({ownerId:data.context.ownerId},{roundId:data.context.roundId},redeemed.grant));
     // 응답 전 종료를 흉내 냅니다. DB의 COMMIT은 실제 완료되어야 합니다.
-    return data.action==='apply-stop'?{kind:'applied-response-lost'}:result;
-  }catch{return {kind:'worker-error'};}
-  finally{try{reward?.close();}catch{}try{round?.close();}catch{}}
+    return resultAt(diagnostic,data.action==='apply-stop'?{kind:'applied-response-lost'}:result);
+  }catch(error){if(diagnostic)recordError(diagnostic,error);return resultAt(diagnostic,{kind:'worker-error'});}
+  finally{step(diagnostic,'close',()=>{try{reward?.close();}catch(error){if(diagnostic)recordError(diagnostic,error);}try{round?.close();}catch(error){if(diagnostic)recordError(diagnostic,error);}});}
 }
+function run(data){const diagnostic=data.diagnostics===true?createTrace('reward-worker'):null;const result=withSqliteDiagnostics(diagnostic,()=>execute(data,diagnostic));return diagnostic?{kind:'synthetic-worker-report',result,diagnostic}:result;}
 if(parentPort){parentPort.postMessage('ready');parentPort.once('message',()=>parentPort.postMessage(run(workerData)));}
 else process.once('message',data=>{process.send?.(run(data));process.disconnect?.();});

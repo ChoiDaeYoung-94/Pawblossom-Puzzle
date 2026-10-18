@@ -7,6 +7,7 @@ import {Worker} from 'node:worker_threads';
 import {DatabaseSync} from 'node:sqlite';
 import {PurchaseLedger, type PurchaseLedgerOptions} from '../server/commerce/purchaseLedger';
 import {createLedgerAcknowledger} from '../server/commerce/googlePlayAcknowledge';
+import {createTrace,step,asyncStep,elapsed,beginPhase,childRow,safeError,type LedgerTrace} from './helpers/ledgerDiagnostics';
 
 // 실제 계정·키·구매가 아닌 합성 fixture만 사용합니다.
 const policy = {packageName: 'com.example.pawblossom', productId: 'remove_ads', purchaseOptionId: 'permanent', mode: 'production' as const};
@@ -39,12 +40,19 @@ function db(path: string) { const connection = new DatabaseSync(path); connectio
 function rows(path: string) { return db(path).prepare('SELECT * FROM purchases').all(); }
 function advance() { vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 3_600_001); }
 function data(path: string, extra = {}) { return {path, key: [...key], policy, account: owner.expectedObfuscatedAccountId, token, owner: owner.ownerId, ...extra}; }
-async function child(input: ReturnType<typeof data>) {
+async function child(input: ReturnType<typeof data>,trace?:LedgerTrace) {
+  const row=trace?childRow(trace.children.length):undefined;if(row)trace!.children.push(row);
+  let finish=trace?beginPhase(trace,'child-create'):undefined;
   const process = fork(workerUrl, [], {execArgv: ['--experimental-strip-types'], stdio: ['ignore', 'ignore', 'ignore', 'ipc']});
-  const exited = new Promise<void>(resolve => process.once('exit', () => resolve()));
-  const output = new Promise<any>((resolve, reject) => { process.once('message', resolve); process.once('error', reject); process.once('exit', code => {if (code) reject(new Error('child-failed'));}); });
-  try { process.send(input); const result = await output; await exited; return result; }
-  finally { if (process.exitCode === null) {process.kill(); await exited;} }
+  if(row){row.createdAtMs=elapsed(trace!);finish!();}
+  const exited = new Promise<void>(resolve => process.once('exit', code => {if(row){row.exitAtMs=elapsed(trace!);row.exitCode=code;}resolve();}));
+  const output = new Promise<any>((resolve, reject) => { process.once('message', value=>{if(row)row.resultAtMs=elapsed(trace!);resolve(value);});process.once('error',error=>{if(row){Object.assign(row,safeError(error));reject(new Error('합성 구매 child 실행 오류'));}else reject(error);});process.once('exit', code => {if (code) reject(new Error('child-failed'));}); });
+  try {
+    finish=trace?beginPhase(trace,'child-send'):undefined;if(row)row.sentAtMs=elapsed(trace!);process.send(input);finish?.();
+    finish=trace?beginPhase(trace,'child-result'):undefined;const result=await output;finish?.();
+    finish=trace?beginPhase(trace,'child-exit'):undefined;await exited;finish?.();return result;
+  }
+  finally { if (process.exitCode === null) {if(row)row.terminationRequested=true;process.kill();await exited;} }
 }
 async function concurrent(inputs: ReturnType<typeof data>[]) {
   const workers = inputs.map(input => new Worker(workerUrl, {workerData: input, execArgv: ['--experimental-strip-types']}));
@@ -200,17 +208,18 @@ describe('실제 파일 원장 + Google 승인 POST adapter', () => {
       expect(transport).toHaveBeenCalledTimes(1); expect(db(h.path).prepare('SELECT * FROM entitlements').all()).toHaveLength(1);
     }
   });
-  it('실제 프로세스 재시작 뒤 최신 GET로 수렴하고 POST·재지급하지 않습니다', async () => {
-    const location = path();
-    const first = await child(data(location, {httpAcknowledge: true, postStatus: 409, pending: true}));
+  it('실제 프로세스 재시작 뒤 최신 GET로 수렴하고 POST·재지급하지 않습니다', async ({task}) => {
+    const trace=task.meta.ledgerDiagnostic=createTrace('purchase-restart');const location=step(trace,'prepare',path);
+    const first = await child(data(location, {httpAcknowledge: true, postStatus: 409, pending: true}),trace);
     expect(first).toMatchObject({result: {newGrant: true, acknowledgement: 'pending'}, entitlement: true, postCount: 1});
-    db(location).exec('UPDATE purchases SET next_at=0');
-    const second = await child(data(location, {httpAcknowledge: true, action: 'retry'}));
+    step(trace,'reconcile',()=>db(location).exec('UPDATE purchases SET next_at=0'));
+    const second = await child(data(location, {httpAcknowledge: true, action: 'retry'}),trace);
     expect(second).toMatchObject({result: {processed: 1, acknowledged: 1}, entitlement: true, postCount: 0});
-    const third = await child(data(location, {httpAcknowledge: true}));
+    const third = await child(data(location, {httpAcknowledge: true}),trace);
     expect(third).toMatchObject({result: {newGrant: false, acknowledgement: 'acknowledged'}, postCount: 0});
-    expect(rows(location)[0]).toMatchObject({ack: 'acknowledged', attempts: 2});
-    expect(db(location).prepare('SELECT * FROM entitlements').all()).toHaveLength(1);
+    step(trace,'verify',()=>{expect(rows(location)[0]).toMatchObject({ack: 'acknowledged', attempts: 2});
+    expect(db(location).prepare('SELECT * FROM entitlements').all()).toHaveLength(1);});
+    expect(trace.children.every(row=>row.resultAtMs!==null&&row.exitAtMs!==null&&row.exitCode===0)).toBe(true);
   });
   it('실제 프로세스 재시작 뒤 아직 pending이면 최신 GET 후 다시 POST합니다', async () => {
     const location = path();
@@ -429,11 +438,12 @@ describe('영구 pending ack와 제한된 재시도', () => {
     expect(() => h.ledger.acknowledgementSummary()).toThrow('ledger-read-failed');
     expect(h.transport).not.toHaveBeenCalled(); expect(h.ack).not.toHaveBeenCalled();
   });
-  it('배치 한도와 잘못된 재시도 한도를 지킵니다', async () => {
-    const h = open(undefined, {acknowledge: async () => 'retry'});
-    for (let i = 0; i < 3; i++) await h.ledger.process(`${token}${i}`, owner);
-    advance(); expect(await h.ledger.retryPending(2)).toMatchObject({processed: 2});
-    for (const limit of [0, 101, 1.5, NaN]) expect(await h.ledger.retryPending(limit)).toEqual({kind: 'service-error', code: 'invalid-input'});
+  it('배치 한도와 잘못된 재시도 한도를 지킵니다', async ({task}) => {
+    const trace=task.meta.ledgerDiagnostic=createTrace('purchase-batch');const h=step(trace,'open',()=>open(undefined,{acknowledge:async()=>'retry'}));
+    for(let i=0;i<3;i++)await asyncStep(trace,'seed',()=>h.ledger.process(`${token}${i}`,owner));
+    advance();expect(await asyncStep(trace,'retry',()=>h.ledger.retryPending(2))).toMatchObject({processed:2});
+    for(const limit of [0,101,1.5,NaN])expect(await asyncStep(trace,'invalid-limits',()=>h.ledger.retryPending(limit))).toEqual({kind:'service-error',code:'invalid-input'});
+    expect(trace.steps.map(s=>s.phase)).toEqual(['open','seed','seed','seed','retry','invalid-limits','invalid-limits','invalid-limits','invalid-limits']);
   });
   it('암호문 변조는 승인/정보 노출 없이 pending을 유지합니다', async () => {
     const h = open(undefined, {acknowledge: async () => 'retry'}); await h.ledger.process(token, owner);

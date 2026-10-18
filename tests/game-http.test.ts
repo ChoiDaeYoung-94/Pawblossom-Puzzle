@@ -10,6 +10,7 @@ import {PlayFabSessionAuthenticator} from '../server/auth/playfabSession';
 import {RoundLedger,type RoundSnapshot} from '../server/game/roundLedger';
 import {CallbackInbox} from '../server/ads/callbackInbox';
 import {callback,epoch,keyResponse,policy} from './helpers/ssvFixture';
+import {createTrace,step,asyncStep,type LedgerTrace} from './helpers/ledgerDiagnostics';
 
 const fixture=JSON.parse(readFileSync(new URL('./helpers/ledger-v1-fixture.json',import.meta.url),'utf8'));
 const failed=fixture.rounds.failed as RoundSnapshot;
@@ -21,7 +22,7 @@ function request(route:keyof typeof paths='get',value:unknown={roundId:failed.ro
 }
 function authResponse(id=provider){return new Response(JSON.stringify({code:200,status:'OK',data:{IsSessionTicketExpired:false,UserInfo:{PlayFabId:id}}}),{headers:{'content-type':'application/json'}});}
 function mac(key:Uint8Array,domain:string,text:string){return createHmac('sha256',createHmac('sha256',key).update('pawblossom-round-v1\0'+domain).digest()).update(text).digest('hex');}
-function setup(gate=true){
+function setup(gate=true,trace?:LedgerTrace){
   const dir=mkdtempSync(join(tmpdir(),'pawblossom-game-http-'));dirs.push(dir);let now=epoch;
   const authKey=new Uint8Array(32).fill(53),roundKey=new Uint8Array(32).fill(67),rewardKey=new Uint8Array(32).fill(71);
   const ownerId=createHmac('sha256',authKey).update(JSON.stringify(['pawblossom-session-v1','pawblossom.example','1A2B3','test','owner',provider])).digest('hex');
@@ -42,7 +43,7 @@ function setup(gate=true){
     authTransport:transport,round:{databasePath:roundPath,serverKey:roundKey,environment:'test',now:()=>now},
     reward:{databasePath:rewardPath,serverKey:rewardKey,policy,dependencies:{now:()=>now,transport:async()=>keyResponse()}},
     rewardAdUnit:policy.adUnits[0],allowRewardClaim:()=>gate};
-  function open(config?:GameHttpOptions){const service=new GameService(options);resources.push(service);return {service,http:createGameHttpAdapter(service,config)};}
+  function open(config?:GameHttpOptions){const service=step(trace??null,'service-open',()=>new GameService(options));resources.push(service);return {service,http:step(trace??null,'adapter-create',()=>createGameHttpAdapter(service,config))};}
   return {dir,transport,options,open,setTime:(v:number)=>now=v};
 }
 afterEach(()=>{vi.restoreAllMocks();for(const r of resources.splice(0).reverse())try{r.close();}catch{}
@@ -158,8 +159,12 @@ describe('원문 경로·헤더·실제 본문 제한',()=>{
     const f=setup(),{http}=f.open(),body=bytes({roundId:failed.roundId});structuredClone(body.buffer,{transfer:[body.buffer]});
     expect(await http({...request(),body})).toMatchObject({status:400,body:'{"code":"invalid-request"}'});expect(f.transport).not.toHaveBeenCalled();
   });
-  it.each([new Uint8Array(new SharedArrayBuffer(2)),new Proxy(new Uint8Array(2),{}),new Uint16Array(2),'{}',{},null])('실제 단독 Uint8Array 외 본문 %# 거절',async body=>{
-    const f=setup(),{http}=f.open();expect((await http({...request(),body})).status).toBe(400);expect(f.transport).not.toHaveBeenCalled();
+  it.for([new Uint8Array(new SharedArrayBuffer(2)),new Proxy(new Uint8Array(2),{}),new Uint16Array(2),'{}',{},null].map((body,caseIndex)=>({body,caseIndex})))('실제 단독 Uint8Array 외 본문 %# 거절',async({body,caseIndex},{task})=>{
+    const trace=task.meta.ledgerDiagnostic=createTrace('http-body');trace.caseIndex=caseIndex;
+    const f=step(trace,'fixture',()=>setup(true,trace)),{http}=f.open();trace.authCallCount=f.transport.mock.calls.length;
+    try{const response=await asyncStep(trace,'adapter-call',()=>http({...request(),body}));trace.status=response.status;expect(response.status).toBe(400);expect(f.transport).not.toHaveBeenCalled();}
+    finally{trace.authCallCount=f.transport.mock.calls.length;}
+    expect(trace.steps.map(s=>s.phase)).toEqual(['fixture','service-open','adapter-create','adapter-call']);
   });
   it.each(['transfer-encoding','content-encoding','trailer'])('호스트에서 해결해야 할 %s 거절',async name=>{
     const f=setup(),{http}=f.open();expect((await http({...request(),headers:[...(request().headers as string[][]),[name,'x']]})).status).toBe(400);expect(f.transport).not.toHaveBeenCalled();
