@@ -1,6 +1,12 @@
 # 출시까지의 개발 순서
 
-## 현재 작업 현황 · 2026-10-18 · #119
+## 현재 작업 현황 · 2026-10-18 · #122
+
+기준 main `b9782b6c36b8abba88511cb937e80a2e07daff32`, `codex/122-ledger-test-diagnostics`에서 [원장 실패 관측 #122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)의 테스트 전용 단계/시간/안전 결과·native SQLite 분류를 구현했습니다. **관련4파일475개 통과·최종 전체2,018통과/기존 Round 특수 탭1실패·원인 미확정·총괄 독립검수 완료·Draft 제출 승인**입니다. #120 PR#127의 두 Node 성공과 달리 정확한 병합 main CI39102714284는 Node22 성공/Node24 Round 동시 생성1실패였으며 이전 성공으로 덮지 않습니다. [단계별 실패·범위·한계·검증](android-release.ko.md#현재-작업-상태--2026-10-18--122)을 우선합니다.
+
+총괄은 관련475개·타입/diff·코드7개 LF SHA·11metadata/24worker와 production JS/CSS3개 #120 기준 SHA 동일·제품/설정 무변경을 독립 확인했습니다. 다음은 승인된11파일의 한국어 test 커밋·푸시·Draft PR 제출이며 최신 PR/main Node22·24·Ready/병합·정리는 총괄이 담당합니다. 최종 지정11개/24worker는 관측 설치·복원 성공/native 오류0개였지만 기존 미계측 실패의 원인을 설명하지 않습니다. 앞선 다른 코드 단계의 보상3worker/콜백 실패도 보존하며 callback의 busy 분류는5/6을 묶은 값입니다. 전체/CI 단순 재실행·원장/재시도/timeout/worker/assertion 완화 없이 #122를 열린 상태로 유지합니다. 전체/앱/서버 타입·스토어12개·testing→production 빌드·diff·flags3개false·서버/진단 번들 마커0건은 통과했습니다. 사용자 조치·질문은 없고18시 총괄 취합입니다. APK/AAB·sync·버전·최종 믹스·계정/키/env·Drive/콘솔/상품·폰·공개 배포 보류를 유지하며 아래 현재 표현은 당시 기록입니다.
+
+## 과거 작업 현황 · 2026-10-18 · #119
 
 기준 main `00dfc3b0b8ff77f6f40aa3376e710a4a6ed251bc`, `codex/119-idle-hint-recovery`입니다. [유휴 힌트 복구 #119](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/119)는 선택 중 만료 후 Escape·화면 복귀에서 새7.5초를 예약하며 CREATE/onReady·pause/sleep·종료/재시작과 이전 타이머 callback을 보호합니다. 전체29파일/1,999개(기존1,959+신규40) 한 번·관련 보드154개·전체/앱/서버 타입·스토어12개·원본·testing→production 빌드가 통과했습니다. [구현·검증·최초 fixture/QA 실패 보존](android-release.ko.md#현재-작업-상태--2026-10-18--119), [자연 시간 브라우저](browser-qa.ko.md#2026-10-18--유휴-힌트-자연-만료와-복귀-이슈-119)를 우선합니다.
 

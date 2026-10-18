@@ -3,13 +3,14 @@ import {mkdtempSync,readFileSync,readdirSync,rmSync} from 'node:fs';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {createHash,createHmac} from 'node:crypto';
-import {DatabaseSync} from 'node:sqlite';
+import {DatabaseSync,StatementSync} from 'node:sqlite';
 import {fork} from 'node:child_process';
 import {Worker} from 'node:worker_threads';
 import {BoardEngine} from '../src/core/BoardEngine';
 import {RoundLedger,type RoundLedgerOptions,type RoundSnapshot,type RoundCommandRequest} from '../server/game/roundLedger';
 import {advanceState,publicState,startState,type RoundState} from '../server/game/roundState';
 import {PlayFabSessionAuthenticator} from '../server/auth/playfabSession';
+import {createTrace,step,asyncStep,elapsed,workerRow,observeWorker,receiveWorker,terminateWorker,workerFailure,safeRows,safeError,withSqliteDiagnostics,type LedgerTrace} from './helpers/ledgerDiagnostics';
 const key=new Uint8Array(32).fill(67),epoch=1_792_233_000_000,owner={ownerId:'synthetic-round-owner-private'};
 const dirs:string[]=[],ledgers:RoundLedger[]=[],dbs:DatabaseSync[]=[],workers:Worker[]=[];
 const workerUrl=new URL('./helpers/round-ledger-worker.mjs',import.meta.url);
@@ -36,14 +37,14 @@ async function child(input:ReturnType<typeof data>){
   const output=new Promise<any>((resolve,reject)=>{process.once('message',resolve);process.once('error',reject);process.once('exit',code=>{if(code)reject(new Error('child-failed'));});});
   try{process.send(input);const v=await output;await done;return v;}finally{if(process.exitCode===null){process.kill();await done;}}
 }
-async function concurrent(inputs:ReturnType<typeof data>[]){
-  const batch=inputs.map(value=>new Worker(workerUrl,{workerData:value,execArgv:['--experimental-transform-types']}));workers.push(...batch);
+async function concurrent(inputs:ReturnType<typeof data>[],trace?:LedgerTrace){
+  const batch=inputs.map((value,index)=>{const row=trace?workerRow(index):undefined;if(row)trace!.workers.push(row);const worker=new Worker(workerUrl,{workerData:trace?{...value,diagnostics:true}:value,execArgv:['--experimental-transform-types']});if(row)observeWorker(worker,trace!,row);return worker;});workers.push(...batch);
   const outputs:Promise<any>[]=[];
-  await Promise.all(batch.map(w=>new Promise<void>((resolve,reject)=>{
-    let receive!:(v:any)=>void;outputs.push(new Promise((yes,no)=>{receive=yes;w.on('error',no);}));
-    w.on('message',v=>v==='ready'?resolve():receive(v));w.on('error',reject);
+  await Promise.all(batch.map((w,index)=>new Promise<void>((resolve,reject)=>{
+    const row=trace?.workers[index];let receive!:(v:any)=>void;outputs.push(new Promise((yes,no)=>{receive=yes;w.on('error',error=>no(workerFailure(error,trace)));}));
+    w.on('message',v=>{if(v==='ready'){if(row)row.readyAtMs=elapsed(trace!);resolve();}else{if(row)row.resultAtMs=elapsed(trace!);receive(row?receiveWorker(v,row):v);}});w.on('error',error=>reject(workerFailure(error,trace)));
   })));
-  batch.forEach(w=>w.postMessage('go'));return Promise.all(outputs);
+  batch.forEach((w,index)=>{if(trace)trace.workers[index].goAtMs=elapsed(trace);w.postMessage('go');});return Promise.all(outputs);
 }
 function mac(domain:string,value:string){const derived=createHmac('sha256',key).update('pawblossom-round-v1\0'+domain).digest();return createHmac('sha256',derived).update(value).digest('hex');}
 function signRow(d:DatabaseSync,patch:(s:any)=>void){
@@ -64,11 +65,55 @@ function specialRound(ledger:RoundLedger,path:string){
   expect(snapshot.state.board[at.row][at.col].special).toBe('row');return {snapshot,at};
 }
 afterEach(async()=>{
-  vi.restoreAllMocks();await Promise.all(workers.splice(0).map(w=>w.terminate()));
+  vi.restoreAllMocks();await Promise.all(workers.splice(0).map(terminateWorker));
   dbs.splice(0).forEach(d=>{try{d.exec('ROLLBACK');}catch{}d.close();});ledgers.splice(0).forEach(l=>l.close());
   dirs.splice(0).forEach(p=>{const root=join(tmpdir(),'pawblossom-round-');if(!p.startsWith(root))throw new Error('unsafe-cleanup');rmSync(p,{recursive:true,force:true});});
 });
 describe('서버 영구 회차·멱등 명령 원장',()=>{
+  it('검사 진단은 미허용 문자열·원문 오류·snapshot·grant를 투영하지 않고 결과 반환을 유지',()=>{
+    const privateValue='synthetic-diagnostic-private';const result={kind:privateValue,code:privateValue,snapshot:{privateValue},grant:{privateValue}};
+    const row=workerRow(0),returned=receiveWorker({kind:'synthetic-worker-report',result,diagnostic:{phase:privateValue,resultPhase:privateValue,errorPhase:privateValue,errorName:privateValue,errorCode:privateValue,elapsedMs:Infinity,message:privateValue,stack:privateValue,cause:{privateValue},steps:[{phase:privateValue,startedAtMs:NaN,durationMs:Infinity,body:privateValue}],sqliteErrors:[{operation:privateValue,phase:privateValue,errorCode:privateValue,extendedCode:123456789,baseCode:5,sql:privateValue}]}},row);
+    expect(returned===result).toBe(true);expect(row.kind).toBe('other');expect(row.code).toBe('other');
+    expect(row.diagnostic).toEqual({phase:'unknown',elapsedMs:0,resultPhase:'unknown',errorPhase:'unknown',errorName:'other',errorCode:'other',steps:[{phase:'unknown',startedAtMs:0,durationMs:null}],sqliteErrors:[{operation:'unknown',phase:'unknown',errorCode:'other',extendedCode:null,baseCode:null}],sqliteErrorsTruncated:false,sqliteHook:{installation:'unknown',restoration:'unknown',installedMethods:0,restoreFailures:0}});
+    const error=Object.assign(new Error(privateValue),{code:privateValue,cause:{privateValue}});expect(safeError(error)).toEqual({errorName:'Error',errorCode:'other'});
+    expect(JSON.stringify(row).includes(privateValue)).toBe(false);expect(Object.keys(row)).not.toContain('result');
+    expect(receiveWorker(result,workerRow(1))===result).toBe(true);
+    for(const extendedCode of [undefined,NaN,Infinity,-1,0,1.5,29,100,101,256,65536]){const safe=workerRow(0);receiveWorker({kind:'synthetic-worker-report',result,diagnostic:{sqliteErrors:[{errorCode:'ERR_SQLITE_ERROR',extendedCode,baseCode:5}]}},safe);expect(safe.diagnostic?.sqliteErrors[0].extendedCode).toBeNull();expect(safe.diagnostic?.sqliteErrors[0].baseCode).toBeNull();}
+    const capped=workerRow(0);receiveWorker({kind:'synthetic-worker-report',result,diagnostic:{sqliteErrors:Array.from({length:10},()=>({operation:'database-exec',phase:'start',errorCode:'ERR_SQLITE_ERROR',extendedCode:261,baseCode:19}))}},capped);
+    expect(capped.diagnostic?.sqliteErrors).toHaveLength(8);expect(capped.diagnostic?.sqliteErrorsTruncated).toBe(true);expect(capped.diagnostic?.sqliteErrors.every(row=>row.extendedCode===261&&row.baseCode===5)).toBe(true);
+  });
+  it('검사 SQLite 관측은 실제 잠금 코드를 남기고 this·반환·동일 예외와 descriptor를 복원',()=>{
+    const location=file(),first=db(location),second=db(location),privateValue='synthetic-native-argument-private';
+    first.exec('CREATE TABLE diagnostic_probe(value TEXT)');first.exec('BEGIN IMMEDIATE');
+    const targets:[object,string][]=[[DatabaseSync.prototype,'exec'],[DatabaseSync.prototype,'prepare'],[StatementSync.prototype,'run'],[StatementSync.prototype,'get'],[StatementSync.prototype,'all']];
+    const descriptors=targets.map(([p,k])=>Object.getOwnPropertyDescriptor(p,k)),trace=createTrace('round-worker');
+    expect(withSqliteDiagnostics(null,()=>targets.every(([p,k],i)=>Object.getOwnPropertyDescriptor(p,k)?.value===descriptors[i]?.value))).toBe(true);
+    const sentinel={};expect(withSqliteDiagnostics(trace,()=>{second.exec('SELECT 1');const s=second.prepare('SELECT 7 AS value');expect(s.get()?.value).toBe(7);expect(s.all()).toEqual([{value:7}]);return sentinel;})===sentinel).toBe(true);
+    let emitted:unknown,observed:unknown;
+    try{step(trace,'start',()=>withSqliteDiagnostics(trace,()=>{try{second.prepare('INSERT INTO diagnostic_probe VALUES(?)').run(privateValue);}catch(error){emitted=error;throw error;}}));}catch(error){observed=error;}
+    expect(observed!==undefined&&observed===emitted).toBe(true);
+    expect(trace.sqliteErrors).toEqual([{operation:'statement-run',phase:'start',errorCode:'ERR_SQLITE_ERROR',extendedCode:5,baseCode:5}]);
+    expect(trace.sqliteErrorsTruncated).toBe(false);expect(targets.map(([p,k])=>Object.getOwnPropertyDescriptor(p,k))).toEqual(descriptors);
+    expect(trace.sqliteHook).toEqual({installation:'installed',restoration:'restored',installedMethods:5,restoreFailures:0});
+    const row=workerRow(0);receiveWorker({kind:'synthetic-worker-report',result:{kind:'worker-error'},diagnostic:trace},row);expect(row.diagnostic?.sqliteErrors).toEqual(trace.sqliteErrors);
+    expect(JSON.stringify(row).includes(privateValue)).toBe(false);expect(JSON.stringify(row).includes('diagnostic_probe')).toBe(false);
+    const originalDefine=Object.defineProperty,defineDescriptor=Object.getOwnPropertyDescriptor(Object,'defineProperty')!;
+    for(const [fault,mode] of [['install','return'],['restore','return'],['restore','throw']] as const){
+      const faultTrace=createTrace('round-worker'),restored:string[]=[],marker=new Error(privateValue);let returned:unknown,thrown:unknown,originalsAtWork=false;
+      originalDefine(Object,'defineProperty',{...defineDescriptor,value:(target:object,key:PropertyKey,descriptor:PropertyDescriptor)=>{
+        const index=targets.findIndex(([p,k])=>p===target&&k===key);
+        if(index>=0){const restoring=descriptor.value===descriptors[index]?.value;if(restoring){restored.push(String(key));if(fault==='restore'&&key==='all')throw new Error(privateValue);}else if(fault==='install'&&key==='run')throw new Error(privateValue);}
+        return originalDefine(target,key,descriptor);
+      }});
+      try{
+        try{returned=withSqliteDiagnostics(faultTrace,()=>{originalsAtWork=targets.every(([p,k],i)=>Object.getOwnPropertyDescriptor(p,k)?.value===descriptors[i]?.value);if(mode==='throw')throw marker;return sentinel;});}catch(error){thrown=error;}
+        expect(mode==='throw'?thrown===marker:returned===sentinel&&thrown===undefined).toBe(true);
+        expect(restored).toHaveLength(5);expect(faultTrace.sqliteHook).toEqual(fault==='install'?{installation:'failed',restoration:'restored',installedMethods:2,restoreFailures:0}:{installation:'installed',restoration:'failed',installedMethods:5,restoreFailures:1});
+        if(fault==='install')expect(originalsAtWork).toBe(true);expect(JSON.stringify(faultTrace).includes(privateValue)).toBe(false);
+      }finally{originalDefine(Object,'defineProperty',defineDescriptor);targets.forEach(([p,k],i)=>originalDefine(p,k,descriptors[i]!));}
+      expect(targets.map(([p,k])=>Object.getOwnPropertyDescriptor(p,k))).toEqual(descriptors);
+    }
+  });
   it('서버 난수 ID/초기 상태·인증 소유자별 생성·중복은 현재 snapshot',()=>{
     const {ledger,path}=open(),s=start(ledger);expect(s.roundId).toMatch(/^[A-Za-z0-9_-]{43}$/);expect(s.revision).toBe(0);expect(s.state).toMatchObject({moves:26,score:0,status:'active',shuffles:1});
     const newer=apply(ledger,command(ledger,s)).snapshot;
@@ -151,10 +196,11 @@ describe('서버 영구 회차·멱등 명령 원장',()=>{
     const read=open(path).ledger;expect(read.get(owner,{roundId:s.roundId})).toEqual({kind:'round-snapshot',snapshot:restarted.snapshot});
     expect(JSON.parse(String(d.prepare('SELECT state_json FROM round_rounds').get()?.state_json)).rngState).toBe(reference.state.rngState);
   });
-  it('8worker 동시 생성 중복은 생성 1회·owner+requestID 영구 공유',async()=>{
-    const {ledger,path}=open();close(ledger);const outputs=await concurrent(Array.from({length:8},()=>data(path,'start',{requestId:'concurrent',levelId:30})));
-    expect(outputs.every(r=>r.kind==='round-started')).toBe(true);expect(outputs.filter(r=>r.created).length).toBe(1);expect(new Set(outputs.map(r=>r.snapshot.roundId)).size).toBe(1);
+  it('8worker 동시 생성 중복은 생성 1회·owner+requestID 영구 공유',async({task})=>{
+    const trace=task.meta.ledgerDiagnostic=createTrace('round-parallel');const {path}=step(trace,'prepare',()=>{const h=open();close(h.ledger);return h;});const outputs=await asyncStep(trace,'workers',()=>concurrent(Array.from({length:8},()=>data(path,'start',{requestId:'concurrent',levelId:30})),trace));
+    expect(outputs.every(r=>r.kind==='round-started'),safeRows(trace)).toBe(true);expect(outputs.filter(r=>r.created).length,safeRows(trace)).toBe(1);expect(new Set(outputs.map(r=>r.snapshot.roundId)).size,safeRows(trace)).toBe(1);
     expect(db(path).prepare('SELECT count(*) AS n FROM round_rounds').get()?.n).toBe(1);
+    expect(trace.workers.every(row=>row.diagnostic?.resultPhase==='start'&&row.diagnostic.steps.some(s=>s.phase==='round-open'&&s.durationMs!==null)&&row.diagnostic.sqliteHook.installation==='installed'&&row.diagnostic.sqliteHook.restoration==='restored')).toBe(true);
   });
   it('8worker 동일 명령은 1회 적용·같은 현재 revision',async()=>{
     const {ledger,path}=open(),s=start(ledger),r=command(ledger,s);close(ledger);

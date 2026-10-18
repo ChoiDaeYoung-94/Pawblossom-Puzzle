@@ -1,4 +1,34 @@
-## 현재 작업 상태 · 2026-10-18 · #120
+## 현재 작업 상태 · 2026-10-18 · #122
+
+기준 main `b9782b6c36b8abba88511cb937e80a2e07daff32`, 브랜치 `codex/122-ledger-test-diagnostics`, [원장 검사 실패 관측 #122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)입니다. **테스트 전용 진단 구현·관련475개 통과 / 최종 로컬 전체2,018통과·기존 Round 특수 탭1실패 / 원인 미확정 / 총괄 독립검수 완료·Draft 제출 승인**입니다. 제품 오류 수정이나 전체 검사 성공으로 보고하지 않습니다. #120 PR#127의 head `ccceed33`/base `013188d`에서 Node22·24가 성공한 뒤 병합되었지만, [정확한 병합 main CI39102714284](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39102714284)는 Node22 성공·Node24 실패였습니다. 기존 Round 동시 생성 검사는1,204ms에 첫 `every(kind==='round-started')`가 false였고(29파일2,016통과/1실패·30.21초), 실제 결과 배열은 없었습니다. 원문은 Temp의 `pawblossom-main-127-failed-d0223e1bade048fcb06b052c698b8bf2.log`에 남습니다. 이전 PR/로컬 성공으로 이 main의 실패를 덮지 않습니다. 아래 #120 이하 현재/완료 표현은 당시 기록입니다.
+
+### 2026-10-18 · 안전한 단계·worker·SQLite 오류 관측 (이슈 #122)
+
+변경 범위는 검사4파일·기존 worker helper2파일·검사 전용 `ledgerDiagnostics.ts`·기존 docs4파일입니다. 보상 소비8worker2개와 Round 동시 생성8worker1개만 `diagnostics:true`의 선택적 `synthetic-worker-report` envelope를 사용합니다. 부모는 기존 `result`만 반환하므로 기존 child의 consume-stop/apply-stop/정확한 결과 비교와 일반 worker 결과 형식을 유지합니다. ready→전체 준비→go 이후 DB 개방 시점·파일 maxWorkers2·내부8worker·보상/회차500ms·구매5초 잠금 대기·기본 test5초·원래 성공/횟수 assertion·fixture·스키마·재시도는 유지합니다. 제품/원장 소스와 빌드/CI 설정은 수정하지 않습니다.
+
+준비 전에 `task.meta.ledgerDiagnostic`를 연결하고 `node:perf_hooks`의 단조 시각으로 고정 phase·시작 상대시간·완료 소요를 기록합니다. 보상은 reward-open/redeem/round-open/apply/close, 회차는 round-open/start/close이며 결과·예외 단계는 close와 별도로 보존합니다. 부모는 worker 순번·ready/go/result/exit 상대시간·kind/code·exitCode·terminationRequested를 기록합니다. afterEach 종료 요청은 이미 관측한 자연 exit를 덮지 않으며 종료 코드만으로 자연 실패를 판단하지 않습니다. 최종 결과 미수신이면 내부 phase는 미관측(null/unknown)이고 go 시각만 근거입니다. 중간 IPC/polling·추가 barrier/재시도는 없습니다.
+
+HTTP 본문6개는 같은 입력/이름/검사 수의 `it.for`로 context를 받아 caseIndex·fixture/service-open/adapter-create/adapter-call 소요·status/authCallCount만 남깁니다. fixture는 실제 SQLite 생성·FULL commit·이전을 포함하므로 느린 준비를 인증 통신5초 대기로 해석하지 않습니다. 구매 재시작은 부모의 child 생성/전송/결과/종료3회·reconcile·verify, 배치는 open·초기 process3회·retry·잘못된 한도4회만 기록하며 구매 child 내부는 바꾸지 않습니다. 설치 Vitest4.1.11 소스와 [공식 metadata 계약](https://vitest.dev/api/advanced/metadata)을 대조했고 JSON reporter의11개 실제 진단 기록을 확인했습니다.
+
+총괄의 후속 지시에 따라 진단을 켠 단발 worker의 동기 execute 전체에서만 DatabaseSync.exec/prepare와 StatementSync.run/get/all의 원래 descriptor를 저장하고 임시 wrapper를 설치합니다. Reflect.apply로 원래 this/args/return/동일 throw 객체를 전달하고 catch에서 고정 operation/현재 phase·허용 errorCode와 정수 SQLite extended/base code만 최대8개 기록합니다. `ERR_SQLITE_ERROR`의 errcode는1..65,535 정수와 하위 byte의 공식 primary1..28 조건을 확인하고 그 외는 null입니다. parent도 다시 명시 투영하고 base를 재계산합니다. [Node22 소스](https://raw.githubusercontent.com/nodejs/node/v22.x/src/node_sqlite.cc), [Node24 소스](https://raw.githubusercontent.com/nodejs/node/v24.x/src/node_sqlite.cc), [SQLite 코드 정의](https://www.sqlite.org/rescode.html)를 대조했습니다. 로컬 실제 런타임 검증은 Node24.21.0이며 Node22는 아직 실행하지 않았습니다.
+
+설치 실패는 부분 설치를 복원한 뒤 실제 작업을 한 번 실행하고, 복원은 항목별 실패에도 나머지 항목을 끝까지 시도해 원래 작업 return/throw를 덮지 않습니다. 설치/복원 고정 상태·설치 수·복원 실패 수를 남깁니다. 복원 실패 환경에서는 descriptor 복원을 보장할 수 없고 단발 worker 종료 전까지 잔존 wrapper가 있을 수 있습니다. 함수 identity/stack·미세 시간 비용도 달라지므로 완전 무간섭이나 운영 성능 지표라고 주장하지 않습니다. new DatabaseSync 자체 및 close 오류는 native5메서드 관측 밖이며 native 기록 없음은 무결성/저장 정상의 증거가 아닙니다. diagnostics:false/기존 child는 후킹하지 않습니다.
+
+metadata와 추가 assertion 설명은 명시 허용한 phase/kind/code/errorName·유한 숫자·불리언·null만 사용하고 미허용 문자열은 other/unknown/null로 바꿉니다. SQL/인자·token·owner/id·DB 경로·키·본문·errstr·원문 error.message/stack/cause·result/snapshot/grant·envelope 전체를 기록하지 않습니다. 신규2개 회귀는 비허용 문자열/숫자·원문 오류·snapshot/grant 비노출/결과 참조 유지와 실제 임시 SQLite 잠금 코드5·같은 throw 참조·descriptor 복원을 확인합니다. 부분 설치 실패/첫 복원 실패를 주입해5개 복원 시도·원래 return/throw 유지까지 확인하고, 주입 검사는 원본 defineProperty로 별도 finally 정리합니다.
+
+| 코드 단계·실행 시작(KST) | 결과와 보존한 한계 |
+| --- | --- |
+| phase 진단 초안, 15:09:59 | 전체29파일2,018개 중2,017통과/1실패·51.70초. 기존 reward-ledger의3worker `동시 다른claim/transaction 같은round 신규1회`가1,220.42ms에 두 번째 round-closed2개 기대/실제0개로 실패했습니다. 신규1회 assertion은 통과했고 meta={}·배열 없음이라 원인 미확정입니다. 관련474개는 별도 통과입니다. |
+| native 관측 추가, 15:14:37 | 전체29파일2,019개 중2,018통과/1실패·42.96초. 기존 callback-inbox8worker가3,200.56ms에 completed1·idle6·process 단계 unavailable/storage/busy1로 실패했습니다. 기존 helper는 native primary5/6을 busy로 묶으므로 BUSY5 또는 BEGIN 단계라고 확정하지 않습니다. 해당 검사/helper·기존 재시도/기대는 변경하지 않았습니다. 관련475개는 별도 통과입니다. |
+| 최종 복원 보호, 15:16:38/15:16:52 | 지정3개(안전 투영/실제 잠금·복원/Round 동시 생성) 통과·나머지124개 skip. 관련4파일 **475/475 통과**, JSON 기준25.01초입니다. 기존473+신규2이며 전체에 합산하지 않습니다. |
+| 최종 전체1회, 15:17:18 | **29파일2,019개 중2,018통과·기존 Round 특수 탭1실패**, JSON 기준46.95초. `8worker 동일 특수 탭은 정확히1회만 차감·영수증 적용`이2,198.99ms에 worker-error 포함 배열과 기대 배열이 달라 실패했습니다. 이 항목은 동일 helper지만 이번 지정 진단 옵션이 꺼진 검사로 meta={}·세부 원인 미관측입니다. |
+| 최종 진단/정적 검증 | 지정11개는 최종 전체에서도 모두 통과했고24worker의 관측5메서드 설치/복원이 성공했습니다. 이24worker의 native 오류 기록은0개입니다. HTTP6개는400/auth0, 구매 child3회 결과/exit 확인입니다. 전체/앱/서버 typecheck·store:check·store:test12개·build:test→build·diff/신규 helper 후행공백 통과, production flags3개false·src/dist 서버/진단 마커0건입니다. |
+
+각 소스 단계 변경에 필요한 전체를 한 번씩 실행했으며 같은 코드의 실패를 감추기 위한 전체 반복/CI rerun은 하지 않았습니다. 기존500kB 청크·Node 타입 변환 경고는 남습니다. 과거 HTTP/구매 timeout·보상/동시 생성·새 특수 탭 실패의 원인은 여전히 미확정이며 성공한24worker에서 native 오류가 없었다는 사실로 다른 실패를 설명하지 않습니다. #122는 열린 상태로 유지하고 후속 PR은 Refs #122로 연결합니다.
+
+최초 결과는 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-122`, 최종 명령/UTC 시각/exit code·JSON·안전 샘플·코드7파일 LF SHA-256은 같은 폴더의 `final\checkpoint.json`과 `final\verify.mjs`/각 log에 보존합니다. 중간 native JSON/log도 같은 작업 결과에 보존합니다. 총괄은 별도 관련4파일475/475·전체/앱/서버 타입·diff·코드7개 LF SHA 일치·11metadata/24worker 설치/복원24개/native 오류0개를 독립 확인했습니다. production JS/CSS3개는 #120 기준과 SHA가 같고 src/server/android/package/CI 무변경을 확인했습니다. 독립 보고서는 `C:\Users\user\AppData\Local\Temp\pawblossom-122-root-related.json`입니다. 승인된11파일의 한국어 test 커밋·푸시·Draft PR 제출 단계이며 Refs #122로 연결합니다. 최신 PR/main Node22·24·Ready/병합·정리는 총괄이 별도 판단합니다. 앱·오디오·Android/APK/AAB/sync·버전·계정/키/env·콘솔/상품·Drive·폰·공개 배포는 변경/실행하지 않았고 브라우저·실서비스·단말 검증을 새로 주장하지 않습니다. 사용자 조치·질문은 없고 총괄이18시에 취합합니다.
+
+## 과거 작업 상태 · 2026-10-18 · #120
 
 기준 main `013188d3286166d2bd187c6372ff1773a7449cb8`, 작업 브랜치 `codex/120-goal-accessibility`입니다. 목표별 KO/EN 남음·완료 문장과 기존 보드 상태의 남은 이동·목표 요약을 구현했습니다. `goalDescriptions()`는 기존 회차 집계의 목표 수에서0까지 clamp한 값을 쓰며 낙엽은 남은 **더미 수**, 현재 칸은 기존 **겹 수**를 유지합니다. 목표의 sr-only 문장 하나/그림 빈 alt/시각 숫자·체크 aria-hidden으로 중복을 막습니다. updateGoals에 live 쓰기·scene 상태 재조회를 추가하지 않았습니다. 최종 onMove 집계 뒤 busy=false→changed와 시작/복원·언어 전환, +5의 모달 해제→새 이동 값 갱신 순서를 유지했습니다. 시각 CSS·게임 판정·저장·경제·오디오·서비스 설정은 바꾸지 않았습니다.
 
