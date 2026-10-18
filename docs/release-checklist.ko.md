@@ -1,6 +1,31 @@
 # 출시까지 남은 작업
 
-## 현재 판단 기준 · 2026-10-18 · #122
+## 현재 판단 기준 · 2026-10-18 · #122 원장 후속
+
+기준 main `75773eb9b94c865e90bfc44831ca94e57bc26cc0`, `codex/122-reward-open-busy`입니다. **최종 관련521개 통과·전체2,064통과/기존 callback timeout1, 총괄 독립검수 완료·Draft 제출 승인**입니다. [두 phase 후속과 실패](android-release.ko.md#현재-작업-상태--2026-10-18--122-원장-후속)를 우선하며 아래 보상 한정 단계 성공과 합산하지 않습니다.
+
+- [x] 보상30개 유지·Round16개 추가, 새 exact5/tx=false/실제 닫힘/close·hook 복원 gate와 최대3회/25ms·phase 분리 확인
+- [x] 기존 concurrent5개 flag·child/operation 재시도 없음·RNG/행/영수증/special 조건, 관련521/521·타입/스토어12/두 빌드/diff·production flagsfalse·서버/진단 마커0건
+- [ ] 최신 전체 성공: 29파일2,065개 중 기존 callback-inbox 잠금 해제 회귀1개가5,113.09ms timeout, 결과/원인 미관측 상태를 보존
+- [x] 총괄 관련521개·타입/diff·source6개 LF SHA/21metadata/56worker·두 gate/기존 조건·production 기준 동일 독립검수와10파일 Draft 제출 승인
+- [ ] 후속 PR/정확한 Node22·24 CI·총괄 Ready/병합 판단·나머지 #122 원인 확인
+- [ ] #73 실서비스·단말·스토어 검증
+
+Node22 새 속성의 실제 실행은 미확인이며 제품/원장/500ms/5초/worker/CI·Android·계정·오디오·배포 정책은 그대로입니다. 사용자 조치·질문은 없고18시 총괄 취합입니다. 아래 #122 후속은 이전 보상 한정 단계 기록입니다.
+
+## 현재 판단 기준 · 2026-10-18 · #122 후속
+
+기준 main `75773eb9b94c865e90bfc44831ca94e57bc26cc0`, `codex/122-reward-open-busy`입니다. **최종 관련505개·전체2,049개 통과, 커밋 전 총괄 독립검수 대기**이며 [후속 계약·실패·검증](android-release.ko.md#현재-작업-상태--2026-10-18--122-후속)을 우선합니다. main CI39103936163의 Node22 2실패·과거/중간 실패를 이전 PR나 이번 전체 성공으로 덮지 않습니다.
+
+- [x] 보상 생성자 한 호출만 opt-in 총3회/25ms, 새 exact BUSY5·비트랜잭션·실제 닫힘·close/관측 복원 확인, API/operation 재시도 없음
+- [x] factory/wait·실제 잠금 해제/소진·무결성·close noop/관측 null 등 신규30개와 기존 migration/DB/영수증/RNG/child 계약, Round concurrent5개 안전 진단
+- [x] 최종 관련505/505·전체29파일2,049/2,049·전체/앱/서버 타입·스토어12개·두 빌드·diff·production flagsfalse·서버/진단 마커0건
+- [ ] 총괄 source5개 LF SHA/metadata/close gate 독립 검수·후속 커밋/Refs #122 PR·정확한 최신 PR/main Node22·24 검증
+- [ ] #122 나머지 간헐 실패 원인 확인 및 #73 실제 서비스·단말·스토어 검증
+
+실제 로컬 Node24.21.0에서만 새 getter/close 관측을 검증했습니다. Node22 실제 동작·active/unknown/미관측 오류는 성공으로 가정하지 않습니다. 운영/원장/500ms/기본5초/worker/CI·Android·계정·오디오·버전은 변경하지 않았고 실제 서비스·단말·브라우저 검증을 추가로 주장하지 않습니다. 사용자 조치·질문은 없으며18시 총괄 취합입니다. 아래 현재 표현은 당시 기록입니다.
+
+## 이전 판단 기준 · 2026-10-18 · #122
 
 기준 main `b9782b6c36b8abba88511cb937e80a2e07daff32`, `codex/122-ledger-test-diagnostics`입니다. **관련475개 성공과 최종 전체2,018통과/기존 Round 특수 탭1실패를 구분하며 원인 미확정·총괄 독립검수 완료·Draft 제출 승인**입니다. 정확한 병합 main CI39102714284의 Node24 Round 동시 생성 실패도 이전 PR 성공으로 덮지 않습니다. [진단·단계별 실패·한계](android-release.ko.md#현재-작업-상태--2026-10-18--122)를 우선합니다.
 

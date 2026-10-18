@@ -6,12 +6,14 @@ import {DatabaseSync} from 'node:sqlite';
 import {createHash,createHmac} from 'node:crypto';
 import {fork} from 'node:child_process';
 import {Worker} from 'node:worker_threads';
+import {isDeepStrictEqual} from 'node:util';
 import {RewardLedger,readRedeemedGrant,type RewardLedgerOptions,type RedeemedGrant} from '../server/ads/rewardLedger';
 import {RoundLedger,type RoundLedgerOptions,type RoundSnapshot} from '../server/game/roundLedger';
 import {CallbackInbox} from '../server/ads/callbackInbox';
 import {BoardEngine} from '../src/core/BoardEngine';
 import {policy,epoch,callback,keyResponse} from './helpers/ssvFixture';
-import {createTrace,step,asyncStep,elapsed,workerRow,observeWorker,receiveWorker,terminateWorker,workerFailure,safeRows,type LedgerTrace} from './helpers/ledgerDiagnostics';
+import {createTrace,step,asyncStep,elapsed,workerRow,observeWorker,receiveWorker,terminateWorker,workerFailure,safeRows,withSqliteDiagnostics,type LedgerTrace} from './helpers/ledgerDiagnostics';
+import {retryLedgerOpen} from './helpers/ledgerOpenRetry';
 
 // d867e32의 실제 v1 코드로 한 번 생성한 DDL·서명 행입니다. CI는 Git 과거 이력에 의존하지 않습니다.
 const fixture=JSON.parse(readFileSync(new URL('./helpers/ledger-v1-fixture.json',import.meta.url),'utf8'));
@@ -33,15 +35,15 @@ function move(l:RoundLedger,s:RoundSnapshot,activation=false){
   const command=activation&&at?{type:'activate' as const,at}:{type:'swap' as const,...engine.legalMoves()[0]};
   const r=l.command(owner,{roundId:s.roundId,operationId:'after-'+s.revision,expectedRevision:s.revision,command});if(r.kind!=='command-result')throw new Error('합성 이동 실패');return r;
 }
-function input(f:ReturnType<typeof setup>,action='apply'){return {action,rewardPath:f.rewardPath,roundPath:f.roundPath,rewardKey:[...rewardKey],roundKey:[...roundKey],policy,now:epoch,context};}
+function input(f:ReturnType<typeof setup>,action='apply',extra:{retryConstructorBusy?:boolean;notifyConstructorBusy?:boolean;constructorReleaseGate?:SharedArrayBuffer}={}){return {action,rewardPath:f.rewardPath,roundPath:f.roundPath,rewardKey:[...rewardKey],roundKey:[...roundKey],policy,now:epoch,context,...extra};}
 async function child(data:ReturnType<typeof input>){
   const p=fork(url,[],{execArgv:['--experimental-transform-types'],stdio:['ignore','ignore','ignore','ipc']});const done=new Promise<void>(r=>p.once('exit',()=>r()));
   const output=new Promise<any>((r,j)=>{p.once('message',r);p.once('error',j);p.once('exit',c=>{if(c)j(new Error('별도 프로세스 실패'));});});
   try{p.send(data);const result=await output;await done;return result;}finally{if(p.exitCode===null){p.kill();await done;}}
 }
-async function parallel(data:ReturnType<typeof input>[],trace?:LedgerTrace){
+async function parallel(data:ReturnType<typeof input>[],trace?:LedgerTrace,onConstructorBusy?:()=>void){
   const batch=data.map((d,index)=>{const row=trace?workerRow(index):undefined;if(row)trace!.workers.push(row);const worker=new Worker(url,{workerData:trace?{...d,diagnostics:true}:d,execArgv:['--experimental-transform-types']});if(row)observeWorker(worker,trace!,row);return worker;});workers.push(...batch);const outputs:Promise<any>[]=[];
-  await Promise.all(batch.map((w,index)=>new Promise<void>((r,j)=>{let receive!:(v:any)=>void;const row=trace?.workers[index];outputs.push(new Promise((yes,no)=>{receive=yes;w.on('error',error=>no(workerFailure(error,trace)));}));w.on('message',v=>{if(v==='ready'){if(row)row.readyAtMs=elapsed(trace!);r();}else{if(row)row.resultAtMs=elapsed(trace!);receive(row?receiveWorker(v,row):v);}});w.on('error',error=>j(workerFailure(error,trace)));})));batch.forEach((w,index)=>{if(trace)trace.workers[index].goAtMs=elapsed(trace);w.postMessage('go');});return Promise.all(outputs);
+  await Promise.all(batch.map((w,index)=>new Promise<void>((r,j)=>{let receive!:(v:any)=>void;const row=trace?.workers[index];outputs.push(new Promise((yes,no)=>{receive=yes;w.on('error',error=>no(workerFailure(error,trace)));}));w.on('message',v=>{if(v==='ready'){if(row)row.readyAtMs=elapsed(trace!);r();}else if(v?.kind==='synthetic-open-busy'){onConstructorBusy?.();}else{if(row)row.resultAtMs=elapsed(trace!);receive(row?receiveWorker(v,row):v);}});w.on('error',error=>j(workerFailure(error,trace)));})));batch.forEach((w,index)=>{if(trace)trace.workers[index].goAtMs=elapsed(trace);w.postMessage('go');});return Promise.all(outputs);
 }
 function dump(d:DatabaseSync){return d.prepare("SELECT name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY name").all().map(t=>({...t,rows:d.prepare('SELECT * FROM '+t.name+' ORDER BY 1').all()}));}
 function roundMac(domain:string,value:string){return createHmac('sha256',createHmac('sha256',roundKey).update('pawblossom-round-v1\0'+domain).digest()).update(value).digest('hex');}
@@ -52,6 +54,72 @@ function reprofile(d:DatabaseSync,patch:Record<string,number>){
   for(const r of d.prepare('SELECT * FROM round_ops').all() as any[])d.prepare('UPDATE round_ops SET receipt_mac=? WHERE round_id=? AND op_hash=?').run(roundMac('receipt',JSON.stringify([m.profile,r.round_id,r.op_hash,r.request_digest,r.revision,r.outcome])),r.round_id,r.op_hash);
 }
 afterEach(async()=>{vi.restoreAllMocks();await Promise.all(workers.splice(0).map(terminateWorker));dbs.splice(0).forEach(d=>{try{d.exec('ROLLBACK');}catch{}d.close();});resources.splice(0).forEach(l=>l.close());dirs.splice(0).forEach(p=>{if(!p.startsWith(join(tmpdir(),'pawblossom-redemption-')))throw new Error('정리 경로 오류');rmSync(p,{recursive:true,force:true});});});
+
+describe('검사 전용 생성자 BUSY5 재개방',()=>{
+  it.for([{plan:['ok'],calls:1,waits:0},{plan:['busy','ok'],calls:2,waits:1},{plan:['busy','busy','busy'],calls:3,waits:2}])('factory/wait 상한 %#',({plan,calls,waits})=>{
+    const trace=createTrace('reward-worker'),marker={kind:'service-error',code:'storage-unavailable'},originalClose=DatabaseSync.prototype.close;
+    const nativeError=Object.assign(new Error('synthetic-private-error'),{code:'ERR_SQLITE_ERROR',errcode:5});vi.spyOn(DatabaseSync.prototype,'exec').mockImplementation(()=>{throw nativeError;});
+    let index=0;const create=vi.fn(()=>{if(plan[index++]==='ok')return marker;const connection=new DatabaseSync(':memory:');try{connection.exec('SELECT 1');throw new Error();}finally{connection.close();}}),wait=vi.fn<(ms:number)=>void>();let returned:unknown,thrown:unknown;
+    try{returned=withSqliteDiagnostics(trace,()=>retryLedgerOpen(trace,'reward-open',true,create,wait));}catch(error){thrown=error;}
+    expect(create).toHaveBeenCalledTimes(calls);expect(wait.mock.calls).toEqual(Array.from({length:waits},()=>[25]));expect(trace.constructorAttempts).toHaveLength(calls);
+    expect(plan.at(-1)==='ok'?returned===marker&&thrown===undefined:thrown===nativeError).toBe(true);expect(DatabaseSync.prototype.close===originalClose).toBe(true);
+    expect(trace.sqliteErrors.every(row=>row.transactionActive===false&&row.connectionClosed===true)).toBe(true);
+    expect(JSON.stringify(trace).includes('synthetic-private-error')).toBe(false);
+  });
+  it.for(['locked6','extended261','sqlite1','integrity','missing-native','old-busy','wrong-phase','wrong-operation','wrong-code','truncated','hook-failed','active','unknown-transaction','open-connection','close-missing','close-throw','close-noop','unknown-open-state','close-install-failed','close-restore-failed','disabled'])('비대상 %s는 추가 생성/대기 없음',mode=>{
+    const trace=createTrace('reward-worker'),originalExec=DatabaseSync.prototype.exec,originalClose=DatabaseSync.prototype.close,originalDefine=Object.defineProperty,defineDescriptor=Object.getOwnPropertyDescriptor(Object,'defineProperty')!,closeDescriptor=Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'close')!,originalGetDescriptor=Object.getOwnPropertyDescriptor,getDescriptorDescriptor=Object.getOwnPropertyDescriptor(Object,'getOwnPropertyDescriptor')!;
+    const connections:DatabaseSync[]=[],nativeError=Object.assign(new Error('synthetic-private-failure'),{code:'ERR_SQLITE_ERROR',errcode:mode==='locked6'?6:mode==='extended261'?261:mode==='sqlite1'?1:5});
+    vi.spyOn(DatabaseSync.prototype,'exec').mockImplementation(()=>{throw nativeError;});
+    if(mode==='old-busy')trace.sqliteErrors.push({operation:'database-exec',phase:'reward-open',errorCode:'ERR_SQLITE_ERROR',extendedCode:5,baseCode:5,transactionActive:false,connectionClosed:true});
+    if(mode==='close-throw')vi.spyOn(DatabaseSync.prototype,'close').mockImplementation(()=>{throw new Error('synthetic-private-close');});
+    if(mode==='close-noop')vi.spyOn(DatabaseSync.prototype,'close').mockImplementation(()=>{});
+    // native own getter는 수정하지 않습니다. 해당 연결의 관측 조회 실패만 주입합니다.
+    if(mode==='unknown-open-state')vi.spyOn(Object,'getOwnPropertyDescriptor').mockImplementation((target,key)=>connections.includes(target as DatabaseSync)&&key==='isOpen'?undefined:Reflect.apply(originalGetDescriptor,Object,[target,key]));
+    if(mode==='close-install-failed'||mode==='close-restore-failed')originalDefine(Object,'defineProperty',{...defineDescriptor,value:(target:object,key:PropertyKey,descriptor:PropertyDescriptor)=>{
+      if(target===DatabaseSync.prototype&&key==='close'&&((mode==='close-install-failed'&&descriptor.value!==originalClose)||(mode==='close-restore-failed'&&descriptor.value===originalClose)))throw new Error('synthetic-private-descriptor');return originalDefine(target,key,descriptor);
+    }});
+    const create=vi.fn(()=>{
+      if(['integrity','missing-native','old-busy'].includes(mode))throw nativeError;
+      const connection=new DatabaseSync(':memory:');connections.push(connection);if(mode==='active')Reflect.apply(originalExec,connection,['BEGIN IMMEDIATE']);
+      try{connection.exec('SELECT 1');throw new Error();}
+      catch(error){const row=trace.sqliteErrors.at(-1)!;if(mode==='wrong-phase')row.phase='redeem';if(mode==='wrong-operation')row.operation='statement-run';if(mode==='wrong-code')row.errorCode='other';if(mode==='unknown-transaction')row.transactionActive=null;if(mode==='truncated')trace.sqliteErrorsTruncated=true;if(mode==='hook-failed')trace.sqliteHook.installation='failed';throw error;}
+      finally{if(mode!=='open-connection')try{if(mode==='close-missing')Reflect.apply(originalClose,connection,[]);else connection.close();}catch{}}
+    }),wait=vi.fn<(ms:number)=>void>();let thrown:unknown;
+    try{try{withSqliteDiagnostics(trace,()=>retryLedgerOpen(trace,'reward-open',mode!=='disabled',create,wait));}catch(error){thrown=error;}
+      expect(thrown===nativeError).toBe(true);expect(create).toHaveBeenCalledTimes(1);expect(wait).not.toHaveBeenCalled();expect(trace.constructorAttempts).toHaveLength(mode==='disabled'?0:1);
+      if(mode==='close-noop'||mode==='unknown-open-state'){
+        const attempt=trace.constructorAttempts[0];expect(attempt.closeObserved&&attempt.closeSucceeded&&!attempt.closeFailed&&attempt.closeHookInstalled&&attempt.closeHookRestored).toBe(true);
+        expect(trace.sqliteErrors[0].transactionActive).toBe(false);expect(trace.sqliteErrors[0].connectionClosed).toBe(mode==='close-noop'?false:null);
+      }
+      expect(JSON.stringify(trace).includes('synthetic-private')).toBe(false);
+    }finally{originalDefine(Object,'defineProperty',defineDescriptor);originalDefine(Object,'getOwnPropertyDescriptor',getDescriptorDescriptor);originalDefine(DatabaseSync.prototype,'close',closeDescriptor);for(const connection of connections)try{Reflect.apply(originalClose,connection,[]);}catch{}}
+  });
+  it.for(['no-ack','notify-throw','wait-throw'])('대기/해제 관측 실패 %s도 원래 생성자 예외를 보존',mode=>{
+    const trace=createTrace('reward-worker'),original=Object.assign(new Error('synthetic-private'),{code:'ERR_SQLITE_ERROR',errcode:5});vi.spyOn(DatabaseSync.prototype,'exec').mockImplementation(()=>{throw original;});
+    const create=vi.fn(()=>{const connection=new DatabaseSync(':memory:');try{connection.exec('SELECT 1');}finally{connection.close();}}),wait=vi.fn<(ms:number)=>void>(()=>{if(mode==='wait-throw')throw new Error('관측 대기 실패');}),notify=()=>{if(mode==='notify-throw')throw new Error('관측 통지 실패');return mode!=='no-ack';};let thrown:unknown;
+    try{withSqliteDiagnostics(trace,()=>retryLedgerOpen(trace,'reward-open',true,create,wait,notify));}catch(error){thrown=error;}expect(thrown===original).toBe(true);expect(create).toHaveBeenCalledTimes(1);expect(wait).toHaveBeenCalledTimes(mode==='wait-throw'?1:0);expect(trace.constructorAttempts[0].retryScheduled).toBe(false);
+  });
+  it('실제 생성자 BUSY5 신호→부모 해제 뒤 같은worker 복구·소비/적용은1회',async({task})=>{
+    const trace=task.meta.ledgerDiagnostic=createTrace('reward-parallel');const f=step(trace,'prepare',()=>{const f=setup();f.reward.close();f.round.close();return f;});const lock=db(f.rewardPath),beforeRound=JSON.parse(String(db(f.roundPath).prepare('SELECT state_json FROM round_rounds WHERE round_id=?').get(context.roundId)?.state_json));
+    lock.exec('BEGIN IMMEDIATE');const shared=new SharedArrayBuffer(4),gate=new Int32Array(shared);let signals=0;
+    const results=await asyncStep(trace,'workers',()=>parallel([input(f,'apply',{retryConstructorBusy:true,notifyConstructorBusy:true,constructorReleaseGate:shared})],trace,()=>{signals++;lock.exec('ROLLBACK');Atomics.store(gate,0,1);Atomics.notify(gate,0);}));
+    expect(signals).toBe(1);expect(results[0].kind,safeRows(trace)).toBe('reward-result');expect(results[0].applied,safeRows(trace)).toBe(true);expect(results[0].snapshot.state.moves).toBe(5);
+    const diagnostic=trace.workers[0].diagnostic!;expect(diagnostic.constructorAttempts).toHaveLength(2);expect(diagnostic.constructorAttempts.map(row=>row.waitMs)).toEqual([25,0]);expect(diagnostic.errorPhase).toBeNull();
+    expect(diagnostic.steps.filter(row=>row.phase==='redeem')).toHaveLength(1);expect(diagnostic.steps.filter(row=>row.phase==='apply')).toHaveLength(1);expect(diagnostic.sqliteErrors.every(row=>row.extendedCode===5&&row.baseCode===5&&row.transactionActive===false&&row.connectionClosed===true)).toBe(true);
+    expect(db(f.rewardPath).prepare('SELECT count(*) AS n FROM reward_redemptions').get()?.n).toBe(1);const roundDb=db(f.roundPath);expect(roundDb.prepare('SELECT count(*) AS n FROM round_rewards').get()?.n).toBe(1);expect(roundDb.prepare("SELECT count(*) AS n FROM round_ops WHERE outcome='reward-applied'").get()?.n).toBe(1);
+    expect(isDeepStrictEqual(JSON.parse(String(roundDb.prepare('SELECT state_json FROM round_rounds WHERE round_id=?').get(context.roundId)?.state_json)),{...beforeRound,moves:5,status:'active'}),safeRows(trace)).toBe(true);
+  });
+  it('실제 생성자 잠금 유지 시3회 소진·소비/적용/행 변화 없음',async({task})=>{
+    const trace=task.meta.ledgerDiagnostic=createTrace('reward-parallel');const f=step(trace,'prepare',()=>{const f=setup();f.reward.close();f.round.close();return f;}),lock=db(f.rewardPath),before=dump(lock),roundDb=db(f.roundPath),beforeRound=dump(roundDb);lock.exec('BEGIN IMMEDIATE');
+    let results:any[];try{results=await asyncStep(trace,'workers',()=>parallel([input(f,'apply',{retryConstructorBusy:true})],trace));}finally{lock.exec('ROLLBACK');}
+    expect(results![0].kind,safeRows(trace)).toBe('worker-error');const diagnostic=trace.workers[0].diagnostic!;expect(diagnostic.constructorAttempts).toHaveLength(3);expect(diagnostic.constructorAttempts.map(row=>row.waitMs)).toEqual([25,25,0]);expect(diagnostic.constructorAttempts.every(row=>row.closeSucceeded&&row.closeHookRestored&&!row.opened)).toBe(true);
+    expect(diagnostic.errorPhase).toBe('reward-open');expect(diagnostic.steps.some(row=>row.phase==='redeem'||row.phase==='apply')).toBe(false);expect(isDeepStrictEqual(dump(lock),before),safeRows(trace)).toBe(true);expect(isDeepStrictEqual(dump(roundDb),beforeRound),safeRows(trace)).toBe(true);
+  });
+  it('실제 무결성 오류는 생성1회·대기/소비/적용 없이 보존',async({task})=>{
+    const trace=task.meta.ledgerDiagnostic=createTrace('reward-parallel');const f=step(trace,'prepare',()=>{const f=setup();f.reward.close();f.round.close();return f;}),storage=db(f.rewardPath);storage.exec('ALTER TABLE reward_redemptions ADD COLUMN unexpected TEXT');const before=dump(storage);
+    const results=await asyncStep(trace,'workers',()=>parallel([input(f,'apply',{retryConstructorBusy:true})],trace));expect(results[0].kind,safeRows(trace)).toBe('worker-error');const diagnostic=trace.workers[0].diagnostic!;expect(diagnostic.constructorAttempts).toHaveLength(1);expect(diagnostic.constructorAttempts[0].waitMs).toBe(0);expect(diagnostic.steps.some(row=>row.phase==='redeem'||row.phase==='apply')).toBe(false);expect(isDeepStrictEqual(dump(storage),before),safeRows(trace)).toBe(true);
+  });
+});
 
 describe('실제 보상권 영구 소비·런타임 권한',()=>{
   it('실제 v1 보상권만 소비·불투명 ID/참조·재시작 동일 ID·신규1회',()=>{
@@ -71,7 +139,7 @@ describe('실제 보상권 영구 소비·런타임 권한',()=>{
     const f=setup(),g=redeem(f.reward).grant;f.reward.closeRound(context);expect(redeem(f.reward)).toEqual({kind:'voucher-redeemed',consumed:false,grant:g});f.reward.close();expect(readRedeemedGrant(g,context,'test')).toEqual(g);expect(apply(f.round,g).applied).toBe(true);
   });
   it('claim TTL은 새 소비 기한이 아니며 이미 기록한 보상권은 보존',()=>{const f=setup();f.reward.close();const l=reward(f.rewardPath,{dependencies:{now:()=>epoch+1_200_001,transport:async()=>keyResponse()}});expect(redeem(l).consumed).toBe(true);});
-  it('8worker 동시 소비는 영구1회·같은 ID·전달된 복사본에는 런타임 권한 없음',async({task})=>{const trace=task.meta.ledgerDiagnostic=createTrace('reward-parallel');const f=step(trace,'prepare',()=>{const f=setup();f.reward.close();return f;});const results=await asyncStep(trace,'workers',()=>parallel(Array.from({length:8},()=>input(f,'redeem')),trace));expect(results.every(r=>r.kind==='voucher-redeemed'),safeRows(trace)).toBe(true);expect(results.filter(r=>r.consumed).length,safeRows(trace)).toBe(1);expect(new Set(results.map(r=>r.grant.opaqueGrantId)).size,safeRows(trace)).toBe(1);expect(readRedeemedGrant(results[0].grant,context,'test')).toBeUndefined();expect(trace.workers.every(row=>row.diagnostic?.resultPhase==='redeem')).toBe(true);});
+  it('8worker 동시 소비는 영구1회·같은 ID·전달된 복사본에는 런타임 권한 없음',async({task})=>{const trace=task.meta.ledgerDiagnostic=createTrace('reward-parallel');const f=step(trace,'prepare',()=>{const f=setup();f.reward.close();return f;});const results=await asyncStep(trace,'workers',()=>parallel(Array.from({length:8},()=>input(f,'redeem',{retryConstructorBusy:true})),trace));expect(results.every(r=>r.kind==='voucher-redeemed'),safeRows(trace)).toBe(true);expect(results.filter(r=>r.consumed).length,safeRows(trace)).toBe(1);expect(new Set(results.map(r=>r.grant.opaqueGrantId)).size,safeRows(trace)).toBe(1);expect(readRedeemedGrant(results[0].grant,context,'test')).toBeUndefined();expect(trace.workers.every(row=>row.diagnostic?.resultPhase==='redeem')).toBe(true);});
 });
 
 describe('실패 회차 이동+5·원자 기록·중복 복구',()=>{
@@ -91,7 +159,7 @@ describe('실패 회차 이동+5·원자 기록·중복 복구',()=>{
   it('타owner/회차/env 적용은 실제 참조여도 거절',()=>{const f=setup(),g=redeem(f.reward).grant;expect(f.round.applyReward({ownerId:'other'},request,g)).toEqual(denied('invalid-grant'));expect(f.round.applyReward(owner,{roundId:fixture.rounds.active.roundId},g)).toEqual(denied('invalid-grant'));expect(round(undefined,{environment:'production'}).applyReward(owner,request,g)).toEqual(denied('invalid-grant'));});
   it('소비→적용 전 별도 프로세스 종료 후 같은 ID로 복구',async()=>{const f=setup();f.reward.close();f.round.close();const lost=await child(input(f,'consume-stop'));expect(lost.kind).toBe('consumed');const l=reward(f.rewardPath),g=redeem(l);expect(g.consumed).toBe(false);expect(g.grant.opaqueGrantId).toBe(lost.opaqueGrantId);expect(apply(round(f.roundPath),g.grant).applied).toBe(true);});
   it('적용→응답 전 종료·재시작·후속 이동 뒤 별도 프로세스 재전송',async()=>{const f=setup();f.reward.close();f.round.close();expect(await child(input(f,'apply-stop'))).toEqual({kind:'applied-response-lost'});const l=round(f.roundPath),read=l.get(owner,request);if(read.kind!=='round-snapshot')throw new Error();const next=move(l,read.snapshot).snapshot;l.close();expect(await child(input(f))).toEqual({kind:'reward-result',applied:false,snapshot:next});});
-  it('8worker 소비+적용 동시 실행은 이동5/적용1회·보상행1·영수증1',async({task})=>{const trace=task.meta.ledgerDiagnostic=createTrace('reward-parallel');const f=step(trace,'prepare',()=>{const f=setup();f.reward.close();f.round.close();return f;});const results=await asyncStep(trace,'workers',()=>parallel(Array.from({length:8},()=>input(f)),trace));expect(results.every(r=>r.kind==='reward-result'),safeRows(trace)).toBe(true);expect(results.filter(r=>r.applied).length,safeRows(trace)).toBe(1);expect(results.every(r=>r.snapshot.state.moves===5&&r.snapshot.revision===failed.revision+1),safeRows(trace)).toBe(true);expect(trace.workers.every(row=>row.diagnostic?.resultPhase==='apply')).toBe(true);});
+  it('8worker 소비+적용 동시 실행은 이동5/적용1회·보상행1·영수증1',async({task})=>{const trace=task.meta.ledgerDiagnostic=createTrace('reward-parallel');const f=step(trace,'prepare',()=>{const f=setup();f.reward.close();f.round.close();return f;});const results=await asyncStep(trace,'workers',()=>parallel(Array.from({length:8},()=>input(f,'apply',{retryConstructorBusy:true})),trace));expect(results.every(r=>r.kind==='reward-result'),safeRows(trace)).toBe(true);expect(results.filter(r=>r.applied).length,safeRows(trace)).toBe(1);expect(results.every(r=>r.snapshot.state.moves===5&&r.snapshot.revision===failed.revision+1),safeRows(trace)).toBe(true);expect(trace.workers.every(row=>row.diagnostic?.resultPhase==='apply')).toBe(true);});
   it.each([0,1,2])('남은 전체 행수 %s: 보상행+영수증 두 행을 정확히 예약',space=>{const p=path('round'),d=load(p,fixture.round),n=Number(d.prepare('SELECT (SELECT count(*) FROM round_rounds)+(SELECT count(*) FROM round_ops) AS n').get()?.n),m:any=d.prepare('SELECT * FROM round_meta').get();const profile=JSON.parse(m.profile);profile.rows=n+space;m.profile=JSON.stringify(profile);d.prepare('UPDATE round_meta SET profile=?,meta_mac=?').run(m.profile,roundMac('meta',JSON.stringify([m.profile,m.high_water])));for(const r of d.prepare('SELECT * FROM round_rounds').all() as any[])d.prepare('UPDATE round_rounds SET state_mac=? WHERE round_id=?').run(roundMac('state',JSON.stringify([m.profile,r.round_id,r.owner_hash,r.create_hash,r.create_digest,r.created_at,r.expires_at,r.revision,r.state_json])),r.round_id);for(const r of d.prepare('SELECT * FROM round_ops').all() as any[])d.prepare('UPDATE round_ops SET receipt_mac=? WHERE round_id=? AND op_hash=?').run(roundMac('receipt',JSON.stringify([m.profile,r.round_id,r.op_hash,r.request_digest,r.revision,r.outcome])),r.round_id,r.op_hash);const l=round(p,{maxRows:n+space}),f=setup(),g=redeem(f.reward).grant;expect(l.rewardEligibility(owner,request).kind).toBe(space<2?'rejected':'reward-eligible');expect(l.applyReward(owner,request,g)).toMatchObject(space<2?denied('capacity'):{kind:'reward-result',applied:true});});
   it('만료 경계는 자격·새 적용·이미 적용한 중복도 차단',()=>{const f=setup(),g=redeem(f.reward).grant;apply(f.round,g);f.round.close();const l=round(f.roundPath,{now:()=>failed.expiresAt});expect(l.rewardEligibility(owner,request)).toEqual(denied('expired'));expect(l.applyReward(owner,request,g)).toEqual(denied('expired'));});
   it('소비 후 abandon은 적용 차단·소비 기록은 보존',()=>{const f=setup(),g=redeem(f.reward).grant;expect(f.round.command(owner,{roundId:context.roundId,operationId:'abandon-after-consume',expectedRevision:failed.revision,command:{type:'abandon'}}).kind).toBe('command-result');expect(f.round.applyReward(owner,request,g)).toEqual(denied('round-terminal'));expect(redeem(f.reward).consumed).toBe(false);});

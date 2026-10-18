@@ -1,4 +1,66 @@
-## 현재 작업 상태 · 2026-10-18 · #122
+## 현재 작업 상태 · 2026-10-18 · #122 원장 후속
+
+기준 main `75773eb9b94c865e90bfc44831ca94e57bc26cc0`, 브랜치 `codex/122-reward-open-busy`입니다. **보상·Round 검사 생성자 exact BUSY5의 제한 재개방 구현 / 최종 관련521/521 통과·전체2,064통과/기존 callback timeout1 / 총괄 독립검수 완료·Draft 제출 승인**입니다. [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)는 열린 상태이며 제품 원장/operation 오류 수정이나 전체 통과로 보고하지 않습니다. 아래 `#122 후속`은 보상에만 적용했던 이전 코드 단계의 기록입니다.
+
+### Round 생성자에 대한 좁은 확장
+
+총괄은15:34:22 관련 실행의 Round 특수 탭7worker(worker0/1/2/3/4/6/7)에서 round-open/database-exec/ERR_SQLITE_ERROR/exact extended5/base5·transactionActive=false를 확인한 뒤 같은 목적의 범위를 승인했습니다. 이 근거를 과거 main CI39103936163의 별도 Round 동일 명령 실패와 같은 원인이라고 확정하지 않습니다. main의 보상 worker1/5 생성자5와 앞선 관련 실패·성공은 모두 보존합니다.
+
+변경 범위는 검사2파일·기존 helper3파일·신규 helper1파일·기존 docs4파일의10파일입니다. 신규 helper를 `ledgerOpenRetry.ts`로 정리했습니다. 검사 전용 phase는 reward-open 또는 round-open만 받고, 매 시도의 새 native 행이 모두 해당 phase/database-exec/exact5이고 트랜잭션 비활성·실제 연결 닫힘·close 관측/정상 반환/복원·관측5메서드 설치·잘림 없음까지 확인해야 재개방합니다. 조건 미충족/active/unknown/무결성/LOCKED6/다른 phase/닫기·복원 실패는 원래 실패를 보존합니다. 총3회·추가 시도 전25ms 두 번·동기 경계·Boolean/null/최대3개 시도 기록과 내부 WeakMap은 그대로입니다. src/server의 공통 프레임워크나 운영 재시도 정책은 만들지 않습니다.
+
+`round-ledger-worker.mjs`의 new RoundLedger 한 호출만 diagnostics===true && retryConstructorBusy===true의 명시 opt-in에서 같은 gate를 사용합니다. 기존 concurrent5개 호출의 flag를 각각 명시했고 child·start/command/get·전체 execute는 재시도하지 않습니다. `reward-redemption-worker.mjs`의 두 번째 RoundLedger 호출은 그대로 두어 한 trace의 생성 시도 최대3개·단계 최대7개를 유지합니다. 보상 기존30개/child 중단형식/소비·적용1회 및 기존8worker·행/영수증/special/RNG 조건은 유지합니다. 운영500ms·기본5초·파일2/내부8worker·CI·계정·Android는 변경하지 않습니다.
+
+Round 신규16개는 factory/wait3개, active/unknown/close 실패·noop/관측 null/다른 phase/LOCKED6/미관측/hook 실패/비활성화의10개 음성 조건, 실제 worker3개입니다. 실제 첫 잠금5→부모 해제→같은 worker 재개방 후 command1회·RNG/영수증을 확인하고, 잠금 유지 시3회 뒤 start/행 변경 없이 실패·무결성은1회/operation 없이 보존함을 확인했습니다. 전용 회귀의 유한 공유 플래그만 쓰고 일반 concurrent의 ready/go·추가 barrier/시차/순차화는 바꾸지 않습니다. close 정상 반환만으로 실제 닫힘을 추정하지 않고 native own getter를 수정하지 않습니다.
+
+| 최신 코드 검증 | 결과 |
+| --- | --- |
+| Round 지정16개 | 16개 통과, 나머지127개 선택 제외. 실제 잠금·상한·무결성과 phase별 gate 확인입니다. |
+| 관련4파일·15:47:27 KST 시작 | **521/521 통과**, JSON 기준28.97초·기존475+보상30+Round16. 전체의 부분집합이므로 합산하지 않습니다. |
+| 최신 전체1회·15:48:24 KST 시작 | **29파일2,065개 중2,064통과/1실패**, JSON 기준42.69초. 기존 callback-inbox의 `worker 생성자 SQLite BUSY 진단→잠금 해제→같은 요청 제한 재시도`가5,113.09ms에 timeout됐습니다. meta={}·최종 수신 결과가 없어 단계/실제 native 코드/원인은 미확정입니다. 대상 코드·기존 callback 재시도/기대는 바꾸지 않았고 전체/CI를 다시 실행하지 않았습니다. |
+| 타입/스토어/빌드 | 전체/앱/서버 타입·원본/스토어12개·testing→production 빌드·diff·신규 helper 후행공백 통과. 마지막 production 세 flags=false, src/dist 서버/진단/재시도 마커0건입니다. 기존 청크 크기·Node 실험 경고는 남습니다. |
+
+최신21개 metadata/56worker의 관측 설치·복원과 두 phase의 gate·재개방 기록을 확인했습니다. native오류8개는 두 도메인의 전용 잠금 회귀(복구 각1/소진 각3)이며 일반 보상16/Round34worker는 모두 생성1회였습니다. CI 실패 조건에서 자연 재개방이 성공한 실행으로 세지 않습니다. 실제 Node24.21.0 결과이며 Node22 새 getter/close 동작은 후속 CI 전 미확인입니다. 물리적 정리·원자성·재개방 안전성이나5초 내 완료를 보장하지 않습니다. callback/HTTP/구매 등 나머지 실패의 원인을 생성자5로 일반화하지 않고 원인 미확정 항목을 남깁니다.
+
+최신 명령/시각/성공·실패·21metadata/56worker·안전 샘플·코드6개 LF SHA는 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-122-reward-open-busy\final-round\checkpoint.json`과 같은 폴더의 JSON/log에 보존합니다. 공통 helper LF SHA-256은 `cc3ec3ae6d753a39956216a1f5e018987f87c47f97bd4a7ad5df056e722ac214`입니다. 이전 보상 한정 단계 결과는 `final`에 그대로 남습니다. 총괄은 독립 관련4파일521/521·전체/앱/서버 타입·diff·6개 LF SHA 일치·21metadata/56worker 설치/복원56개·실제 최대시도3/관측 steps6/native8개(전용 잠금 회귀)를 확인했습니다. production JS/CSS3개는 #120 기준과 같고 src/server/android/package/CI 무변경입니다. 별도 읽기 검토에서도 두 gate·명령1회·길이8/predicate·row/receipt/RNG/fullDump 비교와 마스킹에 결함/약화가 없음을 확인했습니다. 독립 보고서는 `C:\Users\user\AppData\Local\Temp\pawblossom-122-busy-root-related.json`입니다. 승인된10파일의 한국어 test 커밋·푸시·Draft PR 제출 단계이며 Refs #122로 연결합니다. 최신 PR/main Node22·24·Ready/병합·정리·다음 작성권은 총괄이 담당합니다. 앱/서버/오디오/버전/Android·실계정/키/env·콘솔/상품·Drive·폰·공개 배포를 변경/실행하지 않았고 브라우저·단말·실서비스 검증도 새로 주장하지 않습니다. 사용자 조치·질문은 없고18시에 총괄이 취합합니다.
+
+## 현재 작업 상태 · 2026-10-18 · #122 후속
+
+기준 main `75773eb9b94c865e90bfc44831ca94e57bc26cc0`, 브랜치 `codex/122-reward-open-busy`입니다. **보상 생성자 BUSY5의 검사 전용 제한 재개방·Round 동시 검사 진단 확대 구현 / 최종 관련505개·전체2,049개 통과 / 커밋 전 총괄 독립검수 대기**입니다. [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)는 열린 상태로 유지하며 제품 원장 정책이나 모든 간헐 실패를 수정한 것으로 보고하지 않습니다. 아래 첫 진단 PR 단계의 Draft/미병합 표현은 당시 기록입니다.
+
+### 정확한 main 실패와 좁은 후속 범위
+
+총괄은 [PR#128](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/128)의 head `b585ddcc39788b340e702898e8448054fc7fc09a`가 [PR CI39103833208](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39103833208)의 Node22·24 성공 후 Ready/Squash 병합되었음을 확인했습니다. 위 main과 PR head의 tree는 `37136325765b30a07a91b09b9a6192e0dc4cb391`로 같지만 [정확한 main CI39103936163](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39103936163)는 Node22 **2,017통과/2실패·34.54초**, Node24 성공입니다. 이전 PR 성공으로 main 실패를 덮지 않았고 rerun하지 않았습니다.
+
+원문 `C:\Users\user\AppData\Local\Temp\pawblossom-main128-failed.log`에서 보상 소비+적용8worker의 worker1(510.26ms)과 worker5(505.31ms)가 reward-open/database-exec/ERR_SQLITE_ERROR/exact extended5/base5로 실패했고 관측5메서드 설치·복원은 성공했습니다. 생성자 BUSY5는 실제 관측됐지만 SQL을 기록하지 않아 BEGIN 등 세부 명령은 확정하지 않습니다. 별도 Round 동일 명령8worker의 every=false는 당시 진단이 꺼져 원인이 미확정입니다. 두 실패와 이후 다른 실행 결과를 합산하지 않습니다.
+
+변경은 검사2파일·검사 helper3파일(신규 `rewardOpenRetry.ts`)·기존 docs4파일의9파일입니다. 실제 보상8worker2개에서만 diagnostics===true와 retryConstructorBusy===true를 명시합니다. worker의 new RewardLedger **한 호출**만 최대3회, 추가 시도 전25ms Atomics.wait로 실행합니다. 각 대기는 해당 worker의 별도 공유 버퍼를 사용하고 일반8worker의 ready/go·DB 개방 시점·추가 barrier/시차/순차화는 바꾸지 않습니다. 전체 execute/redeem/apply·반환된 storage 결과를 재시도하지 않고 child 중단형식/기존 결과를 유지합니다. Round에는 재시도를 넣지 않고 기존 concurrent5개 호출 모두에 준비 전 trace·safeRows를 연결했습니다(8+2+8+8+8 worker, 기존 입력/성공·DB/영수증/RNG 조건 유지).
+
+매 생성자 시도의 새 native 행만 판정하며 행이 없거나 잘리거나 관측5메서드 설치가 실패하면 재시도하지 않습니다. 새 행 모두 reward-open/database-exec/ERR_SQLITE_ERROR/exact extended5/base5이고 오류 당시 실제 isTransaction===false, 실패 뒤 실제 isOpen===false임을 확인해야 합니다. active/unknown·LOCKED6·확장 코드·다른 phase/operation/code·이전 BUSY만 있는 경우는 즉시 원래 실패를 보존합니다. 이 조건으로 COMMIT/rollback 장애를 우회하지 않습니다.
+
+native receiver는 worker 내부 WeakMap에만 보관하고 공개 trace에는 transactionActive/connectionClosed의 Boolean/null만 넣습니다. 생성자 한 시도 동안 DatabaseSync.close 원래 descriptor/this/args/return/동일 throw를 보존하는 임시 관측을 설치합니다. 해당 실패 연결의 close 관측·정상 반환·wrapper 복원까지 확인해야 다음 시도를 허용합니다. close 성공 반환만으로 닫힘을 추정하지 않습니다. close/설치/복원 실패나 미관측도 즉시 종료하며 관측 자체 오류가 원래 결과·예외를 덮지 않도록 합니다. 최대3개 시도 기록과 실제 native 오류를 남기고 errorPhase는 최종 실패만 기록합니다. 보상 worker 단계는 최대7개이며 중간 실패를 성공으로 지우지 않습니다.
+
+첫 지정 검사에서 isOpen/isTransaction을 prototype에서만 찾은 구현 오류로21통과/4실패가 있었습니다. Node24.21.0의 두 속성이 실제 인스턴스 getter임을 확인해 own getter 우선·prototype fallback으로 고쳤고 해당25개가 통과했습니다. 속성이 없거나 읽을 수 없으면 null로 유지해 재시도를 차단합니다. [Node22](https://raw.githubusercontent.com/nodejs/node/v22.x/doc/api/sqlite.md)·[Node24](https://raw.githubusercontent.com/nodejs/node/v24.x/doc/api/sqlite.md) 공식 계약을 대조했으나 이번 새 속성/close 관측의 **실제 로컬 검증은24.21.0뿐**이고 Node22 실제 동작은 후속 CI 전 미확인입니다.
+
+### 검증과 보존한 실패
+
+신규30개는 factory/wait의 첫 성공1회/0대기, BUSY→성공2회/25ms1회, BUSY3회 소진/25ms2회,21개 재시도 금지 조건, 통지/대기 실패3개, 실제 worker 잠금 해제·소진·무결성3개입니다. 실제 해제 검사는 첫 BUSY 통지→부모 ROLLBACK→공유 플래그 확인(해당 전용 검사만 최대500ms)→25ms 후 같은 worker 복구로 제어합니다. 복구 뒤 redeem/apply 각1회·이동5·소비행/보상행/영수증 각1회·기존 상태/RNG를 확인합니다. 소진/무결성은 소비·적용 없이 DB 상태를 보존하고 기존 migration COMMIT rollback/reopen 검사도 유지합니다.
+
+총괄의 추가 독립 검토에 따라 close spy가 noop 정상 반환해 closeSucceeded=true지만 실제 연결이 열린 경우와 isOpen 관측이 null인 경우를 분리해 각각1회/0대기임을 확인했습니다. native own getter를 수정하지 않고 해당 조회 경로에 관측 불가를 주입했으며 원본 close/descriptor로 finally 정리했습니다. 새 DB 상태 비교와 특수 탭8개 kind/outcome 비교는 동일 성공 조건의 Boolean 결과로 검사하여 실패 시 원문 SQL/행/snapshot을 matcher에 넘기지 않습니다. 허용 코드/고정 단계·횟수·시간·Boolean/null만 metadata/추가 assertion 설명에 기록합니다.
+
+| 코드 단계·시작(KST) | 결과 |
+| --- | --- |
+| getter 수정 뒤 최초 관련,15:34:22 | 4파일502/503 통과·32.50초. 기존 Round 특수 탭8worker1실패(1,876.48ms). 새 진단에서 worker0/1/2/3/4/6/7의 round-open/database-exec/exact5·transactionActive=false를 관측했습니다. 연결 종료는 미관측(null)이고 Round 재시도는 추가하지 않았습니다. 이 실행이 과거 main의 다른 Round 실패 원인을 확정하지는 않습니다. |
+| 초기 전체,15:35:13 | 29파일2,047/2,047 통과·JSON 기준42.34초. 다음 검사 코드 변경 전 결과이며 최종 검증과 합산하지 않습니다. |
+| 실패 출력 안전 보완 뒤,15:37:33/15:38:01 | 관련503/503·전체2,047/2,047 통과(각26.88/37.85초). 원문 대신 같은 조건의 Boolean 비교를 적용한 코드 단계입니다. |
+| 추가 음성2개 뒤 최종 관련,15:39:03 | **4파일505/505 통과**, JSON 기준29.08초. 기존475+신규30이며 전체의 부분집합입니다. |
+| 최종 전체1회,15:39:32 | **29파일2,049/2,049 통과**, JSON 기준39.56초. 검사 코드 단계별 변경 후 필요한 전체를 한 번씩 실행했으며 동일 코드 실패를 가리기 위한 반복/CI rerun은 없습니다. |
+| 최종 정적·빌드 | 전체/앱/서버 typecheck·store:check·store:test12개·build:test→build(원본/타입 포함)·diff·신규 helper 후행공백 통과. production 세 flags=false, src/dist 서버/진단/재시도 마커0건. 기존500kB 청크·Node 타입 변환 경고는 남습니다. |
+
+최종18개 metadata/53worker의 안전 투영·관측5메서드 설치/복원, 실제 재개방 기록·close/상태 gate·전용 해제 handshake를 확인했습니다. native오류4건은 전용 잠금 회귀의 복구1건/소진3건이며, 일반 보상16worker는 모두 생성1회였습니다. 이번 실행을 CI 실패 조건에서의 자연 재시도 복구로 세지 않습니다. 생성자 내부 close 정상 반환과 isOpen=false는 관측 근거이며 모든 물리적 정리·원자성·재개방 안전성을 증명한 것은 아닙니다. active/unknown이나 부족한 진단은 계속 실패로 남고5초 안에 끝나지 않는 실행도 보장하지 않습니다. 운영500ms/구매5초·기본 test5초·파일2/내부8worker·원장/서비스/스키마·광고/상품/계정 설정은 그대로입니다. 이번 전체 성공으로 #122 전체 원인 해결이나 출시 완료를 주장하지 않습니다.
+
+명령·UTC 시각·exit code·처음4실패/관련 Round 실패를 포함한 JSON/log·main128 원문·안전 metadata·코드5개 LF SHA는 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-122-reward-open-busy\final\checkpoint.json`과 같은 폴더에 보존합니다. 총괄 독립 검수 전 커밋/푸시/PR은 만들지 않았으며 후속 PR은 Refs #122입니다. src/server/android/package/CI·오디오·버전·실계정/키/env·콘솔/상품·Drive·폰·공개 배포는 변경/실행하지 않았습니다. 브라우저·실서비스·단말·스토어 검증은 새로 수행하지 않았고 사용자 조치·질문은 없으며18시에 총괄이 취합합니다.
+
+## 이전 진단 PR 상태 · 2026-10-18 · #122
 
 기준 main `b9782b6c36b8abba88511cb937e80a2e07daff32`, 브랜치 `codex/122-ledger-test-diagnostics`, [원장 검사 실패 관측 #122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)입니다. **테스트 전용 진단 구현·관련475개 통과 / 최종 로컬 전체2,018통과·기존 Round 특수 탭1실패 / 원인 미확정 / 총괄 독립검수 완료·Draft 제출 승인**입니다. 제품 오류 수정이나 전체 검사 성공으로 보고하지 않습니다. #120 PR#127의 head `ccceed33`/base `013188d`에서 Node22·24가 성공한 뒤 병합되었지만, [정확한 병합 main CI39102714284](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39102714284)는 Node22 성공·Node24 실패였습니다. 기존 Round 동시 생성 검사는1,204ms에 첫 `every(kind==='round-started')`가 false였고(29파일2,016통과/1실패·30.21초), 실제 결과 배열은 없었습니다. 원문은 Temp의 `pawblossom-main-127-failed-d0223e1bade048fcb06b052c698b8bf2.log`에 남습니다. 이전 PR/로컬 성공으로 이 main의 실패를 덮지 않습니다. 아래 #120 이하 현재/완료 표현은 당시 기록입니다.
 
