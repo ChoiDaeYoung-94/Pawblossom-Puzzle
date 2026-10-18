@@ -1,5 +1,11 @@
 # 출시까지의 개발 순서
 
+## 현재 작업 현황 · 2026-10-18 · #119
+
+기준 main `00dfc3b0b8ff77f6f40aa3376e710a4a6ed251bc`, `codex/119-idle-hint-recovery`입니다. [유휴 힌트 복구 #119](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/119)는 선택 중 만료 후 Escape·화면 복귀에서 새7.5초를 예약하며 CREATE/onReady·pause/sleep·종료/재시작과 이전 타이머 callback을 보호합니다. 전체29파일/1,999개(기존1,959+신규40) 한 번·관련 보드154개·전체/앱/서버 타입·스토어12개·원본·testing→production 빌드가 통과했습니다. [구현·검증·최초 fixture/QA 실패 보존](android-release.ko.md#현재-작업-상태--2026-10-18--119), [자연 시간 브라우저](browser-qa.ko.md#2026-10-18--유휴-힌트-자연-만료와-복귀-이슈-119)를 우선합니다.
+
+최종 production Chrome155 일반/모션 감소 자연 시간10개/pageerror0·실제390×844 viewport PNG8개/화면 안 canvas·재시작 리스너 동일/늦은 callback 무접근, 정적 검사·flags3개 false·src/dist 서버 마커0건·source LF SHA를 보존했습니다. 총괄의 관련154개·전체/앱/서버 타입·diff/QA 구문·동일3개 LF SHA·full.json/브라우저/화면 독립검수를 마쳐 **Ready PR 제출 승인**을 받았습니다. 다음은 승인된7파일의 한국어 fix 커밋·푸시·Ready PR 제출과 최신 PR/main Node22·24 CI 확인이며 병합·정리는 총괄이 담당합니다. #122는 원인 미확정이며 이번 전체 통과를 원인 수정으로 처리하지 않습니다. 이후 #120 목표 완료/이동 안내 접근성 순서를 유지합니다. 사용자 조치·질문은 없고 판단 사항은 오늘18시에 총괄이 모읍니다. APK/AAB·sync·버전·최종 오디오 믹스·실계정/키/env·Drive/콘솔/상품·폰/TalkBack/전달 보류를 유지합니다. #118은 PR#124와 위 main에 반영되었으며 아래 #118/이전 현재 표현은 당시 이력입니다.
+
 ## 현재 작업 현황 · 2026-10-18 · #118
 
 기준 main `fdfc242f81723bc5dd0d34962b57517f7d3c589e`, `codex/118-save-source-conflict`에서 [저장 전 외부 원문 변경 차단 #118](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/118)을 구현했습니다. **저장/UI171개·최종 타입/스토어12/두 웹 빌드/production 두 탭 검증 완료, 최신 전체는1958통과/기존 구매1실패이며 총괄 관련 독립검수 완료·Draft 제출 승인·최신 head 원격 전체 Node22/24 대기**입니다. 정상 두 실행 사이의 오래된 메모리 덮어쓰기·완료 초기화 부활·미래 형식/삭제/backup 단독 변경을 저장 직전 원문 비교로 차단합니다. 본인 부분 쓰기·초기화 marker·최신 메모리 재시도는 유지하고, 확정 conflict는 명시 load/reset만 해제합니다. [계약·한계·실패를 포함한 검증](android-release.ko.md#2026-10-18--저장-전-외부-원문-변경-차단-이슈-118), [production 실제 두 탭 순차 검증](browser-qa.ko.md#2026-10-18--저장-전-외부-원문-변경-차단-이슈-118)을 우선합니다. check→write 경쟁·ABA·자동 병합을 완전히 해결한 것은 아닙니다.

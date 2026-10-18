@@ -1,3 +1,11 @@
+## 2026-10-18 · 유휴 힌트 자연 만료와 복귀 (이슈 #119)
+
+기준 main `00dfc3b0b8ff77f6f40aa3376e710a4a6ed251bc`, `codex/119-idle-hint-recovery`입니다. 신규 `scripts/idle-hint-qa.mjs`는 실제 production dist를 새 headless Chrome context/합성 origin `http://hint.pawblossom.invalid`에 제공하고 Game 관찰 참조만 응답에 노출합니다. KO 합성 저장의 tutorialSeen/music/sfx만 준비하며 실제 앱의 보드/판정/타이머/시간은 대체하지 않습니다. 키보드 Enter 선택→자연7.9초 만료→Escape→7초 동안 힌트 없음→자연7.5초 이후 힌트와 선택 중 자연 만료→실제 설정 클릭/pause→복귀→새7.5초 흐름을 일반/모션 감소에서 검사합니다. Scene restart/remove와 보관한 이전 callback 재호출은 수명 경계 fixture입니다.
+
+결과는 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-119`에 보존합니다. 최초 `browser-production`은 일반 모드 Escape·설정 흐름 성공 뒤 리스너 기대값 오류로 중지했습니다. 실제 InputPlugin의 pause/sleep 구독을 고려하여 최초 생성과 재시작의 전체 수를 비교하도록 QA를 고쳤으며 제품 코드는 바꾸지 않았습니다. 최종 결과는 `browser-production-final/summary.json`과 일반/모션 감소 각 viewport PNG이며 최초 실패와 합산하지 않습니다. 사진은 fullPage 옵션 없이 **390×844 실제 viewport**로 찍고 canvas 전체가 화면 안에 있는지·중앙 hit test·수평 넘침0을 함께 확인합니다. 사용자5173/기존 Chrome 창/진행은 사용하지 않고 새 headless context/browser만 finally에서 닫습니다. 서버를 열지 않습니다. Android·실제폰/TalkBack 완료를 뜻하지 않습니다.
+
+최종 Chrome **155.0.8059.80**, 두 모드 **각5개 확인=10개**, pageerror0, viewport PNG8개 통과입니다. `no-preference-restart-hint.png`와 `reduce-settings-return-hint.png`를 직접 확인했으며 화면 안 canvas/중앙 hit test/수평 넘침0입니다. 최초와 재시작의 전체 리스너 수(create0/pause2/resume1/sleep2/wake1, pointerdown1)가 같고, 실제 destroy 뒤 이전 callback은 효과·블록 getter를 호출하지 않습니다. handler/ready 응답 뒤부터 관찰한 힌트 wall 시간은 일반 Escape7,508ms·설정7,480ms, 모션 감소 Escape7,498ms·설정7,493ms입니다. 이 수치는 정확한 만료 시작점 측정이 아니며, timer delay7500·7초 미표시·이후 표시 및 단위 검사의 실제 Clock7,499+1ms와 구분합니다. 현재 source/build 해시는 `checkpoint.json`과 [개발 기록](android-release.ko.md#현재-작업-상태--2026-10-18--119)에 보존했으며 총괄의 관련154개·타입·정적 검사·동일3개 LF SHA·최종 브라우저/화면 독립검수 완료 및 Ready PR 제출 승인 상태입니다. 최신 PR/main Node22·24 CI는 제출 후 별도 확인합니다.
+
 ## 2026-10-18 · 저장 전 외부 원문 변경 차단 (이슈 #118)
 
 기준 main `fdfc242f81723bc5dd0d34962b57517f7d3c589e`, `codex/118-save-source-conflict`, [이슈 #118](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/118)입니다. `SaveStore`는 load 때 관찰한 primary/backup/reset **원문**과 본인이 성공한 부분 쓰기를 추적하고, 저장 직전에 이미 달라진 키를 발견하면 디스크를 쓰지 않고 conflict로 차단합니다. 정규화한 백업 기준과 원문은 분리하며, 읽지 못한 키와 실제 없는 키도 구분합니다. 현재 메모리는 유지하고 확정된 충돌은 반복 재시도·외부 삭제/원문 복원으로 풀지 않습니다. 명시적인 기존 기록 불러오기 또는 사용자 초기화만 새 기준을 만듭니다. 초기화 대기 상태에서도 충돌 안내를 먼저 표시합니다.
