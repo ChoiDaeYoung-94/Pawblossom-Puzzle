@@ -1,5 +1,11 @@
 # 웹 자동 검증
 
+## 최신 통합 근거 · 2026-10-18 · #139
+
+구현·검사 기준 main `ca57341fbd269d82cfac63d1be9f173384ad68cc`의 [CI39111374076](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39111374076)에서 Node22·24 각각35파일2,349/2,349·스토어12/12·타입·production/testing 빌드/구분 검사가 성공했습니다. PR#140 head91f74cff와 실제 squash의 전체 tree가 같고 총괄 독립 관련136개·타입·LF SHA/production 동일 확인도 보존했습니다. [최신 전체 통합·실패 구분](android-release.ko.md)을 우선하며 이번 #139는 문서5개만 변경합니다. 새 문서 PR/head와 실제 main CI는 제출 뒤 별도로 확인합니다.
+
+main136 CI39109768855 Node22의 기존 reward-redemption:163 기본5000ms timeout과 과거 #122 실패는 원문을 보존합니다. 최신 성공과 이전 버전의 성공을 합산해 원인이 해결됐다고 표현하지 않으며 #122는 미해결입니다. 검사5초/file worker2/내부8worker·업무 assertion·제품 SQLite·CI·retry 조건을 완화하거나 CI rerun하지 않았습니다. Chrome37개/AX20개는 #129의 실행 근거와 이후 동일 앱 bundle 확인이며 이번에 재실행하지 않았습니다. Android/실서비스/출시 검증을 대신하지 않습니다.
+
 ## 최신 작업 근거 · 2026-10-18 · #122 callback parallel 수명
 
 기준 main `aa7e3ca0e437080536a9d8e5916f7a0d51c11bb7`·`codex/122-callback-parallel-lifecycle`, **최종 관련136/136·최신 전체35파일2,349/2,349 한 번·타입/스토어12/에셋/두 빌드·최종 flags3false/마커0·diff/7파일 SHA 확인**입니다. [검증 단계/소스 SHA·과거 실패](android-release.ko.md#현재-작업-상태--2026-10-18--122-callback-parallel-수명)를 우선합니다. ready 뒤 error/무결과 exit의 검사 harness 공백만 보강하며 정상 결과의 exit 무대기·실제 종료 뒤 부모 정리·기존8worker/go/업무 assertion·SQLite500ms/기본5초/file2/CI는 유지합니다. go 이후 회귀 추가 전 전체2,347개 성공과 최종 소스 전체1회는 별도 기록합니다. #122와 이전 main136 Node22 reward-redemption timeout 원인 미확정 상태를 유지하고 CI rerun은 하지 않았습니다. 총괄 독립 관련136/136·전체/앱/서버 타입·승인 전7파일 SHA·production3개 bundle 동일·무변경 범위 확인을 마쳐 한국어 test 커밋·푸시·Ready PR 제출을 승인받았습니다. 최신 PR/main Node22·24 CI와 병합/정리는 제출 후 총괄이 확인합니다. 아래 선행 CI/통합 성공은 이번 미커밋 결과와 구분합니다.

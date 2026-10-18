@@ -1,3 +1,35 @@
+## 현재 통합 상태 · 2026-10-18 · 18시 보고 준비 (#139)
+
+**구현·검사의 최신 통합 기준은 main `ca57341fbd269d82cfac63d1be9f173384ad68cc`입니다.** 오늘 기능·검사·중간 기록 13개 PR(#123, #124, #125, #127, #128, #130, #131, #132, #133, #135, #136, #138, #140)을 Squash merge했습니다. 정확한 [main CI39111374076](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39111374076)에서 **Node22·24 각각 35파일2,349/2,349·스토어12/12·타입·production/testing 빌드와 구분 검사 성공**을 확인했습니다. 아래 현재/미커밋/제출 전 표현은 각 작업 당시 이력이며 이 상단을 우선합니다.
+
+이번 [#139](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/139)는 기존 문서5개의 현황 정리만 합니다. 앱/서버/검사·Android·버전0.1.7/code8·의존성·오디오 믹스는 변경하지 않습니다. 이 문서 PR 자신의 head/main CI와 병합 결과는 제출 뒤 별도로 확인하며 위 코드 기준 CI로 대체하지 않습니다. 오늘 앞선9개 PR의 세부 근거는 아래 #129 기록에 보존했습니다.
+
+| #129 이후 작업 | PR head → 실제 squash/main | PR CI / 정확한 main CI |
+|---|---|---|
+| #129 중간 통합 기록 [PR#135](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/135) | `6b474c17fdfb9461c01f9f462882e019509cd29e` → `74ae081d87ac15efb0baef25f487af5843b7ebe1` | [39108900325](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39108900325) / [39109057700](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39109057700) 양쪽 Node 성공·2,267개 |
+| #134 구매 처리의 실제 종료 [PR#136](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/136) | `afbf4f82745d8355e87ed2e7bf8cb37aff75526e` → `2e4e3451903a56c4febf94e7b8fba9ac320e0119` | [39109664442](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39109664442) 양쪽 Node 성공 / [39109768855](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39109768855) Node24 성공·Node22 기존1실패 |
+| #137 회수 조회의 모든 페이지 정리 [PR#138](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/138) | `4a85dbd25d7b69f20542361090325f3d9525f52c` → `aa7e3ca0e437080536a9d8e5916f7a0d51c11bb7` | [39110445295](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39110445295) / [39110589558](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39110589558) 양쪽 Node 성공·2,326개 |
+| #122 parallel 검사 수명 [PR#140](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/140) | `91f74cffb44717b1e39be377f8038b15f8424ddb` → `ca57341fbd269d82cfac63d1be9f173384ad68cc` | [39111267567](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39111267567) / [39111374076](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39111374076) 양쪽 Node 성공·2,349개 |
+
+구매 그룹 기본8/최대32/대기열0은 OAuth·fetch/read·cancel의 실제 종료까지 유지하며 process/재시도/회수 조회가 공유합니다. 회수 조회는 기존 전체 기본30초/최대60초와 모든 페이지 검증 뒤 원자 회수를 유지합니다. parallel 검사는 준비/결과/실제 exit를 분리하고 오류 시 batch 대기를 정산하며 실제 종료 확인 뒤 부모 DB·폴더를 정리합니다. 이는 내부 모듈/검사 수명 보강이고 실제 Google·공개 호스팅·SDK 동작 완료가 아닙니다.
+
+### 자동 검사·브라우저·실기기 구분
+
+총괄 독립 관련 검사는 #134 406개, #137 274개, 최종 parallel 136개와 각 타입·소스 LF SHA·diff/production 동일성을 확인했습니다. 서로 다른 버전의 수를 최신 전체2,349개에 더하지 않습니다. #134/#137/parallel 각 PR head 전체 tree와 실제 해당 squash tree가 같고, 최신 main 포함·원격/로컬 tip·종속 PR와 사용 중 worktree·clean 상태를 확인한 뒤 완료 브랜치를 정리했습니다. 완료 구매 세션은 정식 보관했고 #122 미해결 진단 세션은 총괄 아래 유지합니다. 보관을 영구 삭제로 표현하지 않습니다.
+
+브라우저는 #129에서 실제 실행한 **Chrome37개·목표 AX20개·pageerror0**입니다. 그 뒤 앱 src/public tree와 production JS/CSS3개 byte가 같은 것을 확인한 것이며, 이번에 브라우저37개를 다시 실행했다고 주장하지 않습니다. 유휴 힌트10개·목표20개·두 탭 저장7개의 fixture/실입력 구분과 PNG/AX/원문은 [브라우저 기록](browser-qa.ko.md)에 보존합니다. 실제 Android 터치·TalkBack·청취/오디오 포커스·회전/복귀·백업·서비스·스토어 검증은 별개로 남아 있습니다.
+
+기존 #120/#122/#134 main 실패는 원문 그대로 보존합니다. 특히 main136 Node22 `reward-redemption.test.ts:163:19`의 기본5000ms timeout(2,302통과/1실패)은 내부 phase 원인 미확정입니다. #122의 생성자 exact5 관측과 확인한 child/parallel 정리 공백을 보강했지만, 최신 성공이 과거 모든 실패의 원인 해결 증거는 아닙니다. 전체/CI rerun·검사 기한·8worker·업무 assertion·제품 SQLite/재시도 조건을 완화하지 않았습니다. [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)는 계속 열어 둡니다.
+
+### 다음 작업과 사용자 결정 대기
+
+1. #122에서 아직 계측되지 않은 실패 원인을 실제 단계/안전 진단 근거로 좁힙니다. 단순 재실행 성공을 해결로 처리하지 않습니다.
+2. 최소/주요 대상 연령, 공개 개발자명·지원 이메일·도메인, 로그인 없이 시작/다른 기기 진행 복구 범위, 월 서버 예산·운영 계정, 광고 제거 범위와 KR/US 일회성 가격을18시 대화에서 취합합니다. 어린이 포함·광고+광고 제거 결제라는 기존 기획을 유지하며 질문 답변을 임의 승인으로 간주하지 않습니다.
+3. 결정과 별도 허용 범위가 마련되면 실제 인증/앱-서버 연결·운영 호스트/TLS/로그·저장/백업/용량·Google 구매/광고 SDK/동의·상품/지원 정보를 구현하고 검증합니다. 현재 제한된 listener와 O(N) 원장은 공개 운영 용량/가용성 보장이 아닙니다.
+4. 사용자가 나중에 폰을 연결하면 총괄 설치·입력·저장·복귀·로그 일괄 점검 → 사용자 감각 검수/변경 결정 → 개선 → 한국·미국 스토어 검증 순서를 따릅니다. 복원 안내가 잠깐 하단 글자를 가리는 시각 후보는 감각 검수 항목으로 남겨 둡니다.
+
+AdMob 앱·전면/보상형(이동5회) 광고 단위 생성은 완료했지만 실제 광고 게재·서버 검증 보상 지급·UMP/대상 연령·app-ads.txt·스토어 연결은 미완료입니다. 실제 구매·복원·pending/환불·운영 자격정보/상품도 미검증입니다. [#73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)을 유지하며 이번 문서 작업으로 출시 완료를 선언하지 않습니다. APK/AAB 생성·Android sync·버전·폰/전달·Drive/Play Console/상품·실계정/키/env·최종 믹스·공개 배포는 수행하지 않습니다. 테스트 안내는 별도 파일을 만들지 않고 대화로 전달합니다.
+
 ## 현재 작업 상태 · 2026-10-18 · #122 callback parallel 수명
 
 기준 main/origin main은 `aa7e3ca0e437080536a9d8e5916f7a0d51c11bb7`, 작업 브랜치는 `codex/122-callback-parallel-lifecycle`입니다. [#122 작업 목적·범위·완료 기준](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122#issuecomment-6247529205)에 연결했습니다. **검사 전용 parallel Worker 수명 구현·최종 관련136/136·최신 전체35파일2,349/2,349 한 번·전체/앱/서버 타입·스토어12개·에셋·testing→production·최종 flags3false/마커0·diff/7파일 LF SHA 확인, 총괄 독립검수 완료·한국어 커밋/푸시/Ready PR 제출 승인**입니다. 한국어 test 커밋·푸시·Ready PR 제출을 승인받았습니다. 총괄이 확인한 [PR#138 CI39110445295](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39110445295)와 [정확한 main CI39110589558](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39110589558)의 Node22·24 성공/기존2,326개와 이번 미커밋 소스 결과는 구분합니다. 아래 #137 및 선행 현재/제출 전 표현은 당시 이력입니다.

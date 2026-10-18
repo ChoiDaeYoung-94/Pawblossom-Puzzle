@@ -1,3 +1,9 @@
+## 2026-10-18 · 최신 통합과 브라우저 근거 구분 (이슈 #139)
+
+최신 구현/검사 main은 `ca57341fbd269d82cfac63d1be9f173384ad68cc`이며 정확한 main CI39111374076 Node22·24 각각2,349개·스토어12개·타입/두 빌드 성공을 확인했습니다. [최신 통합 상태](android-release.ko.md)를 우선합니다. #134/#137/#122 parallel 후속은 서버/검사·문서 변경이며 #129 브라우저 실행 대상과 앱 src/public tree 및 production JS/CSS3개 byte가 같습니다.
+
+아래 Chrome37개·목표 AX20개·pageerror0은 **#129에서 실제 실행한 결과**이며 이번 문서 작업에서 재실행한 것이 아닙니다. 일반/모션 감소 힌트10개·KO/EN 작은 세로/가로 목표20개·두 탭 저장7개의 합성 fixture/실제 입력·PNG/AX/로그 구분을 유지합니다. 실제 폰 터치·Android 회전/글꼴 배율·TalkBack·청취/오디오 포커스·실서비스·스토어는 미완료이고 #73을 유지합니다. 짧은 복원 안내의 하단 글자 가림은 최종 감각 검수 후보이며 입력 차단으로 과장하지 않습니다.
+
 ## 2026-10-18 · 누적 통합 확인 (이슈 #129)
 
 검증 대상은 PR#133 head `3d3b52f8cec63cbb24ea8ef8aa586cd49e608558`와 전체 tree가 같은 main `dc210437bc3ec02b07cc2e86cd4ebb430ac891bc`의 **production dist**입니다. 세 flags 모두false이고 시작/완료 시 src/public tree·JS/CSS3개 hash가 같았습니다. [최신 통합·각 PR/main 검사·과거 실패 구분](android-release.ko.md#현재-통합-상태--2026-10-18--129)을 우선하며 아래 제출 전/현재 표현은 당시 이력입니다.
