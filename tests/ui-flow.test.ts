@@ -890,6 +890,14 @@ describe('정상 회차 복구와 종료 확정',()=>{
 
 
 describe('저장 상태·초기화 UI 보호',()=>{
+  it('초기화 대기 중 외부 기록 변경은 충돌을 우선 안내하고 재시도로 덮지 않습니다',()=>{
+    const h=mainHarness();h.run("save=clearSave();localStorage.setItem('pawblossom.save.v1',JSON.stringify({...save,coins:280}))");
+    const disk=h.disk(),writes=h.writes();expect(h.run('persist()')).toBe(false);
+    expect(h.element('#save-status').textContent).toContain('저장 기록이 바뀌었거나');expect(h.element('#save-reload').hidden).toBe(false);
+    h.element('#save-retry').onclick();h.element('#save-retry').onclick();
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('save.coins')).toBe(0);
+    expect(h.run('saveStatus().resetPending')).toBe(true);expect(h.run('saveStatus().load')).toBe('conflict');
+  });
   it('초기화 취소는 메모리·회차·모든 저장 키와 쓰기 횟수를 바꾸지 않습니다',()=>{
     const h=mainHarness(),disk=h.disk(),writes=h.writes(),memory=h.run('JSON.stringify(save)'),board=h.run('scene');
     h.run('confirm=()=>false');h.element('#reset').onclick();

@@ -69,6 +69,8 @@ type LoadState='new'|'loaded'|'recovered'|'corrupt'|'unsupported'|'read-error'|'
 type WriteState='idle'|'saved'|'blocked'|'failed'|'backup-failed'|'reset-failed';
 export interface SaveStatus { load:LoadState; write:WriteState; resetPending:boolean; }
 type StorageAccess=()=>Pick<Storage,'getItem'|'setItem'|'removeItem'>;
+const sourceKeys=[RESET_KEY,SAVE_KEY,BACKUP_KEY] as const;
+type Source=Partial<Record<typeof sourceKeys[number],string|null>>;
 type Decoded={kind:'valid';data:SaveData}|{kind:'missing'|'corrupt'|'unsupported'};
 function decode(raw:string|null,backup=false):Decoded {
   if(raw===null)return {kind:'missing'};
@@ -81,35 +83,47 @@ function decode(raw:string|null,backup=false):Decoded {
 /** localStorage의 여러 키는 원자적이지 않습니다. 백업을 확보한 뒤에만 primary를 교체합니다. */
 export class SaveStore {
   private baseline?:string;
+  // 정규화한 백업과 원문 관찰값은 다릅니다. undefined는 읽지 못함, null은 실제 부재입니다.
+  private source:Source={};
+  private memoryKnown=false;
   private blocked=true;
   private state:SaveStatus={load:'new',write:'idle',resetPending:false};
   constructor(private readonly access:StorageAccess=()=>localStorage){}
   get status():SaveStatus{return {...this.state};}
+  private read(storage:ReturnType<StorageAccess>,key:typeof sourceKeys[number]):string|null {
+    const raw=storage.getItem(key);this.source[key]=raw;return raw;
+  }
+  private conflict():false {
+    this.blocked=true;this.state.load='conflict';this.state.write='blocked';return false;
+  }
   load():SaveData {
-    this.baseline=undefined;this.blocked=true;this.state={load:'new',write:'idle',resetPending:false};
+    this.baseline=undefined;this.source={};this.memoryKnown=false;this.blocked=true;this.state={load:'new',write:'idle',resetPending:false};
     try {
       const storage=this.access();
       // 초기화 의도가 먼저 영속화됩니다. 중간 종료/실패 뒤 과거 primary·backup을 복원하지 않습니다.
-      const marker=storage.getItem(RESET_KEY);
+      const marker=this.read(storage,RESET_KEY);
       if(marker!==null){
         if(marker!=='1'){this.state.load='unsupported';return defaults();}
-        this.blocked=false;this.state.resetPending=true;return defaults();
+        this.memoryKnown=true;this.state.resetPending=true;
+        // 초기화 대상의 옛 payload도 원문으로 관찰해 이후 외부 변경과 구분합니다.
+        this.read(storage,SAVE_KEY);this.read(storage,BACKUP_KEY);
+        this.blocked=false;return defaults();
       }
-      const primary=decode(storage.getItem(SAVE_KEY));
+      const primary=decode(this.read(storage,SAVE_KEY));
       if(primary.kind==='valid'){
-        this.baseline=JSON.stringify(primary.data);
+        this.baseline=JSON.stringify(primary.data);this.memoryKnown=true;
         // 정상 primary로 플레이하더라도 읽지 못한/미래 형식 사본을 자동 교체하지 않습니다.
         try{
-          if(decode(storage.getItem(BACKUP_KEY),true).kind==='unsupported'){this.state.load='unsupported';return primary.data;}
+          if(decode(this.read(storage,BACKUP_KEY),true).kind==='unsupported'){this.state.load='unsupported';return primary.data;}
         }catch{this.state.load='read-error';return primary.data;}
         this.blocked=false;this.state.load='loaded';return primary.data;
       }
       // 미래 형식의 primary는 구형 backup으로 롤백하지 않습니다.
       if(primary.kind==='unsupported'){this.state.load='unsupported';return defaults();}
-      const backup=decode(storage.getItem(BACKUP_KEY),true);
-      if(backup.kind==='valid'){this.baseline=JSON.stringify(backup.data);this.blocked=false;this.state.load='recovered';return backup.data;}
+      const backup=decode(this.read(storage,BACKUP_KEY),true);
+      if(backup.kind==='valid'){this.baseline=JSON.stringify(backup.data);this.memoryKnown=true;this.blocked=false;this.state.load='recovered';return backup.data;}
       if(backup.kind==='unsupported'){this.state.load='unsupported';return defaults();}
-      if(primary.kind==='missing'&&backup.kind==='missing'){this.blocked=false;return defaults();}
+      if(primary.kind==='missing'&&backup.kind==='missing'){this.memoryKnown=true;this.blocked=false;return defaults();}
       this.state.load='corrupt';return defaults();
     }catch{this.state.load='read-error';return defaults();}
   }
@@ -118,34 +132,46 @@ export class SaveStore {
     const valid=normalizeSave(data,true);
     if(!valid){this.state.write='failed';return false;}
     const raw=JSON.stringify(valid);
+    let storage:ReturnType<StorageAccess>;
     try {
-      const storage=this.access();
+      storage=this.access();
+      // 저장 전에 이미 달라진 원문을 감지합니다. 비교→쓰기 사이 경쟁이나 ABA는 막지 못합니다.
+      for(const key of sourceKeys)if(storage.getItem(key)!==this.source[key])return this.conflict();
+    }catch{this.blocked=true;this.state.load='read-error';this.state.write='blocked';return false;}
+    try {
       // 실패하면 primary를 건드리지 않습니다. baseline은 성공한 쓰기/검증한 로드에서만 갱신합니다.
-      try{storage.setItem(BACKUP_KEY,this.state.resetPending?raw:(this.baseline??raw));}
+      const backup=this.state.resetPending?raw:(this.baseline??raw);
+      try{storage.setItem(BACKUP_KEY,backup);this.source[BACKUP_KEY]=backup;}
       catch{this.state.write='backup-failed';return false;}
       storage.setItem(SAVE_KEY,raw);
-      if(this.state.resetPending)storage.removeItem(RESET_KEY);
+      this.source[SAVE_KEY]=raw;
+      if(this.state.resetPending){storage.removeItem(RESET_KEY);this.source[RESET_KEY]=null;}
       this.baseline=raw;this.state.resetPending=false;this.state.write='saved';return true;
     }catch{this.state.write='failed';return false;}
   }
   retry(data:SaveData):boolean {
+    // 확정된 충돌은 재시도나 외부 삭제로 해제하지 않습니다. 명시 load/reset만 허용합니다.
+    if(this.state.load==='conflict'){this.state.write='blocked';return false;}
     if(this.blocked){
       // 재검증은 디스크를 덮지 않으며, 반환된 옛 진행을 현재 메모리에 대입하지 않습니다.
-      const known=this.baseline;
-      this.load();
-      // 재검증만 한 기록을 현재 메모리의 출발점으로 승격하지 않습니다.
-      if(this.blocked){this.baseline=known;this.state.write='blocked';return false;}
-      if((this.state.load==='loaded'||this.state.load==='recovered')&&(known===undefined||known!==this.baseline)){
-        this.baseline=known;this.blocked=true;this.state.load='conflict';this.state.write='blocked';return false;
-      }
+      const probe=new SaveStore(this.access);probe.load();
+      for(const key of sourceKeys)if(this.source[key]!==undefined&&probe.source[key]!==undefined&&this.source[key]!==probe.source[key])return this.conflict();
+      if(probe.blocked){this.state.load=probe.state.load;this.state.write='blocked';return false;}
+      // 읽지 못했던 외부 진행/초기화 의도를 현재 메모리의 출발점으로 승격하지 않습니다.
+      if(!this.memoryKnown&&(probe.state.load!=='new'||probe.state.resetPending))return this.conflict();
+      this.source={...probe.source};this.memoryKnown=true;this.blocked=false;
+      this.state.load=probe.state.load;this.state.resetPending=probe.state.resetPending;
     }
     return this.save(data);
   }
   reset():SaveData|undefined {
-    try{this.access().setItem(RESET_KEY,'1');}
+    let storage:ReturnType<StorageAccess>;
+    try{storage=this.access();storage.setItem(RESET_KEY,'1');}
     catch{this.state.write='reset-failed';return;}
-    const data=defaults();this.baseline=undefined;this.blocked=false;
+    const data=defaults();this.baseline=undefined;this.source={[RESET_KEY]:'1'};this.memoryKnown=true;this.blocked=false;
     this.state={load:'new',write:'idle',resetPending:true};
+    try{this.read(storage,SAVE_KEY);this.read(storage,BACKUP_KEY);}
+    catch{this.blocked=true;this.state.load='read-error';}
     // 다음 회차 checkpoint가 한 번만 기록합니다. marker만 있어도 과거 사본은 부활하지 않습니다.
     return data;
   }
