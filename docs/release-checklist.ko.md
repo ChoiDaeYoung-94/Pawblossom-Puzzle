@@ -1,5 +1,20 @@
 # 출시까지 남은 작업
 
+## 현재 판단 기준 · 2026-10-18 · #122 callback 자식 정리
+
+기준 main `4938d3ff515f06369fa793279497e2cd86d591f3`, 브랜치 `codex/122-callback-child-cleanup`, [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)입니다. [계약·검증 단계/실패·LF SHA](android-release.ko.md#현재-작업-상태--2026-10-18--122-callback-자식-정리)를 우선합니다.
+
+- [x] callback fork 즉시 등록·결과/실제 close 분리·거부 즉시 관측·멱등 취소/동일 조인·늦은 BUSY 차단
+- [x] 실제 close→Worker 종료→단발 잠금 해제→부모 close→소유 폴더 삭제, 미확인 종료/부모 정리 실패 시 삭제 방지
+- [x] 합성20개·실제 BUSY 명시 취소1개 포함 최종 관련113/113, 기존 결과/assertion·worker 재시도·5초/worker/500ms/CI 유지
+- [x] 최종 소스 전체 한 번·타입/스토어12/에셋/두 빌드·최종 flags3false/마커0·diff 및7파일 SHA 보존
+- [ ] 최신 전체 성공: 32파일2,267개 중2,265통과/기존 game-service5,531.6698ms·reward-ledger worker-error2,195.649ms 실패, 내부 원인 미확정
+- [ ] 커밋 전 총괄 독립검수·승인된 커밋/푸시/Draft PR·최신 PR/main Node22·24 CI
+- [ ] #122 최초 callback timeout·실제 EPERM 핸들 소유자·과거 Round/보상 실패 원인 확인(Refs, 이슈 열림 유지)
+- [ ] #73 실서비스·실제 Google/SDK·기기·스토어 검증
+
+현재 커밋 전 STOP이며 새 커밋/PR은 없습니다. 사용자 조치/질문은 없고18시 총괄 취합입니다. APK/AAB·sync·버전·폰/전달·Drive/콘솔/상품·계정/키/env·최종 믹스·공개 배포 보류를 유지합니다. PR#132/기준 main의 선행 두 Node CI 성공과 아래 과거 작업 결과는 이번 전체 결과와 구분합니다.
+
 ## 현재 판단 기준 · 2026-10-18 · #126
 
 기준 main `c995a001db98ef1219a71dff6fe53c10c83a9872`, 브랜치 `codex/126-ssv-node-listener`, [#126](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/126)입니다. [계약·단계별 검증·LF SHA](android-release.ko.md#현재-작업-상태--2026-10-18--126)를 우선합니다. #121은 PR#131로 위 main에 반영되었으며 아래 대기 표현은 당시 이력입니다.

@@ -1,5 +1,5 @@
 import {afterEach,describe,expect,it,vi} from 'vitest';
-import {mkdtempSync,readFileSync,readdirSync,rmSync} from 'node:fs';
+import {existsSync,mkdtempSync,readFileSync,readdirSync,rmSync} from 'node:fs';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {DatabaseSync} from 'node:sqlite';
@@ -11,8 +11,10 @@ import {RewardLedger} from '../server/ads/rewardLedger';
 import {isAdmobCallbackStructure} from '../server/ads/admobSsv';
 import {createCallbackHttpAdapter,CALLBACK_PATH} from '../server/ads/callbackHttp';
 import {callback,epoch,keyEntry,keyResponse,policy,malleate} from './helpers/ssvFixture';
+import {createCallbackChildScope,finishCallbackTest} from './helpers/callbackChild';
 const key=randomBytes(32),rewardKey=randomBytes(32),owner={ownerId:'synthetic-private-owner',roundId:'synthetic-private-round'};
 const dirs:string[]=[],inboxes:CallbackInbox[]=[],ledgers:RewardLedger[]=[],dbs:DatabaseSync[]=[],workers:Worker[]=[];
+const childJobs=createCallbackChildScope(),lockReleases:(()=>void)[]=[];
 const workerUrl=new URL('./helpers/callback-inbox-worker.mjs',import.meta.url);
 const storage={kind:'unavailable',code:'storage'},clock={kind:'unavailable',code:'clock'};
 function fixture() {
@@ -31,11 +33,15 @@ function fixture() {
   return {path,rewardPath,dir,options,raw,claim,ledger,transport,open,conn,input,setTime:(n:number)=>time=n};
 }
 function close(b:CallbackInbox){b.close();inboxes.splice(inboxes.indexOf(b),1);}
-async function child(data:ReturnType<ReturnType<typeof fixture>['input']>,onBusy?:()=>void) {
-  const p=fork(workerUrl,[],{execArgv:['--experimental-strip-types'],stdio:['ignore','ignore','ignore','ipc']});
-  const done=new Promise<void>(r=>p.once('exit',()=>r()));
-  const result=new Promise<any>((r,j)=>{p.on('message',(v:any)=>{if(v?.kind==='worker-open-busy')onBusy?.();else r(v);});p.once('error',j);p.once('exit',c=>{if(c)j(new Error('worker-failed'));});});
-  try{p.send(data);const output=await result;await done;return output;}finally{if(p.exitCode===null){p.kill();await done;}}
+function startChild(data:ReturnType<ReturnType<typeof fixture>['input']>,onBusy?:()=>void) {
+  let p:ReturnType<typeof fork>;
+  try{p=fork(workerUrl,[],{execArgv:['--experimental-strip-types'],stdio:['ignore','ignore','ignore','ipc']});}catch{throw new Error('callback-child-spawn-failed');}
+  return childJobs.track(p,data,onBusy);
+}
+function child(data:ReturnType<ReturnType<typeof fixture>['input']>,onBusy?:()=>void){return startChild(data,onBusy).output;}
+function releaseLockOnce(lock:DatabaseSync){
+  let released=false;const release=()=>{if(released)return;released=true;lock.exec('ROLLBACK');};
+  lockReleases.push(release);return release;
 }
 async function parallel(data:unknown[]) {
   const batch=data.map(d=>new Worker(workerUrl,{workerData:d,execArgv:['--experimental-strip-types']}));workers.push(...batch);
@@ -45,7 +51,14 @@ async function parallel(data:unknown[]) {
     w.on('message',v=>v==='ready'?r():receive(v));w.on('error',j);
   })));batch.forEach(w=>w.postMessage('go'));return Promise.all(outputs);
 }
-afterEach(async()=>{vi.restoreAllMocks();await Promise.all(workers.splice(0).map(w=>w.terminate()));dbs.splice(0).forEach(d=>d.close());inboxes.splice(0).forEach(b=>b.close());ledgers.splice(0).forEach(l=>l.close());dirs.splice(0).forEach(p=>rmSync(p,{recursive:true,force:true}));});
+function runCleanupSteps(steps:(()=>void)[]){let failed=false;for(const step of steps){try{step();}catch{failed=true;}}if(failed)throw new Error('callback-resource-cleanup-failed');}
+async function cleanup(){await finishCallbackTest(childJobs,{
+  terminateWorkers:()=>Promise.all(workers.splice(0).map(w=>w.terminate())),
+  releaseLocks:()=>runCleanupSteps(lockReleases.splice(0)),
+  closeParents:()=>runCleanupSteps([...dbs.splice(0),...inboxes.splice(0),...ledgers.splice(0)].map(resource=>()=>resource.close())),
+  removeFolders:()=>dirs.splice(0).forEach(p=>rmSync(p,{recursive:true,force:true})),
+});}
+afterEach(async()=>{vi.restoreAllMocks();await cleanup();});
 describe('암호화 수신·원장 내부검증·재시작',()=>{
   it('durable receipt, 동일원문 dedup·terminal tombstone·실원장 신규1회',async()=>{
     const f=fixture(),b=f.open(),a=b.receive(f.raw);expect(a.kind).toBe('accepted');expect(b.receive(f.raw)).toEqual(a);
@@ -79,14 +92,23 @@ describe('암호화 수신·원장 내부검증·재시작',()=>{
   });
   it('worker 생성자 SQLite BUSY 진단→잠금 해제→같은 요청 제한 재시도',async()=>{
     const f=fixture(),b=f.open();b.receive(f.raw);const lock=f.conn(f.rewardPath);lock.exec('BEGIN IMMEDIATE');let busy=0;
-    const result=await child(f.input({openRetries:2,diagnostics:true,notifyOpenBusy:true}),()=>{busy++;lock.exec('ROLLBACK');});
+    const release=releaseLockOnce(lock);let result:any;
+    try{result=await child(f.input({openRetries:2,diagnostics:true,notifyOpenBusy:true}),()=>{busy++;release();});}finally{release();}
     expect(busy).toBe(1);expect(result).toEqual({kind:'completed',diagnostic:{openAttempts:2,failures:[{stage:'open',sqlite:'busy'}]}});
     expect(f.conn().prepare('SELECT state,attempts FROM callback_inbox').get()).toEqual({state:'completed',attempts:1});expect(f.conn(f.rewardPath).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n).toBe(1);
   });
   it('worker 생성자 BUSY는 최대3회 뒤 오류·무한 재시도/성공 위장 없음',async()=>{
     const f=fixture();f.open();const lock=f.conn(f.rewardPath);lock.exec('BEGIN IMMEDIATE');
-    try{expect(await child(f.input({openRetries:2,diagnostics:true}))).toEqual({kind:'worker-error',stage:'open',code:'open-failed',sqlite:'busy',diagnostic:{openAttempts:3,failures:Array.from({length:3},()=>({stage:'open',sqlite:'busy'}))}});}finally{lock.exec('ROLLBACK');}
+    const release=releaseLockOnce(lock);
+    try{expect(await child(f.input({openRetries:2,diagnostics:true}))).toEqual({kind:'worker-error',stage:'open',code:'open-failed',sqlite:'busy',diagnostic:{openAttempts:3,failures:Array.from({length:3},()=>({stage:'open',sqlite:'busy'}))}});}finally{release();}
     expect(f.conn(f.rewardPath).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n).toBe(0);
+  });
+  it('BUSY 대기 자식을 명시적으로 취소한 뒤 소유 DB와 임시 폴더를 정리',async()=>{
+    const f=fixture(),b=f.open();b.receive(f.raw);const lock=f.conn(f.rewardPath);lock.exec('BEGIN IMMEDIATE');const release=releaseLockOnce(lock);
+    let busy!:()=>void;const notified=new Promise<void>(resolve=>busy=resolve);
+    const job=startChild(f.input({openRetries:2,diagnostics:true,notifyOpenBusy:true}),busy);
+    await notified;await job.cancelAndWait();await expect(job.output).rejects.toThrow('callback-child-cancelled');
+    expect(childJobs.size).toBe(0);await cleanup();release();expect(existsSync(f.dir)).toBe(false);
   });
   it.each(['hmac','schema'])('worker %s 영구 오류는 BUSY로 오인/재시도하지 않음',mode=>{
     const f=fixture();f.open();const d=f.conn(f.rewardPath);if(mode==='hmac')d.prepare('UPDATE reward_auth SET state_mac=?').run('0'.repeat(64));else d.exec('ALTER TABLE reward_vouchers ADD COLUMN extra TEXT');

@@ -1,5 +1,11 @@
 # 출시까지의 개발 순서
 
+## 현재 작업 현황 · 2026-10-18 · #122 callback 자식 정리
+
+기준 main `4938d3ff515f06369fa793279497e2cd86d591f3`, `codex/122-callback-child-cleanup`입니다. **callback fork 즉시 등록·result/close 분리·멱등 취소·자식 close 뒤 부모 정리·잠금 단발 해제를 구현했고 관련113개는 통과했습니다. 최신 전체는32파일2,265통과/기존 game-service·reward-ledger2실패로 보존하며 커밋 전 총괄 독립검수 대기**입니다. [계약·전체 실패·실제 EPERM 소유자 미확정·검증/SHA](android-release.ko.md#현재-작업-상태--2026-10-18--122-callback-자식-정리)를 우선합니다.
+
+타입·스토어12개·에셋·testing→production·최종 flags3false/마커0·diff를 확인했습니다. 전체/CI 재실행·기대 완화 없이 #122를 열린 상태로 유지하며 다음은 독립검수와 승인된 커밋/푸시/Draft PR 및 정확한 최신 PR/main Node22·24 CI입니다. 현재 새 커밋/PR은 없습니다. 사용자 조치/질문은 없고18시 총괄 취합입니다. APK/AAB·sync·버전·최종 믹스·계정/키/env·Drive/콘솔/상품·폰/전달·공개 배포 보류를 유지합니다. #126 PR#132와 기준 main의 선행 CI 성공은 이번 전체 실패를 대체하지 않으며 아래 상태는 당시 이력입니다.
+
 ## 현재 작업 현황 · 2026-10-18 · #121
 
 기준 main `f1660bda2c797f62bf5119eb642c4f4fbb5e4aba`, `codex/121-game-node-listener`에서 trusted adapter용 `{listener,close}`를 구현했습니다. **관련327/327·최신 전체30파일2,143/2,143 한 번·Node22 listener78/78·타입/스토어12/두 웹 빌드 통과, 커밋 전 총괄 독립검수 대기**입니다. rawHeaders·8KiB 수신·절대 기한·슬롯 실제 settle·정상 keep-alive/조기 단절·빈 요청 최적화 수명·고정 오류/HEAD/204를 다루며 서버 생성/listen/배포·외부 서비스 자원 소유는 추가하지 않았습니다. [최신 계약·실패 이력·LF SHA·Node 버전별 범위](android-release.ko.md#현재-작업-상태--2026-10-18--121)를 우선합니다.
