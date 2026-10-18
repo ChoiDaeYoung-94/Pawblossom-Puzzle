@@ -1,5 +1,9 @@
 # 웹 자동 검증
 
+## 최신 작업 근거 · 2026-10-18 · #122 callback parallel 수명
+
+기준 main `aa7e3ca0e437080536a9d8e5916f7a0d51c11bb7`·`codex/122-callback-parallel-lifecycle`, **최종 관련136/136·최신 전체35파일2,349/2,349 한 번·타입/스토어12/에셋/두 빌드·최종 flags3false/마커0·diff/7파일 SHA 확인**입니다. [검증 단계/소스 SHA·과거 실패](android-release.ko.md#현재-작업-상태--2026-10-18--122-callback-parallel-수명)를 우선합니다. ready 뒤 error/무결과 exit의 검사 harness 공백만 보강하며 정상 결과의 exit 무대기·실제 종료 뒤 부모 정리·기존8worker/go/업무 assertion·SQLite500ms/기본5초/file2/CI는 유지합니다. go 이후 회귀 추가 전 전체2,347개 성공과 최종 소스 전체1회는 별도 기록합니다. #122와 이전 main136 Node22 reward-redemption timeout 원인 미확정 상태를 유지하고 CI rerun은 하지 않았습니다. 총괄 독립 관련136/136·전체/앱/서버 타입·승인 전7파일 SHA·production3개 bundle 동일·무변경 범위 확인을 마쳐 한국어 test 커밋·푸시·Ready PR 제출을 승인받았습니다. 최신 PR/main Node22·24 CI와 병합/정리는 제출 후 총괄이 확인합니다. 아래 선행 CI/통합 성공은 이번 미커밋 결과와 구분합니다.
+
 ## 최신 통합 근거 · 2026-10-18 · #129
 
 검증 기준 main은 `dc210437bc3ec02b07cc2e86cd4ebb430ac891bc`입니다. [PR#133 CI39108385256](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39108385256)와 [정확한 main CI39108513692](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39108513692)의 Node22·24가 모두 성공했고 main 로그의32파일2,267 passed를 각각 확인했습니다. 스토어12개·타입·production/testing 두 빌드와 각 플래그 검사도 성공했습니다. 서버 모듈과 검사 helper는 앱 번들에 포함되지 않으며 로컬 최종 production 세 flags는false입니다.

@@ -1,5 +1,20 @@
 # 출시까지 남은 작업
 
+## 현재 판단 기준 · 2026-10-18 · #122 callback parallel 수명
+
+기준 main `aa7e3ca0e437080536a9d8e5916f7a0d51c11bb7`, `codex/122-callback-parallel-lifecycle`입니다. [계약·단계별 검증·SHA·과거 실패](android-release.ko.md#현재-작업-상태--2026-10-18--122-callback-parallel-수명)를 우선합니다.
+
+- [x] callback 전용 즉시 소유 등록·ready/result/exit 분리·첫 오류의 batch 전체 pending 거절·거부 즉시 관측
+- [x] 정상8개 barrier/go 순서/동일 payload·exit 무대기, 실제 go 뒤 오류2개 포함 합성23개·관련136개 통과
+- [x] 취소/종료 실패·일부 exit·terminate Promise 선행 완료에서도 실제 전체 exit 전 DB/폴더 정리0회 확인
+- [x] 최종 소스 전체35파일2,349개 한 번·타입/스토어12/에셋/testing→production·최종 flags3false/마커0·diff/7파일 SHA 체크포인트 확인
+- [x] 총괄 독립 관련136/136·전체/앱/서버 타입·승인 전7파일 SHA·production bundle 동일·범위 검수 및 Ready PR 제출 승인
+- [ ] 승인된 한국어 커밋/푸시/Ready PR·최신 PR/main Node22·24 CI
+- [ ] #122 이전 main136 reward-redemption:163 timeout·최초 callback/EPERM·과거 Round/보상 원인 확인(미확정, 이슈 열림)
+- [ ] 실서비스/SDK·기기·스토어 검증
+
+현재 한국어 test 커밋·푸시·Ready PR 제출 승인 상태이며 사용자 조치/질문은 없습니다. Android/APK·계정·오디오·배포 보류와18시 총괄 취합을 유지합니다. 아래 선행 상태/성공은 당시 이력입니다.
+
 ## 현재 통합 판단 · 2026-10-18 · #129
 
 구현 검증 기준 main `dc210437bc3ec02b07cc2e86cd4ebb430ac891bc`, [원격 CI39108513692](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39108513692)의 Node22·24 각각2,267개·타입·스토어12개·두 웹 빌드 성공입니다. [오늘9개 PR과 실패 보존 근거](android-release.ko.md#현재-통합-상태--2026-10-18--129)를 우선합니다. 아래 현재/제출 전 표현은 각 당시 이력입니다.

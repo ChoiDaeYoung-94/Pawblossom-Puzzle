@@ -1,4 +1,51 @@
-## 현재 작업 상태 · 2026-10-18 · #137
+## 현재 작업 상태 · 2026-10-18 · #122 callback parallel 수명
+
+기준 main/origin main은 `aa7e3ca0e437080536a9d8e5916f7a0d51c11bb7`, 작업 브랜치는 `codex/122-callback-parallel-lifecycle`입니다. [#122 작업 목적·범위·완료 기준](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122#issuecomment-6247529205)에 연결했습니다. **검사 전용 parallel Worker 수명 구현·최종 관련136/136·최신 전체35파일2,349/2,349 한 번·전체/앱/서버 타입·스토어12개·에셋·testing→production·최종 flags3false/마커0·diff/7파일 LF SHA 확인, 총괄 독립검수 완료·한국어 커밋/푸시/Ready PR 제출 승인**입니다. 한국어 test 커밋·푸시·Ready PR 제출을 승인받았습니다. 총괄이 확인한 [PR#138 CI39110445295](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39110445295)와 [정확한 main CI39110589558](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39110589558)의 Node22·24 성공/기존2,326개와 이번 미커밋 소스 결과는 구분합니다. 아래 #137 및 선행 현재/제출 전 표현은 당시 이력입니다.
+
+### 확인한 harness 공백과 보강 계약
+
+기존 callback `parallel()`은 error를 ready Promise의 reject에만 연결했습니다. ready 후 error가 발생하면 이미 완료된 ready를 바꿀 수 없어 result 대기가 남고, 최종 결과 없는 exit도 정산하지 못하는 공백을 확인했습니다. 과거 간헐 timeout의 실제 내부 원인을 새로 관측한 것은 아닙니다.
+
+- callback 전용 `createCallbackParallelScope()`는 각 Worker 생성 직후 소유 등록하고 준비/결과/실제 exit를 분리합니다. 중간 생성자 실패도 앞선 Worker를 정리 목록에 남깁니다. 주입 factory에서 기존 Worker 오류가 동기 재진입해도 이후 등록된 job의 ready/result를 같은 오류로 거절하는 방어를 검사합니다. 이를 실제 native 오류의 원인이라고 주장하지 않습니다.
+- 첫 고정 오류로 **같은 batch의 모든 미완료 ready/result를 거절**합니다. A가 ready 또는 자기 결과를 보낸 뒤 실패하고 B가 ready/결과 대기 중인 경우도 대기를 끝냅니다. 개별·집계·호출 반환 Promise의 거부 처리기를 즉시 연결하며 원문 오류/SQL/입력/토큰/DB 내용을 복사하거나 새 metadata를 추가하지 않습니다.
+- 모든 ready 뒤 기존 입력 순서대로 `'go'`를 한 번 보냅니다. 실패 상태에서는 추가 송신하지 않고 postMessage throw도 batch 실패로 정산합니다. 정상 결과는 받은 payload와 입력별 배열 순서를 그대로 반환하며 **자연 exit를 기다리지 않습니다**. 실제8worker/두 batch의 순서·입출력·기존 업무 assertion은 유지합니다.
+- 결과 없는 exit는 코드0도 고정 오류로 거절합니다. Node22·24는 Worker가 보낸 모든 메시지를 exit 전에 전달하고 exit를 마지막 이벤트로 보장하므로 child process의 close 대기 계약과 구분합니다. [Node22 message/exit](https://nodejs.org/download/release/v22.22.0/docs/api/worker_threads.html#event-message), [Node24 message/exit](https://nodejs.org/docs/latest-v24.x/api/worker_threads.html#event-message).
+- 정상 결과 후에도 소유 목록은 실제 exit까지 유지합니다. afterEach는 기존 위치에서 멱등 취소와 terminate를 요청하고 **각 Worker의 실제 exit와 terminate Promise를 모두 기다린 뒤** 잠금/부모 DB/폴더 정리로 진행합니다. 본문/result를 조인하지 않아 순환 대기를 만들지 않습니다. terminate Promise만 먼저 완료된 합성 상태, throw/reject, 일부만 종료된 상태에는 DB close/폴더 삭제0회를 확인합니다. 실제 종료 미확인 상태를 정리 성공으로 간주하지 않습니다. [Node terminate의 종료 계약](https://nodejs.org/docs/latest-v24.x/api/worker_threads.html#workerterminate).
+
+새 합성23개는 정상8개 ready barrier·ordered go·역순 결과/동일 payload·exit 무대기, go 전 오류, **전체 go 확인 후 오류/자기 결과 뒤 오류** 각1개, 무결과 exit0/1, 송신 실패, 중간 생성 실패/재진입, 첫 오류 보존, 거부 지연 관측, 반복/재진입 취소·늦은 메시지, 실제 exit 전 DB/폴더 미접근, 종료 실패, 정리 중 신규 batch 거절/다음 batch 독립 실행을 포함합니다. 강제5초 timeout 검사는 추가하지 않았습니다.
+
+제품 src·server와 보상/Round, callback worker 프로토콜/run/재시도/SQLite hooks, 기존 fork helper·회귀는 변경하지 않았습니다. SQLite500ms·검사 기본5초·file worker2·내부8worker·운영 정책·CI·의존성도 그대로입니다. 이번 변경은 검사 코드3개와 기존 문서4개입니다.
+
+### 검증 단계와 과거 실패 보존
+
+로컬 Node24.21.0에서 동일 기준 main으로 실행했습니다. 최종 코드3개 LF SHA를 명령별로 수집하고 관련/전체/타입/스토어/에셋/testing→production에서 동일함을 확인합니다.
+
+| 단계(KST) | 결과와 구분 |
+|---|---|
+| 초기 관련·타입 | 관련3파일134/134·전체/앱/서버 타입 통과. 정확한 초기 실행 시각은 JSON 시작 시각으로 남기며 당시 별도 소스 SHA는 미수집입니다. |
+| exit 증거 보강 후17:17:30~17:18:44 | 관련134/134, 전체35파일2,347/2,347 한 번, 타입/스토어12/에셋/testing→production 통과. 이 단계는 go 이후 명시 회귀2개 추가 전입니다. |
+| 읽기 검수 반영 | 기존 after-ready/after-own-result 합성은 실제 go 이전 경로였습니다. 이를 유지하고 모든 ready→go 송신 확인/flush 뒤 error 및 자기 결과 뒤 error가 다른 미완료 result를 거절하는2개를 추가했습니다. helper 결함을 관측한 것이 아닌 회귀 범위 보강입니다. |
+| 최종 관련17:18:53~17:19:07 | **3파일136/136**(parallel23+Inbox93+fork20), exit0. |
+| 최종 전체17:19:07~17:19:56 | **35파일2,349/2,349·pending0·exit0**. 기존2,326개+새 합성23개이며 이 최종 소스 전체를 한 번 실행했습니다. 위 보강 전 전체 성공과 합산하지 않습니다. |
+| 최종 타입/스토어/에셋17:19:56~17:20:00 | 전체/앱/서버 타입·store:check·store:test12/12·assets:check 모두 exit0입니다. |
+| 최종 두 빌드17:20:00~17:20:09 | build:test→build 모두 exit0, 각각 flags3true/false를 보존했고 마지막 production은 모두false입니다. 기존 Vite500kB 청크 경고는 남습니다. |
+| 정적 체크포인트 | src/dist 서버·검사 helper 마커0건, tracked 및 신규 LF snapshot whitespace 진단0건, 보호한 제품/worker/fork/설정/Android의 기준 main 대비 diff0과 최종7파일 SHA를 확인합니다. |
+
+총괄 독립검수에서 정확한 같은 코드3파일 관련136/136과 전체/앱/서버 타입이 통과했습니다. 검수 전7파일 LF SHA가 모두 checkpoint와 일치했고 production3개 bundle 동일·src/server/public/android/package/lock/vite 무변경·diff 확인을 마쳤습니다. 최종 코드 읽기에서도 중요 결함/누락이 없고 실제 go 이후 오류2개 회귀를 확인하여 코드/검사 변경 없이 Ready PR 제출을 승인받았습니다. 독립 관련 JSON은 Git 밖 QA의 `root-related.json`, 승인 전 SHA는 `checkpoint-before-approval.json`에 보존하며 이후 문서 상단 승인 상태만 갱신했습니다.
+
+초기 두 버전의 성공·최종 결과와 별도로, #134의 PR#136 Node22·24 성공 후 정확한 main `2e4e3451903a56c4febf94e7b8fba9ac320e0119`의 [CI39109768855](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39109768855)는 Node24 성공/Node22 기존 `reward-redemption.test.ts:163:19` 「남은 전체 행수0」5,000ms timeout·2,302/2,303이었습니다. 당시 신규 구매36개는 통과했으며 내부 phase/native code는 미관측입니다. 개별 UPDATE autocommit 등이 실제 timeout 원인이라고 단정하거나 이번 helper가 고쳤다고 주장하지 않습니다. 원문 `pawblossom-main136-failed.log`를 Git 밖 QA에 사본 보존했고 CI rerun은 하지 않았습니다. 최초 callback timeout·실제 EPERM 핸들 소유자·과거 Round/보상 실패 원인도 미확정으로 [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)에 열린 상태로 유지합니다(Refs, 닫지 않음).
+
+| 최종 코드 파일 | LF UTF-8 SHA-256 |
+|---|---|
+| `tests/helpers/callbackParallel.ts` | `54c69013d9d7fe3adc8183e06029a0e4c8f3733b87c65b5d256f42e0af0c0edb` |
+| `tests/callback-parallel.test.ts` | `77dc91e3bae1ae23e30e9884d84e38aab11dc65917e3ed545f8b4144a8c5a22e` |
+| `tests/callback-inbox.test.ts` | `e7c555d9c4fb84f98eebffb5948e0a294ef8b18e8dd56ee9047f5137f4c29be8` |
+
+Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-122-callback-parallel-lifecycle`에 초기/보강 전/최종 관련 및 전체 JSON·명령/UTC/exit/단계별 소스 SHA·보강 전 코드 snapshot·원문 로그·두 빌드 flags·최종7파일 SHA/체크포인트를 보존합니다. 재현은 `node node_modules/vitest/vitest.mjs run tests/callback-parallel.test.ts tests/callback-inbox.test.ts tests/callback-child.test.ts --reporter=json --outputFile=<Git 밖 JSON>`→파일 인수 없는 전체 run→npm typecheck/store:check/store:test/assets:check/build:test/build 순서입니다. 실행기에만 Node 폴더 PATH를 설정합니다.
+
+총괄 독립검수를 마쳤으며 **한국어 test 커밋·푸시·Ready PR 제출 승인** 상태입니다. 최신 PR/main Node22·24 CI는 제출 후 별도 확인 대상이고, 최신 PR/main CI·Ready 이후 병합/정리는 총괄이 담당합니다. 사용자 조치/질문은 없고18시 총괄 취합입니다. APK/AAB·Android sync·버전·폰/전달·계정/키/env·Drive/콘솔/상품·최종 오디오 믹스·공개 배포 보류를 유지합니다. 브라우저 UI·Android·실서비스·광고 지급·스토어 검증 완료로 확대하지 않습니다.
+
+## 이전 작업 상태 · 2026-10-18 · #137
 
 [회수 조회 수명 #137](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/137)는 기준 main `2e4e3451903a56c4febf94e7b8fba9ac320e0119`의 `codex/137-voided-operation-lifetime`에서 구현했습니다. **관련5파일274개, 최신 전체34파일2,326개, 전체/앱/서버 타입·스토어12개·에셋·testing→production 빌드와 총괄 독립검수를 마쳤으며 한국어 커밋·푸시·Ready PR 제출 승인 상태**입니다. 현재 변경은 생산 코드2개·새 회귀1개·이 기존 문서의4파일입니다. 기존 #134 helper/GET/ACK/수량 설정·DB schema/profile을 변경하지 않았습니다. 아래 #134의 voided 제외 등은 당시 이력이며 현재 범위는 이 상단을 우선합니다.
 

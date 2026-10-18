@@ -12,9 +12,11 @@ import {isAdmobCallbackStructure} from '../server/ads/admobSsv';
 import {createCallbackHttpAdapter,CALLBACK_PATH} from '../server/ads/callbackHttp';
 import {callback,epoch,keyEntry,keyResponse,policy,malleate} from './helpers/ssvFixture';
 import {createCallbackChildScope,finishCallbackTest} from './helpers/callbackChild';
+import {createCallbackParallelScope} from './helpers/callbackParallel';
 const key=randomBytes(32),rewardKey=randomBytes(32),owner={ownerId:'synthetic-private-owner',roundId:'synthetic-private-round'};
-const dirs:string[]=[],inboxes:CallbackInbox[]=[],ledgers:RewardLedger[]=[],dbs:DatabaseSync[]=[],workers:Worker[]=[];
+const dirs:string[]=[],inboxes:CallbackInbox[]=[],ledgers:RewardLedger[]=[],dbs:DatabaseSync[]=[];
 const childJobs=createCallbackChildScope(),lockReleases:(()=>void)[]=[];
+const parallelWorkers=createCallbackParallelScope();
 const workerUrl=new URL('./helpers/callback-inbox-worker.mjs',import.meta.url);
 const storage={kind:'unavailable',code:'storage'},clock={kind:'unavailable',code:'clock'};
 function fixture() {
@@ -43,17 +45,10 @@ function releaseLockOnce(lock:DatabaseSync){
   let released=false;const release=()=>{if(released)return;released=true;lock.exec('ROLLBACK');};
   lockReleases.push(release);return release;
 }
-async function parallel(data:unknown[]) {
-  const batch=data.map(d=>new Worker(workerUrl,{workerData:d,execArgv:['--experimental-strip-types']}));workers.push(...batch);
-  const outputs:Promise<any>[]=[];
-  await Promise.all(batch.map(w=>new Promise<void>((r,j)=>{
-    let receive!:(x:any)=>void;outputs.push(new Promise(resolve=>receive=resolve));
-    w.on('message',v=>v==='ready'?r():receive(v));w.on('error',j);
-  })));batch.forEach(w=>w.postMessage('go'));return Promise.all(outputs);
-}
+function parallel(data:unknown[]){return parallelWorkers.run(data,d=>new Worker(workerUrl,{workerData:d,execArgv:['--experimental-strip-types']}));}
 function runCleanupSteps(steps:(()=>void)[]){let failed=false;for(const step of steps){try{step();}catch{failed=true;}}if(failed)throw new Error('callback-resource-cleanup-failed');}
 async function cleanup(){await finishCallbackTest(childJobs,{
-  terminateWorkers:()=>Promise.all(workers.splice(0).map(w=>w.terminate())),
+  terminateWorkers:()=>parallelWorkers.cancelAllAndWait(),
   releaseLocks:()=>runCleanupSteps(lockReleases.splice(0)),
   closeParents:()=>runCleanupSteps([...dbs.splice(0),...inboxes.splice(0),...ledgers.splice(0)].map(resource=>()=>resource.close())),
   removeFolders:()=>dirs.splice(0).forEach(p=>rmSync(p,{recursive:true,force:true})),
