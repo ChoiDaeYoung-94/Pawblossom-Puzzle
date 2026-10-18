@@ -1,5 +1,77 @@
 # Android 빌드와 출시 준비
 
+## 현재 작업 상태 · 2026-10-18 · #117
+
+기준 main `cfe9d32b47567056864ab09789818643d668248b`, 작업 브랜치 `codex/117-game-http-boundary`, [이슈 #117](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/117)입니다. **제한된 순수 게임 HTTP 요청/응답·OPTIONS 어댑터 구현·로컬 검증·총괄 최종 독립검수 완료, 커밋/푸시/Ready PR 제출 승인**입니다. 승인 시점의 기록이며 최신 PR/main 원격 검사·반영 결과는 GitHub에 별도 기록합니다. 아래 #115 및 날짜별 “현재” 표현은 당시 이력입니다. 기존 GameService/Auth/Round/Reward의 핵심 API·스키마·TTL과 앱/광고 콜백 경로는 수정하지 않았습니다.
+
+최신 코드 검증: KST **14:09:25 시작**, Node24.21.0 `npm test` **29파일/1,922개(기존1,734+신규188), 40.25초 통과**입니다. 스토어 원본/규격 검사·스토어12개·전체/앱/서버 타입·testing→production 웹 빌드도 통과했습니다. 최종 `dist/build-info.json`의 `testTools/androidTestAds/androidTestBilling=false`, src/dist의 서비스/HTTP/인증/원장/SQLite/capability 마커0건입니다. 500kB chunk 경고와 Node 타입 변환 실험 경고는 기존 상태로 남습니다. 아래 상세 계약·검증과 SHA가 이번 체크포인트의 근거이며, 최신 PR/main Node22·24 CI는 아직 실행하지 않았습니다.
+
+실제 listen/스트림 읽기·TLS·공개 호스트/배포·앱/SDK 연결·실계정/키/env·운영 광고/결제·연령/동의·단말/스토어 검증은 [#73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)에 남습니다. APK/AAB·Android sync·버전·최종 오디오 믹스·Drive/콘솔·폰 테스트/전달은 수행하지 않았습니다. 이 제한된 어댑터의 합성 검증을 공개 서버 안전 또는 서비스/출시 완료로 표시하지 않습니다.
+
+중간 사용자 확인 없이 진행하며, 다음 미결정은 **오늘 18시 종합 보고**로 모읍니다: 실제 최저 이용연령/대상연령, 공개 개발자명·지원 이메일·개발자 사이트, 바로 시작+선택 계정 연결과 첫 출시 기기간 진행 복원 필수 중 우선순위, 월 서버 운영비 상한/운영 계정, 광고 제거 범위(전면만/선택 보상형 예외)와 한국·미국 가격입니다. 광고+비소모성 제거 상품1개 방향은 이미 확정이며 도입 여부를 다시 묻거나 실제 값/정책을 임의 확정하지 않습니다. 지금 사용자께 요청할 조치는 없습니다.
+
+## 2026-10-18 · 제한된 게임 HTTP 요청·응답과 preflight (이슈 #117)
+
+### 경로와 입력 계약
+
+`createGameHttpAdapter(service, {allowedOrigins?})`는 신뢰된 호스트가 완성하여 전달한 `{method, target, headers, body, signal?}`만 받습니다. raw header는 병합 전 이름/값 쌍 배열이며 body는 실제 `Uint8Array` view(Buffer 포함)입니다. 실제 네트워크 요청 수신기를 만들지 않습니다. service-like 객체/Proxy를 거절하고 모듈 로딩 때 보존한 `GameService.prototype` 메서드를 호출하여 instance/subclass override를 신뢰하지 않습니다. prototype만 위조한 객체는 실제 private 필드가 없으므로 503이며 위조 성공 응답을 만들지 못합니다. 같은 프로세스의 악성 코드에 대한 격리 장치는 아닙니다.
+
+| 정확한 원문 경로 | POST JSON의 허용 필드 |
+| --- | --- |
+| `/v1/rounds/start` | `requestId, levelId` |
+| `/v1/rounds/get` | `roundId` |
+| `/v1/rounds/command` | `roundId, operationId, expectedRevision, command` |
+| `/v1/rounds/reward/claim` | `roundId, expectedRevision` |
+| `/v1/rounds/reward/apply` | `roundId` |
+
+- 원문 target 최대128자, 쿼리·fragment·percent escape·절대 URL은 400, 다른 경로는 404입니다. 경로를 decode/정규화하지 않으며 callback `/callbacks/admob`는 별도 `callbackHttp`/Inbox 경로에 유지합니다. 알려진 경로의 POST/OPTIONS 이외 메서드는 405/`Allow: POST, OPTIONS`입니다.
+- raw header 최대32개·총16KiB(ASCII 이름+값+콜론/공백/CRLF 4byte 계산), 이름64byte·값8KiB입니다. ASCII token 이름·출력 가능한 ASCII/HTAB 값만 받고 CR/LF/NUL/obs-text를 거절합니다. **모든 이름의 중복을 대소문자 구분 없이 거절**하므로 authorization/content-type/content-length/Origin도 병합으로 유실되지 않습니다. 이는 일반 HTTP 전체를 허용하는 파서가 아닌 자체 strict profile입니다.
+- POST body 최대8KiB입니다. typed array의 native buffer/offset/length로 실제 view를 제한하고 별도 복제하므로 사용자 getter/iterator/species를 실행하지 않습니다. SharedArrayBuffer와 분리된 buffer/Proxy/다른 형식은 거절합니다. `Content-Length`는 선택이지만 있으면 선행0 없는 십진수와 실제 byte 수가 일치해야 합니다. transfer-encoding/content-encoding/trailer는 이 계층에서 거절합니다. 원시 프레이밍/압축/중복 원본을 정규화하기 전의 제한은 여전히 호스트 책임입니다.
+- Content-Type은 대소문자 무관 `application/json` 또는 `application/json; charset=utf-8`만 허용합니다(그 외415). fatal UTF-8·BOM/잘못된 JSON·루트 object·정확한 필드·중복 키/escape 등가 키·최대 깊이32를 검사합니다. 기존 `strictSessionJson`을 import만 하여 재사용하며 인증 응답 파서/성공 shape는 바꾸지 않았습니다. 중첩 command/좌표는 기존 `commandSnapshot`으로 검증합니다. body/query의 ticket·owner/context/board/score/grant/adunit/동의 bool 등 추가 필드는 인증 전에 거절합니다.
+- 인증은 **Authorization 헤더만** 사용합니다. Bearer scheme은 대소문자를 구분하지 않고 scheme 뒤1개 이상 ASCII SP, 이어서 RFC6750 b64token/token68(`ALPHA/DIGIT/-/./_/~/+//` 뒤 선택 `=`)만 허용합니다. 티켓1~4096자이고 앞뒤 OWS·HTAB·쉼표·중간 공백은 400입니다. 내부 PlayFab의 `0x21..0x7e` strict ASCII ticket 전체가 이 문자 집합에 포함된다는 주장은 하지 않습니다. 실제 provider/티켓 호환 검증은 미완료입니다.
+- 요청·헤더·body·명령과 Origin 구성은 첫 await 전에 snapshot합니다. 선택 signal은 Proxy/위조·자체 문자열 필드/변형 프로토타입을 거절하고 native AbortSignal getter로 확인합니다. 실제 취소 신호는 보존하여 인증 중 abort/close 이후 늦은 성공이 DB를 바꾸지 못하게 합니다. 동기 SQLite 진입 이후 선점 취소를 제공하지는 않습니다.
+
+### CORS와 OPTIONS
+
+기본 Origin 허용 목록은 비어 있습니다. 명시된 Origin이 있으면 정확한 허용 목록과 일치해야 하며 없으면403입니다. 서버 구성은 최대16개·각256자 이내의 정규화된 **HTTPS origin**만 받고 wildcard·`null`·경로/쿼리·userinfo·중복·비정규 표기를 거절합니다. 구성/배열은 생성 시 복제합니다. Origin 없는 native POST도 반드시 세션 인증을 받습니다. Origin 검사는 인증을 대신하지 않습니다.
+
+초기 초안의 OPTIONS 미지원 상태에서 총괄 읽기 검토 후 같은 #117 범위에 순수 preflight를 추가했습니다. **현재는 알려진 5개 경로의 OPTIONS를 지원합니다.** 원문 헤더의 같은 형식/중복/크기 제한과 실제 body0byte(있으면413), 선택 Content-Length0을 확인합니다. 정확히 허용된 Origin과 `Access-Control-Request-Method: POST`, `Access-Control-Request-Headers`의 authorization/content-type 중1~2개 comma 목록만 허용합니다. 헤더명 대소문자·항목 앞뒤 SP/HTAB은 허용하고 중복/빈 항목/문법 오류/128자 초과는400, 미허용 이름은403입니다. ACRM 누락/문법 오류는400, 문법상 유효하지만 다른 method는405입니다. 필수 Origin 누락/비허용은403입니다.
+
+성공은 인증/DB 호출 없이 **204·빈 body**, 정확한 ACAO·`Access-Control-Allow-Methods: POST`·`Access-Control-Allow-Headers: authorization, content-type`·`Access-Control-Max-Age: 0`입니다. OPTIONS 응답의 Vary는 Origin/Access-Control-Request-Method/Access-Control-Request-Headers이며 POST는 Origin입니다. wildcard와 Access-Control-Allow-Credentials를 반환하지 않습니다. preflight 성공은 실제 POST의 인증/정책/보상 성공을 뜻하지 않습니다. 실제 브라우저 fetch/HTTP 호스트 연결은 이번에 검사하지 않았습니다.
+
+### 응답과 호스트 책임
+
+모든 오류 body는 고정 `{code}`이며 ticket/원문/provider ID·비밀키/예외·provider 세부 code를 반환하거나 로그/파일에 기록하지 않습니다. 성공은 실제 서비스의 공개 snapshot/created/applied/outcome/선택 rewardCleanup 또는 SDK용 opaque claim(`customData/userId/expiresAt`)만 선택합니다. owner/provider context/RNG/private grant는 반환하지 않습니다. `voucher-missing`은409이며 성공/큐접수로 표시하지 않고 같은 보상 중복/재시작은 최신 snapshot과 `applied:false`를 유지합니다.
+
+| HTTP 상태 | 고정 공개 오류 code/계약 |
+| --- | --- |
+| 400 | `invalid-request`, `aborted` |
+| 401 | `unauthenticated` + `WWW-Authenticate: Bearer realm="pawblossom"` |
+| 403 | `forbidden`, `ads-unavailable`, `origin-denied`, `preflight-denied` |
+| 404 | `not-found`(존재하지 않음/다른 owner 동일) |
+| 405 | `method-not-allowed` + `Allow: POST, OPTIONS` |
+| 409 | `request-conflict/revision-conflict/round-terminal/shuffle-used/expired/operation-limit/reward-used/voucher-missing/round-closed/round-limit` |
+| 413 | `request-too-large` |
+| 415 | `unsupported-media-type` |
+| 429 | `temporarily-limited`(기존 인증 busy/상류 rate limit만 매핑) |
+| 503 | `unavailable`(닫힘/저장/상류/알 수 없는 내부 결과·예외 포함) |
+
+모든 응답은 `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, JSON Content-Type을 포함하며, 204는 본문이 없습니다. 이 매핑과 크기·Origin·JSON profile은 프로젝트의 자체 제한입니다. **신뢰된 호스트가 TLS/Host·socket/stream의 읽기 전 크기/시간·프레이밍·인코딩 제한, 헤더 원본 보존, 외부 signal 생성, 로그의 Authorization/본문 마스킹, 공개 요청 rate limit/연결·동시성 제한, SSV 원문 callback 경로 분리, 키/파일 ACL/운영 감시를 책임져야 합니다.** 이 어댑터의 429 반환은 공개 rate limiter 구현 완료가 아닙니다. 기존 원장 TTL·최대행·내부 인증 기한/슬롯·두 DB 비원자성도 그대로입니다.
+
+직접 확인한 1차 자료(2026-10-18): [RFC6750 §2.1/§3/§5](https://www.rfc-editor.org/rfc/rfc6750.html#section-2.1)의 Bearer 자격 문법·challenge·TLS 요구, [RFC9110 §11.1/§15](https://www.rfc-editor.org/rfc/rfc9110.html#section-11.1)의 scheme 대소문자·상태/Allow 의미, [WHATWG Fetch CORS-preflight](https://fetch.spec.whatwg.org/#cors-preflight-fetch)의 사전 요청/허용 헤더와 [CORS credentials](https://fetch.spec.whatwg.org/#cors-protocol-and-credentials)를 참고했습니다. 원문 규격과 위 자체 strict profile을 구분하며 OAuth/PlayFab 전체 적합성 또는 실제 브라우저/서비스 검증을 주장하지 않습니다.
+
+### #117 검증 체크포인트
+
+신규 `tests/game-http.test.ts` **188개**는 실제 파일 SQLite+실제 GameService+합성 PlayFab transport, 기존 실패 회차 fixture의 합성 owner 재서명, 별도 CallbackInbox의 유효 SSV 서명 검증을 사용합니다. 정상 start/get/command/claim/+5·voucher-missing·중복/재시작·다른 owner·revision/TTL/gate·실제 SQLite 잠금·abort/close 늦은 인증, 원문 경로·헤더/byte 상한·중복·JSON escape 등가 키/UTF-8/추가 권한·본체 view/자체 getter·구성 snapshot·위조 service/signal·비노출과 preflight의 허용/거절/인증 무호출을 검증합니다. 실계정·실 API 통신은 사용하지 않습니다.
+
+최초 부분 실행은 **380통과/1실패**(헤더 쌍3항목을 413으로 분류했으나 구조 오류400을 기대)였으며 쌍 길이 오류와 전체 개수 상한을 분리해 수정했습니다. 당시 결과를 성공 또는 최종 전체 수치에 합산하지 않습니다. 이후 부분 **3파일391개 = 당시 game-http154 + 기존 game-service61 + 기존 playfab-session176** 통과는 OPTIONS 추가 전 근거입니다. 이어서 OPTIONS 미지원 기대1개를 대체하고 preflight35개를 추가하여 **최신 game-http는1파일188개**, **최신 전체는29파일1922개**입니다. 391은 신규 검사 수나 전체 검사 수가 아니며 최신 수치에 합산하지 않습니다. 기존 `maxWorkers:2`·개별8worker·5초·SQLite 잠금 정책을 변경하지 않았습니다.
+
+최종 로컬 명령: `npm test`(14:09:25/29파일1922개/40.25초), `npm run store:check`, `npm run store:test`(12개), `npm run typecheck`(전체/앱/서버), `npm run build:test` → `npm run build`, `git diff --check`, 신규2파일 no-index whitespace 검사 통과입니다. 최종 production 세 flags=false·src/dist 서버 마커0건입니다. 부분/반복 검사를 전체에 더하지 않았으며 브라우저/실제 HTTP/Android/실서비스/스토어 동작 검사는 수행하지 않았습니다.
+
+검증 코드 LF SHA-256: `server/game/gameHttp.ts` = `707e182ef2a761f08a4ccac5ec15ca4fc8094a7a0255b22107ec986e869ed02d`, `tests/game-http.test.ts` = `7d5871df76368ea81beb932341f88fedd7f7d657d1d8e72a0944d59c2c21f155`입니다. 변경은 신규 코드/테스트2+기존docs3의5파일이며 기존 핵심 모듈/fixture/앱/빌드 설정은 변경하지 않았습니다. 처음 체크포인트에서 작성·명령을 멈췄으며 아래 최종 독립검수 승인 후 문서 근거만 갱신하여 커밋/푸시/Ready PR을 제출합니다. merge/정리는 총괄이 담당합니다.
+
+총괄 독립검수 이력은 로컬 성공과 구분합니다. **14:11:48 시작 전체 검사(43.58초)는1921통과/1실패**이며 기존 `purchase-ledger.test.ts:432`의 “배치 한도와 잘못된 재시도 한도를 지킵니다”가5초 기한을 초과했습니다(5143ms). 같은 검사 단독 진단은113.13ms 통과, purchase-ledger+game-http 두 파일 진단은256개 통과했으며 별도 SQLite 잠금 검사의5559.88ms 관찰과 최초 실패의 인과는 미확정입니다. **14:14:41 시작 동일 코드 JSON 진단 전체 재검증은 실제 testResults29파일/1922개 전부 통과(보고 wall42.257초)**했고 문제 배치 검사는150.10ms 통과했습니다. JSON의 numPassedTestSuites114는 describe 포함 집계로 파일 수에 사용하지 않았습니다. 전체/앱/서버 타입·diff·최종3flags=false·src/dist 서버 마커0건과 코드2 LF SHA 일치도 총괄이 확인하여 커밋/PR 제출을 승인했습니다. 테스트/제품 코드·timeout/worker 설정은 바꾸지 않았으며 간헐 실패 원인을 수정 완료했다고 주장하지 않습니다. 원인 미확정·미해결 후속은 [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)에 남기고 부분/반복 결과를 합산하지 않습니다.
+
 ## 현재 통합 상태 · 2026-10-17 · #115
 
 내부 서버 구현의 main 기준은 `b58f9c7da0b0c19393a26cd065be9b8e99e1cf6b`입니다. [#108](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/108) 인증(`de72bdd`), [#110](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/110) 회차(`d867e32`), [#112](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/112) 보상권 소비/+5(`d890494`), [#114](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/114) 인증된 서비스 연결(`b58f9c7`)을 Squash merge했습니다. 이 절 아래의 작업별 기록·실패 이력·검증 SHA는 작성 당시 근거로 보존합니다.
