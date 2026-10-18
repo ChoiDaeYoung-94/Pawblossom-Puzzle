@@ -1,5 +1,23 @@
 # 출시까지 남은 작업
 
+## 현재 판단 기준 · 2026-10-18 · #117
+
+기준 main `cfe9d32b47567056864ab09789818643d668248b`, `codex/117-game-http-boundary`에서 [제한된 게임 HTTP 요청/응답 #117](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/117)을 구현·로컬 검증했고 **총괄 최종 독립검수 완료/커밋·푸시·Ready PR 제출 승인**입니다. 기존 핵심 계약/TTL/스키마·앱은 변경하지 않았습니다. [API/HTTP·CORS 계약·검증과 한계](android-release.ko.md#2026-10-18--제한된-게임-http-요청응답과-preflight-이슈-117), [다음 순서](roadmap.ko.md#현재-작업-현황--2026-10-18--117)를 우선하며 아래 #115/이전 현재 상태는 당시 이력입니다.
+
+- [x] 실제 GameService의5개 POST 순수 어댑터·원문 헤더/크기/JSON/인증 경계·공개 응답/고정 오류·정확한 Origin 허용/기본 거절
+- [x] 알려진 경로의 제한된 OPTIONS preflight·204 빈 응답·좁은 헤더/POST 허용·credentials/wildcard 없음·인증/DB 무호출 합성 검증
+- [x] 최신 전체29파일1922개(기존1734+신규188)·스토어12개/원본·전체/앱/서버 타입·두 웹 빌드·whitespace·최종 production flags3개 false/서버 마커0건
+- [x] 총괄 최신 독립 전체29파일1922개·타입/diff/flags/마커/동일 코드SHA 확인 및 커밋/Ready PR 제출 승인
+- [ ] 커밋/푸시/PR·해당 최신 PR/main Node22/24 원격 검사와 총괄 반영(승인 시점 기준)
+- [ ] 실제 HTTP listen/TLS/host stream·프레이밍/로그 마스킹/공개 rate limit·키/보존/감시·실제 브라우저/앱 온라인 연결
+- [ ] 실제 로그인/복구·진행/경제·SDK/Google SSV·구매/복원/환불·연령/한국·미국 동의·단말/스토어 검증
+
+위 완료는 구현·합성 자동 검사 범위입니다. preflight는 실제 POST의 인증/보상 성공을 보장하지 않으며 기본 광고 gate/두 DB 비원자성도 그대로입니다. 실제 출시 미검증은 [#73](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/73)에 유지합니다. APK/AAB·Android sync·버전·최종 믹스·계정/실키/env·Drive/콘솔·폰 테스트/전달은 수행하지 않았습니다.
+
+총괄 최초 전체1921통과/1timeout(기존 구매 배치5143ms), 단독113.13ms·부분256개 통과와 최신14:14:41 시작 동일 코드 전체1922개 통과(wall42.257초/해당 배치150.10ms)는 별도 근거입니다. 파일 수는 JSON actual testResults29이며 describe 포함 numPassedTestSuites114를 파일 수로 쓰지 않습니다. 코드·timeout/worker는 수정하지 않았고 실패 원인 해결을 주장하지 않습니다. 원인 미확정·미해결 후속 [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)를 유지합니다.
+
+중간 사용자 확인 없이 진행하며 실제 최저/대상연령, 공개 개발자명·지원 이메일·사이트, 계정 연결/기기간 복원 우선순위, 서버비 상한/운영 계정, 광고 제거 범위·한국/미국 가격은 **오늘18시 종합 보고**로 모읍니다. 광고+비소모성 제거 상품1개 방향은 확정이며 다시 도입 여부를 묻지 않습니다. 지금 사용자 조치는 없습니다.
+
 ## 현재 판단 기준 · 2026-10-17 · #115
 
 main `b58f9c7da0b0c19393a26cd065be9b8e99e1cf6b`에는 인증 → 서버 회차 → 검증된 광고 보상권 소비 → 이동 5회 추가를 연결한 **내부 서버 구현**까지 반영했습니다. [통합 PR #114](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/114)과 [개발·CI 근거](android-release.ko.md#현재-통합-상태--2026-10-17--115), [개발 순서](roadmap.ko.md#현재-통합-현황--2026-10-17--115)를 함께 확인합니다.
