@@ -1,5 +1,6 @@
 /** 서버 전용. 앱 import 금지. 구성만으로 통신/DB/자격정보/키 읽기나 생성을 하지 않습니다. */
 import type {PurchaseLedgerOptions} from './purchaseLedger.ts';
+import {completedOperation, startOperation, trackedCallable} from './operationLifetime.ts';
 
 export interface PlayAcknowledgeConfig {
   /** 검증된 영구 비소모 상품 한 개의 서버 allowlist. HTTP 입력에서 구성하지 마세요. */
@@ -61,23 +62,28 @@ export function createPlayPurchaseAcknowledger(config: PlayAcknowledgeConfig, tr
       || typeof transport !== 'function') throw new Error();
   } catch { throw new Error('invalid-acknowledge-config'); }
   const timeoutMs = policy.timeoutMs!, maxBytes = policy.maxResponseBytes!;
-  return async (input: PlayAcknowledgeInput): Promise<PlayAcknowledgeResult> => {
+  return trackedCallable((input: PlayAcknowledgeInput) => {
     let packageName: string, productId: string, purchaseToken: string, accessToken: string, signal: AbortSignal | undefined;
     try {
       ({packageName, productId, purchaseToken, accessToken, signal} = input);
       if (packageName !== policy.packageName || productId !== policy.productId
         || !bounded(purchaseToken, 4096) || purchaseToken === '.' || purchaseToken === '..'
         || !bounded(accessToken, 8192) || !/^[A-Za-z0-9._~+\/-]+=*$/.test(accessToken)
-        || (signal !== undefined && !(signal instanceof AbortSignal))) return failure('invalid-input');
-    } catch { return failure('invalid-input'); }
-    if (signal?.aborted) return failure('aborted');
+        || (signal !== undefined && !(signal instanceof AbortSignal))) return completedOperation(failure('invalid-input'));
+    } catch { return completedOperation(failure('invalid-input')); }
+    if (signal?.aborted) return completedOperation(failure('aborted'));
     const controller = new AbortController();
     let stopped: 'aborted' | 'timeout' | undefined;
     let response: Response | undefined, reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+    let cancellation: Promise<void> | undefined;
     // cancel이 reject/throw/hang하더라도 반환을 기다리지 않습니다.
-    const cancelBody = () => {
-      try { void (reader ? reader.cancel() : response?.body?.cancel())?.catch(() => {}); }
-      catch { /* 오류 원문을 버립니다. */ }
+    const cancelBody = (): Promise<void> => {
+      if (cancellation) return cancellation;
+      try {
+        const target = reader ?? response?.body;
+        if (target) cancellation = Promise.resolve().then(() => target.cancel()).then(() => {}, () => {});
+      } catch {cancellation = Promise.resolve(); /* 오류 원문 비공개 */}
+      return cancellation ?? Promise.resolve();
     };
     let stop!: (code: 'aborted' | 'timeout') => void;
     const stopResult = new Promise<PlayAcknowledgeResult>(resolve => {
@@ -86,7 +92,7 @@ export function createPlayPurchaseAcknowledger(config: PlayAcknowledgeConfig, tr
         stopped = code;
         resolve(failure(code));
         controller.abort();
-        cancelBody();
+        void cancelBody();
       };
     });
     const onAbort = () => stop('aborted');
@@ -100,7 +106,7 @@ export function createPlayPurchaseAcknowledger(config: PlayAcknowledgeConfig, tr
         response = await transport(url, {method: 'POST',
           headers: {Authorization: `Bearer ${accessToken}`, Accept: 'application/json', 'Content-Type': 'application/json'},
           body: '{}', redirect: 'error', signal: controller.signal});
-        if (stopped) { cancelBody(); return failure(stopped); }
+        if (stopped) { void cancelBody(); return failure(stopped); }
         if (response.redirected || response.type === 'opaqueredirect') return failure('redirect-blocked');
         // native fetch는 URL을 채우며, 빈 URL은 주입 합성 Response에서만 허용됩니다.
         if (response.url && response.url !== url) return failure('invalid-response');
@@ -130,15 +136,26 @@ export function createPlayPurchaseAcknowledger(config: PlayAcknowledgeConfig, tr
         }
         return {kind: 'acknowledged'};
       } catch { return failure(stopped ?? 'transport-error'); }
-      finally { cancelBody(); }
+      finally { void cancelBody(); }
     };
-    try { return await Promise.race([request(), stopResult]); }
-    finally { clearTimeout(timer); signal?.removeEventListener('abort', onAbort); }
-  };
+    const work = request();
+    const settled = work.then(cancelBody, cancelBody).then(() => {
+      try {reader?.releaseLock();} catch { /* 합성/손상 reader 오류 원문 비공개 */ }
+    });
+    const result = (async () => {
+      try {return await Promise.race([work, stopResult]);}
+      finally {clearTimeout(timer); signal?.removeEventListener('abort', onAbort);}
+    })();
+    return {result, settled};
+  });
 }
 
 /** 저장/지급을 하지 않습니다. 원장이 commit·최신 GET·lease를 관리한 뒤 호출할 callback입니다. */
 export function createLedgerAcknowledger(config: PlayAcknowledgeConfig, transport?: typeof fetch): PurchaseLedgerOptions['acknowledge'] {
   const acknowledge = createPlayPurchaseAcknowledger(config, transport);
-  return async input => (await acknowledge(input)).kind === 'acknowledged' ? 'acknowledged' : 'retry';
+  return trackedCallable((input: Parameters<PurchaseLedgerOptions['acknowledge']>[0]) => {
+    const operation = startOperation(acknowledge, input);
+    const result = operation.result.then(value => value.kind === 'acknowledged' ? 'acknowledged' as const : 'retry' as const);
+    return {result, settled: Promise.all([operation.settled, result.then(() => {}, () => {})]).then(() => {})};
+  });
 }

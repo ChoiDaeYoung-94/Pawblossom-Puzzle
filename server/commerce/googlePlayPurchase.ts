@@ -1,4 +1,5 @@
 /** 서버 전용입니다. 앱/웹 엔트리에서 import하지 마세요. 환경변수/자격정보를 읽지 않습니다. */
+import {completedOperation, trackedCallable} from './operationLifetime.ts';
 export interface PlayPurchaseServerConfig {
   /** 운영자가 검증한 단일 패키지·영구 비소모 상품·구매 옵션 allowlist입니다. */
   readonly packageName: string;
@@ -142,26 +143,29 @@ export function createPlayPurchaseLookup(config: PlayPurchaseServerConfig, trans
   }
   // 호출 중 외부 config 변경으로 허용 목록이 바뀌지 않도록 복사합니다.
   const policy = {...config};
-  return async (input: PurchaseLookup): Promise<PurchaseLookupResult> => {
+  return trackedCallable((input: PurchaseLookup) => {
     if (!object(input) || !bounded(input.purchaseToken, 4096) || input.purchaseToken === '.' || input.purchaseToken === '..'
       || !bounded(input.accessToken, 8192) || !/^[A-Za-z0-9._~+\/-]+=*$/.test(input.accessToken)
       || !bounded(input.expectedObfuscatedAccountId, 64)
-      || (input.signal !== undefined && !(input.signal instanceof AbortSignal))) return failure('invalid-input');
+      || (input.signal !== undefined && !(input.signal instanceof AbortSignal))) return completedOperation(failure('invalid-input'));
     const purchaseToken = input.purchaseToken;
     const accessToken = input.accessToken;
     const accountId = input.expectedObfuscatedAccountId;
     const signal = input.signal;
-    if (signal?.aborted) return failure('aborted');
+    if (signal?.aborted) return completedOperation(failure('aborted'));
     const controller = new AbortController();
     let stopped: 'aborted' | 'timeout' | undefined;
     let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
     let response: Response | undefined;
+    let cancellation: Promise<void> | undefined;
     // cancel을 기다리지 않습니다. 중단을 무시하는 transport/stream도 반환 기한을 지킵니다.
-    const cancelBody = () => {
+    const cancelBody = (): Promise<void> => {
+      if (cancellation) return cancellation;
       try {
-        const cancelled = reader ? reader.cancel() : response?.body?.cancel();
-        void cancelled?.catch(() => {});
-      } catch { /* 손상되거나 잠긴 본문의 예외도 외부로 노출하지 않습니다. */ }
+        const target = reader ?? response?.body;
+        if (target) cancellation = Promise.resolve().then(() => target.cancel()).then(() => {}, () => {});
+      } catch { cancellation = Promise.resolve(); /* 손상되거나 잠긴 본문 오류 원문은 비공개입니다. */ }
+      return cancellation ?? Promise.resolve();
     };
     let stop!: (code: 'aborted' | 'timeout') => void;
     const stopResult = new Promise<PurchaseLookupResult>(resolve => {
@@ -170,7 +174,7 @@ export function createPlayPurchaseLookup(config: PlayPurchaseServerConfig, trans
         stopped = code;
         resolve(failure(code));
         controller.abort();
-        cancelBody();
+        void cancelBody();
       };
     });
     const onAbort = () => stop('aborted');
@@ -184,7 +188,7 @@ export function createPlayPurchaseLookup(config: PlayPurchaseServerConfig, trans
           // native fetch는 3xx에서 예외를 던집니다. 원인 미노출을 위해 transport-error로 닫습니다.
           redirect: 'error', signal: controller.signal,
         });
-        if (stopped) { cancelBody(); return failure(stopped); }
+        if (stopped) { void cancelBody(); return failure(stopped); }
         if (response.redirected || response.type === 'opaqueredirect') return failure('redirect-blocked');
         if (response.url && response.url !== url) return failure('invalid-response');
         const error = httpError(response.status);
@@ -215,14 +219,18 @@ export function createPlayPurchaseLookup(config: PlayPurchaseServerConfig, trans
       } catch {
         return failure(stopped ?? 'transport-error');
       } finally {
-        cancelBody();
+        void cancelBody();
       }
     };
-    try {
-      return await Promise.race([request(), stopResult]);
-    } finally {
-      clearTimeout(timer);
-      signal?.removeEventListener('abort', onAbort);
-    }
-  };
+    const work = request();
+    // 반환 기한과 독립적으로 fetch/read 및 한 번 시작한 cancel의 실제 종료를 전달합니다.
+    const settled = work.then(cancelBody, cancelBody).then(() => {
+      try {reader?.releaseLock();} catch { /* 합성/손상 reader 오류 원문 비공개 */ }
+    });
+    const result = (async () => {
+      try {return await Promise.race([work, stopResult]);}
+      finally {clearTimeout(timer); signal?.removeEventListener('abort', onAbort);}
+    })();
+    return {result, settled};
+  });
 }
