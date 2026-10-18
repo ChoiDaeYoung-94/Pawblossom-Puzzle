@@ -1,3 +1,24 @@
+## 현재 작업 상태 · 2026-10-18 · #120
+
+기준 main `013188d3286166d2bd187c6372ff1773a7449cb8`, 작업 브랜치 `codex/120-goal-accessibility`입니다. 목표별 KO/EN 남음·완료 문장과 기존 보드 상태의 남은 이동·목표 요약을 구현했습니다. `goalDescriptions()`는 기존 회차 집계의 목표 수에서0까지 clamp한 값을 쓰며 낙엽은 남은 **더미 수**, 현재 칸은 기존 **겹 수**를 유지합니다. 목표의 sr-only 문장 하나/그림 빈 alt/시각 숫자·체크 aria-hidden으로 중복을 막습니다. updateGoals에 live 쓰기·scene 상태 재조회를 추가하지 않았습니다. 최종 onMove 집계 뒤 busy=false→changed와 시작/복원·언어 전환, +5의 모달 해제→새 이동 값 갱신 순서를 유지했습니다. 시각 CSS·게임 판정·저장·경제·오디오·서비스 설정은 바꾸지 않았습니다.
+
+**구현·로컬 검증·총괄 독립검수 완료, Ready PR 제출 승인** 상태입니다. 최신 PR/main Node22·24 CI와 병합은 제출 뒤 별도 확인 대상이며 결과는 GitHub 이슈·PR에 보존합니다. 아래 #119 이하의 현재 상태/승인 표현은 당시 이력이며 이후 병합 상태는 기준 main과 PR#125로 구분합니다. #122 간헐 원장 검사 원인은 이번 성공으로 해결한 것으로 간주하지 않고 열린 상태로 둡니다.
+
+총괄은 Node24.21에서 관련 UI **125/125**, 전체/앱/서버 타입, diff·신규 QA 구문/후행공백 검사와 소스/번역/검사/QA의 LF SHA4개 일치를 독립 확인했습니다. full.json의2,017/2,017과 실제 AX의 목표 문장1회/장식 이미지 제외, production4화면 각5확인·5AX·pageerror0, KO320×568 일부완료 PNG의 체크·더미3·배치를 검토해 Ready 제출을 승인했습니다. 독립 보고서는 Git 밖 `C:\Users\user\AppData\Local\Temp\pawblossom-120-root-related-3bc481682d3f42e398e8da1482831fc5.json`입니다. 관련125는 전체의 부분집합으로 합산하지 않습니다.
+
+| 검증 | 이번 기준 결과 |
+| --- | --- |
+| 관련 UI 검사 | 1파일 **125/125**, 기존107+신규18. KO/EN 남음/일부완료/전체완료·2겹→1겹 더미수 불변·최종 집계·updateGoals live무쓰기/상태재조회없음·같은 상태 무쓰기·busy/finished/modal/hidden/pending/settings·복원/언어·+5 이른 콜백·마지막 이동 완료를 포함합니다. |
+| 전체 자동 검사 | Node **24.19.0**, 2026-10-18 **14:56:14 KST 시작**, 39.73초, **29파일 2,017/2,017**. 전체는 한 번 실행했으며 관련125는 부분집합이라 더하지 않습니다. 파일worker2/내부8worker/기본5초 timeout·운영 잠금 정책 변경 없음. |
+| 타입·스토어·빌드 | 전체/앱/서버 typecheck, store:check, store:test **12/12**, assets:check, testing→production 웹 빌드 성공. production flags testTools/androidTestAds/androidTestBilling **모두 false**. 기존500kB chunk 경고와 Node 타입 변환 실험 경고는 남습니다. |
+| 실제 브라우저 | Chrome155.0.8059.80, testing4화면24확인/production4화면20확인, AX총40스냅샷, PNG총20장, pageerror0. 실제 입력과 합성 준비 경계는 [브라우저 기록](browser-qa.ko.md#2026-10-18--목표-완료남은-이동-접근성-이슈-120)에 구분합니다. |
+
+현재 PATH에 npm이 없어 package.json의 동일 설치 CLI를 `node node_modules/vitest/vitest.mjs run`, `node node_modules/typescript/bin/tsc --noEmit`/`-p tsconfig.app.json`/`-p tsconfig.server.json`, `node scripts/check-store-assets.mjs`, `node --test scripts/store-assets-qa.mjs`, `node scripts/generate-launcher-assets.mjs --check`, `node node_modules/vite/bin/vite.js build --mode testing`→`build`로 호출했습니다. 명령·시각·exit code·원문 출력과 full.json은 Git 밖 `C:\Users\user\Documents\ChatGPT\Pawblossom-builds\qa\issue-120`의 verify.mjs/full-commands.json/checks-commands.json/각 log에 보존했습니다. 개발 중 최초 관련 검사는 준비 fixture의 자동 프레임 추가 호출2건·pending 프레임 진행1건·highestLevel/실제 낙엽 수 불일치 복원2건으로5실패, 다음은 기존 영어 Selected 문구 기대값 차이1실패였습니다. 대역 준비/기대값만 고친 뒤125개와 전체가 성공했으며 제품 코드·정책을 바꿔 통과시키지 않았습니다. 두 번째 실패 원문과 최종 관련 log를 외부 결과에 보존하고 첫 실패 원문은 작업 대화의 도구 출력에 남깁니다. 전체 및 브라우저 실패는 없습니다.
+
+검증 소스 LF SHA-256(브라우저 summary와 최종 checkpoint.json): main.ts `aa39532ffa249c84c0174d66f6fe05e69b77c56b786e519f7053441dc2b9f4d1`, i18n.ts `d2b9affd41dd5ceb042abf84a54ebe6785332d2335a73670543cb6bb43ee4a5c`, ui-flow.test.ts `fdfd843b7f4dd3a5aacf366033cf6d61990dfd8279b8b841a7395336b91c87e8`, goal-accessibility-qa.mjs `11e233603d66fa69460a63120f4560e22e9696edc7113ff67c8191335a5ed1d6`입니다. 최종 diff/신규 QA 구문/후행공백 검사와 production 서버 번들 마커0 근거 및 dist JS/CSS SHA는 checkpoint.json에 보존합니다.
+
+APK/AAB·Android sync·버전·최종 오디오 믹스·실계정/키/env·Drive/콘솔/상품·폰/TalkBack/전달은 수행하지 않았습니다. 사용자 조치·질문은 없으며 총괄이18시에 취합합니다. 최신 PR/main Node22·24 CI·병합은 이번 로컬 검증과 별도인 후속 단계입니다.
+
 # Android 빌드와 출시 준비
 
 ## 현재 작업 상태 · 2026-10-18 · #119

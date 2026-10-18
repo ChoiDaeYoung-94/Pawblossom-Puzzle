@@ -134,7 +134,17 @@ function updateBoardAccess(){
       .replace('{layers}',String(state.layers));
     description+=' '+(state.selected?text('boardSelected').replace('{row}',String(state.selected.row+1)).replace('{col}',String(state.selected.col+1)):text('boardUnselected'));
   }else if(available)description=text('boardKeyboardHelp');
+  if(available)description+=' '+text('movesRemaining').replace('{count}',String(moves))+' '+goalDescriptions().join(' ');
   const status=$('#board-keyboard-status');if(status.textContent!==description)status.textContent=description;
+}
+// 목표 표시와 보드 안내는 같은 회차 집계에서 짧은 문장을 만듭니다.
+function goalDescriptions(){
+  const level=levels[currentLevel-1];
+  const describe=(name:TextKey,remaining:number)=>text(remaining===0?'goalComplete':'goalRemaining').replace('{name}',text(name)).replace('{count}',String(remaining));
+  const descriptions=level.goals.map(goal=>describe(tileNames[goal.kind] as TextKey,Math.max(0,goal.count-collected[goal.kind])));
+  const total=level.leaves?.length??0;
+  if(total)descriptions.push(describe('leafPile',Math.max(0,total-clearedLeaves)));
+  return descriptions;
 }
 function updateWallet(){
   $('.wallet.stars .sr-only').textContent=text('stars');$('.wallet.coins .sr-only').textContent=text('coins');
@@ -145,14 +155,15 @@ function updateGoals(){
   $('#board-keyboard-help').textContent=text('boardKeyboardHelp');
   $('.bottom-nav').setAttribute('aria-label',text('navLabel'));
   const level=levels[currentLevel-1];
+  const descriptions=goalDescriptions();
   const chapter=chapterForLevel(currentLevel);
   for(const id of ['#story-chapter-name','#chapter-name'])$(id).textContent=`${text(chapter.title)} · ${chapter.first}–${chapter.last}`;
   $('#level-number').textContent=String(currentLevel);$('#moves').textContent=String(moves);$('#score').textContent=score.toLocaleString(save.language==='ko'?'ko-KR':'en-US');
-  $('#goals').innerHTML=level.goals.map(goal=>{const remaining=Math.max(0,goal.count-collected[goal.kind]);return `<div class="goal-item ${remaining===0?'done':''}"><img src="/assets/tiles/${tileNames[goal.kind]}.svg" alt="${text(tileNames[goal.kind] as TextKey)}"/><strong>${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,collected[goal.kind]/goal.count*100)}%"></span></div>`;}).join('');
+  $('#goals').innerHTML=level.goals.map((goal,index)=>{const remaining=Math.max(0,goal.count-collected[goal.kind]);return `<div class="goal-item ${remaining===0?'done':''}"><span class="sr-only">${descriptions[index]}</span><img src="/assets/tiles/${tileNames[goal.kind]}.svg" alt=""/><strong aria-hidden="true">${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,collected[goal.kind]/goal.count*100)}%"></span></div>`;}).join('');
   const total=level.leaves?.length??0,remaining=Math.max(0,total-clearedLeaves);
   $('#goals').classList.toggle('has-leaves',total>0);
   $('#goals').classList.toggle('has-many',level.goals.length+(total?1:0)>2);
-  if(total)$('#goals').innerHTML+=`<div class="goal-item ${remaining===0?'done':''}"><img src="/assets/obstacles/leaf-pile.svg" alt="${text('leafPile')}"/><strong>${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,clearedLeaves/total*100)}%"></span></div>`;
+  if(total)$('#goals').innerHTML+=`<div class="goal-item ${remaining===0?'done':''}"><span class="sr-only">${descriptions[level.goals.length]}</span><img src="/assets/obstacles/leaf-pile.svg" alt=""/><strong aria-hidden="true">${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,clearedLeaves/total*100)}%"></span></div>`;
   $('#board-hint-text').textContent=(testingLevel?text('testRound')+' · ':'')+text(total?(level.leaves!.some(p=>p.layers===2)?'leafHintDouble':'leafHint'):'hint');
   $('#shuffle-count').textContent=String(shuffles);$('#shuffle').toggleAttribute('disabled',shuffles<1);
 }
