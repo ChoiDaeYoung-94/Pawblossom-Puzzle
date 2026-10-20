@@ -3,7 +3,7 @@ import {performance} from 'node:perf_hooks';
 import type {Worker} from 'node:worker_threads';
 import {DatabaseSync,StatementSync} from 'node:sqlite';
 
-const phases=['unknown','fixture','service-open','adapter-create','adapter-call','prepare','workers','reward-open','redeem','round-open','apply','start','command','get','close','open','seed','retry','invalid-limits','child-create','child-send','child-result','child-exit','reconcile','verify'] as const;
+const phases=['unknown','fixture','service-open','adapter-create','adapter-call','prepare','workers','reward-open','redeem','round-open','apply','start','command','get','close','open','seed','retry','invalid-limits','child-create','child-send','child-result','child-exit','reconcile','verify','reprofile','eligibility'] as const;
 type Phase=typeof phases[number];
 const kinds=['voucher-redeemed','reward-result','round-started','round-snapshot','command-result','rejected','service-error','worker-error','other'] as const;
 const codes=['storage-unavailable','invalid-input','invalid-time','voucher-missing','round-closed','round-limit','expired','invalid-grant','reward-used','not-found','request-conflict','revision-conflict','round-terminal','shuffle-used','capacity','operation-limit','other'] as const;
@@ -34,7 +34,7 @@ export interface WorkerRow extends ReturnType<typeof safeResult> {
 }
 export interface ChildRow {index:number;createdAtMs:number|null;sentAtMs:number|null;resultAtMs:number|null;exitAtMs:number|null;exitCode:number|null;terminationRequested:boolean;errorName:ReturnType<typeof safeError>['errorName']|null;errorCode:ReturnType<typeof safeError>['errorCode'];}
 export interface LedgerTrace extends PhaseTrace {
-  family:'reward-worker'|'round-worker'|'reward-parallel'|'round-parallel'|'http-body'|'purchase-restart'|'purchase-batch';
+  family:'reward-worker'|'round-worker'|'reward-parallel'|'round-parallel'|'http-body'|'purchase-restart'|'purchase-batch'|'reward-capacity';
   workers:WorkerRow[];children:ChildRow[];caseIndex:number|null;status:number|null;authCallCount:number|null;
 }
 declare module 'vitest' {interface TaskMeta {ledgerDiagnostic?:LedgerTrace;}}

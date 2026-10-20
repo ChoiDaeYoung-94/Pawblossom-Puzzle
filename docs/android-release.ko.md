@@ -1,3 +1,35 @@
+## 현재 작업 · 2026-10-20 · #122 잔여 행수 검사 단계 관측 (총괄 검수 완료·Ready PR 제출 승인)
+
+기준 main/origin main은 `5839e22e6e52190d87321be00d4b291842ca4365`, 브랜치는 `codex/122-reward-capacity-trace`입니다. [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)의 남은 전체 행수0/1/2 동기 검사만 기존 순서·같은 제목의 `it.for`로 옮기고 `task.meta.ledgerDiagnostic`의 고정 family `reward-capacity`와 `caseIndex=space`를 연결했습니다. 현재 **관련325개·최신 전체35파일2,373개 한 번·타입/스토어12/에셋/두 빌드 통과, 총괄 독립검수 완료·Ready PR 제출 승인**입니다. 총괄은 관련3파일325개·전체/앱/서버 타입·JSON 세 사례/7단계/hook·범위·소스 SHA·동일 UI bundle을 독립 확인했습니다. 승인된5파일의 한국어 test 커밋·푸시·Refs #122 Ready PR 제출을 진행하며 CI/병합은 총괄이 담당합니다. 아래 이전 현재/제출 전 표현은 당시 이력입니다.
+
+고정 단계는 `fixture → reprofile → round-open → prepare → redeem → eligibility → apply` 7개입니다. fixture는 기존 path/load/count이며 모듈 초기화 때 한 번 읽는 fixture JSON은 포함하지 않습니다. 인라인 profile/MAC 갱신 전체를 기존 그대로 reprofile에 두고, 기존 `round(p,{maxRows:n+space})` → 별도 setup 전체 → `redeem(f.reward).grant` → 자격 query/assert → 적용 call/assert 순서를 유지했습니다. 인라인 갱신을 기존 reprofile helper로 합치거나 fixture·업무 assertion·afterEach 정리 순서를 바꾸지 않았습니다. 기준 소스와 인라인 갱신·두 assertion의 문자열 동일성도 확인했습니다.
+
+기존 `withSqliteDiagnostics` 동기 hook은 이 세 사례 본문에만 설치/복원합니다. helper의 family union과 고정 phase `reprofile/eligibility`만 추가했으며 metadata shape·caseIndex·최대8단계/8native 오류·오류 allowlist는 유지했습니다. 기존 `server-round-ledger.test.ts`의 안전 투영 회귀에 새 phase7개·8단계 상한·SQL/args/path/owner/grant/profile/MAC/message/stack/tokens 제외를 보강했고, 기존 hook의 this/반환/동일 예외/descriptor 복원·설치/복원 실패 회귀도 실제 관련 검사에 포함했습니다. 기본5초·file worker2·내부 worker·SQLite·retry·제품·CI·의존성을 변경하지 않았습니다.
+
+검증은 정식 `scripts/use-dev-tools.ps1`과 Node24.21.0/npm.cmd, 설치된 Vitest4.1.11로 실행했습니다. 없는 필터를 통과로 세지 않도록 먼저 `rg --files`로 실제 파일을 확인했습니다.
+
+| 검증 | 명령·결과 |
+| --- | --- |
+| 관련 원장·진단 | `npm.cmd test -- tests/reward-redemption.test.ts tests/server-round-ledger.test.ts tests/reward-ledger.test.ts --reporter=default --reporter=json --outputFile.json=<QA>/related.json` · 3파일325/325, 22.51초 |
+| 최종 소스 전체 | `npm.cmd test -- --reporter=default --reporter=json --outputFile.json=<QA>/full.json` · 35파일2,373/2,373, 52.74초, 최종1회 |
+| 전체/앱/서버 타입 | `npm.cmd run typecheck` · 세 tsc 성공 |
+| 스토어/에셋 | `npm.cmd run store:check`, `npm.cmd run store:test`, `npm.cmd run assets:check` · 원본 일치·12/12·생성 파일 일치 |
+| 웹 빌드 | `npm.cmd run build:test` → `npm.cmd run build` · 둘 다 성공, testing flags3true → 최종 production flags3false |
+| 분리/범위 | src/dist 서버·진단 마커0건, production JS/CSS3개가 작업 전 및 #149 최종 UI bundle과 SHA256 동일, `git diff --check` 통과 |
+
+관련/전체 JSON을 각각 검사해 정확히 세 사례·caseIndex0/1/2·같은7단계·유한 비음수 시작/소요 시간·hook 설치5개/복원 성공·원문 미노출을 확인했습니다. 두 실행 모두 이 세 사례의 native 오류0건·constructorAttempts/workers/children 빈 배열입니다. 아래 수치는 검사 전체 시간이며 단계 시간과 구분합니다.
+
+| 실행 | space0 | space1 | space2 |
+| --- | ---: | ---: | ---: |
+| 관련 검사 소요(ms) | 613.04 | 496.34 | 485.96 |
+| 전체 검사 소요(ms) | 603.72 | 501.72 | 492.80 |
+
+SQLite hook은 **오류를 던진 native 호출만** 관측합니다. 성공한 오래 걸린 native 호출의 개별 시간·I/O/BUSY 원인은 관측하지 못하며, 이번 단계 시간이나 native 오류0건으로 원인을 확정하지 않습니다. 동기 본문 바깥의 모듈 초기화/정리 시간도 7단계에 포함되지 않습니다. [main136 CI39109768855](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39109768855)의 Node22 `reward-redemption.test.ts:163:19` 기본5000ms timeout은 계속 원인 미확정입니다. 원문 `C:/Users/user/AppData/Local/Temp/pawblossom-main136-failed.log`와 [실패 기록](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122#issuecomment-6247419321)·[관측 계획](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122#issuecomment-6247672376)을 보존하며 이번 성공을 과거 원인 해결로 처리하지 않습니다. 전체/CI 재실행이나 조건 완화 없이 #122를 열어 둡니다.
+
+Git 밖 QA 경로는 `C:/Users/user/Documents/ChatGPT/Pawblossom-builds/qa/issue-122-reward-capacity`입니다. `related/full.json`·각 로그, `metadata-review.json`, `source-build-review.json`, `checkpoint.json`에 버전·명령·안전 투영·bundle/SHA를 연결합니다. 최초 별도 비교 스크립트는 CRLF 소스에서 LF 경계를 찾지 못해 인라인 범위를 과다 추출했고, LF 정규화로 스크립트만 수정한 경위를 `review-adjustment.json`에 보존했습니다. 실제 소스/검사 결과 변경이나 전체 재실행은 없습니다. 빌드의 기존 500kB 초과 chunk 경고는 성공과 함께 보존했습니다.
+
+검증 소스 LF SHA256은 `tests/helpers/ledgerDiagnostics.ts`=`f56d50113f5dc1ef6eb5d4d84f981b65bfc889f0b66a5b46644cf41f86693ea9`, `tests/reward-redemption.test.ts`=`4fd194aa83b22ee68fe879a1f3b5d83c4fb15715e1a7d81868bb8da3da1ea3f6`, `tests/server-round-ledger.test.ts`=`193507d9c07f2ee2f7639a410a24c6b27be82302cbc0fd9d81cdd68f99d753ce`입니다. 총괄 독립검수와 별도 읽기 검수를 마쳐 Ready PR 제출 승인을 받았습니다. 다음은 승인된5파일의 한국어 test 커밋·푸시·Ready PR 제출이며 CI/병합·정리는 총괄이 담당합니다. 사용자 조치/질문은 없습니다. Android/APK/AAB/sync·버전·최종 오디오 믹스·SDK·계정/키/env·콘솔/상품/Drive·폰/전달·배포 보류를 유지합니다.
+
 ## 현재 작업 · 2026-10-20 · 설정 안내와 고객센터 (#149, PR 제출 승인)
 
 기준 main `1917ee84c07fb13193a01c58b14a2448a13f8893`의 `codex/149-settings-clarity`에서 [#149](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/149)를 구현했고 **로컬 검증·총괄 독립검수 완료·Ready PR 제출 승인**입니다. 총괄은 관련UI149개·전체/앱/서버 타입·diff·최종 production PNG와 상태/검증 버전 경계를 독립 대조했습니다. 승인된 커밋·푸시·PR 제출 뒤 필수CI·최신 main 확인·병합은 총괄이 진행하며 아래 이전 상태는 당시 이력입니다.
