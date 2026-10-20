@@ -1,3 +1,11 @@
+## 현재 작업 · 2026-10-20 · #153 임시 안내 접근성 정리 (로컬 최종 검증 완료·PR 제출 승인 대기)
+
+기준 `be328c75372d4a1b2a2dd36faf39722330406186`, 브랜치 `codex/153-transient-notice-cleanup`의 웹 변경입니다. 보드 안내의 새 회차/시험 이어하기/종료와 일반 toast 만료에서 키·표시·DOM 텍스트를 함께 비웁니다. 1300ms/3200ms·활성 한영 전환·현재 회차/타이머 보호를 유지하고, 새 안내 재생 중 늦은 종료 이벤트를 무시합니다. getAnimations API 미제공 시 예외 없이 정리하는 최소 방어도 포함합니다.
+
+최종 API 방어·화면 이탈 포함 UI153/153, 전체35파일2,377/2,377·52.44초·변경 후1회, 전체/앱/서버 타입·스토어12개·에셋·두 웹 빌드가 통과했습니다. testing 세 flags true/production 세 flags false입니다. 최종 testing 일반/감소 모션 8조합24PNG와 기본6화면 8조합48PNG는 오류0이며 최종 production도 동일16조합72PNG·오류0을 확인했습니다. 두 모드 합계32조합144PNG입니다. 총괄 독립 UI153·타입도 통과했습니다. 앞선 API 방어 전 전체2,375개·브라우저 성공은 별도 버전 기록으로 보존합니다. 세부 절차·실패 원인·Chrome AX·fixture 경계는 [브라우저 QA](browser-qa.ko.md) 상단과 Git 밖 `Pawblossom-builds/qa/issue-153/checkpoint.json`에 연결합니다. PR 제출은 총괄 후속 승인 대기이며 병합·브랜치 정리는 총괄이 담당합니다.
+
+모션 감소의 기존 CSS .01ms를 일반 모션1300ms 노출과 혼동하지 않습니다. 최신 Chrome과 API 미제공 단위 fixture만 확인했으며 Chrome60/구형 WebView에서 전체 게임이 작동하거나 지원 범위를 확대한 것으로 주장하지 않습니다. 실제 Android/TalkBack·구형 단말·광고·결제·스토어 검증은 미완료입니다. APK/AAB·Android sync·폰 테스트/전달·버전·오디오 믹스·계정/운영 설정은 변경하지 않았습니다. 아래 과거 현재/최신/승인 표현은 당시 이력입니다.
+
 ## 현재 작업 · 2026-10-20 · #122 잔여 행수 검사 단계 관측 (총괄 검수 완료·Ready PR 제출 승인)
 
 기준 main/origin main은 `5839e22e6e52190d87321be00d4b291842ca4365`, 브랜치는 `codex/122-reward-capacity-trace`입니다. [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)의 남은 전체 행수0/1/2 동기 검사만 기존 순서·같은 제목의 `it.for`로 옮기고 `task.meta.ledgerDiagnostic`의 고정 family `reward-capacity`와 `caseIndex=space`를 연결했습니다. 현재 **관련325개·최신 전체35파일2,373개 한 번·타입/스토어12/에셋/두 빌드 통과, 총괄 독립검수 완료·Ready PR 제출 승인**입니다. 총괄은 관련3파일325개·전체/앱/서버 타입·JSON 세 사례/7단계/hook·범위·소스 SHA·동일 UI bundle을 독립 확인했습니다. 승인된5파일의 한국어 test 커밋·푸시·Refs #122 Ready PR 제출을 진행하며 CI/병합은 총괄이 담당합니다. 아래 이전 현재/제출 전 표현은 당시 이력입니다.

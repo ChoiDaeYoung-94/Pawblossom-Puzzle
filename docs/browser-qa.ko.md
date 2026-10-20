@@ -1,3 +1,30 @@
+## 2026-10-20 · 종료된 임시 안내 정리 (#153, 로컬 최종 검증 완료·PR 제출 승인 대기)
+
+기준 main/origin main `be328c75372d4a1b2a2dd36faf39722330406186`, 브랜치 `codex/153-transient-notice-cleanup`에서 [#153](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/153)를 구현했습니다. 현재 최종 소스의 자동 검사·testing/production Chrome 검증이 모두 완료되었으며, PR 제출은 총괄의 후속 승인을 기다립니다. 아래 이전 현재/최신/제출 표현은 당시 이력입니다. Git 밖 `C:/Users/user/Documents/ChatGPT/Pawblossom-builds/qa/issue-153`에 로그·JSON·PNG·소스/빌드 해시를 보존합니다.
+
+`clearBoardNotice()`가 키·텍스트·pop을 함께 비우며 새 회차/시험 이어하기/애니메이션 종료/허용된 퍼즐 이탈이 같은 정리를 사용합니다. 재생 중인 새 애니메이션이 있으면 늦은 종료 이벤트를 무시하고, 기존 activeRound가 이전 Scene 안내를 막습니다. 일반 toast는 기존 3200ms와 현재 timer 일치 보호 아래 키·visible·텍스트를 함께 정리합니다. 활성 한영 전환과 일반 모션의 1300ms를 유지하고, 만료 뒤 언어를 바꿔도 빈 DOM을 유지합니다. 엔진·저장·보상·오디오·버전·SDK/운영 설정은 변경하지 않았습니다.
+
+총괄 검수 후 `getAnimations?.()`로 API 미제공 분기의 예외 방어를 추가했습니다. [Capacitor v8 Android 문서](https://capacitorjs.com/docs/android)의 WebView Chrome60 최소 조건과 [MDN BCD](https://raw.githubusercontent.com/mdn/browser-compat-data/main/api/Element.json)의 해당 API Chrome84/mirror 차이를 확인한 최소 방어입니다. API 미제공 단위 fixture에서 예외 없이 텍스트·키를 비우고 번역으로 재발표하지 않는 것을 검사합니다. Vite 전체 산출물이나 다른 API의 Chrome60/구형 WebView 호환성·지원 확대·실기기 실행 검증을 뜻하지 않습니다.
+
+| 검증/버전 | 명령·결과 |
+|---|---|
+| API 방어 전 이력 | 관련 UI151, 전체35파일2,375개·49.80초 성공. 해당 소스의 두 빌드/브라우저 기록도 별도 보존하며 최종 소스 실행으로 합산하지 않음 |
+| 최종 API 방어·화면 이탈 포함 | `npm.cmd test -- tests/ui-flow.test.ts` 153/153; `npm.cmd test -- --reporter=default --reporter=json --outputFile.json=<QA>/full-route-final.json` 35파일2,377/2,377·52.44초·변경 후 전체1회. 신규 회귀4개와 기존 만료 기대 수정. 기본 timeout/worker2/원장·lock·CI 설정 유지 |
+| 최종 타입·스토어·빌드 | `npm.cmd run typecheck`, `store:check`, `store:test` 12/12, `build:test`→`build`. 전체/앱/서버 타입·에셋 원본 포함. testing 세 flags true/production 세 flags false. 기존 500kB chunk 경고 유지 |
+| 총괄 독립 확인 | 최종 UI153/153·전체/앱/서버 타입·diff whitespace. root-related-route-final.json/log·root-typecheck-route-final.log·root-reviewed-source-route-final.json. 앞선151개 기록과 구분 |
+| 최종 testing Chrome | `--transient-only` 일반 모션 KO/EN×320×568·640×360:4조합16PNG. `--transient-only --transient-reduced`:4조합8PNG. 기본6화면 흐름 KO/EN×4크기:8조합48PNG. 각 오류0 |
+| 최종 production Chrome | testing과 같은 일반4조합16PNG·감소4조합8PNG·기본6화면8조합48PNG. 각 오류0. 두 모드 최종 합계32조합144PNG |
+
+최종 재현은 `scripts/use-dev-tools.ps1` dot-source 및 기존 `PAWBLOSSOM_PLAYWRIGHT_MODULE` 설정 후 `node scripts/play-focused-ui-qa.mjs [--transient-only [--transient-reduced]] --output=<새 폴더>`입니다. `route-testing-*`/`route-production-*`만 API 방어·화면 이탈 포함 최종 산출물 증거입니다. source manifest는 `validated-source-route-final.json`, 빌드 파일별 SHA256은 `route-*-build-hashes.json`입니다. main LF SHA256 `8f2c6de414246d661d95f000648020892a3e0e97ace6f10e70e71f0b0cc564ef`, 검사 LF SHA256 `18dcc693221f9871929495376a0a995bf5352803333c781070d25a5b71f427ae`로 고정합니다.
+
+Chrome155.0.8059.85 새 headless context/합성 저장/origin에서 실제 dist·DOM·Chrome AX를 검사합니다. 일반 모션은 isTrusted=true animationend의 elapsedTime=1.3을 확인하고, 수동으로 공급한 이전 animationend(isTrusted=false)는 별도 분리합니다. 모션 감소는 기존 전역 CSS .01ms/실제 trusted elapsedTime=0.00001을 확인하며 1300ms 노출로 주장하지 않습니다. 감소 모션의 활성 보드 번역은 같은 브라우저 task 안에서 확인합니다. 일반 모션의 활성 보드/토스트 AX, 자연 만료 뒤 빈 DOM/AX, 번역 왕복, 연속 안내, restart/설정이탈·1500ms뒤복귀/이전 회차 콜백, 결과→다음 회차를 검사합니다. toast 3200ms는 두 모션에서 자연 만료를 관측합니다. onNotice 안내·onMove 결과 수량은 fixture이며 토스트는 실제 꽃 심기 UI입니다. 자연 성공 플레이·TalkBack·구형 단말·Android·실서비스 검증으로 주장하지 않습니다.
+
+실패는 `testing-reduced/summary.json`과 로그에 보존합니다. 꽃밭 화면에서 숨겨진 퍼즐 안내의 AX root를 요구한 QA 절차 오류이며, 퍼즐로 돌아와 ready 뒤 빈 AX를 검사하도록 수정했습니다. 제품 코드 실패나 assertion 완화/재시도 정책 변경이 아닙니다. `testing-transient`는 isTrusted 분리 전 중간 증거이며, API 방어 전 `testing-*-final`/`production-*` 기록도 최종과 구분해 보존합니다. 총괄의 `manual-20261020-main5839` 자연 플레이는 be328과 동일한 이전 production bundle에서 수행한 별도 기록이며 이번 소스 실행으로 합산하지 않습니다.
+
+APK/AAB 생성·Android 동기화·단말 전달·버전 증가·최종 오디오 믹스·계정/광고/결제/실서비스 설정은 보류 상태 그대로입니다. 실제 TalkBack/구형 환경과 출시 검증은 미완료입니다.
+
+화면 이탈 경계는 실제 합법 설정 이동으로 추가 재현했습니다. API 방어 포함·이탈 정리 전 production에서 canLeave=true 상태의 matched 안내가 설정1500ms 뒤 퍼즐 복귀 시 text/pop을 유지하며 애니메이션을 다시 시작했습니다(`route-observe-before.json/png`). switchView의 canLeave 통과 후 nonpuzzle 분기에 clearBoardNotice 호출 한 곳과 차단/허용 이탈 회귀1개만 추가했습니다. 수정 뒤 동일 절차의 `route-observe-after.json/png`는 숨김/복귀 text 빈값·pop=false·animations=[]입니다. 앞선 API 방어 포함 UI152/전체2,376·48.45초와 `compat-*` 두 모드72PNG씩 성공은 이탈 수정 전 이력으로 구분합니다. 외부 관측 스크립트 첫 실행의 Windows ESM c: 경로 로더 오류는 브라우저 실행 전 준비 오류였고 file URL로 고쳤습니다.
+
 ## 2026-10-20 · 설정 저장 안내와 고객센터 (#149, PR 제출 승인)
 
 기준 main/origin main `1917ee84c07fb13193a01c58b14a2448a13f8893`, 브랜치 `codex/149-settings-clarity`에서 [#149](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/149)를 구현했습니다. **로컬 검증·총괄 독립검수 완료·Ready PR 제출 승인**입니다. 총괄은 관련UI149개·전체/앱/서버 타입·diff·최종 production PNG와 정상/문제 표시 범위, CSS 전 전체/이후 브라우저 검증 구분을 독립 대조하고 제출을 승인했습니다. PR/main 필수CI와 병합은 총괄 후속입니다. 아래 이전 작업의 최신/현재/제출 표현은 당시 이력입니다. Git 밖 `Pawblossom-builds/qa/issue-149/checkpoint.json`에 기준/소스 LF SHA·명령·버전 경계·로그·PNG를 연결합니다.

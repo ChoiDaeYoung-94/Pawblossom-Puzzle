@@ -49,6 +49,7 @@ class ElementStub {
   hasPointerCapture(){return false;}releasePointerCapture(){}
   isConnected=true;disabled=false;
   getBoundingClientRect(){return {left:0,top:0,right:180,bottom:180};}
+  getAnimations():{playState:string}[]{return [];}
   querySelectorAll(_selector:string):ElementStub[]{return [];}
   toggleAttribute() {}
   addEventListener(name: string, callback: (event: { preventDefault(): void }) => void) { this.listeners[name] = callback; }
@@ -1112,7 +1113,42 @@ describe('열린 화면의 언어 변경은 진행·결과 처리를 보존합�
 
 it('끝난 짧은 안내는 언어 변경으로 다시 발표하지 않습니다',()=>{
   const app=mainHarness();app.run("notice('planted');scene.hooks.onNotice('chain')");app.flushToasts();app.element('#board-notice').listeners.animationend({preventDefault(){}});
-  app.run("changeLanguage('ko')");expect(app.element('#toast').textContent).toBe('A new patch is blooming!');expect(app.element('#board-notice').textContent).toBe('Keep it going!');
+  app.run("changeLanguage('ko')");expect(app.element('#toast').textContent).toBe('');expect(app.element('#board-notice').textContent).toBe('');
+  expect(app.run('noticeKey')).toBeUndefined();expect(app.run('boardNoticeKey')).toBeUndefined();
+});
+
+it('새 회차는 보드 안내를 비우며 이전 회차 콜백은 새 안내를 덮어쓰지 않습니다',()=>{
+  const app=mainHarness();app.run("globalThis.previousScene=scene;scene.hooks.onNotice('chain');startLevel(3)");
+  expect(app.element('#board-notice').textContent).toBe('');expect(app.run('boardNoticeKey')).toBeUndefined();
+  app.run("scene.hooks.onNotice('matched');previousScene.hooks.onNotice('chain');changeLanguage('ko')");
+  expect(app.element('#board-notice').textContent).toBe(t('ko','matched'));
+});
+
+it('getAnimations API가 없는 환경도 종료 안내를 예외 없이 비웁니다',()=>{
+  const app=mainHarness();app.run("document.querySelector('#board-notice').getAnimations=undefined;scene.hooks.onNotice('chain')");
+  expect(()=>app.element('#board-notice').listeners.animationend({preventDefault(){}})).not.toThrow();
+  expect(app.element('#board-notice').textContent).toBe('');expect(app.run('boardNoticeKey')).toBeUndefined();
+  app.run("changeLanguage('ko')");expect(app.element('#board-notice').textContent).toBe('');
+});
+
+it('퍼즐 화면 이탈이 허용될 때만 보드 안내를 정리하고 복귀해도 재발표하지 않습니다',()=>{
+  const app=mainHarness();app.run("scene.hooks.onNotice('matched');scene.canLeave=()=>false;switchView('settings')");
+  expect(app.element('#board-notice').textContent).toBe(t('en','matched'));
+  app.run("scene.canLeave=()=>true;switchView('settings')");expect(app.element('#board-notice').textContent).toBe('');
+  expect(app.run('boardNoticeKey')).toBeUndefined();app.run("switchView('puzzle');changeLanguage('ko')");
+  expect(app.element('#board-notice').textContent).toBe('');
+});
+
+it('연속 안내의 이전 만료·종료 이벤트는 활성 안내를 지우지 않습니다',()=>{
+  const app=mainHarness();app.run(`globalThis.callbacks=[];const originalTimeout=setTimeout;setTimeout=(callback,ms)=>{if(ms===3200)callbacks.push(callback);return originalTimeout(callback,ms)};
+    notice('planted');notice('saveFailed');callbacks[0]();scene.hooks.onNotice('chain');scene.hooks.onNotice('matched');`);
+  expect(app.element('#toast').textContent).toBe(t('en','saveFailed'));expect(app.run('noticeKey')).toBe('saveFailed');
+  app.element('#board-notice').getAnimations=()=>[{playState:'running'}];
+  app.element('#board-notice').listeners.animationend({preventDefault(){}});
+  app.run("changeLanguage('ko')");expect(app.element('#board-notice').textContent).toBe(t('ko','matched'));
+  app.element('#board-notice').getAnimations=()=>[];
+  app.element('#board-notice').listeners.animationend({preventDefault(){}});app.run('callbacks[1]()');
+  expect(app.element('#board-notice').textContent).toBe('');expect(app.element('#toast').textContent).toBe('');
 });
 
 describe('회차 복원 안내의 표시 수명',()=>{
