@@ -1,3 +1,24 @@
+## 2026-10-20 · 회차 복원 안내와 섞기 설명 (#147, PR 제출 승인)
+
+기준 main/origin main `2d31df97720b7ad180b6949c1ed0f54946289fae`, 작업 브랜치 `codex/147-resume-notice-ui`에서 [#147](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/147)의 좁은 UI 수정을 마쳤습니다. **로컬 검증·총괄 독립검수 완료·Ready PR 제출 승인**입니다. 총괄이 관련 UI134개·전체/앱/서버 타입·source LF SHA/production 플래그/diff와 주요 활성·키보드 PNG, 전체2,358개 및 브라우저 summary/문서의 검증 경계를 대조하고 제출을 승인했습니다. PR/main 필수CI·최신 main 확인과 병합은 총괄 후속입니다. 아래 #144/이전 날짜의 현재/제출 상태는 당시 이력이며, #144는 PR146으로 반영된 뒤 이번 기준에 포함됩니다. 최종 소스 LF SHA·명령·로그·PNG는 Git 밖 `Pawblossom-builds/qa/issue-147/checkpoint.json`에 보존합니다.
+
+최신 production을 먼저 빌드해 합성 저장 회차를 재로드했습니다. Chrome155.0.8059.85·KO/EN×320×568/390×844/640×360/1280×720의 활성 PNG8장에서 기존 복원 toast가 하단 nav와 모두 겹쳤습니다. 640×360에서는 canvas와도2/8, tools와는6/8 겹쳤습니다(실제 bounds와 이미지 근거, 입력 차단을 뜻하지 않음). KO1280 섞기 설명의 글자별 Range는 마지막 ‘번’ 한 글자가 별도 줄인 것을 확인했습니다. #129의 과거 사진만으로 이번 재현을 대신하지 않았습니다.
+
+복원 안내만 기존 board-hint 안의 상대 표시로 옮기고, 기본 힌트를 visibility로 숨겨 원래 높이를 유지했습니다. 3200ms 만료·표시 중 언어 변경·새 회차/화면 이탈·유효한 첫 주 포인터/보드 키 입력 정리를 연결했으며, 현재 timer handle과 round를 비교해 취소된/이전 콜백을 무시합니다. Tab으로 보드에 초점이 오면 키보드 도움말을 우선하고 초점을 강제로 옮기지 않습니다. KO/EN 섞기 설명을 짧게 줄이고 .tool-note만 어절 줄바꿈을 적용했습니다. 폭 상한 확대·전역 nowrap·일반 planted/저장 안내 toast·저장/보상/엔진 정책은 변경하지 않았습니다.
+
+| 검증 | 기준/실행 결과 |
+|---|---|
+| 관련 UI | `npm.cmd exec vitest run tests/ui-flow.test.ts` 134/134(수명 회귀4개 추가). DOM mock은 표시 상태·3200ms 예약/취소·언어·늦은 콜백·입력/회차/이탈 정리와 저장 무쓰기 경계만 확인 |
+| 최종 전체1회 | Node24.21.0/Vitest4.1.11 `npm.cmd test`, 35파일2,358/2,358·50.39초. 기본5초/worker2/기존worker·SQLite/retry/업무 assertion·CI 유지, 동일 소스 전체 rerun 없음 |
+| 타입·스토어·빌드 | `typecheck` 전체/앱/서버, `store:check`, `store:test`12개, `build:test→build`(에셋 원본 포함) 모두 exit0. 최종3flags=false·src/dist서버마커0·diff whitespace0 |
+| 활성 복원 전후 | 기존 `play-focused-ui-qa.mjs --resume-only` 확장. baseline8조합16 PNG, testing/production 각8조합32 PNG. 활성/만료/키보드 우선 화면·실제 bounds·Chrome AX를 저장. 최종 각8조합에서 menu/canvas/tools 겹침0·문서 overflow0·만료 전후canvas/hint geometry 동일 |
+| 실제 수명/입력 | KO/EN 4크기 모두 실제 저장 회차 재로드→활성 문구/초점불변→언어 왕복·저장 불변→자연 만료→만료 후 언어 변경 재표시 없음. 실제 Tab 도움말 우선·Arrow 입력 정리·Enter선택/Escape·첫 마우스 선택/저장 불변·restart/설정 이탈 정리. 늦은 콜백 직접 재호출은 단위 회귀로 구분 |
+| 기존 흐름·목표 | 같은 QA 기본6화면 흐름 testing/production 각8조합48 PNG·오류0. 기존 goal-accessibility testing24확인/AX20/PNG12, production20확인/AX20/PNG8 성공. 이전 #144 실행을 이번 성공에 합산하지 않음 |
+
+새 headless context와 합성 origin/저장을 사용했고 사용자 Chrome/5173/5197 저장·서버를 사용하지 않았습니다. 실제 dist 응답에 Game 관찰 참조만 추가합니다. 수명 검증은 실제 재로드/DOM/키보드·마우스와 자연 타이머이며, 가짜 시간/저장 판정을 주입하지 않았습니다. 기본6화면 흐름의 결과 완료 수량은 기존 onMove fixture로서 자연 성공 플레이와 구분합니다. 실제 expiry.observedMs는 활성 PNG/AX 확보 후부터 잰 남은 대기 시간(약3초)이며, 타이머 시작부터3200ms를 정확히 실측한 값으로 설명하지 않습니다. 3200ms 예약은 소스/단위 회귀에서 별도로 확인했습니다. 기존 목표 QA의 dateKst는 과거 고정값이며 이번 실행일2026-10-20과 구분합니다.
+
+이번 작업의 명령 실패는 없었으며 baseline에서 관측한 제품 문제와 구분합니다. 기존 Vite500kB 청크/Node SQLite·타입 변환 경고는 남습니다. 실기기/TalkBack·네이티브 touch·일반/모션 감소 전체 오디오·실서비스·PR/main CI·출시는 새 검증하지 않았습니다. Android/APK/AAB/sync·버전·최종 오디오 믹스·SDK/의존성/서버/가격/계정/상품/공개 배포는 변경하지 않았습니다. #122의 미확정 CI 실패 원인 해결을 주장하지 않습니다. 사용자 조치·질문은 없습니다.
+
 ## 2026-10-20 · 플레이 중심 UI 검증 체크포인트 (이슈 #144)
 
 기준 main/origin main은 `a4b4992c5499ed8a7ca5adee8eec2a4e1c3a0f23`, 작업 브랜치는 `codex/144-play-focused-ui`입니다. [#144](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/144)의 앱·문구·접근성 수정을 마치고 **총괄 독립검수 완료·Ready PR 제출 승인**입니다. 총괄은 관련 UI130개·전체/앱/서버 타입·diff/체크포인트와 주요 production/testing PNG를 독립 검수했고 확정 기능 회귀를 발견하지 않았습니다. PR/main 필수CI와 병합은 별도 후속입니다. 아래 이전 날짜의 최신/현재 표현은 당시 이력입니다. 최종 소스의 LF SHA와 명령·로그·PNG는 Git 밖 `Pawblossom-builds/qa/issue-144/checkpoint.json`에 연결합니다.

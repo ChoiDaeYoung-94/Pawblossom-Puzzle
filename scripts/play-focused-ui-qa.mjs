@@ -6,11 +6,12 @@ import {pathToFileURL} from 'node:url';
 // 사용자 저장/기존 창/서버를 사용하지 않는 실제 dist 브라우저 QA입니다.
 const arg=name=>process.argv.find(value=>value.startsWith(`--${name}=`))?.slice(name.length+3);
 const output=arg('output'),root=path.resolve(arg('root')??'dist'),baseline=process.argv.includes('--baseline');
+const resumeOnly=process.argv.includes('--resume-only');
 assert(output&&process.env.PAWBLOSSOM_PLAYWRIGHT_MODULE,'--output와 PAWBLOSSOM_PLAYWRIGHT_MODULE이 필요합니다.');
 await fs.mkdir(output,{recursive:false});
 const {chromium}=await import(pathToFileURL(process.env.PAWBLOSSOM_PLAYWRIGHT_MODULE).href);
 const browser=await chromium.launch({headless:true,channel:'chrome'});
-const report={dateKst:'2026-10-20',baseline,root,flags:JSON.parse(await fs.readFile(path.join(root,'build-info.json'),'utf8')),browser:browser.version(),
+const report={dateKst:'2026-10-20',baseline,resumeOnly,root,flags:JSON.parse(await fs.readFile(path.join(root,'build-info.json'),'utf8')),browser:browser.version(),
   scope:'KO/EN 합성 저장·새 headless context. 실제 dist/DOM/키보드/Chrome AX. Game 참조만 응답에 노출. 결과는 실제 onMove 콜백에 완료 수량을 공급한 fixture. Android/실서비스 검증 아님.',cases:[],pageerrors:[]};
 const ready=page=>page.waitForFunction(()=>window.__uiGame?.scene.getScene('Board')?.keyboardState().available);
 async function screen(page,item,name){
@@ -40,6 +41,18 @@ async function ax(page,selector){
     const result=[],visit=node=>{result.push(node);for(const id of node.childIds??[]){const child=nodes.find(item=>item.nodeId===id);if(child)visit(child);}};visit(start);return result;
   }finally{await cdp.detach();}
 }
+async function resumeEvidence(page){
+  return page.evaluate(()=>{
+    const rect=el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};};
+    const note=document.querySelector('#round-resumed-notice')??document.querySelector('#toast'),bounds=rect(note);
+    const overlaps=el=>{const r=rect(el);return bounds.x<r.right&&bounds.right>r.x&&bounds.y<r.bottom&&bounds.bottom>r.y;};
+    const text=document.querySelector('.tool-note [data-t]').firstChild,lines=[];
+    for(let i=0;i<text.length;i++){const range=document.createRange();range.setStart(text,i);range.setEnd(text,i+1);const r=range.getBoundingClientRect();if(!r.width)continue;let line=lines.find(line=>Math.abs(line.y-r.y)<1);if(!line){line={y:r.y,text:''};lines.push(line);}line.text+=text.textContent[i];}
+    return {note:{id:note.id,text:note.textContent,bounds},hint:rect(document.querySelector('.board-hint')),canvas:rect(document.querySelector('canvas')),
+      overlapsNav:overlaps(document.querySelector('.bottom-nav')),overlapsCanvas:overlaps(document.querySelector('canvas')),overlapsTools:overlaps(document.querySelector('.tools')),
+      focus:document.activeElement.id,toolLines:lines.map(line=>line.text),overflowX:document.documentElement.scrollWidth-innerWidth,overflowY:document.documentElement.scrollHeight-innerHeight};
+  });
+}
 try{
   for(const language of ['ko','en'])for(const viewport of [{width:320,height:568},{width:390,height:844},{width:640,height:360},{width:1280,height:720}]){
     const item={label:`${language}-${viewport.width}x${viewport.height}`,screens:[],checks:[]};report.cases.push(item);
@@ -53,6 +66,42 @@ try{
         else await route.fulfill({path:file});
       });
       await page.goto('http://ui.pawblossom.invalid');await ready(page);await screen(page,item,'puzzle');
+      if(resumeOnly){
+        await page.reload();await ready(page);
+        await page.waitForFunction(baseline=>baseline?getComputedStyle(document.querySelector('#toast')).opacity==='1':!document.querySelector('#round-resumed-notice').hidden,baseline);
+        item.resume=await resumeEvidence(page);await screen(page,item,'resume-active');
+        item.checks.push('최신 dist 저장 회차 재로드·활성 복원 안내 PNG/실제 bounds·도구 글자별 줄바꿈');
+        if(!baseline){
+          const note=page.locator('#round-resumed-notice'),stored=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('pawblossom.save.v1'))),saved=await stored();
+          const sameGeometry=(a,b)=>{for(const name of ['canvas','hint'])for(const key of ['x','y','width','height'])assert(Math.abs(a[name][key]-b[name][key])<1,`${item.label} ${name}.${key}`);};
+          assert(!item.resume.overlapsNav&&!item.resume.overlapsCanvas&&!item.resume.overlapsTools);
+          assert(item.resume.note.bounds.y>=item.resume.hint.y&&item.resume.note.bounds.bottom<=item.resume.hint.bottom);
+          assert.equal(item.resume.overflowX,0);assert.equal(item.resume.overflowY,0);assert.equal(item.resume.focus,'');
+          assert.equal(await page.locator('#toast').evaluate(el=>el.classList.contains('visible')),false);
+          item.resumeAX=await ax(page,'#round-resumed-notice');
+          assert(item.resumeAX.some(node=>!node.ignored&&node.role?.value==='StaticText'&&node.name.value===item.resume.note.text));
+          const started=Date.now();
+          await page.locator('#language-toggle').click();assert.equal(await note.textContent(),language==='ko'?'Your saved round has resumed.':'저장된 회차를 이어서 시작했어요.');
+          await page.locator('#language-toggle').click();assert.deepEqual(await stored(),saved);
+          await page.waitForFunction(()=>document.querySelector('#round-resumed-notice').hidden);
+          item.expiry={observedMs:Date.now()-started,geometry:await resumeEvidence(page)};sameGeometry(item.resume,item.expiry.geometry);
+          assert.equal(await note.textContent(),'');await screen(page,item,'resume-expired');
+          await page.locator('#language-toggle').click();await page.locator('#language-toggle').click();assert.equal(await note.textContent(),'');
+          await page.reload();await ready(page);assert(await note.isVisible());
+          await page.locator('#restart').focus();await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>document.activeElement.id),'game-canvas');
+          assert(await page.locator('#board-keyboard-help').isVisible());assert.equal(await note.isVisible(),false);assert.equal(await note.evaluate(el=>el.hidden),false);
+          await screen(page,item,'resume-keyboard');await page.keyboard.press('ArrowRight');assert.equal(await note.evaluate(el=>el.hidden),true);assert.deepEqual(await stored(),saved);
+          await page.keyboard.press('Enter');assert(await page.evaluate(()=>Boolean(__uiGame.scene.getScene('Board').keyboardState().selected)));await page.keyboard.press('Escape');
+          await page.reload();await ready(page);assert(await note.isVisible());
+          const canvas=await page.locator('canvas').boundingBox();await page.mouse.click(canvas.x+canvas.width/16,canvas.y+canvas.height/16);
+          assert.equal(await note.evaluate(el=>el.hidden),true);assert(await page.evaluate(()=>Boolean(__uiGame.scene.getScene('Board').keyboardState().selected)));assert.deepEqual(await stored(),saved);
+          await page.reload();await ready(page);await page.locator('#restart').click();await ready(page);assert.equal(await note.evaluate(el=>el.hidden),true);
+          await page.reload();await ready(page);assert(await note.isVisible());await page.locator('#settings-button').click();assert.equal(await note.evaluate(el=>el.hidden),true);
+          item.checks.push('복원 안내/menu-board-tools 비겹침·Chrome AX·초점불변·언어 왕복/자연3200ms만료·만료전후canvas/hint높이불변',
+            '실제 Tab 도움말 우선·Arrow 입력정리·Enter선택/Escape·마우스첫선택/저장불변·restart회차/설정이탈 정리');
+        }
+        continue;
+      }
       assert.equal(await page.locator('html').getAttribute('lang'),language);
       const round=await page.evaluate(()=>JSON.parse(localStorage.getItem('pawblossom.save.v1')).inProgress);
       await page.locator('[data-route="village"]').click();await screen(page,item,'garden');

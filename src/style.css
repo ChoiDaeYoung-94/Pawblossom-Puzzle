@@ -140,6 +140,13 @@ html:lang(ko) h1,html:lang(ko) h2,html:lang(ko) h3,html:lang(ko) .moves-box stro
 .level-top .eyebrow{letter-spacing:.5px}
 .goal-heading{letter-spacing:.3px}
 .score-label{display:inline-flex;gap:4px;align-items:baseline;white-space:nowrap;font-weight:600}
+.tool-note{word-break:keep-all}
+/* 복원 안내는 원래 힌트의 높이를 유지하며 같은 영역에서 잠시 교체합니다. */
+.board-hint{position:relative}
+.board-hint.has-resume-notice>#board-hint-text,.board-hint.has-resume-notice>svg{visibility:hidden}
+#round-resumed-notice{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+#round-resumed-notice[hidden]{display:none}
+#puzzle-view:has(#game-canvas[data-keyboard="true"]:focus) #round-resumed-notice{display:none}
 .goal-heading #score{font-weight:800}
 .moves-box{border-radius:10px;background:#f0f4e7}
 .primary{border-radius:10px;box-shadow:none}
