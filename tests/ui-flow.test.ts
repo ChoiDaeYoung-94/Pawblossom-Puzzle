@@ -1081,3 +1081,39 @@ it('끝난 짧은 안내는 언어 변경으로 다시 발표하지 않습니다
   const app=mainHarness();app.run("notice('planted');scene.hooks.onNotice('chain')");app.flushToasts();app.element('#board-notice').listeners.animationend({preventDefault(){}});
   app.run("changeLanguage('ko')");expect(app.element('#toast').textContent).toBe('A new patch is blooming!');expect(app.element('#board-notice').textContent).toBe('Keep it going!');
 });
+
+describe('회차 복원 안내의 표시 수명',()=>{
+  const restored=()=>{const first=mainHarness();return mainHarness(false,false,false,false,first.stored());};
+  it('저장 회차 복원만 힌트 안내로 표시하고 일반 toast·진행·초점은 바꾸지 않습니다',()=>{
+    const first=mainHarness(),saved=first.stored(),h=mainHarness(false,false,false,false,saved);
+    expect(first.element('#round-resumed-notice').hidden).toBe(true);
+    expect(h.element('#round-resumed-notice').hidden).toBe(false);
+    expect(h.element('#round-resumed-notice').textContent).toBe(t('en','roundResumed'));
+    expect(h.run('noticeKey')).toBeUndefined();expect(h.run('document.activeElement')).toBeUndefined();
+    expect(h.stored()).toEqual(saved);
+    const failed=mainHarness(true,false,false,false,saved);expect(failed.element('#round-resumed-notice').hidden).toBe(true);
+  });
+  it('언어를 바꿔도 같은 만료 예약을 유지하고 만료 뒤 다시 표시하지 않습니다',()=>{
+    const h=restored(),timer=h.run('resumeNoticeTimer');h.run("changeLanguage('ko')");
+    expect(h.run('resumeNoticeTimer')).toBe(timer);expect(h.element('#round-resumed-notice').textContent).toBe(t('ko','roundResumed'));
+    h.flushToasts();expect(h.element('#round-resumed-notice').hidden).toBe(true);expect(h.run('resumeNoticeTimer')).toBeUndefined();
+    h.run("changeLanguage('en')");expect(h.element('#round-resumed-notice').textContent).toBe('');
+  });
+  it('취소되거나 이전 회차에서 늦게 실행된 만료는 새 안내를 지우지 않습니다',()=>{
+    const h=restored();h.run(`globalThis.callbacks=[];const originalTimeout=setTimeout;setTimeout=(callback,ms)=>{if(ms===3200)callbacks.push(callback);return originalTimeout(callback,ms)};
+      showResumeNotice();showResumeNotice();callbacks[0]();`);
+    expect(h.element('#round-resumed-notice').hidden).toBe(false);
+    h.run('startLevel(3)');expect(h.element('#round-resumed-notice').hidden).toBe(true);
+    h.run('showResumeNotice();callbacks[1]()');expect(h.element('#round-resumed-notice').hidden).toBe(false);
+  });
+  it('주 포인터·보드 키 입력·화면 이탈로 안내만 정리하고 첫 선택 전에 저장을 쓰지 않습니다',()=>{
+    const h=restored(),saved=h.stored(),writes=h.writes();
+    h.run("document.querySelector('#game-canvas').listeners.pointerdown({button:2,isPrimary:true})");expect(h.element('#round-resumed-notice').hidden).toBe(false);
+    h.run("document.querySelector('#game-canvas').listeners.pointerdown({button:0,isPrimary:false})");expect(h.element('#round-resumed-notice').hidden).toBe(false);
+    h.run("document.querySelector('#game-canvas').listeners.pointerdown({button:0,isPrimary:true})");expect(h.element('#round-resumed-notice').hidden).toBe(true);
+    h.run("showResumeNotice();document.activeElement=document.querySelector('#game-canvas');document.querySelector('#game-canvas').listeners.keydown({target:document.activeElement,key:'ArrowRight',preventDefault(){}})");
+    expect(h.element('#round-resumed-notice').hidden).toBe(true);expect(h.stored()).toEqual(saved);expect(h.writes()).toBe(writes);
+    h.run("showResumeNotice();switchView('settings')");expect(h.element('#round-resumed-notice').hidden).toBe(true);
+    h.run("notice('planted')");expect(h.element('#toast').textContent).toBe(t('en','planted'));
+  });
+});

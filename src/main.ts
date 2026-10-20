@@ -26,6 +26,7 @@ import { TestBillingController,nativeTestBilling,billingCopy } from './testBilli
 let save=loadSave(), currentLevel=save.highestLevel, moves=0, score=0, collected=Array(6).fill(0) as number[], shuffles=1;
 let scene:BoardScene, game:Phaser.Game, route='puzzle', toastTimer:ReturnType<typeof setTimeout>;
 let resultTimer:ReturnType<typeof setTimeout>|undefined;
+let resumeNoticeTimer:ReturnType<typeof setTimeout>|undefined;
 let round=0;
 let boardPending=false;
 let roundEnded=false, resultShown=false, firstReward=false;
@@ -87,7 +88,7 @@ $('#app').innerHTML=`
         <div class="level-top"><div><div class="eyebrow"><span id="chapter-name"></span></div><h2><span data-t="level">${text('level')}</span> <span id="level-number">1</span><span class="level-flower">${icon('flower',21)}</span></h2></div><div class="level-actions">${TEST_TOOLS_ENABLED?`<button id="test-level-button" class="test-level-button">${label('testPick')}</button>`:''}<button id="restart" class="icon-button" aria-label="${text('restart')}">${icon('restart',20)}</button></div></div>
         <div class="mission-bar"><div class="moves-box"><strong id="moves">22</strong>${label('moves')}</div><div class="goal-box"><div class="goal-heading">${label('goal')}<span class="score-label">${label('score')} <span id="score">0</span></span></div><div id="goals"></div></div></div>
         <div class="board-wrap"><div id="game-canvas" tabindex="-1" aria-label="${text('boardLabel')}" aria-describedby="board-keyboard-help board-keyboard-status" role="application"></div><div id="board-notice" aria-live="polite"></div></div>
-        <p class="board-hint">${icon('leaf',15)} <span id="board-hint-text">${text('hint')}</span><span id="board-keyboard-help">${text('boardKeyboardHelp')}</span></p>
+        <p class="board-hint">${icon('leaf',15)} <span id="board-hint-text">${text('hint')}</span><span id="board-keyboard-help">${text('boardKeyboardHelp')}</span><span id="round-resumed-notice" role="status" aria-live="polite" aria-atomic="true" hidden></span></p>
         <div id="board-keyboard-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
         <div class="tools"><button id="shuffle" class="shuffle-button">${icon('shuffle',20)}${label('shuffle')}<span id="shuffle-count">1</span></button><span class="tool-note">${label('shuffleHelp')}</span></div>
       </div>
@@ -186,6 +187,7 @@ function replaceBoard(){
 function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
   abandonRewardContinue();
   if(!Number.isInteger(id)||id<1||id>levels.length)return;
+  clearResumeNotice();
   clearTimeout(resultTimer);resultTimer=undefined;round++;
   roundEnded=false;resultShown=false;firstReward=false;resultWon=undefined;boardNoticeKey=undefined;testContinueUsed=false;
   const activeRound=round;
@@ -219,6 +221,18 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
   return stored;
 }
 function notice(key:TextKey){noticeKey=key;clearTimeout(toastTimer);$('#toast').textContent=text(key);$('#toast').classList.add('visible');toastTimer=setTimeout(()=>{noticeKey=undefined;$('#toast').classList.remove('visible');},3200);}
+function clearResumeNotice(){
+  clearTimeout(resumeNoticeTimer);resumeNoticeTimer=undefined;
+  $('#round-resumed-notice').hidden=true;$('#round-resumed-notice').textContent='';
+  $('.board-hint').classList.remove('has-resume-notice');
+}
+function showResumeNotice(){
+  clearResumeNotice();const activeRound=round;
+  $('#round-resumed-notice').textContent=text('roundResumed');$('#round-resumed-notice').hidden=false;
+  $('.board-hint').classList.add('has-resume-notice');
+  const timer=setTimeout(()=>{if(resumeNoticeTimer!==timer||round!==activeRound)return;clearResumeNotice();},3200);
+  resumeNoticeTimer=timer;
+}
 function renderTutorial(){
   practiceInputs?.dispose();practiceInputs=undefined;
   const headings:TextKey[]=['tutorialSwap','tutorialGoal','tutorialMagic','practiceTitle'];
@@ -516,6 +530,7 @@ function localize(){
   $('#language-toggle').textContent=save.language==='en'?'한국어':'EN';$('#language-toggle').setAttribute('aria-label',text('switchLanguage'));
   $('#settings-button').setAttribute('aria-label',text('settings'));$('#restart').setAttribute('aria-label',text('restart'));
   if(noticeKey)$('#toast').textContent=text(noticeKey);
+  if(resumeNoticeTimer!==undefined)$('#round-resumed-notice').textContent=text('roundResumed');
   if(boardNoticeKey)$('#board-notice').textContent=text(boardNoticeKey);
 }
 function changeLanguage(language:'en'|'ko'){
@@ -529,6 +544,7 @@ function changeLanguage(language:'en'|'ko'){
 function switchView(name:string){
   if(name!=='puzzle')abandonRewardContinue();
   if(!scene.canLeave())return;
+  if(name!=='puzzle')clearResumeNotice();
   route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
   document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(b=>{b.classList.toggle('active',b.dataset.route===name);if(b.dataset.route===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   updateSaveStatus();
@@ -550,7 +566,7 @@ document.addEventListener('pointerdown',()=>{void audio.unlock().catch(()=>{});}
 const boardFocus=$('#game-canvas');
 boardFocus.addEventListener('focus',()=>{if(boardFocus.matches(':focus-visible')){boardFocus.dataset.keyboard='true';scene?.focusKeyboard();}updateBoardAccess();});
 boardFocus.addEventListener('blur',()=>{boardFocus.dataset.keyboard='false';scene?.cancelInput();});
-boardFocus.addEventListener('pointerdown',()=>{boardFocus.dataset.keyboard='false';scene?.hideKeyboardCursor();},{capture:true});
+boardFocus.addEventListener('pointerdown',event=>{if(event.button===0&&event.isPrimary!==false&&scene?.keyboardState().available)clearResumeNotice();boardFocus.dataset.keyboard='false';scene?.hideKeyboardCursor();},{capture:true});
 boardFocus.addEventListener('keydown',event=>{
   if(event.target!==boardFocus||document.activeElement!==boardFocus||event.altKey||event.ctrlKey||event.metaKey||event.isComposing)return;
   if(!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter',' ','Escape'].includes(event.key))return;
@@ -558,6 +574,7 @@ boardFocus.addEventListener('keydown',event=>{
   // 대기 중에도 방향키/Space의 페이지 스크롤은 막고 엔진 입력은 거부합니다.
   event.preventDefault();
   if(!scene.keyboardState().available)return;
+  clearResumeNotice();
   boardFocus.dataset.keyboard='true';void audio.unlock().catch(()=>{});scene.focusKeyboard();scene.keyboardKey(event.key,event.repeat);
 });
 window.addEventListener('blur',()=>{boardFocus.dataset.keyboard='false';scene?.cancelInput();practiceInputs?.cancel();});
@@ -584,5 +601,5 @@ if(androidBillingEntry){
   testBilling=new TestBillingController(nativeTestBilling(),()=>{renderBillingDialog();if(testAds)renderAdDialog();syncActivity();});
   void testBilling.connect();
 }
-if(resumed&&resumedStored&&saveStatus().load!=='recovered')notice('roundResumed');
+if(resumed&&resumedStored&&saveStatus().load!=='recovered')showResumeNotice();
 if(!save.tutorialSeen)showTutorial();
