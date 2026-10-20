@@ -1,3 +1,13 @@
+## 현재 작업 · 2026-10-20 · 플레이 중심 UI (#144, PR 제출 승인)
+
+기준 main `a4b4992c5499ed8a7ca5adee8eec2a4e1c3a0f23`에서 `codex/144-play-focused-ui`로 작업했습니다. [#144](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/144)는 **UI 구현/로컬 검증·총괄 독립검수 완료, Ready PR 제출 승인**입니다. 총괄은 관련 UI130개·전체/앱/서버 타입·diff/체크포인트·주요 PNG를 독립 검수했습니다. 승인된 브랜치의 커밋·푸시·PR 제출 뒤 필수CI와 최신 main 검증·병합은 총괄이 진행하며, 아래 이전 기록과 구분합니다.
+
+긴 감성 문구·미구현 이웃 약속을 줄이고, 한영 제목/튜토리얼/결과를 실제 행동과 보상 중심으로 정리했습니다. 기존 핍/숲 에셋을 유지하면서 데스크톱 보조 그림을 축소하고 그림자/반짝임·카드 장식을 절제했습니다. 점수 label, 완료/잠금 스테이지 읽기, 결과 보상 종류, 심기 뒤 상태 초점·정원 스크롤 보존을 보강했습니다. 게임 엔진/점수 규칙·30스테이지·별/코인 보상량/스키마·가격·광고/결제·서버·Android·버전·최종 오디오 믹스·계정/키/콘솔·공개 배포는 수정하지 않았습니다.
+
+최신 Node24.21.0/Vitest4.1.11에서 관련UI130개, 전체35파일2,354개(기본5초·worker2·전체 최종1회), 전체/앱/서버 타입, store:check/store:test12개, 에셋 원본, build:test→build, flags3false/서버마커0, diff 검사를 통과했습니다. KO/EN×4뷰포트×6화면의 baseline/testing/production PNG 각48개와 실제 조작/AX 결과를 구분해 보존했습니다. 기존 목표 회귀는 testing24/production20 확인이며 유휴 힌트는 production 일반/모션 감소 각5확인=10·오류0·PNG8입니다. [브라우저 근거·실패/도구 복구·제약](browser-qa.ko.md)을 참고해 주세요.
+
+Git 밖 `Pawblossom-builds/qa/issue-144/checkpoint.json`은 기준SHA·변경 파일LF SHA·명령/결과·초기 실패 원문·브라우저PNG·보류 상태를 연결합니다. 의존성 복구의 EPERM/도구 PATH 실패와 초기 옛문구 검사 실패를 최종 성공에 합산하지 않습니다. npm 고정lock 설치본으로 복구를 마쳤고 package/lock·테스트 시간/retry/worker·CI는 바꾸지 않았습니다. 이번 성공은 #122의 미확정 CI 실패 원인 해결을 뜻하지 않습니다. 실기기·운영 광고/결제·스토어·출시는 미검증이며 단말 테스트와 APK 전달 보류를 유지합니다.
+
 ## 사용자 결정 · 2026-10-19 · 첫 출시 범위 (#142)
 
 기준 main `11f4bb05909b0102eebfbd1bbc67e6be011d8edc`의 [#142](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/142)는 사용자 후속 결정을 AGENTS.md와 기존 문서3개에 기록하는 작업입니다. 앱/서버/시험 bridge·Android·버전·오디오·콘솔/상품/실계정/키·배포 설정을 변경하지 않습니다. 아래10월18일의 제안/질문·진행 복구/서버 우선순위는 당시 이력이며 이번 확정 범위가 우선합니다.
