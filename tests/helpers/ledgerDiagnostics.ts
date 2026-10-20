@@ -10,7 +10,9 @@ const codes=['storage-unavailable','invalid-input','invalid-time','voucher-missi
 const names=['Error','TypeError','RangeError','SyntaxError','AbortError','AggregateError','other'] as const;
 const errorCodes=['ERR_SQLITE_ERROR','SQLITE_BUSY','SQLITE_LOCKED','SQLITE_ERROR','SQLITE_IOERR','SQLITE_FULL','SQLITE_CORRUPT','SQLITE_CONSTRAINT','ERR_WORKER_OUT_OF_MEMORY','ERR_WORKER_INIT_FAILED','ERR_IPC_CHANNEL_CLOSED','other'] as const;
 const sqliteOperations=['database-exec','database-prepare','statement-run','statement-get','statement-all','unknown'] as const;
-interface SqliteErrorRow {operation:typeof sqliteOperations[number];phase:Phase;errorCode:ReturnType<typeof safeError>['errorCode'];extendedCode:number|null;baseCode:number|null;transactionActive:boolean|null;connectionClosed:boolean|null;}
+// site는 정적 SQL의 종류이며 호출자 위치나 잠금 소유자를 판정하지 않습니다.
+const sqliteSites=['unknown','transaction-begin','transaction-commit','transaction-rollback','pragma-synchronous-full'] as const;
+interface SqliteErrorRow {operation:typeof sqliteOperations[number];site:typeof sqliteSites[number];phase:Phase;errorCode:ReturnType<typeof safeError>['errorCode'];extendedCode:number|null;baseCode:number|null;transactionActive:boolean|null;connectionClosed:boolean|null;}
 export interface ConstructorAttempt {attempt:number;opened:boolean;nativeCount:number;closeObserved:boolean;closeSucceeded:boolean;closeFailed:boolean;closeHookInstalled:boolean;closeHookRestored:boolean;retryScheduled:boolean;waitMs:number;}
 const hookInstallStates=['not-requested','pending','installed','failed','unknown'] as const,hookRestoreStates=['not-needed','pending','restored','failed','unknown'] as const;
 interface SqliteHookState {installation:typeof hookInstallStates[number];restoration:typeof hookRestoreStates[number];installedMethods:number;restoreFailures:number;}
@@ -63,7 +65,12 @@ function nativeBoolean(database:object,key:'isOpen'|'isTransaction'):boolean|nul
 }
 export function matchesFailedConnection(trace:PhaseTrace,from:number,database:unknown):boolean {return trace.sqliteErrors.slice(from).some(row=>nativeDatabases.get(row)===database);}
 export function refreshClosedConnections(trace:PhaseTrace,from:number):void {for(const row of trace.sqliteErrors.slice(from)){const database=nativeDatabases.get(row),open=database?nativeBoolean(database,'isOpen'):null;row.connectionClosed=open===null?null:!open;}}
-// 단발 worker의 동기 execute 범위에서만 사용합니다. SQL/인자/errstr/원문 오류는 읽지 않습니다.
+function sqliteSite(operation:SqliteErrorRow['operation'],input:unknown):SqliteErrorRow['site'] {
+  if(operation!=='database-exec'||typeof input!=='string')return 'unknown';
+  switch(input){case 'BEGIN IMMEDIATE':return 'transaction-begin';case 'COMMIT':return 'transaction-commit';case 'ROLLBACK':return 'transaction-rollback';case 'PRAGMA synchronous=FULL':return 'pragma-synchronous-full';default:return 'unknown';}
+}
+// 단발 worker의 동기 execute 범위에서만 사용합니다.
+// SQL은 고정 literal과의 완전 일치만 분류하며 원문·인자·errstr·원문 오류는 저장/출력하지 않습니다.
 export function withSqliteDiagnostics<T>(trace:PhaseTrace|null,work:()=>T):T {
   if(!trace)return work();
   const targets:[object,string,SqliteErrorRow['operation']][]=[[DatabaseSync.prototype,'exec','database-exec'],[DatabaseSync.prototype,'prepare','database-prepare'],[StatementSync.prototype,'run','statement-run'],[StatementSync.prototype,'get','statement-get'],[StatementSync.prototype,'all','statement-all']];
@@ -82,7 +89,7 @@ export function withSqliteDiagnostics<T>(trace:PhaseTrace|null,work:()=>T):T {
       try{return Reflect.apply(descriptor.value,this,args);}
       catch(error){
         // 수집 실패도 원래 예외의 종류/참조를 바꾸지 않습니다.
-        try{if(trace.sqliteErrors.length<8){const errorCode=safeError(error).errorCode;const row:SqliteErrorRow={operation,phase:trace.phase,errorCode,...sqliteCode(errorCode==='ERR_SQLITE_ERROR'?field(error,'errcode'):undefined),transactionActive:operation==='database-exec'?nativeBoolean(this as object,'isTransaction'):null,connectionClosed:null};if(operation==='database-exec'&&this!==null&&typeof this==='object')nativeDatabases.set(row,this);trace.sqliteErrors.push(row);}else trace.sqliteErrorsTruncated=true;}catch{}
+        try{if(trace.sqliteErrors.length<8){const errorCode=safeError(error).errorCode;const row:SqliteErrorRow={operation,site:sqliteSite(operation,args[0]),phase:trace.phase,errorCode,...sqliteCode(errorCode==='ERR_SQLITE_ERROR'?field(error,'errcode'):undefined),transactionActive:operation==='database-exec'?nativeBoolean(this as object,'isTransaction'):null,connectionClosed:null};if(operation==='database-exec'&&this!==null&&typeof this==='object')nativeDatabases.set(row,this);trace.sqliteErrors.push(row);}else trace.sqliteErrorsTruncated=true;}catch{}
         throw error;
       }
     }});state.installedMethods++;}
@@ -98,7 +105,7 @@ export function projectTrace(value:unknown):PhaseTrace {
     resultPhase:field(value,'resultPhase')===null?null:allowed(field(value,'resultPhase'),phases,'unknown'),errorPhase:field(value,'errorPhase')===null?null:allowed(field(value,'errorPhase'),phases,'unknown'),
     errorName:field(value,'errorName')===null?null:allowed(field(value,'errorName'),names,'other'),errorCode:field(value,'errorCode')===null?null:allowed(field(value,'errorCode'),errorCodes,'other'),
     steps:Array.isArray(steps)?steps.slice(0,8).map(row=>({phase:allowed(field(row,'phase'),phases,'unknown'),startedAtMs:number(field(row,'startedAtMs'))??0,durationMs:number(field(row,'durationMs'))})):[],
-    sqliteErrors:Array.isArray(sqliteErrors)?sqliteErrors.slice(0,8).map(row=>{const errorCode=field(row,'errorCode')===null?null:allowed(field(row,'errorCode'),errorCodes,'other');return {operation:allowed(field(row,'operation'),sqliteOperations,'unknown'),phase:allowed(field(row,'phase'),phases,'unknown'),errorCode,...sqliteCode(errorCode==='ERR_SQLITE_ERROR'?field(row,'extendedCode'):undefined),transactionActive:booleanOrNull(field(row,'transactionActive')),connectionClosed:booleanOrNull(field(row,'connectionClosed'))};}):[],sqliteErrorsTruncated:field(value,'sqliteErrorsTruncated')===true||(Array.isArray(sqliteErrors)&&sqliteErrors.length>8),
+    sqliteErrors:Array.isArray(sqliteErrors)?sqliteErrors.slice(0,8).map(row=>{const operation=allowed(field(row,'operation'),sqliteOperations,'unknown'),errorCode=field(row,'errorCode')===null?null:allowed(field(row,'errorCode'),errorCodes,'other');return {operation,site:operation==='database-exec'?allowed(field(row,'site'),sqliteSites,'unknown'):'unknown',phase:allowed(field(row,'phase'),phases,'unknown'),errorCode,...sqliteCode(errorCode==='ERR_SQLITE_ERROR'?field(row,'extendedCode'):undefined),transactionActive:booleanOrNull(field(row,'transactionActive')),connectionClosed:booleanOrNull(field(row,'connectionClosed'))};}):[],sqliteErrorsTruncated:field(value,'sqliteErrorsTruncated')===true||(Array.isArray(sqliteErrors)&&sqliteErrors.length>8),
     sqliteHook:{installation:allowed(field(hook,'installation'),hookInstallStates,'unknown'),restoration:allowed(field(hook,'restoration'),hookRestoreStates,'unknown'),installedMethods:methodCount(field(hook,'installedMethods')),restoreFailures:methodCount(field(hook,'restoreFailures'))},
     constructorAttempts:Array.isArray(attempts)?attempts.slice(0,3).map(row=>({attempt:boundedCount(field(row,'attempt'),3),opened:field(row,'opened')===true,nativeCount:boundedCount(field(row,'nativeCount'),8),closeObserved:field(row,'closeObserved')===true,closeSucceeded:field(row,'closeSucceeded')===true,closeFailed:field(row,'closeFailed')===true,closeHookInstalled:field(row,'closeHookInstalled')===true,closeHookRestored:field(row,'closeHookRestored')===true,retryScheduled:field(row,'retryScheduled')===true,waitMs:field(row,'waitMs')===25?25:0})):[]};
 }

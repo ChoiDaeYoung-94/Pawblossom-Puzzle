@@ -1,3 +1,57 @@
+## 현재 통합 · 2026-10-20 19시 연장 · #153 최신 main 반영 (로컬 통과·새 CI 대기)
+
+사용자 요청으로 작업 종료를20시로 연장했습니다. [PR157](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/157)의 검사 전용 정적 SQL 분류는 main `90845643e37197674a901936892c06b03a7f947b`에 반영됐고 [정확한 main CI39406780626](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39406780626)가 Node22·24 각각35파일2,375개·스토어12개·타입·두 빌드를 통과했습니다. 오늘 이 시점까지 병합 PR은7개입니다. 진단 관측 보강이며 #122의 잠금/과거 timeout 원인 해결을 뜻하지 않습니다.
+
+[PR155](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/155)의 원래 head `9ad4579499385d7da4b9a04a72c6025bcc2e854b`와 실패 CI39400594900은 보존하고, 최신 main908의 새 진단 코드·검사·문서 이력을 실제 병합했습니다. 충돌2개는 기존 기록을 모두 보존하는 문서 통합이며 앱·UI 검사·브라우저 QA 소스는 원래 PR155와 동일합니다. 기본5초/file2/8worker·ready/go·SQLite500ms·기대값·운영 코드·CI를 바꾸거나 동일 head를 재실행하지 않았습니다.
+
+통합 작업 트리에서 Node24.21.0/Vitest4.1.11 전체35파일2,379/2,379·47.59초를1회 실행했고, 타입·스토어12개·에셋·build:test→build를 통과했습니다. testing flags3true/production3false·src/dist 진단 마커0이며 production30파일 전체가 원래 PR155의 최종 브라우저 검증 manifest와 SHA256 동일합니다. 기존 Chrome32조합144PNG·오류0과 총괄 자연 입력은 동일 산출물의 과거 근거이며 이번 브라우저 재실행이 아닙니다. Git 밖 `Pawblossom-builds/qa/issue-153-integration`에 전체 JSON/로그·두 빌드·source-build-review.json을 보존합니다. 새 통합 head의 필수 CI와 병합은 아직 확인 전이며, 실패 시 원인을 보존하고 조건 완화/통과 맞추기 재실행을 하지 않습니다. 아래 현재/제출 전/미병합 표현은 해당 시점 이력입니다. Android·실서비스·스토어·최종 오디오 및 기존 보류는 그대로입니다.
+
+## 현재 작업 · 2026-10-20 · #122 SQLite 오류의 정적 분류 (커밋 전 검수)
+
+기준 main/origin main은 `6dc9b3c0a063e535b5db0e4d5314f013cb306ef9`, 브랜치는 `codex/122-sqlite-error-site`입니다. [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)의 검사 전용 native 오류 행에 고정 `site` 분류만 추가했습니다. **관련327개·전체35파일2,375개 한 번 성공 후 타입 비교 오류를 보완했고, 최종 타입·안전4개·두 빌드와 소거 JS 동일성을 확인했습니다. 커밋 전 총괄 최종 체크포인트 검수·제출 승인 대기**입니다. 새 커밋·푸시·PR은 아직 없습니다. 아래 이전 통합/제출 전 표현은 당시 이력입니다.
+
+`database-exec`가 오류를 던졌을 때 첫 인자가 정확한 정적 문자열인 경우만 `transaction-begin`/`transaction-commit`/`transaction-rollback`/`pragma-synchronous-full`로 분류합니다. 각각 BEGIN IMMEDIATE/COMMIT/ROLLBACK/PRAGMA synchronous=FULL 완전 일치이며 공백·대소문자·세미콜론·주석·복수 SQL을 정규화하지 않습니다. 문자열 외 입력에 getter/toString/강제 변환을 추가하지 않고 다른 SQL·prepare/statement는 `unknown`으로 둡니다. **site는 정적 문자열의 종류이며 호출자 위치나 잠금 소유자를 판정하지 않습니다.** 원문 SQL·인자·오류 message/stack·경로·owner·grant·키·토큰은 metadata에 저장/출력하지 않습니다. projectTrace도 허용 enum만 투영하고 미허용·객체·throwing getter와 database-exec 외의 위조 분류는 unknown으로 제한합니다.
+
+원래 native 함수의 this/인자/호출1회·반환·동일 예외·descriptor 설치/복원과 최대8native/8step·기존 오류 allowlist를 유지합니다. 새 회귀2개와 기존 안전 회귀 보강은 server-round-ledger.test.ts에만 두었고, reward-redemption.test.ts의 기존 합성 old-busy 행1곳에는 필수 site:unknown을 추가했습니다. worker ready/go·생성자/업무 중첩·취소/afterEach·retry·기본5초/file2/내부worker/SQLite500ms·제품·서버·CI·의존성은 그대로입니다. 준비 barrier를 도입하거나 기존 혼합 실행을 대체하지 않았습니다.
+
+| 실행 단계 | 명령·결과와 버전 경계 |
+| --- | --- |
+| 최초 관련/전체 | `npm.cmd test -- tests/reward-redemption.test.ts tests/server-round-ledger.test.ts tests/reward-ledger.test.ts --reporter=default --reporter=json --outputFile.json=<QA>/related-before-type-fix.json` · 3파일327/327, 17.34초. `npm.cmd test -- --reporter=default --reporter=json --outputFile.json=<QA>/full.json` · 35파일2,375/2,375, 47.30초, 전체1회입니다. 관련 원본 파일은 이후 보존용 이름으로 복사했습니다. |
+| 초기 타입 실패 | `npm.cmd run typecheck` · 새 합성 반환 회귀의 void 대 객체 직접 비교 TS2367, server-round-ledger.test.ts:200입니다. 원문 typecheck-initial-failed.log와 최초 전체/관련 JSON을 보존했습니다. |
+| 최종 타입/안전 | Reflect.apply 호출과 === 비교는 그대로 두고 왼쪽 반환값에 `as unknown`만 추가했습니다. 최종 `npm.cmd run typecheck` 및 `npm.cmd test -- tests/server-round-ledger.test.ts -t '검사 진단\|검사 SQLite' --reporter=default --reporter=json --outputFile.json=<QA>/safety-final.json` · 전체/앱/서버 타입 성공, 안전4통과/기존141건 필터 제외, 420ms입니다. |
+| 소거/독립 검수 | Node24.21.0 stripTypeScriptTypes(mode=transform)로 타입 단언 전/후 JS 바이트 동일을 확인했습니다. 소거 JS SHA256=`738735d3da8c7df1c2ce812e3223faebf2ab28afc31bc7fa9348145f2db6f012`입니다. 총괄도 타입 보완 전 관련327개·최종 타입과 핵심2회귀·privacy/호출/복원 경계를 독립 확인했습니다. 최종 전체를 다시 실행했다고 표현하지 않습니다. |
+| 스토어/웹 | `npm.cmd run store:check`, `store:test`12/12, `assets:check`, `build:test`→`build` 성공입니다. testing flags3true→최종 production flags3false, src/dist 서버·진단 마커0건이며 production JS/CSS3개는 기준 main을 먼저 빌드한 bundle과 SHA256이 같습니다. |
+
+중간에 동일 객체 확인을 toBe로 표현한 본문도 관련327개(18.30초)/타입 성공으로 별도 보존했습니다. 최종 본문은 최초 전체 실행본과 타입 소거 후 동일한 비교식으로 확정했으며, 중간본 결과를 최종 전체로 합산하지 않습니다. Node24.21.0/Vitest4.1.11·정식 use-dev-tools.ps1/npm.cmd를 사용했고 전체/CI의 성공 맞추기 재실행은 하지 않았습니다. 기존 chunk 크기 경고와 stripTypeScriptTypes의 experimental 경고도 보존합니다.
+
+관련/전체 JSON은 각각73trace/12native,81trace/16native에서 새 필드/enum·원문 비노출을 확인했습니다. 최종 안전 JSON은 실제 결정적 오류4건을 수집했습니다. 부모 연결 잠금 중 BEGIN은 code5/transactionActive=false, 활성 거래 중 PRAGMA와 거래 없는 COMMIT/ROLLBACK은 code1이며 네 정적 분류와 원래 실패를 유지합니다. 합성 회귀는 네 literal·유사/복수SQL·객체/Proxy/getter·비exec·위조 투영·8건 상한·단일 호출/receiver/반환/동일 throw/복원을 검증합니다. 성공한 오래 걸린 native 호출의 시간과 잠금 소유자는 여전히 관측하지 않습니다.
+
+**보존한 미해결 실패:** [PR155](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/155)의 head `9ad4579499385d7da4b9a04a72c6025bcc2e854b`와 [CI39400594900](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39400594900)은 그대로입니다. 양쪽 각각2,376통과/1실패이며 Node22 동일 명령 worker7 command501.953894ms·Node24 동시 생성 worker2 start503.123828ms의 database-exec/base·extended5/transactionActive=false를 확인했습니다. 해당 생성자는8.18/3.75ms에 성공했습니다. 당시 로그에는 site가 없으므로 BEGIN 진입 실패는 코드/상태에 따른 추론이며 새 필드를 과거 로그에 소급하지 않습니다. 실제 잠금 소유자·지속 원인·생성자/업무 중첩의 인과는 미확정입니다. 예전 main136 reward-redemption:163의5초 timeout과도 동일 원인으로 합치지 않습니다. 이번 관측 검증 성공으로 PR155 실패나 #122를 해결했다고 처리하지 않습니다.
+
+Git 밖 QA는 `C:/Users/user/Documents/ChatGPT/Pawblossom-builds/qa/issue-122-sqlite-site`이며 checkpoint.json·각 단계 JSON/로그·metadata-review.json·type-erasure-review.json·source-build-review.json·소스 LF SHA를 보존합니다. 최초 전체의 test source LF SHA는 `50b47e6d32e203cf9d530f6c1f74e8f16f24b9438813ea3f008247c04e1e86b6`, 최종은 `ca42f72255c92c510b81aa4358448f807eec06d6e14f857dfe6130f86638cf89`입니다. helper=`7c2eb79f7275f80ef02b2ef9dabc1840984f665e960c700116cd59908dd913d0`, reward-redemption=`5f8bcf51b03ebee5bf49b3761506edbab5240fe974a757b20f94bd8b8330a469`입니다. 다음은 총괄 최종검수·승인 뒤 한국어 test 커밋·푸시·Refs #122 PR 제출이며 CI/병합/정리는 총괄 담당입니다. 사용자 조치/질문은 없습니다. APK/AAB·Android sync·버전·최종 오디오 믹스·SDK·계정/키/env·콘솔/상품/Drive·폰/전달·배포 보류를 유지합니다.
+
+## 현재 통합 상태 · 2026-10-20 · #154
+
+오늘 시작 main `a4b4992c5499ed8a7ca5adee8eec2a4e1c3a0f23`부터 **5개 PR을 병합**했습니다. 제품·검사 기준 main은 `be328c75372d4a1b2a2dd36faf39722330406186`이며, [정확한 main CI39397742294](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39397742294)는 Node22·24 각각35파일2,373개·스토어12개·타입·두 웹 빌드 성공입니다. 이번 #154는 기존4문서의 현황 정리이며 자체 PR/main CI·병합은 제출 뒤 별도 확인합니다. 아래 과거의 현재/승인/제출 전 표현은 당시 이력입니다.
+
+| 이슈·PR | 반영 결과 | 실제 squash main · 정확한 main CI |
+|---|---|---|
+| #144 · [PR146](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/146) | 문구·장식 축소, 퍼즐 중심 배치, 상태/보상 접근성·꽃 심기 초점 | `c37ceba8eac43d238665b90e192a7c89edde0b6b` · [39391338805](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39391338805) |
+| #145 · [PR148](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/148) | 한국3,000원·미국US$2.50 확정 기록 | `2d31df97720b7ad180b6949c1ed0f54946289fae` · [39391701617](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39391701617) |
+| #147 · [PR150](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/150) | 회차 복원 안내의 메뉴 겹침·섞기 설명 줄바꿈 수정 | `1917ee84c07fb13193a01c58b14a2448a13f8893` · [39393448039](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39393448039) |
+| #149 · [PR151](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/151) | 정상 저장 중복 안내 축소·문제 복구/초점 유지·고객센터 표시 | `5839e22e6e52190d87321be00d4b291842ca4365` · [39396115390](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39396115390) |
+| #122 · [PR152](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/152) | 잔여 행수0/1/2 검사의 고정7단계·안전 진단 보강 | `be328c75372d4a1b2a2dd36faf39722330406186` · [39397742294](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39397742294) |
+
+**#153의 [PR155](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/155)는 미병합 Draft입니다.** head `9ad4579499385d7da4b9a04a72c6025bcc2e854b`의 종료 안내 정리·API 미제공 방어·화면 복귀 재표시 수정은 로컬 UI153/전체2,377개·타입/스토어12/두 빌드와 최종 Chrome32조합144PNG·오류0을 통과했습니다. 그러나 [필수 CI39400594900](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39400594900)는 양쪽 모두 서버 회차 동시 검사1개 실패/2,376개 성공이므로 병합하지 않았습니다. 이후 단계의 스토어/빌드 CI도 실행 성공으로 합산하지 않습니다. 재실행·기대/timeout/worker/500ms 완화·운영 코드 변경은 하지 않았습니다.
+
+Node22는 동일 명령 검사 worker7의 command(501.954ms), Node24는 동시 생성 검사 worker2의 start(503.124ms)에서 SQLite base/extended5와 storage-unavailable을 관측했습니다. 해당 worker의 round-open은 각각8.18/3.75ms에 성공했습니다. 잠금 소유자·전체 대기 원인은 미확정이며, go 이후 생성자/업무가 섞이는 구조는 후속 조사 후보입니다. 예전 main136 reward-redemption:163의5초 timeout과 동일 원인으로 합치지 않습니다. 원문·안전 투영은 Git 밖 `Pawblossom-builds/qa/issue-153/pr155-ci-failed.log`와 `pr155-ci-safe-summary.json`에 보존하고 #122를 열어 둡니다.
+
+실제 자연 플레이와 fixture QA의 버전 경계는 [브라우저 기록](browser-qa.ko.md) 상단을 우선합니다. 완료5브랜치는 개별 squash/tree/tip·종속 PR·worktree 확인 후 정리했고, 미병합153과 이번154는 보존합니다. 완료 UI 세션은 정식 보관했으며 미해결 진단·미병합 안내 세션은 총괄 아래 유지합니다. 영구 삭제로 보고하지 않습니다.
+
+다음 순서는 원장 실패의 소유자/준비·업무 경계를 근거로 좁히고 PR155의 필수 검증을 충족하는 것입니다. 실제 광고 SDK/동의·Play 구매/복원/환불·연령/개인정보·단말·스토어는 #73 미완료입니다. 별도 게임 로그인/클라우드 진행 복구는 제외하고 동일 Play 구매 계정의 광고 제거 소유권 복원만 준비합니다. 고객센터는 doeud1410@gmail.com, 가격은 한국3,000원/미국US$2.50이며 광고 제거 범위·최소 구매 검증 운영 구성은 후속 결정입니다. 개발자 표시명/사업자·정확한 홈페이지는 사용자가 준비될 때 결정합니다. 당장 사용자 조치·질문은 없습니다.
+
+자체 게임 서버 계약/비용/배포는 승인되지 않았습니다. APK/AAB·Android sync·버전·폰 테스트/전달·실계정/키/env·Drive/Play Console/상품·최종 오디오 믹스·공개 배포 보류와 폰 연결 후 총괄 일괄 점검→사용자 감각 검수→개선 순서를 유지합니다.
+
 ## 현재 작업 · 2026-10-20 · #153 임시 안내 접근성 정리 (로컬 최종 검증 완료·PR 제출 승인 대기)
 
 기준 `be328c75372d4a1b2a2dd36faf39722330406186`, 브랜치 `codex/153-transient-notice-cleanup`의 웹 변경입니다. 보드 안내의 새 회차/시험 이어하기/종료와 일반 toast 만료에서 키·표시·DOM 텍스트를 함께 비웁니다. 1300ms/3200ms·활성 한영 전환·현재 회차/타이머 보호를 유지하고, 새 안내 재생 중 늦은 종료 이벤트를 무시합니다. getAnimations API 미제공 시 예외 없이 정리하는 최소 방어도 포함합니다.
