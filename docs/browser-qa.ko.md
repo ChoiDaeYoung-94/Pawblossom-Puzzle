@@ -1,3 +1,28 @@
+## 2026-10-20 · 플레이 중심 UI 검증 체크포인트 (이슈 #144)
+
+기준 main/origin main은 `a4b4992c5499ed8a7ca5adee8eec2a4e1c3a0f23`, 작업 브랜치는 `codex/144-play-focused-ui`입니다. [#144](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/144)의 앱·문구·접근성 수정을 마치고 **총괄 독립검수 완료·Ready PR 제출 승인**입니다. 총괄은 관련 UI130개·전체/앱/서버 타입·diff/체크포인트와 주요 production/testing PNG를 독립 검수했고 확정 기능 회귀를 발견하지 않았습니다. PR/main 필수CI와 병합은 별도 후속입니다. 아래 이전 날짜의 최신/현재 표현은 당시 이력입니다. 최종 소스의 LF SHA와 명령·로그·PNG는 Git 밖 `Pawblossom-builds/qa/issue-144/checkpoint.json`에 연결합니다.
+
+- KO/EN 제목을 ‘핍의 정원/정원/정원사 핍/설정’처럼 짧게 다듬고, 목표·점수·실제 보상·튜토리얼 행동을 명시했습니다. 현재 없는 이웃/업데이트 약속 카드를 제거했습니다.
+- 넓은 화면에서 보조 그림 폭을 280px로 낮춰 퍼즐(1280×720에서 약356px)이 시선의 중심이 되도록 했습니다. 기존 자체 에셋을 재사용하며 큰 그림자·반짝임·둥근 장식을 줄였습니다. 화면 높이 기반 보드와 작은 가로 화면의 좌측 정보/우측 퍼즐 배치는 유지합니다.
+- 완료/잠금 스테이지 이름에 상태를 넣고 잠금 disabled를 유지합니다. 결과의 별/코인은 숨김 텍스트로 종류와 수량을 함께 읽습니다. 심기 후 DOM 교체로 초점이 body로 사라지는 것을 기준 브라우저에서 재현했고, 비활성 심기 버튼 대신 갱신된 상태 문장으로 초점을 잇습니다. 가로 정원 스크롤은 기준에서도 유지됐으며 수정 후에도 같은 위치를 보존했습니다.
+
+| 검증 대상 | 명령/경계 | 결과 |
+|---|---|---|
+| 관련 UI | `npm.cmd exec vitest run tests/ui-flow.test.ts` | 최신130/130. 상태 이름·보상 종류·초점/scroll 회귀5개 추가. 문구 번역 검사는 번역 원본으로 기대값 연결 |
+| 최신 전체 | `npm.cmd test`, Node24.21.0·Vitest4.1.11·worker2·기본5초 | 35파일2,354/2,354, 47.99초, 최종 소스로1회 실행. 타임아웃/retry/SQLite/업무 assertion/CI 변경 없음 |
+| 정적/빌드 | `typecheck` 전체·앱·서버, `store:check`, `store:test`, `build:test→build` (에셋 원본 검사 포함) | 모두 exit0, store12/12. testing flags3true/production3false. src/dist 서버 마커0, diff whitespace0 |
+| 새 UI 브라우저 | `play-focused-ui-qa.mjs` · KO/EN×320×568/390×844/640×360/1280×720 | baseline48 PNG, testing48, production48. 각8조합×퍼즐/정원/핍/설정/튜토리얼/결과. 각 실행 pageerror0·문서 overflow0·퍼즐 전체 표시/내부 무scroll·가시 버튼44px/hit·nav 영역·Enter/Space 심기·초점/scroll·지갑·저장/언어 왕복·실습·보드 키보드·재로드·결과 AX·모션 감소 확인 |
+| 유휴 힌트 회귀 | `idle-hint-qa.mjs`, production390×844·일반/모션 감소 | 각5확인=10, PNG8·오류0. 선택/Escape·설정 복귀·자연7.5초·Scene restart/remove·이전 callback 경계 유지 |
+| 기존 목표 회귀 | `goal-accessibility-qa.mjs` | testing24확인·AX20·PNG12, production20확인·AX20·PNG8. 실제 키보드/콜백/연쇄·언어/저장 유지. testing만 시험 이어하기+5 포함 |
+
+실제 브라우저 심기는0→1→2꽃밭과 별4→2→0에서 확인했습니다. DOM stub 회귀는 isConnected/disabled와 초점 함수를 수동 준비한 단위 검사이며 실제 DOM 교체 증거와 구분합니다. 450ms 이내 중복 입력은 기존 단위 회귀로만 확인했고, 4→5꽃밭 완성 직후 초점과 열린 결과창의 언어 변경 후 보상 종류 AX는 직접 브라우저 실행하지 않았습니다(해당 경로 코드 읽기만 수행).
+
+Chrome155.0.8059.85의 새 headless context와 합성 origin/저장을 사용했습니다. 실제 dist를 응답하고 Game 관찰 참조만 추가합니다. 결과 준비에 완료 수량을 onMove 콜백으로 공급한 것은 fixture이며 실제 퍼즐 성공 플레이로 세지 않습니다. 튜토리얼 실습과 키보드 조작·DOM/Chrome AX는 실제 입력입니다. 기존 목표/유휴 스크립트의 내장 dateKst는 과거 고정값이므로 실제 이번 실행일2026-10-20은 체크포인트/로그 파일 시각으로 구분합니다. 보유 사용자 저장·기존 Chrome·5173/5197 서버를 사용하지 않았고 이 세션은 preview 서버를 생성하지 않았습니다. 각 QA의 browser/context는 finally로 닫습니다.
+
+초기 실패를 최종 결과와 합산하지 않습니다. `before-1/2/3`는 QA 작성 중 clipping 판정·selectOption 초점 준비·native dialog 순서 기대를 바로잡은 도구 실패이며 summary의 stack을 보존했습니다. `ui-initial.log`의125개 중7실패는 바뀐 문구를 기대하던 검사입니다. 당시 PATH에 npm이 없어 선택한 pnpm이 로컬 설치를 재구성했고, 원래 패키지를 복원한 뒤 정식 npm 고정lock 설치본과 비교해 복구했습니다. repo npm ci는 기존 프로세스의 native binding 잠금(EPERM)으로 실패했고, Git 밖 cwd npm.cmd ci로142패키지 설치→동일 파일 유지/누락 파일 복원→필수 패키지 불일치0을 확인했습니다. 생성된 pnpm lock/설정/캐시는 repo 밖에 보존했고 package/lock은 변경하지 않았습니다. `build-testing-initial.log`는 npm PATH 실패, `build-testing-ui1.log`는 DOM NodeList 반복 타입 오류로, Array.from 수정 뒤 최종 타입·빌드가 통과했습니다. 원문은 모두 QA 폴더에 남깁니다.
+
+기존 Vite500kB 청크·Node SQLite/타입 변환 경고는 남습니다. #122 CI 실패 원인을 이번 UI 성공으로 설명하거나 해결했다고 주장하지 않습니다. 최신 PR/main CI, 실제 폰/TalkBack·광고·구매·스토어/공개 배포는 별도입니다. APK/AAB·Android sync·버전·최종 오디오 믹스·서버/보상 규칙·계정/상품 설정은 변경하지 않았습니다.
+
 ## 2026-10-18 · 최신 통합과 브라우저 근거 구분 (이슈 #139)
 
 최신 구현/검사 main은 `ca57341fbd269d82cfac63d1be9f173384ad68cc`이며 정확한 main CI39111374076 Node22·24 각각2,349개·스토어12개·타입/두 빌드 성공을 확인했습니다. [최신 통합 상태](android-release.ko.md)를 우선합니다. #134/#137/#122 parallel 후속은 서버/검사·문서 변경이며 #129 브라우저 실행 대상과 앱 src/public tree 및 production JS/CSS3개 byte가 같습니다.

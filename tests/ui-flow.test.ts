@@ -6,6 +6,7 @@ import { BoardEngine, seededRng, type BoardSnapshot } from '../src/core';
 import {TestAdsController,adCopy,type TestAdsBridge} from '../src/testAds';
 import {TestBillingController,billingCopy,type TestBillingBridge,type BillingSnapshot} from '../src/testBilling';
 import {bindPracticeBoard} from '../src/bindPracticeInputs';
+import {t, type TextKey} from '../src/i18n';
 
 // 테스트에만 사용하는 Node API입니다. 별도 @types/node 설치 없이 런타임에서 읽습니다.
 const fsModule = 'node:fs', vmModule = 'node:vm';
@@ -594,6 +595,28 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     expect(h.element('#save-status').textContent).toMatch(/recovery copy could not be written/);
     expect(h.stored().garden).toBe(0);
   });
+  it.each(['ko','en'] as const)('스테이지 이름에 %s 완료·잠금 상태를 포함하고 잠금은 비활성으로 유지합니다',language=>{
+    const h=mainHarness();h.run(`changeLanguage('${language}')`);
+    const html=h.element('#village-view').innerHTML;
+    expect(html).toContain(`aria-label="${t(language,'level')} 1 · ${t(language,'levelCompleted')}"`);
+    expect(html).toContain(`aria-label="${t(language,'level')} 2"`);
+    expect(html).toMatch(new RegExp(`data-level="3" disabled[^>]+aria-label="${t(language,'level')} 3 · ${t(language,'levelLocked')}"`));
+  });
+  it('정원 DOM 갱신은 내부 스크롤과 심기 뒤 상태 초점을 복원합니다',()=>{
+    const h=mainHarness();
+    h.run(`document.querySelector('#village-view').scrollTop=87;document.querySelector('#village-view').scrollLeft=0;
+      document.activeElement={id:'grow',isConnected:false};document.querySelector('#grow').disabled=true;
+      globalThis.focused='';document.querySelector('#garden-stage').focus=options=>{globalThis.focused='garden-stage';globalThis.preventScroll=options.preventScroll};renderViews(true);`);
+    expect(h.run('focused')).toBe('garden-stage');expect(h.run('preventScroll')).toBe(true);
+    expect(h.run("document.querySelector('#village-view').scrollTop")).toBe(87);
+  });
+  it.each(['ko','en'] as const)('최초 보상은 %s 별·코인 종류와 수량을 함께 렌더합니다',language=>{
+    const h=mainHarness();h.run(`changeLanguage('${language}');finish(true)`);
+    const html=h.element('#result-dialog').innerHTML;
+    expect(html).toContain(`data-t="stars">${t(language,'stars')}</span> +1`);
+    expect(html).toContain(`data-t="coins">${t(language,'coins')}</span> +40`);
+    expect(h.stored()).toMatchObject({stars:2,coins:80,completed:[1,2]});
+  });
   it('새 회차 시작은 이전 결과 타이머를 취소하고 이미 추출한 콜백도 무시합니다', () => {
     const h = mainHarness();
     h.run('startLevel(1);scene.hooks.onMove([12,10,0,0,0,0],220)');
@@ -1005,29 +1028,29 @@ describe('언어 정합성과 버전 단일 원본',()=>{
   it('한국어/영어 지역명·친구 제목·핍 설명을 실제 렌더에 연결합니다',()=>{
     const app=mainHarness();app.run("changeLanguage('ko')");
     expect(app.element('#village-view').innerHTML).toContain('꽃잎 초원');
-    expect(app.element('#journal-view').innerHTML).toContain('포블로섬 친구들');
+    expect(app.element('#journal-view').innerHTML).toContain(t('ko','friendsTitle'));
     expect(app.element('#journal-view').innerHTML).toContain('alt="정원사 토끼 핍"');
     expect(app.element('#journal-view').innerHTML).not.toMatch(/Blossom Meadow|PAWBLOSSOM FRIENDS|alt="Pip"/);
-    app.run("changeLanguage('en')");expect(app.element('#journal-view').innerHTML).toContain('Pawblossom Friends');
+    app.run("changeLanguage('en')");expect(app.element('#journal-view').innerHTML).toContain(t('en','friendsTitle'));
     expect(app.element('#journal-view').innerHTML).toContain('alt="Pip the gardener"');
   });
 });
 
 describe('열린 화면의 언어 변경은 진행·결과 처리를 보존합니다',()=>{
   it.each([
-    {id:2,won:true,test:false,replay:false,title:'풍성한 수확이에요!',description:'핍이 정말 기뻐해요.'},
-    {id:1,won:true,test:false,replay:true,title:'풍성한 수확이에요!',description:'다시 즐긴 스테이지예요.'},
-    {id:2,won:false,test:false,replay:false,title:'다시 시작해 볼까요?',description:'정원은 기다려 줄 거예요.'},
-    {id:30,won:true,test:false,replay:false,title:'초원을 완성했어요!',description:'시제품의 30개 스테이지'},
-    {id:30,won:true,test:true,replay:false,title:'풍성한 수확이에요!',description:'테스트가 끝났어요.'},
-    {id:30,won:false,test:true,replay:false,title:'다시 시작해 볼까요?',description:'테스트가 끝났어요.'},
+    {id:2,won:true,test:false,replay:false,title:'win',description:'winDesc'},
+    {id:1,won:true,test:false,replay:true,title:'win',description:'replayDesc'},
+    {id:2,won:false,test:false,replay:false,title:'lose',description:'loseDesc'},
+    {id:30,won:true,test:false,replay:false,title:'complete',description:'completeDesc'},
+    {id:30,won:true,test:true,replay:false,title:'win',description:'testResultDesc'},
+    {id:30,won:false,test:true,replay:false,title:'lose',description:'testResultDesc'},
   ])('$id번 성공=$won 시험=$test 재완료=$replay 결과 문구만 바꿉니다',({id,won,test,title,description})=>{
     const app=mainHarness(false,false,true);app.run(`startLevel(${id},${test});finish(${won})`);
     const saved=app.stored(),memory=app.run('JSON.stringify({currentLevel,moves,score,collected,shuffles,firstReward,roundEnded,resultShown})');
     const scene=app.run('scene'),dialog=app.element('#result-dialog'),html=dialog.innerHTML,next=app.element('#result-next').onclick,home=app.element('#result-home').onclick;
     const sounds=app.run('audio.plays.slice()'),art=app.resultArtCalls();
     app.run("document.activeElement=document.querySelector('#result-next');changeLanguage('ko')");
-    expect(app.element('#result-title').textContent).toBe(title);expect(app.element('#result-description').textContent).toContain(description);
+    expect(app.element('#result-title').textContent).toBe(t('ko',title as TextKey));expect(app.element('#result-description').textContent).toBe(t('ko',description as TextKey).replace('{count}','30'));
     expect(dialog.innerHTML).toBe(html);expect(dialog.open).toBe(true);
     expect(app.element('#result-next').onclick).toBe(next);expect(app.element('#result-home').onclick).toBe(home);
     expect(app.run("document.activeElement===document.querySelector('#result-next')")).toBe(true);
@@ -1039,7 +1062,7 @@ describe('열린 화면의 언어 변경은 진행·결과 처리를 보존합�
   it('300ms 결과 대기 중 전환은 저장된 보상을 한 번 유지하며 새 언어로 창을 엽니다',()=>{
     const app=mainHarness();app.run('scene.hooks.onMove([99,99,99,99,99,99],220,1,0)');const timer=app.resultTimers()[0],saved=app.stored();
     app.run("changeLanguage('ko')");expect(app.resultTimers()).toEqual([timer]);expect(app.stored()).toEqual({...saved,language:'ko'});
-    expect(app.resultArtCalls()).toBe(0);app.flushResults();expect(app.resultArtCalls()).toBe(1);expect(app.element('#result-dialog').innerHTML).toContain('풍성한 수확이에요!');
+    expect(app.resultArtCalls()).toBe(0);app.flushResults();expect(app.resultArtCalls()).toBe(1);expect(app.element('#result-dialog').innerHTML).toContain(t('ko','win'));
     expect(app.stored()).toEqual({...saved,language:'ko'});
   });
   it('실습 선택과 시험 묶음, 일반 회차·저장 경고·짧은 안내를 유지하며 번역합니다',()=>{

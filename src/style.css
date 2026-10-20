@@ -130,3 +130,71 @@ html:lang(ko) h1,html:lang(ko) h2,html:lang(ko) h3,html:lang(ko) .moves-box stro
 
 /* 저장 상태는 설정 내부에 유지하며 퍼즐 화면 높이를 바꾸지 않습니다. */
 .storage-card{border:1px solid var(--line);border-radius:13px;padding:12px;color:#41573f;background:#f5f3df;font-size:12px;line-height:1.6;margin:0 0 12px}.storage-card p{margin:0}.storage-card button{min-width:44px;min-height:44px;text-align:left;text-decoration:underline}.save-attention{position:relative}.save-attention:after{content:"!";position:absolute;right:0;top:0;border-radius:50%;background:#8a513b;color:#fffdf5;font-weight:800;font-size:11px;width:15px;height:15px;display:grid;place-items:center}
+
+/* 퍼즐과 실제 상태를 먼저 읽도록 장식의 대비와 보조 그림 비중을 낮춥니다. */
+.brand-mark{transform:none;border-radius:11px}
+.wallet{border-radius:9px;background:transparent;padding-left:6px;padding-right:6px;gap:5px}
+.icon-button{border-radius:10px;background:#edf0e5}
+.game-panel{border-radius:16px;box-shadow:none}
+.level-flower,.message-flower{display:none}
+.level-top .eyebrow{letter-spacing:.5px}
+.goal-heading{letter-spacing:.3px}
+.score-label{display:inline-flex;gap:4px;align-items:baseline;white-space:nowrap;font-weight:600}
+.goal-heading #score{font-weight:800}
+.moves-box{border-radius:10px;background:#f0f4e7}
+.primary{border-radius:10px;box-shadow:none}
+.shuffle-button,.chapter-tabs button,.level-node{border-radius:9px}
+.bottom-nav{background:#fafbf6}
+.bottom-nav button{border-radius:8px}
+.bottom-nav button.active{background:#eaf0e0}
+.bottom-nav button.active svg{filter:none}
+.subview-heading h2,#village-view .subview-heading h2{font-size:25px;line-height:1.25;word-break:keep-all}
+.subview-heading p{margin-top:8px;font-size:12px}
+.garden-card,.settings-card,.journal-card{border-radius:13px;background:#f8f9f2}
+.garden-picture{border-radius:8px}
+.garden-pill{border-radius:7px;background:#fffdf0ed}
+.garden-card .garden-stage{font-size:12px;line-height:1.5}
+.garden-stage:focus-visible{outline:2px solid #527957;outline-offset:3px;border-radius:3px}
+.garden-card small{font-size:11px}
+.level-picker{padding-top:20px}
+.level-grid{gap:9px}
+.level-node.completed span{right:4px;bottom:3px;background:transparent;width:15px;height:15px}
+.journal-card{padding:20px}
+.journal-card>img{height:180px;width:145px;filter:none}
+.journal-card h3{font-size:21px;margin:8px 0}
+.journal-card p{font-size:13px;line-height:1.7}
+.friend-number{border:0;background:transparent;padding:0}
+.friend-tag{border-radius:6px;font-size:11px;margin-top:14px}
+dialog,#tutorial-dialog{border-radius:16px;box-shadow:0 10px 36px #263c3426}
+dialog::backdrop,#tutorial-dialog::backdrop{backdrop-filter:none}
+.guide-content h2{font-size:25px;word-break:keep-all}
+.guide-content p{font-size:14px;line-height:1.7}
+.guide-swap,.guide-goals,.guide-specials{border-radius:12px}
+.result-rewards>span{border-radius:8px}
+.result-rewards .sr-only{padding:0;border:0}
+.result-content h2{font-size:25px;word-break:keep-all}
+.result-symbol{width:30px;height:30px;background:transparent}
+.result-sparkles{display:none}
+.pip{filter:none}
+@media(min-width:761px) and (min-height:601px){
+ .topbar{max-width:980px}
+ .workspace{max-width:980px;grid-template-columns:minmax(0,280px) minmax(0,560px);gap:40px;justify-content:center}
+ .story-panel{justify-content:center}
+ .story-panel h1{font-size:30px;line-height:1.25;margin-top:10px;word-break:keep-all}
+ .story-panel>.eyebrow{letter-spacing:.4px}
+ .story-copy{font-size:13px;line-height:1.75;margin-top:12px;word-break:keep-all}
+ .meadow-art{width:100%;aspect-ratio:7/5;max-height:200px;border-radius:12px;margin-top:22px;box-shadow:none;flex-shrink:0}
+ .friend-message{padding:14px 0;gap:10px}
+ .friend-message p{font-size:11px;line-height:1.5}
+ .friend-avatar{width:36px;height:36px}
+ .garden-status{padding-top:14px}
+}
+@media(max-width:760px){
+ .story-panel{border-radius:10px;background:#edf1e4}
+ .story-panel .meadow-art{border-radius:0 10px 10px 0;box-shadow:none}
+ .friend-message p{font-size:11px}
+}
+@media(orientation:landscape) and (max-height:600px){
+ .subview-heading h2,#village-view .subview-heading h2{font-size:23px}
+ .result-content h2{font-size:23px}
+}
