@@ -1,3 +1,25 @@
+## 현재 통합 상태 · 2026-10-20 · #154
+
+오늘 시작 main `a4b4992c5499ed8a7ca5adee8eec2a4e1c3a0f23`부터 **5개 PR을 병합**했습니다. 제품·검사 기준 main은 `be328c75372d4a1b2a2dd36faf39722330406186`이며, [정확한 main CI39397742294](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39397742294)는 Node22·24 각각35파일2,373개·스토어12개·타입·두 웹 빌드 성공입니다. 이번 #154는 기존4문서의 현황 정리이며 자체 PR/main CI·병합은 제출 뒤 별도 확인합니다. 아래 과거의 현재/승인/제출 전 표현은 당시 이력입니다.
+
+| 이슈·PR | 반영 결과 | 실제 squash main · 정확한 main CI |
+|---|---|---|
+| #144 · [PR146](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/146) | 문구·장식 축소, 퍼즐 중심 배치, 상태/보상 접근성·꽃 심기 초점 | `c37ceba8eac43d238665b90e192a7c89edde0b6b` · [39391338805](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39391338805) |
+| #145 · [PR148](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/148) | 한국3,000원·미국US$2.50 확정 기록 | `2d31df97720b7ad180b6949c1ed0f54946289fae` · [39391701617](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39391701617) |
+| #147 · [PR150](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/150) | 회차 복원 안내의 메뉴 겹침·섞기 설명 줄바꿈 수정 | `1917ee84c07fb13193a01c58b14a2448a13f8893` · [39393448039](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39393448039) |
+| #149 · [PR151](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/151) | 정상 저장 중복 안내 축소·문제 복구/초점 유지·고객센터 표시 | `5839e22e6e52190d87321be00d4b291842ca4365` · [39396115390](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39396115390) |
+| #122 · [PR152](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/152) | 잔여 행수0/1/2 검사의 고정7단계·안전 진단 보강 | `be328c75372d4a1b2a2dd36faf39722330406186` · [39397742294](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39397742294) |
+
+**#153의 [PR155](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/155)는 미병합 Draft입니다.** head `9ad4579499385d7da4b9a04a72c6025bcc2e854b`의 종료 안내 정리·API 미제공 방어·화면 복귀 재표시 수정은 로컬 UI153/전체2,377개·타입/스토어12/두 빌드와 최종 Chrome32조합144PNG·오류0을 통과했습니다. 그러나 [필수 CI39400594900](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39400594900)는 양쪽 모두 서버 회차 동시 검사1개 실패/2,376개 성공이므로 병합하지 않았습니다. 이후 단계의 스토어/빌드 CI도 실행 성공으로 합산하지 않습니다. 재실행·기대/timeout/worker/500ms 완화·운영 코드 변경은 하지 않았습니다.
+
+Node22는 동일 명령 검사 worker7의 command(501.954ms), Node24는 동시 생성 검사 worker2의 start(503.124ms)에서 SQLite base/extended5와 storage-unavailable을 관측했습니다. 해당 worker의 round-open은 각각8.18/3.75ms에 성공했습니다. 잠금 소유자·전체 대기 원인은 미확정이며, go 이후 생성자/업무가 섞이는 구조는 후속 조사 후보입니다. 예전 main136 reward-redemption:163의5초 timeout과 동일 원인으로 합치지 않습니다. 원문·안전 투영은 Git 밖 `Pawblossom-builds/qa/issue-153/pr155-ci-failed.log`와 `pr155-ci-safe-summary.json`에 보존하고 #122를 열어 둡니다.
+
+실제 자연 플레이와 fixture QA의 버전 경계는 [브라우저 기록](browser-qa.ko.md) 상단을 우선합니다. 완료5브랜치는 개별 squash/tree/tip·종속 PR·worktree 확인 후 정리했고, 미병합153과 이번154는 보존합니다. 완료 UI 세션은 정식 보관했으며 미해결 진단·미병합 안내 세션은 총괄 아래 유지합니다. 영구 삭제로 보고하지 않습니다.
+
+다음 순서는 원장 실패의 소유자/준비·업무 경계를 근거로 좁히고 PR155의 필수 검증을 충족하는 것입니다. 실제 광고 SDK/동의·Play 구매/복원/환불·연령/개인정보·단말·스토어는 #73 미완료입니다. 별도 게임 로그인/클라우드 진행 복구는 제외하고 동일 Play 구매 계정의 광고 제거 소유권 복원만 준비합니다. 고객센터는 doeud1410@gmail.com, 가격은 한국3,000원/미국US$2.50이며 광고 제거 범위·최소 구매 검증 운영 구성은 후속 결정입니다. 개발자 표시명/사업자·정확한 홈페이지는 사용자가 준비될 때 결정합니다. 당장 사용자 조치·질문은 없습니다.
+
+자체 게임 서버 계약/비용/배포는 승인되지 않았습니다. APK/AAB·Android sync·버전·폰 테스트/전달·실계정/키/env·Drive/Play Console/상품·최종 오디오 믹스·공개 배포 보류와 폰 연결 후 총괄 일괄 점검→사용자 감각 검수→개선 순서를 유지합니다.
+
 ## 현재 작업 · 2026-10-20 · #122 잔여 행수 검사 단계 관측 (총괄 검수 완료·Ready PR 제출 승인)
 
 기준 main/origin main은 `5839e22e6e52190d87321be00d4b291842ca4365`, 브랜치는 `codex/122-reward-capacity-trace`입니다. [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)의 남은 전체 행수0/1/2 동기 검사만 기존 순서·같은 제목의 `it.for`로 옮기고 `task.meta.ledgerDiagnostic`의 고정 family `reward-capacity`와 `caseIndex=space`를 연결했습니다. 현재 **관련325개·최신 전체35파일2,373개 한 번·타입/스토어12/에셋/두 빌드 통과, 총괄 독립검수 완료·Ready PR 제출 승인**입니다. 총괄은 관련3파일325개·전체/앱/서버 타입·JSON 세 사례/7단계/hook·범위·소스 SHA·동일 UI bundle을 독립 확인했습니다. 승인된5파일의 한국어 test 커밋·푸시·Refs #122 Ready PR 제출을 진행하며 CI/병합은 총괄이 담당합니다. 아래 이전 현재/제출 전 표현은 당시 이력입니다.

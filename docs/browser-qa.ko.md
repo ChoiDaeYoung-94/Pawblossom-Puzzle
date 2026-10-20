@@ -1,3 +1,15 @@
+## 2026-10-20 · 통합 상태와 총괄 자연 입력 검수 (#154)
+
+제품·검사 기준 main `be328c75372d4a1b2a2dd36faf39722330406186`에 PR146/148/150/151/152가 반영됐습니다. [정확한 main CI39397742294](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39397742294)는 Node22·24 각각2,373개·스토어12개·타입/두 웹 빌드 성공입니다. 아래 작업별 제출 승인/CI 대기는 당시 이력이며 [통합 PR·검증 경계](android-release.ko.md) 상단이 현재 상태입니다. 이번 문서 변경은 브라우저·전체 검사를 재실행하지 않습니다.
+
+총괄은 main5839의 production을 Git 밖에 고정해 IAB390×844/한국어에서 실제 튜토리얼·연습과 키보드 교환으로 스테이지1을 완료했습니다. 15이동/점수430에서 첫 보상 별1·코인40, 실제4매치 특수 블록의 즉시 사용, 무료 섞기1→0과 이동16/점수400 보존을 확인했습니다. 다음 스테이지2→reload에서 이동24/점수0/당근12·블루베리10/지갑1·40 유지, 정원1완료·2가능·3잠김, 정상 설정/고객센터 표시를 확인했습니다. 난수·Scene·완료 수량·저장 fixture 주입이 없는 자연 플레이이며, reload 전후 보드 전체 행렬 동일성·실기기/물리 오디오는 측정하지 않았습니다. 이 산출물은 main be328과 같은 앱 bundle이고 원본 PNG3개·범위는 Git 밖 `Pawblossom-builds/qa/manual-20261020-main5839/manual-checkpoint.json`에 보존했습니다.
+
+후속 #153/[PR155](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/155) head `9ad4579499385d7da4b9a04a72c6025bcc2e854b`는 **로컬 검증 완료·필수 CI 실패로 Draft 미병합**입니다. 최종 로컬 UI153/전체2,377개·타입/스토어12/두 빌드, 실제 dist Chrome 일반/감소 모션과6화면 흐름32조합144PNG·오류0은 해당 branch의 근거입니다. [CI39400594900](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39400594900)는 Node22 command/Node24 start의 서버 원장 동시 검사에서 각각1실패이며 성공으로 합산하지 않습니다. 안내 onNotice·결과 onMove는 fixture, 자연 타이머/DOM/Chrome AX·실제 심기 토스트·합법 화면 이동은 브라우저 실행입니다. 실패/버전별 해시와 일반1.3초·감소.01ms, 수동/브라우저 trusted 이벤트를 구분한 상세 기록은 PR155의 기존 docs와 `qa/issue-153/checkpoint.json`에 보존합니다.
+
+총괄은 이 미병합 최종 production(main LF SHA256 `8f2c6de414246d661d95f000648020892a3e0e97ace6f10e70e71f0b0cc564ef`)도 별도 고정했습니다. 실제5행6열↔6행6열 교환으로 당근3개를 맞춰 이동24→23/점수0→30/당근12→9, 블루10·지갑1/40 보존을 확인했습니다. 안내 종료 뒤 DOM 빈값, KO→EN→설정→퍼즐→KO 뒤 이전 안내·toast 빈값과 목표/보상 유지도 확인했습니다. 이 수동 입력은 활성 안내1.3초 실측이나 활성 중 화면 이탈 검사가 아니며 실제 Chrome fixture QA·구형 API 미제공 단위 검사와 구분합니다. frozen30파일이 최종 production manifest와 모두 같고 `qa/manual-20261020-notice-final/manual-checkpoint.json`·PNG2개에 보존했습니다. 이를 main의 자연 성공 검증으로 합산하지 않습니다.
+
+자신의 IAB 탭2·3/viewport override와 preview5198은 모두 정리했고 Listen0을 확인했습니다. 사용자 Chrome·5173과 저장은 사용하지 않았습니다. Cua AX는 실제 Chrome AX/TalkBack 검증을 대신하지 않습니다. Android/구형 WebView·실제 광고/구매/스토어·최종 청취는 미완료이고 #73/#122 및 기존 보류를 유지합니다. 별도 APK 테스트 안내 문서는 만들지 않았습니다.
+
 ## 2026-10-20 · 설정 저장 안내와 고객센터 (#149, PR 제출 승인)
 
 기준 main/origin main `1917ee84c07fb13193a01c58b14a2448a13f8893`, 브랜치 `codex/149-settings-clarity`에서 [#149](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/149)를 구현했습니다. **로컬 검증·총괄 독립검수 완료·Ready PR 제출 승인**입니다. 총괄은 관련UI149개·전체/앱/서버 타입·diff·최종 production PNG와 정상/문제 표시 범위, CSS 전 전체/이후 브라우저 검증 구분을 독립 대조하고 제출을 승인했습니다. PR/main 필수CI와 병합은 총괄 후속입니다. 아래 이전 작업의 최신/현재/제출 표현은 당시 이력입니다. Git 밖 `Pawblossom-builds/qa/issue-149/checkpoint.json`에 기준/소스 LF SHA·명령·버전 경계·로그·PNG를 연결합니다.
