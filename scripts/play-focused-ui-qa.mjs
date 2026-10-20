@@ -7,11 +7,12 @@ import {pathToFileURL} from 'node:url';
 const arg=name=>process.argv.find(value=>value.startsWith(`--${name}=`))?.slice(name.length+3);
 const output=arg('output'),root=path.resolve(arg('root')??'dist'),baseline=process.argv.includes('--baseline');
 const resumeOnly=process.argv.includes('--resume-only');
+const settingsOnly=process.argv.includes('--settings-only');
 assert(output&&process.env.PAWBLOSSOM_PLAYWRIGHT_MODULE,'--output와 PAWBLOSSOM_PLAYWRIGHT_MODULE이 필요합니다.');
 await fs.mkdir(output,{recursive:false});
 const {chromium}=await import(pathToFileURL(process.env.PAWBLOSSOM_PLAYWRIGHT_MODULE).href);
 const browser=await chromium.launch({headless:true,channel:'chrome'});
-const report={dateKst:'2026-10-20',baseline,resumeOnly,root,flags:JSON.parse(await fs.readFile(path.join(root,'build-info.json'),'utf8')),browser:browser.version(),
+const report={dateKst:'2026-10-20',baseline,resumeOnly,settingsOnly,root,flags:JSON.parse(await fs.readFile(path.join(root,'build-info.json'),'utf8')),browser:browser.version(),
   scope:'KO/EN 합성 저장·새 headless context. 실제 dist/DOM/키보드/Chrome AX. Game 참조만 응답에 노출. 결과는 실제 onMove 콜백에 완료 수량을 공급한 fixture. Android/실서비스 검증 아님.',cases:[],pageerrors:[]};
 const ready=page=>page.waitForFunction(()=>window.__uiGame?.scene.getScene('Board')?.keyboardState().available);
 async function screen(page,item,name){
@@ -53,6 +54,15 @@ async function resumeEvidence(page){
       focus:document.activeElement.id,toolLines:lines.map(line=>line.text),overflowX:document.documentElement.scrollWidth-innerWidth,overflowY:document.documentElement.scrollHeight-innerHeight};
   });
 }
+async function retryFocusSpacing(page){
+  const evidence=await page.locator('#save-retry').evaluate(button=>{
+    const r=button.getBoundingClientRect(),style=getComputedStyle(button),outside=parseFloat(style.outlineWidth)+parseFloat(style.outlineOffset),range=document.createRange();
+    range.selectNodeContents(document.querySelector('#save-status'));
+    const text=[...range.getClientRects()].map(r=>({x:r.x,y:r.y,right:r.right,bottom:r.bottom})),ring={x:r.x-outside,y:r.y-outside,right:r.right+outside,bottom:r.bottom+outside};
+    return {focusVisible:button.matches(':focus-visible'),text,ring,gap:ring.y-Math.max(...text.map(r=>r.bottom)),overlap:text.some(r=>r.x<ring.right&&r.right>ring.x&&r.y<ring.bottom&&r.bottom>ring.y)};
+  });
+  assert(evidence.focusVisible);assert(!evidence.overlap);assert(evidence.gap>=0);return evidence;
+}
 try{
   for(const language of ['ko','en'])for(const viewport of [{width:320,height:568},{width:390,height:844},{width:640,height:360},{width:1280,height:720}]){
     const item={label:`${language}-${viewport.width}x${viewport.height}`,screens:[],checks:[]};report.cases.push(item);
@@ -60,12 +70,63 @@ try{
     page.on('pageerror',error=>report.pageerrors.push({label:item.label,message:error.message}));
     try{
       await context.addInitScript(language=>{if(!localStorage.getItem('pawblossom.save.v1'))localStorage.setItem('pawblossom.save.v1',JSON.stringify({version:1,language,highestLevel:6,completed:[1,2,3,4,5],stars:4,coins:200,garden:0,music:false,sfx:false,tutorialSeen:true}));},language);
+      if(settingsOnly)await context.addInitScript(()=>{
+        const get=Storage.prototype.getItem,set=Storage.prototype.setItem,remove=Storage.prototype.removeItem;
+        window.__settingsFault={read:'',write:''};
+        window.__settingsDisk=()=>['pawblossom.save.v1','pawblossom.save.v1.backup','pawblossom.save.v1.reset'].map(key=>[key,get.call(localStorage,key)]);
+        window.__settingsPut=(key,value)=>value===null?remove.call(localStorage,key):set.call(localStorage,key,value);
+        Storage.prototype.getItem=function(key){if(this===localStorage&&__settingsFault.read===key)throw new DOMException('QA read','SecurityError');return get.call(this,key);};
+        Storage.prototype.setItem=function(key,value){if(this===localStorage&&__settingsFault.write===key)throw new DOMException('QA quota','QuotaExceededError');return set.call(this,key,value);};
+      });
       await page.route('http://ui.pawblossom.invalid/**',async route=>{
         const url=new URL(route.request().url()),file=path.resolve(root,'.'+(url.pathname==='/'?'/index.html':url.pathname));assert(file.startsWith(root+path.sep));
         if(file.endsWith('.js')){let source=await fs.readFile(file,'utf8');const calls=source.match(/new [\w$.]+\.Game\(\{type:/g)??[];if(calls.length){assert.equal(calls.length,1);source=source.replace(calls[0],'window.__uiGame='+calls[0]);}await route.fulfill({body:source,contentType:'text/javascript'});}
         else await route.fulfill({path:file});
       });
       await page.goto('http://ui.pawblossom.invalid');await ready(page);await screen(page,item,'puzzle');
+      if(settingsOnly){
+        await page.locator('#settings-button').click();await screen(page,item,'settings-normal');
+        item.settings=await page.locator('#settings-view').evaluate(el=>({clientHeight:el.clientHeight,scrollHeight:el.scrollHeight,cardVisible:!!document.querySelector('.storage-card').getClientRects().length,offline:document.querySelector('.save-note').textContent}));
+        item.checks.push('정상 설정 실제 내부 높이·저장 카드·설명·PNG');
+        if(!baseline){
+          const card=page.locator('#storage-card'),retry=page.locator('#save-retry'),reload=page.locator('#save-reload');
+          const disk=()=>page.evaluate(()=>__settingsDisk()),key='pawblossom.save.v1',backup=key+'.backup';
+          const warning=async()=>{assert(await card.isVisible());assert(await page.locator('#settings-button').evaluate(el=>el.classList.contains('save-attention')));assert((await page.locator('#storage-announcement').textContent()).length>0);};
+          assert.equal(await card.isVisible(),false);assert.equal(await retry.isVisible(),false);assert.equal(await reload.isVisible(),false);
+          const saved=await disk();await page.locator('#language').focus();await page.locator('#language').selectOption(language==='ko'?'en':'ko');await page.locator('#language').selectOption(language);
+          assert.equal(await page.evaluate(()=>document.activeElement.id),'language');assert.deepEqual(await disk().then(rows=>JSON.parse(rows[0][1])),JSON.parse(saved[0][1]));
+          const email=page.locator('#support-email');assert.equal(await email.textContent(),'doeud1410@gmail.com');assert.equal(await page.locator('a[href^="mailto:"]').count(),0);
+          item.settings.email=await email.evaluate(el=>{const r=document.createRange();r.selectNodeContents(el);const selection=getSelection();selection.removeAllRanges();selection.addRange(r);const selected=selection.toString();selection.removeAllRanges();return {selected,userSelect:getComputedStyle(el).userSelect,width:el.getBoundingClientRect().width,scrollWidth:el.scrollWidth};});
+          assert.equal(item.settings.email.selected,'doeud1410@gmail.com');assert.equal(item.settings.email.userSelect,'text');assert(item.settings.email.scrollWidth<=item.settings.email.width+1);
+          await email.scrollIntoViewIfNeeded();await screen(page,item,'settings-support');
+          const before=await disk();await page.evaluate(backup=>{__settingsFault.write=backup;},backup);await page.locator('#music-toggle').click();await warning();assert(await retry.isVisible());assert.deepEqual(await disk(),before);
+          await retry.scrollIntoViewIfNeeded();await screen(page,item,'settings-write-failed');
+          await retry.focus();await page.keyboard.press('Enter');assert.equal(await page.evaluate(()=>document.activeElement.id),'save-retry');
+          item.settings.warningFocus=await retryFocusSpacing(page);
+          await page.evaluate(()=>{__settingsFault.write='';});await page.keyboard.press('Space');
+          assert(await card.isVisible());assert(await retry.isVisible());assert.equal(await page.evaluate(()=>document.activeElement.id),'save-retry');
+          assert.equal(await page.locator('#settings-button').evaluate(el=>el.classList.contains('save-attention')),false);
+          assert.equal(JSON.parse((await disk())[0][1]).music,!JSON.parse(before[0][1]).music);
+          await page.locator('#language').selectOption(language==='ko'?'en':'ko');assert.equal(await page.evaluate(()=>document.activeElement.id),'save-retry');assert(await card.isVisible());assert(await retry.isVisible());
+          await page.locator('#language').selectOption(language);assert.equal(await page.evaluate(()=>document.activeElement.id),'save-retry');item.settings.savedFocus=await retryFocusSpacing(page);await screen(page,item,'settings-retry-focus');
+          await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>document.activeElement.id),'reset');assert.equal(await card.isVisible(),false);await screen(page,item,'settings-retry-blur');
+          await page.evaluate(({key,backup})=>{__settingsPut(backup,__settingsDisk()[0][1]);__settingsPut(key,'{');},{key,backup});
+          await page.reload();await ready(page);await page.locator('#settings-button').click();await warning();assert.equal(await retry.isVisible(),false);await card.scrollIntoViewIfNeeded();await screen(page,item,'settings-recovery-copy');
+          await page.evaluate(key=>{const value=JSON.parse(__settingsDisk()[0][1]);value.coins+=40;__settingsPut(key,JSON.stringify(value));},key);
+          const conflict=await disk();await page.locator('#music-toggle').click();await warning();assert(await reload.isVisible());assert(await retry.isVisible());assert.deepEqual(await disk(),conflict);
+          page.once('dialog',dialog=>dialog.dismiss());await reload.click();assert.deepEqual(await disk(),conflict);await retry.click();assert.deepEqual(await disk(),conflict);await reload.scrollIntoViewIfNeeded();await screen(page,item,'settings-conflict');
+          for(const [name,raw] of [['corrupt','{'],['unsupported','{"version":2}']]){
+            await page.evaluate(({key,backup,raw})=>{__settingsPut(key,raw);__settingsPut(backup,null);},{key,backup,raw});
+            await page.reload();await page.locator('canvas').waitFor();if(await page.locator('#tutorial-dialog').evaluate(el=>el.open))await page.locator('#guide-skip').click();await ready(page);
+            await page.locator('#settings-button').click();await page.locator('#language').selectOption(language);await warning();assert(await retry.isVisible());assert.equal(await reload.isVisible(),false);
+            assert.equal((await disk())[0][1],raw);await card.scrollIntoViewIfNeeded();await screen(page,item,`settings-${name}`);
+          }
+          await page.locator('#settings-button').click();await ready(page);const puzzle=await page.locator('#puzzle-view').evaluate(el=>({scrollHeight:el.scrollHeight,clientHeight:el.clientHeight}));assert(puzzle.scrollHeight<=puzzle.clientHeight+1);
+          item.checks.push('정상 중복 축소·KOEN 언어 왕복·이메일 일반텍스트 선택/줄바꿈·실제 backup쓰기실패/복구·재시도 Enter/Space·회복/언어 DOM교체 후 초점/blur 접기',
+            '실제 손상 primary→정상 backup복구·외부저장충돌/reload취소·손상/미지원 원문보존·경고/live/설정배지/복구조작·퍼즐무스크롤');
+        }
+        continue;
+      }
       if(resumeOnly){
         await page.reload();await ready(page);
         await page.waitForFunction(baseline=>baseline?getComputedStyle(document.querySelector('#toast')).opacity==='1':!document.querySelector('#round-resumed-notice').hidden,baseline);

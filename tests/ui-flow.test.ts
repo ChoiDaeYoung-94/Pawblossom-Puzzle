@@ -980,6 +980,39 @@ describe('정상 회차 복구와 종료 확정',()=>{
 
 
 describe('저장 상태·초기화 UI 보호',()=>{
+  it.each([
+    {load:'new',write:'idle',resetPending:false,hidden:true},
+    {load:'loaded',write:'saved',resetPending:false,hidden:true},
+    {load:'recovered',write:'saved',resetPending:false,hidden:false},
+    {load:'loaded',write:'failed',resetPending:false,hidden:false},
+    {load:'loaded',write:'backup-failed',resetPending:false,hidden:false},
+    {load:'loaded',write:'reset-failed',resetPending:false,hidden:false},
+    {load:'loaded',write:'blocked',resetPending:false,hidden:false},
+    {load:'new',write:'saved',resetPending:true,hidden:false},
+    {load:'corrupt',write:'blocked',resetPending:false,hidden:false},
+    {load:'unsupported',write:'blocked',resetPending:false,hidden:false},
+    {load:'read-error',write:'blocked',resetPending:false,hidden:false},
+    {load:'conflict',write:'blocked',resetPending:false,hidden:false},
+  ])('정상 중복 카드만 숨기고 $load/$write/대기$resetPending 경고와 live를 유지합니다',({hidden,...status})=>{
+    const h=mainHarness(),writes=h.writes(),saved=h.stored();h.run(`saveStatus=()=>(${JSON.stringify(status)});announcedSave='';updateSaveStatus()`);
+    expect(h.element('#storage-card').hidden).toBe(hidden);
+    expect(h.element('#storage-announcement').textContent==='').toBe(hidden);
+    expect(h.element('#save-reload').hidden).toBe(status.load!=='conflict');
+    expect(h.stored()).toEqual(saved);expect(h.writes()).toBe(writes);
+  });
+  it('저장 회복 뒤 초점된 재시도는 언어 DOM 교체에서도 유지하고 초점을 떠난 뒤 정상 카드를 접습니다',()=>{
+    const h=mainHarness(true);h.run("document.activeElement=document.querySelector('#save-retry')");h.setStorageFails(false);h.element('#save-retry').onclick();
+    expect(h.element('#storage-card').hidden).toBe(false);expect(h.element('#save-retry').hidden).toBe(false);
+    h.run("document.activeElement={id:'save-retry',isConnected:false};document.querySelector('#save-retry').focus=()=>{document.activeElement=document.querySelector('#save-retry')};changeLanguage('ko')");
+    expect(h.run('document.activeElement.id')).toBe('save-retry');expect(h.element('#storage-card').hidden).toBe(false);expect(h.element('#save-retry').hidden).toBe(false);
+    h.run("document.activeElement=document.querySelector('#reset');document.querySelector('#save-retry').listeners.blur()");
+    expect(h.element('#storage-card').hidden).toBe(true);expect(h.element('#save-retry').hidden).toBe(true);expect(h.run('document.activeElement.id')).toBe('reset');
+  });
+  it.each(['ko','en'] as const)('%s 고객센터 메일은 링크/발송 동작이 없는 일반 텍스트입니다',language=>{
+    const h=mainHarness();h.run(`changeLanguage('${language}')`);const html=h.element('#settings-view').innerHTML;
+    expect(html).toContain(`id="support-title">${t(language,'support')}</h3>`);
+    expect(html).toContain('<p id="support-email">doeud1410@gmail.com</p>');expect(html).not.toContain('mailto:');
+  });
   it('초기화 대기 중 외부 기록 변경은 충돌을 우선 안내하고 재시도로 덮지 않습니다',()=>{
     const h=mainHarness();h.run("save=clearSave();localStorage.setItem('pawblossom.save.v1',JSON.stringify({...save,coins:280}))");
     const disk=h.disk(),writes=h.writes();expect(h.run('persist()')).toBe(false);

@@ -1,3 +1,13 @@
+## 현재 작업 · 2026-10-20 · 설정 안내와 고객센터 (#149, PR 제출 승인)
+
+기준 main `1917ee84c07fb13193a01c58b14a2448a13f8893`의 `codex/149-settings-clarity`에서 [#149](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/149)를 구현했고 **로컬 검증·총괄 독립검수 완료·Ready PR 제출 승인**입니다. 총괄은 관련UI149개·전체/앱/서버 타입·diff·최종 production PNG와 상태/검증 버전 경계를 독립 대조했습니다. 승인된 커밋·푸시·PR 제출 뒤 필수CI·최신 main 확인·병합은 총괄이 진행하며 아래 이전 상태는 당시 이력입니다.
+
+진행 안내를 짧게 하고 정상 saveNew/saveSaved 카드만 접었습니다. recovered/problem·retry/reload·설정!/live는 유지하며 회복 후 초점된 재시도와 언어 DOM 교체의 초점을 보호합니다. 고객센터 doeud1410@gmail.com을 선택 가능한 일반 텍스트로 표시했습니다. 게임의 진행 이전 기능 미제공만 안내하며 OS 백업/D2D 불가능이나 구매 복원 미지원을 뜻하지 않습니다. 메일 발송/mailto·새 홈페이지/구매 동작·Android 백업 설정은 추가/변경하지 않았습니다.
+
+여백 보강 전 관련UI149/149·전체35파일2,373/2,373(45.71초·전체1회), 전체/앱/서버 타입·store12개·에셋 원본·testing→production 빌드가 통과했습니다. 총괄의 초점 링 접촉 지적 후 실제 글자/outline 겹침을 확인해 카드 버튼 위 여백8px만 보강했습니다. 이후 앱 로직/테스트/고정lock은 같은 LF SHA이며, 최종 CSS는 두 빌드(타입/에셋 포함)·KO/EN4크기 설정 testing/production 각80PNG와 production6화면48PNG로 별도 재검증했습니다. 글자/링 간격3.1875px·겹침0·오류0·가시 버튼44px/hit를 확인했으며 CSS 전 전체 성공과 최종 시각 검증을 구분합니다.
+
+정상 설정 높이는31~85px 줄었고 내부 스크롤은 허용합니다. 소리/언어 조작은 원래 중복 안내 앞이었으므로 해당 조작이 밀려났다고 과장하지 않습니다. 지원 메일 줄바꿈/DOM 선택·실제 저장 실패/복구·충돌·손상/미지원·경고/liveness·회복/언어 변경 초점을 [브라우저 QA 기록](browser-qa.ko.md)에 구분했습니다. 최종 flags3false·서버마커0·범위/whitespace·LF SHA를 Git 밖 `Pawblossom-builds/qa/issue-149/checkpoint.json`에 보존했습니다. 실기기/OS 백업·운영 광고/결제·스토어/출시는 미검증이며 단말/APK 전달 보류를 유지합니다. 사용자 조치·질문은 없습니다.
+
 ## 현재 작업 · 2026-10-20 · 복원 안내 UI (#147, PR 제출 승인)
 
 기준 main `2d31df97720b7ad180b6949c1ed0f54946289fae`의 `codex/147-resume-notice-ui`에서 [#147](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/147)을 구현했고 **로컬 검증·총괄 독립검수 완료·Ready PR 제출 승인**입니다. 총괄이 관련 UI134개·전체/앱/서버 타입·LF SHA/production 플래그/diff·주요 PNG와 전체/브라우저 근거를 독립 대조했습니다. 승인된 커밋·푸시·PR 제출 뒤 필수CI·최신 main 확인과 병합은 총괄이 진행하며 아래 이전 작업의 상태는 당시 이력입니다.

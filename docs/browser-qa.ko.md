@@ -1,3 +1,30 @@
+## 2026-10-20 · 설정 저장 안내와 고객센터 (#149, PR 제출 승인)
+
+기준 main/origin main `1917ee84c07fb13193a01c58b14a2448a13f8893`, 브랜치 `codex/149-settings-clarity`에서 [#149](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/149)를 구현했습니다. **로컬 검증·총괄 독립검수 완료·Ready PR 제출 승인**입니다. 총괄은 관련UI149개·전체/앱/서버 타입·diff·최종 production PNG와 정상/문제 표시 범위, CSS 전 전체/이후 브라우저 검증 구분을 독립 대조하고 제출을 승인했습니다. PR/main 필수CI와 병합은 총괄 후속입니다. 아래 이전 작업의 최신/현재/제출 표현은 당시 이력입니다. Git 밖 `Pawblossom-builds/qa/issue-149/checkpoint.json`에 기준/소스 LF SHA·명령·버전 경계·로그·PNG를 연결합니다.
+
+최신 production의 정상 설정을 먼저 보존했습니다. 소리/언어 조작은 중복 안내보다 앞에 있어 중복이 해당 조작을 밀어냈다고 설명하지 않습니다. 진행 안내를 앱 내 진행 이전 기능 미제공 범위로 줄이고, 문제 없는 saveNew/saveSaved의 중복 카드만 접습니다. recovered/모든 problem·retry/reload·live/설정 경고 배지는 유지합니다. 회복 후 재시도에 초점이 있으면 카드/버튼을 유지하고, 언어 DOM 교체에도 초점 의도를 전달하며, 초점을 떠난 뒤 정상 카드를 접습니다. 고객센터 doeud1410@gmail.com은 선택 가능한 일반 텍스트이며 mailto/발송·새 홈페이지·구매/복원 동작을 추가하지 않았습니다.
+
+| 정상 설정 내부 높이 (scrollHeight/clientHeight px) | 기준 | 최종 |
+|---|---|---|
+| KO320×568 / KO390×844 | 852/429 · 835/637 | 769/429 · 750/637 |
+| KO640×360 / KO1280×720 | 723/241 · 799/561 | 692/241 · 750/561 |
+| EN320×568 / EN390×844 | 846/429 · 830/637 | 768/429 · 749/637 |
+| EN640×360 / EN1280×720 | 736/241 · 795/561 | 691/241 · 749/561 |
+
+정상 높이는31~85px 감소했으며 설정 내부 스크롤을 허용합니다. 퍼즐/문서 외부 스크롤0과 가시 버튼44px/hit를 유지합니다. 전체 설정 무스크롤이나 모든 조작이 첫 화면에 노출된다고 주장하지 않습니다.
+
+| 검증/버전 | 실제 실행·결과 |
+|---|---|
+| 앱/단위 로직·여백 보강 전 | Node24.21.0/Vitest4.1.11 관련UI149/149(신규15), 전체35파일2,373/2,373·45.71초·전체1회. 기본5초/worker2·worker/SQLite/retry/업무 assertion·고정lock·CI 유지. source `validated-source.json` |
+| 타입/스토어·초기 두 빌드 | 전체/앱/서버 typecheck, store원본/12개, build:test→build(에셋 원본 포함) exit0. 여백 보강 전 testing/production 설정 각8조합80PNG, 기존6화면 흐름 각48PNG·오류0 |
+| 후속 CSS 최소 보강 | 총괄 읽기에서 문장/초점 링 접촉을 발견해 실제 Range/outline bounds로 KO320·EN640 경고/회복 상태의 -0.81~-4.81px 겹침을 관측. .storage-card button margin-top8px만 추가. 정상 카드는 숨겨져 정상 높이 불변 |
+| 최종 CSS 검증 | 이후 main/i18n/tests·package/lock·검사 설정은 LF SHA 동일. QA에 실제 글자/링 측정만 보강. 전체를 반복하지 않고 build:test→build(전체/앱/서버 타입·에셋 포함)와 설정 testing/production 각80PNG·최종production 기본6화면48PNG를 새로 검증. 각8조합 오류0, 경고/회복 focus-visible 글자/링 간격3.1875px·겹침0·44px/hit·정상 높이 불변 |
+| 정적·최종 산출 | flags3false·src/dist서버마커0·허용7파일·기존docs보존·diff whitespace0. 최종 source `validated-source-final.json`. CSS 전 전체 성공을 최종 CSS 포함 전체 재실행으로 합산하지 않음 |
+
+기존 play-focused-ui-qa에 --settings-only를 추가했습니다. Chrome155.0.8059.85·새 headless context/합성 origin/저장에서 KO/EN4크기를 확인했습니다. 정상 언어 왕복·실제 Range 메일 선택(user-select:text, 가로 넘침0), backup 쓰기 QuotaExceededError→재시도 Enter/Space→회복을 실제 Storage API 경로로 확인했습니다. 재시도 초점을 유지한 채 selectOption 변경 이벤트를 발생시켜 언어 DOM 교체 후 초점을 검증했고, Tab으로 reset에 이동하면 정상 카드가 접히는 것을 확인했습니다. 손상 primary+정상 backup 복구, 외부 기록 충돌/명시 불러오기 취소·재시도 무덮어쓰기, 손상/미지원 원문 보존도 실제 브라우저에서 확인했습니다. 각 문제의 카드·live·설정!·복구 조작을 보존합니다. resetPending/reset-failed/read-error/primary-write-failed 등 전체 표시 분기는 12상태 DOM mock 단위 검사이며 해당 경계를 모두 실제 브라우저로 재현했다고 주장하지 않습니다. 기본6화면의 결과는 기존 onMove 완료수량 fixture로 자연 성공 플레이와 구분합니다.
+
+메일의 실제 발송/메일 앱 실행과 단말 long-press 복사는 실행하지 않았습니다. ‘게임 내 진행 이전 기능 미제공’은 OS 백업/D2D 이전 불가능·완전 로컬/전송 없음·광고 제거 구매 복원 미지원이라는 뜻이 아닙니다. Android allowBackup/OS 전송 설정이나 실제 복원 검증을 변경하지 않았습니다. 실기기/TalkBack·OS 백업/전송·운영 서비스/광고/구매/스토어·PR/main CI·출시는 별도입니다. 이번 명령 실패는 없으며 초기 CSS 시각 결함/검사 성공의 관측 범위를 구분합니다. Vite500kB 청크·Node 실험 경고는 남습니다. #122 미확정 CI 실패 원인 해결을 주장하지 않습니다. 서버/엔진/저장 스키마/보상·가격/SDK/의존성/Android/APK/sync·버전·최종 오디오 믹스·계정/콘솔/상품/배포는 바꾸지 않았습니다. 사용자 조치·질문은 없습니다.
+
 ## 2026-10-20 · 회차 복원 안내와 섞기 설명 (#147, PR 제출 승인)
 
 기준 main/origin main `2d31df97720b7ad180b6949c1ed0f54946289fae`, 작업 브랜치 `codex/147-resume-notice-ui`에서 [#147](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/147)의 좁은 UI 수정을 마쳤습니다. **로컬 검증·총괄 독립검수 완료·Ready PR 제출 승인**입니다. 총괄이 관련 UI134개·전체/앱/서버 타입·source LF SHA/production 플래그/diff와 주요 활성·키보드 PNG, 전체2,358개 및 브라우저 summary/문서의 검증 경계를 대조하고 제출을 승인했습니다. PR/main 필수CI·최신 main 확인과 병합은 총괄 후속입니다. 아래 #144/이전 날짜의 현재/제출 상태는 당시 이력이며, #144는 PR146으로 반영된 뒤 이번 기준에 포함됩니다. 최종 소스 LF SHA·명령·로그·PNG는 Git 밖 `Pawblossom-builds/qa/issue-147/checkpoint.json`에 보존합니다.

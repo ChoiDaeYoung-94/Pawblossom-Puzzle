@@ -163,6 +163,12 @@ html:lang(ko) h1,html:lang(ko) h2,html:lang(ko) h3,html:lang(ko) .moves-box stro
 .garden-card .garden-stage{font-size:12px;line-height:1.5}
 .garden-stage:focus-visible{outline:2px solid #527957;outline-offset:3px;border-radius:3px}
 .garden-card small{font-size:11px}
+.storage-card[hidden]{display:none}
+.storage-card button{margin-top:8px}
+.save-note{align-items:flex-start;gap:8px;padding:14px 0;line-height:1.6}
+.support-note{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;padding:10px 0;margin-bottom:8px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:12px;line-height:1.6}
+.support-note h3{font-size:12px;font-weight:800}
+.support-note p{min-width:0;overflow-wrap:anywhere;user-select:text}
 .level-picker{padding-top:20px}
 .level-grid{gap:9px}
 .level-node.completed span{right:4px;bottom:3px;background:transparent;width:15px;height:15px}
