@@ -8,11 +8,13 @@ const arg=name=>process.argv.find(value=>value.startsWith(`--${name}=`))?.slice(
 const output=arg('output'),root=path.resolve(arg('root')??'dist'),baseline=process.argv.includes('--baseline');
 const resumeOnly=process.argv.includes('--resume-only');
 const settingsOnly=process.argv.includes('--settings-only');
+const transientOnly=process.argv.includes('--transient-only');
+const transientReduced=process.argv.includes('--transient-reduced');
 assert(output&&process.env.PAWBLOSSOM_PLAYWRIGHT_MODULE,'--output와 PAWBLOSSOM_PLAYWRIGHT_MODULE이 필요합니다.');
 await fs.mkdir(output,{recursive:false});
 const {chromium}=await import(pathToFileURL(process.env.PAWBLOSSOM_PLAYWRIGHT_MODULE).href);
 const browser=await chromium.launch({headless:true,channel:'chrome'});
-const report={dateKst:'2026-10-20',baseline,resumeOnly,settingsOnly,root,flags:JSON.parse(await fs.readFile(path.join(root,'build-info.json'),'utf8')),browser:browser.version(),
+const report={dateKst:'2026-10-20',baseline,resumeOnly,settingsOnly,transientOnly,transientReduced,root,flags:JSON.parse(await fs.readFile(path.join(root,'build-info.json'),'utf8')),browser:browser.version(),
   scope:'KO/EN 합성 저장·새 headless context. 실제 dist/DOM/키보드/Chrome AX. Game 참조만 응답에 노출. 결과는 실제 onMove 콜백에 완료 수량을 공급한 fixture. Android/실서비스 검증 아님.',cases:[],pageerrors:[]};
 const ready=page=>page.waitForFunction(()=>window.__uiGame?.scene.getScene('Board')?.keyboardState().available);
 async function screen(page,item,name){
@@ -64,9 +66,9 @@ async function retryFocusSpacing(page){
   assert(evidence.focusVisible);assert(!evidence.overlap);assert(evidence.gap>=0);return evidence;
 }
 try{
-  for(const language of ['ko','en'])for(const viewport of [{width:320,height:568},{width:390,height:844},{width:640,height:360},{width:1280,height:720}]){
+  for(const language of ['ko','en'])for(const viewport of (transientOnly?[{width:320,height:568},{width:640,height:360}]:[{width:320,height:568},{width:390,height:844},{width:640,height:360},{width:1280,height:720}])){
     const item={label:`${language}-${viewport.width}x${viewport.height}`,screens:[],checks:[]};report.cases.push(item);
-    const context=await browser.newContext({viewport,reducedMotion:'reduce'}),page=await context.newPage();page.setDefaultTimeout(10000);
+    const context=await browser.newContext({viewport,reducedMotion:transientOnly&&!transientReduced?'no-preference':'reduce'}),page=await context.newPage();page.setDefaultTimeout(10000);
     page.on('pageerror',error=>report.pageerrors.push({label:item.label,message:error.message}));
     try{
       await context.addInitScript(language=>{if(!localStorage.getItem('pawblossom.save.v1'))localStorage.setItem('pawblossom.save.v1',JSON.stringify({version:1,language,highestLevel:6,completed:[1,2,3,4,5],stars:4,coins:200,garden:0,music:false,sfx:false,tutorialSeen:true}));},language);
@@ -84,6 +86,65 @@ try{
         else await route.fulfill({path:file});
       });
       await page.goto('http://ui.pawblossom.invalid');await ready(page);await screen(page,item,'puzzle');
+      if(transientOnly){
+        const board=page.locator('#board-notice'),toast=page.locator('#toast');
+        const spoken=nodes=>nodes.filter(node=>!node.ignored&&node.role?.value==='StaticText').map(node=>node.name.value);
+        const empty=async(selector)=>{assert.equal(await page.locator(selector).textContent(),'');const nodes=await ax(page,selector);assert.deepEqual(spoken(nodes),[]);return nodes;};
+        const show=key=>page.evaluate(key=>__uiGame.scene.getScene('Board').hooks.onNotice(key),key);
+        // 안내 콜백에만 fixture를 공급하며 엔진/자연 플레이 성공으로 간주하지 않습니다.
+        item.transient={fixture:'onNotice 안내·onMove 결과 수량 fixture. 토스트는 실제 꽃 심기 UI.',events:[]};
+        await page.evaluate(()=>{const el=document.querySelector('#board-notice');window.__noticeEvents=[];el.addEventListener('animationstart',e=>__noticeEvents.push({type:e.type,time:performance.now(),isTrusted:e.isTrusted}));el.addEventListener('animationend',e=>__noticeEvents.push({type:e.type,time:performance.now(),elapsed:e.elapsedTime,isTrusted:e.isTrusted}));});
+        if(transientReduced){
+          item.transient.motion='reduce: 기존 CSS .01ms; 1300ms 노출 검증과 구분';
+          const active=await page.evaluate(()=>{const scene=__uiGame.scene.getScene('Board');scene.hooks.onNotice('chain');document.querySelector('#language-toggle').click();return document.querySelector('#board-notice').textContent;});
+          assert.equal(active,language==='ko'?'Keep it going!':'또 맞았어요!');await page.locator('#language-toggle').click();
+          await page.waitForFunction(()=>document.querySelector('#board-notice').textContent==='');item.transient.expiredBoardAX=await empty('#board-notice');
+          await page.evaluate(()=>{const scene=__uiGame.scene.getScene('Board');scene.hooks.onNotice('chain');scene.hooks.onNotice('matched');document.querySelector('#restart').click();scene.hooks.onNotice('chain');});
+          await ready(page);await empty('#board-notice');
+          await page.locator('[data-route="village"]').click();await page.locator('#grow').click();await page.locator('#language-toggle').click();
+          assert.equal(await toast.textContent(),language==='ko'?'A new patch is blooming!':'새 꽃밭이 피어났어요!');await page.locator('#language-toggle').click();
+          await page.waitForFunction(()=>!document.querySelector('#grow').disabled);await page.locator('#grow').click();const started=Date.now();
+          await page.waitForFunction(()=>document.querySelector('#toast').textContent==='');item.transient.toastExpiryObservedMs=Date.now()-started;assert(item.transient.toastExpiryObservedMs>=3000);
+          item.transient.expiredToastAX=await empty('#toast');item.transient.events=await page.evaluate(()=>__noticeEvents);
+          assert(item.transient.events.some(event=>event.isTrusted&&event.type==='animationend'&&Math.abs(event.elapsed-0.00001)<0.000001));
+          await page.locator('#language-toggle').click();await page.locator('#language-toggle').click();await empty('#toast');
+          await page.locator('[data-route="puzzle"]').click();await ready(page);await empty('#board-notice');
+          item.checks.push('reduce 기존 .01ms 실제 trusted 종료·동일 task 활성 번역·연속/새 회차 정리·toast 연속/활성 번역/3200ms만료·빈 Chrome AX');
+          await screen(page,item,'reduced-expired');continue;
+        }
+        await show('chain');assert.equal(await board.textContent(),language==='ko'?'또 맞았어요!':'Keep it going!');
+        item.transient.activeBoardAX=await ax(page,'#board-notice');assert(spoken(item.transient.activeBoardAX).includes(await board.textContent()));
+        await page.locator('#language-toggle').click();assert.equal(await board.textContent(),language==='ko'?'Keep it going!':'또 맞았어요!');
+        await page.locator('#language-toggle').click();await screen(page,item,'board-active');
+        await page.waitForFunction(()=>document.querySelector('#board-notice').textContent==='');assert.equal(await board.evaluate(el=>el.classList.contains('pop')),false);
+        item.transient.expiredBoardAX=await empty('#board-notice');
+        await page.locator('#language-toggle').click();await page.locator('#language-toggle').click();await empty('#board-notice');
+        await show('chain');await page.waitForTimeout(250);await show('matched');
+        await page.evaluate(()=>document.querySelector('#board-notice').dispatchEvent(new AnimationEvent('animationend',{animationName:'notice',elapsedTime:1.3})));
+        assert((await board.textContent()).length>0);assert(await board.evaluate(el=>el.classList.contains('pop')));
+        await page.waitForFunction(()=>document.querySelector('#board-notice').textContent==='');await empty('#board-notice');
+        await show('matched');await page.locator('#settings-button').click();
+        assert.equal(await board.textContent(),'');assert.equal(await board.evaluate(el=>el.classList.contains('pop')),false);
+        await page.waitForTimeout(1500);await page.locator('#settings-button').click();await ready(page);
+        item.transient.returnedBoardAX=await empty('#board-notice');assert.equal(await board.evaluate(el=>el.getAnimations().length),0);
+        await show('chain');await page.evaluate(()=>{window.__previousNoticeScene=__uiGame.scene.getScene('Board');});await page.locator('#restart').click();await ready(page);await empty('#board-notice');
+        await show('matched');const current=await board.textContent();await page.evaluate(()=>__previousNoticeScene.hooks.onNotice('chain'));assert.equal(await board.textContent(),current);
+        await page.waitForFunction(()=>document.querySelector('#board-notice').textContent==='');await empty('#board-notice');
+        await show('matched');await page.evaluate(()=>__uiGame.scene.getScene('Board').hooks.onMove([999,999,999,999,999,999],1000,1,64));
+        await page.locator('#result-dialog').waitFor({state:'visible'});await page.locator('#result-next').click();await ready(page);await empty('#board-notice');
+        await page.locator('[data-route="village"]').click();await page.locator('#grow').click();
+        assert(await toast.evaluate(el=>el.classList.contains('visible')));item.transient.activeToastAX=await ax(page,'#toast');assert(spoken(item.transient.activeToastAX).includes(await toast.textContent()));
+        await page.locator('#language-toggle').click();assert.equal(await toast.textContent(),language==='ko'?'A new patch is blooming!':'새 꽃밭이 피어났어요!');await page.locator('#language-toggle').click();
+        await page.waitForFunction(()=>!document.querySelector('#grow').disabled);await page.locator('#grow').click();
+        const toastStarted=Date.now();await screen(page,item,'toast-active');
+        await page.waitForFunction(()=>document.querySelector('#toast').textContent==='');assert.equal(await toast.evaluate(el=>el.classList.contains('visible')),false);
+        item.transient.toastExpiryObservedMs=Date.now()-toastStarted;assert(item.transient.toastExpiryObservedMs>=3000&&item.transient.toastExpiryObservedMs<4500);
+        item.transient.expiredToastAX=await empty('#toast');await page.locator('#language-toggle').click();await page.locator('#language-toggle').click();await empty('#toast');
+        item.transient.events=await page.evaluate(()=>__noticeEvents);assert(item.transient.events.some(event=>event.isTrusted&&event.type==='animationend'&&event.elapsed===1.3));
+        item.checks.push('자연1300ms 보드 만료/3200ms 토스트 만료·활성 KOEN 전환·만료 DOM/Chrome AX 정리',
+          '연속 보드/토스트·늦은 animationend·이전 회차 콜백 보호·설정이탈/1500ms뒤복귀·restart/결과→다음회차 정리');
+        await screen(page,item,'transient-expired');continue;
+      }
       if(settingsOnly){
         await page.locator('#settings-button').click();await screen(page,item,'settings-normal');
         item.settings=await page.locator('#settings-view').evaluate(el=>({clientHeight:el.clientHeight,scrollHeight:el.scrollHeight,cardVisible:!!document.querySelector('.storage-card').getClientRects().length,offline:document.querySelector('.save-note').textContent}));

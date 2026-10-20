@@ -192,7 +192,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
   if(!Number.isInteger(id)||id<1||id>levels.length)return;
   clearResumeNotice();
   clearTimeout(resultTimer);resultTimer=undefined;round++;
-  roundEnded=false;resultShown=false;firstReward=false;resultWon=undefined;boardNoticeKey=undefined;testContinueUsed=false;
+  roundEnded=false;resultShown=false;firstReward=false;resultWon=undefined;clearBoardNotice();testContinueUsed=false;
   const activeRound=round;
   testingLevel=TEST_TOOLS_ENABLED&&testPlay;
   pickerReturnToResult=false;
@@ -223,7 +223,12 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
   updateGoals();syncActivity();
   return stored;
 }
-function notice(key:TextKey){noticeKey=key;clearTimeout(toastTimer);$('#toast').textContent=text(key);$('#toast').classList.add('visible');toastTimer=setTimeout(()=>{noticeKey=undefined;$('#toast').classList.remove('visible');},3200);}
+function clearBoardNotice(){boardNoticeKey=undefined;$('#board-notice').textContent='';$('#board-notice').classList.remove('pop');}
+function notice(key:TextKey){
+  noticeKey=key;clearTimeout(toastTimer);$('#toast').textContent=text(key);$('#toast').classList.add('visible');
+  const timer=setTimeout(()=>{if(toastTimer!==timer)return;noticeKey=undefined;$('#toast').classList.remove('visible');$('#toast').textContent='';},3200);
+  toastTimer=timer;
+}
 function clearResumeNotice(){
   clearTimeout(resumeNoticeTimer);resumeNoticeTimer=undefined;
   $('#round-resumed-notice').hidden=true;$('#round-resumed-notice').textContent='';
@@ -367,7 +372,7 @@ function continueTestRound(activeRound:number,activeScene:BoardScene,button:HTML
   if(!activeScene.resumeAfterFailure())return false;
   abandonRewardContinue();
   testContinueUsed=true;moves+=5;roundEnded=false;resultShown=false;resultWon=undefined;firstReward=false;
-  boardNoticeKey=undefined;$('#board-notice').textContent='';$('#board-notice').classList.remove('pop');
+  clearBoardNotice();
   dialog.close();updateGoals();syncActivity();
   const board=$('#game-canvas');if(board.tabIndex===0)board.focus();
   return true;
@@ -548,7 +553,7 @@ function changeLanguage(language:'en'|'ko'){
 function switchView(name:string){
   if(name!=='puzzle')abandonRewardContinue();
   if(!scene.canLeave())return;
-  if(name!=='puzzle')clearResumeNotice();
+  if(name!=='puzzle'){clearResumeNotice();clearBoardNotice();}
   route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
   document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(b=>{b.classList.toggle('active',b.dataset.route===name);if(b.dataset.route===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   updateSaveStatus();
@@ -559,7 +564,11 @@ document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(button=>but
 $('#settings-button').onclick=()=>switchView(route==='settings'?'puzzle':'settings');
 $('.brand').onclick=e=>{e.preventDefault();switchView('puzzle');};
 $('#language-toggle').onclick=()=>changeLanguage(save.language==='en'?'ko':'en');
-$('#board-notice').addEventListener('animationend',()=>{boardNoticeKey=undefined;});
+$('#board-notice').addEventListener('animationend',()=>{
+  // 이전 애니메이션의 늦은 종료 이벤트는 현재 재생 중인 새 안내를 지우지 않습니다.
+  if($('#board-notice').getAnimations?.().some(animation=>animation.playState==='running'))return;
+  clearBoardNotice();
+});
 $('#restart').onclick=()=>{if(scene.canLeave())startLevel(currentLevel,testingLevel);};
 if(TEST_TOOLS_ENABLED){$('#test-level-button').onclick=()=>showTestPicker();$<HTMLDialogElement>('#test-level-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTestPicker();});}
 $('#shuffle').onclick=()=>{if(!boardPending&&game.scene.isActive('Board')&&shuffles>0&&scene.shuffle()){shuffles--;updateGoals();checkpoint();}};
