@@ -70,7 +70,7 @@ describe('검사 전용 생성자 BUSY5 재개방',()=>{
     const trace=createTrace('reward-worker'),originalExec=DatabaseSync.prototype.exec,originalClose=DatabaseSync.prototype.close,originalDefine=Object.defineProperty,defineDescriptor=Object.getOwnPropertyDescriptor(Object,'defineProperty')!,closeDescriptor=Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'close')!,originalGetDescriptor=Object.getOwnPropertyDescriptor,getDescriptorDescriptor=Object.getOwnPropertyDescriptor(Object,'getOwnPropertyDescriptor')!;
     const connections:DatabaseSync[]=[],nativeError=Object.assign(new Error('synthetic-private-failure'),{code:'ERR_SQLITE_ERROR',errcode:mode==='locked6'?6:mode==='extended261'?261:mode==='sqlite1'?1:5});
     vi.spyOn(DatabaseSync.prototype,'exec').mockImplementation(()=>{throw nativeError;});
-    if(mode==='old-busy')trace.sqliteErrors.push({operation:'database-exec',phase:'reward-open',errorCode:'ERR_SQLITE_ERROR',extendedCode:5,baseCode:5,transactionActive:false,connectionClosed:true});
+    if(mode==='old-busy')trace.sqliteErrors.push({operation:'database-exec',site:'unknown',phase:'reward-open',errorCode:'ERR_SQLITE_ERROR',extendedCode:5,baseCode:5,transactionActive:false,connectionClosed:true});
     if(mode==='close-throw')vi.spyOn(DatabaseSync.prototype,'close').mockImplementation(()=>{throw new Error('synthetic-private-close');});
     if(mode==='close-noop')vi.spyOn(DatabaseSync.prototype,'close').mockImplementation(()=>{});
     // native own getter는 수정하지 않습니다. 해당 연결의 관측 조회 실패만 주입합니다.

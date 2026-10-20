@@ -120,7 +120,7 @@ describe('서버 영구 회차·멱등 명령 원장',()=>{
     const privateValue='synthetic-diagnostic-private';const result={kind:privateValue,code:privateValue,snapshot:{privateValue},grant:{privateValue}};
     const row=workerRow(0),returned=receiveWorker({kind:'synthetic-worker-report',result,diagnostic:{phase:privateValue,resultPhase:privateValue,errorPhase:privateValue,errorName:privateValue,errorCode:privateValue,elapsedMs:Infinity,message:privateValue,stack:privateValue,cause:{privateValue},steps:[{phase:privateValue,startedAtMs:NaN,durationMs:Infinity,body:privateValue}],sqliteErrors:[{operation:privateValue,phase:privateValue,errorCode:privateValue,extendedCode:123456789,baseCode:5,sql:privateValue}]}},row);
     expect(returned===result).toBe(true);expect(row.kind).toBe('other');expect(row.code).toBe('other');
-    expect(row.diagnostic).toEqual({phase:'unknown',elapsedMs:0,resultPhase:'unknown',errorPhase:'unknown',errorName:'other',errorCode:'other',steps:[{phase:'unknown',startedAtMs:0,durationMs:null}],sqliteErrors:[{operation:'unknown',phase:'unknown',errorCode:'other',extendedCode:null,baseCode:null,transactionActive:null,connectionClosed:null}],sqliteErrorsTruncated:false,sqliteHook:{installation:'unknown',restoration:'unknown',installedMethods:0,restoreFailures:0},constructorAttempts:[]});
+    expect(row.diagnostic).toEqual({phase:'unknown',elapsedMs:0,resultPhase:'unknown',errorPhase:'unknown',errorName:'other',errorCode:'other',steps:[{phase:'unknown',startedAtMs:0,durationMs:null}],sqliteErrors:[{operation:'unknown',site:'unknown',phase:'unknown',errorCode:'other',extendedCode:null,baseCode:null,transactionActive:null,connectionClosed:null}],sqliteErrorsTruncated:false,sqliteHook:{installation:'unknown',restoration:'unknown',installedMethods:0,restoreFailures:0},constructorAttempts:[]});
     const error=Object.assign(new Error(privateValue),{code:privateValue,cause:{privateValue}});expect(safeError(error)).toEqual({errorName:'Error',errorCode:'other'});
     expect(JSON.stringify(row).includes(privateValue)).toBe(false);expect(Object.keys(row)).not.toContain('result');
     expect(receiveWorker(result,workerRow(1))===result).toBe(true);
@@ -132,6 +132,14 @@ describe('서버 영구 회차·멱등 명령 원장',()=>{
     const capacity=workerRow(0),capacityPhases=['fixture','reprofile','round-open','prepare','redeem','eligibility','apply'];
     receiveWorker({kind:'synthetic-worker-report',result,diagnostic:{phase:'apply',steps:[...capacityPhases,'close',privateValue].map(phase=>({phase,startedAtMs:0,durationMs:0,sql:privateValue,args:[privateValue],path:privateValue,owner:privateValue,grant:privateValue,profile:privateValue,mac:privateValue,message:privateValue,stack:privateValue,tokens:privateValue}))}},capacity);
     expect(capacity.diagnostic?.steps.map(row=>row.phase)).toEqual([...capacityPhases,'close']);expect(capacity.diagnostic?.steps).toHaveLength(8);expect(JSON.stringify(capacity).includes(privateValue)).toBe(false);
+    const sites=workerRow(0),coerce=vi.fn(()=>privateValue),badSite={toString:coerce};
+    receiveWorker({kind:'synthetic-worker-report',result,diagnostic:{sqliteErrors:[
+      ...['transaction-begin','transaction-commit','transaction-rollback','pragma-synchronous-full'].map(site=>({operation:'database-exec',site,sql:privateValue})),
+      {operation:'database-exec',site:privateValue},{operation:'database-exec',site:badSite},{operation:'statement-run',site:'transaction-begin'},
+      {operation:'database-exec',get site(){throw new Error(privateValue);}},{operation:'database-exec',site:'transaction-begin'},
+    ]}},sites);
+    expect(sites.diagnostic?.sqliteErrors.map(row=>row.site)).toEqual(['transaction-begin','transaction-commit','transaction-rollback','pragma-synchronous-full','unknown','unknown','unknown','unknown']);
+    expect(sites.diagnostic?.sqliteErrorsTruncated).toBe(true);expect(coerce).not.toHaveBeenCalled();expect(JSON.stringify(sites).includes(privateValue)).toBe(false);
   });
   it('검사 SQLite 관측은 실제 잠금 코드를 남기고 this·반환·동일 예외와 descriptor를 복원',()=>{
     const location=file(),first=db(location),second=db(location),privateValue='synthetic-native-argument-private';
@@ -143,7 +151,7 @@ describe('서버 영구 회차·멱등 명령 원장',()=>{
     let emitted:unknown,observed:unknown;
     try{step(trace,'start',()=>withSqliteDiagnostics(trace,()=>{try{second.prepare('INSERT INTO diagnostic_probe VALUES(?)').run(privateValue);}catch(error){emitted=error;throw error;}}));}catch(error){observed=error;}
     expect(observed!==undefined&&observed===emitted).toBe(true);
-    expect(trace.sqliteErrors).toEqual([{operation:'statement-run',phase:'start',errorCode:'ERR_SQLITE_ERROR',extendedCode:5,baseCode:5,transactionActive:null,connectionClosed:null}]);
+    expect(trace.sqliteErrors).toEqual([{operation:'statement-run',site:'unknown',phase:'start',errorCode:'ERR_SQLITE_ERROR',extendedCode:5,baseCode:5,transactionActive:null,connectionClosed:null}]);
     expect(trace.sqliteErrorsTruncated).toBe(false);expect(targets.map(([p,k])=>Object.getOwnPropertyDescriptor(p,k))).toEqual(descriptors);
     expect(trace.sqliteHook).toEqual({installation:'installed',restoration:'restored',installedMethods:5,restoreFailures:0});
     const row=workerRow(0);receiveWorker({kind:'synthetic-worker-report',result:{kind:'worker-error'},diagnostic:trace},row);expect(row.diagnostic?.sqliteErrors).toEqual(trace.sqliteErrors);
@@ -164,6 +172,46 @@ describe('서버 영구 회차·멱등 명령 원장',()=>{
       }finally{originalDefine(Object,'defineProperty',defineDescriptor);targets.forEach(([p,k],i)=>originalDefine(p,k,descriptors[i]!));}
       expect(targets.map(([p,k])=>Object.getOwnPropertyDescriptor(p,k))).toEqual(descriptors);
     }
+  });
+  it('검사 SQLite 분류는 정확한 정적 literal만 구분·입력 강제변환 없이 원래 호출1회·반환/동일 예외 유지',()=>{
+    const receiver=db(':memory:'),marker=Object.assign(new Error('synthetic-site-private'),{code:'ERR_SQLITE_ERROR',errcode:5}),returned={};
+    const getter=vi.fn(()=>{throw marker;}),input=Object.defineProperty({},'toString',{get:getter}),proxy=new Proxy({},{get:getter});
+    const targets:[object,string][]=[[DatabaseSync.prototype,'exec'],[DatabaseSync.prototype,'prepare'],[StatementSync.prototype,'run'],[StatementSync.prototype,'get'],[StatementSync.prototype,'all']];
+    const calls:{receiver:unknown;args:unknown[]}[]=[];let fails=true;
+    for(const [prototype,key] of targets)vi.spyOn(prototype as any,key).mockImplementation(function(this:unknown,...args:unknown[]){calls.push({receiver:this,args});if(fails)throw marker;return returned;});
+    const descriptors=targets.map(([p,k])=>Object.getOwnPropertyDescriptor(p,k));
+    const cases:[unknown,string][]=[['BEGIN IMMEDIATE','transaction-begin'],['COMMIT','transaction-commit'],['ROLLBACK','transaction-rollback'],['PRAGMA synchronous=FULL','pragma-synchronous-full'],['SELECT 1','unknown'],[' BEGIN IMMEDIATE','unknown'],['COMMIT ','unknown'],['COMMIT;','unknown'],['begin immediate','unknown'],['BEGIN IMMEDIATE; COMMIT','unknown'],['ROLLBACK\nCOMMIT','unknown'],['PRAGMA synchronous=FULL; SELECT 1','unknown'],['/* private */COMMIT','unknown'],[new String('COMMIT'),'unknown'],[input,'unknown'],[proxy,'unknown'],[null,'unknown'],[undefined,'unknown'],[1,'unknown'],[Symbol('synthetic-site-private'),'unknown']];
+    for(const [value,site] of cases){
+      const trace=createTrace('round-worker');let thrown:unknown;const before=calls.length;
+      try{withSqliteDiagnostics(trace,()=>Reflect.apply((DatabaseSync.prototype as any).exec,receiver,[value,input]));}catch(error){thrown=error;}
+      expect(thrown===marker).toBe(true);expect(calls.length-before).toBe(1);expect(calls.at(-1)?.receiver===receiver).toBe(true);expect(calls.at(-1)?.args[0]===value&&calls.at(-1)?.args[1]===input).toBe(true);
+      expect(trace.sqliteErrors.map(row=>row.site)).toEqual([site]);expect(trace.sqliteHook).toEqual({installation:'installed',restoration:'restored',installedMethods:5,restoreFailures:0});
+      expect(JSON.stringify(trace).includes('synthetic-site-private')).toBe(false);expect(targets.map(([p,k])=>Object.getOwnPropertyDescriptor(p,k))).toEqual(descriptors);
+    }
+    for(const [prototype,key] of targets.slice(1)){
+      const trace=createTrace('round-worker'),before=calls.length;let thrown:unknown;
+      try{withSqliteDiagnostics(trace,()=>Reflect.apply((prototype as any)[key],receiver,['COMMIT']));}catch(error){thrown=error;}
+      expect(thrown===marker).toBe(true);expect(calls.length-before).toBe(1);expect(calls.at(-1)?.receiver===receiver&&calls.at(-1)?.args[0]==='COMMIT').toBe(true);expect(trace.sqliteErrors.map(row=>row.site)).toEqual(['unknown']);
+      expect(targets.map(([p,k])=>Object.getOwnPropertyDescriptor(p,k))).toEqual(descriptors);
+    }
+    const capped=createTrace('round-worker');withSqliteDiagnostics(capped,()=>{for(let i=0;i<10;i++)try{receiver.exec('COMMIT');}catch(error){expect(error===marker).toBe(true);}});
+    expect(capped.sqliteErrors).toHaveLength(8);expect(capped.sqliteErrors.every(row=>row.site==='transaction-commit')).toBe(true);expect(capped.sqliteErrorsTruncated).toBe(true);
+    fails=false;const successful=createTrace('round-worker'),before=calls.length;
+    expect((withSqliteDiagnostics(successful,()=>Reflect.apply(DatabaseSync.prototype.exec,receiver,['COMMIT'])) as unknown)===returned).toBe(true);expect(calls.length-before).toBe(1);expect(successful.sqliteErrors).toEqual([]);
+    expect(getter).not.toHaveBeenCalled();expect(targets.map(([p,k])=>Object.getOwnPropertyDescriptor(p,k))).toEqual(descriptors);
+  });
+  it('검사 SQLite 실제 잠금과 transaction 오류는 정적 분류만 남기고 원래 실패를 보존',({task})=>{
+    const location=file(),first=db(location),second=db(location),trace=task.meta.ledgerDiagnostic=createTrace('round-worker');
+    first.exec('CREATE TABLE site_probe(value TEXT)');first.exec('BEGIN IMMEDIATE');
+    const fail=(sql:string)=>{let emitted:unknown,observed:unknown;try{withSqliteDiagnostics(trace,()=>{try{second.exec(sql);}catch(error){emitted=error;throw error;}});}catch(error){observed=error;}expect(observed!==undefined&&observed===emitted).toBe(true);};
+    step(trace,'start',()=>fail('BEGIN IMMEDIATE'));first.exec('ROLLBACK');
+    second.exec('BEGIN IMMEDIATE');step(trace,'round-open',()=>fail('PRAGMA synchronous=FULL'));second.exec('ROLLBACK');
+    step(trace,'command',()=>fail('COMMIT'));step(trace,'close',()=>fail('ROLLBACK'));
+    expect(trace.sqliteErrors.map(row=>row.site)).toEqual(['transaction-begin','pragma-synchronous-full','transaction-commit','transaction-rollback']);
+    expect(trace.sqliteErrors[0]).toMatchObject({operation:'database-exec',phase:'start',errorCode:'ERR_SQLITE_ERROR',extendedCode:5,baseCode:5,transactionActive:false});
+    expect(trace.sqliteErrors[1].transactionActive).toBe(true);expect(trace.sqliteErrorsTruncated).toBe(false);expect(trace.sqliteHook).toEqual({installation:'installed',restoration:'restored',installedMethods:5,restoreFailures:0});
+    const projected=workerRow(0);receiveWorker({kind:'synthetic-worker-report',result:{kind:'worker-error'},diagnostic:trace},projected);expect(projected.diagnostic?.sqliteErrors).toEqual(trace.sqliteErrors);
+    const safe=JSON.stringify(trace);for(const text of ['BEGIN IMMEDIATE','PRAGMA synchronous=FULL','COMMIT','ROLLBACK','site_probe',location])expect(safe.includes(text)).toBe(false);
   });
   it('서버 난수 ID/초기 상태·인증 소유자별 생성·중복은 현재 snapshot',()=>{
     const {ledger,path}=open(),s=start(ledger);expect(s.roundId).toMatch(/^[A-Za-z0-9_-]{43}$/);expect(s.revision).toBe(0);expect(s.state).toMatchObject({moves:26,score:0,status:'active',shuffles:1});
