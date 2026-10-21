@@ -1,3 +1,11 @@
+## 현재 작업 · 2026-10-21 · #122 callback 결과 안전 분류 (커밋 전 검수)
+
+기준 main `13eca6b850a444980eea1eff571c4c1ca1ff0791`, 브랜치 `codex/122-callback-outcome-trace`에서 [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)의 검사 전용 관측만 추가했습니다. 기존 reward callback 동시8worker 한 case만 opt-in envelope를 사용하고 부모는 원래 결과·순서·신규1/중복7/DB행1 기대를 유지합니다. 고정 kind/code·newGrant boolean/null·생성자/비동기 callback/close 단계와 관측 실패/누락을 최대8행으로 보존합니다. 기본 worker/child IPC·생성/처리/close 횟수·5초/DB500ms를 유지하며 서버 소스·DB hook·자동 retry를 추가하지 않았습니다. SQL/SSV/키/owner/경로/오류 원문을 진단에 복사하지 않습니다.
+
+Node24.21.0/SQLite3.53.4에서 상위 플래그의 엄격 boolean 투영·배열 사용자 정의 메서드 우회를 포함한 helper로 관련2파일 **75개(안전15·기존 reward60)**를 통과했습니다. 이후 원문 객체 플래그 합성 fixture만 추가해 **최종 안전15개와 전체/앱/서버 타입**을 재확인했으며 helper·worker·기존 reward case는 그대로이고 8worker/전체/빌드는 추가 실행하지 않았습니다. 앞선 합성 getter 반환형 추론 오류1건은 원문을 보존하고 `never` 표기를 보완한 뒤 검증했습니다. 새8결과는 신규1/중복7·관측 실패0·close 호출 반환으로 기록됐지만 native BUSY/site/잠금 소유자·worker 종료/부모 정리 완료를 관측한 것은 아닙니다. 에셋 검사·격리 testing/production 빌드는 성공했고 게임 빌드 입력은 후속 안전 보완과 무관하게 유지했습니다. 두 dist는 각각30파일 전수 byte/SHA가 #171 최종 동결본과 같고 testing flags3true/production3false·src/dist 서버 마커0입니다. 기존 큰 chunk 경고는 유지합니다.
+
+Git 밖 `Pawblossom-builds/qa/issue-122-callback-outcome-trace`에 명령·최초 타입 실패·최종 raw/safe metadata·소스 LF/산출물 SHA·diff와 STOP을 보존합니다. **로컬 전체·브라우저 행렬은 이번에 실행하지 않았고, 총괄 독립 검수와 커밋/푸시/PR 승인을 기다립니다.** 기준 main의 기존 CI39540843710 성공과 새 소스 PR의 필수 Node22/24 전체 검증은 구분합니다. #167의 과거 중복4/기대7에서 미관측3결과를 소급 복원하거나 해결한 것이 아니며, #171 로컬2474통과/2실패(callback5초·Round start BEGIN/BUSY5), main319/39·옛5초 원인은 각각 미확정으로 유지합니다. UI·실기기·실제 SDK/스토어 완료가 아니며 APK/sync/Drive·버전·오디오·운영 설정은 이 세션 범위 밖입니다. 사용자 조치·질문은 없습니다. 아래 현재/대기 표현은 당시 이력입니다.
+
 ## 현재 작업 · 2026-10-21 · #161 통합 테스트 APK·Drive 전달 검증
 
 오늘 광고 전체 제거 결정 #159, 검사 전용 트랜잭션 관측 #162, 광고 제거 상태 안내·늦은 보상 회귀 #164, 선택형 특수 탭 실습·실제 터치 초점 보완 #165를 병합했습니다. APK의 게임 소스는 `08912a050b7929a78f588ec74e4d4b2fce725793`입니다. [정확 main CI39533204430](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39533204430)는 Node22·24 각각36파일2,418개/store12/타입/production·testing 웹 빌드와 flags 검사를 통과했습니다. 이전 main319의 CI39531343063은 Node22 보상권 소비 BEGIN/BUSY5 1실패이며 [#122 관측](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122#issuecomment-6306317059)에 보존했습니다. 새 UI 버전의 성공은 이전 잠금 원인 해결이나 같은 head 재실행을 뜻하지 않습니다.
