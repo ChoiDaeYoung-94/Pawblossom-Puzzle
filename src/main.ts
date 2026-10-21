@@ -9,7 +9,8 @@ import '@fontsource/fraunces/latin-600.css';
 import './style.css';
 import { BoardScene,tileNames } from './BoardScene';
 import { AudioManager } from './audio/AudioManager';
-import { loadSave,saveData,retrySave,saveStatus,clearSave,levels,LEVEL_COUNT,chapters,chapterForLevel,levelSignature,type RoundCheckpoint } from './state';
+import { loadSave,saveData,retrySave,saveStatus,clearSave,levels,LEVEL_COUNT,chapters,chapterForLevel,levelSignature,type RoundCheckpoint,type SaveData } from './state';
+import { freshPip,pipLevel,careCost,preparePipAction,type PipAction } from './pipCare';
 import { t,type TextKey } from './i18n';
 import { icon } from './icons';
 import { SwapPractice } from './SwapPractice';
@@ -40,6 +41,11 @@ let practice:SwapPractice|undefined;
 let specialPractice:SpecialTapPractice|undefined;
 let practiceInputs:ReturnType<typeof bindPracticeBoard>|undefined;
 let growing=false;
+let growthTimer:ReturnType<typeof setTimeout>|undefined;
+let careProcessing=false,careGeneration=0;
+let careDemo:{normalSave:SaveData;returnRoute:'village'|'journal';chapter:number}|undefined;
+let pipReaction:'feed'|'play'|'greet'|'tend'|undefined;
+let careReactionTimer:ReturnType<typeof setTimeout>|undefined;
 let clearedLeaves=0;
 let testingLevel=false;
 let testContinueUsed=false;
@@ -61,7 +67,7 @@ const audio=new AudioManager(false);audio.setMusicEnabled(save.music);audio.setS
 const text=(key:TextKey)=>t(save.language,key);
 const label=(key:TextKey)=>`<span data-t="${key}">${text(key)}</span>`;
 const $=<T extends HTMLElement=HTMLElement>(selector:string)=>document.querySelector<T>(selector)!;
-function persist(){const stored=saveData(save);updateSaveStatus();return stored;}
+function persist(){if(careDemo)return true;const stored=saveData(save);updateSaveStatus();return stored;}
 let announcedSave='';
 function updateSaveStatus(restoreControl?:string){
   const status=saveStatus();
@@ -119,7 +125,7 @@ if(androidBillingEntry){
 function billingModal(){return Boolean(androidBillingEntry&&$<HTMLDialogElement>('#test-billing-dialog').open);}
 const previewDialog=document.createElement('dialog');previewDialog.id='stage-preview-dialog';previewDialog.setAttribute('aria-labelledby','stage-preview-title');previewDialog.setAttribute('aria-describedby','stage-preview-description');document.body.append(previewDialog);
 function otherModal(){return $<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open)||billingModal();}
-function previewEnvironment(){return nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!otherModal()&&!boardPending&&Boolean(scene?.canLeave())&&!resultTimer;}
+function previewEnvironment(){return !careDemo&&nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!otherModal()&&!boardPending&&Boolean(scene?.canLeave())&&!resultTimer;}
 function validPreview(context:StagePreview){return stagePreview===context&&context.round===round&&context.scene===scene&&context.testing===testingLevel&&context.route===route&&previewDialog.open&&previewEnvironment()&&Number.isInteger(context.id)&&context.id>=1&&context.id<=LEVEL_COUNT&&(context.intent==='restart'||context.id<=save.highestLevel);}
 function canContinuePreview(context:StagePreview){return context.intent==='map'&&!testingLevel&&!roundEnded&&context.id===currentLevel;}
 function closeStagePreview(restore=true){
@@ -171,7 +177,7 @@ function syncActivity(){
   if(active&&Capacitor.isNativePlatform()&&!nativeAudioAttempted){nativeAudioAttempted=true;if(save.music)void audio.unlock().catch(()=>{});}
   if(!game)return;
   const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
-  const playing=active&&route==='puzzle'&&!modal&&!previewDialog.open;
+  const playing=active&&!careDemo&&route==='puzzle'&&!modal&&!previewDialog.open;
   if(playing){if(game.scene.isPaused('Board'))game.scene.resume('Board');}
   else if(game.scene.isActive('Board'))game.scene.pause('Board');
   updateBoardAccess();
@@ -179,7 +185,7 @@ function syncActivity(){
 function updateBoardAccess(){
   const board=$('#game-canvas'),state=scene?.keyboardState();
   const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
-  const visible=nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!billingModal()&&route==='puzzle'&&!modal&&!previewDialog.open&&!boardPending;
+  const visible=!careDemo&&nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!billingModal()&&route==='puzzle'&&!modal&&!previewDialog.open&&!boardPending;
   const available=visible&&Boolean(state?.available);
   board.tabIndex=visible&&(available||state?.busy)?0:-1;
   board.setAttribute('aria-disabled',String(!available));board.setAttribute('aria-busy',String(Boolean(state?.busy)));
@@ -224,7 +230,7 @@ function updateGoals(){
   $('#shuffle-count').textContent=String(shuffles);$('#shuffle').toggleAttribute('disabled',shuffles<1);
 }
 function checkpoint(){
-  if(testingLevel||roundEnded)return;
+  if(careDemo||testingLevel||roundEnded)return;
   save.inProgress={schema:1,levelId:currentLevel,levelSignature:levelSignature(levels[currentLevel-1]),
     board:scene.engine.board.map(row=>row.map(tile=>({...tile}))),leaves:scene.engine.leaves.map(row=>row.slice()),
     moves,score,collected:collected.slice(),shuffles,clearedLeaves};
@@ -240,6 +246,7 @@ function replaceBoard(){
   game.scene.add('Board',scene,true);
 }
 function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{focusBoard?:boolean}={}){
+  if(careDemo)return;
   if(stagePreview)closeStagePreview(false);
   abandonRewardContinue();
   if(!Number.isInteger(id)||id<1||id>levels.length)return;
@@ -269,7 +276,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
     if(activeRound!==round)return;
     boardNoticeKey=key;$('#board-notice').textContent=text(key);$('#board-notice').classList.remove('pop');void $('#board-notice').offsetWidth;$('#board-notice').classList.add('pop');
   },onMove:(items,points,_chains,leavesCleared)=>{
-    if(activeRound!==round||roundEnded)return;
+    if(careDemo||activeRound!==round||roundEnded)return;
     moves--;score+=points;clearedLeaves+=leavesCleared??0;items.forEach((n,i)=>collected[i]+=n);updateGoals();
     const level=levels[currentLevel-1];
     const won=level.goals.every(g=>collected[g.kind]>=g.count)&&clearedLeaves>=(level.leaves?.length??0);
@@ -351,6 +358,7 @@ function focusPracticeStart(){
   setTimeout(()=>{if(button.isConnected&&document.activeElement===button&&$<HTMLDialogElement>('#tutorial-dialog').open)button.scrollIntoView({block:'nearest'});},0);
 }
 function showTutorial(intent:'onboarding'|'help'='onboarding',opener?:HTMLButtonElement){
+  if(careDemo)return;
   if(stagePreview||previewDialog.open||otherModal()||!scene.canLeave()||resultTimer)return;
   // 첫 안내는 보드 부팅 중에도 열립니다. 사용자가 다시 여는 도움말만 활성 화면을 확인합니다.
   if(intent==='help'&&(!nativeActive||document.hidden||boardPending||testAds?.pausesGame||testBilling?.pausesGame||!opener?.isConnected||opener.disabled||opener.hidden||!['settings','journal'].includes(route)||$('#'+route+'-view').hidden))return;
@@ -396,6 +404,7 @@ function renderTestPicker(){
   $('#test-close').onclick=closeTestPicker;
 }
 function showTestPicker(fromResult=false){
+  if(careDemo)return;
   if(stagePreview)return;
   if(!TEST_TOOLS_ENABLED||!scene.canLeave()||resultTimer||$<HTMLDialogElement>('#result-dialog').open||$<HTMLDialogElement>('#tutorial-dialog').open)return;
   pickerReturnToResult=fromResult;selectedTestChapter=chapterForLevel(currentLevel).id;
@@ -410,7 +419,7 @@ function closeTestPicker(){
   syncActivity();
 }
 function settleRound(won:boolean){
-  if(roundEnded)return;
+  if(careDemo||roundEnded)return;
   roundEnded=true;
   firstReward=won&&!testingLevel&&!save.completed.includes(currentLevel);
   if(testingLevel)return;
@@ -420,7 +429,7 @@ function settleRound(won:boolean){
   persist();updateWallet();renderViews();
 }
 function finish(won:boolean){
-  if(resultShown)return;
+  if(careDemo||resultShown)return;
   settleRound(won);resultShown=true;resultWon=won;
   const first=firstReward;
   audio.play(won?'win':'lose');
@@ -455,6 +464,7 @@ function bindRewardContinue(button:HTMLButtonElement){
   ensureTestAds();renderRewardContinue();void testAds!.connect();
 }
 function continueTestRound(activeRound:number,activeScene:BoardScene,button:HTMLButtonElement):boolean {
+  if(careDemo)return false;
   const dialog=$<HTMLDialogElement>('#result-dialog');
   if(!TEST_TOOLS_ENABLED||!testingLevel||testContinueUsed||activeRound!==round||activeScene!==scene
     ||route!=='puzzle'||boardPending||game.scene.getScene('Board')!==activeScene||resultTimer!==undefined
@@ -556,6 +566,7 @@ function renderAdDialog(){
   $('#test-ad-close').toggleAttribute('disabled',testAds.busy);
 }
 async function showAdDialog(){
+  if(careDemo)return;
   if(!androidAdEntry||testBilling?.pausesGame||!scene.canLeave()||document.querySelector('dialog[open]'))return;
   ensureTestAds();
   renderAdDialog();$<HTMLDialogElement>('#test-ad-dialog').showModal();syncActivity();$('#test-ad-title').focus();
@@ -590,6 +601,7 @@ function renderBillingDialog(){
   $('#test-billing-close').toggleAttribute('disabled',testBilling.pausesGame);
 }
 async function showBillingDialog(){
+  if(careDemo)return;
   if(!androidBillingEntry||!scene.canLeave()||testAds?.busy||document.querySelector('dialog[open]'))return;
   renderBillingDialog();$<HTMLDialogElement>('#test-billing-dialog').showModal();syncActivity();$('#test-billing-title').focus();
   await testBilling?.connect();
@@ -598,31 +610,155 @@ function closeBillingDialog(){
   if(testBilling?.pausesGame)return;
   $<HTMLDialogElement>('#test-billing-dialog').close();syncActivity();$('#test-billing-button').focus();
 }
+function currentControl(button:HTMLElement,expectedSave:SaveData,generation:number){
+  return expectedSave===save&&generation===careGeneration&&button.isConnected&&$('#'+button.id)===button;
+}
+function careEnvironment(){
+  return ['village','journal'].includes(route)&&nativeActive&&!document.hidden&&!boardPending&&!resultTimer
+    &&!stagePreview&&!previewDialog.open&&!otherModal()&&!testAds?.pausesGame&&!testBilling?.pausesGame
+    &&Boolean(scene?.canLeave())&&game.scene.getScene('Board')===scene;
+}
+function careStorageBlocked(){
+  if(careDemo)return false;
+  const status=saveStatus();
+  return status.resetPending||status.write==='blocked'||['conflict','corrupt','unsupported','read-error'].includes(status.load);
+}
+/** 같은 실행의 재화와 효과를 한 payload로 확정합니다. 다른 탭의 비교→쓰기 경쟁은 기존 저장 제한을 따릅니다. */
+function commitCare(button:HTMLButtonElement,expectedSave:SaveData,generation:number,prepare:(next:SaveData)=>boolean):boolean {
+  if(careProcessing||!currentControl(button,expectedSave,generation)||!careEnvironment())return false;
+  if(careStorageBlocked()){notice('careSaveBlocked');updateSaveStatus();return false;}
+  careProcessing=true;
+  try{
+    const next:SaveData=JSON.parse(JSON.stringify(save));
+    if(!prepare(next))return false;
+    if(!careDemo&&!saveData(next)){updateSaveStatus();notice('careSaveBlocked');return false;}
+    save=next;updateWallet();updateSaveStatus();return true;
+  }finally{careProcessing=false;}
+}
+function clearCareReaction(){clearTimeout(careReactionTimer);careReactionTimer=undefined;pipReaction=undefined;}
+function reactPip(kind:NonNullable<typeof pipReaction>){
+  clearCareReaction();pipReaction=kind;
+  const generation=careGeneration;
+  const timer=setTimeout(()=>{if(generation!==careGeneration||careReactionTimer!==timer)return;careReactionTimer=undefined;pipReaction=undefined;renderViews();},2400);
+  careReactionTimer=timer;
+}
+function enterCareDemo():boolean {
+  if(!TEST_TOOLS_ENABLED||careDemo||careProcessing||growing||!careEnvironment())return false;
+  const returnRoute=route as 'village'|'journal';
+  const demo:SaveData=JSON.parse(JSON.stringify(save));
+  careDemo={normalSave:save,returnRoute,chapter:selectedChapter};careGeneration++;
+  demo.coins=240;demo.stars=10;demo.garden=0;demo.pip=freshPip();save=demo;
+  clearCareReaction();scene.cancelInput();renderViews();localize();updateWallet();syncActivity();
+  document.querySelector<HTMLButtonElement>('#care-demo-exit-'+returnRoute)?.focus({preventScroll:true});
+  return true;
+}
+function exitCareDemo(navigate=true):boolean {
+  if(!careDemo||careProcessing||otherModal()||previewDialog.open)return false;
+  const context=careDemo;careDemo=undefined;careGeneration++;
+  clearTimeout(growthTimer);growthTimer=undefined;growing=false;clearCareReaction();
+  save=context.normalSave;selectedChapter=context.chapter;
+  // 저장이나 회차 재생성 없이 원래 언어·오디오 설정만 복원합니다.
+  audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);
+  renderViews();localize();updateWallet();updateGoals();updateResultCopy();syncActivity();
+  if(navigate){
+    switchView(context.returnRoute);
+    const target=document.querySelector<HTMLElement>('#care-demo-enter-'+context.returnRoute)
+      ??document.querySelector<HTMLElement>('#'+context.returnRoute+'-view h2');
+    if(target){if(target.tagName==='H2')target.tabIndex=-1;target.focus({preventScroll:true});}
+  }
+  return true;
+}
+function careDemoPanel(view:'village'|'journal'){
+  if(!TEST_TOOLS_ENABLED)return '';
+  return careDemo?`<aside class="care-demo-banner"><strong>${text('careDemoActive')}</strong><p>${text('careDemoHint')}</p><button id="care-demo-exit-${view}" class="text-button">${text('careDemoExit')}</button></aside>`
+    :`<aside class="care-demo-entry"><p>${text('careDemoInvite')}</p><button id="care-demo-enter-${view}" class="text-button">${text('careDemoEnter')}</button></aside>`;
+}
+function pipDecoration(){
+  const equipped=(save.pip??freshPip()).equipped;
+  if(equipped==='ribbon'&&pipReaction!=='tend')return '<svg class="pip-accessory pip-ribbon" viewBox="0 0 80 36" aria-hidden="true"><path d="M35 16Q8-6 5 9Q-1 31 35 23M45 16Q72-6 75 9Q81 31 45 23" fill="#e7a4b5" stroke="#965e74" stroke-width="3"/><rect x="33" y="13" width="14" height="14" rx="5" fill="#f5c7d2" stroke="#965e74" stroke-width="3"/></svg>';
+  if(equipped==='wateringCan'||pipReaction==='tend')return '<svg class="pip-accessory pip-watering-can" viewBox="0 0 76 70" aria-hidden="true"><path d="M48 27Q73 7 68 34Q65 45 51 43M19 33 7 19 1 23 18 47" fill="none" stroke="#527c70" stroke-width="7"/><path d="M16 26Q33 21 51 26L54 59Q35 66 14 59Z" fill="#91b8a0" stroke="#456b5b" stroke-width="3"/><path d="M25 25V16Q34 11 43 16V25" fill="none" stroke="#456b5b" stroke-width="4"/><path d="M26 40h17m-8-8v17" stroke="#f6e6ad" stroke-width="4" stroke-linecap="round"/></svg>';
+  return '';
+}
+function pipCareCard(){
+  const pip=save.pip??freshPip(),level=pipLevel(pip),cost=careCost(pip),blocked=careStorageBlocked();
+  const next=level===1?20:level===2?60:100;
+  const image=pipReaction==='feed'?'/assets/pip-feed-v1.webp':pipReaction==='play'?'/assets/pip-play-v1.webp':'/assets/pip.png';
+  const reactionKey:TextKey=pipReaction==='feed'?'pipFeedReaction':pipReaction==='play'?'pipPlayReaction':pipReaction==='greet'?'pipGreetReaction':pipReaction==='tend'?'pipTendReaction':level===3?'pipLevel3Line':level===2?'pipLevel2Line':'pipLevel1Line';
+  const effect=(kind:'feed'|'play')=>text('pipCareEffect').replace('{growth}',String(Math.min(100-pip.growth,kind==='feed'?10:4))).replace('{affection}',String(Math.min(100-pip.affection,kind==='feed'?4:10)));
+  const price=cost?`${icon('coin',15)} ${cost}`:text('pipFreeCare');
+  const decoration=(item:'ribbon'|'wateringCan',required:number,price:number)=>{
+    const owned=pip.owned.includes(item),equipped=pip.equipped===item,name=text(item==='ribbon'?'pipRibbon':'pipWateringCan');
+    return `<div class="pip-shop-item"><div><strong>${name}</strong><small>${owned?text('pipOwned'):text('pipUnlockAt').replace('{level}',String(required))}</small></div><button id="pip-${owned?'equip':'buy'}-${item}" class="text-button" ${blocked||equipped||(!owned&&(level<required||save.coins<price))?'disabled':''}>${equipped?text('pipEquipped'):owned?text('pipEquipFree'):`${icon('coin',15)} ${price}`}</button></div>`;
+  };
+  return `<section class="journal-card pip-care-card" aria-labelledby="pip-care-title"><div class="pip-care-hero"><div class="pip-portrait ${pipReaction?'pip-reaction-'+pipReaction:''}"><img src="${image}" alt="${text(pipReaction==='feed'?'pipFeedAlt':pipReaction==='play'?'pipPlayAlt':'pip')}"/>${pipDecoration()}</div><div class="pip-summary"><h3 id="pip-care-title" tabindex="-1"><span class="pip-name">${text('pip')}</span><span class="pip-level">Lv. ${level}</span></h3><p class="pip-reaction-line" role="status" aria-live="polite">${text(reactionKey)}</p><div class="pip-stats"><label>${text('pipGrowth')} <strong>${pip.growth} / 100</strong><progress max="100" value="${pip.growth}"></progress></label><label>${text('pipAffection')} <strong>${pip.affection} / 100</strong><progress max="100" value="${pip.affection}"></progress></label></div></div></div><p class="pip-next">${text(level<3?'pipNextUnlock':'pipAllUnlocked').replace('{count}',String(Math.max(0,next-pip.growth))).replace('{reward}',text(level===1?'pipLevel2Unlock':'pipLevel3Unlock'))}</p><div class="pip-care-actions"><button id="pip-feed" class="primary" ${blocked||save.coins<cost?'disabled':''}><span>${text('pipFeed')} · ${price}</span><small>${effect('feed')}</small></button><button id="pip-play" class="primary" ${blocked||save.coins<cost?'disabled':''}><span>${text('pipPlay')} · ${price}</span><small>${effect('play')}</small></button></div><p class="pip-purpose">${text('pipPurpose')}</p><p class="pip-care-note">${text('pipNoDecay')}</p><div class="pip-reactions"><button id="pip-greet" class="text-button" ${level<2?'disabled':''}>${text('pipGreet')}</button><button id="pip-tend" class="text-button" ${level<3?'disabled':''}>${text('pipTend')}</button></div><h4>${text('pipDecorate')}</h4><p class="pip-shop-note">${text('pipShopHint')}</p>${decoration('ribbon',2,40)}${decoration('wateringCan',3,80)}<button id="pip-equip-none" class="text-button" ${blocked||pip.equipped==='none'?'disabled':''}>${text('pipUnequip')}</button>${blocked?`<p class="pip-save-note" role="status">${text('careSaveBlocked')}</p>`:''}</section>`;
+}
+// 상점까지 내리거나 화면을 회전한 뒤에도 반응 그림과 돌보기 버튼을 함께 보여 줍니다.
+function revealPipCare(){
+  if(route!=='journal')return;
+  const view=$('#journal-view'),hero=view.querySelector<HTMLElement>('.pip-care-hero'),actions=view.querySelector<HTMLElement>('.pip-care-actions');
+  if(!hero||!actions)return;
+  const bounds=view.getBoundingClientRect(),top=hero.getBoundingClientRect().top,bottom=actions.getBoundingClientRect().bottom;
+  if(top<bounds.top||bottom>bounds.bottom){
+    view.scrollTop=Math.max(0,view.scrollTop+top-bounds.top);
+    const active=document.activeElement;
+    if(active&&view.contains(active)&&!hero.contains(active)&&!actions.contains(active))$('#pip-care-title').focus({preventScroll:true});
+  }
+}
+function bindCareControls(){
+  const expectedSave=save,generation=careGeneration;
+  const bind=(id:string,handler:(button:HTMLButtonElement)=>void)=>{const button=document.querySelector<HTMLButtonElement>('#'+id);if(button)button.onclick=()=>{if(currentControl(button,expectedSave,generation))handler(button);};};
+  for(const view of ['village','journal'] as const){
+    if(TEST_TOOLS_ENABLED){bind('care-demo-enter-'+view,()=>{if(route===view)enterCareDemo();});bind('care-demo-exit-'+view,()=>{if(route===view)exitCareDemo();});}
+  }
+  const actions:[string,PipAction][]=[['feed','feed'],['play','play'],['buy-ribbon','buyRibbon'],['buy-wateringCan','buyWateringCan'],['equip-ribbon','equipRibbon'],['equip-wateringCan','equipWateringCan'],['equip-none','equipNone']];
+  for(const [id,action] of actions)bind('pip-'+id,button=>{
+    if(route!=='journal')return;
+    if(commitCare(button,expectedSave,generation,next=>{const result=preparePipAction(next.coins,next.pip??freshPip(),action);if(!result)return false;next.coins=result.coins;next.pip=result.pip;return true;})){
+      if(action==='feed'||action==='play')reactPip(action);else clearCareReaction();
+      audio.play('reward');renderViews();revealPipCare();
+    }
+  });
+  for(const kind of ['greet','tend'] as const)bind('pip-'+kind,()=>{if(route==='journal'&&careEnvironment()&&pipLevel(save.pip??freshPip())>=(kind==='greet'?2:3)){reactPip(kind);renderViews();revealPipCare();}});
+  bind('grow',button=>{
+    if(route!=='village'||growing)return;
+    if(!commitCare(button,expectedSave,generation,next=>{if(next.stars<2||next.garden>=5)return false;next.stars-=2;next.garden++;return true;}))return;
+    growing=true;audio.play('reward');renderViews(true);notice('planted');
+    const timer=setTimeout(()=>{if(generation!==careGeneration||growthTimer!==timer)return;growthTimer=undefined;growing=false;$('#grow').toggleAttribute('disabled',careStorageBlocked()||save.stars<2||save.garden>=5);},450);
+    growthTimer=timer;
+  });
+}
 function renderViews(grew=false){
   const focused=document.activeElement as HTMLElement|null,focusedId=focused?.id;
   const scroll=Array.from(document.querySelectorAll<HTMLElement>('.view'),view=>({view,top:view.scrollTop,left:view.scrollLeft}));
   $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('chapterMeadow')}</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div><div class="garden-card"><div class="garden-picture"><div class="garden-illustration" role="img" aria-label="${text('gardenImage').replace('{count}',String(save.garden))}">${gardenArt(save.garden,grew)}</div><span class="garden-pill">${icon('flower',17)} ${save.garden} / 5</span></div><h3>${text('garden')}</h3><p class="garden-stage" id="garden-stage" role="status" tabindex="-1">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div><div class="level-picker"><h3>${text('levelSelect')}</h3>${chapterTabs(selectedChapter)}<div class="level-grid" id="chapter-levels" role="tabpanel" aria-labelledby="chapter-${selectedChapter}">${levels.filter(l=>chapterForLevel(l.id).id===selectedChapter).map(l=>`<button data-level="${l.id}" ${l.id>save.highestLevel?'disabled':''} class="level-node ${save.completed.includes(l.id)?'completed':''} ${!testingLevel&&!roundEnded&&l.id===currentLevel?'current':''}" ${!testingLevel&&!roundEnded&&l.id===currentLevel?'aria-current="step"':''} aria-label="${text('level')} ${l.id}${!testingLevel&&!roundEnded&&l.id===currentLevel?' · '+text('previewCurrent'):''}${l.id>save.highestLevel?' · '+text('levelLocked'):save.completed.includes(l.id)?' · '+text('levelCompleted'):''}">${l.id>save.highestLevel?icon('lock',19):l.id}${save.completed.includes(l.id)?`<span>${icon('star',13)}</span>`:''}</button>`).join('')}</div></div>`;
-  $('#journal-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('friendsHeading')}</div><h2>${text('friendsTitle')}</h2><p>${text('friendsDesc')}</p></div><button id="pip-tutorial-help" class="primary guide-help">${text('tutorial')}</button><div class="journal-card"><img src="/assets/pip.png" alt="${text('pip')}" data-alt="pip"/><h3>${text('pip')}</h3><p>${text('pipDesc')}</p><span class="friend-tag">${icon('leaf',15)} ${text('chapterMeadow')}</span></div>`;
-  $('#pip-tutorial-help').onclick=()=>showTutorial('help',$<HTMLButtonElement>('#pip-tutorial-help'));
+  if(careDemo)$('#village-view').innerHTML=$('#village-view').innerHTML.split('<div class="level-picker">')[0];
+  $('#village-view').innerHTML=careDemoPanel('village')+$('#village-view').innerHTML;
+  $('#grow').toggleAttribute('disabled',growing||careStorageBlocked()||save.stars<2||save.garden>=5);
+  $('#journal-view').innerHTML=`${careDemoPanel('journal')}<div class="subview-heading pip-view-heading"><div class="eyebrow">${text('friendsHeading')}</div><h2>${text('friendsTitle')}</h2></div>${pipCareCard()}${!careDemo?`<button id="pip-tutorial-help" class="text-button guide-help">${text('tutorial')}</button>`:''}`;
+  if(!careDemo)$('#pip-tutorial-help').onclick=()=>showTutorial('help',$<HTMLButtonElement>('#pip-tutorial-help'));
   $('#settings-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><div class="storage-card" id="storage-card"><p id="save-status"></p><button id="save-retry" class="text-button" hidden></button><button id="save-reload" class="text-button" hidden></button></div><section class="support-note" aria-labelledby="support-title"><h3 id="support-title">${text('support')}</h3><p id="support-email">doeud1410@gmail.com</p></section><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v${APP_VERSION}</p>`;
   updateSaveStatus(focusedId);
   for(const id of ['#save-retry','#save-reload'])$(id).addEventListener('blur',()=>updateSaveStatus());
-  $('#save-retry').onclick=()=>{retrySave(save);updateSaveStatus();};
-  $('#save-reload').onclick=()=>{if(confirm(text('saveReloadConfirm')))window.location.reload();};
+  const renderedSave=save,renderedGeneration=careGeneration;
+  const renderedControls=new Map(['save-retry','save-reload','music-toggle','sfx-toggle','language','reset'].map(id=>[id,$('#'+id)]));
+  const settingsAction=(id:string)=>!careDemo&&currentControl(renderedControls.get(id)!,renderedSave,renderedGeneration);
+  $('#save-retry').onclick=()=>{if(!settingsAction('save-retry'))return;retrySave(save);updateSaveStatus();};
+  $('#save-reload').onclick=()=>{if(!settingsAction('save-reload'))return;if(confirm(text('saveReloadConfirm')))window.location.reload();};
   bindChapterTabs();
-  $('#grow').onclick=()=>{if(growing||save.stars<2||save.garden>=5)return;growing=true;save.stars-=2;save.garden++;const stored=persist();updateWallet();renderViews(true);audio.play('reward');if(stored)notice('planted');setTimeout(()=>{growing=false;$('#grow').toggleAttribute('disabled',save.stars<2||save.garden>=5);},450);};
+  bindCareControls();
   document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach(button=>button.onclick=()=>showStagePreview(Number(button.dataset.level),'map',button));
-  $('#music-toggle').onclick=()=>{save.music=!save.music;audio.setMusicEnabled(save.music);persist();$('#music-toggle').classList.toggle('on',save.music);$('#music-toggle').setAttribute('aria-checked',String(save.music));};
+  $('#music-toggle').onclick=()=>{if(!settingsAction('music-toggle'))return;save.music=!save.music;audio.setMusicEnabled(save.music);persist();$('#music-toggle').classList.toggle('on',save.music);$('#music-toggle').setAttribute('aria-checked',String(save.music));};
   const help=document.createElement('button');help.id='tutorial-help';help.className='primary guide-help';help.textContent=text('tutorial');help.onclick=()=>showTutorial('help',help);$('#settings-view').append(help);
   if(androidAdEntry){const entry=document.createElement('button');entry.id='test-ad-button';entry.className='text-button';entry.textContent=adCopy(save.language).title;entry.onclick=()=>{void showAdDialog();};$('#settings-view').append(entry);}
   if(androidBillingEntry){const entry=document.createElement('button');entry.id='test-billing-button';entry.className='text-button';entry.textContent=billingCopy(save.language).title;entry.onclick=()=>{void showBillingDialog();};$('#settings-view').append(entry);}
-  $('#sfx-toggle').onclick=()=>{save.sfx=!save.sfx;audio.setSfxEnabled(save.sfx);persist();$('#sfx-toggle').classList.toggle('on',save.sfx);$('#sfx-toggle').setAttribute('aria-checked',String(save.sfx));};
-  $<HTMLSelectElement>('#language').onchange=event=>changeLanguage((event.target as HTMLSelectElement).value==='ko'?'ko':'en');
-  $('#reset').onclick=()=>{if(!confirm(text('resetConfirm')))return;const cleared=clearSave();updateSaveStatus();if(!cleared)return;save=cleared;selectedChapter=1;audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');showTutorial();};
+  $('#sfx-toggle').onclick=()=>{if(!settingsAction('sfx-toggle'))return;save.sfx=!save.sfx;audio.setSfxEnabled(save.sfx);persist();$('#sfx-toggle').classList.toggle('on',save.sfx);$('#sfx-toggle').setAttribute('aria-checked',String(save.sfx));};
+  $<HTMLSelectElement>('#language').onchange=event=>{if(settingsAction('language'))changeLanguage((event.target as HTMLSelectElement).value==='ko'?'ko':'en');};
+  $('#reset').onclick=()=>{if(!settingsAction('reset')||!confirm(text('resetConfirm')))return;const cleared=clearSave();updateSaveStatus();if(!cleared)return;clearCareReaction();careGeneration++;clearTimeout(growthTimer);growthTimer=undefined;growing=false;save=cleared;selectedChapter=1;audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');showTutorial();};
   // DOM 교체 뒤에도 읽던 위치를 유지합니다. 심기 버튼이 비활성이면 갱신된 상태로 초점을 잇습니다.
   if(focusedId&&!focused?.isConnected){
     const replacement=document.querySelector<HTMLElement>('#'+focusedId);
-    const target=focusedId==='grow'&&(replacement as HTMLButtonElement|null)?.disabled?$('#garden-stage'):replacement;
+    const target=focusedId==='grow'&&(replacement as HTMLButtonElement|null)?.disabled?$('#garden-stage')
+      :focusedId.startsWith('pip-')&&(!replacement||(replacement as HTMLButtonElement).disabled)?$('#pip-care-title'):replacement;
     target?.focus({preventScroll:true});
   }
   for(const {view,top,left} of scroll){view.scrollTop=top;view.scrollLeft=left;}
@@ -647,6 +783,7 @@ function changeLanguage(language:'en'|'ko'){
   if(focusedId&&!focused?.isConnected)document.querySelector<HTMLElement>('#'+focusedId)?.focus();
 }
 function switchView(name:string){
+  if(careDemo&&!['village','journal'].includes(name)&&!exitCareDemo(false))return;
   if(stagePreview)return;
   const returnToResult=name==='puzzle'&&roundEnded&&resultShown&&resultWon!==undefined;
   // 광고 취소 등으로 아직 표시할 수 없으면 종료 보드로 이동하지 않고 현재 화면을 유지합니다.
