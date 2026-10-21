@@ -221,3 +221,14 @@ dialog::backdrop,#tutorial-dialog::backdrop{backdrop-filter:none}
  .subview-heading h2,#village-view .subview-heading h2{font-size:23px}
  .result-content h2{font-size:23px}
 }
+/* 낮은 가로 화면에서는 그림 옆에서 정원 상태와 심기 조작을 바로 읽습니다. */
+@media(orientation:landscape) and (max-height:600px){
+ .garden-card{display:grid;grid-template-columns:min(34%,220px) minmax(0,1fr);gap:6px 14px;padding:10px;align-items:start}
+ .garden-picture{grid-column:1;grid-row:1 / span 4;aspect-ratio:auto;overflow:visible;display:grid;justify-items:center;align-self:center}
+ .garden-illustration{height:auto;aspect-ratio:12/7;border-radius:8px;overflow:hidden}
+ .garden-pill{position:static;margin-top:6px}
+ .garden-card h3{grid-column:2;grid-row:1;margin:0}
+ .garden-card .garden-stage{grid-column:2;grid-row:2;margin:0}
+ .garden-card #grow{grid-column:2;grid-row:3;min-width:44px}
+ .garden-card small{grid-column:2;grid-row:4;margin:0;line-height:1.5}
+}
