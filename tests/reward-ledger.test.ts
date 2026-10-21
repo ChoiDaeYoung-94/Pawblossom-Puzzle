@@ -7,6 +7,7 @@ import {fork} from 'node:child_process';
 import {Worker} from 'node:worker_threads';
 import {RewardLedger,type RewardLedgerOptions,type TrustedRewardRound} from '../server/ads/rewardLedger';
 import {policy,epoch,keyEntry,keyResponse,callback,malleate} from './helpers/ssvFixture';
+import {createCallbackOutcomeTrace,receiveCallbackOutcome,callbackOutcomeContext,type CallbackOutcomeTrace} from './helpers/callbackOutcomeDiagnostics';
 const key=new Uint8Array(32).fill(71),owner={ownerId:'synthetic-owner-private',roundId:'synthetic-round-private'};
 const folders:string[]=[],ledgers:RewardLedger[]=[],connections:DatabaseSync[]=[],workers:Worker[]=[];
 const workerUrl=new URL('./helpers/reward-ledger-worker.mjs',import.meta.url);
@@ -30,13 +31,13 @@ async function child(data:ReturnType<typeof input>){
   const output=new Promise<any>((resolve,reject)=>{p.once('message',resolve);p.once('error',reject);p.once('exit',code=>{if(code)reject(new Error('child-failed'));});});
   try{p.send(data);const result=await output;await done;return result;}finally{if(p.exitCode===null){p.kill();await done;}}
 }
-async function concurrent(data:ReturnType<typeof input>[]){
+async function concurrent(data:ReturnType<typeof input>[],trace?:CallbackOutcomeTrace){
   const batch=data.map(value=>new Worker(workerUrl,{workerData:value,execArgv:['--experimental-strip-types']}));workers.push(...batch);
   const outputs:Promise<any>[]=[];
-  const ready=batch.map(worker=>new Promise<void>((resolve,reject)=>{
+  const ready=batch.map((worker,index)=>new Promise<void>((resolve,reject)=>{
     let receive!:(v:any)=>void;
     outputs.push(new Promise(r=>receive=r));
-    worker.on('message',v=>v==='ready'?resolve():receive(v));worker.on('error',reject);
+    worker.on('message',v=>v==='ready'?resolve():receive(trace?receiveCallbackOutcome(v,trace,index):v));worker.on('error',reject);
   }));
   await Promise.all(ready);batch.forEach(w=>w.postMessage('go'));return Promise.all(outputs);
 }
@@ -95,9 +96,10 @@ describe('회차 취소·시간 정책·재시작',()=>{
   it('같은 인스턴스 clock 역행 발급/close 차단',()=>{const {ledger,setNow}=open();claim(ledger);setNow(epoch-1);expect(ledger.issueClaim({...owner,roundId:'other'},policy.adUnits[0])).toEqual(denied('invalid-time'));expect(ledger.closeRound(owner)).toEqual(denied('invalid-time'));});
 });
 describe('원자 저장·동시 worker·오류 비노출',()=>{
-  it('동시 8 worker 동일 callback 신규 보상권 정확히1회',async()=>{
-    const {ledger,path}=open(),c=claim(ledger),raw=query(c);close(ledger);const results=await concurrent(Array.from({length:8},()=>input(path,raw)));
-    expect(results.filter(r=>r.kind==='voucher-recorded'&&r.newGrant).length).toBe(1);expect(results.filter(r=>r.kind==='voucher-recorded'&&!r.newGrant).length).toBe(7);expect(db(path).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n).toBe(1);
+  it('동시 8 worker 동일 callback 신규 보상권 정확히1회',async({task})=>{
+    const trace=task.meta.callbackOutcomeDiagnostic=createCallbackOutcomeTrace(8);
+    const {ledger,path}=open(),c=claim(ledger),raw=query(c);close(ledger);const results=await concurrent(Array.from({length:8},()=>input(path,raw,{diagnostics:true})),trace);
+    expect(results.filter(r=>r.kind==='voucher-recorded'&&r.newGrant).length,callbackOutcomeContext(trace)).toBe(1);expect(results.filter(r=>r.kind==='voucher-recorded'&&!r.newGrant).length,callbackOutcomeContext(trace)).toBe(7);expect(db(path).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n,callbackOutcomeContext(trace)).toBe(1);
   });
   it('동시 다른claim/transaction 같은round 신규1회',async()=>{
     const {ledger,path}=open(),a=claim(ledger),b=claim(ledger),c=claim(ledger);close(ledger);const results=await concurrent([a,b,c].map((c,i)=>input(path,query(c,{transaction_id:String(i+1).repeat(32)}))));
