@@ -1,3 +1,16 @@
+## 최신 통합 APK · 2026-10-21 · #169 오후 UI 개선 전달
+
+사용자의14:34 작업 재개 지시에 따라16시 대기 계획을 취소하고 최신 게임 main `e4429b84c3a8a3186f34d47f1498b398a005fcfd`로 debug APK를 갱신했습니다. 이 소스의 [정확한 main CI39547250064](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39547250064)는 Node22·24 각각37파일2,503개·스토어12개·타입/두 웹 빌드/flags 검사를 통과했습니다. [PR170](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/170)의 목표 미리보기·같은 Scene 이어하기·명시 재시작, [PR172](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/172)의 가로 정원 배치, [PR173](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/173)의 핍 도움말, [PR177](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/177)의 새 보드 준비 후 일회 키보드 초점 복구가 포함됐습니다. 이 전달 기록 PR은 제품 변경이 없는 후속 문서입니다.
+
+- 파일 `Pawblossom-Puzzle-v0.1.7-2026-10-21-e4429b8-debug.apk`, **14,479,084바이트**, SHA256 `eb035dcaf3696a909dde5294cbe8f131c39cd19c4e3e1ff86ae3b0ece952f5bd`입니다. appId `com.choidaeyoung.pawblossompuzzle`, 버전0.1.7/code8·min24/target36을 유지했습니다. 기존 전달본과 같은 v2 인증서 SHA256 `3db1481f54ab024e442493713f4d5dd400b985e4c2a41852b4b389a6e2df47b3`를 확인했습니다. 동일 서명은 실제 단말 업데이트 성공을 뜻하지 않습니다.
+- `npm run android:sync:test` → Gradle `:app:assembleDebug :app:testDebugUnitTest :app:lintDebug` → APK 보존 → `npm run android:sync`로 production 복원을 완료했습니다. Gradle17초/169작업(실행40·UP-TO-DATE129) 성공입니다. **JVM은 UP-TO-DATE로 오전16개(유의미15개) 결과를 재사용**했으며 새 실행으로 세지 않습니다. 오전089 이후 Android/설정/의존성/스크립트 변경0과 결과 XML3개 SHA 동일성을 확인했습니다. `lintAnalyzeDebug`는 실행됐고 unit/androidTest 분석·report는 UP-TO-DATE이며 최종 오류0/기존 경고15개입니다.
+- APK/testing 웹30파일·추가 빈 Capacitor 호환파일2개와 production30파일을 전수 해시 비교했습니다. 두 빌드는 #176 브라우저 검증 동결본과 각각 전수 일치하며 최종 저장소 dist/Android public은 production입니다. testing flags3true/production3false, Google 공식 시험 앱 ID·시험 광고/결제 플러그인·SDK 클래스 포함, MobileAds 자동 초기화 provider와 광고 식별자 관련4권한·실상품 properties 제외를 확인했습니다. 이 정적 포함 확인은 실SDK 광고 표시·결제·복원·환불 성공이 아닙니다.
+- 기존 `doeud1410@gmail.com`의 Pawblossom 테스트 폴더에 [새 APK](https://drive.google.com/file/d/1fnqdNuGH6EB_jax8FvoV2pD6p1TSBFIv/view)와 `SHA256SUMS-2026-10-21-e4429b8.txt`만 추가했습니다. 실제 재다운로드 APK의 크기·SHA가 원본과 일치했습니다. 오전089 APK·기존 자료·공유 범위를 보존하고 테스트 안내 파일은 만들지 않았습니다.
+
+Git 밖 `C:/Users/user/Documents/ChatGPT/Pawblossom-builds/2026-10-21-e4429b8`에 소스 경계·두 sync/Gradle 로그·APK·양 dist·정적 패키지/서명/전수 웹 검증·오전 재사용 XML/lint·Drive 실제 다운로드 검증/깨끗한 폴더 스크린샷을 보존했습니다. `qa/issue-169-final-apk/independent-artifact-review.json`의 독립 읽기 검수는 패키지/해시·production 복원·캐시 경계에 한정하며 Drive 성공을 대신하지 않습니다. Drive는 별도 `drive-delivery.json`과 원본/다운로드 해시로 확인했습니다.
+
+이전 자연 UI 검증(소스13eca6b)의 스테이지1·2 완주→별2/80코인→첫 정원 심기→재접속 유지와 수정 소스의 스테이지3 완주→Enter로4 진입/즉시 방향키·재시작·미리보기 초점 확인은 버전별 근거를 유지합니다. 실패 후 재시도 실화면·실기기/청취·실SDK/Play 구매·복원·환불·스토어 #73은 미검증입니다. 과거 #122 timeout/BUSY/결과 수량 실패는 원인 미확정이며 현재 녹색이나 관측 PR174/175를 해결 근거로 합산하지 않습니다. AAB/공개 배포·콘솔/상품·실키/env·폰 자동 테스트·최종 믹스는 보류합니다. 아래 현재/제출 전 표현과 오전 APK 기록은 당시 이력입니다.
+
 ## 현재 작업 · 2026-10-21 · #176 스테이지 전환 뒤 키보드 초점
 
 기준 main `548b07a33f2ab679a8c68bbacf263f4b9945e899`, 브랜치 `codex/176-board-focus`입니다. 저장·보드 주입 없이 스테이지1·2를 완료하고 첫 꽃밭을 심어 재접속 유지까지 확인하던 중, 결과창의 「다음 스테이지」를 Enter로 선택하면 BODY로 초점이 빠지는 것을 관측했습니다. 결과 다음/재시도와 미리보기 새 시작/재시작에서만 새 Scene 준비 후 보드 초점을 한 번 요청합니다. 다른 회차·화면·modal·비활성·사용자 초점 이동이면 폐기하고 재시도하지 않으며, 같은 DOM에 초점이 남은 경우 focus-visible일 때만 키보드 커서를 준비합니다. 기본 로드/저장 복원·기존 계속/취소·업무/저장/RNG/광고·믹스·버전은 유지합니다.
