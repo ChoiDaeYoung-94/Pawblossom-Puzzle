@@ -6,6 +6,7 @@ import {createHash,createHmac} from 'node:crypto';
 import {DatabaseSync,StatementSync} from 'node:sqlite';
 import {fork} from 'node:child_process';
 import {Worker} from 'node:worker_threads';
+import {performance} from 'node:perf_hooks';
 import {isDeepStrictEqual} from 'node:util';
 import {BoardEngine} from '../src/core/BoardEngine';
 import {RoundLedger,type RoundLedgerOptions,type RoundSnapshot,type RoundCommandRequest} from '../server/game/roundLedger';
@@ -120,7 +121,7 @@ describe('서버 영구 회차·멱등 명령 원장',()=>{
     const privateValue='synthetic-diagnostic-private';const result={kind:privateValue,code:privateValue,snapshot:{privateValue},grant:{privateValue}};
     const row=workerRow(0),returned=receiveWorker({kind:'synthetic-worker-report',result,diagnostic:{phase:privateValue,resultPhase:privateValue,errorPhase:privateValue,errorName:privateValue,errorCode:privateValue,elapsedMs:Infinity,message:privateValue,stack:privateValue,cause:{privateValue},steps:[{phase:privateValue,startedAtMs:NaN,durationMs:Infinity,body:privateValue}],sqliteErrors:[{operation:privateValue,phase:privateValue,errorCode:privateValue,extendedCode:123456789,baseCode:5,sql:privateValue}]}},row);
     expect(returned===result).toBe(true);expect(row.kind).toBe('other');expect(row.code).toBe('other');
-    expect(row.diagnostic).toEqual({phase:'unknown',elapsedMs:0,resultPhase:'unknown',errorPhase:'unknown',errorName:'other',errorCode:'other',steps:[{phase:'unknown',startedAtMs:0,durationMs:null}],sqliteErrors:[{operation:'unknown',site:'unknown',phase:'unknown',errorCode:'other',extendedCode:null,baseCode:null,transactionActive:null,connectionClosed:null}],sqliteErrorsTruncated:false,sqliteHook:{installation:'unknown',restoration:'unknown',installedMethods:0,restoreFailures:0},constructorAttempts:[]});
+    expect(row.diagnostic).toEqual({phase:'unknown',elapsedMs:0,resultPhase:'unknown',errorPhase:'unknown',errorName:'other',errorCode:'other',steps:[{phase:'unknown',startedAtMs:0,durationMs:null}],sqliteErrors:[{operation:'unknown',site:'unknown',phase:'unknown',errorCode:'other',extendedCode:null,baseCode:null,transactionActive:null,connectionClosed:null}],sqliteErrorsTruncated:false,sqliteTransactions:[],sqliteTransactionsTruncated:false,sqliteTransactionObservationFailed:false,sqliteHook:{installation:'unknown',restoration:'unknown',installedMethods:0,restoreFailures:0},constructorAttempts:[]});
     const error=Object.assign(new Error(privateValue),{code:privateValue,cause:{privateValue}});expect(safeError(error)).toEqual({errorName:'Error',errorCode:'other'});
     expect(JSON.stringify(row).includes(privateValue)).toBe(false);expect(Object.keys(row)).not.toContain('result');
     expect(receiveWorker(result,workerRow(1))===result).toBe(true);
@@ -212,6 +213,100 @@ describe('서버 영구 회차·멱등 명령 원장',()=>{
     expect(trace.sqliteErrors[1].transactionActive).toBe(true);expect(trace.sqliteErrorsTruncated).toBe(false);expect(trace.sqliteHook).toEqual({installation:'installed',restoration:'restored',installedMethods:5,restoreFailures:0});
     const projected=workerRow(0);receiveWorker({kind:'synthetic-worker-report',result:{kind:'worker-error'},diagnostic:trace},projected);expect(projected.diagnostic?.sqliteErrors).toEqual(trace.sqliteErrors);
     const safe=JSON.stringify(trace);for(const text of ['BEGIN IMMEDIATE','PRAGMA synchronous=FULL','COMMIT','ROLLBACK','site_probe',location])expect(safe.includes(text)).toBe(false);
+  });
+  it('검사 transaction 호출은 정적3종류만 같은 연결 번호·프로세스 시각·원래 반환/동일 예외로 관측',()=>{
+    const trace=createTrace('round-worker'),first=db(':memory:'),second=db(':memory:'),marker=new Error('synthetic-transaction-private'),sentinel={};
+    const native=vi.spyOn(DatabaseSync.prototype,'exec').mockImplementation(function(this:DatabaseSync,...args:unknown[]){if(args[1]===marker)throw marker;return sentinel as any;});
+    const descriptor=Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'exec');let tick=10;const clock=vi.spyOn(performance,'now').mockImplementation(()=>tick++);
+    try{withSqliteDiagnostics(trace,()=>{
+      trace.phase='round-open';expect((Reflect.apply(DatabaseSync.prototype.exec,first,['BEGIN IMMEDIATE']) as unknown)===sentinel).toBe(true);
+      expect((Reflect.apply(DatabaseSync.prototype.exec,first,['COMMIT']) as unknown)===sentinel).toBe(true);
+      trace.phase='command';expect((Reflect.apply(DatabaseSync.prototype.exec,second,['BEGIN IMMEDIATE']) as unknown)===sentinel).toBe(true);
+      let thrown:unknown;try{Reflect.apply(DatabaseSync.prototype.exec,second,['COMMIT',marker]);}catch(error){thrown=error;}expect(thrown===marker).toBe(true);
+      expect((Reflect.apply(DatabaseSync.prototype.exec,second,['ROLLBACK']) as unknown)===sentinel).toBe(true);
+      const reads=clock.mock.calls.length;
+      for(const input of ['PRAGMA synchronous=FULL','COMMIT;',' BEGIN IMMEDIATE','ROLLBACK\nCOMMIT',new String('COMMIT'),new Proxy({},{get(){throw marker;}})])Reflect.apply(DatabaseSync.prototype.exec,first,[input]);
+      Reflect.apply(DatabaseSync.prototype.exec,null,['COMMIT']);expect(clock.mock.calls.length-reads).toBe(2);
+    });}finally{clock.mockRestore();}
+    expect(native).toHaveBeenCalledTimes(12);expect(native.mock.contexts.slice(0,5)).toEqual([first,first,second,second,second]);expect((native.mock.calls[3] as unknown[])[1]===marker).toBe(true);
+    expect(trace.sqliteTransactions).toEqual([
+      {connectionIndex:1,phase:'round-open',site:'transaction-begin',startedAtProcessMs:10,finishedAtProcessMs:11,outcome:'returned'},
+      {connectionIndex:1,phase:'round-open',site:'transaction-commit',startedAtProcessMs:12,finishedAtProcessMs:13,outcome:'returned'},
+      {connectionIndex:2,phase:'command',site:'transaction-begin',startedAtProcessMs:14,finishedAtProcessMs:15,outcome:'returned'},
+      {connectionIndex:2,phase:'command',site:'transaction-commit',startedAtProcessMs:16,finishedAtProcessMs:17,outcome:'threw'},
+      {connectionIndex:2,phase:'command',site:'transaction-rollback',startedAtProcessMs:18,finishedAtProcessMs:19,outcome:'returned'},
+      {connectionIndex:null,phase:'command',site:'transaction-commit',startedAtProcessMs:20,finishedAtProcessMs:21,outcome:'returned'},
+    ]);
+    expect(trace.sqliteTransactionObservationFailed||trace.sqliteTransactionsTruncated).toBe(false);expect(Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'exec')).toEqual(descriptor);
+    expect(trace.sqliteErrors).toHaveLength(1);expect(JSON.stringify(trace).includes('synthetic-transaction-private')).toBe(false);
+  });
+  it.for(['clock-before','clock-after','clock-invalid','clock-backward','push','row-write'] as const)('검사 transaction 관측 %s 실패도 실제 호출1회·원래 성공/동일 throw·복원 유지',mode=>{
+    const sentinel={},marker=new Error('synthetic-observation-private'),connection=db(':memory:');let nativeThrows=false;
+    const native=vi.spyOn(DatabaseSync.prototype,'exec').mockImplementation(()=>{if(nativeThrows)throw marker;return sentinel as any;}),descriptor=Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'exec');
+    for(const throws of [false,true]){
+      const trace=createTrace('round-worker');nativeThrows=throws;
+      if(mode==='push')vi.spyOn(trace.sqliteTransactions,'push').mockImplementation(()=>{throw marker;});
+      if(mode==='row-write'){const push=trace.sqliteTransactions.push;vi.spyOn(trace.sqliteTransactions,'push').mockImplementation(function(this:unknown,...rows){rows.forEach(Object.freeze);return Reflect.apply(push,this,rows);});}
+      let reads=0;const clock=vi.spyOn(performance,'now').mockImplementation(()=>{reads++;if(mode==='clock-before'||(mode==='clock-after'&&reads===2))throw marker;if(mode==='clock-invalid')return NaN;return mode==='clock-backward'?3-reads:reads;});
+      let returned:unknown,thrown:unknown;const before=native.mock.calls.length;
+      try{try{returned=withSqliteDiagnostics(trace,()=>connection.exec('COMMIT'));}catch(error){thrown=error;}}finally{clock.mockRestore();}
+      expect(throws?thrown===marker&&returned===undefined:returned===sentinel&&thrown===undefined).toBe(true);expect(native.mock.calls.length-before).toBe(1);
+      expect(trace.sqliteTransactionObservationFailed).toBe(true);expect(trace.sqliteErrors).toHaveLength(throws?1:0);expect(Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'exec')).toEqual(descriptor);
+      expect(trace.sqliteHook).toEqual({installation:'installed',restoration:'restored',installedMethods:5,restoreFailures:0});expect(JSON.stringify(trace).includes('synthetic-observation-private')).toBe(false);
+    }
+  });
+  it('검사 transaction은 연결1..8/호출8건 상한 뒤 해제 누락을 잘림으로 표시·위조 필드는 안전 투영',()=>{
+    const trace=createTrace('round-worker'),connections=Array.from({length:9},()=>db(':memory:'));
+    withSqliteDiagnostics(trace,()=>{connections.forEach(connection=>connection.exec('BEGIN IMMEDIATE'));connections[0].exec('ROLLBACK');});
+    expect(trace.sqliteTransactions).toHaveLength(8);expect(trace.sqliteTransactions.map(row=>row.connectionIndex)).toEqual([1,2,3,4,5,6,7,8]);expect(trace.sqliteTransactions.every(row=>row.site==='transaction-begin'&&row.outcome==='returned')).toBe(true);
+    expect(trace.sqliteTransactionsTruncated).toBe(true);expect(trace.sqliteTransactionObservationFailed).toBe(false);expect(trace.sqliteErrors).toEqual([]);
+    const value='synthetic-transaction-projection-private',row=workerRow(0),coerce=vi.fn(()=>value);
+    receiveWorker({kind:'synthetic-worker-report',result:{kind:'command-result'},diagnostic:{sqliteTransactions:[
+      ...[1,8,9,0,-1,1.5,Infinity,NaN,2].map(connectionIndex=>({connectionIndex,phase:value,site:value,startedAtProcessMs:-1,finishedAtProcessMs:Infinity,outcome:value,sql:value,args:[value],database:{value},owner:value,path:value,message:value,stack:value})),
+    ],sqliteTransactionsTruncated:false,sqliteTransactionObservationFailed:value}},row);
+    expect(row.diagnostic?.sqliteTransactions).toHaveLength(8);expect(row.diagnostic?.sqliteTransactions.map(row=>row.connectionIndex)).toEqual([1,8,null,null,null,null,null,null]);
+    expect(row.diagnostic?.sqliteTransactions.every(row=>row.phase==='unknown'&&row.site==='unknown'&&row.outcome==='unknown'&&row.startedAtProcessMs===null&&row.finishedAtProcessMs===null)).toBe(true);
+    expect(row.diagnostic?.sqliteTransactionsTruncated).toBe(true);expect(row.diagnostic?.sqliteTransactionObservationFailed).toBe(false);
+    const projected=workerRow(1);receiveWorker({kind:'synthetic-worker-report',result:{kind:'command-result'},diagnostic:{sqliteTransactions:[
+      {connectionIndex:1,phase:'command',site:'transaction-commit',startedAtProcessMs:2,finishedAtProcessMs:3,outcome:'returned'},
+      {connectionIndex:1,phase:'command',site:'transaction-rollback',startedAtProcessMs:3,finishedAtProcessMs:2,outcome:'threw'},
+      {connectionIndex:1,site:'pragma-synchronous-full',startedAtProcessMs:0,finishedAtProcessMs:1,outcome:{toString:coerce}},
+      {get connectionIndex(){throw new Error(value);},get startedAtProcessMs(){throw new Error(value);}},
+    ],sqliteTransactionObservationFailed:true}},projected);
+    expect(projected.diagnostic?.sqliteTransactions[0]).toEqual({connectionIndex:1,phase:'command',site:'transaction-commit',startedAtProcessMs:2,finishedAtProcessMs:3,outcome:'returned'});
+    expect(projected.diagnostic?.sqliteTransactions[1].finishedAtProcessMs).toBeNull();expect(projected.diagnostic?.sqliteTransactions[2].site).toBe('unknown');expect(projected.diagnostic?.sqliteTransactions[2].outcome).toBe('unknown');expect(projected.diagnostic?.sqliteTransactions[3].connectionIndex).toBeNull();
+    expect(projected.diagnostic?.sqliteTransactionObservationFailed).toBe(true);expect(coerce).not.toHaveBeenCalled();expect(JSON.stringify([row,projected]).includes(value)).toBe(false);
+  });
+  it('검사 transaction 실제 BEGIN 잠금·COMMIT 실패 뒤 ROLLBACK·성공 COMMIT 구간을 실패 그대로 관측',({task})=>{
+    const location=file(),reader=db(location),writer=db(location),trace=task.meta.ledgerDiagnostic=createTrace('round-worker');writer.exec('CREATE TABLE transaction_probe(value TEXT)');writer.exec("INSERT INTO transaction_probe VALUES('synthetic-private-value')");
+    const fail=(connection:DatabaseSync,sql:string)=>{let emitted:unknown,observed:unknown;try{try{connection.exec(sql);}catch(error){emitted=error;throw error;}}catch(error){observed=error;}expect(observed!==undefined&&observed===emitted).toBe(true);};
+    withSqliteDiagnostics(trace,()=>{
+      trace.phase='round-open';writer.exec('BEGIN IMMEDIATE');fail(reader,'BEGIN IMMEDIATE');writer.exec('ROLLBACK');
+      reader.exec('BEGIN');reader.prepare('SELECT * FROM transaction_probe').all();
+      trace.phase='command';writer.exec('BEGIN IMMEDIATE');writer.exec("UPDATE transaction_probe SET value='synthetic-private-changed'");fail(writer,'COMMIT');expect(writer.isTransaction).toBe(true);writer.exec('ROLLBACK');reader.exec('ROLLBACK');
+      expect(writer.prepare('SELECT value FROM transaction_probe').get()?.value).toBe('synthetic-private-value');
+      writer.exec('BEGIN IMMEDIATE');writer.exec('COMMIT');
+    });
+    expect(trace.sqliteTransactions.map(row=>[row.connectionIndex,row.site,row.outcome])).toEqual([[1,'transaction-begin','returned'],[2,'transaction-begin','threw'],[1,'transaction-rollback','returned'],[1,'transaction-begin','returned'],[1,'transaction-commit','threw'],[1,'transaction-rollback','returned'],[2,'transaction-rollback','returned'],[1,'transaction-begin','returned']]);
+    expect(trace.sqliteTransactionsTruncated).toBe(true);expect(trace.sqliteTransactionObservationFailed).toBe(false);
+    expect(trace.sqliteErrors.map(row=>[row.site,row.baseCode,row.transactionActive])).toEqual([['transaction-begin',5,false],['transaction-commit',5,true]]);
+    for(const row of trace.sqliteTransactions){expect(Number.isFinite(row.startedAtProcessMs)&&row.startedAtProcessMs!>=0&&row.finishedAtProcessMs!>=row.startedAtProcessMs!).toBe(true);}
+    const row=workerRow(0);receiveWorker({kind:'synthetic-worker-report',result:{kind:'command-result'},diagnostic:trace},row);expect(row.diagnostic?.sqliteTransactions).toEqual(trace.sqliteTransactions);
+    expect(trace.sqliteHook).toEqual({installation:'installed',restoration:'restored',installedMethods:5,restoreFailures:0});for(const text of ['transaction_probe','synthetic-private',location,'BEGIN IMMEDIATE','ROLLBACK','COMMIT'])expect(JSON.stringify(row).includes(text)).toBe(false);
+  });
+  it('검사 transaction 성공 BEGIN/COMMIT·BEGIN/ROLLBACK의 같은 연결 순서를 유지',()=>{
+    const connection=db(':memory:'),trace=createTrace('round-worker');withSqliteDiagnostics(trace,()=>{connection.exec('BEGIN IMMEDIATE');connection.exec('COMMIT');connection.exec('BEGIN IMMEDIATE');connection.exec('ROLLBACK');});
+    expect(trace.sqliteTransactions.map(row=>[row.connectionIndex,row.site,row.outcome])).toEqual([[1,'transaction-begin','returned'],[1,'transaction-commit','returned'],[1,'transaction-begin','returned'],[1,'transaction-rollback','returned']]);
+    expect(trace.sqliteTransactionsTruncated||trace.sqliteTransactionObservationFailed).toBe(false);expect(trace.sqliteErrors).toEqual([]);
+    trace.sqliteTransactions.slice(1).forEach((row,i)=>expect(row.startedAtProcessMs!>=trace.sqliteTransactions[i].finishedAtProcessMs!).toBe(true));
+  });
+  it('검사 transaction 프로세스 시계는 전용 worker와 공통 기준·trace 상대 시간과 구분',async()=>{
+    const before=performance.now(),origin=performance.timeOrigin;
+    const worker=new Worker("const {parentPort}=require('node:worker_threads');const {performance}=require('node:perf_hooks');parentPort.postMessage({started:performance.now(),origin:performance.timeOrigin});",{eval:true});workers.push(worker);
+    const stamp=await new Promise<{started:number;origin:number}>((resolve,reject)=>{let received=false;worker.once('message',value=>{received=true;resolve(value);});worker.once('error',()=>reject(new Error('transaction-clock-worker-error')));worker.once('exit',()=>{if(!received)reject(new Error('transaction-clock-worker-incomplete'));});});
+    const after=performance.now();expect(Number.isFinite(stamp.started)&&stamp.started>=before&&stamp.started<=after).toBe(true);expect(stamp.origin===origin).toBe(true);
+    const trace=createTrace('round-worker'),connection=db(':memory:');withSqliteDiagnostics(trace,()=>{connection.exec('BEGIN IMMEDIATE');connection.exec('ROLLBACK');});
+    expect(trace.sqliteTransactions.every(row=>row.startedAtProcessMs!>=after&&row.finishedAtProcessMs!>=row.startedAtProcessMs!)).toBe(true);
   });
   it('서버 난수 ID/초기 상태·인증 소유자별 생성·중복은 현재 snapshot',()=>{
     const {ledger,path}=open(),s=start(ledger);expect(s.roundId).toMatch(/^[A-Za-z0-9_-]{43}$/);expect(s.revision).toBe(0);expect(s.state).toMatchObject({moves:26,score:0,status:'active',shuffles:1});

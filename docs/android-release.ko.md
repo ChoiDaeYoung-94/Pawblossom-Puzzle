@@ -1,3 +1,25 @@
+## 현재 작업 · 2026-10-21 · #122 트랜잭션 호출 구간 관측 (커밋 전 검수 대기)
+
+기준 main/origin main `aac84bba5ac2477cbbead77bd08ae0eef2c524e4`, 브랜치 `codex/122-transaction-observation`에서 검사 전용 hook의 정적 BEGIN IMMEDIATE/COMMIT/ROLLBACK 호출만 관측했습니다. **최종 안전15개·관련3파일338개·전체35파일2,390개 한 번·타입/스토어12/에셋/두 웹 빌드 통과, 커밋 전 총괄 독립검수 대기**입니다. 새 커밋/푸시/PR은 없으며 Refs #122로 제출할 예정입니다. 아래 과거 현재/제출 전 표현은 당시 이력입니다.
+
+새 `sqliteTransactions` 행에는 trace 안의 연결 번호1..8, 기존 phase·고정 site, `startedAtProcessMs/finishedAtProcessMs`, `returned/threw/unknown`만 기록합니다. 실제 연결은 WeakMap에만 두며 SQL·인자·경로·owner·키·오류 원문은 저장하지 않습니다. 최대8호출과 `sqliteTransactionsTruncated`, 관측 실패의 `sqliteTransactionObservationFailed`를 추가했고 기존 native8/step8·오류 allowlist·hook 설치/복원은 유지했습니다. 비정상 시각은 null이며 성공/throw와 관측 완전성을 혼동하지 않습니다. 상한 뒤 해제 기록이 없어도 잠금 유지·소유자를 확정하지 않습니다.
+
+기존 native 함수1회·receiver/인자·반환·동일 예외를 보존하고 관측 준비/완료 실패를 각각 삼켜 별도 실패 표시로 남깁니다. 정확한 정적3종 외에는 새 시계 읽기를 하지 않으며, 대상 호출마다 시계 읽기2회와 제한된 기록만 추가합니다. 추가 SQL/native getter/대기/업무 IPC는 없습니다. worker ready/go·생성자/업무 혼합 순서·retry·5초/file2/내부worker/SQLite500ms·업무 assertion·afterEach·제품/서버/CI/의존성은 바꾸지 않았습니다. 관측의 스케줄링 영향이0이라고 보장하지 않습니다.
+
+새 시각은 [Node22](https://nodejs.org/download/release/v22.21.1/docs/api/perf_hooks.html#performancenow)·[Node24](https://nodejs.org/docs/latest-v24.x/api/perf_hooks.html#performancenow)의 performance.now 프로세스 시작 기준입니다. 안전 회귀 안의 전용 worker에서 부모와 같은 timeOrigin 및 부모 호출 전/수신 후 사이의 시각을 확인했으며 원래 round worker는 수정하지 않았습니다. Node24 로컬 확인과 향후 Node22 CI를 구분합니다. 기존 elapsed/step의 trace 상대 시간·메시지 수신 시각을 실행 시각으로 대체하거나 다른 프로세스/파일 worker/CI 실행의 시각을 합치지 않습니다. [SQLite 계약](https://www.sqlite.org/lang_transaction.html)에 따라 성공 BEGIN 반환부터 성공 COMMIT/ROLLBACK 호출까지를 연결별 관측 구간으로 볼 수 있지만 native 내부의 정확한 획득/해제 순간이나 독점 소유자를 입증하지는 못합니다. COMMIT BUSY는 해제로 취급하지 않습니다.
+
+| 검증 | 명령·결과 |
+| --- | --- |
+| 안전/관련 | `npm.cmd test -- tests/server-round-ledger.test.ts -t '검사 진단\|검사 SQLite\|검사 transaction'` · 15통과/기존141필터제외(806ms). `npm.cmd test -- tests/reward-redemption.test.ts tests/server-round-ledger.test.ts tests/reward-ledger.test.ts` · 338/338(18.17초)입니다. JSON reporter도 함께 사용했습니다. |
+| 최종 전체1회 | `npm.cmd test -- --reporter=default --reporter=json --outputFile.json=<QA>/full.json` · 35파일2,390/2,390(50.68초)입니다. |
+| 타입/스토어/빌드 | `npm.cmd run typecheck`, `store:check`, `store:test`12/12, `assets:check`, `build:test`→`build` 성공입니다. testing flags3true→최종 production flags3false, src/dist 서버·진단 마커0건·기준 main production JS/CSS3개 SHA256 동일·diff 통과입니다. |
+
+Node24.21.0/Vitest4.1.11·정식 use-dev-tools.ps1/npm.cmd를 사용했습니다. 최초 타입 검사에서 새 spy 회귀의 tuple 추가 인자(TS2493)·this 표기(TS2683)가 실패해 타입 단언/this 표기만 보완했고 원문 `typecheck-initial.log`를 보존했습니다. 이후 안전/관련/전체/최종 타입은 같은 소스이며 전체/CI를 성공 맞추기로 재실행하지 않았습니다. 기존 빌드 chunk 크기 경고도 보존합니다. 실제 BEGIN 잠금·COMMIT BUSY 후 ROLLBACK/원본 값 보존·성공 BEGIN/COMMIT/ROLLBACK·관측 시계/기록 실패6종·위조 투영·상한 회귀를 포함했습니다.
+
+관련/전체 JSON의74trace295호출·82trace293호출은 모두 허용 필드/연결 번호/유한 비음수 시각·결과를 확인했고 관측 실패0입니다. 각 실행의 잘림5trace는 보상 생성자 회귀 worker1개·잔여행수3개·결정적 상한 회귀1개이며, 해제 누락을 완전한 기록으로 해석하지 않습니다. main39 `39c5f54`의 [CI39407512908](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39407512908) Node22 다른 명령 경쟁 worker0·Node24 동일 특수 탭 worker0/7의 command/transaction-begin/BUSY5·transactionActive=false와 이전 PR155 실패·과거 보상5초 timeout은 그대로 보존합니다. 이번 성공은 당시 잠금 소유자·지속 원인·생성자/업무 중첩 인과의 해결 근거가 아니며 #122를 열어 둡니다.
+
+Git 밖 `C:/Users/user/Documents/ChatGPT/Pawblossom-builds/qa/issue-122-transaction-observation`의 checkpoint.json·소스 LF SHA·단계별 로그/JSON·metadata-review.json·source-build-review.json을 보존합니다. 다음은 총괄 독립검수·승인 뒤 한국어 test 커밋/푸시/PR이며 CI·병합/정리는 총괄 담당입니다. 사용자 조치/질문은 없습니다. 오늘 APK/Drive 전달은 총괄이 일괄 담당하며 이 세션은 Android/APK·계정/상품·폰·최종 믹스·배포를 변경하지 않았습니다.
+
 ## 최신 결정 · 2026-10-21 · #158 모든 광고 제거·오늘 APK 전달
 
 사용자는 광고 제거 구매 시 **전면·보상형을 포함한 모든 광고 제거**를 확정했습니다. 한국 일회성3,000원/미국US$2.50·동일 Play 구매 계정의 비소모성 소유권 복원 범위는 유지합니다. 이전 선택형 보상 광고 유지 제안/범위 미확정 표기는 당시 이력이며 이번 지시가 우선합니다. 구매자에게 광고 시청을 요구하지 않으며 광고 없는 이어하기 횟수/혜택은 별도 결정 전입니다. 무제한 이동·미검증 소유권·자동 보상을 임의 추가하지 않습니다. 현재 시험 브리지/내부 모듈과 실제 상품·구매/환불·운영 SDK/수익화 완료는 구분합니다.
