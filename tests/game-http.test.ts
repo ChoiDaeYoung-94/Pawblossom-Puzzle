@@ -9,6 +9,7 @@ import {createGameHttpAdapter,GAME_HTTP_PATHS as paths,GAME_HTTP_LIMITS as limit
 import {PlayFabSessionAuthenticator} from '../server/auth/playfabSession';
 import {RoundLedger,type RoundSnapshot} from '../server/game/roundLedger';
 import {squareRoundFixture} from './helpers/squareRoundFixture';
+import {levels} from '../src/levels';
 import {CallbackInbox} from '../server/ads/callbackInbox';
 import {callback,epoch,keyResponse,policy} from './helpers/ssvFixture';
 import {createTrace,step,asyncStep,type LedgerTrace} from './helpers/ledgerDiagnostics';
@@ -53,6 +54,13 @@ afterEach(()=>{vi.restoreAllMocks();for(const r of resources.splice(0).reverse()
   for(const dir of dirs.splice(0)){if(!dir.startsWith(join(tmpdir(),'pawblossom-game-http-')))throw new Error('정리 경로 오류');rmSync(dir,{recursive:true,force:true});}});
 
 describe('게임 HTTP·실제 인증/SQLite/SSV 통합',()=>{
+  it('비정형 레벨 생성/조회/무효 교환 응답에 canonical mask와 null을 유지하고 RNG를 숨깁니다',async()=>{
+    const {http}=setup().open(),started=JSON.parse((await http(request('start',{requestId:'mask-http',levelId:32}))).body),snapshot=started.snapshot;
+    expect(snapshot.state.level.mask).toEqual(levels[31].mask);expect(snapshot.state.board[3][3]).toBeNull();expect(snapshot.state.leaves[3][3]).toBe(0);expect(snapshot.state).not.toHaveProperty('rngState');
+    const moved=JSON.parse((await http(request('command',{roundId:snapshot.roundId,operationId:'hole',expectedRevision:0,command:{type:'swap',a:{row:3,col:2},b:{row:3,col:3}}}))).body);
+    expect(moved.outcome).toBe('invalid-swap');expect(moved.snapshot.state).toEqual(snapshot.state);
+    expect(JSON.parse((await http(request('get',{roundId:snapshot.roundId}))).body).snapshot.state).toEqual(snapshot.state);
+  });
   it('5개 경로의 공개 응답·매 요청 인증·명령/생성 멱등성',async()=>{
     const f=setup(),{http}=f.open();expect(f.transport).not.toHaveBeenCalled();
     const start=await http(request('start',{requestId:'http-game',levelId:1}));expect(start.status).toBe(200);

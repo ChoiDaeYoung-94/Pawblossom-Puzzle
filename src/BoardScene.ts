@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { BoardEngine, type Position, type Tile, type ResolveStep, type LeafPile, type BoardSnapshot } from './core';
+import { BoardEngine, type Position, type Tile, type Cell, type BoardMask, type ResolveStep, type LeafPile, type BoardSnapshot } from './core';
 import type { AudioManager } from './audio/AudioManager';
 import { BoardEffects } from './BoardEffects';
 import { reducedMotion } from './reducedMotion';
@@ -11,7 +11,7 @@ interface Hooks { audio: AudioManager; onStart:()=>void; onReady?:()=>void; onBo
 const CELL = 56, PAD = 16;
 export class BoardScene extends Phaser.Scene {
   engine: BoardEngine;
-  private pieces: Phaser.GameObjects.Container[][] = [];
+  private pieces: (Phaser.GameObjects.Container|null)[][] = [];
   private selected?: Position;
   private down?: {pos:Position,x:number,y:number,pointerId:number,downTime:number};
   private busy = false;
@@ -27,7 +27,7 @@ export class BoardScene extends Phaser.Scene {
   private hintMark?:Phaser.GameObjects.Graphics;
   private hintPieces:Phaser.GameObjects.Container[]=[];
   private motionReduced=reducedMotion();
-  constructor(hooks: Hooks, snapshot?:BoardSnapshot) {super('Board');this.hooks=hooks;this.engine=new BoardEngine(8,8,Math.random,snapshot);this.effects=new BoardEffects(this);}
+  constructor(hooks: Hooks, snapshot?:BoardSnapshot, mask?:BoardMask) {super('Board');this.hooks=hooks;this.engine=new BoardEngine(8,8,Math.random,snapshot,undefined,mask);this.effects=new BoardEffects(this);}
   configureLeaves(piles:LeafPile[]){this.engine.setLeaves(piles);}
   preload() {
     for(const name of tileNames)if(!this.textures.exists(name))this.load.svg(name,`/assets/tiles-v2/${name}.svg`,{width:100,height:100});
@@ -40,6 +40,7 @@ export class BoardScene extends Phaser.Scene {
     const g=this.add.graphics();
     g.fillStyle(0xb9cdb5,1);g.fillRoundedRect(6,6,468,468,24);
     for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+      if(!this.engine.isActive({row:r,col:c}))continue;
       g.fillStyle((r+c)%2?0xe7eee0:0xf1f3e7,1);g.fillRoundedRect(PAD+c*CELL+2,PAD+r*CELL+2,52,52,11);
     }
     this.paint(this.engine.board);
@@ -100,7 +101,7 @@ export class BoardScene extends Phaser.Scene {
       tile:tile?{...tile}:undefined,layers:pos?this.engine.leaves[pos.row][pos.col]:0,selected:this.selected?{...this.selected}:undefined};
   }
   private changed(){this.hooks.onBoardState?.();}
-  focusKeyboard(){if(!this.canInteract())return;this.syncMotion();this.cursor??={row:0,col:0};this.drawCursor();this.changed();}
+  focusKeyboard(){if(!this.canInteract())return;this.syncMotion();this.cursor??=this.engine.mask.flatMap((line,row)=>line.flatMap((active,col)=>active?[{row,col}]:[]))[0];this.drawCursor();this.changed();}
   hideKeyboardCursor(){this.cursor=undefined;this.cursorMark?.clear();this.changed();}
   cancelInput(){
     this.down=undefined;this.hideKeyboardCursor();this.clearHint();this.clearSelection();
@@ -114,7 +115,11 @@ export class BoardScene extends Phaser.Scene {
     const delta=key==='ArrowUp'?[-1,0]:key==='ArrowDown'?[1,0]:key==='ArrowLeft'?[0,-1]:key==='ArrowRight'?[0,1]:undefined;
     if(!delta)return false;
     this.down=undefined;
-    this.cursor={row:Math.max(0,Math.min(this.engine.rows-1,this.cursor.row+delta[0])),col:Math.max(0,Math.min(this.engine.cols-1,this.cursor.col+delta[1]))};
+    let next={row:this.cursor.row+delta[0],col:this.cursor.col+delta[1]};
+    while(next.row>=0&&next.row<this.engine.rows&&next.col>=0&&next.col<this.engine.cols){
+      if(this.engine.isActive(next)){this.cursor=next;break;}
+      next={row:next.row+delta[0],col:next.col+delta[1]};
+    }
     this.drawCursor();this.changed();return true;
   }
   private drawCursor(){
@@ -128,7 +133,7 @@ export class BoardScene extends Phaser.Scene {
   }
   private position(x:number,y:number): Position|undefined {
     const col=Math.floor((x-PAD)/CELL),row=Math.floor((y-PAD)/CELL);
-    return row>=0&&row<8&&col>=0&&col<8?{row,col}:undefined;
+    return this.engine.isActive({row,col})?{row,col}:undefined;
   }
   private point(p:Position) {return {x:PAD+p.col*CELL+CELL/2,y:PAD+p.row*CELL+CELL/2};}
   private restorePiece(pos:Position){
@@ -145,7 +150,7 @@ export class BoardScene extends Phaser.Scene {
   }
   private drawSelection(reduced:boolean){
     if(!this.selected)return;
-    if(!reduced){this.pieces[this.selected.row][this.selected.col].setScale(1.12);return;}
+    if(!reduced){this.pieces[this.selected.row][this.selected.col]!.setScale(1.12);return;}
     const {x,y}=this.point(this.selected);
     const g=(this.selectionMark??=this.add.graphics().setDepth(21).setName('board-selection')).clear();
     g.lineStyle(5,0xfffdf5);g.strokeRoundedRect(x-21,y-21,42,42,7);
@@ -198,9 +203,9 @@ export class BoardScene extends Phaser.Scene {
       }
       return item;
   }
-  private paint(board:Tile[][]) {
-    this.pieces.flat().forEach(p=>p.destroy());
-    this.pieces=board.map((row,r)=>row.map((tile,c)=>this.makePiece(tile,{row:r,col:c})));
+  private paint(board:Cell[][]) {
+    this.pieces.flat().forEach(p=>p?.destroy());
+    this.pieces=board.map((row,r)=>row.map((tile,c)=>tile?this.makePiece(tile,{row:r,col:c}):null));
   }
   private paintLeaves(leaves:number[][]){
     this.leafObjects.forEach(item=>item.destroy());this.leafObjects=[];
@@ -225,31 +230,26 @@ export class BoardScene extends Phaser.Scene {
   /** 사라진 칸만 보충하고 남은 블록의 객체와 세로 순서를 유지합니다. */
   private drop(step:ResolveStep) {
     const reduced=this.syncMotion();
-    const removed=new Set(step.removed.map(p=>p.row*this.engine.cols+p.col));
-    step.removed.forEach(p=>this.pieces[p.row][p.col].destroy());
+    step.removed.forEach(p=>this.pieces[p.row][p.col]?.destroy());
     step.created?.forEach(p=>{
-      this.pieces[p.row][p.col].destroy();this.pieces[p.row][p.col]=this.makePiece(p.tile,p);
+      this.pieces[p.row][p.col]?.destroy();this.pieces[p.row][p.col]=this.makePiece(p.tile,p);
     });
-    const next:Phaser.GameObjects.Container[][]=Array.from({length:this.engine.rows},()=>[]);
-    for(let col=0;col<this.engine.cols;col++){
-      const survivors=this.pieces.map(row=>row[col]).filter((_,row)=>!removed.has(row*this.engine.cols+col));
-      const missing=this.engine.rows-survivors.length;
-      for(let row=0;row<this.engine.rows;row++){
-        const pos={row,col},point=this.point(pos);
-        const item=row<missing?this.makePiece(step.after[row][col],reduced?pos:{row:row-missing,col}):survivors[row-missing];
-        next[row][col]=item;
-        if(reduced)item.setPosition(point.x,point.y);
-        else if(item.y!==point.y)this.tweens.add({targets:item,y:point.y,duration:280,ease:'Cubic.easeIn'});
-      }
+    const next:(Phaser.GameObjects.Container|null)[][]=this.engine.mask.map(line=>line.map(()=>null));
+    for(const fall of step.falls??[]){
+      const point=this.point(fall.to),tile=step.after[fall.to.row][fall.to.col]!;
+      const item=fall.from?this.pieces[fall.from.row][fall.from.col]!:this.makePiece(tile,reduced?fall.to:{row:fall.startRow,col:fall.to.col});
+      next[fall.to.row][fall.to.col]=item;
+      if(reduced)item.setPosition(point.x,point.y);
+      else if(item.y!==point.y)this.tweens.add({targets:item,y:point.y,duration:280,ease:'Cubic.easeIn'});
     }
     this.pieces=next;
   }
   private tap(pos:Position) {
-    if(!this.canInteract())return;
+    if(!this.canInteract()||!this.engine.isActive(pos))return;
     const reduced=this.syncMotion();
     this.resetHint();this.hooks.audio.play('tap');
     if(this.selected&&Math.abs(pos.row-this.selected.row)+Math.abs(pos.col-this.selected.col)===1){void this.attempt(this.selected,pos);return;}
-    if(this.engine.board[pos.row][pos.col].special){void this.attempt(pos);return;}
+    if(this.engine.board[pos.row][pos.col]!.special){void this.attempt(pos);return;}
     this.clearSelection();this.selected=pos;this.drawSelection(reduced);
     if(!reduced)this.tweens.add({targets:this.pieces[pos.row][pos.col],y:this.point(pos).y-3,duration:180,yoyo:true,repeat:1});
     this.changed();
@@ -280,12 +280,12 @@ export class BoardScene extends Phaser.Scene {
   }
   private wait(ms:number){return new Promise<void>(resolve=>this.time.delayedCall(ms,()=>resolve()));}
   private async attempt(a:Position,b?:Position) {
-    if(!this.canInteract())return;
+    if(!this.canInteract()||!this.engine.isActive(a)||(b&&!this.engine.isActive(b)))return;
     const reduced=this.syncMotion();this.clearHint();
     this.down=undefined;
     this.busy=true;this.stopHintTimer();this.clearSelection();this.hooks.onStart();
-    this.pieces.forEach((row,r)=>row.forEach((item,c)=>{this.tweens.killTweensOf(item);item.setScale(1);item.setPosition(this.point({row:r,col:c}).x,this.point({row:r,col:c}).y);}));
-    const x=this.pieces[a.row][a.col],y=b?this.pieces[b.row][b.col]:undefined;
+    this.pieces.forEach((row,r)=>row.forEach((item,c)=>{if(!item)return;this.tweens.killTweensOf(item);item.setScale(1);item.setPosition(this.point({row:r,col:c}).x,this.point({row:r,col:c}).y);}));
+    const x=this.pieces[a.row][a.col]!,y=b?this.pieces[b.row][b.col]:undefined;
     const result=b?this.engine.swap(a,b):this.engine.activate(a);
     this.hooks.audio.play(result.valid?'swap':'invalid');
     if(b){
@@ -321,7 +321,7 @@ export class BoardScene extends Phaser.Scene {
         const reducedRemoval=this.syncMotion();
         // 동기 엔진의 최종 보드 대신 현재 제거 단계의 실제 데이터만 복사합니다.
         this.hooks.onResolveVisual?.({cascade:i+1,
-          removed:step.removed.map(p=>({...this.point(p),kind:step.before[p.row][p.col].kind})),
+          removed:step.removed.map(p=>({...this.point(p),kind:step.before[p.row][p.col]!.kind})),
           clearedLeaves:(step.leaves?.hits??[]).filter(p=>p.after===0).map(p=>this.point(p)),
           specialActivated:Boolean(step.effects?.length),specialCreated:Boolean(step.created?.length)});
         step.removed.forEach(p=>{
@@ -374,7 +374,7 @@ export class BoardScene extends Phaser.Scene {
         g.lineStyle(3,0x294f40);
         for(const p of [a,b]){const {x,y}=this.point(p);g.strokeRoundedRect(x-23,y-23,46,46,8);g.lineBetween(x-5,y+18,x+5,y+18);}
         const start=this.point(a),end=this.point(b);g.lineBetween(start.x,start.y,end.x,end.y);
-      }else {this.hintPieces=[this.pieces[a.row][a.col],this.pieces[b.row][b.col]];this.tweens.add({targets:this.hintPieces,scale:1.1,duration:450,yoyo:true,repeat:1,ease:'Sine.easeInOut'});}
+      }else {this.hintPieces=[this.pieces[a.row][a.col]!,this.pieces[b.row][b.col]!];this.tweens.add({targets:this.hintPieces,scale:1.1,duration:450,yoyo:true,repeat:1,ease:'Sine.easeInOut'});}
     }
   }
 }

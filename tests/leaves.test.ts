@@ -22,7 +22,7 @@ describe('고정 낙엽 바닥층',()=>{
   });
   it.each([['row',3,5],['column',5,3],['bomb',4,4],['rainbow',0,3]] as [Special,number,number][])
   ('%s 직접 효과는 두 겹 더미도 한 번에 치웁니다',(special,row,col)=>{
-    const engine=fixture();engine.board[3][3].special=special;engine.setLeaves([{row,col,layers:2}]);
+    const engine=fixture();engine.board[3][3]!.special=special;engine.setLeaves([{row,col,layers:2}]);
     const result=engine.activate({row:3,col:3});
     expect(result.steps[0].leaves?.hits).toEqual([{row,col,before:2,after:0}]);
     expect(result.leavesCleared).toBe(1);expect(engine.remainingLeaves()).toBe(0);

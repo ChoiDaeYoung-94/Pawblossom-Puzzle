@@ -71,17 +71,17 @@ describe('BoardEngine', () => {
   it('rainbow 교환은 상대 색만 지우고 수집량은 실제 제거 수와 일치합니다', () => {
     const engine = fixture();
     set(engine, 0, 0, 0, 'rainbow'); set(engine, 0, 1, 1);
-    const targetCount = engine.board.flat().filter(tile => tile.kind === 1).length;
+    const targetCount = engine.board.flat().filter(tile => tile!.kind === 1).length;
     const result = engine.swap({ row: 0, col: 0 }, { row: 0, col: 1 });
     expect(result.steps[0].removed).toHaveLength(targetCount + 1);
     const counts = [0, 0, 0, 0, 0, 0];
-    result.steps.forEach(step => step.removed.forEach(p => counts[step.before[p.row][p.col].kind]++));
+    result.steps.forEach(step => step.removed.forEach(p => counts[step.before[p.row][p.col]!.kind]++));
     expect(result.collected).toEqual(counts);
     expect(result.score).toBe(result.steps.reduce((total, step, i) => total + step.removed.length * 10 * (i + 1), 0));
     expect(engine.findMatches()).toEqual([]);
     expect(engine.hasMoves()).toBe(true);
     const snapshot = JSON.stringify(result.steps);
-    engine.board[0][0].kind = 5;
+    engine.board[0][0]!.kind = 5;
     expect(JSON.stringify(result.steps)).toBe(snapshot);
   });
   it('rainbow 두 개는 전체 보드를 한 번씩 제거합니다', () => {
@@ -106,7 +106,7 @@ describe('BoardEngine', () => {
   it('셔플 결과는 매치 없이 이동 가능하고 정상 구성의 타일을 보존합니다', () => {
     const engine = fixture();
     expect(engine.hasMoves()).toBe(false);
-    const signature = () => engine.board.flat().map(tile => `${tile.kind}:${tile.special ?? ''}`).sort();
+    const signature = () => engine.board.flat().map(tile => `${tile!.kind}:${tile!.special ?? ''}`).sort();
     set(engine, 0, 0, 0, 'bomb');
     const before = signature();
     expect(engine.hasMoves()).toBe(true); // 특수 블록은 매치 없이 사용할 수 있습니다.
@@ -178,7 +178,7 @@ describe('BoardEngine', () => {
     set(engine, 0, 0, 0, 'rainbow'); set(engine, 0, 1, 1, 'row');
     const result = engine.swap({ row: 0, col: 0 }, { row: 0, col: 1 });
     expect(result.steps[0].removed).toHaveLength(64);
-    expect(result.steps[0].effects?.some(p=>p.special==='row'&&!result.steps[0].before[p.row][p.col].special)).toBe(true);
+    expect(result.steps[0].effects?.some(p=>p.special==='row'&&!result.steps[0].before[p.row][p.col]!.special)).toBe(true);
   });
   it('상수 난수의 보충도 연쇄를 종료합니다', () => {
     const engine = new BoardEngine(3, 3, () => 0);
@@ -202,7 +202,7 @@ describe('BoardEngine', () => {
             expect(engine.findMatches()).toEqual([]);
             expect(engine.hasMoves()).toBe(true);
             expect(engine.board.flat()).toHaveLength(64);
-            expect(engine.board.flat().every(tile => tile.kind >= 0 && tile.kind <= 5)).toBe(true);
+            expect(engine.board.flat().every(tile => tile!.kind >= 0 && tile!.kind <= 5)).toBe(true);
             played = true;
             break;
           }

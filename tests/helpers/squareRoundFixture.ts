@@ -7,7 +7,7 @@ import {RoundLedger,type RoundSnapshot} from '../../server/game/roundLedger';
 import {startState,type Command} from '../../server/game/roundState';
 import {BoardEngine} from '../../src/core';
 
-/** 현재 V2 엔진으로 새 상태·명령 영수증을 만듭니다. 옛 DB의 해시/상태를 덮어 호환을 가장하지 않습니다.
+/** 현재 mask 지원 V2 엔진으로 새 상태·명령 영수증을 만듭니다. 옛 DB의 해시/상태를 덮어 호환을 가장하지 않습니다.
  * 이전 보상 voucher와 결합할 합성 회차 ID만 재사용하고, 보드·RNG·점수·명령은 새로 계산합니다. */
 export function squareRoundFixture(legacy:any,key:Uint8Array,owner:{ownerId:string},epoch:number){
   const directory=mkdtempSync(join(tmpdir(),'pawblossom-square-fixture-')),path=join(directory,'round.sqlite');
@@ -37,9 +37,9 @@ export function squareRoundFixture(legacy:any,key:Uint8Array,owner:{ownerId:stri
           [engine.board[a.row][a.col],engine.board[b.row][b.col]]=[y,x];
           let score=0;
           try{
-            const matched=engine.findMatches();score=matched.length+(x.special||y.special?10_000:0);
+            const matched=engine.findMatches();score=matched.length+(x!.special||y!.special?10_000:0);
             for(const p of matched){
-              if(snapshot.state.level.goals.some(g=>g.kind===engine.board[p.row][p.col].kind))score+=100;
+              if(snapshot.state.level.goals.some(g=>g.kind===engine.board[p.row][p.col]!.kind))score+=100;
               for(const [dr,dc] of [[0,0],[-1,0],[1,0],[0,-1],[0,1]])if(engine.leaves[p.row+dr]?.[p.col+dc])score+=1000;
             }
           }finally{[engine.board[a.row][a.col],engine.board[b.row][b.col]]=[x,y];}

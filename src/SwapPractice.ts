@@ -14,7 +14,7 @@ export class SwapPractice {
     this.engine.board=(square?[[0,0,1],[0,2,0],[3,4,5]]:[[0,0,1],[2,3,0],[4,2,5]]).map(row=>row.map(kind=>({kind})));
   }
   get completed(){return Boolean(this.result?.valid);}
-  get board():Tile[][] {return this.result?.steps[0].before??this.engine.board;}
+  get board():Tile[][] {return (this.result?.steps[0].before??this.engine.board).map(row=>row.map(tile=>({...tile!})));}
   isTarget(p:Position){return this.targets.some(target=>same(target,p));}
   select(p:Position):boolean {
     if(this.completed||!this.isTarget(p))return false;

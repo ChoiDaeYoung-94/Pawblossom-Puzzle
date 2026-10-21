@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import ts from 'typescript';
 import packageInfo from '../package.json';
 import {APP_VERSION} from '../src/appVersion';
-import { BoardEngine, seededRng, type BoardSnapshot } from '../src/core';
+import { BoardEngine, seededRng, type BoardMask, type BoardSnapshot } from '../src/core';
 import {TestAdsController,adCopy,type TestAdsBridge,type AdSnapshot,type AdFormat} from '../src/testAds';
 import {TestBillingController,billingCopy,type TestBillingBridge,type BillingSnapshot} from '../src/testBilling';
 import {bindPracticeBoard} from '../src/bindPracticeInputs';
@@ -89,7 +89,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   class SceneStub {
     engine:BoardEngine;
     stopped=false;
-    constructor(public hooks: { onMove(items: number[], points: number): void; onReady():void; onNotice(key:string):void },snapshot?:BoardSnapshot) {this.engine=new BoardEngine(8,8,seededRng(42),snapshot);}
+    constructor(public hooks: { onMove(items: number[], points: number): void; onReady():void; onNotice(key:string):void },snapshot?:BoardSnapshot,mask?:BoardMask) {this.engine=new BoardEngine(8,8,seededRng(42),snapshot,undefined,mask);}
     configureLeaves(piles:Parameters<BoardEngine['setLeaves']>[0]) {this.engine.setLeaves(piles);}
     shuffle(){this.engine.shuffle();return true;}
     snapshot(){return cloneSnapshot({board:this.engine.board,leaves:this.engine.leaves,ruleVersion:this.engine.ruleVersion});}
@@ -158,8 +158,8 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
       createElement: () => {const created=new ElementStub('button');created.hidden=false;return created;},
       querySelector:(selector:string)=>selector==='dialog[open]'?null:element(selector),
       querySelectorAll: (selector: string) => selector === '[data-test-level]'
-        ? Array.from({length:30},(_,i)=>{const button=element(`#test-stage-${i+1}`);button.dataset.testLevel=String(i+1);return button;}) : selector === '[data-chapter]' || selector === '[data-test-chapter]'
-        ? Array.from({length:3},(_,i)=>{const test=selector.includes('test-');const button=element(`#${test?'test-':''}chapter-${i+1}`);button.dataset[test?'testChapter':'chapter']=String(i+1);return button;}) : selector === '#practice-board button'
+        ? Array.from({length:35},(_,i)=>{const button=element(`#test-stage-${i+1}`);button.dataset.testLevel=String(i+1);return button;}) : selector === '[data-chapter]' || selector === '[data-test-chapter]'
+        ? Array.from({length:4},(_,i)=>{const test=selector.includes('test-');const button=element(`#${test?'test-':''}chapter-${i+1}`);button.dataset[test?'testChapter':'chapter']=String(i+1);return button;}) : selector === '#practice-board button'
         ? Array.from({length:9},(_,i)=>{const button=element(`#practice-cell-${Math.floor(i/3)}-${i%3}`);button.dataset={row:String(Math.floor(i/3)),col:String(i%3)};return button;}) : selector === '.view'
         ? ['puzzle', 'village', 'journal', 'settings'].map(name => element(`#${name}-view`)) : [],
       documentElement: {}, hidden:false, addEventListener:(name:string,callback:()=>void)=>{documentEvents[name]=callback;},
@@ -920,7 +920,7 @@ describe('종료된 회차의 명시적 퍼즐 복귀',()=>{
     }
     expect(focus).toBe(3);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('audio.plays')).toEqual(sounds);expect(h.resultArtCalls()).toBe(art);
     expect(h.run('scene')).toBe(scene);expect(h.run('scene.engine')).toBe(engine);expect(h.run('round')).toBe(round);expect(h.element('#result-dialog').innerHTML).toBe(html);expect(h.element('#result-next').onclick).toBe(next);
-    h.element('#result-next').onclick();expect(h.run('currentLevel')).toBe(won?Math.min(30,level+1):level);expect(h.run('testingLevel')).toBe(test);expect(h.element('#result-dialog').open).toBe(false);
+    h.element('#result-next').onclick();expect(h.run('currentLevel')).toBe(won?Math.min(35,level+1):level);expect(h.run('testingLevel')).toBe(test);expect(h.element('#result-dialog').open).toBe(false);
   });
   it.each([true,false])('Escape로 닫은 결과 won=%s도 명시적으로 돌아올 수 있습니다',won=>{
     const h=ended(false,won);h.element('#result-dialog').listeners.cancel({preventDefault(){}});expect(h.run('route')).toBe('village');
@@ -1329,7 +1329,7 @@ describe('첫 플레이 안내', () => {
 });
 
 
-describe('30스테이지 진행과 선택 묶음',()=>{
+describe('35스테이지 진행과 선택 묶음',()=>{
   it('10번 완료는 11번을 해제하고 마지막 완료 안내를 표시하지 않습니다',()=>{
     const app=mainHarness();app.run('startLevel(10);finish(true)');
     expect(app.stored().highestLevel).toBe(11);
@@ -1337,11 +1337,11 @@ describe('30스테이지 진행과 선택 묶음',()=>{
     app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(11);
     expect(app.element('#chapter-name').textContent).toContain('Flower Path');
   });
-  it('30번 완료는 31번을 열지 않으며 재플레이 보상을 중복 지급하지 않습니다',()=>{
-    const app=mainHarness();app.run('startLevel(30);finish(true)');
-    expect(app.stored().highestLevel).toBe(30);
-    expect(app.element('#result-dialog').innerHTML).toContain('All 30 prototype levels');
-    app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(30);
+  it('35번 완료는 범위를 넘지 않으며 재플레이 보상을 중복 지급하지 않습니다',()=>{
+    const app=mainHarness();app.run('startLevel(35);finish(true)');
+    expect(app.stored().highestLevel).toBe(35);
+    expect(app.element('#result-dialog').innerHTML).toContain('All 35 prototype levels');
+    app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(35);
     const before=app.stored();app.run('finish(true)');expect(app.stored()).toEqual({...before,inProgress:undefined});
   });
   it('일반 선택 묶음은 잠금을 유지하고 테스트 30번은 진행 기록을 바꾸지 않습니다',()=>{
@@ -1662,7 +1662,7 @@ describe('열린 화면의 언어 변경은 진행·결과 처리를 보존합�
     {id:2,won:true,test:false,replay:false,title:'win',description:'winDesc'},
     {id:1,won:true,test:false,replay:true,title:'win',description:'replayDesc'},
     {id:2,won:false,test:false,replay:false,title:'lose',description:'loseDesc'},
-    {id:30,won:true,test:false,replay:false,title:'complete',description:'completeDesc'},
+    {id:35,won:true,test:false,replay:false,title:'complete',description:'completeDesc'},
     {id:30,won:true,test:true,replay:false,title:'win',description:'testResultDesc'},
     {id:30,won:false,test:true,replay:false,title:'lose',description:'testResultDesc'},
   ])('$id번 성공=$won 시험=$test 재완료=$replay 결과 문구만 바꿉니다',({id,won,test,title,description})=>{
@@ -1671,7 +1671,7 @@ describe('열린 화면의 언어 변경은 진행·결과 처리를 보존합�
     const scene=app.run('scene'),dialog=app.element('#result-dialog'),html=dialog.innerHTML,next=app.element('#result-next').onclick,home=app.element('#result-home').onclick;
     const sounds=app.run('audio.plays.slice()'),art=app.resultArtCalls();
     app.run("document.activeElement=document.querySelector('#result-next');changeLanguage('ko')");
-    expect(app.element('#result-title').textContent).toBe(t('ko',title as TextKey));expect(app.element('#result-description').textContent).toBe(t('ko',description as TextKey).replace('{count}','30'));
+    expect(app.element('#result-title').textContent).toBe(t('ko',title as TextKey));expect(app.element('#result-description').textContent).toBe(t('ko',description as TextKey).replace('{count}','35'));
     expect(dialog.innerHTML).toBe(html);expect(dialog.open).toBe(true);
     expect(app.element('#result-next').onclick).toBe(next);expect(app.element('#result-home').onclick).toBe(home);
     expect(app.run("document.activeElement===document.querySelector('#result-next')")).toBe(true);
@@ -1774,6 +1774,34 @@ describe('회차 복원 안내의 표시 수명',()=>{
   });
 });
 
+describe('새 mask 챕터와 이전 완료 진행',()=>{
+  it('30 완료는 31을 열고 재플레이는 무보상이며 새 판·재로드의 null 칸을 유지합니다',()=>{
+    const app=mainHarness();app.run('startLevel(30);finish(true)');expect(app.stored().highestLevel).toBe(31);
+    const wallet=app.run('JSON.stringify({stars:save.stars,coins:save.coins})');app.run('startLevel(30);finish(true)');expect(app.run('JSON.stringify({stars:save.stars,coins:save.coins})')).toBe(wallet);
+    app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(31);expect(app.element('#chapter-name').textContent).toContain('Pond Trail');
+    expect(app.stored().inProgress.board[0][0]).toBeNull();const old=app.stored();const resumed=mainHarness(false,false,false,false,old);expect(resumed.stored()).toEqual(old);
+    app.run('startLevel(34);finish(true)');expect(app.stored().highestLevel).toBe(35);
+  });
+  it('새 테스트 묶음은 비정형·빈칸을 표시하고 본판 저장을 보존합니다',()=>{
+    const app=mainHarness(false,false,true),before=app.stored();app.run('showTestPicker()');app.element('#test-chapter-4').onclick();
+    expect(app.element('#test-level-dialog').innerHTML).toContain('data-test-level="35"');expect(app.element('#test-level-dialog').innerHTML).toContain('Shaped board · empty spaces');
+    app.element('#test-stage-32').onclick();expect(app.run('scene.engine.board[3][3]')).toBeNull();expect(app.element('#board-hint-text').textContent).toContain('Tiles fall within each section.');
+    expect(app.stored()).toEqual(before);
+  });
+});
+
+describe('비정형 보드의 짧은 플레이 안내와 가로 화면 높이',()=>{
+  it.each(['ko','en'] as const)('%s 실플레이 안내는 상세 preview·기본 hint를 중복하지 않으며 언어/키보드 도움말과 저장을 유지합니다',language=>{
+    const app=mainHarness(false,false,true);app.run(`startLevel(33,true);changeLanguage('${language}')`);const before=app.disk();
+    expect(app.element('#board-hint-text').textContent).toBe(t(language,'testRound')+' · '+t(language,'maskPlayHint'));
+    expect(app.element('#board-hint-text').textContent).not.toContain(t(language,'maskHint'));
+    expect(app.element('#board-hint-text').textContent).not.toContain(t(language,'hint'));
+    expect(app.element('#board-keyboard-help').textContent).toBe(t(language,'boardKeyboardHelp'));
+    app.run("save.highestLevel=33;switchView('village');showStagePreview(33,'map',document.querySelector('#settings-button'))");
+    expect(app.run('previewDialog.innerHTML')).toContain(t(language,'maskHint'));
+    expect(app.disk()).toEqual(before);
+  });
+});
 describe('회차 도움 원자성과 검증된 시험 구매 혜택',()=>{
   const state=(h:ReturnType<typeof mainHarness>)=>h.run('JSON.stringify({save,moves,shuffles,paidShuffleUsed,continueUsed,roundEnded,board:scene.engine.board,leaves:scene.engine.leaves})');
   it.each(['failed','blocked','conflict','candidate','stale','route','modal','busy','hidden','poor'])('%s 섞기 거절은 회차와 재화를 보존합니다',reason=>{
@@ -1798,12 +1826,12 @@ describe('회차 도움 원자성과 검증된 시험 구매 혜택',()=>{
     const h=mainHarness(false,false,true);h.run('startLevel(6,true)');const disk=h.disk();h.element('#shuffle').onclick();const before=state(h);
     expect(h.element('#shuffle').disabled).toBe(true);h.element('#shuffle').onclick();expect(state(h)).toBe(before);expect(h.disk()).toEqual(disk);
   });
-  async function owned(test=false){
+  async function owned(test=false,id=2){
     let value:BillingSnapshot={available:true,configured:true,state:'idle',entitlement:'owned',revision:1,error:'',price:'',overlay:false,adsBlocked:true,preparingPurchase:false};
     let listener!:(s:BillingSnapshot)=>void;
     const bridge:TestBillingBridge={getStatus:async()=>({...value}),restore:async()=>({...value}),queryProduct:async()=>({...value}),purchase:async()=>({...value}),addListener:async(_n,fn)=>{listener=fn;return {remove:async()=>{}};}};
     const h=mainHarness(false,false,true,true,undefined,true,undefined,bridge);h.nativeEvents.appStateChange({isActive:true});await h.run('testBilling.connect()');
-    if(test)h.run('startLevel(6,true)');h.run('moves=1;scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');h.flushResults();
+    if(test)h.run('startLevel(6,true)');else if(id!==2)h.run(`save.highestLevel=${id};startLevel(${id})`);h.run('moves=1;scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');h.flushResults();
     return {h,emit:(patch:Partial<BillingSnapshot>)=>{value={...value,...patch,revision:value.revision+1};listener(value);}};
   }
   it('검증 시험 구매자는 정상 실패판 +5와 cap을 한 저장에 확정하고 재실행해도 공통 한 번입니다',async()=>{
@@ -1830,4 +1858,19 @@ describe('회차 도움 원자성과 검증된 시험 구매 혜택',()=>{
     const {h}=await owned(true);const buy=h.element('#result-buyer-continue').onclick,disk=h.disk();h.element('#result-continue').onclick();buy();expect(h.run('moves')).toBe(5);expect(h.disk()).toEqual(disk);
     const production=mainHarness();production.run('moves=1;scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');production.flushResults();expect(production.element('#result-dialog').innerHTML).not.toContain('result-buyer-continue');
   });
+  it('pond 무료/유료 후보는 저장 실패 때 무차감이고 reload 후 구멍·cap·Pip을 유지합니다',()=>{
+    const h=mainHarness();h.run("save.highestLevel=32;save.pip={growth:34,affection:22,owned:['ribbon'],equipped:'ribbon'};startLevel(32)");
+    const engine=h.run('scene.engine');let before=state(h),disk=h.disk();h.setStorageFails(true);h.element('#shuffle').onclick();expect(state(h)).toBe(before);expect(h.disk()).toEqual(disk);
+    h.setStorageFails(false);h.element('#shuffle').onclick();expect(h.run('scene.engine')).toBe(engine);expect(h.stored().coins).toBe(40);expect(h.run('shuffles')).toBe(0);
+    before=state(h);disk=h.disk();h.setStorageFails(true);h.element('#shuffle').onclick();expect(state(h)).toBe(before);expect(h.disk()).toEqual(disk);
+    h.setStorageFails(false);h.element('#shuffle').onclick();const saved=h.stored();expect(saved.coins).toBe(20);expect(saved.inProgress.paidShuffleUsed).toBe(true);expect(saved.inProgress.board[3][3]).toBeNull();expect(saved.pip).toMatchObject({growth:34,affection:22,equipped:'ribbon'});
+    const restored=mainHarness(false,false,false,false,saved);expect(restored.stored()).toEqual(saved);expect(restored.run('scene.engine.board[3][3]')).toBeNull();expect(restored.run('paidShuffleUsed')).toBe(true);
+    const last=state(restored);restored.element('#shuffle').onclick();expect(state(restored)).toBe(last);
+  });
+  it('pond 정상 실패판의 검증 시험 +5는 null·엔진을 유지하고 reload로 공통 cap을 복원합니다',async()=>{
+    const {h}=await owned(false,32),engine=h.run('scene.engine'),board=h.run('JSON.stringify(scene.engine.board)');h.element('#result-buyer-continue').onclick();
+    expect(h.run('moves')).toBe(5);expect(h.run('scene.engine')).toBe(engine);expect(h.run('JSON.stringify(scene.engine.board)')).toBe(board);expect(h.stored().inProgress).toMatchObject({continueUsed:true,ruleVersion:2,moves:5});expect(h.stored().inProgress.board[3][3]).toBeNull();
+    const restored=mainHarness(false,false,false,false,h.stored());expect(restored.run('continueUsed')).toBe(true);expect(restored.run('moves')).toBe(5);expect(restored.run('scene.engine.board[3][3]')).toBeNull();
+  });
+
 });

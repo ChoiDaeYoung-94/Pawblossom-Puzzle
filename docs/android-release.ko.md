@@ -1,4 +1,40 @@
-# 현재 개발 · 2026-10-21 · #193 퍼즐 도움과 이어하기
+## 현재 통합 · 2026-10-21 · #190 mask × #193 회차 도움
+
+총괄은 최종 통합 production CX_aLDYa에서 정상4번26이동/0점/0코인·유료cap과Pip Lv2/성장34/친밀도22/리본 보존을 확인했습니다. testing 3GgaFVX0의 연못32에서 무료 섞기 전후 활성60칸의 종류/특수 재고와 구멍을 보존했고 실제 아래쪽4매치로27이동/30점과가로특수를 만들었습니다. 구멍 위열3의세블록은같았고 구멍탭도이동/점수를쓰지않았습니다. 640×360 KO/EN·키보드에서 canvas/view 하단과 메뉴 상단이304px로 일치해8행이잘리지않았습니다. 일반1번26이동/0점/0재화로복귀했고임시탭/서버/viewport를정리했습니다. browser.json과사진에근거를보존합니다. 실제유료mask/이어하기는자동대역검사이며폰·실구매/광고성공으로확대하지않습니다.
+
+#193의 실제 main `0c6ab754fccc2f49d01714d693c334e4289b4554`를 #190 브랜치에 no-commit merge하여 mask/null과 무료·20코인 섞기/공통 이어하기 cap을 함께 유지합니다. 후보 엔진에는 저장 DTO에서 추측한 mask 대신 실제 Scene의 canonical mask를 별도로 넘기고 활성 타일만300회 범위에서 재배치합니다. 별도 후보 RNG·종류/특수·낙엽/구멍·기존 엔진 RNG를 보존하며 재생성 fallback 없이 불가능한 후보는 무차감 거절합니다. 같은 엔진에 정확한 후보를 적용하고 cap/재화/checkpoint 저장 성공 뒤 확정하는 #193 순서를 유지합니다.
+
+#193 PR199의 첫 CI39608734696은 양Node 성공했습니다. 정확 main CI39609039298은 Node24 성공/Node22의 기존8worker command BEGIN 경쟁 실패로 전체 성공이 아닙니다. #190 Draft PR198/head45b459d의 이전 Node24 BUSY5 실패와 원문도 보존합니다. 마지막 녹색 main은 c23650b/CI39600567484이며 이번 통합은 실제 기능 경계가 달라진 새 head 검증입니다. timeout500ms·5s·8worker·seed·기대값을 완화하지 않고 잠금 원인 해결로 표현하지 않습니다.
+
+통합 관련9파일646개와 전체/앱/서버 타입이 통과했습니다. 초기 타입 오류는 새로 합쳐진193의 빈칸 없는 테스트 fixture에 필요한 null 단언8곳으로, 기대/seed를 바꾸지 않고 수정했습니다. pond 후보의 canonical 구멍/특수 재고/낙엽/규칙/원래 RNG, 무료·유료 저장 실패 무차감/reload cap·Pip, mask 실패판+5, 실제 Scene 적용 후 교환/낙하와 기존 golden·실습 참조를 확인했습니다. testing `index-3GgaFVX0.js`, production `index-CX_aLDYa.js`, CSS `index-DsMroIPi.css`의 두 빌드(타입3config·에셋 포함)가 통과했고 repo dist는 production입니다. 각38파일/public23 전수/flags/version0.1.7을 비교해 기록합니다. 실제 자연 입력은 위 최종 검수와 같이 확인했고 새head전체CI는 총괄에 남기며 기존 실패와 합산해 main 전체 성공으로 표현하지 않습니다.
+
+원문/소스 동결·두 빌드는 Git 밖 `qa/feedback-20261021/190/integration193`에 별도로 보존합니다. 기존190/193 증거를 덮지 않으며 실제 pond mask 섞기/교환·640 한영 화면 검수는 위 근거와 같으며 새 필수 PR CI는 총괄이 수행합니다. #73 실제 구매 권한/폰/운영 검증과 crate #195는 범위 밖입니다.
+
+## 이전190 구현 · 2026-10-21 · #190 mask 보드와 31–35
+
+## #190 가로 화면 검수 후속 · 2026-10-21
+
+최초 PR CI39604397961/45ce4ad는 양Node2644성공2실패로 스토어·빌드 단계가 미실행입니다. 고정3×3 SpecialTapPractice getter가 nullable 대응 중 복제본을 반환해 기존 첫 before 참조 계약을 어긴 원인을 확인하고 원래 배열 참조를 반환하도록 복구했습니다. 테스트 기대는 그대로이며 관련3파일300개·두 웹 빌드(전체/앱/서버 타입·에셋 포함)가 통과했습니다. 각38파일/public23전수/flags를 확인하고 production으로 복원했습니다. 최종 CI는 새 head에서 확인하며 #122의 원장 잠금/시간초과와 별개입니다. 검수 후 바뀐 연습 getter의 실제 최종 화면 전체 재실행을 이전 빌드의 브라우저 성공과 합산하지 않습니다.
+
+
+초기 빌드의 실제640×360 EN 스테이지33에서 puzzle-view는241px인데 grid 자동 최소 높이가261.34px로 커져 보드 하단 약20px이 하단 메뉴 뒤에서 잘렸습니다. 원본 `qa/feedback-20261021/190/stage33-layout.jpg`와 `browser-before-layout-fix.json`은 그대로 보존합니다. 실플레이는 짧은 한영 maskPlayHint 한 문장으로 분리해 기본 힌트 중복을 제거하고, 상세 maskHint는 미리보기에 유지합니다. 가로 grid의 남은 행은 minmax(0,1fr), 안내 영역은 min-height:0과 overflow:auto로 제한해 긴 키보드 도움말이 전체 보드 높이를 밀지 않게 했습니다.
+
+UI 1파일292개와 두 빌드의 전체/앱/서버 타입·에셋 검사가 통과했습니다. testing `index-CRyp5hlF.js`, production `index-BilCi2Fu.js`와 CSS `index-4uRkxrjH.css`를 별도 보존했고 production dist로 복원했습니다. 새 검사 준비의 첫2실패(존재하지 않는 미리보기 함수명), 다음2실패(동적 dialog 대신 별도 DOM 대역을 읽음)는 테스트 연결을 고쳐 해결했으며 원문을 보존합니다. 픽셀 경계 통과는 자동 UI 대역 검사와 구분합니다.
+
+원본190 sourcefreeze/dist/manifest와 브라우저 증거는 덮어쓰지 않고 `qa/feedback-20261021/190/root-layout-final`에 새 소스와 빌드를 보존합니다. 엔진682b986c·서버 hash·콘텐츠·저장·난수는 그대로이며 관련 엔진/원장 검사를 반복하지 않습니다. 총괄이 최종 testing CRyp5hlF의640×360 KO/EN·키보드 상태를 실제 확인했습니다. 네 경우 모두 canvas 하단304px=puzzle-view 하단304px=메뉴 상단304px로 보드8행이 잘리지 않았고 일반1/26이동/0점/0재화로 복귀했습니다. 수정 전 자연 플레이와 최종 화면 검수는 각각 browser-before-layout-fix.json과 root-layout-final/browser-layout.json으로 구분합니다.
+
+
+기준 main `c23650b1431c6f08b070fa476c45757d3ca4a91c`, 브랜치 `codex/190-shaped-boards`입니다. 새 canonical Level.mask의 inactive는 null/낙엽0으로 고정하며 생성·매치·교환·특수 제거·섞기·저장·서버가 같은 활성 칸을 사용합니다. 엔진이 세로 연속 구간별 from→to와 보충 시작점을 기록하고 씬은 살아 있는 객체/생성 특수를 그대로 이동합니다. 기존 #192 실제 제거 종류/좌표 표시와 정산은 유지합니다. 구멍에는52×52 배경도 그리지 않으며 키보드는 다음 활성 칸을 찾습니다.
+
+기존1–30 JSON/levelSignature·V1/V2·누락 버전 회차와 Pip/영구 재화를 유지합니다. 신규31–35는 규칙2이며 저장된 mask를 신뢰하지 않고 canonical 모양/null을 대조합니다. 30 완료 해금·35 완료·재플레이 무보상과 테스트 선택/한영 빈칸 안내를 연결했습니다. 서버 profile은 `pawblossom-board-mask-v2`이며 최종 LF 엔진 SHA-256은 `682b986c23f8999d238789abdbbd42852bf963c330fb8878c7ee8f9c3e80c81e`입니다. 옛 실제 V1/V2 DDL·행 fixture는 불변 보존하고 새 엔진의 열기 거절/DB 보존을 검사합니다. 같은 새 엔진의 합성 schema1→2 회귀와 구엔진 호환을 구분하며 운영DB 이전/재서명/배포는 없습니다.
+
+검증: core/geometry/기존 golden/상수 RNG/서버 상태8파일164개, UI/저장/씬3파일507개, 서버·HTTP·보상·저장복구 통합7파일의 최초684통과/1실패 후 수정한 원장1파일156개가 통과했습니다(나머지6파일529개는 변경 없는 통과 결과). 최초 관련3실패는 수동 낙하 fixture의 falls 누락 두 모션 케이스와31을 잘못된 ID로 기대하던 저장 입력이었습니다. 다음 UI1실패는3개 챕터만 생성하던 테스트 DOM 대역이었고 통합1실패도31을 범위 밖으로 기대하던 입력표였습니다. 실제 기대/seed·timeout·500ms·8worker를 완화하지 않았으며 #122 원인 해결로 해석하지 않습니다. 로그 원문과 수정 근거를 QA에 보존합니다.
+
+testing/production 빌드의 전체·앱·서버 타입과 에셋 검사가 통과했습니다. 두 dist는 각각38파일이며 public23파일 전수 바이트가 원본과 같고 flags는 testing 모두true/production 모두false입니다. JS는 testing `index-B4wYbLq8.js`, production `index-C4jiWXno.js`이며 앱 버전0.1.7을 유지하고 repo dist는 production 바이트로 복원했습니다. 기존500kB 청크 경고를 유지합니다. 브라우저 자연 입력/작은 화면은 총괄 검수, 전체 회귀는 최초 필수 PR CI로 남기며 단말·실서비스·스토어 검증 완료를 뜻하지 않습니다.
+
+고정seed 표본은 roadmap 상단과 QA190에 보존합니다. crate/36–40은 #195이며 새 에셋·오디오·Android sync/APK·실키/계정/상품·운영 설정을 변경하지 않았습니다.
+
+## 이전193 구현 · 2026-10-21 · #193 퍼즐 도움과 이어하기
 
 총괄 실브라우저 검수: 최초 production B_HW9JDs에서 기존3번 회차(19이동/1820점/도토리2남음)를 실제 인접 교환으로 완료해 별1·코인40을 받고4번에서 무료 섞기40유지→유료20차감→재실행 cap유지와64칸 AX 타일/낙엽 복원을 확인했습니다. 이 근거는 browser-functional-before-copy-fix.json입니다. EN640×360에서 가격 안내가28.86px로 좁아져94.5px높이로 줄바꿈되고 보드 하단328.67px가 view304px밖으로 잘린 실제 결함을 browser-price-before-fix.json/사진에 보존했습니다.
 
