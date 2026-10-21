@@ -19,22 +19,22 @@ export class BoardScene extends Phaser.Scene {
   private hooks: Hooks;
   private hintTimer?: Phaser.Time.TimerEvent;
   private leafObjects:(Phaser.GameObjects.Graphics|Phaser.GameObjects.Image|Phaser.GameObjects.Text)[]=[];
-  private effects?:BoardEffects;
+  private effects:BoardEffects;
   private cursor?:Position;
   private cursorMark?:Phaser.GameObjects.Graphics;
   private selectionMark?:Phaser.GameObjects.Graphics;
   private hintMark?:Phaser.GameObjects.Graphics;
   private hintPieces:Phaser.GameObjects.Container[]=[];
   private motionReduced=reducedMotion();
-  constructor(hooks: Hooks, snapshot?:BoardSnapshot) {super('Board');this.hooks=hooks;this.engine=new BoardEngine(8,8,Math.random,snapshot);}
+  constructor(hooks: Hooks, snapshot?:BoardSnapshot) {super('Board');this.hooks=hooks;this.engine=new BoardEngine(8,8,Math.random,snapshot);this.effects=new BoardEffects(this);}
   configureLeaves(piles:LeafPile[]){this.engine.setLeaves(piles);}
   preload() {
-    for(const name of tileNames)if(!this.textures.exists(name))this.load.svg(name,`/assets/tiles/${name}.svg`,{width:100,height:100});
+    for(const name of tileNames)if(!this.textures.exists(name))this.load.svg(name,`/assets/tiles-v2/${name}.svg`,{width:100,height:100});
     for(const name of ['leaf-pile','leaf-single'])if(!this.textures.exists(name))this.load.svg(name,`/assets/obstacles/${name}.svg`,{width:100,height:100});
   }
   create() {
     this.ready=false;this.finished=false;this.busy=false;this.motionReduced=reducedMotion();
-    this.effects=new BoardEffects(this);
+    this.effects.clear();this.effects=new BoardEffects(this);
     this.cameras.main.setBackgroundColor('#dae6d7');
     const g=this.add.graphics();
     g.fillStyle(0xb9cdb5,1);g.fillRoundedRect(6,6,468,468,24);
@@ -158,15 +158,40 @@ export class BoardScene extends Phaser.Scene {
   private makePiece(tile:Tile,pos:Position) {
       const point=this.point(pos);const item=this.add.container(point.x,point.y).setDepth(2);
       if(tile.special){
-        const halo=this.add.graphics();halo.fillStyle(tile.special==='rainbow'?0xf9dc9f:0xffe8a7,.95);halo.fillRoundedRect(-25,-25,50,50,13);halo.lineStyle(2,0xf6c364,.85);halo.strokeRoundedRect(-25,-25,50,50,13);item.add(halo);
+        const halo=this.add.graphics().setName(`special-body-${tile.special}`);
+        if(tile.special==='row'||tile.special==='column'){
+          const across=tile.special==='row',w=across?52:42,h=across?42:52;
+          halo.fillStyle(0x244d60,1);halo.fillRoundedRect(-w/2,-h/2+2,w,h,12);
+          halo.fillStyle(across?0x2684b0:0x248665,1);halo.fillRoundedRect(-w/2,-h/2,w,h-2,12);
+          halo.lineStyle(2,across?0xb5f2ff:0xc1ffda,1);halo.strokeRoundedRect(-w/2+2,-h/2+2,w-4,h-6,10);
+        }else{
+          halo.fillStyle(tile.special==='bomb'?0x493354:0x354d68,1);halo.fillCircle(0,1,25);
+          halo.lineStyle(3,tile.special==='bomb'?0xeea864:0xffe9ad,1);halo.strokeCircle(0,0,24);
+          if(tile.special==='bomb'){
+            halo.fillStyle(0x33283f,1);halo.fillRoundedRect(-8,-25,16,8,3);
+            halo.lineStyle(3,0xffd48e,1);halo.lineBetween(5,-25,11,-27);halo.lineBetween(11,-27,16,-23);
+          }
+        }
+        item.add(halo);
       }
-      const image=this.add.image(0,0,tileNames[tile.kind]).setDisplaySize(43,43);item.add(image);
+      const size=tile.special?(tile.special==='rainbow'?29:tile.special==='bomb'?32:35):45;
+      const image=this.add.image(0,tile.special==='bomb'?2:0,tileNames[tile.kind]).setDisplaySize(size,size);item.add(image);
       if(tile.special){
-        const mark=this.add.graphics().lineStyle(3,0xfffaf0,1);
-        if(tile.special==='row') {mark.lineBetween(-19,0,19,0);mark.lineBetween(-19,0,-12,-6);mark.lineBetween(-19,0,-12,6);mark.lineBetween(19,0,12,-6);mark.lineBetween(19,0,12,6);}
-        if(tile.special==='column') {mark.lineBetween(0,-19,0,19);mark.lineBetween(0,-19,-6,-12);mark.lineBetween(0,-19,6,-12);mark.lineBetween(0,19,-6,12);mark.lineBetween(0,19,6,12);}
-        if(tile.special==='bomb') {mark.fillStyle(0xfff5db);mark.fillCircle(13,14,8);mark.lineStyle(2,0xc78f48);mark.strokeCircle(13,14,8);}
-        if(tile.special==='rainbow') {const colors=[0xe67883,0xe9bd62,0x8db87b,0x849ccc,0xbd93ce];colors.forEach((color,i)=>{mark.lineStyle(3,color);mark.strokeCircle(0,0,17+i*1.7);});}
+        const mark=this.add.graphics().setName(`special-mark-${tile.special}`).lineStyle(3,0xfffaf0,1);
+        if(tile.special==='row') {
+          for(const y of [-16,16])mark.lineBetween(-15,y,15,y);
+          for(const x of [-21,21]){const inward=x>0?-5:5;mark.lineBetween(x,0,x+inward,-5);mark.lineBetween(x,0,x+inward,5);}
+        }
+        if(tile.special==='column') {
+          for(const x of [-16,16])mark.lineBetween(x,-15,x,15);
+          for(const y of [-21,21]){const inward=y>0?-5:5;mark.lineBetween(0,y,-5,y+inward);mark.lineBetween(0,y,5,y+inward);}
+        }
+        if(tile.special==='bomb') {mark.lineStyle(3,0xffe3b8);mark.lineBetween(-17,-12,-13,-16);mark.fillStyle(0xffdf81);mark.fillCircle(17,-23,3);}
+        if(tile.special==='rainbow') {
+          const colors=[0xff788f,0xffc65b,0x9bdc64,0x73ddeb,0x9e9bff,0xf5a2df];
+          colors.forEach((color,i)=>{const angle=(i*60-90)*Math.PI/180;mark.fillStyle(color);mark.fillCircle(Math.cos(angle)*19,Math.sin(angle)*19,5);});
+          mark.lineStyle(2,0xfff8dc,.8);mark.strokeCircle(0,0,13);
+        }
         item.add(mark);
       }
       return item;
@@ -249,7 +274,7 @@ export class BoardScene extends Phaser.Scene {
       else if(effect.special==='column')overlay.lineBetween(point.x,PAD,point.x,PAD+this.engine.rows*CELL);
       else overlay.strokeCircle(point.x,point.y,effect.special==='bomb'?CELL*1.25:24);
     }
-    return overlay;
+    this.effects.trackOverlay(overlay);return overlay;
   }
   private wait(ms:number){return new Promise<void>(resolve=>this.time.delayedCall(ms,()=>resolve()));}
   private async attempt(a:Position,b?:Position) {
@@ -276,23 +301,24 @@ export class BoardScene extends Phaser.Scene {
       for(let i=0;i<result.steps.length;i++){
         const step=result.steps[i];
         if(!step.removed.length){this.hooks.onNotice('noMoves');this.paint(step.after);await this.wait(250);if(this.finished)return;continue;}
+        if(step.effects?.length&&!this.syncMotion()){
+          this.effects.anticipate(step);await this.wait(80);if(this.finished)return;
+        }
         const special=step.created?.length||step.effects?.length;
         this.hooks.audio.play(special?'special':'match',i+1);
         this.hooks.onNotice(step.effects?.length?this.effectNotice(step):step.leaves?.hits.some(p=>p.after===0)?'leavesCleared':step.leaves?.hits.length?'leafThinned':step.created?.length?'specialCreated':i>0?'chain':'matched');
+        // 대량 파편보다 실제 제거범위 표시를 먼저 확보합니다.
+        if(step.effects?.length)this.showEffect(step);
         this.showLeafHits(step);
         this.effects?.match(step,i+1);
         if(step.effects?.length){
           this.effects?.special(step);
-          const overlay=this.showEffect(step);await this.wait(180);
+          await this.wait(180);
           if(this.finished)return;
-          this.tweens.add({targets:overlay,alpha:0,duration:130,onComplete:()=>overlay.destroy()});
         }
         const reducedRemoval=this.syncMotion();
         step.removed.forEach(p=>{
           const item=this.pieces[p.row][p.col];this.tweens.add({targets:item,...(reducedRemoval?{}:{scale:.25}),alpha:0,duration:180,ease:reducedRemoval?'Linear':'Back.easeIn'});
-          if(reducedRemoval)return;
-          const dot=this.add.circle(item.x,item.y,5,[0xf7b0a7,0xf4d488,0xa6c88e][i%3]);
-          this.tweens.add({targets:dot,y:item.y-30,alpha:0,scale:2,duration:400,onComplete:()=>dot.destroy()});
         });
         await this.wait(200);if(this.finished)return;this.drop(step);if(step.leaves)this.paintLeaves(step.leaves.after);await this.wait(300);if(this.finished)return;
       }
@@ -300,7 +326,7 @@ export class BoardScene extends Phaser.Scene {
     }
     this.busy=false;if(!this.finished)this.resetHint();this.changed();
   }
-  stopPlaying(){this.finished=true;this.stopHintTimer();this.cancelInput();}
+  stopPlaying(){this.finished=true;this.stopHintTimer();this.cancelInput();this.effects.clear();}
   /** 현재 실패 보드의 안정 상태만 복귀합니다. 라운드 자격/1회 제한은 호출자가 검사합니다. */
   resumeAfterFailure():boolean {
     if(!this.ready||!this.finished||this.busy||(!this.sys.isActive()&&!this.sys.isPaused())

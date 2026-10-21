@@ -7,7 +7,8 @@ class Piece {
   destroyed=false;alpha=1;scale=1;
   name='';text='';texture='';width=0;height=0;
   constructor(public x:number,public y:number){}
-  add(){return this;}setScale(value:number){this.scale=value;return this;}
+  children:(Piece|Graphic)[]=[];
+  add(child:Piece|Graphic){this.children.push(child);return this;}setScale(value:number){this.scale=value;return this;}
   setDepth(){return this;}
   setName(name:string){this.name=name;return this;}setOrigin(){return this;}
   setAngle(){return this;}setDisplaySize(width:number,height:number){this.width=width;this.height=height;return this;}
@@ -15,12 +16,12 @@ class Piece {
   destroy(){this.destroyed=true;}
 }
 class Graphic {
-  destroyed=false;alpha=1;rectangles:number[][]=[];lines:number[][]=[];strokes:number[][]=[];
+  destroyed=false;alpha=1;name='';rectangles:number[][]=[];lines:number[][]=[];strokes:number[][]=[];circles:number[][]=[];
   fillStyle(){return this;}lineStyle(){return this;}setDepth(){return this;}
   fillRoundedRect(...values:number[]){this.rectangles.push(values);return this;}
-  strokeRoundedRect(...values:number[]){this.strokes.push(values);return this;}fillCircle(){return this;}strokeCircle(){return this;}
+  strokeRoundedRect(...values:number[]){this.strokes.push(values);return this;}fillCircle(...values:number[]){this.circles.push(values);return this;}strokeCircle(){return this;}
   lineBetween(...values:number[]){this.lines.push(values);return this;}
-  setName(){return this;}setPosition(){return this;}
+  setName(name:string){this.name=name;return this;}setPosition(){return this;}setAngle(){return this;}
   clear(){this.rectangles=[];this.lines=[];this.strokes=[];return this;}
   destroy(){this.destroyed=true;}
 }
@@ -224,6 +225,21 @@ describe('유휴 힌트 (실제 Phaser Clock)',()=>{
   });
 });
 describe('블록 객체 보존과 낙하 연출',()=>{
+  it('일반 타일 색을 유지하면서 특수의 방향판·폭탄·다색 구슬을 서로 다른 외형으로 만듭니다',()=>{
+    const {scene}=harness();
+    for(const [col,special] of (['row','column','bomb','rainbow'] as const).entries())scene.engine.board[0][col].special=special;
+    scene.paint(scene.engine.board);
+    const body=(col:number)=>scene.pieces[0][col].children.find(child=>child.name.startsWith('special-body')) as Graphic;
+    expect(body(0).rectangles[0].slice(2,4)).toEqual([52,42]);expect(body(1).rectangles[0].slice(2,4)).toEqual([42,52]);
+    expect(body(2).circles).toContainEqual([0,1,25]);expect(body(2).rectangles.some(rect=>rect[2]===16&&rect[3]===8)).toBe(true);
+    const rainbow=scene.pieces[0][3].children.find(child=>child.name==='special-mark-rainbow') as Graphic;
+    expect(rainbow.circles).toHaveLength(6);
+    for(let col=0;col<5;col++){
+      const image=scene.pieces[0][col].children.find(child=>child instanceof Piece) as Piece;
+      expect(image.texture).toBe(['strawberry','carrot','blueberry','acorn','leaf'][scene.engine.board[0][col].kind]);
+      expect(image.width).toBe(col===4?45:col===3?29:col===2?32:35);
+    }
+  });
   it.each([false,true])('실패 복귀는 살아 있는 paused=%s 보드·엔진·낙엽·컨테이너를 그대로 유지합니다',paused=>{
     const {scene,onMove}=harness();scene.engine.setLeaves([{row:2,col:3,layers:2}]);
     scene.create();scene.events.emit('create');scene.focusKeyboard();scene.keyboardKey('Enter');scene.stopPlaying();

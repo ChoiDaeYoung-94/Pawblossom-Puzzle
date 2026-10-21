@@ -1,9 +1,19 @@
 import type Phaser from 'phaser';
-import type { LeafHit, Position, ResolveStep } from './core';
+import type { LeafHit, Position, ResolveStep, Special } from './core';
 import { reducedMotion } from './reducedMotion';
 
 type EffectObject=Phaser.GameObjects.Graphics|Phaser.GameObjects.Image|Phaser.GameObjects.Text;
 const point=(p:Position)=>({x:44+p.col*56,y:44+p.row*56});
+const colors=[0xf65a72,0xffa635,0x8285ed,0xd5a34f,0x8bcc4b,0xf28bbc];
+const specialColor=(special:Special)=>special==='row'?0x8be8ff:special==='column'?0xa8f1ca:special==='bomb'?0xffb686:0xe3b2ff;
+// 같은 단계의 겹치는 행·열은 한 번만 그리며 연쇄에도 추가 난수를 쓰지 않습니다.
+const uniqueEffects=(step:ResolveStep)=>{
+  const seen=new Set<string>();
+  return (step.effects??[]).filter(p=>{
+    const key=p.special==='row'?`r${p.row}`:p.special==='column'?`c${p.col}`:`${p.row},${p.col}`;
+    if(seen.has(key))return false;seen.add(key);return true;
+  }).slice(0,8);
+};
 
 /** 룰·난수·카메라 위치에 영향을 주지 않는 짧은 보드 연출입니다. */
 export class BoardEffects {
@@ -17,6 +27,25 @@ export class BoardEffects {
     this.scene.tweens.add({...config,targets:item,onComplete:()=>this.finish(item)});
   }
   clear(){for(const item of this.objects){this.scene.tweens.killTweensOf(item);item.destroy();}this.objects.clear();}
+  /** 실제 제거 범위의 표시도 파편과 같은 상한·종료 정리 안에서 관리합니다. */
+  trackOverlay(overlay:Phaser.GameObjects.Graphics){this.animate(overlay,{alpha:0,delay:180,duration:130});}
+  anticipate(step:ResolveStep){
+    if(reducedMotion())return;
+    for(const p of uniqueEffects(step)){
+      const {x,y}=point(p),pulse=this.scene.add.graphics().setPosition(x,y).setDepth(12).setName('special-charge');
+      pulse.fillStyle(specialColor(p.special),.3);pulse.fillRoundedRect(-23,-23,46,46,p.special==='bomb'||p.special==='rainbow'?23:10);
+      pulse.lineStyle(3,0xfff9e4,.95);pulse.strokeCircle(0,0,17);
+      this.animate(pulse,{scaleX:1.18,scaleY:1.18,alpha:0,duration:110,ease:'Sine.easeIn'});
+    }
+  }
+  private fragment(x:number,y:number,color:number,index:number,distance:number){
+    const directions=[[-1,-.65],[1,-.65],[-.65,1],[.65,1],[-1,.15],[1,.15],[.15,-1],[-.15,1]];
+    const [dx,dy]=directions[index%directions.length];
+    const chip=this.scene.add.graphics().setPosition(x,y).setDepth(12).setAngle(index*31).setName('tile-fragment');
+    chip.fillStyle(color,1);chip.fillRoundedRect(-3,-3,6,6,2);
+    chip.lineStyle(1,0xfff7de,.9);chip.lineBetween(-2,-2,2,-2);
+    this.animate(chip,{x:x+dx*distance,y:y+dy*distance,angle:index*31+110,alpha:0,scaleX:.35,scaleY:.35,duration:270+index%3*25,ease:'Cubic.easeOut'});
+  }
   leafHit(hit:LeafHit){
     const {x,y}=point(hit),cleared=hit.after===0,reduced=reducedMotion();
     const pulse=this.scene.add.graphics().setDepth(11).setName('leaf-hit-pulse');
@@ -41,30 +70,36 @@ export class BoardEffects {
     // 64칸 제거에도 최대 12개만 만들어 모바일의 중첩 비용을 제한합니다.
     const stride=Math.max(1,Math.ceil(step.removed.length/12));
     step.removed.filter((_,i)=>i%stride===0).forEach((p,i)=>{
-      const {x,y}=point(p),spark=this.scene.add.graphics().setDepth(8).setName('match-spark');
+      const {x,y}=point(p),spark=this.scene.add.graphics().setPosition(x,y).setDepth(8).setName('match-spark');
       spark.lineStyle(2,chain>1?0xf4bc65:0xfff8df,1);
-      spark.lineBetween(x-5,y,x+5,y);spark.lineBetween(x,y-5,x,y+5);
-      this.animate(spark,{y:-12,alpha:0,duration:300+i%3*35,ease:'Sine.easeOut'});
+      spark.lineBetween(-5,0,5,0);spark.lineBetween(0,-5,0,5);
+      this.animate(spark,{y:y-12,alpha:0,duration:220+i%3*25,ease:'Sine.easeOut'});
+      if(i<8){
+        const color=colors[step.before[p.row]?.[p.col]?.kind??i%colors.length];
+        this.fragment(x,y,color,i,22+Math.min(chain,4)*3);
+        this.fragment(x,y,color,i+1,22+Math.min(chain,4)*3);
+      }
     });
   }
   special(step:ResolveStep){
     if(reducedMotion())return;
-    const drawn=new Set<string>();
-    for(const p of step.effects??[]){
-      const key=p.special==='row'?`r${p.row}`:p.special==='column'?`c${p.col}`:`${p.row},${p.col}`;
-      if(drawn.has(key))continue;drawn.add(key);
-      if(drawn.size>8)break;
+    for(const p of uniqueEffects(step)){
       const {x,y}=point(p);
       if(p.special==='row'||p.special==='column'){
-        const across=p.special==='row',beam=this.scene.add.graphics().setDepth(12).setName('special-sweep');
-        beam.fillStyle(0xfff6cc,.9);beam.fillRoundedRect(-9,-9,18,18,6);
-        beam.setPosition(across?16:x,across?y:16);
-        this.animate(beam,{...(across?{x:464}:{y:464}),alpha:0,duration:360,ease:'Sine.easeInOut'});
+        const across=p.special==='row',beam=this.scene.add.graphics().setPosition(x,y).setDepth(12).setName('special-sweep');
+        beam.fillStyle(specialColor(p.special),.6);
+        beam.fillRoundedRect(across?16-x:-11,across?-11:16-y,across?448:22,across?22:448,10);
+        beam.fillStyle(0xfffce7,.98);
+        beam.fillRoundedRect(across?16-x:-3,across?-3:16-y,across?448:6,across?6:448,3);
+        this.animate(beam,{...(across?{scaleY:.45}:{scaleX:.45}),alpha:0,duration:210,ease:'Cubic.easeOut'});
       }else{
         const ring=this.scene.add.graphics().setDepth(12).setPosition(x,y).setName('special-ripple');
-        ring.lineStyle(3,p.special==='bomb'?0xf0a9bd:0xcbb0ef,.85);ring.strokeCircle(0,0,18);
-        this.animate(ring,{scaleX:p.special==='bomb'?3:2.4,scaleY:p.special==='bomb'?3:2.4,alpha:0,duration:430,ease:'Cubic.easeOut'});
+        ring.lineStyle(5,specialColor(p.special),.95);ring.strokeCircle(0,0,18);
+        ring.lineStyle(2,0xfffbe4,.95);ring.strokeCircle(0,0,24);
+        this.animate(ring,{scaleX:p.special==='bomb'?3.2:2.6,scaleY:p.special==='bomb'?3.2:2.6,alpha:0,duration:300,ease:'Cubic.easeOut'});
       }
+      const count=p.special==='bomb'?8:p.special==='rainbow'?6:4;
+      for(let i=0;i<count;i++)this.fragment(x,y,p.special==='rainbow'?colors[i%colors.length]:specialColor(p.special),i,p.special==='bomb'?60:40);
     }
   }
 }
