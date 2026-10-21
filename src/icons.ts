@@ -3,7 +3,7 @@ export const icon = (name: string, size = 24) => {
     leaf:'<path d="M20 4C9 3 3 9 5 15s13 6 15-11Z"/><path d="m4 21 12-13M9 15v-5m0 5h5"/>',
     paw:'<ellipse cx="12" cy="16" rx="6" ry="4.5"/><ellipse cx="5.3" cy="9" rx="2" ry="2.7"/><ellipse cx="10" cy="5.7" rx="2" ry="2.7"/><ellipse cx="15" cy="5.7" rx="2" ry="2.7"/><ellipse cx="19" cy="9.5" rx="2" ry="2.7"/>',
     star:'<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z"/>',
-    coin:'<circle cx="12" cy="12" r="9"/><path d="M14.5 8H11a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4H9.5m2.5-9v10"/>',
+    coin:'<circle cx="12" cy="12" r="9"/><path d="M12 9c-3-5-7-1-4 2-5 2-2 7 1 4 0 5 6 5 5 0 5 3 7-2 3-4 3-4-2-7-5-2Z"/><circle cx="12" cy="12" r="1.7"/>',
     puzzle:'<rect x="4" y="4" width="6" height="6" rx="1.8"/><rect x="14" y="4" width="6" height="6" rx="1.8"/><rect x="4" y="14" width="6" height="6" rx="1.8"/><rect x="14" y="14" width="6" height="6" rx="1.8"/>',
     home:'<path d="m3 11 9-8 9 8M5 10v10h14V10M10 20v-6h4v6"/>',
     settings:'<path d="m9 3-1 3-3 1 1 3-2 2 2 2-1 3 3 1 1 3h6l1-3 3-1-1-3 2-2-2-2 1-3-3-1-1-3Z"/><circle cx="12" cy="12" r="3"/>',

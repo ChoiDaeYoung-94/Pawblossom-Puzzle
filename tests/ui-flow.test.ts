@@ -17,6 +17,7 @@ const compile = (source: string): string => ts.transpileModule(source, {
 }).outputText;
 const mainCode = compile(read('../src/main.ts').replace(/^import .*;\r?\n/gm, ''));
 const stateCode = compile(read('../src/state.ts'));
+const pipCareCode = compile(read('../src/pipCare.ts'));
 const levelsCode = compile(read('../src/levels.ts'));
 const boardCode = compile(read('../src/BoardScene.ts'));
 const effectsCode = compile(read('../src/BoardEffects.ts'));
@@ -116,9 +117,9 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   }
   class AudioStub {
     plays:string[]=[];
-    suspended=false;suspends=0;resumes=0;unlocks=0;
-    setMusicEnabled() {}
-    setSfxEnabled() {}
+    suspended=false;suspends=0;resumes=0;unlocks=0;music=true;sfx=true;
+    setMusicEnabled(enabled:boolean) {this.music=enabled;}
+    setSfxEnabled(enabled:boolean) {this.sfx=enabled;}
     unlock() { this.unlocks++;return Promise.resolve(); }
     play(key:string) {this.plays.push(key);}
     suspend() {this.suspended=true;this.suspends++;}
@@ -164,7 +165,8 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   });
   const levelExports: Record<string, unknown> = {};
   vm.runInNewContext(levelsCode, {exports:levelExports});
-  Object.assign(context,{require:(name:string) => {if(name==='./levels')return levelExports;if(name==='./core')return coreExports;throw new Error(name);}});
+  const pipCareExports:Record<string,unknown>={};vm.runInNewContext(pipCareCode,{exports:pipCareExports});Object.assign(context,pipCareExports);
+  Object.assign(context,{require:(name:string) => {if(name==='./levels')return levelExports;if(name==='./core')return coreExports;if(name==='./pipCare')return pipCareExports;throw new Error(name);}});
   const coreExports:Record<string,unknown>={}, practiceExports:Record<string,unknown>={};
   vm.runInNewContext(engineCode,{exports:coreExports});
   vm.runInNewContext(practiceCode,{exports:practiceExports,require:()=>coreExports});
@@ -190,6 +192,103 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     writes: () => writes, stored: () => JSON.parse(storageValues.get('pawblossom.save.v1')??'null'),
   };
 }
+
+describe('핍 육성·재화 소비와 정원 전용 체험',()=>{
+  const normalState='JSON.stringify({round,currentLevel,moves,score,collected,shuffles,clearedLeaves,roundEnded,resultShown,firstReward,resultWon,testingLevel,testContinueUsed,board:scene.engine.board,leaves:scene.engine.leaves})';
+  it('먹이·놀이를 저장하고 지난 버튼 콜백으로 두 번 차감하지 않습니다',()=>{
+    const h=mainHarness();h.run("switchView('journal');globalThis.beforeCheckpoint=JSON.stringify(save.inProgress)");
+    h.run("globalThis.pipFocus='';document.activeElement={id:'pip-feed',isConnected:false};document.querySelector('#pip-feed').focus=()=>{pipFocus='pip-feed'}");
+    const feed=h.element('#pip-feed').onclick;feed();feed();
+    expect(h.run('pipFocus')).toBe('pip-feed');
+    expect(h.stored()).toMatchObject({coins:30,pip:{growth:10,affection:4}});
+    expect(h.element('#journal-view').innerHTML).toContain('/assets/pip-feed-v1.webp');
+    h.element('#pip-play').onclick();expect(h.stored()).toMatchObject({coins:20,pip:{growth:14,affection:14}});
+    expect(h.element('#journal-view').innerHTML).toContain('/assets/pip-play-v1.webp');
+    expect(h.run('JSON.stringify(save.inProgress)===beforeCheckpoint')).toBe(true);
+  });
+  it('성장 해금·소품 구매·무료 장착 변경을 실제 카드에 표시합니다',()=>{
+    const h=mainHarness();h.run("save.coins=100;switchView('journal')");
+    h.element('#pip-buy-ribbon').onclick();expect(h.run('save.coins')).toBe(100);
+    h.element('#pip-feed').onclick();h.element('#pip-feed').onclick();
+    expect(h.element('#journal-view').innerHTML).toContain('Lv. 2');
+    h.run(`globalThis.pipFocus='';document.activeElement={id:'pip-buy-ribbon',isConnected:false};
+      document.querySelector('#pip-care-title').focus=()=>{pipFocus='pip-care-title'};
+      const careQuery=document.querySelector;document.querySelector=selector=>selector==='#pip-buy-ribbon'&&save.pip?.owned.includes('ribbon')?null:careQuery(selector);`);
+    const buy=h.element('#pip-buy-ribbon').onclick;buy();buy();
+    expect(h.run('pipFocus')).toBe('pip-care-title');
+    expect(h.element('#journal-view').innerHTML).toContain('id="pip-care-title" tabindex="-1"');
+    expect(h.stored()).toMatchObject({coins:40,pip:{growth:20,owned:['ribbon'],equipped:'ribbon'}});
+    expect(h.element('#journal-view').innerHTML).toContain('pip-ribbon');
+    h.element('#pip-equip-none').onclick();
+    h.run(`pipFocus='';document.activeElement={id:'pip-equip-ribbon',isConnected:false};
+      Object.defineProperty(document.querySelector('#pip-equip-ribbon'),'disabled',{configurable:true,get:()=>save.pip?.equipped==='ribbon'});`);
+    h.element('#pip-equip-ribbon').onclick();expect(h.stored().coins).toBe(40);expect(h.run('pipFocus')).toBe('pip-care-title');
+    h.element('#pip-greet').onclick();expect(h.element('#journal-view').innerHTML).toContain(t('en','pipGreetReaction'));
+    for(let i=0;i<4;i++)h.element('#pip-feed').onclick();
+    const beforeTend=h.disk(),writesBeforeTend=h.writes();h.element('#pip-tend').onclick();
+    expect(h.element('#journal-view').innerHTML).toContain('pip-watering-can');expect(h.run('save.pip.equipped')).toBe('ribbon');
+    expect(h.disk()).toEqual(beforeTend);expect(h.writes()).toBe(writesBeforeTend);
+  });
+  it('소비 저장 실패와 다른 실행의 저장 충돌은 코인·성장·별을 변경하지 않습니다',()=>{
+    const h=mainHarness();h.run("switchView('journal');globalThis.originalCareSave=save");const before=h.disk();
+    h.setStorageFails(true);h.element('#pip-feed').onclick();
+    expect(h.run('save===originalCareSave')).toBe(true);expect(h.disk()).toEqual(before);expect(h.run('save.coins')).toBe(40);expect(h.run('save.pip')).toBeUndefined();
+    h.setStorageFails(false);h.run("localStorage.setItem('pawblossom.save.v1',JSON.stringify({...save,coins:99}))");const changed=h.disk();
+    h.element('#pip-feed').onclick();expect(h.disk()).toEqual(changed);expect(h.run('save.coins')).toBe(40);expect(h.run('saveStatus().load')).toBe('conflict');
+  });
+  it.each(['explicit','puzzle','settings','brand'] as const)('%s 종료는 세 저장 키와 원래 save·scene·회차·언어·오디오를 유지합니다',method=>{
+    const h=mainHarness(false,false,true);
+    h.run("switchView('village');globalThis.normalSaveRef=save;globalThis.normalSceneRef=scene;globalThis.normalEngineRef=scene.engine;globalThis.normalSaveJson=JSON.stringify(save)");
+    h.run("globalThis.careFocusCalls=[];document.querySelector('#care-demo-enter-village').focus=options=>careFocusCalls.push({id:'care-demo-enter-village',preventScroll:options?.preventScroll})");
+    h.run("globalThis.careEntryFocusCalls=[];document.querySelector('#care-demo-exit-village').focus=options=>careEntryFocusCalls.push({id:'care-demo-exit-village',preventScroll:options?.preventScroll})");
+    const disk=h.disk(),writes=h.writes(),roundState=h.run(normalState),adds=h.run('game.scene.adds');
+    expect(h.run('enterCareDemo()')).toBe(true);expect(h.element('#village-view').innerHTML).not.toContain('class="level-picker"');
+    expect(h.run('careEntryFocusCalls')).toEqual([{id:'care-demo-exit-village',preventScroll:true}]);
+    h.element('#grow').onclick();h.flushGrowth();h.run("switchView('journal');changeLanguage('ko');audio.setMusicEnabled(false);audio.setSfxEnabled(false)");
+    h.element('#pip-feed').onclick();h.element('#pip-feed').onclick();h.element('#pip-buy-ribbon').onclick();
+    expect(h.run('save.coins')).toBe(180);expect(h.run('normalSaveRef===save')).toBe(false);
+    h.run('scene.hooks.onMove([99,0,0,0,0,0],999);settleRound(true);finish(true);checkpoint();startLevel(1);showTestPicker();showStagePreview(1,"map",document.querySelector("#map-opener"))');
+    expect(h.run(normalState)).toBe(roundState);
+    if(method==='explicit')h.element('#care-demo-exit-journal').onclick();
+    else if(method==='brand')h.run("document.querySelector('.brand').onclick({preventDefault(){}})");
+    else h.run(`switchView('${method}')`);
+    expect(h.run('careDemo')).toBeUndefined();expect(h.run('save===normalSaveRef&&scene===normalSceneRef&&scene.engine===normalEngineRef')).toBe(true);
+    expect(h.run('JSON.stringify(save)===normalSaveJson')).toBe(true);expect(h.run(normalState)).toBe(roundState);expect(h.run('game.scene.adds')).toBe(adds);
+    expect(h.run('save.language')).toBe('en');expect(h.run('audio.music&&audio.sfx')).toBe(true);
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('route')).toBe(method==='explicit'?'village':method==='brand'?'puzzle':method);
+    expect(h.run('careFocusCalls')).toEqual(method==='explicit'?[{id:'care-demo-enter-village',preventScroll:true}]:[]);
+  });
+  it('끝난 회차와 늦은 일반/체험/설정 버튼 콜백도 복원 뒤 다시 적용되지 않습니다',()=>{
+    const h=mainHarness(false,false,true);h.run("finish(false);document.querySelector('#result-dialog').close();switchView('journal')");
+    const oldFeed=h.element('#pip-feed').onclick,oldReset=h.element('#reset').onclick,oldRetry=h.element('#save-retry').onclick;
+    const ended=h.run(normalState),disk=h.disk(),writes=h.writes();expect(h.run('enterCareDemo()')).toBe(true);
+    oldFeed();oldReset();oldRetry();expect(h.run('save.coins')).toBe(240);
+    const demoFeed=h.element('#pip-feed').onclick;demoFeed();expect(h.run('save.coins')).toBe(230);
+    h.run('exitCareDemo()');oldFeed();oldReset();oldRetry();demoFeed();
+    expect(h.run(normalState)).toBe(ended);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('production은 체험 진입이나 가짜 재화를 노출하지 않습니다',()=>{
+    const h=mainHarness(false,false,false);h.run("switchView('journal')");const disk=h.disk(),state=h.run(normalState);
+    expect(h.run('enterCareDemo()')).toBe(false);expect(h.run('careDemo')).toBeUndefined();expect(h.run('save.coins')).toBe(40);
+    expect(h.element('#journal-view').innerHTML).not.toContain('care-demo-');expect(h.element('#village-view').innerHTML).not.toContain('care-demo-');
+    expect(h.disk()).toEqual(disk);expect(h.run(normalState)).toBe(state);
+  });
+  it('체험 중 비활성·복귀에서도 보드를 멈추고 Android 뒤로가기는 원래 회차로 돌아갑니다',()=>{
+    const h=mainHarness(false,false,true,true);h.run("nativeActive=true;switchView('journal');globalThis.careOriginalScene=scene;globalThis.careOriginalSave=save");
+    const disk=h.disk(),state=h.run(normalState);expect(h.run('enterCareDemo()')).toBe(true);
+    h.element('#pip-play').onclick();h.run('document.hidden=true');h.documentEvents.visibilitychange();h.nativeEvents.appStateChange({isActive:false});
+    h.run('document.hidden=false');h.documentEvents.visibilitychange();h.nativeEvents.appStateChange({isActive:true});
+    expect(h.run('game.paused')).toBe(true);expect(h.run(normalState)).toBe(state);
+    h.nativeEvents.backButton({isActive:true});expect(h.run('careDemo')).toBeUndefined();expect(h.run('route')).toBe('puzzle');
+    expect(h.run('scene===careOriginalScene&&save===careOriginalSave')).toBe(true);expect(h.run(normalState)).toBe(state);expect(h.disk()).toEqual(disk);
+  });
+  it('비활성·모달·회차교체·정산·육성 처리 중에는 체험을 시작하지 않습니다',()=>{
+    for(const guard of ['document.hidden=true','nativeActive=false',"document.querySelector('#tutorial-dialog').open=true",'boardPending=true','resultTimer=1','scene.canLeave=()=>false','careProcessing=true','growing=true','testAds={pausesGame:true}','testBilling={pausesGame:true}']){
+      const h=mainHarness(false,false,true,false,undefined,false);h.frame();h.run("switchView('village')");const disk=h.disk();h.run(guard);
+      expect(h.run('enterCareDemo()'),guard).toBe(false);expect(h.disk()).toEqual(disk);expect(h.run('careDemo')).toBeUndefined();
+    }
+  });
+});
 
 describe('명시적 스테이지 전환의 보드 초점',()=>{
   function setup(){
@@ -900,7 +999,7 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     h.run("changeLanguage('ko')");expect(h.element('#board-hint-text').textContent).toContain('두 겹');
   });
   it('꽃밭 성장은 별 2개를 한 번만 쓰고 저장·그림·최대 5개 제한을 유지합니다',()=>{
-    const h=mainHarness();h.run('save.stars=4;renderViews()');
+    const h=mainHarness();h.run("save.stars=4;switchView('village')");
     h.element('#grow').onclick();h.element('#grow').onclick();
     expect(h.stored()).toMatchObject({stars:2,garden:1,coins:40,highestLevel:2});
     expect(h.element('#village-view').innerHTML).toContain('data-stage="1"');
@@ -911,8 +1010,8 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     expect(h.run('save.garden')).toBe(5);expect(h.run('save.stars')).toBe(8);
   });
   it('정원 저장 실패 안내는 성공 메시지로 덮어쓰지 않습니다',()=>{
-    const h=mainHarness(true);h.run('save.stars=2;renderViews()');h.element('#grow').onclick();
-    expect(h.run('save.garden')).toBe(1);
+    const h=mainHarness(true);h.run("save.stars=2;switchView('village')");h.element('#grow').onclick();
+    expect(h.run('save.garden')).toBe(0);expect(h.run('save.stars')).toBe(2);
     expect(h.element('#save-status').textContent).toMatch(/recovery copy could not be written/);
     expect(h.stored().garden).toBe(0);
   });

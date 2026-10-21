@@ -237,3 +237,53 @@ dialog::backdrop,#tutorial-dialog::backdrop{backdrop-filter:none}
  .garden-card #grow{grid-column:2;grid-row:3;min-width:44px}
  .garden-card small{grid-column:2;grid-row:4;margin:0;line-height:1.5}
 }
+
+/* 핍 육성: 가격과 효과를 가까이 두고 작은 화면에서도 버튼을 충분히 확보합니다. */
+.pip-care-card{padding:14px 12px;margin-bottom:16px;min-width:0}
+.pip-view-heading{padding:2px 0 12px}
+.pip-view-heading h2{margin-top:5px}
+.pip-care-hero{display:grid;grid-template-columns:minmax(110px,42%) minmax(0,1fr);gap:12px;align-items:center;min-width:0}
+.pip-summary{min-width:0;text-align:left}
+.pip-portrait{position:relative;width:min(100%,160px);height:160px;margin:0 auto;background:radial-gradient(ellipse at 50% 72%,#dce9ce80,transparent 70%)}
+.pip-portrait>img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 5px 6px #697b4b20)}
+.pip-accessory{position:absolute;pointer-events:none}
+.pip-ribbon{width:32%;height:auto;left:34%;top:62%}
+.pip-watering-can{width:38%;height:auto;right:0;bottom:5px}
+.pip-care-card h3{display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:4px 7px;margin:0 0 5px;font-size:19px;line-height:1.25}
+.pip-name{min-width:0;overflow-wrap:anywhere}
+#pip-care-title:focus-visible{outline:2px solid #527957;outline-offset:3px;border-radius:3px}
+.pip-level{font-family:'Nunito',sans-serif;font-size:11px;background:#e7edda;color:#476444;padding:4px 7px;border-radius:18px;letter-spacing:0;white-space:nowrap}
+.pip-care-card .pip-reaction-line{min-height:0;font-size:11px;line-height:1.5;margin:0 0 9px;max-width:none;overflow-wrap:anywhere}
+.pip-stats{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;text-align:left;padding:0 1px;min-width:0}
+.pip-stats label{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px;font-size:10px;color:#4f6748;min-width:0}
+.pip-stats strong{font-size:10px;white-space:nowrap}
+.pip-stats progress{width:100%;height:9px;border:0;border-radius:10px;overflow:hidden;background:#e4e9d9;accent-color:#7c9d6a}
+.pip-stats progress::-webkit-progress-bar{background:#e4e9d9;border-radius:10px}
+.pip-stats progress::-webkit-progress-value{background:#88a873;border-radius:10px}
+.pip-stats label:last-child progress{accent-color:#c88a9c}
+.pip-stats label:last-child progress::-webkit-progress-value{background:#c88a9c}
+.pip-care-card .pip-next{margin:8px 0 10px;font-size:11px;line-height:1.5;background:#f0f2e6;border-radius:10px;padding:7px 9px;max-width:none;overflow-wrap:anywhere}
+.pip-care-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pip-care-actions .primary{flex-direction:column;gap:4px;padding:10px 7px;min-height:60px;min-width:0;font-size:12px;box-shadow:0 2px 0 #355533}
+.pip-care-actions .primary>span{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px}
+.pip-care-actions small{font-size:10px;line-height:1.45;font-weight:600}
+.pip-care-card .pip-purpose,.pip-care-card .pip-care-note,.pip-care-card .pip-shop-note{font-size:10px;line-height:1.7;margin:12px auto;max-width:none}
+.pip-reactions{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;border-bottom:1px solid #e0e6d3;padding-bottom:10px;margin-bottom:14px}
+.pip-reactions .text-button{font-size:10px;padding:10px 8px;min-height:44px}
+.pip-care-card h4{font-size:13px;text-align:left;margin:10px 0 5px}
+.pip-shop-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid #e0e6d3;text-align:left}
+.pip-shop-item>div{display:flex;flex-direction:column;gap:5px;min-width:0}
+.pip-shop-item strong{font-size:12px}
+.pip-shop-item small{font-size:10px;color:#5b6d50}
+.pip-shop-item button{display:flex;align-items:center;justify-content:center;gap:4px;min-height:44px;min-width:84px;border:1px solid #cedac1;border-radius:11px;padding:9px;font-size:11px;background:#eff3e5}
+.pip-care-card .pip-save-note{font-size:11px;color:#8a513b;margin:8px auto;max-width:none}
+.care-demo-banner,.care-demo-entry{border:1px solid #c8d5b7;background:#eef3e4;border-radius:14px;padding:12px 13px;margin-bottom:18px;text-align:left}
+.care-demo-banner{border:2px solid #9daf7d;background:#f8f2dc}
+.care-demo-banner strong{font-size:12px;color:#725a2c}
+.care-demo-banner p,.care-demo-entry p{font-size:11px;line-height:1.65;color:#526648;margin-top:5px}
+.care-demo-banner button,.care-demo-entry button{display:block;margin:5px 0 -5px auto;min-height:44px;font-size:11px;text-decoration:underline;text-underline-offset:3px}
+@keyframes pip-greeting{35%{transform:rotate(-3deg)}70%{transform:rotate(3deg)}}
+.pip-reaction-greet>img{animation:pip-greeting .6s ease-in-out}
+@media(max-width:380px){.pip-care-card{padding:10px 8px}.pip-care-hero{grid-template-columns:minmax(104px,42%) minmax(0,1fr);gap:8px}.pip-portrait{height:136px;max-width:136px}.pip-care-card h3{font-size:16px;gap:3px 5px}.pip-level{font-size:10px;padding:3px 6px}.pip-care-card .pip-reaction-line{font-size:10px;line-height:1.4;margin-bottom:7px}.pip-stats{gap:6px}.pip-stats progress{height:7px}.pip-view-heading{padding-bottom:9px}.pip-view-heading h2{font-size:21px}.pip-care-card .pip-next{font-size:10px;margin:7px 0 8px;padding:6px 8px}.pip-care-actions{gap:7px}.pip-care-actions .primary{font-size:11px;min-height:56px;padding:8px 5px}.pip-care-actions small{font-size:9px}.pip-shop-item{gap:7px}}
+@media(orientation:landscape) and (max-height:520px){.pip-view-heading{padding:0 0 4px}.pip-view-heading .eyebrow{display:none}.pip-view-heading h2{font-size:18px;margin:0;line-height:1.2}.pip-care-hero{grid-template-columns:130px minmax(0,1fr);gap:12px}.pip-portrait{height:110px;width:130px}.pip-care-card{padding:8px 10px}.pip-care-card h3{font-size:18px;margin-bottom:4px}.pip-care-card .pip-reaction-line{margin-bottom:7px}.pip-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.pip-care-card .pip-next{font-size:10px;line-height:1.4;margin:5px 0 7px;padding:5px 8px}.pip-care-actions .primary{min-height:50px;padding:8px 7px;font-size:11px;gap:3px}}
+@media(prefers-reduced-motion:reduce){.pip-reaction-greet>img{animation:none}}
