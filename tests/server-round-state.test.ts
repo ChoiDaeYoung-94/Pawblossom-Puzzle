@@ -49,10 +49,17 @@ describe('서버 순수 회차 상태·기존 엔진 기준 동등성',()=>{
     {special:'row',seed:1,a:{row:3,col:5},b:{row:4,col:5},at:{row:3,col:2}},
     {special:'column',seed:2,a:{row:1,col:4},b:{row:1,col:5},at:{row:3,col:4}},
     {special:'bomb',seed:2,a:{row:6,col:7},b:{row:7,col:7},at:{row:2,col:6}},
-    {special:'rainbow',seed:3,a:{row:4,col:4},b:{row:4,col:5},at:{row:6,col:5}},
+    {special:'rainbow',seed:3,a:{row:3,col:2},b:{row:2,col:2},at:{row:2,col:2}},
   ])('기존 생성/교환으로 만든 $special 탭은 기준 엔진·복원 RNG·점수/수집/낙엽과 동일',fixture=>{
     let calls=0;const next=seededRng(fixture.seed),reference=new BoardEngine(8,8,()=>{calls++;return next();});reference.setLeaves(levels[29].leaves??[]);
-    const initial=startState(30,fixture.seed),setup=reference.swap(fixture.a,fixture.b),before=advanceState(initial,{type:'swap',a:fixture.a,b:fixture.b}).state;
+    const initial=startState(30,fixture.seed);
+    if(fixture.special==='rainbow'){
+      // V2 초기 생성은 정사각을 피하므로 옛 seed3의 5직선 위치가 달라집니다. 같은 seed/소비 상태에 명시적인 5직선 교환을 구성합니다.
+      const authored=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({kind:(r*2+c)%5})));
+      for(const [r,c] of [[2,0],[2,1],[2,3],[2,4],[3,2]])authored[r][c]={kind:5};
+      reference.board=authored.map(row=>row.map(t=>({...t})));initial.board=authored;
+    }
+    const setup=reference.swap(fixture.a,fixture.b),before=advanceState(initial,{type:'swap',a:fixture.a,b:fixture.b}).state;
     expect(setup.valid).toBe(true);expect(before.board[fixture.at.row][fixture.at.col].special).toBe(fixture.special);expect(before.board).toEqual(reference.board);
     const original=clone(before),result=reference.activate(fixture.at),actual=advanceState(clone(before),{type:'activate',at:fixture.at});
     expect(actual.outcome).toBe('valid-activation');expect(result.valid).toBe(true);expect(actual.state.board).toEqual(reference.board);expect(actual.state.leaves).toEqual(reference.leaves);
@@ -63,6 +70,19 @@ describe('서버 순수 회차 상태·기존 엔진 기준 동등성',()=>{
   it('일반 타일 탭은 기준 엔진과 같은 불성립이며 RNG/이동/보드/집계 불변',()=>{
     const state=startState(30,1),before=clone(state),reference=new BoardEngine(8,8,()=>{throw new Error('unexpected-rng');},state),at={row:0,col:0};
     expect(reference.activate(at).valid).toBe(false);expect(advanceState(state,{type:'activate',at})).toEqual({state:before,outcome:'invalid-activation'});expect(state).toEqual(before);
+  });
+  it('명시 V2 정사각만 되는 교환도 서버/순수 엔진의 결과와 RNG가 일치합니다',()=>{
+    const state=startState(1,42);state.board=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({kind:(r*2+c)%5})));
+    for(const [r,c] of [[2,2],[2,3],[3,2],[3,4]])state.board[r][c]={kind:5};
+    validateState(state);let calls=0;const next=seededRng(state.rngState),engine=new BoardEngine(8,8,()=>{calls++;return next();},state);
+    const command={type:'swap' as const,a:{row:3,col:4},b:{row:3,col:3}},result=engine.swap(command.a,command.b),actual=advanceState(state,command);
+    expect(result.steps[0].created).toEqual([{row:3,col:3,tile:{kind:5,special:'bomb'}}]);
+    expect(actual.outcome).toBe('valid-swap');expect(actual.state).toMatchObject({ruleVersion:2,board:engine.board,leaves:engine.leaves,moves:state.moves-1,score:result.score,collected:result.collected});
+    expect(actual.state.rngState).toBe((state.rngState+Math.imul(calls,0x6d2b79f5))>>>0);
+  });
+  it.each([undefined,null,1,3,'2'])('서버 회차 버전 %s는 신규 명시2 계약에서 거절합니다',ruleVersion=>{
+    const state:any=startState(1,42);if(ruleVersion===undefined)delete state.ruleVersion;else state.ruleVersion=ruleVersion;
+    expect(()=>validateState(state)).toThrow();
   });
   it.each(['won','failed'] as const)('특수 탭 마지막 이동의 %s·종료 뒤 재조작 차단',status=>{
     const id=status==='won'?1:30,setup=advanceState(startState(id,1),{type:'swap',a:{row:3,col:5},b:{row:4,col:5}}).state;

@@ -2,7 +2,7 @@ import {BoardEngine,seededRng,type Position,type SwapResult,type Tile} from './c
 
 /** 교환 실습과 본판에서 분리된, 한 번만 실행하는 특수 탭 연습입니다. */
 export class SpecialTapPractice {
-  private engine=new BoardEngine(3,3,seededRng(20261021));
+  private engine=new BoardEngine(3,3,seededRng(20261021),undefined,1);
   result?:SwapResult;
   constructor(){
     this.engine.board=[[0,1,2],[3,4,5],[1,2,0]].map(row=>row.map(kind=>({kind})));

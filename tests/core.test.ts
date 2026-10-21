@@ -3,7 +3,8 @@ import { BoardEngine, seededRng, type Tile } from '../src/core';
 
 // 규칙이 드러나는 작은 보드를 직접 설정하고 첫 제거 단계를 확인합니다.
 function fixture(): BoardEngine {
-  const engine = new BoardEngine(8, 8, seededRng(42));
+  // 기존 직선 규칙 fixture는 V1로 고정합니다. V2 생성/연쇄와 직선 우선순위는 square-rules에서 별도 검증합니다.
+  const engine = new BoardEngine(8, 8, seededRng(42),undefined,1);
   engine.board = Array.from({ length: 8 }, (_, row) => Array.from({ length: 8 }, (_, col) => ({ kind: (row * 2 + col) % 6 })));
   return engine;
 }

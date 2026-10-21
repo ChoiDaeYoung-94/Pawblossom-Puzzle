@@ -7,13 +7,16 @@ import {DatabaseSync} from 'node:sqlite';
 import {GameService,type GameServiceOptions} from '../server/game/gameService';
 import {PlayFabSessionAuthenticator,type PlayFabSessionResult} from '../server/auth/playfabSession';
 import {RoundLedger,type RoundSnapshot} from '../server/game/roundLedger';
+import {squareRoundFixture} from './helpers/squareRoundFixture';
 import {RewardLedger} from '../server/ads/rewardLedger';
 import {CallbackInbox} from '../server/ads/callbackInbox';
 import {BoardEngine} from '../src/core/BoardEngine';
 import {callback,epoch,keyResponse,policy} from './helpers/ssvFixture';
 
-// 이전 원장의 실제 서명 fixture에 합성 인증 owner만 재서명합니다. 실제 계정/키/통신 없음.
-const fixture=JSON.parse(readFileSync(new URL('./helpers/ledger-v1-fixture.json',import.meta.url),'utf8'));
+// 현재 V2 상태/실제 명령으로 만든 합성 fixture에 인증 owner를 연결합니다. 옛 DB 호환/재서명이 아닙니다.
+const legacyFixture=JSON.parse(readFileSync(new URL('./helpers/ledger-v1-fixture.json',import.meta.url),'utf8'));
+const currentFixture=squareRoundFixture(legacyFixture,new Uint8Array(32).fill(67),{ownerId:'synthetic-redemption-owner-private'},epoch);
+const fixture={...legacyFixture,round:currentFixture.round,rounds:currentFixture.rounds};
 const ticket='synthetic-private-session-ticket',provider='0123456789ABCDEF';
 const dirs:string[]=[],resources:{close():void}[]=[];
 const denied=(code:string)=>({kind:'rejected',code});

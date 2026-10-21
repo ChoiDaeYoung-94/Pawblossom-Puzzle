@@ -8,11 +8,14 @@ import {GameService,type GameServiceOptions} from '../server/game/gameService';
 import {createGameHttpAdapter,GAME_HTTP_PATHS as paths,GAME_HTTP_LIMITS as limits,type GameHttpRequest,type GameHttpOptions} from '../server/game/gameHttp';
 import {PlayFabSessionAuthenticator} from '../server/auth/playfabSession';
 import {RoundLedger,type RoundSnapshot} from '../server/game/roundLedger';
+import {squareRoundFixture} from './helpers/squareRoundFixture';
 import {CallbackInbox} from '../server/ads/callbackInbox';
 import {callback,epoch,keyResponse,policy} from './helpers/ssvFixture';
 import {createTrace,step,asyncStep,type LedgerTrace} from './helpers/ledgerDiagnostics';
 
-const fixture=JSON.parse(readFileSync(new URL('./helpers/ledger-v1-fixture.json',import.meta.url),'utf8'));
+const legacyFixture=JSON.parse(readFileSync(new URL('./helpers/ledger-v1-fixture.json',import.meta.url),'utf8'));
+const currentFixture=squareRoundFixture(legacyFixture,new Uint8Array(32).fill(67),{ownerId:'synthetic-redemption-owner-private'},epoch);
+const fixture={...legacyFixture,round:currentFixture.round,rounds:currentFixture.rounds};
 const failed=fixture.rounds.failed as RoundSnapshot;
 const ticket='synthetic-private-session-ticket',provider='0123456789ABCDEF';
 const dirs:string[]=[],resources:{close():void}[]=[];
@@ -54,6 +57,7 @@ describe('게임 HTTP·실제 인증/SQLite/SSV 통합',()=>{
     const f=setup(),{http}=f.open();expect(f.transport).not.toHaveBeenCalled();
     const start=await http(request('start',{requestId:'http-game',levelId:1}));expect(start.status).toBe(200);
     const body=JSON.parse(start.body);expect(Object.keys(body)).toEqual(['kind','created','snapshot']);
+    expect(body.snapshot.state.ruleVersion).toBe(2);expect(body.snapshot.state).not.toHaveProperty('rngState');
     expect(JSON.parse((await http(request('start',{requestId:'http-game',levelId:1}))).body)).toEqual({...body,created:false});
     expect(JSON.parse((await http(request('get',{roundId:body.snapshot.roundId}))).body)).toEqual({kind:'round-snapshot',snapshot:body.snapshot});
     const command={roundId:body.snapshot.roundId,operationId:'http-shuffle',expectedRevision:0,command:{type:'shuffle'}};

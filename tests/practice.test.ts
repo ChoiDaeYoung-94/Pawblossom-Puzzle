@@ -2,6 +2,15 @@ import {describe,expect,it} from 'vitest';
 import {SwapPractice} from '../src/SwapPractice';
 
 describe('첫 교환 실습',()=>{
+  it('선택형 V2 정사각 실습은 실제 꽃폭탄을 생성하고 기존 직선 실습과 중복 입력을 분리합니다',()=>{
+    const classic=new SwapPractice(),lesson=new SwapPractice(true),before=JSON.stringify(classic);
+    expect(lesson.swap({row:0,col:0},{row:0,col:1})).toBe(false);
+    expect(lesson.swipe({row:1,col:2},-56,0)).toBe(true);
+    expect(lesson.result?.steps[0].created).toEqual([{row:1,col:1,tile:{kind:0,special:'bomb'}}]);
+    expect(lesson.result?.steps[0].removed).toEqual([{row:0,col:0},{row:0,col:1},{row:1,col:0}]);
+    const result=lesson.result;expect(lesson.swipe({row:1,col:2},-56,0)).toBe(false);expect(lesson.result).toBe(result);
+    expect(JSON.stringify(classic)).toBe(before);expect(classic.completed).toBe(false);
+  });
   it('표시된 블록을 어느 순서로 선택해도 실제 첫 제거는 딸기 3개입니다',()=>{
     for(const reverse of [false,true]){
       const lesson=new SwapPractice();

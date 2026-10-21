@@ -2,7 +2,8 @@ import {describe,expect,it} from 'vitest';
 import {BoardEngine,seededRng,type Special} from '../src/core';
 
 function fixture(){
-  const engine=new BoardEngine(8,8,seededRng(42));
+  // 기존 V1 직선 피해 회귀를 보존하고 V2 정사각 피해는 square-rules에서 별도로 확인합니다.
+  const engine=new BoardEngine(8,8,seededRng(42),undefined,1);
   engine.board=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({kind:(r*2+c)%6})));
   return engine;
 }

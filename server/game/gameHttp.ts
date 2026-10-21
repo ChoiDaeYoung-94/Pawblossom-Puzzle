@@ -130,7 +130,7 @@ function project(result:Result,route:Route):{status:GameHttpResponse['status'];b
   // 서비스만 만든 공개 snapshot을 명시적으로 선택합니다. RNG·owner·grant·provider context는 포함하지 않습니다.
   const s=result.snapshot,state=s.state;
   const snapshot={roundId:s.roundId,revision:s.revision,createdAt:s.createdAt,expiresAt:s.expiresAt,state:{
-    level:state.level,board:state.board,leaves:state.leaves,moves:state.moves,collected:state.collected,score:state.score,
+    ruleVersion:state.ruleVersion,level:state.level,board:state.board,leaves:state.leaves,moves:state.moves,collected:state.collected,score:state.score,
     shuffles:state.shuffles,clearedLeaves:state.clearedLeaves,status:state.status}};
   if(route==='start'&&result.kind==='round-started')return {status:200,body:{kind:result.kind,created:result.created,snapshot}};
   if(route==='get'&&result.kind==='round-snapshot')return {status:200,body:{kind:result.kind,snapshot}};

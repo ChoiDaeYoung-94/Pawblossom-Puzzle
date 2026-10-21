@@ -1,0 +1,438 @@
+{
+  "source": "7ff7b0700e870a4eb808067635f0dcbc90ea645e",
+  "sourceLfSha256": "f07d4d5ae190b9a0ff28150e2c392adf7810a3eb84b17e1de25c3493269c293e",
+  "description": "변경 전 V1 엔진의 고정 seed/교환·무효입력·섞기·특수 탭 결과와 누적 RNG 소비. CI는 과거 Git 이력에 의존하지 않습니다.",
+  "runs": [
+    {
+      "seed": 0,
+      "initial": {
+        "digest": "1f029ab52615645a113e4c0df0d05b81747873dd1d16f2e3ed93c4720478ddf9",
+        "calls": 64
+      },
+      "steps": [
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 0,
+              "col": 7
+            },
+            "b": {
+              "row": 1,
+              "col": 7
+            }
+          },
+          "calls": 67,
+          "result": "c4e9a5fca63f9c5227878538e0b34c33c0459aef5a6a0c991446dff9b1f69f26",
+          "state": "a288c2273e35f7c19d8acb4956ec65db7c94813ee3a2249ebd76221e06719c30"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": -1,
+              "col": 0
+            },
+            "b": {
+              "row": 0,
+              "col": 0
+            }
+          },
+          "calls": 67,
+          "result": "55ad1fb150b844502fd4c75a65c06f9093893d33039b9c38df3d2c8948fd0cdf",
+          "state": "a288c2273e35f7c19d8acb4956ec65db7c94813ee3a2249ebd76221e06719c30"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 1,
+              "col": 2
+            },
+            "b": {
+              "row": 2,
+              "col": 2
+            }
+          },
+          "calls": 76,
+          "result": "3744432fad549369e26b285ce87e0df54eefdbbdeaabbb8fa806e5538a159cd9",
+          "state": "be1d2434320c9ce49b8322488ee0e9d9c9dce3cfbda0d72b2797d8980b9e7ad7"
+        },
+        {
+          "command": {
+            "type": "shuffle"
+          },
+          "calls": 328,
+          "result": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+          "state": "c502318ee03c12ff439a5a76e2bf5fec1dbb71278e53a2ba67aef59d57dda751"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 3,
+              "col": 1
+            },
+            "b": {
+              "row": 4,
+              "col": 1
+            }
+          },
+          "calls": 331,
+          "result": "f6a61e608580410623ce213951287fc364f80557cd1c789c77e3ae5aa6eb8cd2",
+          "state": "0a23983a6ff36dc96574c490a25b97684adb2e453995d3d7b9d77a03eb632cc6"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 5,
+              "col": 5
+            },
+            "b": {
+              "row": 6,
+              "col": 5
+            }
+          },
+          "calls": 337,
+          "result": "d942df838ca9f719f0fb163006ed5e081eec25d707428de918edb399a9958217",
+          "state": "414323fff0ec47048cbbf5b87789de8d4f45b1e7172388479776471ac6c19d22"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 2,
+              "col": 0
+            },
+            "b": {
+              "row": 3,
+              "col": 0
+            }
+          },
+          "calls": 340,
+          "result": "d0127bdc1b52eaa896a8e8c366b5b0a3035b0051f5c0aeadb2a075c709815ebd",
+          "state": "dec344a4f062049f62f9edf5d3254ee9bdb0d5f5b40b7af60389f2a482489849"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 4,
+              "col": 6
+            },
+            "b": {
+              "row": 5,
+              "col": 6
+            }
+          },
+          "calls": 343,
+          "result": "0dfc6c6a1f5e622c77823005fccbe26c066088daa41268d892bbc86717cb274b",
+          "state": "a5a270a30774a771621ebf5a7d91a4c009c2389488d0a68bf37b49ed8237848b"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 0,
+              "col": 2
+            },
+            "b": {
+              "row": 0,
+              "col": 3
+            }
+          },
+          "calls": 346,
+          "result": "eeda61f35ec989f74d231585d057255ca523980898eb7d32dbaad0614dbc6fad",
+          "state": "6a2eb641919c4688026e2d0347008865f81abde3a01e3b1d5fdd2d09ac883279"
+        }
+      ]
+    },
+    {
+      "seed": 42,
+      "initial": {
+        "digest": "c01e86ae668a14a8bfd197fa355de9bb6da3880426cda714bcee7041714ac48f",
+        "calls": 64
+      },
+      "steps": [
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 0,
+              "col": 4
+            },
+            "b": {
+              "row": 1,
+              "col": 4
+            }
+          },
+          "calls": 67,
+          "result": "bcee3096a12c339f1439fa507dd5b1ee85345d07d408a5774d429c330cb0e442",
+          "state": "7284cc1f44a86adf9c569d2df2b151fced4f21ab2392f29061f9090d9ef4e08e"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": -1,
+              "col": 0
+            },
+            "b": {
+              "row": 0,
+              "col": 0
+            }
+          },
+          "calls": 67,
+          "result": "55ad1fb150b844502fd4c75a65c06f9093893d33039b9c38df3d2c8948fd0cdf",
+          "state": "7284cc1f44a86adf9c569d2df2b151fced4f21ab2392f29061f9090d9ef4e08e"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 2,
+              "col": 6
+            },
+            "b": {
+              "row": 2,
+              "col": 7
+            }
+          },
+          "calls": 70,
+          "result": "e6be6319659c496c7ef8726ddcd6b2871e0e08f7ace41eda505a0d12cc7e347c",
+          "state": "0ab75c5266a728e49367c3c97fb509a9e7b95f6ea664b538284bfe86c0a3b007"
+        },
+        {
+          "command": {
+            "type": "shuffle"
+          },
+          "calls": 322,
+          "result": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+          "state": "5cea0ec1187cd6e88b6258064b547b890f74a500fb70eba6a2f34983bd12b06d"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 5,
+              "col": 3
+            },
+            "b": {
+              "row": 6,
+              "col": 3
+            }
+          },
+          "calls": 325,
+          "result": "4baa5ee45c1ace04555b62379bb35f4bb3583d5472d812f3f5cc90f3c4736899",
+          "state": "91edb5795dd7071bd39116e54a929f6bde93bfa41f622d195aa5d52d19e9c7f7"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 4,
+              "col": 4
+            },
+            "b": {
+              "row": 4,
+              "col": 5
+            }
+          },
+          "calls": 328,
+          "result": "7c6486b83e271a05ba9260afa4803ae1fa990c531121b13763ad07d992be8e03",
+          "state": "8984a63b81681d067cb65386f8cccfc5d2d3f4711f1a7143f767ecccb6d8b4d5"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 5,
+              "col": 3
+            },
+            "b": {
+              "row": 6,
+              "col": 3
+            }
+          },
+          "calls": 331,
+          "result": "e91a5509eee35553a05f7cc43cd068160fd912c932ccb94b0add9deb0cd78472",
+          "state": "1fca2734a61e005e32d69bca04309f49d48fe96d30de7989d9080ccb64321dbc"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 6,
+              "col": 1
+            },
+            "b": {
+              "row": 6,
+              "col": 2
+            }
+          },
+          "calls": 337,
+          "result": "533acb96470f88def7b552e298b12b33cebeda8e285c47624727e8f5c72e996b",
+          "state": "7426808cfc58205857916f0f1599c1a945f94c613643deb8598e4e331a8b83d0"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 2,
+              "col": 7
+            },
+            "b": {
+              "row": 3,
+              "col": 7
+            }
+          },
+          "calls": 340,
+          "result": "9e56bd493c8934af35f5fcc077a1842d92e3a1e702944808b5ad5bcdd3ac4318",
+          "state": "e5f05e4295d431acc8eb8a58615c5c7a030ed4b1da9c2d47c9ecb64573c5a4bb"
+        }
+      ]
+    },
+    {
+      "seed": 4294967295,
+      "initial": {
+        "digest": "70df468dfa88a6af77ad4ba0e47ad02c792aaf4d4a04afbad0f968096bedd8a4",
+        "calls": 64
+      },
+      "steps": [
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 0,
+              "col": 0
+            },
+            "b": {
+              "row": 1,
+              "col": 0
+            }
+          },
+          "calls": 67,
+          "result": "6b5425d90f1165e2d983dbe2be0bcf245f8b6af1a1aecad815a73dc7e2483b1d",
+          "state": "5a693c4f724095d8af38b4dadfb5f89ff4bce5eebe190641547bf272bbc227ab"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": -1,
+              "col": 0
+            },
+            "b": {
+              "row": 0,
+              "col": 0
+            }
+          },
+          "calls": 67,
+          "result": "55ad1fb150b844502fd4c75a65c06f9093893d33039b9c38df3d2c8948fd0cdf",
+          "state": "5a693c4f724095d8af38b4dadfb5f89ff4bce5eebe190641547bf272bbc227ab"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 1,
+              "col": 0
+            },
+            "b": {
+              "row": 1,
+              "col": 1
+            }
+          },
+          "calls": 70,
+          "result": "02f48aacddc6cf8258335915a055e9772c3eda434a2b10cef2fea677794a209b",
+          "state": "5d58740572b4540f7776cfb268bb68771f7422f875497bc15ce2d494fbe56234"
+        },
+        {
+          "command": {
+            "type": "shuffle"
+          },
+          "calls": 385,
+          "result": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+          "state": "dee446f7f62ae1b1bbed3bece833eb09570be62769e96670595862f41a866f8a"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 4,
+              "col": 2
+            },
+            "b": {
+              "row": 5,
+              "col": 2
+            }
+          },
+          "calls": 400,
+          "result": "48976a33df0c1b503b4d7750d207985518e6b49d64d55cb6a92bb45aa8d00212",
+          "state": "cdf87b5e0a1b3b8fea47bf02dc9ca8ba0eb6f7403100fafd7a519049d44fdcc6"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 4,
+              "col": 5
+            },
+            "b": {
+              "row": 5,
+              "col": 5
+            }
+          },
+          "calls": 409,
+          "result": "6f5c5e5d65ec5b2eb4c54e48dc4290aad04665532867b826ef95402c099f4e7a",
+          "state": "909fb4cedd889730203d6f7997f975abb58d0cceef3003748699e25e5efa365e"
+        },
+        {
+          "command": {
+            "type": "activate",
+            "at": {
+              "row": 5,
+              "col": 5
+            }
+          },
+          "calls": 417,
+          "result": "f37a9869fe0d5affbfe77eae1b1c730351e763ae61e32f137b5c08e06a6730ed",
+          "state": "db8ad540cbb37288caf922185ac3286e800a16a87bcf4d37b7f46d2af66c5b16"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 3,
+              "col": 3
+            },
+            "b": {
+              "row": 4,
+              "col": 3
+            }
+          },
+          "calls": 426,
+          "result": "859baa90e61fe3e3753283547b93acf9fc1dd75f0f89a80873c8771a79c4e955",
+          "state": "939b1e254c4bf2d50f743f8c40e5a4430c9ddb8a9e0cafa742f13083b8f434f3"
+        },
+        {
+          "command": {
+            "type": "swap",
+            "a": {
+              "row": 4,
+              "col": 4
+            },
+            "b": {
+              "row": 4,
+              "col": 5
+            }
+          },
+          "calls": 435,
+          "result": "81e3e980d21439e2a31307c7db5ad81b2b0ea0ac73ffd77e5e69a9477a56674a",
+          "state": "0b3daa0468beaadc038778ae600b3ed3391a76fe5d16d75b5e2de9f9d77a6c40"
+        }
+      ]
+    }
+  ]
+}
