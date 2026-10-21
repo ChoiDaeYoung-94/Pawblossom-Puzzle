@@ -1,4 +1,25 @@
-## 현재 작업 · 2026-10-21 · #122 트랜잭션 호출 구간 관측 (커밋 전 검수 대기)
+## 현재 작업 · 2026-10-21 · #160 모든 광고 제거 안내·통합 회귀 (커밋 전 검수)
+
+기준 main/origin main `ad793a0b20e064aef5afe5c36f85914c9ddf9b63`, 브랜치 `codex/160-all-ads-removal-state`입니다. 기준의 [정확 main CI39529995708](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39529995708)는 총괄이 Node22·24 각각35파일2,390개·store12·타입·두 빌드 성공을 확인한 버전입니다. **이번 변경은 관련232개·전체35파일2,403개 한 번·타입/store12/에셋·두 웹 빌드·실제 testing/production dist 브라우저 검증을 통과했고 커밋 전 총괄 독립검수 대기**입니다. 커밋·푸시·PR은 아직 없으며 아래 이전 현재/제출 전 표현은 당시 이력입니다.
+
+`billingCopy.entitlement.owned`는 KO/EN 모두 검증된 권한으로 전면·보상형 시험 광고를 차단한다고 명시합니다. 작은 `adBlockMessage()`를 광고 창과 보상 이어하기가 공유하고, unknown/pending/busy 등 나머지 차단은 구매 확인/처리 중 전체 광고 보류로 구분합니다. 기존 차단 조건·권한 판정·준비/표시·보상·저장 동작은 그대로입니다. 무료 이어하기 혜택/횟수·가격·운영 SKU·native 코드·Android/버전·최종 믹스는 변경하지 않았습니다.
+
+UI 하네스에 두 실제 `TestAdsController`/`TestBillingController`와 명시적인 두 합성 브리지를 함께 연결했습니다. 두 형식×loading/ready×owned 이벤트/restore의8경우에서 추가 prepare/show IPC0을 확인합니다. KO/EN의 unknown/pending/querying/owned 문구·차단, owned 상태 또는 닫힘 전 미구매 재전환의 늦은 earned/closed와 이전 receipt 재사용 지급0, 이후 새 요청의 기존 +5 시험 이어하기1회, scene/engine·회차·이동·저장 보존, 표시 중 owned여도 실제 closed 이벤트 전 닫기/Escape/back 보호를 검증합니다. 기존 단순 blocksAds 객체 주입1경우를 실제 컨트롤러 회귀14경우로 대체하여 전체는13개 증가했습니다. 하네스의 disabled 속성도 기록하여 버튼 상태를 확인합니다.
+
+| 단계 | 명령·결과·버전 경계 |
+| --- | --- |
+| 관련 | `npm.cmd test -- tests/ui-flow.test.ts tests/test-ads.test.ts tests/test-billing.test.ts --reporter=default --reporter=json --outputFile.json=<QA>/related-final.json` · 3파일232/232, 1.28초. 최초 관련231개 성공 뒤 닫힘 전 미구매 전환 여부1경우와 문구 assertion을 보강한 최종본입니다. |
+| 최종 전체1회 | `npm.cmd test -- --reporter=default --reporter=json --outputFile.json=<QA>/full.json` · 35파일2,403/2,403, 56.35초. Node24.21.0/Vitest4.1.11, 기존 worker/5초/SQLite500ms/retry/업무 assertion/CI 유지입니다. 이후 저장소 변경은 이 문서2개뿐입니다. |
+| 정적·스토어 | `npm.cmd run typecheck`, `store:check`, `store:test`12/12, `assets:check`, `build:test`→`build` 모두 성공입니다. 기존 chunk 크기/SQLite·타입변환 experimental 경고를 로그에 보존했습니다. |
+| testing 실제 dist | `node scripts/test-ads-qa.mjs --dist --output=<QA>/browser-testing-initial` · 격리 headless Chrome155.0.8059.85. 기존3비율×KO/EN×2형식×10상태120배치 + 새 KO/EN×2형식×loading/ready8조합, 총14체크·12PNG·페이지오류0·외부요청0입니다. 새 조합은 owned/unknown/pending/busy·합성 늦은ready/클릭의 추가 prepare/show0·복원1·언어왕복·44px/히트·화면내 배치·owned overlay/closed·이동/점수/저장 byte 불변을 확인했습니다. 세로320×568 KO와 가로640×360 EN PNG도 직접 검토했습니다. |
+| production 실제 dist | 동일 `test-ads-qa.mjs --dist`와 기존 `billing-qa.mjs --dist` · 실제 웹/Android IPC 대역 모두 광고 진입 없음·광고IPC0, 결제 진입/모달 없음·Billing IPC0, 페이지오류0·외부요청0입니다. 사용자 Chrome·5173·실제 저장을 사용하지 않았습니다. |
+| flags·산출물 | testing3true/production3false, src와 양 빌드의 서버/진단 마커0입니다. production SDK 플러그인명/광고·시험선택 진입 마커가 없으며 실제 DOM·IPC 검증도 위와 같습니다. production JS는 공통 i18n의 보류 문구2개 때문에 기준과 byte 동일하지 않습니다. 청크 파일명을 정규화하면 main JS는 그2문구 치환만으로 동일, web JS도 동일, CSS SHA는 그대로입니다. 최종 main JS `index-B3OEUStf.js` SHA256=`ba63d1ad5e1bd1c158a52a0f817608160ad70f9a69e61eb20259c5dcd2bfc553`입니다. |
+
+Git 밖 `<QA>=C:/Users/user/Documents/ChatGPT/Pawblossom-builds/qa/issue-160-all-ads-state`에 명령 로그/JSON·PNG·기준/testing/production JS/CSS·flags·소스 사본/LF SHA·`source-build-review.json`·`checkpoint.json`을 보존합니다. 최초 Git 밖 산출물 검사에서 `test-billing-button` 문자열의 완전 소거를 가정한 assertion1건이 실패했습니다. 기준/최종 모두 기존 닫기 함수의 focus 선택자를 보유하므로 그 가정을 정정했고, 변경하지 않은 billing QA로 실제 결제 진입/모달/IPC 부재를 별도 확인했습니다. 제품 소스 보완이나 전체검사 재실행은 없으며 실패/정정 근거도 보존합니다.
+
+네이티브 `TestCommerce.blocksAds`와 `TestAdsPlugin`의 두 형식 prepare/load/show·광고 객체/receipt 폐기·늦은 earn/dismiss 재확인은 읽기로 확인했으며 이번에 우회 결함을 발견/수정한 것이 아닙니다. 합성 브리지에 명시한 폐기/overlay 모델은 Android SDK 동작의 증명이 아닙니다. 실제 ready 객체·지연 콜백·Play 구매/복원·단말/스토어는 #73에 남기고, #122의 과거 BEGIN BUSY/보상 timeout 원인도 미해결로 유지합니다. 총괄의 독립검수·후속 PR/main CI·병합은 별도이며 이번 결과를 그 성공으로 합산하지 않습니다. 사용자 조치·질문은 없고 오늘17시 APK/Drive는 총괄이 별도로 담당합니다.
+
+## 이전 작업 · 2026-10-21 · #122 트랜잭션 호출 구간 관측 (당시 커밋 전 검수)
 
 기준 main/origin main `aac84bba5ac2477cbbead77bd08ae0eef2c524e4`, 브랜치 `codex/122-transaction-observation`에서 검사 전용 hook의 정적 BEGIN IMMEDIATE/COMMIT/ROLLBACK 호출만 관측했습니다. **최종 안전15개·관련3파일338개·전체35파일2,390개 한 번·타입/스토어12/에셋/두 웹 빌드 통과, 커밋 전 총괄 독립검수 대기**입니다. 새 커밋/푸시/PR은 없으며 Refs #122로 제출할 예정입니다. 아래 과거 현재/제출 전 표현은 당시 이력입니다.
 
