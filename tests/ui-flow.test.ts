@@ -1557,6 +1557,37 @@ describe('저장 상태·초기화 UI 보호',()=>{
 });
 
 
+describe('V1 회차 보존과 V2 정사각 안내',()=>{
+  it('버전 없는 기존 판을 그대로 복원·재저장하고 명시 재시작부터2를 쓰며 Pip·영구 기록을 보존합니다',()=>{
+    const original=mainHarness().stored();delete original.inProgress.ruleVersion;
+    original.inProgress.board=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({kind:(r*2+c)%5})));
+    for(const [r,c] of [[2,2],[2,3],[3,2],[3,3]])original.inProgress.board[r][c]={kind:5};original.inProgress.board[0][0].special='row';
+    original.pip={growth:34,affection:22,owned:['ribbon'],equipped:'ribbon'};
+    const h=mainHarness(false,false,false,false,original),before=h.run('JSON.stringify({board:scene.engine.board,leaves:scene.engine.leaves,moves,score,collected})');
+    expect(h.run('scene.engine.ruleVersion')).toBe(1);expect(h.element('#round-resumed-notice').textContent).toBe(t('en','roundResumedClassic'));
+    h.run("changeLanguage('ko');checkpoint()");expect(h.element('#round-resumed-notice').textContent).toBe(t('ko','roundResumedClassic'));
+    expect(h.stored().inProgress.ruleVersion).toBe(1);expect(h.run('JSON.stringify({board:scene.engine.board,leaves:scene.engine.leaves,moves,score,collected})')).toBe(before);
+    const next=mainHarness(false,false,false,false,h.stored());expect(next.run('scene.engine.ruleVersion')).toBe(1);
+    next.run('startLevel(currentLevel)');expect(next.run('scene.engine.ruleVersion')).toBe(2);expect(next.stored().inProgress.ruleVersion).toBe(2);
+    for(const field of ['completed','stars','coins','garden','pip'])expect(next.stored()[field]).toEqual(original[field]);
+  });
+  it.each(['ko','en'] as const)('%s 선택형2×2는 본판/저장을 바꾸지 않고 실제 생성·완료와 언제든 시작을 유지합니다',language=>{
+    const h=mainHarness();h.run(`changeLanguage('${language}');switchView('settings');showTutorial();tutorialPage=3;practice=new SwapPractice();practice.swipe({row:0,col:2},0,56);renderTutorial()`);
+    const saved=h.disk(),before=h.run('JSON.stringify({round,moves,score,collected,board:scene.engine.board,leaves:scene.engine.leaves})');
+    h.element('#practice-square').onclick();expect(h.run('squarePractice.completed')).toBe(false);
+    expect(h.element('#tutorial-dialog').innerHTML).toContain(t(language,'squarePracticeTitle'));
+    expect(h.element('#tutorial-dialog').innerHTML).not.toMatch(/id="guide-next"[^>]*disabled/);
+    h.run('squarePractice.swipe({row:1,col:2},-56,0);renderTutorial()');
+    expect(h.run('squarePractice.result.steps[0].created[0].tile.special')).toBe('bomb');
+    const html=h.element('#tutorial-dialog').innerHTML;
+    expect(html.split(t(language,'squarePracticeDone'))).toHaveLength(2);
+    expect(html).toContain(t(language,'squarePracticeMatched'));expect(html).toContain('class="practice-bomb"');
+    expect(html).toContain(t(language,'squarePracticeBombCell').replace('{row}','2').replace('{col}','2'));
+    expect(html).toMatch(/id="practice-cell-1-1"[^>]+practice-created[^>]+disabled/);
+    expect(h.disk()).toEqual(saved);expect(h.run('JSON.stringify({round,moves,score,collected,board:scene.engine.board,leaves:scene.engine.leaves})')).toBe(before);
+  });
+});
+
 describe('언어 정합성과 버전 단일 원본',()=>{
   it('KO/EN 키와 치환 변수가 같고 빈 번역이 없습니다',()=>{
     const values:Record<string,any>={};vm.runInNewContext(i18nCode+'\nexports.messages=strings;', {exports:values});

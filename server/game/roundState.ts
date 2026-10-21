@@ -4,13 +4,14 @@ import {BoardEngine, seededRng, type BoardSnapshot, type Position} from '../../s
 import {levels, type Level} from '../../src/levels.ts';
 
 // 엔진 변경 시 이 해시와 profile을 함께 갱신해야 하며 기존 DB는 migration 없이 열리지 않습니다.
-export const ENGINE_PROFILE = 'pawblossom-board-v1';
-export const ENGINE_SOURCE_SHA256 = 'f07d4d5ae190b9a0ff28150e2c392adf7810a3eb84b17e1de25c3493269c293e';
+export const ENGINE_PROFILE = 'pawblossom-board-square-v2';
+export const ENGINE_SOURCE_SHA256 = 'c02c8278090d332b3d56f05636158d360947d55e8ef84cddff20aa81c7fd3778';
 export type RoundStatus = 'active' | 'won' | 'failed' | 'abandoned';
 export type Command = {type:'swap';a:Position;b:Position} | {type:'activate';at:Position} | {type:'shuffle'} | {type:'abandon'};
 export type CommandOutcome = 'valid-swap' | 'invalid-swap' | 'valid-activation' | 'invalid-activation' | 'shuffled' | 'abandoned';
 type Frozen<T> = T extends object ? {readonly [K in keyof T]:Frozen<T[K]>} : T;
 export interface RoundState extends BoardSnapshot {
+  ruleVersion:2;
   level:Level;
   rngState:number;
   moves:number;
@@ -73,8 +74,8 @@ function trackedRng(state:Pick<RoundState,'rngState'>):()=>number {
 export function startState(levelId:number,seed:number):RoundState {
   if(!integer(seed,0,0xffffffff))throw new Error('invalid-seed');
   const level=levelSnapshot(levelId);
-  const state:RoundState={level,rngState:seed,moves:level.moves,collected:[0,0,0,0,0,0],score:0,shuffles:1,clearedLeaves:0,status:'active',board:[],leaves:[]};
-  const engine=new BoardEngine(8,8,trackedRng(state));engine.setLeaves(level.leaves??[]);
+  const state:RoundState={ruleVersion:2,level,rngState:seed,moves:level.moves,collected:[0,0,0,0,0,0],score:0,shuffles:1,clearedLeaves:0,status:'active',board:[],leaves:[]};
+  const engine=new BoardEngine(8,8,trackedRng(state),undefined,2);engine.setLeaves(level.leaves??[]);
   state.board=engine.board;state.leaves=engine.leaves;return state;
 }
 export function advanceState(input:RoundState,command:Command):{state:RoundState;outcome:CommandOutcome} {
@@ -102,7 +103,8 @@ export function publicState(state:RoundState):PublicRoundState {
 }
 /** HMAC 검증 뒤에도 구조·범위·콘텐츠·종료 상태의 일관성을 검사합니다. */
 export function validateState(input:unknown):asserts input is RoundState {
-  const s=exactRecord(input,['level','rngState','moves','collected','score','shuffles','clearedLeaves','status','board','leaves']);
+  const s=exactRecord(input,['ruleVersion','level','rngState','moves','collected','score','shuffles','clearedLeaves','status','board','leaves']);
+  if(s.ruleVersion!==2)throw new Error('invalid-rules');
   const id=Object.getOwnPropertyDescriptor(s.level??{},'id')?.value;
   if(!isLevelId(id))throw new Error('invalid-level');
   const expectedLevel=levelSnapshot(id);
@@ -128,6 +130,6 @@ export function validateState(input:unknown):asserts input is RoundState {
   const won=level.goals.every(g=>Number(collected[g.kind])>=g.count)&&s.clearedLeaves>=piles.length;
   if(typeof s.status!=='string'||!['active','won','failed','abandoned'].includes(s.status)||(s.status==='won'&&!won)||(s.status==='failed'&&(s.moves!==0||won))
     ||(s.status==='active'&&(s.moves===0||won))||(s.status==='abandoned'&&won))throw new Error('invalid-status');
-  const engine=new BoardEngine(8,8,()=>{throw new Error('unexpected-rng');},{board:board as unknown as BoardSnapshot['board'],leaves});
+  const engine=new BoardEngine(8,8,()=>{throw new Error('unexpected-rng');},{ruleVersion:2,board:board as unknown as BoardSnapshot['board'],leaves});
   if(engine.findMatches().length||!engine.hasMoves())throw new Error('unsettled-board');
 }

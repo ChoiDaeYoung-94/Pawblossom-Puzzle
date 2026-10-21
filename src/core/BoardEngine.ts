@@ -1,6 +1,7 @@
 export type Special = 'row' | 'column' | 'bomb' | 'rainbow';
+export type RuleVersion = 1 | 2;
 export interface Tile { kind: number; special?: Special }
-export interface BoardSnapshot { board: Tile[][]; leaves: number[][] }
+export interface BoardSnapshot { board: Tile[][]; leaves: number[][]; ruleVersion?: RuleVersion }
 export interface Position { row: number; col: number }
 export interface LeafPile extends Position { layers: 1 | 2 }
 export interface LeafHit extends Position { before: number; after: number }
@@ -20,7 +21,7 @@ export interface SwapResult {
   score: number;
   leavesCleared?: number;
 }
-interface Run { cells: Position[]; horizontal: boolean }
+interface Run { cells: Position[]; horizontal?: boolean; square?: true }
 const clone = (board: Tile[][]): Tile[][] => board.map(row => row.map(tile => ({ ...tile })));
 
 /** 재현 가능한 Mulberry32 난수 생성기입니다. */
@@ -39,10 +40,15 @@ export function seededRng(seed: number): () => number {
 export class BoardEngine {
   public board: Tile[][];
   public leaves: number[][];
-  constructor(public readonly rows = 8, public readonly cols = 8, private readonly rng: () => number = Math.random, snapshot?: BoardSnapshot) {
+  public readonly ruleVersion:RuleVersion;
+  constructor(public readonly rows = 8, public readonly cols = 8, private readonly rng: () => number = Math.random, snapshot?: BoardSnapshot, ruleVersion?:RuleVersion) {
     if (!Number.isInteger(rows) || !Number.isInteger(cols) || rows < 3 || cols < 3) {
       throw new RangeError('보드의 행과 열은 각각 3 이상의 정수여야 합니다.');
     }
+    const saved=snapshot?.ruleVersion;
+    const rules=ruleVersion===undefined?(snapshot?(saved===undefined?1:saved):2):ruleVersion;
+    if((rules!==1&&rules!==2)||(saved!==undefined&&saved!==rules))throw new RangeError('지원하지 않거나 일치하지 않는 회차 규칙입니다.');
+    this.ruleVersion=rules;
     // 저장 검증을 마친 스냅샷은 초기 생성 난수를 소비하지 않고 복원합니다.
     this.board = snapshot ? clone(snapshot.board) : [];
     this.leaves = snapshot ? snapshot.leaves.map(row=>row.slice()) : Array.from({length:rows},()=>Array(cols).fill(0));
@@ -96,6 +102,10 @@ export class BoardEngine {
         }
       }
     }
+    if(this.ruleVersion===2)for(let row=0;row<this.rows-1;row++)for(let col=0;col<this.cols-1;col++){
+      const cells=[{row,col},{row,col:col+1},{row:row+1,col},{row:row+1,col:col+1}];
+      if(cells.every(p=>this.board[p.row][p.col].kind===this.board[row][col].kind))result.push({cells,square:true});
+    }
     return result;
   }
   public findMatches(): Position[] {
@@ -128,7 +138,8 @@ export class BoardEngine {
       for (let row = 0; row < this.rows; row++) for (let col = 0; col < this.cols; col++) {
         const choices = [0, 1, 2, 3, 4, 5].filter(kind =>
           !(col >= 2 && this.board[row][col - 1].kind === kind && this.board[row][col - 2].kind === kind) &&
-          !(row >= 2 && this.board[row - 1][col].kind === kind && this.board[row - 2][col].kind === kind));
+          !(row >= 2 && this.board[row - 1][col].kind === kind && this.board[row - 2][col].kind === kind) &&
+          !(this.ruleVersion===2&&row>0&&col>0&&this.board[row-1][col].kind===kind&&this.board[row][col-1].kind===kind&&this.board[row-1][col-1].kind===kind));
         this.board[row][col] = { kind: choices[this.randomIndex(choices.length)] };
       }
       if (this.hasMoves()) return;
@@ -160,10 +171,11 @@ export class BoardEngine {
       groups.push(group);
     }
     return groups.flatMap(group => {
-      const long = group.find(run => run.cells.length >= 5);
-      const cross = group.some(run => run.horizontal) && group.some(run => !run.horizontal);
-      const four = group.find(run => run.cells.length >= 4);
-      const special: Special | undefined = long ? 'rainbow' : cross ? 'bomb' : four ? (four.horizontal ? 'row' : 'column') : undefined;
+      const long = group.find(run => !run.square&&run.cells.length >= 5);
+      const cross = group.some(run => run.horizontal===true) && group.some(run => run.horizontal===false);
+      const square=group.find(run=>run.square);
+      const four = group.find(run => !run.square&&run.cells.length >= 4);
+      const special: Special | undefined = long ? 'rainbow' : cross||square ? 'bomb' : four ? (four.horizontal ? 'row' : 'column') : undefined;
       if (!special) return [];
       const cells = group.flatMap(run => run.cells);
       const intersection = cells.find(p => group.filter(run => run.cells.some(q => this.key(p) === this.key(q))).length > 1);
@@ -279,6 +291,10 @@ export class BoardEngine {
           for (const [dr, dc] of [[1, 0], [0, 1]]) for (let offset = -2; offset <= 0; offset++) {
             const cells = [0, 1, 2].map(i => next[row + (offset + i) * dr]?.[col + (offset + i) * dc]);
             if (cells.every((tile, i) => offset + i === 0 || tile?.kind === kind)) return false;
+          }
+          if(this.ruleVersion===2)for(const dr of [-1,0])for(const dc of [-1,0]){
+            const cells=[{row:row+dr,col:col+dc},{row:row+dr,col:col+dc+1},{row:row+dr+1,col:col+dc},{row:row+dr+1,col:col+dc+1}];
+            if(cells.every(p=>(p.row===row&&p.col===col)||next[p.row]?.[p.col]?.kind===kind))return false;
           }
           return true;
         });

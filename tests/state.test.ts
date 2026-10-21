@@ -49,6 +49,25 @@ function roundSave():RoundCheckpoint {
     moves:24,score:1240,collected:[3,4,5,6,7,8],shuffles:0,clearedLeaves:1};
 }
 describe('안정 회차 저장 검증',()=>{
+  it('2×2가 남은 구 회차는 기존 규칙으로 복원하고 새 V2 안정 검사와 구분하며 Pip·영구 기록을 보존합니다',()=>{
+    const checkpoint=roundSave();checkpoint.board=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({kind:(r*2+c)%5})));
+    for(const [r,c] of [[2,2],[2,3],[3,2],[3,3]])checkpoint.board[r][c]={kind:5};
+    checkpoint.board[0][0].special='row';
+    expect(validateCheckpoint(checkpoint,6)).toEqual(checkpoint);
+    expect(validateCheckpoint({...checkpoint,ruleVersion:2},6)).toBeUndefined();
+    for(const ruleVersion of [null,0,3,'2'])expect(validateCheckpoint({...checkpoint,ruleVersion},6)).toBeUndefined();
+    const pip={growth:34,affection:22,owned:['ribbon'],equipped:'ribbon'};
+    storage({version:1,highestLevel:6,completed:[1,2,3,4,5],stars:3,coins:200,garden:1,pip,inProgress:checkpoint});
+    const save=loadSave();expect(save.pip).toEqual(pip);expect(save.inProgress).toEqual(checkpoint);
+    expect(new BoardEngine(8,8,()=>{throw Error('복원 난수');},save.inProgress).ruleVersion).toBe(1);
+    expect(saveData(save)).toBe(true);expect(loadSave()).toEqual(save);
+  });
+  it('명시 V2 checkpoint는 같은 규칙으로 왕복하며 구 회차의 명시1도 유지합니다',()=>{
+    for(const ruleVersion of [1,2] as const){
+      const checkpoint={...roundSave(),ruleVersion};expect(validateCheckpoint(checkpoint,6)).toEqual(checkpoint);
+      storage({highestLevel:6,completed:[1,2,3,4,5],inProgress:checkpoint});const save=loadSave();expect(saveData(save)).toBe(true);expect(loadSave().inProgress?.ruleVersion).toBe(ruleVersion);
+    }
+  });
   it('보드·특수·낙엽·수치와 기존 영구 기록을 같은 저장 키로 복원합니다',()=>{
     storage({version:1,highestLevel:6,completed:[1,2,3,4,5],stars:3,coins:200,garden:1,inProgress:roundSave()});
     const save=loadSave();expect(save.inProgress).toEqual(roundSave());
