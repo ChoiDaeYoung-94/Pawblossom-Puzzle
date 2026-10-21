@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRequire } from 'node:module';
 import type Phaser from 'phaser';
-import { BoardEngine, seededRng, type Tile, type Position, type ResolveStep } from '../src/core';
+import { BoardEngine, seededRng, type Cell, type Tile, type Position, type ResolveStep } from '../src/core';
 
 class Piece {
   destroyed=false;alpha=1;scale=1;
@@ -41,12 +41,13 @@ vi.mock('phaser',async()=>{
 });
 import { BoardScene } from '../src/BoardScene';
 import type { ResolveVisual } from '../src/RoundFeedback';
+import {levels} from '../src/levels';
 // 렌더링은 대역을 유지하되 예약/만료/제거는 설치된 Phaser 3.90 Clock 원본을 사용합니다.
 const Clock=createRequire(import.meta.url)('phaser/src/time/Clock.js') as new(scene:unknown)=>Phaser.Time.Clock&{start():void};
 interface RenderScene {
   sys:{isActive():boolean;isPaused():boolean};shuffle():boolean;resumeAfterFailure():boolean;
   pieces:Piece[][];engine:BoardEngine;
-  paint(board:Tile[][]):void;drop(step:ResolveStep):void;
+  paint(board:Cell[][]):void;drop(step:ResolveStep):void;
   attempt(a:Position,b?:Position):Promise<void>;tap(p:Position):void;resetHint():void;
   showEffect(step:ResolveStep):Graphic;
   paintLeaves(leaves:number[][]):void;
@@ -66,7 +67,7 @@ describe('보드 포인터 종료 (Phaser 입력 대역)',()=>{
   const pointer=(overrides:Record<string,unknown>={})=>({id:1,x:44,y:44,downTime:1,wasTouch:true,wasCanceled:false,event:{touches:[{}]},...overrides});
   const create=()=>{const h=harness();h.scene.create();return h;};
   it.each([false,true])('취소된 일반/특수 탭은 보드·선택·결과를 바꾸지 않고 다음 입력은 회복합니다 (%s)',async special=>{
-    const {scene,onMove}=create();if(special)scene.engine.board[0][0].special='row';
+    const {scene,onMove}=create();if(special)scene.engine.board[0][0]!.special='row';
     const before=snapshot(scene.engine);scene.input.emit('pointerdown',pointer());scene.input.emit('pointerup',pointer({wasCanceled:true}));
     expect(snapshot(scene.engine)).toEqual(before);expect(scene.keyboardState().selected).toBeUndefined();expect(onMove).not.toHaveBeenCalled();expect(scene.down).toBeUndefined();
     scene.input.emit('pointerdown',pointer({downTime:2}));scene.input.emit('pointerup',pointer({downTime:2}));
@@ -116,7 +117,7 @@ describe('보드 포인터 종료 (Phaser 입력 대역)',()=>{
     await vi.waitFor(()=>expect(scene.busy).toBe(false));expect(swap).toHaveBeenCalledExactlyOnceWith({row:3,col:3},{row:3+Math.sign(dy),col:3+Math.sign(dx)});
   });
   it('두 칸 탭 특수 교환은 한 번만 실행합니다',async()=>{
-    const {scene,onMove}=create();scene.engine.board[0][1].special='row';const swap=vi.spyOn(scene.engine,'swap');
+    const {scene,onMove}=create();scene.engine.board[0][1]!.special='row';const swap=vi.spyOn(scene.engine,'swap');
     for(const x of [44,100]){scene.input.emit('pointerdown',pointer({x}));scene.input.emit('pointerup',pointer({x}));}
     await vi.waitFor(()=>expect(scene.busy).toBe(false));expect(swap).toHaveBeenCalledExactlyOnceWith({row:0,col:0},{row:0,col:1});expect(onMove).toHaveBeenCalledOnce();
   });
@@ -134,7 +135,7 @@ describe('보드 포인터 종료 (Phaser 입력 대역)',()=>{
     scene.input.emit('gameout',pointer());scene.scale.emit('resize');expect(scene.keyboardState()).toEqual(state);
   });
 });
-const snapshot=(engine:BoardEngine)=>({board:engine.board.map(row=>row.map(tile=>({...tile}))),leaves:engine.leaves.map(row=>row.slice())});
+const snapshot=(engine:BoardEngine)=>({board:engine.board.map(row=>row.map(tile=>tile?{...tile}:null)),leaves:engine.leaves.map(row=>row.slice())});
 function harness(){
   const onMove=vi.fn(),onNotice=vi.fn(),onResolveVisual=vi.fn<(event:ResolveVisual)=>void>(),onVisualCancel=vi.fn();
   const scene=new BoardScene({audio:{play(){}} as never,onStart(){},onMove,onNotice,onResolveVisual,onVisualCancel}) as unknown as RenderScene;
@@ -154,7 +155,7 @@ describe('제거 단계 표시 훅과 엔진 정산 분리',()=>{
     const result=swap.mock.results[0].value as ReturnType<BoardEngine['swap']>,steps=result.steps.filter(step=>step.removed.length);
     expect(onResolveVisual.mock.calls.map(([payload])=>payload)).toEqual(steps.map(step=>({
       cascade:result.steps.indexOf(step)+1,
-      removed:step.removed.map(p=>({x:44+p.col*56,y:44+p.row*56,kind:step.before[p.row][p.col].kind})),
+      removed:step.removed.map(p=>({x:44+p.col*56,y:44+p.row*56,kind:step.before[p.row][p.col]!.kind})),
       clearedLeaves:(step.leaves?.hits??[]).filter(p=>p.after===0).map(p=>({x:44+p.col*56,y:44+p.row*56})),
       specialCreated:Boolean(step.created?.length),specialActivated:Boolean(step.effects?.length),
     })));
@@ -274,7 +275,7 @@ describe('유휴 힌트 (실제 Phaser Clock)',()=>{
 describe('블록 객체 보존과 낙하 연출',()=>{
   it('일반 타일 색을 유지하면서 특수의 방향판·폭탄·다색 구슬을 서로 다른 외형으로 만듭니다',()=>{
     const {scene}=harness();
-    for(const [col,special] of (['row','column','bomb','rainbow'] as const).entries())scene.engine.board[0][col].special=special;
+    for(const [col,special] of (['row','column','bomb','rainbow'] as const).entries())scene.engine.board[0][col]!.special=special;
     scene.paint(scene.engine.board);
     const body=(col:number)=>scene.pieces[0][col].children.find(child=>child.name.startsWith('special-body')) as Graphic;
     expect(body(0).rectangles[0].slice(2,4)).toEqual([52,42]);expect(body(1).rectangles[0].slice(2,4)).toEqual([42,52]);
@@ -283,7 +284,7 @@ describe('블록 객체 보존과 낙하 연출',()=>{
     expect(rainbow.circles).toHaveLength(6);
     for(let col=0;col<5;col++){
       const image=scene.pieces[0][col].children.find(child=>child instanceof Piece) as Piece;
-      expect(image.texture).toBe(['strawberry','carrot','blueberry','acorn','leaf'][scene.engine.board[0][col].kind]);
+      expect(image.texture).toBe(['strawberry','carrot','blueberry','acorn','leaf'][scene.engine.board[0][col]!.kind]);
       expect(image.width).toBe(col===4?45:col===3?29:col===2?32:35);
     }
   });
@@ -329,7 +330,7 @@ describe('블록 객체 보존과 낙하 연출',()=>{
     expect(scene.pieces).toEqual(pieces);expect(pieces.flat().every(p=>!p.destroyed)).toBe(true);
   });
   it('낙엽은 각 연쇄의 이전·이후 상태를 표시하고 완료 수를 한 번 전달합니다',async()=>{
-    const {scene,onMove}=harness();scene.engine.board[3][3].special='row';
+    const {scene,onMove}=harness();scene.engine.board[3][3]!.special='row';
     scene.engine.setLeaves([{row:3,col:5,layers:2}]);scene.paint(scene.engine.board);
     const snapshots:number[][][]=[],paint=scene.paintLeaves.bind(scene);
     scene.paintLeaves=leaves=>{snapshots.push(leaves.map(row=>row.slice()));paint(leaves);};
@@ -367,23 +368,24 @@ describe('블록 객체 보존과 낙하 연출',()=>{
   });
   it('특수 생성 칸도 위의 빈칸만큼 내려오며 다른 블록은 새로 만들지 않습니다',()=>{
     const {scene}=harness();scene.paint(scene.engine.board);const old=scene.pieces.map(row=>row.slice());
-    const before=scene.engine.board,after=before.map(row=>row.map(tile=>({...tile})));
-    after[6][0]={kind:before[5][0].kind,special:'row'};
-    scene.drop({before,after,removed:[{row:7,col:0}],created:[{row:5,col:0,tile:after[6][0]}]});
+    const before=scene.engine.board,after=before.map(row=>row.map(tile=>tile?{...tile}:null));
+    after[6][0]={kind:before[5][0]!.kind,special:'row'};
+    const falls=Array.from({length:8},(_,col)=>Array.from({length:8},(_,row)=>col===0?(row===0?{to:{row,col},startRow:-1}:{from:{row:row-1,col},to:{row,col},startRow:row-1}):{from:{row,col},to:{row,col},startRow:row})).flat();
+    scene.drop({before,after,removed:[{row:7,col:0}],created:[{row:5,col:0,tile:after[6][0]}],falls});
     expect(old[7][0].destroyed).toBe(true);expect(old[5][0].destroyed).toBe(true);
     expect(scene.pieces[7][0]).toBe(old[6][0]);expect(scene.pieces[4][0]).toBe(old[3][0]);
     expect(scene.pieces[6][0]).not.toBe(old[5][0]);expect(scene.pieces[6][0].y).toBe(380);
     expect(scene.pieces[3][1]).toBe(old[3][1]);
   });
   it('특수 탭과 교환은 결과 콜백을 한 번 호출하고 일반 블록 탭은 이동을 쓰지 않습니다',async()=>{
-    const {scene,onMove}=harness();scene.engine.board[3][3].special='row';scene.paint(scene.engine.board);
+    const {scene,onMove}=harness();scene.engine.board[3][3]!.special='row';scene.paint(scene.engine.board);
     await scene.attempt({row:3,col:3});expect(onMove).toHaveBeenCalledOnce();
     await scene.attempt({row:0,col:0});expect(onMove).toHaveBeenCalledOnce();
-    scene.engine.board[3][3].special='column';scene.paint(scene.engine.board);
+    scene.engine.board[3][3]!.special='column';scene.paint(scene.engine.board);
     await scene.attempt({row:3,col:3},{row:3,col:4});expect(onMove).toHaveBeenCalledTimes(2);
   });
   it('실제 제거 칸·줄 방향을 먼저 표시하고 중복 입력을 막은 뒤 표시 객체를 정리합니다',async()=>{
-    const {scene,onMove,onNotice}=harness();scene.engine.board[3][3].special='row';scene.paint(scene.engine.board);
+    const {scene,onMove,onNotice}=harness();scene.engine.board[3][3]!.special='row';scene.paint(scene.engine.board);
     const overlays:Graphic[]=[],showEffect=scene.showEffect.bind(scene);
     scene.showEffect=step=>{
       const overlay=showEffect(step);overlays.push(overlay);
@@ -426,7 +428,7 @@ describe('보드 키보드 입력과 읽기 상태',()=>{
     await vi.waitFor(()=>expect(scene.busy).toBe(false));expect(onMove).toHaveBeenCalledOnce();expect(onMove.mock.calls[0][1]).toBeGreaterThan(0);
   });
   it.each(['Enter',' '])('특수 바로 사용 %s 뒤 연쇄 중 반복 입력·섞기는 거부합니다',async key=>{
-    const {scene,onMove}=harness();scene.engine.board[0][0].special='row';scene.engine.setLeaves([{row:0,col:0,layers:2}]);scene.paint(scene.engine.board);
+    const {scene,onMove}=harness();scene.engine.board[0][0]!.special='row';scene.engine.setLeaves([{row:0,col:0,layers:2}]);scene.paint(scene.engine.board);
     scene.focusKeyboard();expect(scene.keyboardState()).toMatchObject({tile:{special:'row'},layers:2});
     expect(scene.keyboardKey(key,true)).toBe(true);expect(scene.busy).toBe(false);
     scene.keyboardKey(key);const before=snapshot(scene.engine);
@@ -505,4 +507,39 @@ describe('모션 설정 경계와 정적 표시',()=>{
     expect(scene.pieces.flat().every(p=>p.scale===1&&p.alpha===1)).toBe(true);
   });
 });
+describe('비정형 보드의 실제 표시·입력·엔진 낙하 재생',()=>{
+  it('inactive 칸 배경과 객체가 없고 시작 커서는 첫 활성 칸이며 빈칸 입력은 무시합니다',async()=>{
+    const {scene,onMove}=harness();scene.engine=new BoardEngine(8,8,seededRng(42),undefined,2,levels[30].mask);
+    const graphics:Graphic[]=[],add=(scene as unknown as {add:{graphics:()=>Graphic}}).add,original=add.graphics;
+    add.graphics=()=>{const g=original();graphics.push(g);return g;};scene.create();scene.events.emit('create');
+    const active=levels[30].mask!.flat().filter(Boolean).length;
+    expect(graphics[0].rectangles).toHaveLength(active+1);expect(scene.pieces[0][0]).toBeNull();
+    expect(scene.pieces.flat().filter(Boolean)).toHaveLength(active);
+    scene.input.emit('pointerdown',{id:1,x:44,y:44,button:0});expect(scene.down).toBeUndefined();
+    await scene.attempt({row:0,col:0},{row:0,col:1});scene.tap({row:0,col:0});expect(onMove).not.toHaveBeenCalled();
+    scene.focusKeyboard();expect(scene.keyboardState().cursor).toEqual({row:0,col:2});
+  });
+  it('방향키는 구멍을 건너뛰지만 선택한 칸과 건너편 칸은 교환하지 않습니다',()=>{
+    const {scene,onMove}=harness();scene.engine=new BoardEngine(8,8,seededRng(42),undefined,2,levels[31].mask);scene.paint(scene.engine.board);scene.focusKeyboard();
+    for(let i=0;i<3;i++)scene.keyboardKey('ArrowDown');for(let i=0;i<2;i++)scene.keyboardKey('ArrowRight');
+    scene.keyboardKey('Enter');const before=JSON.stringify(scene.engine.board);scene.keyboardKey('ArrowRight');expect(scene.keyboardState().cursor).toEqual({row:3,col:5});
+    scene.keyboardKey('Enter');expect(scene.keyboardState().selected).toEqual({row:3,col:5});expect(onMove).not.toHaveBeenCalled();expect(JSON.stringify(scene.engine.board)).toBe(before);
+  });
+  it('구간별 from/to 객체·생성 특수와 최종 종류·위치·실제 제거 피드백을 함께 보존합니다',async()=>{
+    const {scene,onMove,onResolveVisual}=harness();scene.engine=new BoardEngine(8,8,seededRng(42),undefined,2,levels[31].mask);
+    scene.engine.board=scene.engine.mask.map((row,r)=>row.map((active,c)=>active?{kind:(r*2+c)%6}:null));scene.engine.board[5][2]!.special='row';scene.paint(scene.engine.board);
+    const drops:ResolveStep[]=[],drop=scene.drop.bind(scene);scene.drop=step=>{
+      const old=scene.pieces.map(row=>row.slice());drop(step);drops.push(step);
+      for(const f of step.falls!)if(f.from&&!step.created?.some(p=>p.row===f.from!.row&&p.col===f.from!.col))expect(scene.pieces[f.to.row][f.to.col]).toBe(old[f.from.row][f.from.col]);
+      step.after.forEach((row,r)=>row.forEach((tile,c)=>{
+        const piece=scene.pieces[r][c];if(!tile){expect(piece).toBeNull();return;}
+        expect(piece.x).toBe(44+c*56);expect(piece.y).toBe(44+r*56);
+        expect((piece.children.find(p=>p instanceof Piece) as Piece).texture).toBe(['strawberry','carrot','blueberry','acorn','leaf','flower'][tile.kind]);
+      }));
+    };
+    await scene.attempt({row:5,col:2});expect(onMove).toHaveBeenCalledOnce();expect(drops.length).toBeGreaterThan(0);
+    expect(onResolveVisual.mock.calls.flatMap(([e])=>e.removed).length).toBe(drops.reduce((n,s)=>n+s.removed.length,0));
+  });
+});
+
 });

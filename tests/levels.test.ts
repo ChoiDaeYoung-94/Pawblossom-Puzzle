@@ -34,7 +34,7 @@ describe('힌트와 자동 점검의 합법 이동',()=>{
   it('조회가 타일·특수·보충 난수를 소비하지 않습니다',()=>{
     const rng=seededRng(19);let calls=0;
     const engine=new BoardEngine(8,8,()=>{calls++;return rng();});
-    engine.board[0][0].special='rainbow';
+    engine.board[0][0]!.special='rainbow';
     const before=JSON.stringify(engine.board), count=calls;
     const moves=engine.legalMoves();
     expect(engine.legalMoves()).toEqual(moves);
@@ -45,14 +45,14 @@ describe('힌트와 자동 점검의 합법 이동',()=>{
   it('일반·특수 보드에서 모든 이웃 교환의 실제 유효성과 일치합니다',()=>{
     for(const special of [false,true])for(let seed=1;seed<=4;seed++){
       const source=new BoardEngine(8,8,seededRng(seed));
-      if(special){source.board[0][0].special='rainbow';source.board[3][3].special='row';source.board[3][4].special='bomb';}
+      if(special){source.board[0][0]!.special='rainbow';source.board[3][3]!.special='row';source.board[3][4]!.special='bomb';}
       const listed=source.legalMoves();
       const keys=listed.map(({a,b})=>`${a.row},${a.col}:${b.row},${b.col}`);
       expect(new Set(keys).size).toBe(keys.length);
       const probe=new BoardEngine(8,8,seededRng(900));
       for(let row=0;row<8;row++)for(let col=0;col<8;col++)for(const b of [{row,col:col+1},{row:row+1,col}]){
         if(b.row>=8||b.col>=8)continue;
-        probe.board=source.board.map(line=>line.map(tile=>({...tile})));
+        probe.board=source.board.map(line=>line.map(tile=>tile?{...tile}:null));
         expect(probe.swap({row,col},b).valid).toBe(keys.includes(`${row},${col}:${b.row},${b.col}`));
       }
     }

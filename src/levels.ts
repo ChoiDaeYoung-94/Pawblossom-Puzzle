@@ -1,7 +1,7 @@
-import type { LeafPile } from './core';
+import type { BoardMask, LeafPile } from './core';
 import type { TextKey } from './i18n';
 export interface LevelGoal { kind: number; count: number }
-export interface Level { id: number; moves: number; goals: LevelGoal[]; leaves?: LeafPile[] }
+export interface Level { id: number; moves: number; goals: LevelGoal[]; leaves?: LeafPile[]; mask?: BoardMask }
 
 const patches=(cells:number[][],layers:1|2=1):LeafPile[]=>cells.map(([row,col])=>({row,col,layers}));
 const center=[[2,2],[2,5],[5,2],[5,5]];
@@ -11,6 +11,16 @@ const trail=[[1,1],[2,2],[3,3],[4,4],[5,5],[6,6]];
 const border=[[1,1],[1,3],[1,5],[3,6],[5,6],[6,4],[6,2],[4,1]];
 const crossed=[...center,[1,3],[1,4],[3,1],[4,1],[3,6],[4,6],[6,3],[6,4]];
 const mixed=(cells:number[][]):LeafPile[]=>cells.map(([row,col],i)=>({row,col,layers:i%2===0?2:1}));
+
+// 31~35 비정형 보드는 canonical 활성 칸만 사용합니다. 기존 1~30 정의는 그대로 유지합니다.
+const shape=(rows:string[]):BoardMask=>rows.map(row=>[...row].map(cell=>cell==='#'));
+const shapes={
+  rounded:shape(['..####..','.######.','########','########','########','########','.######.','..####..']),
+  pond:shape(['########','########','########','###..###','###..###','########','########','########']),
+  hourglass:shape(['########','########','.######.','..####..','..####..','.######.','########','########']),
+  u:shape(['##....##','##....##','##....##','########','########','########','########','########']),
+  slant:shape(['#######.','#######.','.######.','.######.','.######.','.######.','.#######','.#######']),
+};
 
 // 순서는 저장 데이터의 스테이지 ID와 연결되므로 기존 ID를 재배치하지 않습니다.
 export const levels: Level[] = [
@@ -45,6 +55,11 @@ export const levels: Level[] = [
   {id:28,moves:32, goals:[{kind:1,count:32},{kind:3,count:26}],leaves:mixed(crossed)},
   {id:29,moves:34, goals:[{kind:4,count:32},{kind:5,count:28}],leaves:patches(crossed,2)},
   {id:30,moves:34, goals:[{kind:0,count:34},{kind:5,count:28}],leaves:patches(crossed,2)},
+  {id:31,moves:26,goals:[{"kind":1,"count":12},{"kind":2,"count":12}],mask:shapes.rounded},
+  {id:32,moves:28,goals:[{"kind":0,"count":16},{"kind":5,"count":14}],mask:shapes.pond},
+  {id:33,moves:28,goals:[{"kind":3,"count":14},{"kind":4,"count":14}],mask:shapes.hourglass},
+  {id:34,moves:28,goals:[{"kind":2,"count":16},{"kind":5,"count":12}],mask:shapes.u},
+  {id:35,moves:30,goals:[{"kind":0,"count":18},{"kind":1,"count":16}],mask:shapes.slant},
 ];
 
 export const LEVEL_COUNT=levels.length;
@@ -52,5 +67,6 @@ export const chapters:{id:number;first:number;last:number;title:TextKey}[]=[
   {id:1,first:1,last:10,title:'chapterMeadow'},
   {id:2,first:11,last:20,title:'chapterPath'},
   {id:3,first:21,last:30,title:'chapterSunshine'},
+  {id:4,first:31,last:35,title:'chapterPond'},
 ];
 export const chapterForLevel=(id:number)=>chapters.find(chapter=>id>=chapter.first&&id<=chapter.last)??chapters[0];

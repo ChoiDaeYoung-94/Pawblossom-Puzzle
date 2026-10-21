@@ -22,7 +22,7 @@ describe('회차 규칙 V1 보존과 V2 정사각 꽃폭탄',()=>{
       for(const step of run.steps){
         const c=step.command;let result;
         if(c.type==='shuffle'){e.shuffle();result=null;}else result=c.type==='activate'?e.activate(c.at):e.swap(c.a,c.b);
-        expect({calls,result:hash(result),state:hash({board:e.board,leaves:e.leaves})}).toEqual({calls:step.calls,result:step.result,state:step.state});
+        expect({calls,result:hash(result?{...result,steps:result.steps.map(({falls,...legacy})=>legacy)}:null),state:hash({board:e.board,leaves:e.leaves})}).toEqual({calls:step.calls,result:step.result,state:step.state});
       }
     }
   });
@@ -63,13 +63,13 @@ describe('회차 규칙 V1 보존과 V2 정사각 꽃폭탄',()=>{
     expect(new Set(step.removed.map(p=>`${p.row},${p.col}`)).size).toBe(step.removed.length);
   });
   it('정사각의 기존 특수는 한 번 발동하고 새 꽃폭탄은 보호하며 낙엽을 중복 집계하지 않습니다',()=>{
-    const {e}=board();put(e,square);e.board[2][2].special='row';e.setLeaves([{row:2,col:3,layers:2},{row:4,col:3,layers:2}]);
+    const {e}=board();put(e,square);e.board[2][2]!.special='row';e.setLeaves([{row:2,col:3,layers:2},{row:4,col:3,layers:2}]);
     const result=e.swap({row:3,col:2},{row:3,col:3}),step=result.steps[0];
     expect(step.effects?.filter(p=>p.row===2&&p.col===2)).toEqual([{row:2,col:2,special:'row'}]);
     expect(step.created?.[0].tile.special).toBe('bomb');expect(step.removed).not.toContainEqual({row:3,col:3});
     expect(step.leaves?.hits.filter(p=>p.row===2&&p.col===3)).toEqual([{row:2,col:3,before:2,after:0}]);
     expect(step.leaves?.hits.filter(p=>p.row===4&&p.col===3)).toEqual([{row:4,col:3,before:2,after:1}]);
-    const counts=Array(6).fill(0);result.steps.forEach(s=>s.removed.forEach(p=>counts[s.before[p.row][p.col].kind]++));expect(result.collected).toEqual(counts);
+    const counts=Array(6).fill(0);result.steps.forEach(s=>s.removed.forEach(p=>counts[s.before[p.row][p.col]!.kind]++));expect(result.collected).toEqual(counts);
   });
   it('독립된 정사각 두 그룹은 각각 하나를 만들고 낙하로 생긴 정사각도 다음 단계에서 해소합니다',()=>{
     const {e}=board();put(e,[[1,1],[1,2],[2,1],[2,2],[5,5],[5,6],[6,5],[6,6]]);
@@ -78,17 +78,17 @@ describe('회차 규칙 V1 보존과 V2 정사각 꽃폭탄',()=>{
     initial[2][2].special='row';
     const cascade=new BoardEngine(3,3,()=>values.length?values.shift()!:next(),{board:initial,leaves:Array.from({length:3},()=>[0,0,0]),ruleVersion:2});
     expect(cascade.findMatches()).toEqual([]);const result=cascade.activate({row:2,col:2});
-    expect(result.steps[1].before.slice(0,2).map(row=>row.slice(0,2).map(t=>t.kind))).toEqual([[0,0],[0,0]]);
+    expect(result.steps[1].before.slice(0,2).map(row=>row.slice(0,2).map(t=>t!.kind))).toEqual([[0,0],[0,0]]);
     expect(result.steps[1].created).toEqual([{row:0,col:0,tile:{kind:0,special:'bomb'}}]);expect(result.steps[1].effects).toBeUndefined();expect(cascade.findMatches()).toEqual([]);
   });
   it('V2 섞기·연쇄는 안정 보드를 남기며 상수 RNG도 직선/정사각 없이 종료합니다',()=>{
-    const {e}=board();put(e,square);e.board[0][0].special='rainbow';e.board[0][1].special='rainbow';
+    const {e}=board();put(e,square);e.board[0][0]!.special='rainbow';e.board[0][1]!.special='rainbow';
     const result=e.swap({row:0,col:0},{row:0,col:1});expect(result.valid).toBe(true);
     expect(e.findMatches()).toEqual([]);expect(e.hasMoves()).toBe(true);
-    const signature=()=>e.board.flat().map(t=>`${t.kind}:${t.special??''}`).sort();const old=signature();e.shuffle();expect(signature()).toEqual(old);expect(e.findMatches()).toEqual([]);
+    const signature=()=>e.board.flat().map(t=>`${t!.kind}:${t!.special??''}`).sort();const old=signature();e.shuffle();expect(signature()).toEqual(old);expect(e.findMatches()).toEqual([]);
     for(const value of [0,.5,.999999]){
       const constant=new BoardEngine(3,3,()=>value);expect(constant.findMatches()).toEqual([]);expect(constant.hasMoves()).toBe(true);
-      constant.board[0][0].special='rainbow';constant.board[0][1].special='rainbow';
+      constant.board[0][0]!.special='rainbow';constant.board[0][1]!.special='rainbow';
       const cleared=constant.swap({row:0,col:0},{row:0,col:1});expect(cleared.steps.length).toBeLessThan(60);expect(constant.findMatches()).toEqual([]);expect(constant.hasMoves()).toBe(true);
     }
   });

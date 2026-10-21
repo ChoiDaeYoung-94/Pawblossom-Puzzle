@@ -18,7 +18,7 @@ describe('첫 교환 실습',()=>{
       expect(lesson.select(positions[0])).toBe(false);
       expect(lesson.select(positions[1])).toBe(true);
       expect(lesson.result?.steps[0].removed).toEqual([{row:0,col:0},{row:0,col:1},{row:0,col:2}]);
-      expect(lesson.result?.steps[0].before[0].map(tile=>tile.kind)).toEqual([0,0,0]);
+      expect(lesson.result?.steps[0].before[0].map(tile=>tile!.kind)).toEqual([0,0,0]);
       expect(lesson.result?.collected[0]).toBeGreaterThanOrEqual(3);
     }
   });

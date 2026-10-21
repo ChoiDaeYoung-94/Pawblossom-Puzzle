@@ -44,7 +44,7 @@ describe('튜토리얼 저장 호환',()=>{
 
 function roundSave():RoundCheckpoint {
   const level=levels[5],engine=new BoardEngine(8,8,seededRng(42));engine.setLeaves(level.leaves!);
-  engine.board[0][0].special='rainbow';engine.leaves[2][2]=1;engine.leaves[2][5]=0;
+  engine.board[0][0]!.special='rainbow';engine.leaves[2][2]=1;engine.leaves[2][5]=0;
   return {schema:1,levelId:6,levelSignature:levelSignature(level),board:engine.board,leaves:engine.leaves,
     moves:24,score:1240,collected:[3,4,5,6,7,8],shuffles:0,clearedLeaves:1};
 }
@@ -52,7 +52,7 @@ describe('안정 회차 저장 검증',()=>{
   it('2×2가 남은 구 회차는 기존 규칙으로 복원하고 새 V2 안정 검사와 구분하며 Pip·영구 기록을 보존합니다',()=>{
     const checkpoint=roundSave();checkpoint.board=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({kind:(r*2+c)%5})));
     for(const [r,c] of [[2,2],[2,3],[3,2],[3,3]])checkpoint.board[r][c]={kind:5};
-    checkpoint.board[0][0].special='row';
+    checkpoint.board[0][0]!.special='row';
     expect(validateCheckpoint(checkpoint,6)).toEqual(checkpoint);
     expect(validateCheckpoint({...checkpoint,ruleVersion:2},6)).toBeUndefined();
     for(const ruleVersion of [null,0,3,'2'])expect(validateCheckpoint({...checkpoint,ruleVersion},6)).toBeUndefined();
@@ -85,8 +85,8 @@ describe('안정 회차 저장 검증',()=>{
     ['수집 크기',(x:RoundCheckpoint)=>{x.collected.push(0);}],
     ['수집 상한',(x:RoundCheckpoint)=>{x.collected[0]=1_000_001;}],
     ['행 크기',(x:RoundCheckpoint)=>{x.board[0].pop();}],
-    ['타일 종류',(x:RoundCheckpoint)=>{x.board[0][0].kind=6;}],
-    ['특수 종류',(x:RoundCheckpoint)=>{x.board[0][0].special='other' as never;}],
+    ['타일 종류',(x:RoundCheckpoint)=>{x.board[0][0]!.kind=6;}],
+    ['특수 종류',(x:RoundCheckpoint)=>{x.board[0][0]!.special='other' as never;}],
     ['낙엽 위치',(x:RoundCheckpoint)=>{x.leaves[0][0]=1;}],
     ['낙엽 겹 수',(x:RoundCheckpoint)=>{x.leaves[2][2]=3;}],
     ['낙엽 완료 수',(x:RoundCheckpoint)=>{x.clearedLeaves=2;}],
@@ -106,7 +106,7 @@ describe('안정 회차 저장 검증',()=>{
     const rng=vi.fn(()=>{throw Error('난수 소비');}),snapshot=roundSave(),before=structuredClone(snapshot);
     const valid=validateCheckpoint(snapshot,6)!;expect(valid).toEqual(before);
     const engine=new BoardEngine(8,8,rng,valid);engine.legalMoves();expect(rng).not.toHaveBeenCalled();
-    engine.board[0][0].kind=2;engine.leaves[2][2]=0;valid.collected[0]=100;
+    engine.board[0][0]!.kind=2;engine.leaves[2][2]=0;valid.collected[0]=100;
     expect(snapshot).toEqual(before);
   });
   it('비정상 대형 배열은 원소 검사를 시작하기 전에 크기로 거부합니다',()=>{
@@ -128,7 +128,19 @@ describe('추가 콘텐츠의 저장 호환',()=>{
     expect(saveData(save)).toBe(true);expect(loadSave()).toEqual(save);
   });
   it('중복·잘못된 ID를 버리고 건너뛴 완료 기록으로 새 스테이지를 해제하지 않습니다',()=>{
-    storage({version:1,completed:[1,1,3,30,31,-1,'2'],highestLevel:1});
+    storage({version:1,completed:[1,1,3,30,36,-1,'2'],highestLevel:1});
     expect(loadSave()).toMatchObject({completed:[1,3,30],highestLevel:2});
+  });
+});
+
+describe('비정형 콘텐츠 해금과 구 회차 보존',()=>{
+  it('1–30 완료만 31을 열며 구 30 checkpoint·Pip·재화는 변경하지 않습니다',()=>{
+    const l=levels[29],e=new BoardEngine(8,8,seededRng(42),undefined,1);e.setLeaves(l.leaves??[]);
+    const inProgress={schema:1,levelId:30,levelSignature:levelSignature(l),board:e.board,leaves:e.leaves,moves:24,score:0,collected:[0,0,0,0,0,0],shuffles:1,clearedLeaves:0};
+    const pip={growth:34,affection:22,owned:[],equipped:'none'};
+    storage({completed:Array.from({length:30},(_,i)=>i+1),highestLevel:30,stars:7,coins:240,garden:1,pip,inProgress});
+    expect(loadSave()).toMatchObject({highestLevel:31,stars:7,coins:240,garden:1,pip,inProgress});
+    expect(loadSave().inProgress).not.toHaveProperty('ruleVersion');
+    storage({completed:[1,30],highestLevel:30});expect(loadSave().highestLevel).toBe(30);
   });
 });

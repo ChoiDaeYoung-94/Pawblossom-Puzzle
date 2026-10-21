@@ -24,13 +24,13 @@ function value(engine,move,remaining){
   try{
     const matches=engine.findMatches(),removed=new Set(),near=new Set(),direct=new Set();
     const key=p=>p.row*engine.cols+p.col;
-    const inside=p=>p.row>=0&&p.row<engine.rows&&p.col>=0&&p.col<engine.cols;
+    const inside=p=>engine.isActive(p);
     const add=p=>{if(inside(p))removed.add(key(p));};
     const hit=p=>{if(inside(p)){direct.add(key(p));add(p);}};
     for(const p of matches){add(p);for(const [dr,dc] of [[0,0],[-1,0],[1,0],[0,-1],[0,1]]){const q={row:p.row+dr,col:p.col+dc};if(inside(q))near.add(key(q));}}
     if(x.special)hit(b);if(y.special)hit(a);
     const rainbow=x.special==='rainbow'||y.special==='rainbow',other=x.special==='rainbow'?y:x;
-    if(rainbow){for(let row=0;row<engine.rows;row++)for(let col=0;col<engine.cols;col++)if(other.special==='rainbow'||board[row][col].kind===other.kind)hit({row,col});}
+    if(rainbow){for(let row=0;row<engine.rows;row++)for(let col=0;col<engine.cols;col++)if(other.special==='rainbow'||board[row][col]?.kind===other.kind)hit({row,col});}
     else if(x.special&&y.special)for(const center of [a,b])for(let row=0;row<engine.rows;row++)for(let col=0;col<engine.cols;col++){
       if(x.special==='bomb'&&y.special==='bomb'?(Math.abs(row-center.row)<=2&&Math.abs(col-center.col)<=2):x.special==='bomb'||y.special==='bomb'?(Math.abs(row-center.row)<=1||Math.abs(col-center.col)<=1):(row===center.row||col===center.col))hit({row,col});
     }
@@ -41,7 +41,7 @@ function value(engine,move,remaining){
       const row=Math.floor(id/engine.cols),col=id%engine.cols,tile=board[row][col];
       if(!tile.special)continue;
       for(let r=0;r<engine.rows;r++)for(let c=0;c<engine.cols;c++)if(
-        tile.special==='row'?r===row:tile.special==='column'?c===col:tile.special==='bomb'?(Math.abs(r-row)<=1&&Math.abs(c-col)<=1):!rainbow&&board[r][c].kind===tile.kind
+        tile.special==='row'?r===row:tile.special==='column'?c===col:tile.special==='bomb'?(Math.abs(r-row)<=1&&Math.abs(c-col)<=1):!rainbow&&board[r][c]?.kind===tile.kind
       )hit({row:r,col:c});
     }
     const counts=Array(6).fill(0);for(const id of removed)counts[board[Math.floor(id/engine.cols)][id%engine.cols].kind]++;
@@ -52,10 +52,10 @@ function value(engine,move,remaining){
 }
 const rows=[];
 for(const policy of ['random','goal'])for(const level of configs){
-  let wins=0,totalUsed=0,totalShortfall=0,totalLeafShortfall=0;
+  let wins=0,totalUsed=0,totalShortfall=0,totalLeafShortfall=0,totalRemoved=0,totalCreated=0,totalCascades=0,totalReshuffles=0;
   const winningMoves=[];
   for(let seed=1;seed<=runs;seed++){
-    const engine=new BoardEngine(8,8,seededRng(seed));
+    const engine=new BoardEngine(8,8,seededRng(seed),undefined,2,level.mask);
     engine.setLeaves(level.leaves??[]);
     const choose=seededRng(seed+1000000);
     const remaining=Array(6).fill(0);level.goals.forEach(g=>remaining[g.kind]=g.count);
@@ -71,6 +71,10 @@ for(const policy of ['random','goal'])for(const level of configs){
       const move=candidates[Math.floor(choose()*candidates.length)];
       const result=engine.swap(move.a,move.b);
       if(!result.valid)throw new Error('합법 이동 조회와 교환 결과가 다릅니다.');
+      const clears=result.steps.filter(s=>s.removed.length);
+      totalRemoved+=clears.reduce((sum,s)=>sum+s.removed.length,0);
+      totalCreated+=clears.reduce((sum,s)=>sum+(s.created?.length??0),0);
+      totalCascades+=Math.max(0,clears.length-1);totalReshuffles+=result.steps.length-clears.length;
       result.collected.forEach((count,kind)=>remaining[kind]=Math.max(0,remaining[kind]-count));used++;
     }
     const shortfall=remaining.reduce((a,b)=>a+b,0);
@@ -79,10 +83,11 @@ for(const policy of ['random','goal'])for(const level of configs){
     if(!shortfall&&!leafShortfall){wins++;winningMoves.push(used);}
   }
   winningMoves.sort((a,b)=>a-b);
-  rows.push({policy,level:level.id,runs,wins,winPercent:Math.round(wins/runs*1000)/10,
+  const activeCells=(level.mask??Array.from({length:8},()=>Array(8).fill(true))).flat().filter(Boolean).length;
+  rows.push({policy,level:level.id,runs,wins,totalMoves:totalUsed,removedFractionPerMove:totalRemoved/(totalUsed*activeCells),activeCells,totalRemoved,totalCreated,totalCascades,totalReshuffles,removedPerMove:totalRemoved/totalUsed,createdPerMove:totalCreated/totalUsed,winPercent:Math.round(wins/runs*1000)/10,
     meanMoves:Math.round(totalUsed/runs*10)/10,
     medianWinningMoves:winningMoves.length?winningMoves[Math.floor((winningMoves.length-1)/2)]:null,
     meanShortfall:Math.round(totalShortfall/runs*10)/10,meanLeafShortfall:Math.round(totalLeafShortfall/runs*10)/10});
 }
-console.log(JSON.stringify({schema:2,configuration:args.includes('--baseline')?'baseline':'current',
+console.log(JSON.stringify({schema:3,notes:'고정 seed 표본이며 사람 난이도/전체 seed 결과가 아닙니다. totalReshuffles는 이동 후 자동 섞기 단계 수로 생성 fallback 횟수와 다릅니다.',configuration:args.includes('--baseline')?'baseline':'current',
   seeds:[1,runs],manualShuffle:false,policies:['random','goal'],levels:configs,results:rows},null,2));

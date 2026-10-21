@@ -48,11 +48,12 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto}
 @media(max-height:700px) and (orientation:portrait){.story-panel{display:none}.workspace{padding-top:6px;padding-bottom:6px}#puzzle-view{gap:6px}.board-hint{font-size:10px}.level-top h2{font-size:22px}}
 @media(orientation:landscape) and (max-height:600px){
  .topbar{height:48px;max-width:960px}.workspace{max-width:960px;display:flex;flex-direction:row;padding:6px 12px}.story-panel{display:none}.game-panel{padding:8px 12px 0;flex:1}
- #puzzle-view{display:grid;grid-template-columns:190px minmax(0,1fr);grid-template-rows:auto auto 1fr auto;gap:7px 16px}
+ #puzzle-view{display:grid;grid-template-columns:190px minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;gap:7px 16px}
  .level-top{grid-column:1;grid-row:1}.level-top h2{font-size:21px}.level-top .eyebrow{display:none}
  .mission-bar{grid-column:1;grid-row:2;gap:7px}.moves-box{width:49px}.moves-box strong{font-size:25px}#goals{gap:8px}.goal-item{gap:3px}.goal-item img{width:24px;height:24px}.goal-item strong{font-size:15px}
  .board-wrap{grid-column:2;grid-row:1 / -1}
- .board-hint{grid-column:1;grid-row:3;align-self:center;font-size:11px;padding:0 6px}
+ /* 긴 키보드/시험 안내가 grid의 최소 높이를 키워 보드를 자르지 않게 합니다. */
+ .board-hint{grid-column:1;grid-row:3;min-height:0;align-self:stretch;align-items:flex-start;overflow:auto;font-size:11px;padding:0 6px}
  .tools{grid-column:1;grid-row:4;gap:7px}.tool-note{max-width:80px;font-size:9px}.shuffle-button{padding:7px 8px;min-height:40px;font-size:11px}
  .bottom-nav{padding:4px 12px}.bottom-nav button{flex-direction:row;gap:6px;min-height:36px}
  .subview-heading{padding-bottom:10px}.subview-heading h2{margin-top:4px}.setting-row{padding:12px 0}

@@ -1,4 +1,25 @@
-# 현재 개발 · 2026-10-21 · #192 목표 수집 비행·상단 핍 반응
+# 현재 개발 · 2026-10-21 · #190 mask 보드와 31–35
+
+## #190 가로 화면 검수 후속 · 2026-10-21
+
+초기 빌드의 실제640×360 EN 스테이지33에서 puzzle-view는241px인데 grid 자동 최소 높이가261.34px로 커져 보드 하단 약20px이 하단 메뉴 뒤에서 잘렸습니다. 원본 `qa/feedback-20261021/190/stage33-layout.jpg`와 `browser-before-layout-fix.json`은 그대로 보존합니다. 실플레이는 짧은 한영 maskPlayHint 한 문장으로 분리해 기본 힌트 중복을 제거하고, 상세 maskHint는 미리보기에 유지합니다. 가로 grid의 남은 행은 minmax(0,1fr), 안내 영역은 min-height:0과 overflow:auto로 제한해 긴 키보드 도움말이 전체 보드 높이를 밀지 않게 했습니다.
+
+UI 1파일292개와 두 빌드의 전체/앱/서버 타입·에셋 검사가 통과했습니다. testing `index-CRyp5hlF.js`, production `index-BilCi2Fu.js`와 CSS `index-4uRkxrjH.css`를 별도 보존했고 production dist로 복원했습니다. 새 검사 준비의 첫2실패(존재하지 않는 미리보기 함수명), 다음2실패(동적 dialog 대신 별도 DOM 대역을 읽음)는 테스트 연결을 고쳐 해결했으며 원문을 보존합니다. 픽셀 경계 통과는 자동 UI 대역 검사와 구분합니다.
+
+원본190 sourcefreeze/dist/manifest와 브라우저 증거는 덮어쓰지 않고 `qa/feedback-20261021/190/root-layout-final`에 새 소스와 빌드를 보존합니다. 엔진682b986c·서버 hash·콘텐츠·저장·난수는 그대로이며 관련 엔진/원장 검사를 반복하지 않습니다. 총괄이 최종 testing CRyp5hlF의640×360 KO/EN·키보드 상태를 실제 확인했습니다. 네 경우 모두 canvas 하단304px=puzzle-view 하단304px=메뉴 상단304px로 보드8행이 잘리지 않았고 일반1/26이동/0점/0재화로 복귀했습니다. 수정 전 자연 플레이와 최종 화면 검수는 각각 browser-before-layout-fix.json과 root-layout-final/browser-layout.json으로 구분합니다.
+
+
+기준 main `c23650b1431c6f08b070fa476c45757d3ca4a91c`, 브랜치 `codex/190-shaped-boards`입니다. 새 canonical Level.mask의 inactive는 null/낙엽0으로 고정하며 생성·매치·교환·특수 제거·섞기·저장·서버가 같은 활성 칸을 사용합니다. 엔진이 세로 연속 구간별 from→to와 보충 시작점을 기록하고 씬은 살아 있는 객체/생성 특수를 그대로 이동합니다. 기존 #192 실제 제거 종류/좌표 표시와 정산은 유지합니다. 구멍에는52×52 배경도 그리지 않으며 키보드는 다음 활성 칸을 찾습니다.
+
+기존1–30 JSON/levelSignature·V1/V2·누락 버전 회차와 Pip/영구 재화를 유지합니다. 신규31–35는 규칙2이며 저장된 mask를 신뢰하지 않고 canonical 모양/null을 대조합니다. 30 완료 해금·35 완료·재플레이 무보상과 테스트 선택/한영 빈칸 안내를 연결했습니다. 서버 profile은 `pawblossom-board-mask-v2`이며 최종 LF 엔진 SHA-256은 `682b986c23f8999d238789abdbbd42852bf963c330fb8878c7ee8f9c3e80c81e`입니다. 옛 실제 V1/V2 DDL·행 fixture는 불변 보존하고 새 엔진의 열기 거절/DB 보존을 검사합니다. 같은 새 엔진의 합성 schema1→2 회귀와 구엔진 호환을 구분하며 운영DB 이전/재서명/배포는 없습니다.
+
+검증: core/geometry/기존 golden/상수 RNG/서버 상태8파일164개, UI/저장/씬3파일507개, 서버·HTTP·보상·저장복구 통합7파일의 최초684통과/1실패 후 수정한 원장1파일156개가 통과했습니다(나머지6파일529개는 변경 없는 통과 결과). 최초 관련3실패는 수동 낙하 fixture의 falls 누락 두 모션 케이스와31을 잘못된 ID로 기대하던 저장 입력이었습니다. 다음 UI1실패는3개 챕터만 생성하던 테스트 DOM 대역이었고 통합1실패도31을 범위 밖으로 기대하던 입력표였습니다. 실제 기대/seed·timeout·500ms·8worker를 완화하지 않았으며 #122 원인 해결로 해석하지 않습니다. 로그 원문과 수정 근거를 QA에 보존합니다.
+
+testing/production 빌드의 전체·앱·서버 타입과 에셋 검사가 통과했습니다. 두 dist는 각각38파일이며 public23파일 전수 바이트가 원본과 같고 flags는 testing 모두true/production 모두false입니다. JS는 testing `index-B4wYbLq8.js`, production `index-C4jiWXno.js`이며 앱 버전0.1.7을 유지하고 repo dist는 production 바이트로 복원했습니다. 기존500kB 청크 경고를 유지합니다. 브라우저 자연 입력/작은 화면은 총괄 검수, 전체 회귀는 최초 필수 PR CI로 남기며 단말·실서비스·스토어 검증 완료를 뜻하지 않습니다.
+
+고정seed 표본은 roadmap 상단과 QA190에 보존합니다. crate/36–40은 #195이며 새 에셋·오디오·Android sync/APK·실키/계정/상품·운영 설정을 변경하지 않았습니다.
+
+## 개발 이력 · 2026-10-21 · #192 목표 수집 비행·상단 핍 반응
 
 기준 main `07e9dc19a568ca9f7590a7217a4c5ae0f351d272`, 브랜치 `codex/192-goal-flights-pip`입니다. BoardScene의 제거 fade 직전에 각 단계의 실제 제거 종류/좌표와 완전히 사라진 낙엽만 복사해 표시 모듈로 전달합니다. 일반 목표 타일도 HUD로 비행하며 특수 생성 보호 칸과 한 겹 감소는 제외합니다. 이동 시작 잔량에서 실제 제거 수를 차감하고 종류별 단계당3개/동시12개, 지연 포함468ms 이내로 제한합니다. 비행 도착은 최신 목표 DOM을 다시 강조할 뿐 숫자·이동·점수·재화·저장을 갱신하지 않습니다. 기존 엔진 정산/난수/500ms 제거·낙하 대기와 오디오는 유지합니다.
 

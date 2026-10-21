@@ -27,7 +27,7 @@ describe('서버 순수 회차 상태·기존 엔진 기준 동등성',()=>{
   });
   it.each(levels.map(l=>l.id))('level %s: 전체 회차 점수/수집/낙엽/이동/승패를 기준 엔진과 비교',id=>{
     const seed=id*9876543;let s=startState(id,seed),score=0,leaves=0,moves=levels[id-1].moves,items=[0,0,0,0,0,0];
-    const e=new BoardEngine(8,8,seededRng(seed));e.setLeaves(levels[id-1].leaves??[]);
+    const e=new BoardEngine(8,8,seededRng(seed),undefined,2,levels[id-1].mask);e.setLeaves(levels[id-1].leaves??[]);
     expect(s.board).toEqual(e.board);
     for(let n=0;n<40&&s.status==='active';n++){
       if(n===3){e.shuffle();s=advanceState(clone(s),{type:'shuffle'}).state;expect(s.moves).toBe(moves);expect(s.shuffles).toBe(0);}
@@ -60,7 +60,7 @@ describe('서버 순수 회차 상태·기존 엔진 기준 동등성',()=>{
       reference.board=authored.map(row=>row.map(t=>({...t})));initial.board=authored;
     }
     const setup=reference.swap(fixture.a,fixture.b),before=advanceState(initial,{type:'swap',a:fixture.a,b:fixture.b}).state;
-    expect(setup.valid).toBe(true);expect(before.board[fixture.at.row][fixture.at.col].special).toBe(fixture.special);expect(before.board).toEqual(reference.board);
+    expect(setup.valid).toBe(true);expect(before.board[fixture.at.row][fixture.at.col]!.special).toBe(fixture.special);expect(before.board).toEqual(reference.board);
     const original=clone(before),result=reference.activate(fixture.at),actual=advanceState(clone(before),{type:'activate',at:fixture.at});
     expect(actual.outcome).toBe('valid-activation');expect(result.valid).toBe(true);expect(actual.state.board).toEqual(reference.board);expect(actual.state.leaves).toEqual(reference.leaves);
     expect(actual.state.moves).toBe(before.moves-1);expect(actual.state.score).toBe(before.score+result.score);expect(actual.state.collected).toEqual(before.collected.map((n,k)=>n+result.collected[k]));

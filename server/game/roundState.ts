@@ -4,8 +4,8 @@ import {BoardEngine, seededRng, type BoardSnapshot, type Position} from '../../s
 import {levels, type Level} from '../../src/levels.ts';
 
 // 엔진 변경 시 이 해시와 profile을 함께 갱신해야 하며 기존 DB는 migration 없이 열리지 않습니다.
-export const ENGINE_PROFILE = 'pawblossom-board-square-v2';
-export const ENGINE_SOURCE_SHA256 = 'c02c8278090d332b3d56f05636158d360947d55e8ef84cddff20aa81c7fd3778';
+export const ENGINE_PROFILE = 'pawblossom-board-mask-v2';
+export const ENGINE_SOURCE_SHA256 = '682b986c23f8999d238789abdbbd42852bf963c330fb8878c7ee8f9c3e80c81e';
 export type RoundStatus = 'active' | 'won' | 'failed' | 'abandoned';
 export type Command = {type:'swap';a:Position;b:Position} | {type:'activate';at:Position} | {type:'shuffle'} | {type:'abandon'};
 export type CommandOutcome = 'valid-swap' | 'invalid-swap' | 'valid-activation' | 'invalid-activation' | 'shuffled' | 'abandoned';
@@ -75,13 +75,13 @@ export function startState(levelId:number,seed:number):RoundState {
   if(!integer(seed,0,0xffffffff))throw new Error('invalid-seed');
   const level=levelSnapshot(levelId);
   const state:RoundState={ruleVersion:2,level,rngState:seed,moves:level.moves,collected:[0,0,0,0,0,0],score:0,shuffles:1,clearedLeaves:0,status:'active',board:[],leaves:[]};
-  const engine=new BoardEngine(8,8,trackedRng(state),undefined,2);engine.setLeaves(level.leaves??[]);
+  const engine=new BoardEngine(8,8,trackedRng(state),undefined,2,level.mask);engine.setLeaves(level.leaves??[]);
   state.board=engine.board;state.leaves=engine.leaves;return state;
 }
 export function advanceState(input:RoundState,command:Command):{state:RoundState;outcome:CommandOutcome} {
   validateState(input);
   if(input.status!=='active'&&!(input.status==='failed'&&command.type==='abandon'))throw new Error('round-terminal');
-  const state=copy(input), engine=new BoardEngine(8,8,trackedRng(state),state);
+  const state=copy(input), engine=new BoardEngine(8,8,trackedRng(state),state,undefined,state.level.mask);
   let outcome:CommandOutcome;
   if(command.type==='abandon'){state.status='abandoned';outcome='abandoned';}
   else if(command.type==='shuffle'){
@@ -112,12 +112,14 @@ export function validateState(input:unknown):asserts input is RoundState {
   if(lv.id!==id||lv.moves!==expectedLevel.moves)throw new Error('invalid-level');
   array(lv.goals,expectedLevel.goals.length).forEach((g,i)=>{const goal=exactRecord(g,['kind','count']),expected=expectedLevel.goals[i];if(goal.kind!==expected.kind||goal.count!==expected.count)throw new Error('invalid-level');});
   if(expectedLevel.leaves)array(lv.leaves,expectedLevel.leaves.length).forEach((p,i)=>{const pile=exactRecord(p,['row','col','layers']),expected=expectedLevel.leaves![i];if(pile.row!==expected.row||pile.col!==expected.col||pile.layers!==expected.layers)throw new Error('invalid-level');});
+  if(expectedLevel.mask)array(lv.mask,8).forEach((row,r)=>array(row,8).forEach((cell,c)=>{if(cell!==expectedLevel.mask![r][c])throw new Error('invalid-mask');}));
   const level=levelSnapshot(id), piles=level.leaves??[];
   if(!integer(s.rngState,0,0xffffffff)||!integer(s.moves,0,level.moves)||!integer(s.score,0,1_000_000_000)
     ||!integer(s.shuffles,0,1)||!integer(s.clearedLeaves,0,piles.length))throw new Error('invalid-state');
   const collected=array(s.collected,6);
   if(!collected.every(v=>integer(v,0,10_000_000)))throw new Error('invalid-state');
-  const board=array(s.board,8).map(row=>array(row,8).map(tile=>{
+  const board=array(s.board,8).map((row,r)=>array(row,8).map((tile,c)=>{
+    if(level.mask?.[r][c]===false){if(tile!==null)throw new Error('invalid-inactive');return null;}
     const keys=Reflect.ownKeys(tile as object),t=exactRecord(tile,keys.length===1?['kind']:['kind','special']);
     if(!integer(t.kind,0,5)||(keys.length===2&&(typeof t.special!=='string'||!['row','column','bomb','rainbow'].includes(t.special))))throw new Error('invalid-tile');
     return t;
@@ -130,6 +132,6 @@ export function validateState(input:unknown):asserts input is RoundState {
   const won=level.goals.every(g=>Number(collected[g.kind])>=g.count)&&s.clearedLeaves>=piles.length;
   if(typeof s.status!=='string'||!['active','won','failed','abandoned'].includes(s.status)||(s.status==='won'&&!won)||(s.status==='failed'&&(s.moves!==0||won))
     ||(s.status==='active'&&(s.moves===0||won))||(s.status==='abandoned'&&won))throw new Error('invalid-status');
-  const engine=new BoardEngine(8,8,()=>{throw new Error('unexpected-rng');},{ruleVersion:2,board:board as unknown as BoardSnapshot['board'],leaves});
+  const engine=new BoardEngine(8,8,()=>{throw new Error('unexpected-rng');},{ruleVersion:2,board:board as unknown as BoardSnapshot['board'],leaves},undefined,level.mask);
   if(engine.findMatches().length||!engine.hasMoves())throw new Error('unsettled-board');
 }
