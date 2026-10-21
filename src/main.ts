@@ -133,7 +133,7 @@ function confirmStagePreview(context:StagePreview,action:'continue'|'start'){
   if(action==='continue'&&!canContinuePreview(context))return;
   const testPlay=context.intent==='restart'&&context.testing;
   closeStagePreview(false);
-  if(action==='start')startLevel(context.id,testPlay);
+  if(action==='start')startLevel(context.id,testPlay,undefined,{focusBoard:true});
   switchView('puzzle');
   if(action==='continue')$('#game-canvas').focus({preventScroll:true});
 }
@@ -236,7 +236,7 @@ function replaceBoard(){
   if(game.scene.getScene('Board')){game.scene.stop('Board');game.scene.remove('Board');}
   game.scene.add('Board',scene,true);
 }
-function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
+function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{focusBoard?:boolean}={}){
   if(stagePreview)closeStagePreview(false);
   abandonRewardContinue();
   if(!Number.isInteger(id)||id<1||id>levels.length)return;
@@ -244,13 +244,25 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
   clearTimeout(resultTimer);resultTimer=undefined;round++;
   roundEnded=false;resultShown=false;firstReward=false;resultWon=undefined;clearBoardNotice();testContinueUsed=false;
   const activeRound=round;
+  const focusOrigin=document.activeElement;let focusRequested=options.focusBoard===true;
   testingLevel=TEST_TOOLS_ENABLED&&testPlay;
   pickerReturnToResult=false;
   $<HTMLDialogElement>('#result-dialog').close();
   currentLevel=id;moves=levels[id-1].moves;score=0;collected=Array(6).fill(0);shuffles=1;clearedLeaves=0;
   if(restored&&!testingLevel){moves=restored.moves;score=restored.score;collected=restored.collected.slice();shuffles=restored.shuffles;clearedLeaves=restored.clearedLeaves;}
   scene?.stopPlaying();
-  scene=new BoardScene({audio,onBoardState:()=>{if(activeRound===round)updateBoardAccess();},onReady:()=>{if(activeRound===round)syncActivity();},onStart:()=>{if(activeRound===round)void audio.unlock().catch(()=>{});},onNotice:key=>{
+  const activeScene:BoardScene=scene=new BoardScene({audio,onBoardState:()=>{if(activeRound===round)updateBoardAccess();},onReady:()=>{
+    if(activeRound!==round||scene!==activeScene)return;
+    syncActivity();
+    if(!focusRequested)return;
+    focusRequested=false;
+    const board=$('#game-canvas'),focused=document.activeElement;
+    if(board.tabIndex!==0||!activeScene.keyboardState().available||(focused!==focusOrigin&&focused!==document.body&&focused!==board))return;
+    const alreadyFocused=focused===board;
+    board.focus({preventScroll:true});
+    // 같은 DOM에 초점이 남아 있으면 focus 이벤트가 다시 발생하지 않습니다.
+    if(alreadyFocused&&board.matches(':focus-visible'))activeScene.focusKeyboard();
+  },onStart:()=>{if(activeRound===round)void audio.unlock().catch(()=>{});},onNotice:key=>{
     if(activeRound!==round)return;
     boardNoticeKey=key;$('#board-notice').textContent=text(key);$('#board-notice').classList.remove('pop');void $('#board-notice').offsetWidth;$('#board-notice').classList.add('pop');
   },onMove:(items,points,_chains,leavesCleared)=>{
@@ -415,7 +427,7 @@ function finish(won:boolean){
   dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}${testContinue?' result-with-continue':''}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><span class="result-character"><img class="result-pip" src="/assets/pip.png" decoding="async" alt=""/></span><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line" id="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow" id="result-level">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p>${first?`<div class="result-rewards"><span>${icon('star',20)}<span class="sr-only" data-t="stars">${text('stars')}</span> +1</span><span>${icon('coin',20)}<span class="sr-only" data-t="coins">${text('coins')}</span> +40</span></div>`:''}<button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${testContinue?`<button class="result-test-button" id="result-continue" aria-describedby="result-continue-note">${text('testContinue')}</button><p id="result-continue-note">${text('testContinueNote')}</p>`:''}${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
   dialog.showModal();syncActivity();
   $('#result-next').focus();
-  $('#result-next').onclick=()=>{dialog.close();startLevel(won?Math.min(LEVEL_COUNT,currentLevel+1):currentLevel,testingLevel);switchView('puzzle');};
+  $('#result-next').onclick=()=>{dialog.close();startLevel(won?Math.min(LEVEL_COUNT,currentLevel+1):currentLevel,testingLevel,undefined,{focusBoard:true});switchView('puzzle');};
   $('#result-home').onclick=()=>{dialog.close();switchView('village');};
   if(testingLevel)$('#result-test').onclick=()=>{dialog.close();showTestPicker(true);};
   const continueButton=dialog.querySelector<HTMLButtonElement>('#result-continue');

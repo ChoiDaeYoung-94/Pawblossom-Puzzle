@@ -191,6 +191,52 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   };
 }
 
+describe('명시적 스테이지 전환의 보드 초점',()=>{
+  function setup(){
+    const h=mainHarness(false,false,false,false,undefined,false);h.frame();
+    h.run(`globalThis.focusCalls=[];globalThis.cursorStarts=0;document.activeElement=document.body;
+      BoardScene.prototype.focusKeyboard=()=>{cursorStarts++;};
+      const target=document.querySelector('#game-canvas');target.matches=()=>true;
+      target.focus=options=>{const changed=document.activeElement!==target;document.activeElement=target;
+        focusCalls.push({pending:boardPending,available:scene.keyboardState().available,preventScroll:options?.preventScroll});
+        if(changed)target.listeners.focus();};`);
+    return h;
+  }
+  function transition(h:ReturnType<typeof mainHarness>,kind:string){
+    if(kind==='next'||kind==='retry'){
+      h.run(`finish(${kind==='next'});document.activeElement=document.querySelector('#result-next')`);
+      h.element('#result-next').onclick();
+    }else{
+      if(kind==='preview-start')h.run("switchView('village');showStagePreview(1,'map',document.querySelector('#map-opener'))");
+      else h.element('#restart').onclick();
+      h.run("confirmStagePreview(stagePreview,'start')");
+    }
+  }
+  it.each(['next','retry','preview-start','preview-restart'])('%s는 교체 전 초점을 옮기지 않고 준비된 새 보드로 한 번 전달합니다',kind=>{
+    const h=setup(),before=h.run('round');transition(h,kind);
+    expect(h.run('focusCalls')).toEqual([]);expect(h.run('boardPending')).toBe(true);
+    h.frame();
+    expect(h.run('focusCalls')).toEqual([{pending:false,available:true,preventScroll:true}]);
+    expect(h.run("document.activeElement===document.querySelector('#game-canvas')")).toBe(true);
+    expect(h.run('cursorStarts')).toBe(1);expect(h.run('round')).toBe(before+1);
+    expect(h.run('route')).toBe('puzzle');expect(h.run('currentLevel')).toBe(kind==='next'?3:kind==='preview-start'?1:2);
+    h.run('scene.hooks.onReady()');expect(h.run('focusCalls.length')).toBe(1);
+  });
+  it.each(['route','hidden','inactive','modal','user-focus','superseded'])('%s로 달라진 준비 결과는 초점을 빼앗거나 복귀 때 재시도하지 않습니다',reason=>{
+    const h=setup();transition(h,'next');
+    const change:Record<string,string>={route:"switchView('village')",hidden:'document.hidden=true',inactive:'nativeActive=false',modal:"document.querySelector('#result-dialog').open=true",'user-focus':"document.activeElement=document.querySelector('#language-toggle')",superseded:'globalThis.staleReady=scene.hooks.onReady;startLevel(1);staleReady()'};
+    h.run(change[reason]);h.frame();expect(h.run('focusCalls')).toEqual([]);
+    if(reason==='user-focus')expect(h.run('document.activeElement.id')).toBe('language-toggle');
+    h.run("document.hidden=false;nativeActive=true;document.querySelector('#result-dialog').open=false;document.activeElement=document.body;switchView('puzzle');scene.hooks.onReady()");
+    expect(h.run('focusCalls')).toEqual([]);
+  });
+  it.each([true,false])('같은 보드 DOM에 남은 초점은 focus-visible=%s일 때만 새 키보드 커서를 만듭니다',keyboard=>{
+    const h=setup();transition(h,'next');
+    h.run(`document.activeElement=document.querySelector('#game-canvas');document.activeElement.matches=()=>${keyboard}`);h.frame();
+    expect(h.run('focusCalls.length')).toBe(1);expect(h.run('cursorStarts')).toBe(keyboard?1:0);
+  });
+});
+
 describe('핍·설정 도움말과 원래 화면 복귀',()=>{
   const open=(h:ReturnType<typeof mainHarness>,route:'settings'|'journal')=>{
     h.run(`switchView('${route}')`);
