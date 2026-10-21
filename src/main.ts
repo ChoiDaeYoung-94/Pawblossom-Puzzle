@@ -51,6 +51,7 @@ let nativeRevision=0;
 type StagePreview={id:number;intent:'map'|'restart';round:number;scene:BoardScene;testing:boolean;route:string;opener:HTMLElement;scroll:{view:HTMLElement;top:number;left:number}[]};
 let stagePreview:StagePreview|undefined;
 let audioActive:boolean|undefined;
+let nativeAudioAttempted=false;
 const androidAdEntry=typeof ANDROID_TEST_ADS_ENABLED!=='undefined'&&ANDROID_TEST_ADS_ENABLED&&Capacitor.isNativePlatform()&&Capacitor.getPlatform()==='android'&&Capacitor.isPluginAvailable('PawblossomTestAds');
 let testAds:TestAdsController|undefined;
 let rewardedContinue:{round:number;scene:BoardScene;button:HTMLButtonElement;requestId?:string;preparing:boolean}|undefined;
@@ -82,7 +83,7 @@ function updateSaveStatus(restoreControl?:string){
 $('#app').innerHTML=`
   <header class="topbar">
     <a class="brand" href="#puzzle" aria-label="Pawblossom Puzzle"><span class="brand-mark">${icon('paw',26)}</span><span>Pawblossom<small>PUZZLE</small></span></a>
-    <div class="header-right"><div class="wallet stars">${icon('star',18)}<strong id="star-count">0</strong><span class="sr-only">${text('stars')}</span></div><div class="wallet coins">${icon('coin',18)}<strong id="coin-count">0</strong><span class="sr-only">${text('coins')}</span></div><button id="language-toggle" class="language-button" aria-label="${text('switchLanguage')}">${save.language==='en'?'한국어':'EN'}</button><button id="settings-button" class="icon-button" aria-label="${text('settings')}">${icon('settings',21)}</button></div>
+    <div class="header-right"><div class="wallet stars">${icon('star',18)}<strong id="star-count">0</strong><span class="sr-only">${text('stars')}</span></div><div class="wallet coins">${icon('coin',18)}<strong id="coin-count">0</strong><span class="sr-only">${text('coins')}</span></div><select id="language-toggle" class="language-button" aria-label="${text('language')}"><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option><option value="en" ${save.language==='en'?'selected':''}>English</option></select><button id="settings-button" class="icon-button" aria-label="${text('settings')}">${icon('settings',21)}</button></div>
   </header>
   <main class="workspace">
     <section class="story-panel">
@@ -166,6 +167,8 @@ function syncActivity(){
   const active=nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!billingModal();
   if(!active)practiceInputs?.cancel();
   if(audioActive!==active){audioActive=active;if(active)audio.resume();else audio.suspend();}
+  // 앱은 첫 활성화에서 배경음을 준비합니다. 제한된 WebView는 기존 입력 경로로 재시도합니다.
+  if(active&&Capacitor.isNativePlatform()&&!nativeAudioAttempted){nativeAudioAttempted=true;if(save.music)void audio.unlock().catch(()=>{});}
   if(!game)return;
   const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
   const playing=active&&route==='puzzle'&&!modal&&!previewDialog.open;
@@ -628,7 +631,7 @@ function localize(){
   document.documentElement.lang=save.language;
   document.querySelectorAll<HTMLElement>('[data-t]').forEach(el=>el.textContent=text(el.dataset.t as TextKey));
   document.querySelectorAll<HTMLElement>('[data-alt]').forEach(el=>el.setAttribute('alt',text(el.dataset.alt as TextKey)));
-  $('#language-toggle').textContent=save.language==='en'?'한국어':'EN';$('#language-toggle').setAttribute('aria-label',text('switchLanguage'));
+  $<HTMLSelectElement>('#language-toggle').value=save.language;$('#language-toggle').setAttribute('aria-label',text('language'));
   $('#settings-button').setAttribute('aria-label',text('settings'));$('#restart').setAttribute('aria-label',text('restart'));
   if(noticeKey)$('#toast').textContent=text(noticeKey);
   if(resumeNoticeTimer!==undefined)$('#round-resumed-notice').textContent=text('roundResumed');
@@ -668,7 +671,7 @@ function switchView(name:string){
 document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(button=>button.onclick=()=>switchView(button.dataset.route!));
 $('#settings-button').onclick=()=>switchView(route==='settings'?'puzzle':'settings');
 $('.brand').onclick=e=>{e.preventDefault();switchView('puzzle');};
-$('#language-toggle').onclick=()=>changeLanguage(save.language==='en'?'ko':'en');
+$('#language-toggle').onchange=event=>changeLanguage((event.target as HTMLSelectElement).value==='en'?'en':'ko');
 $('#board-notice').addEventListener('animationend',()=>{
   // 이전 애니메이션의 늦은 종료 이벤트는 현재 재생 중인 새 안내를 지우지 않습니다.
   if($('#board-notice').getAnimations?.().some(animation=>animation.playState==='running'))return;

@@ -116,10 +116,10 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   }
   class AudioStub {
     plays:string[]=[];
-    suspended=false;suspends=0;resumes=0;
+    suspended=false;suspends=0;resumes=0;unlocks=0;
     setMusicEnabled() {}
     setSfxEnabled() {}
-    unlock() { return Promise.resolve(); }
+    unlock() { this.unlocks++;return Promise.resolve(); }
     play(key:string) {this.plays.push(key);}
     suspend() {this.suspended=true;this.suspends++;}
     resume() {this.suspended=false;this.resumes++;}
@@ -1215,6 +1215,45 @@ describe('30스테이지 진행과 선택 묶음',()=>{
   });
 });
 
+
+describe('첫 활성 배경음과 현재 언어 선택',()=>{
+  it('Android 초기 활성 확인 뒤 입력 없이 한 번 준비하고 복귀 이벤트로 중복 준비하지 않습니다',async()=>{
+    const h=mainHarness(false,false,false,true);
+    expect(h.run('audio.unlocks')).toBe(0);
+    await Promise.resolve();h.resolveNativeState({isActive:true});await new Promise(resolve=>setTimeout(resolve,0));
+    expect(h.run('audio.unlocks')).toBe(1);expect(h.run('audio.suspended')).toBe(false);
+    h.nativeEvents.appStateChange({isActive:false});h.nativeEvents.appStateChange({isActive:true});h.documentEvents.visibilitychange();
+    expect(h.run('audio.unlocks')).toBe(1);
+  });
+  it('숨김 문서와 광고 보류가 모두 풀린 뒤에만 첫 자동 준비를 합니다',()=>{
+    const h=mainHarness(false,false,false,true);
+    h.run('document.hidden=true;nativeActive=true;syncActivity()');expect(h.run('audio.unlocks')).toBe(0);
+    h.run('document.hidden=false;testAds={pausesGame:true};syncActivity()');expect(h.run('audio.unlocks')).toBe(0);
+    h.run('testAds=undefined;testBilling={pausesGame:true};syncActivity()');expect(h.run('audio.unlocks')).toBe(0);
+    h.run('testBilling=undefined;syncActivity()');expect(h.run('audio.unlocks')).toBe(1);
+  });
+  it('저장된 배경음 끄기를 존중하고 웹은 기존 첫 입력 경로를 유지합니다',()=>{
+    const h=mainHarness(false,false,false,true,{version:1,language:'ko',highestLevel:1,completed:[],stars:0,coins:0,garden:0,music:false,sfx:true,tutorialSeen:true});
+    h.run('nativeActive=true;syncActivity()');expect(h.run('audio.unlocks')).toBe(0);expect(h.stored().music).toBe(false);
+    const web=mainHarness();expect(web.run('audio.unlocks')).toBe(0);web.documentEvents.pointerdown();expect(web.run('audio.unlocks')).toBe(1);
+  });
+  it('자동 준비가 실패해도 첫 입력에서 재시도할 수 있습니다',async()=>{
+    const h=mainHarness(false,false,false,true);
+    h.run('audio.unlock=()=>{audio.unlocks++;return Promise.reject(new Error("blocked"));};nativeActive=true;syncActivity()');
+    await Promise.resolve();expect(h.run('audio.unlocks')).toBe(1);
+    h.documentEvents.pointerdown();await Promise.resolve();expect(h.run('audio.unlocks')).toBe(2);
+  });
+  it('상단과 설정의 선택이 현재 언어 표시·저장에 함께 반영되고 회차는 유지됩니다',()=>{
+    const h=mainHarness(),round=h.run('JSON.stringify({round,moves,score,collected,board:scene.engine.board,leaves:scene.engine.leaves})');
+    expect(h.run('document.querySelector("#language-toggle").value')).toBe('en');
+    h.run('document.querySelector("#language-toggle").onchange({target:{value:"ko"}})');
+    expect(h.stored().language).toBe('ko');expect(h.run('document.querySelector("#language-toggle").value')).toBe('ko');
+    expect(h.element('#settings-view').innerHTML).toContain('value="ko" selected');
+    h.run('document.querySelector("#language").onchange({target:{value:"en"}})');
+    expect(h.stored().language).toBe('en');expect(h.run('document.querySelector("#language-toggle").value')).toBe('en');
+    expect(h.run('JSON.stringify({round,moves,score,collected,board:scene.engine.board,leaves:scene.engine.leaves})')).toBe(round);
+  });
+});
 
 describe('문서·Android·모달 복귀',()=>{
   it('문서 표시가 먼저 돌아와도 Android 비활성이면 보드와 소리를 재개하지 않습니다',async()=>{
