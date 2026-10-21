@@ -2,6 +2,9 @@
 
 ## #190 가로 화면 검수 후속 · 2026-10-21
 
+최초 PR CI39604397961/45ce4ad는 양Node2644성공2실패로 스토어·빌드 단계가 미실행입니다. 고정3×3 SpecialTapPractice getter가 nullable 대응 중 복제본을 반환해 기존 첫 before 참조 계약을 어긴 원인을 확인하고 원래 배열 참조를 반환하도록 복구했습니다. 테스트 기대는 그대로이며 관련3파일300개·두 웹 빌드(전체/앱/서버 타입·에셋 포함)가 통과했습니다. 각38파일/public23전수/flags를 확인하고 production으로 복원했습니다. 최종 CI는 새 head에서 확인하며 #122의 원장 잠금/시간초과와 별개입니다. 검수 후 바뀐 연습 getter의 실제 최종 화면 전체 재실행을 이전 빌드의 브라우저 성공과 합산하지 않습니다.
+
+
 초기 빌드의 실제640×360 EN 스테이지33에서 puzzle-view는241px인데 grid 자동 최소 높이가261.34px로 커져 보드 하단 약20px이 하단 메뉴 뒤에서 잘렸습니다. 원본 `qa/feedback-20261021/190/stage33-layout.jpg`와 `browser-before-layout-fix.json`은 그대로 보존합니다. 실플레이는 짧은 한영 maskPlayHint 한 문장으로 분리해 기본 힌트 중복을 제거하고, 상세 maskHint는 미리보기에 유지합니다. 가로 grid의 남은 행은 minmax(0,1fr), 안내 영역은 min-height:0과 overflow:auto로 제한해 긴 키보드 도움말이 전체 보드 높이를 밀지 않게 했습니다.
 
 UI 1파일292개와 두 빌드의 전체/앱/서버 타입·에셋 검사가 통과했습니다. testing `index-CRyp5hlF.js`, production `index-BilCi2Fu.js`와 CSS `index-4uRkxrjH.css`를 별도 보존했고 production dist로 복원했습니다. 새 검사 준비의 첫2실패(존재하지 않는 미리보기 함수명), 다음2실패(동적 dialog 대신 별도 DOM 대역을 읽음)는 테스트 연결을 고쳐 해결했으며 원문을 보존합니다. 픽셀 경계 통과는 자동 UI 대역 검사와 구분합니다.

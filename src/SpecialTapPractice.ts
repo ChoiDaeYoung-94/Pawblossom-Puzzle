@@ -9,7 +9,8 @@ export class SpecialTapPractice {
     this.engine.board[1][1]!.special='row';
   }
   get completed(){return Boolean(this.result?.valid);}
-  get board():Tile[][] {return (this.result?.steps[0].before??this.engine.board).map(row=>row.map(tile=>({...tile!})));}
+  // 이 실습은 빈칸 없는 고정 3×3 판만 사용하며 첫 before의 참조를 유지합니다.
+  get board():Tile[][] {return (this.result?.steps[0].before??this.engine.board) as Tile[][];}
   isTarget(p:Position){return p.row===1&&p.col===1;}
   tap(p:Position):boolean {
     if(this.completed||!this.isTarget(p))return false;
