@@ -1,3 +1,15 @@
+## 현재 작업 · 2026-10-21 · #181 종료된 퍼즐의 결과 복귀
+
+기준 main `5ce9444ae879599870377182ee2667971b26de22`, `codex/181-ended-round-return`입니다. production에서 스테이지1을 자연 완료한 뒤 결과의 정원 버튼→하단 퍼즐로 돌아오면 결과창이 닫힌 채 종료 보드/tabindex=-1만 남는 문제를 재현했습니다. 명시적인 퍼즐 복귀 시 기존 결과 DOM과 다음/재시도 버튼을 다시 표시하고 초점을 돌려줍니다. 비활성·다른 modal·보드 준비·결과 타이머·현재 Scene 불일치·시험 광고/결제 중단 중이면 화면을 옮기기 전에 거절하여 현재 화면을 유지하며, 조건 해제만으로 자동 결과창/초점 이동은 하지 않습니다. 보상/저장·완료 처리·결과 아트·효과음·Scene/보드/RNG는 다시 실행하지 않습니다.
+
+native 시험 보상 광고는 화면을 떠날 때 기존 요청 폐기를 유지합니다. 초기 결과의 광고 버튼 바인딩만 공통 함수로 추출하고, 재방문은 기존 dialog를 연 뒤 새로운 context·요청ID 미설정 상태로 연결합니다. 이전 earned/closed/오래된 show는 지급하지 않고 새 명시 prepare/show 요청만 사용합니다. 광고 취소 중 빠른 복귀는 정원에 머물고 취소 완료 후 사용자가 다시 퍼즐을 선택하면 결과를 엽니다. 구매자 모든 광고 차단과 미정인 광고 없는 이어하기 혜택·횟수는 변경하지 않았습니다.
+
+**UI263개·전체/앱/서버 타입·에셋 검사·격리 testing/production 빌드 각30파일/flags3true·3false/서버 마커0을 통과했습니다.** 새 경계20개는 일반/테스트 성공·실패·마지막 스테이지·정원/Escape/native back·반복 왕복 시 보상/아트/소리/회차 동일·일시 차단·언어·진행 중/새 회차·실제 시험 컨트롤러의 옛 receipt 차단/새 요청·취소 중 복귀를 확인합니다. 첫 실행260통과/1실패는 기존 lifecycle 검사가 닫힌 결과 뒤 종료 보드 재개를 기대했기 때문입니다. 기존 기대를 결과 open/paused=true→다음 버튼 뒤 재개로 보강하고 원문 로그/JSON을 보존했으며 최종263개를 확인했습니다. 로컬 전체나 같은 head CI를 반복하지 않았습니다.
+
+수정 production 실화면은 자연 스테이지1 재완료→정원/퍼즐·Escape/퍼즐3회 왕복에서 결과/버튼 초점·별1/120코인 유지, 정원에서 영어 전환 후 결과 재방문, Enter로2번 진입→즉시 Right·24이동 유지와 오류 로그0을 확인했습니다. 접근성 칸 안내를 실제 키로 읽고 외부 순수 인접 매치 계산 후 포인터로 교환했으며 저장/Scene/보드/RNG 주입은 없습니다. 실패/테스트/마지막/native back/SDK 늦은 callback은 하네스 범위이며 이번 production 브라우저 실행과 합산하지 않습니다. 청취·단말/실SDK/Play 구매·복원·환불은 미검증입니다.
+
+Git 밖 `Pawblossom-builds/qa/issue-181-ended-return`에 before/after 화면·조작 JSON·최초 실패/최종 UI·타입/빌드·소스/전수 dist SHA·독립 검수를 보존합니다. 임시 IAB 탭/5187 서버를 정리하고 한국어를 복원했습니다. 아래 e442 APK는 이 수정 전 전달본으로 보존하며 수정 병합/정확 main CI 후 필요한 최종 APK 갱신을 별도 기록합니다. #122 과거 간헐 원인 미확정과 #73 출시 검증은 유지하며 AAB/공개 배포·콘솔/상품·실키env·폰 자동 검사·최종 믹스는 보류합니다. 사용자 조치·질문은17시 보고에 모읍니다.
+
 ## 최신 통합 APK · 2026-10-21 · #169 오후 UI 개선 전달
 
 사용자의14:34 작업 재개 지시에 따라16시 대기 계획을 취소하고 최신 게임 main `e4429b84c3a8a3186f34d47f1498b398a005fcfd`로 debug APK를 갱신했습니다. 이 소스의 [정확한 main CI39547250064](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39547250064)는 Node22·24 각각37파일2,503개·스토어12개·타입/두 웹 빌드/flags 검사를 통과했습니다. [PR170](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/170)의 목표 미리보기·같은 Scene 이어하기·명시 재시작, [PR172](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/172)의 가로 정원 배치, [PR173](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/173)의 핍 도움말, [PR177](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/177)의 새 보드 준비 후 일회 키보드 초점 복구가 포함됐습니다. 이 전달 기록 PR은 제품 변경이 없는 후속 문서입니다.

@@ -700,6 +700,24 @@ describe('보상형 시험 이어하기 요청 문맥',()=>{
     expect(h.run('moves')).toBe(0);expect(h.run('game.paused')).toBe(true);h.nativeEvents.appStateChange({isActive:true});
     expect(h.run('moves')).toBe(5);expect(h.run('game.paused')).toBe(false);
   });
+  it('결과 재방문의 새 문맥은 이전 earned/closed와 오래된 show를 지급하지 않습니다',async()=>{
+    const x=await setup(),{h}=x,disk=h.disk();await x.start();x.earned();
+    const oldContext=h.run('rewardedContinue'),oldShow=h.element('#result-ad-show').onclick;
+    h.element('#result-home').onclick();const oldReceipt=x.closed();expect(h.run('moves')).toBe(0);
+    h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(h.run('rewardedContinue')).not.toBe(oldContext);expect(h.run('rewardedContinue.requestId')).toBeUndefined();
+    x.emit(oldReceipt);oldShow();expect(h.run('moves')).toBe(0);expect(h.run('testContinueUsed')).toBe(false);
+    await x.start();x.earned();x.closed();expect(h.run('moves')).toBe(5);expect(h.run('testContinueUsed')).toBe(true);expect(h.disk()).toEqual(disk);
+  });
+  it('준비 광고 취소 중 즉시 퍼즐 복귀는 정원에 머물고 취소 뒤 명시 복귀만 결과를 엽니다',async()=>{
+    const x=await setup(),{h}=x;await h.run('prepareRewardContinue(rewardedContinue)');x.emit({state:'ready'});
+    let finishCancel!:()=>void;
+    x.bridge.cancel=()=>new Promise<ReturnType<typeof x.state>>(resolve=>{finishCancel=()=>resolve(x.emit({state:'cancelled',receipt:null}));});
+    h.element('#result-home').onclick();expect(h.run('testAds.pending')).toBe(true);
+    h.run("switchView('puzzle')");expect(h.run('route')).toBe('village');expect(h.element('#result-dialog').open).toBe(false);
+    finishCancel();await h.run('testAds.connect()');
+    expect(h.run('testAds.pending')).toBe(false);expect(h.run('route')).toBe('village');expect(h.element('#result-dialog').open).toBe(false);
+    h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(h.run('moves')).toBe(0);expect(h.run('rewardedContinue.requestId')).toBeUndefined();
+  });
 });
 function boardHarness() {
   const handlers: Record<string, (pointer: Pointer) => void> = {};
@@ -743,6 +761,51 @@ function boardHarness() {
   scene.create();
   return { handlers, lifecycle, attempts, taps, scene };
 }
+
+describe('종료된 회차의 명시적 퍼즐 복귀',()=>{
+  function ended(test=false,won=true,level=2,native=false){
+    const h=mainHarness(false,false,true,native);
+    if(native)h.nativeEvents.appStateChange({isActive:true});
+    h.run(`startLevel(${level},${test});moves=1;scene.hooks.onMove(${won?'[99,99,99,99,99,99]':'[0,0,0,0,0,0]'},100,1,${won?'64':'0'})`);
+    h.flushResults();return h;
+  }
+  it.each([{test:false,won:true,level:2},{test:false,won:false,level:2},{test:true,won:true,level:6},{test:true,won:false,level:6},{test:false,won:true,level:30}])('정원 왕복은 $test/$won/$level 결과와 회차·보상·아트·소리를 다시 만들지 않습니다',({test,won,level})=>{
+    const h=ended(test,won,level),disk=h.disk(),writes=h.writes(),scene=h.run('scene'),engine=h.run('scene.engine'),round=h.run('round');
+    const sounds=h.run('audio.plays.slice()'),art=h.resultArtCalls(),html=h.element('#result-dialog').innerHTML,next=h.element('#result-next').onclick;
+    let focus=0;h.element('#result-next').focus=()=>{focus++;};
+    for(let i=0;i<3;i++){
+      h.element('#result-home').onclick();expect(h.run('route')).toBe('village');expect(h.element('#result-dialog').open).toBe(false);
+      h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(h.run('game.paused')).toBe(true);expect(h.element('#game-canvas').tabIndex).toBe(-1);
+    }
+    expect(focus).toBe(3);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('audio.plays')).toEqual(sounds);expect(h.resultArtCalls()).toBe(art);
+    expect(h.run('scene')).toBe(scene);expect(h.run('scene.engine')).toBe(engine);expect(h.run('round')).toBe(round);expect(h.element('#result-dialog').innerHTML).toBe(html);expect(h.element('#result-next').onclick).toBe(next);
+    h.element('#result-next').onclick();expect(h.run('currentLevel')).toBe(won?Math.min(30,level+1):level);expect(h.run('testingLevel')).toBe(test);expect(h.element('#result-dialog').open).toBe(false);
+  });
+  it.each([true,false])('Escape로 닫은 결과 won=%s도 명시적으로 돌아올 수 있습니다',won=>{
+    const h=ended(false,won);h.element('#result-dialog').listeners.cancel({preventDefault(){}});expect(h.run('route')).toBe('village');
+    h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(h.run('resultWon')).toBe(won);
+  });
+  it('Android 뒤로가기로 정원에 나간 결과도 다시 선택할 수 있습니다',()=>{
+    const h=ended(false,false,2,true);h.nativeEvents.backButton({isActive:true});expect(h.run('route')).toBe('village');
+    h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(h.run('resultWon')).toBe(false);
+  });
+  it.each(['hidden','native','pending','timer','tutorial','ads','billing','wrong-scene'])('%s 중에는 화면 전환 전에 막고 자동으로 초점을 가져가지 않습니다',reason=>{
+    const h=ended();h.element('#result-home').onclick();let focus=0;h.element('#result-next').focus=()=>{focus++;};
+    const changes:Record<string,string>={hidden:'document.hidden=true',native:'nativeActive=false',pending:'boardPending=true',timer:'resultTimer=123',tutorial:"document.querySelector('#tutorial-dialog').open=true",ads:'testAds={pausesGame:true}',billing:'testBilling={pausesGame:true}', 'wrong-scene':'game.scene.board=undefined'};
+    h.run(changes[reason]+";switchView('puzzle')");expect(h.run('route')).toBe('village');expect(h.element('#result-dialog').open).toBe(false);expect(focus).toBe(0);
+    h.run("document.hidden=false;nativeActive=true;boardPending=false;resultTimer=undefined;document.querySelector('#tutorial-dialog').open=false;testAds=undefined;testBilling=undefined;game.scene.board=scene;syncActivity()");
+    expect(h.run('route')).toBe('village');expect(h.element('#result-dialog').open).toBe(false);expect(focus).toBe(0);
+    h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(focus).toBe(1);
+  });
+  it('진행 중 회차와 새 회차에는 닫았던 결과를 표시하지 않습니다',()=>{
+    const h=mainHarness();h.run("switchView('village');switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(false);
+    h.run('finish(true)');h.element('#result-home').onclick();h.run("startLevel(3);switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(false);expect(h.run('roundEnded')).toBe(false);
+  });
+  it('정원에서 바꾼 언어는 같은 결과 버튼과 첫 보상 표시를 유지합니다',()=>{
+    const h=ended(),next=h.element('#result-next').onclick;h.element('#result-home').onclick();h.run("changeLanguage('ko')");const disk=h.disk(),writes=h.writes();
+    h.run("switchView('puzzle')");expect(h.element('#result-next').innerHTML).toContain('다음 스테이지');expect(h.element('#result-dialog').innerHTML).toContain('result-rewards');expect(h.element('#result-next').onclick).toBe(next);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+});
 
 describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
   it('숨김 화면에서 보드 복귀는 현재 부모 크기를 먼저 읽어 입력 좌표를 계산합니다',()=>{
@@ -1188,7 +1251,8 @@ describe('문서·Android·모달 복귀',()=>{
       expect(app.run('game.paused')).toBe(false);
     }
     app.run("switchView('settings');document.hidden=true");app.documentEvents.visibilitychange();app.run('document.hidden=false');app.documentEvents.visibilitychange();expect(app.run('game.paused')).toBe(true);
-    app.run("switchView('puzzle')");expect(app.run('game.paused')).toBe(false);
+    app.run("switchView('puzzle')");expect(app.run('game.paused')).toBe(true);expect(app.element('#result-dialog').open).toBe(true);
+    app.element('#result-next').onclick();expect(app.run('game.paused')).toBe(false);
   });
   it('결과에서 선택창을 취소하면 보드가 결과창 아래에서 재개되지 않습니다',()=>{
     const app=mainHarness(false,false,true);app.run('startLevel(6,true);finish(false)');app.element('#result-test').onclick();app.element('#test-close').onclick();
