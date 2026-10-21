@@ -3,10 +3,11 @@ import { BoardEngine, type Position, type Tile, type ResolveStep, type LeafPile,
 import type { AudioManager } from './audio/AudioManager';
 import { BoardEffects } from './BoardEffects';
 import { reducedMotion } from './reducedMotion';
+import type { ResolveVisual } from './RoundFeedback';
 
 export const tileNames = ['strawberry','carrot','blueberry','acorn','leaf','flower'];
 type Notice='matched'|'chain'|'specialCreated'|'noMoves'|'rowClear'|'columnClear'|'bombClear'|'colorClear'|'comboClear'|'leafThinned'|'leavesCleared';
-interface Hooks { audio: AudioManager; onStart:()=>void; onReady?:()=>void; onBoardState?:()=>void; onMove:(collected:number[],score:number,chains:number,leavesCleared:number)=>void; onNotice:(kind:Notice)=>void; }
+interface Hooks { audio: AudioManager; onStart:()=>void; onReady?:()=>void; onBoardState?:()=>void; onResolveVisual?:(event:ResolveVisual)=>void; onVisualCancel?:()=>void; onMove:(collected:number[],score:number,chains:number,leavesCleared:number)=>void; onNotice:(kind:Notice)=>void; }
 const CELL = 56, PAD = 16;
 export class BoardScene extends Phaser.Scene {
   engine: BoardEngine;
@@ -46,10 +47,11 @@ export class BoardScene extends Phaser.Scene {
     this.input.on('pointerdown',this.pointerDown,this);
     this.input.on('pointerup',this.pointerUp,this);
     this.input.on('pointerupoutside',this.pointerOutside,this);
-    const cancelGesture=()=>this.cancelInput();
+    const cancelGesture=()=>{this.cancelInput();this.hooks.onVisualCancel?.();};
     const cancelPointer=()=>{if(this.down)this.cancelInput();};
+    const cancelResize=()=>{cancelPointer();this.hooks.onVisualCancel?.();};
     this.input.on('gameout',cancelPointer);
-    this.scale.on(Phaser.Scale.Events.RESIZE,cancelPointer);
+    this.scale.on(Phaser.Scale.Events.RESIZE,cancelResize);
     this.events.on(Phaser.Scenes.Events.PAUSE,cancelGesture);
     this.events.on(Phaser.Scenes.Events.RESUME,cancelGesture);
     this.events.on(Phaser.Scenes.Events.SLEEP,cancelGesture);
@@ -58,7 +60,7 @@ export class BoardScene extends Phaser.Scene {
     const dispose=()=>{
       this.input.off('pointerdown',this.pointerDown,this);this.input.off('pointerup',this.pointerUp,this);
       this.input.off('pointerupoutside',this.pointerOutside,this);this.input.off('gameout',cancelPointer);
-      this.scale.off(Phaser.Scale.Events.RESIZE,cancelPointer);
+      this.scale.off(Phaser.Scale.Events.RESIZE,cancelResize);
       for(const event of [Phaser.Scenes.Events.PAUSE,Phaser.Scenes.Events.RESUME,Phaser.Scenes.Events.SLEEP,Phaser.Scenes.Events.WAKE])this.events.off(event,cancelGesture);
       this.events.off(Phaser.Scenes.Events.SHUTDOWN,dispose);this.events.off(Phaser.Scenes.Events.DESTROY,dispose);
       this.events.off(Phaser.Scenes.Events.CREATE,onCreate);
@@ -317,6 +319,11 @@ export class BoardScene extends Phaser.Scene {
           if(this.finished)return;
         }
         const reducedRemoval=this.syncMotion();
+        // 동기 엔진의 최종 보드 대신 현재 제거 단계의 실제 데이터만 복사합니다.
+        this.hooks.onResolveVisual?.({cascade:i+1,
+          removed:step.removed.map(p=>({...this.point(p),kind:step.before[p.row][p.col].kind})),
+          clearedLeaves:(step.leaves?.hits??[]).filter(p=>p.after===0).map(p=>this.point(p)),
+          specialActivated:Boolean(step.effects?.length),specialCreated:Boolean(step.created?.length)});
         step.removed.forEach(p=>{
           const item=this.pieces[p.row][p.col];this.tweens.add({targets:item,...(reducedRemoval?{}:{scale:.25}),alpha:0,duration:180,ease:reducedRemoval?'Linear':'Back.easeIn'});
         });
@@ -326,14 +333,14 @@ export class BoardScene extends Phaser.Scene {
     }
     this.busy=false;if(!this.finished)this.resetHint();this.changed();
   }
-  stopPlaying(){this.finished=true;this.stopHintTimer();this.cancelInput();this.effects.clear();}
+  stopPlaying(){this.finished=true;this.stopHintTimer();this.cancelInput();this.effects.clear();this.hooks.onVisualCancel?.();}
   /** 현재 실패 보드의 안정 상태만 복귀합니다. 라운드 자격/1회 제한은 호출자가 검사합니다. */
   resumeAfterFailure():boolean {
     if(!this.ready||!this.finished||this.busy||(!this.sys.isActive()&&!this.sys.isPaused())
       ||this.pieces.length!==this.engine.rows||this.pieces.some(row=>row.length!==this.engine.cols))return false;
     this.cancelInput();this.finished=false;this.resetHint();this.changed();return true;
   }
-  shuffle():boolean {if(!this.canInteract())return false;this.cancelInput();this.engine.shuffle();this.paint(this.engine.board);this.hooks.audio.play('special');this.resetHint();this.changed();return true;}
+  shuffle():boolean {if(!this.canInteract())return false;this.cancelInput();this.hooks.onVisualCancel?.();this.engine.shuffle();this.paint(this.engine.board);this.hooks.audio.play('special');this.resetHint();this.changed();return true;}
   canLeave(){return !this.busy;}
   private stopHintTimer(){this.hintTimer?.remove();this.hintTimer=undefined;}
   private resetHint(){
