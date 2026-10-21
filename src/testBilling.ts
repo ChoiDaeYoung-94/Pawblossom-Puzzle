@@ -28,6 +28,9 @@ export class TestBillingController {
   get busy(){return this.pending||this.snapshot.overlay||['connecting','querying','products','purchasing'].includes(this.snapshot.state);}
   get pausesGame(){return this.requestingPurchase||this.snapshot.preparingPurchase||this.snapshot.overlay||this.snapshot.state==='purchasing';}
   get blocksAds(){return this.snapshot.adsBlocked||this.busy;}
+  /** 시험 네이티브 공급자만 연결됩니다. 과거 owned/오류/조회 중 값으로 새 혜택을 주지 않습니다. */
+  get verifiedOwned(){return !this.disposed&&!this.localError&&this.snapshot.revision>=0&&this.snapshot.available&&this.snapshot.configured
+    &&this.snapshot.entitlement==='owned'&&this.snapshot.state==='idle'&&!this.snapshot.error&&!this.busy&&!this.pausesGame;}
   get canPurchase(){return this.snapshot.available&&this.snapshot.configured&&!this.busy&&this.snapshot.entitlement==='not-owned'&&Boolean(this.snapshot.price);}
   private accept=(value:BillingSnapshot,authoritative=false)=>{
     if(this.disposed||!value||!Number.isSafeInteger(value.revision)||value.revision<this.snapshot.revision||(value.revision===this.snapshot.revision&&!(authoritative&&this.localError))||!billingStates.includes(value.state)||!entitlements.includes(value.entitlement))return;

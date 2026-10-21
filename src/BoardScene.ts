@@ -334,11 +334,22 @@ export class BoardScene extends Phaser.Scene {
     this.busy=false;if(!this.finished)this.resetHint();this.changed();
   }
   stopPlaying(){this.finished=true;this.stopHintTimer();this.cancelInput();this.effects.clear();this.hooks.onVisualCancel?.();}
+  snapshot():BoardSnapshot {return JSON.parse(JSON.stringify({board:this.engine.board,leaves:this.engine.leaves,ruleVersion:this.engine.ruleVersion}));}
+  canResumeAfterFailure():boolean {
+    return this.ready&&this.finished&&!this.busy&&(this.sys.isActive()||this.sys.isPaused())
+      &&this.pieces.length===this.engine.rows&&this.pieces.every(row=>row.length===this.engine.cols);
+  }
+  /** 읽기 전용 사전 검사를 통과하고 저장 성공한 같은 동기 실행에서만 호출합니다. */
+  resumePreparedFailure(){this.cancelInput();this.finished=false;this.resetHint();this.changed();}
+  applyPreparedShuffle(snapshot:BoardSnapshot){
+    this.cancelInput();this.hooks.onVisualCancel?.();
+    this.engine.board=JSON.parse(JSON.stringify(snapshot.board));this.engine.leaves=snapshot.leaves.map(row=>row.slice());
+    this.paint(this.engine.board);this.paintLeaves(this.engine.leaves);this.hooks.audio.play('special');this.resetHint();this.changed();
+  }
   /** 현재 실패 보드의 안정 상태만 복귀합니다. 라운드 자격/1회 제한은 호출자가 검사합니다. */
   resumeAfterFailure():boolean {
-    if(!this.ready||!this.finished||this.busy||(!this.sys.isActive()&&!this.sys.isPaused())
-      ||this.pieces.length!==this.engine.rows||this.pieces.some(row=>row.length!==this.engine.cols))return false;
-    this.cancelInput();this.finished=false;this.resetHint();this.changed();return true;
+    if(!this.canResumeAfterFailure())return false;
+    this.resumePreparedFailure();return true;
   }
   shuffle():boolean {if(!this.canInteract())return false;this.cancelInput();this.hooks.onVisualCancel?.();this.engine.shuffle();this.paint(this.engine.board);this.hooks.audio.play('special');this.resetHint();this.changed();return true;}
   canLeave(){return !this.busy;}

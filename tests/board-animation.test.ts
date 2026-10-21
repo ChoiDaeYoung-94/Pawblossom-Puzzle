@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRequire } from 'node:module';
 import type Phaser from 'phaser';
 import { BoardEngine, seededRng, type Cell, type Tile, type Position, type ResolveStep } from '../src/core';
+import {prepareShuffle} from '../src/puzzleHelp';
 
 class Piece {
   destroyed=false;alpha=1;scale=1;
@@ -46,6 +47,7 @@ import {levels} from '../src/levels';
 const Clock=createRequire(import.meta.url)('phaser/src/time/Clock.js') as new(scene:unknown)=>Phaser.Time.Clock&{start():void};
 interface RenderScene {
   sys:{isActive():boolean;isPaused():boolean};shuffle():boolean;resumeAfterFailure():boolean;
+  snapshot:BoardScene['snapshot'];applyPreparedShuffle:BoardScene['applyPreparedShuffle'];canResumeAfterFailure:BoardScene['canResumeAfterFailure'];
   pieces:Piece[][];engine:BoardEngine;
   paint(board:Cell[][]):void;drop(step:ResolveStep):void;
   attempt(a:Position,b?:Position):Promise<void>;tap(p:Position):void;resetHint():void;
@@ -294,12 +296,19 @@ describe('블록 객체 보존과 낙하 연출',()=>{
     scene.sys.isActive=()=>!paused;scene.sys.isPaused=()=>paused;
     const engine=scene.engine,pieces=scene.pieces,leaves=scene.leafObjects,items=scene.pieces.flat(),before=snapshot(engine);
     const hint=vi.spyOn(scene,'resetHint');
+    expect(scene.canResumeAfterFailure()).toBe(true);expect(scene.finished).toBe(true);expect(hint).not.toHaveBeenCalled();
     expect(scene.resumeAfterFailure()).toBe(true);expect(scene.engine).toBe(engine);expect(scene.pieces).toBe(pieces);
     expect(scene.leafObjects).toBe(leaves);expect(scene.pieces.flat()).toEqual(items);expect(items.every(item=>!item.destroyed)).toBe(true);
     expect(snapshot(engine)).toEqual(before);expect(scene.keyboardState()).toMatchObject({finished:false,available:!paused,cursor:undefined,selected:undefined});
     expect(hint).toHaveBeenCalledOnce();expect(onMove).not.toHaveBeenCalled();expect(scene.resumeAfterFailure()).toBe(false);
     scene.sys.isActive=()=>true;scene.sys.isPaused=()=>false;scene.focusKeyboard();scene.keyboardKey('Enter');
     expect(scene.keyboardState().selected).toEqual({row:0,col:0});
+  });
+  it('준비한 섞기는 같은 엔진에 보드와 낙엽을 정확히 적용하고 정산을 호출하지 않습니다',()=>{
+    const {scene,onMove}=harness();scene.create();scene.events.emit('create');scene.engine.setLeaves([{row:2,col:3,layers:2}]);
+    scene.engine.board[0][0]!.special='rainbow';const engine=scene.engine,source=scene.snapshot(),candidate=prepareShuffle(source,seededRng(93))!;
+    expect(candidate).toBeDefined();scene.applyPreparedShuffle(candidate);expect(scene.engine).toBe(engine);expect(scene.snapshot()).toEqual(candidate);expect(onMove).not.toHaveBeenCalled();
+    candidate.board[0][0]!.kind=99;expect(scene.engine.board[0][0]!.kind).not.toBe(99);
   });
   it.each(['unready','busy','sleep','shutdown','destroy','missing-row','missing-piece','not-finished'])('복귀 불가 상태 %s는 종료 상태와 기존 객체를 바꾸지 않습니다',reason=>{
     const {scene}=harness();scene.create();if(reason!=='unready')scene.events.emit('create');
@@ -518,6 +527,12 @@ describe('비정형 보드의 실제 표시·입력·엔진 낙하 재생',()=>{
     scene.input.emit('pointerdown',{id:1,x:44,y:44,button:0});expect(scene.down).toBeUndefined();
     await scene.attempt({row:0,col:0},{row:0,col:1});scene.tap({row:0,col:0});expect(onMove).not.toHaveBeenCalled();
     scene.focusKeyboard();expect(scene.keyboardState().cursor).toEqual({row:0,col:2});
+  });
+  it('준비한 pond 섞기 후에도 같은 엔진·mask·구멍 객체와 다음 교환 낙하를 유지합니다',async()=>{
+    const {scene,onMove}=harness();scene.engine=new BoardEngine(8,8,seededRng(42),undefined,2,levels[31].mask);scene.create();scene.events.emit('create');
+    const engine=scene.engine,mask=engine.mask,candidate=prepareShuffle(scene.snapshot(),seededRng(83),mask)!;expect(candidate).toBeDefined();
+    scene.applyPreparedShuffle(candidate);expect(scene.engine).toBe(engine);expect(scene.engine.mask).toBe(mask);expect(scene.pieces[3][3]).toBeNull();expect(scene.pieces.flat().filter(Boolean)).toHaveLength(60);
+    const move=engine.legalMoves()[0];await scene.attempt(move.a,move.b);expect(onMove).toHaveBeenCalledOnce();expect(scene.pieces[3][3]).toBeNull();expect(engine.board[3][3]).toBeNull();
   });
   it('방향키는 구멍을 건너뛰지만 선택한 칸과 건너편 칸은 교환하지 않습니다',()=>{
     const {scene,onMove}=harness();scene.engine=new BoardEngine(8,8,seededRng(42),undefined,2,levels[31].mask);scene.paint(scene.engine.board);scene.focusKeyboard();

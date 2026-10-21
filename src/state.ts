@@ -5,6 +5,7 @@ import { validatePip, type PipCare } from './pipCare';
 export interface RoundCheckpoint extends BoardSnapshot {
   schema: 1; levelId: number; levelSignature: string; moves: number; score: number;
   collected: number[]; shuffles: number; clearedLeaves: number;
+  paidShuffleUsed?:boolean; continueUsed?:boolean;
 }
 export interface SaveData { version: 1; language: Language; highestLevel: number; completed: number[]; stars: number; coins: number; garden: number; music: boolean; sfx: boolean; tutorialSeen: boolean; pip?:PipCare; inProgress?: RoundCheckpoint; }
 export const SAVE_KEY = 'pawblossom.save.v1';
@@ -29,6 +30,8 @@ export function validateCheckpoint(value:unknown,highestLevel:number):RoundCheck
   const level=levels[value.levelId-1];
   if(level.mask&&ruleVersion!==2)return;
   if(value.levelSignature!==levelSignature(level)||!integer(value.moves,level.moves)||value.moves<1||!integer(value.score,100_000_000)||!integer(value.shuffles,1))return;
+  if(['paidShuffleUsed','continueUsed'].some(key=>value[key]!==undefined&&typeof value[key]!=='boolean')
+    ||value.paidShuffleUsed===true&&value.shuffles!==0||value.continueUsed===true&&value.moves>5)return;
   if(!Array.isArray(value.collected)||value.collected.length!==6||!value.collected.every(n=>integer(n,1_000_000)))return;
   if(!grid(value.board)||!grid(value.leaves))return;
   const board:Cell[][]=[];
@@ -53,7 +56,8 @@ export function validateCheckpoint(value:unknown,highestLevel:number):RoundCheck
   const engine=new BoardEngine(8,8,()=>{throw Error('저장 검증 중 난수 사용');},{board,leaves,ruleVersion},undefined,level.mask);
   if(engine.findMatches().length||!engine.hasMoves())return;
   return {schema:1,...(value.ruleVersion===undefined?{}:{ruleVersion}),levelId:level.id,levelSignature:levelSignature(level),board,leaves,moves:value.moves,score:value.score,
-    collected:value.collected.slice() as number[],shuffles:value.shuffles,clearedLeaves:total-remaining};
+    collected:value.collected.slice() as number[],shuffles:value.shuffles,clearedLeaves:total-remaining,
+    ...(value.paidShuffleUsed===undefined?{}:{paidShuffleUsed:value.paidShuffleUsed as boolean}),...(value.continueUsed===undefined?{}:{continueUsed:value.continueUsed as boolean})};
 }
 /** 구형 v1의 선택 필드는 정규화하되, 영구 기록의 필수 구조는 추측하지 않습니다. */
 function normalizeSave(x:unknown,backup=false):SaveData|undefined {

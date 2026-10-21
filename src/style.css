@@ -147,6 +147,7 @@ select.language-button{width:84px;max-width:84px;min-width:0;border:0;border-rad
 .goal-heading{letter-spacing:.3px}
 .score-label{display:inline-flex;gap:4px;align-items:baseline;white-space:nowrap;font-weight:600}
 .tool-note{word-break:keep-all}
+.tool-note{min-width:0}.shuffle-button{flex-shrink:0}#shuffle-count.shuffle-cost{width:auto;min-width:19px;padding:0 4px;border-radius:10px;display:inline-flex;justify-content:center;gap:3px;white-space:nowrap}
 /* 복원 안내는 원래 힌트의 높이를 유지하며 같은 영역에서 잠시 교체합니다. */
 .board-hint{position:relative}
 .board-hint.has-resume-notice>#board-hint-text,.board-hint.has-resume-notice>svg{visibility:hidden}

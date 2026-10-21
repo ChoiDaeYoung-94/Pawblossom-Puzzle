@@ -6,6 +6,7 @@ import { BoardEngine, seededRng, type BoardMask, type BoardSnapshot } from '../s
 import {TestAdsController,adCopy,type TestAdsBridge,type AdSnapshot,type AdFormat} from '../src/testAds';
 import {TestBillingController,billingCopy,type TestBillingBridge,type BillingSnapshot} from '../src/testBilling';
 import {bindPracticeBoard} from '../src/bindPracticeInputs';
+import {cloneSnapshot,prepareShuffle} from '../src/puzzleHelp';
 import {t, type TextKey} from '../src/i18n';
 
 // 테스트에만 사용하는 Node API입니다. 별도 @types/node 설치 없이 런타임에서 읽습니다.
@@ -91,6 +92,10 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     constructor(public hooks: { onMove(items: number[], points: number): void; onReady():void; onNotice(key:string):void },snapshot?:BoardSnapshot,mask?:BoardMask) {this.engine=new BoardEngine(8,8,seededRng(42),snapshot,undefined,mask);}
     configureLeaves(piles:Parameters<BoardEngine['setLeaves']>[0]) {this.engine.setLeaves(piles);}
     shuffle(){this.engine.shuffle();return true;}
+    snapshot(){return cloneSnapshot({board:this.engine.board,leaves:this.engine.leaves,ruleVersion:this.engine.ruleVersion});}
+    applyPreparedShuffle(value:BoardSnapshot){const copy=cloneSnapshot(value);this.engine.board=copy.board;this.engine.leaves=copy.leaves;}
+    canResumeAfterFailure(){return this.stopped;}
+    resumePreparedFailure(){this.stopped=false;}
     canLeave() { return true; }
     stopPlaying() {this.stopped=true;}
     resumeAfterFailure(){if(!this.stopped)return false;this.stopped=false;return true;}
@@ -163,6 +168,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     Phaser: { Game: GameStub, AUTO: 0, Scale: { FIT: 0, CENTER_BOTH: 0 }, Core:{Events:{POST_RENDER:'postrender'}} },
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     bindPracticeBoard,
+    cloneSnapshot,prepareShuffle,
     showResultPip:()=>{resultArtCalls++;},
     RoundFeedback:FeedbackStub,
     AudioManager: AudioStub, t: (_language: string, key: string) => key, icon: () => '',
@@ -229,7 +235,7 @@ describe('보드 피드백 연결과 정산 경계',()=>{
 });
 
 describe('핍 육성·재화 소비와 정원 전용 체험',()=>{
-  const normalState='JSON.stringify({round,currentLevel,moves,score,collected,shuffles,clearedLeaves,roundEnded,resultShown,firstReward,resultWon,testingLevel,testContinueUsed,board:scene.engine.board,leaves:scene.engine.leaves})';
+  const normalState='JSON.stringify({round,currentLevel,moves,score,collected,shuffles,clearedLeaves,roundEnded,resultShown,firstReward,resultWon,testingLevel,continueUsed,board:scene.engine.board,leaves:scene.engine.leaves})';
   it('먹이·놀이를 저장하고 지난 버튼 콜백으로 두 번 차감하지 않습니다',()=>{
     const h=mainHarness();h.run("switchView('journal');globalThis.beforeCheckpoint=JSON.stringify(save.inProgress)");
     h.run("globalThis.pipFocus='';document.activeElement={id:'pip-feed',isConnected:false};document.querySelector('#pip-feed').focus=()=>{pipFocus='pip-feed'}");
@@ -551,7 +557,7 @@ describe('목표·남은 이동 접근성 안내',()=>{
   });
   it.each(['ko','en'])('%s +5 이어하기의 이른 상태 콜백은 요약하지 않고 창을 닫은 뒤 새 값만 읽습니다',language=>{
     const h=mainHarness(false,false,true);h.run(`startLevel(6,true);changeLanguage('${language}');moves=1;scene.hooks.onMove([0,0,0,0,0,0],0,1,0)`);h.flushResults();observe(h);
-    h.run('scene.resumeAfterFailure=()=>{scene.stopped=false;scene.hooks.onBoardState();globalThis.earlyStatus=document.querySelector("#board-keyboard-status").textContent;return true;}');
+    h.run('scene.resumePreparedFailure=()=>{scene.stopped=false;scene.hooks.onBoardState();globalThis.earlyStatus=document.querySelector("#board-keyboard-status").textContent;}');
     h.element('#result-continue').onclick();
     expect(h.run('earlyStatus')).toBe(language==='ko'?'지금은 보드를 조작할 수 없어요.':'Board is not available.');
     const status=h.element('#board-keyboard-status').textContent;
@@ -575,7 +581,7 @@ describe('시험 실패 회차 이어하기',()=>{
     expect(h.run('game.paused')).toBe(true);button.onclick();button.onclick();
     expect(h.run('moves')).toBe(5);expect(h.run('round')).toBe(round);expect(h.run('scene')).toBe(scene);expect(h.run('scene.engine')).toBe(engine);
     expect(h.run('JSON.stringify({score,collected,clearedLeaves,shuffles,board:scene.engine.board,leaves:scene.engine.leaves})')).toBe(before);
-    expect(h.run('({roundEnded,resultShown,resultWon,testContinueUsed})')).toEqual({roundEnded:false,resultShown:false,resultWon:undefined,testContinueUsed:true});
+    expect(h.run('({roundEnded,resultShown,resultWon,continueUsed})')).toEqual({roundEnded:false,resultShown:false,resultWon:undefined,continueUsed:true});
     expect(h.run('game.paused')).toBe(false);expect(h.element('#result-dialog').open).toBe(false);
     h.run('scene.hooks.onMove([1,0,0,0,0,0],20,1,0)');expect(h.run('moves')).toBe(4);expect(h.run('score')).toBe(341);
     expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
@@ -591,7 +597,7 @@ describe('시험 실패 회차 이어하기',()=>{
     h.run("changeLanguage('ko')");expect(h.element('#result-continue').onclick).toBe(callback);expect(h.element('#result-continue').textContent).toBe('시험 이어하기 +5');
     expect(h.element('#result-continue-note').textContent).toContain('광고 없이');
     h.run("changeLanguage('en')");callback();expect(h.run('moves')).toBe(5);
-    fail(h);h.run("changeLanguage('ko')");callback();expect(h.run('moves')).toBe(0);expect(h.run('testContinueUsed')).toBe(true);
+    fail(h);h.run("changeLanguage('ko')");callback();expect(h.run('moves')).toBe(0);expect(h.run('continueUsed')).toBe(true);
   });
   it.each(['normal','production','won','not-failed'])('%s는 이어하기 버튼/실행이 없습니다',reason=>{
     const h=mainHarness(false,false,reason!=='production');h.run(`startLevel(6,${reason!=='normal'})`);
@@ -603,23 +609,24 @@ describe('시험 실패 회차 이어하기',()=>{
     const h=setup(),callback=h.element('#result-continue').onclick;
     if(reason==='timer')h.run('resultTimer=123');if(reason==='closed')h.element('#result-dialog').close();
     if(reason==='home')h.element('#result-home').onclick();
-    if(reason==='wrong-scene')h.run('game.scene.board=undefined');if(reason==='resume-blocked')h.run('scene.resumeAfterFailure=()=>false');
+    if(reason==='wrong-scene')h.run('game.scene.board=undefined');if(reason==='resume-blocked')h.run('scene.canResumeAfterFailure=()=>false');
     if(reason==='stale-node')h.element('#result-dialog').querySelector=()=>new ElementStub('#result-continue');
-    const state=h.run('JSON.stringify({moves,roundEnded,resultShown,testContinueUsed})'),disk=h.disk();
+    const state=h.run('JSON.stringify({moves,roundEnded,resultShown,continueUsed})'),disk=h.disk();
     if(reason==='board-pending')h.run("boardPending=true;document.querySelector('#result-continue').onclick()");else callback();
-    expect(h.run('JSON.stringify({moves,roundEnded,resultShown,testContinueUsed})')).toBe(state);expect(h.disk()).toEqual(disk);
+    expect(h.run('JSON.stringify({moves,roundEnded,resultShown,continueUsed})')).toBe(state);expect(h.disk()).toEqual(disk);
   });
   it.each(['restart','new-test','normal'])('%s로 생성한 새 round에서는 오래된 callback을 차단하고 시험 새 회차만 사용 횟수를 초기화합니다',reason=>{
     const h=setup(),callback=h.element('#result-continue').onclick;callback();
     if(reason==='restart'){h.element('#restart').onclick();h.run("confirmStagePreview(stagePreview,'start')");}else h.run(`startLevel(6,${reason==='new-test'})`);
     fail(h);const currentRound=h.run('round'),moves=h.run('moves');callback();
-    expect(h.run('round')).toBe(currentRound);expect(h.run('moves')).toBe(moves);expect(h.run('testContinueUsed')).toBe(false);
+    expect(h.run('round')).toBe(currentRound);expect(h.run('moves')).toBe(moves);expect(h.run('continueUsed')).toBe(false);
     if(reason!=='normal'){h.element('#result-continue').onclick();expect(h.run('moves')).toBe(5);}
   });
-  it.each(['hidden','native'])('%s 비활성 중 복귀해도 syncActivity가 scene을 멈춘 상태로 유지합니다',reason=>{
+  it.each(['hidden','native'])('%s 비활성 중에는 지급하지 않고 활성 복귀 후 새 입력만 이어합니다',reason=>{
     const h=setup();if(reason==='hidden')h.run('document.hidden=true');else h.run('nativeActive=false');
-    h.element('#result-continue').onclick();expect(h.run('moves')).toBe(5);expect(h.run('game.paused')).toBe(true);expect(h.element('#game-canvas').tabIndex).toBe(-1);
-    h.run('document.hidden=false;nativeActive=true;syncActivity()');expect(h.run('game.paused')).toBe(false);
+    h.element('#result-continue').onclick();expect(h.run('moves')).toBe(0);expect(h.run('game.paused')).toBe(true);expect(h.element('#game-canvas').tabIndex).toBe(-1);
+    h.run('document.hidden=false;nativeActive=true;syncActivity()');expect(h.run('game.paused')).toBe(true);
+    h.element('#result-continue').onclick();expect(h.run('moves')).toBe(5);expect(h.run('game.paused')).toBe(false);
   });
 });
 describe('광고 제거 조회·구매창과 게임 활동 상태',()=>{
@@ -691,7 +698,7 @@ describe('모든 광고 제거와 두 실제 컨트롤러 통합',()=>{
     await h.run('testBilling.connect()');
     if(rewardContinue){h.run('startLevel(6,true);moves=1;scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');h.flushResults();await h.run('testAds.connect()');}
     else await h.run('showAdDialog()');
-    const unchanged=()=>({disk:h.disk(),memory:h.run('JSON.stringify(save)'),scene:h.run('scene'),engine:h.run('scene.engine'),round:h.run('round'),moves:h.run('moves'),used:h.run('testContinueUsed')});
+    const unchanged=()=>({disk:h.disk(),memory:h.run('JSON.stringify(save)'),scene:h.run('scene'),engine:h.run('scene.engine'),round:h.run('round'),moves:h.run('moves'),used:h.run('continueUsed')});
     const start=async()=>{await h.run('prepareRewardContinue(rewardedContinue)');emitAd({state:'ready',receipt:null});h.element('#result-ad-show').onclick();await Promise.resolve();};
     return {h,calls,emitAd,emitBilling,unchanged,start,ad:()=>({...ad}),billing:()=>({...billing})};
   }
@@ -733,7 +740,7 @@ describe('모든 광고 제거와 두 실제 컨트롤러 통합',()=>{
     expect(x.unchanged()).toEqual(before); // 이전 요청으로 새 claim도 성립하지 않습니다.
     await x.start();const final=x.ad().receipt!;
     x.emitAd({state:'showing',receipt:{...final,earned:true},rewardEvents:2});x.emitAd({state:'closed',receipt:{...final,earned:true,closed:true}});
-    expect(h.run('moves')).toBe(5);expect(h.run('testContinueUsed')).toBe(true);expect(h.run('scene')).toBe(before.scene);expect(h.run('scene.engine')).toBe(before.engine);
+    expect(h.run('moves')).toBe(5);expect(h.run('continueUsed')).toBe(true);expect(h.run('scene')).toBe(before.scene);expect(h.run('scene.engine')).toBe(before.engine);
     expect(h.disk()).toEqual(before.disk);expect(h.run('JSON.stringify(save)')).toBe(before.memory);expect(x.calls.show).toBe(3);
   });
   it.each(['interstitial','rewarded'] as const)('%s 표시 중 owned여도 실제 closed 전 닫기·Escape·뒤로가기 보호를 유지합니다',async format=>{
@@ -826,10 +833,10 @@ describe('보상형 시험 이어하기 요청 문맥',()=>{
     if(reason==='stale-dom')h.element('#result-dialog').querySelector=()=>new ElementStub('#result-continue');
     const before=h.run('moves'),disk=h.disk();
     if(reason==='failed'||reason==='cancelled')x.emit({state:reason,receipt:null});else x.closed(reason!=='no-reward');
-    expect(h.run('moves')).toBe(before);expect(h.run('testContinueUsed')).toBe(false);expect(h.disk()).toEqual(disk);
+    expect(h.run('moves')).toBe(before);expect(h.run('continueUsed')).toBe(false);expect(h.disk()).toEqual(disk);
   });
   it('실패/취소 뒤 명시적 재시도로 받을 수 있고 비활성 닫힘은 복귀까지 보드가 멈춥니다',async()=>{
-    const x=await setup(),{h}=x;await x.start();x.closed(false);expect(h.run('testContinueUsed')).toBe(false);
+    const x=await setup(),{h}=x;await x.start();x.closed(false);expect(h.run('continueUsed')).toBe(false);
     await h.run("testAds.command('cancel')");await x.start();x.earned();h.nativeEvents.appStateChange({isActive:false});x.closed();
     expect(h.run('moves')).toBe(0);expect(h.run('game.paused')).toBe(true);h.nativeEvents.appStateChange({isActive:true});
     expect(h.run('moves')).toBe(5);expect(h.run('game.paused')).toBe(false);
@@ -839,8 +846,8 @@ describe('보상형 시험 이어하기 요청 문맥',()=>{
     const oldContext=h.run('rewardedContinue'),oldShow=h.element('#result-ad-show').onclick;
     h.element('#result-home').onclick();const oldReceipt=x.closed();expect(h.run('moves')).toBe(0);
     h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(h.run('rewardedContinue')).not.toBe(oldContext);expect(h.run('rewardedContinue.requestId')).toBeUndefined();
-    x.emit(oldReceipt);oldShow();expect(h.run('moves')).toBe(0);expect(h.run('testContinueUsed')).toBe(false);
-    await x.start();x.earned();x.closed();expect(h.run('moves')).toBe(5);expect(h.run('testContinueUsed')).toBe(true);expect(h.disk()).toEqual(disk);
+    x.emit(oldReceipt);oldShow();expect(h.run('moves')).toBe(0);expect(h.run('continueUsed')).toBe(false);
+    await x.start();x.earned();x.closed();expect(h.run('moves')).toBe(5);expect(h.run('continueUsed')).toBe(true);expect(h.disk()).toEqual(disk);
   });
   it('준비 광고 취소 중 즉시 퍼즐 복귀는 정원에 머물고 취소 뒤 명시 복귀만 결과를 엽니다',async()=>{
     const x=await setup(),{h}=x;await h.run('prepareRewardContinue(rewardedContinue)');x.emit({state:'ready'});
@@ -1481,11 +1488,12 @@ describe('정상 회차 복구와 종료 확정',()=>{
     const restored=mainHarness(false,false,false,false,saved);
     expect(restored.stored()).toEqual(saved);expect(restored.run('scene.engine.board')).toEqual(saved.inProgress.board);
   });
-  it('무료 섞기 후 보드와 사용 횟수를 복원하며 두 번째 사용은 저장하지 않습니다',()=>{
+  it('무료 다음 20코인 섞기를 한 번만 저장하고 cap까지 복원합니다',()=>{
     const app=mainHarness(),before=app.stored();app.element('#shuffle').onclick();
     const shuffled=app.stored();expect(shuffled.inProgress.shuffles).toBe(0);expect(shuffled.inProgress.board).not.toEqual(before.inProgress.board);
-    app.element('#shuffle').onclick();expect(app.stored()).toEqual(shuffled);
-    const restored=mainHarness(false,false,false,false,shuffled);expect(restored.run('shuffles')).toBe(0);expect(restored.stored()).toEqual(shuffled);
+    app.element('#shuffle').onclick();const paid=app.stored();expect(paid.coins).toBe(shuffled.coins-20);expect(paid.inProgress.paidShuffleUsed).toBe(true);
+    app.element('#shuffle').onclick();expect(app.stored()).toEqual(paid);
+    const restored=mainHarness(false,false,false,false,paid);expect(restored.run('shuffles')).toBe(0);expect(restored.run('paidShuffleUsed')).toBe(true);expect(restored.stored()).toEqual(paid);
   });
   it('시험·시험 재시작·완료는 정상 저장을 보존하고 일반 복귀와 재실행은 이어갑니다',()=>{
     const app=mainHarness(false,false,true);app.element('#shuffle').onclick();const normal=app.stored();
@@ -1793,4 +1801,76 @@ describe('비정형 보드의 짧은 플레이 안내와 가로 화면 높이',(
     expect(app.run('previewDialog.innerHTML')).toContain(t(language,'maskHint'));
     expect(app.disk()).toEqual(before);
   });
+});
+describe('회차 도움 원자성과 검증된 시험 구매 혜택',()=>{
+  const state=(h:ReturnType<typeof mainHarness>)=>h.run('JSON.stringify({save,moves,shuffles,paidShuffleUsed,continueUsed,roundEnded,board:scene.engine.board,leaves:scene.engine.leaves})');
+  it.each(['failed','blocked','conflict','candidate','stale','route','modal','busy','hidden','poor'])('%s 섞기 거절은 회차와 재화를 보존합니다',reason=>{
+    const h=mainHarness();h.element('#shuffle').onclick();const callback=h.element('#shuffle').onclick;
+    if(reason==='failed')h.setStorageFails(true);
+    if(reason==='blocked')h.run("saveStatus=()=>({load:'loaded',write:'blocked',resetPending:false})");
+    if(reason==='conflict')h.run("localStorage.setItem('pawblossom.save.v1',JSON.stringify({...save,coins:999}))");
+    if(reason==='candidate')h.run('prepareShuffle=()=>undefined');
+    if(reason==='stale')h.run('startLevel(1)');if(reason==='route')h.run("route='settings'");
+    if(reason==='modal')h.run("const originalQuery=document.querySelector;document.querySelector=s=>s==='dialog[open]'?{}:originalQuery(s)");
+    if(reason==='busy')h.run('scene.keyboardState=()=>({available:false})');if(reason==='hidden')h.run('document.hidden=true');
+    if(reason==='poor')h.run('save.coins=19');
+    const before=state(h),disk=h.disk();callback();expect(state(h)).toBe(before);expect(h.disk()).toEqual(disk);
+  });
+  it('무료 저장 실패는 무료 횟수를 잃지 않고 후보 exact 적용 시 원래 engine을 유지합니다',()=>{
+    const h=mainHarness(),engine=h.run('scene.engine');h.run('globalThis.candidate=prepareShuffle(scene.snapshot());prepareShuffle=()=>cloneSnapshot(candidate)');
+    const before=state(h);h.setStorageFails(true);h.element('#shuffle').onclick();expect(state(h)).toBe(before);
+    h.setStorageFails(false);h.element('#shuffle').onclick();expect(h.run('scene.engine')).toBe(engine);
+    expect(h.run('scene.engine.board')).toEqual(h.run('candidate.board'));expect(h.stored().inProgress.board).toEqual(h.run('candidate.board'));expect(h.stored().coins).toBe(40);
+  });
+  it('시험 회차 무료 섞기는 정상 저장을 보존하고 유료 섞기는 비활성입니다',()=>{
+    const h=mainHarness(false,false,true);h.run('startLevel(6,true)');const disk=h.disk();h.element('#shuffle').onclick();const before=state(h);
+    expect(h.element('#shuffle').disabled).toBe(true);h.element('#shuffle').onclick();expect(state(h)).toBe(before);expect(h.disk()).toEqual(disk);
+  });
+  async function owned(test=false,id=2){
+    let value:BillingSnapshot={available:true,configured:true,state:'idle',entitlement:'owned',revision:1,error:'',price:'',overlay:false,adsBlocked:true,preparingPurchase:false};
+    let listener!:(s:BillingSnapshot)=>void;
+    const bridge:TestBillingBridge={getStatus:async()=>({...value}),restore:async()=>({...value}),queryProduct:async()=>({...value}),purchase:async()=>({...value}),addListener:async(_n,fn)=>{listener=fn;return {remove:async()=>{}};}};
+    const h=mainHarness(false,false,true,true,undefined,true,undefined,bridge);h.nativeEvents.appStateChange({isActive:true});await h.run('testBilling.connect()');
+    if(test)h.run('startLevel(6,true)');else if(id!==2)h.run(`save.highestLevel=${id};startLevel(${id})`);h.run('moves=1;scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');h.flushResults();
+    return {h,emit:(patch:Partial<BillingSnapshot>)=>{value={...value,...patch,revision:value.revision+1};listener(value);}};
+  }
+  it('검증 시험 구매자는 정상 실패판 +5와 cap을 한 저장에 확정하고 재실행해도 공통 한 번입니다',async()=>{
+    const {h}=await owned();const engine=h.run('scene.engine');h.element('#result-buyer-continue').onclick();
+    expect(h.run('moves')).toBe(5);expect(h.run('scene.engine')).toBe(engine);expect(h.stored().inProgress).toMatchObject({moves:5,continueUsed:true});expect(h.stored().coins).toBe(40);
+    const next=mainHarness(false,false,false,false,h.stored());expect(next.run('continueUsed')).toBe(true);expect(next.run('moves')).toBe(5);
+    h.run('moves=1;scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');h.flushResults();const before=state(h);h.element('#result-buyer-continue').onclick();expect(state(h)).toBe(before);
+  });
+  it.each(['failed','unknown','unconfigured','blocked','stale','modal','primary-failure'])('%s 구매 혜택은 지급하지 않습니다',async reason=>{
+    const {h,emit}=await owned();const callback=h.element('#result-buyer-continue').onclick;
+    if(reason==='failed')h.setStorageFails(true);if(reason==='unknown')emit({entitlement:'unknown',adsBlocked:true});if(reason==='unconfigured')emit({configured:false});
+    if(reason==='blocked')h.run("saveStatus=()=>({load:'loaded',write:'blocked',resetPending:false})");if(reason==='stale')h.run('startLevel(1)');
+    if(reason==='modal')h.element('#test-billing-dialog').open=true;
+    if(reason==='primary-failure')h.run("const originalWrite=localStorage.setItem;localStorage.setItem=(key,value)=>{if(key==='pawblossom.save.v1')throw Error('primary failed');originalWrite(key,value)}");
+    const before=state(h),disk=h.disk();callback();expect(state(h)).toBe(before);
+    if(reason==='primary-failure')expect(h.stored()).toEqual(JSON.parse(disk.find(([key])=>key==='pawblossom.save.v1')![1]));else expect(h.disk()).toEqual(disk);
+  });
+  it('육성으로 새 저장 객체가 생겨도 퍼즐 복귀 뒤 무료 섞기와 설정 조작은 현재 제어를 사용합니다',()=>{
+    const h=mainHarness();h.run("switchView('journal');save.pip=freshPip();renderViews()");
+    h.element('#pip-feed').onclick();h.run("switchView('puzzle')");h.element('#shuffle').onclick();expect(h.run('shuffles')).toBe(0);
+    const music=h.stored().music;h.element('#music-toggle').onclick();expect(h.stored().music).toBe(!music);
+  });
+  it('시험/구매자 버튼은 같은 cap을 공유하고 production 웹에는 구매 혜택 버튼이 없습니다',async()=>{
+    const {h}=await owned(true);const buy=h.element('#result-buyer-continue').onclick,disk=h.disk();h.element('#result-continue').onclick();buy();expect(h.run('moves')).toBe(5);expect(h.disk()).toEqual(disk);
+    const production=mainHarness();production.run('moves=1;scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');production.flushResults();expect(production.element('#result-dialog').innerHTML).not.toContain('result-buyer-continue');
+  });
+  it('pond 무료/유료 후보는 저장 실패 때 무차감이고 reload 후 구멍·cap·Pip을 유지합니다',()=>{
+    const h=mainHarness();h.run("save.highestLevel=32;save.pip={growth:34,affection:22,owned:['ribbon'],equipped:'ribbon'};startLevel(32)");
+    const engine=h.run('scene.engine');let before=state(h),disk=h.disk();h.setStorageFails(true);h.element('#shuffle').onclick();expect(state(h)).toBe(before);expect(h.disk()).toEqual(disk);
+    h.setStorageFails(false);h.element('#shuffle').onclick();expect(h.run('scene.engine')).toBe(engine);expect(h.stored().coins).toBe(40);expect(h.run('shuffles')).toBe(0);
+    before=state(h);disk=h.disk();h.setStorageFails(true);h.element('#shuffle').onclick();expect(state(h)).toBe(before);expect(h.disk()).toEqual(disk);
+    h.setStorageFails(false);h.element('#shuffle').onclick();const saved=h.stored();expect(saved.coins).toBe(20);expect(saved.inProgress.paidShuffleUsed).toBe(true);expect(saved.inProgress.board[3][3]).toBeNull();expect(saved.pip).toMatchObject({growth:34,affection:22,equipped:'ribbon'});
+    const restored=mainHarness(false,false,false,false,saved);expect(restored.stored()).toEqual(saved);expect(restored.run('scene.engine.board[3][3]')).toBeNull();expect(restored.run('paidShuffleUsed')).toBe(true);
+    const last=state(restored);restored.element('#shuffle').onclick();expect(state(restored)).toBe(last);
+  });
+  it('pond 정상 실패판의 검증 시험 +5는 null·엔진을 유지하고 reload로 공통 cap을 복원합니다',async()=>{
+    const {h}=await owned(false,32),engine=h.run('scene.engine'),board=h.run('JSON.stringify(scene.engine.board)');h.element('#result-buyer-continue').onclick();
+    expect(h.run('moves')).toBe(5);expect(h.run('scene.engine')).toBe(engine);expect(h.run('JSON.stringify(scene.engine.board)')).toBe(board);expect(h.stored().inProgress).toMatchObject({continueUsed:true,ruleVersion:2,moves:5});expect(h.stored().inProgress.board[3][3]).toBeNull();
+    const restored=mainHarness(false,false,false,false,h.stored());expect(restored.run('continueUsed')).toBe(true);expect(restored.run('moves')).toBe(5);expect(restored.run('scene.engine.board[3][3]')).toBeNull();
+  });
+
 });
