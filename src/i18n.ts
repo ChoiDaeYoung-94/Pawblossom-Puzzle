@@ -1,6 +1,8 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    paidShuffle:'Shuffle',shuffleUnavailable:'This shuffle could not preserve your tiles. Nothing was spent.',
+    buyerContinueTest:'Verified Play test benefit · +5 moves, no ad',
     pipPurpose:'First clears earn 40 coins and 1 star. Use coins for food, play and decorations; use stars to grow your garden.',
     pipGrowth:'Growth',pipAffection:'Friendship',pipFeed:'Give a carrot',pipPlay:'Play with a ball',
     pipCareEffect:'Growth +{growth} · Friendship +{affection}',pipFreeCare:'Free',
@@ -63,7 +65,7 @@ const strings = {
     pip: 'Pip the gardener', request: '“Let’s plant some flowers!”',
     play: 'Play', level: 'Level', levelCompleted: 'Complete', levelLocked: 'Locked', score: 'Score', moves: 'MOVES', goal: 'GOALS',
     hint: 'Match 3. Tap special tiles to use them!',
-    shuffle: 'Shuffle', shuffleHelp: '1 free shuffle per level', restart: 'Restart',
+    shuffle: 'Shuffle', shuffleHelp: '1 free, then 20 coins once', shuffleHelpTest:'Test round: 1 free shuffle', restart: 'Restart',
     puzzle: 'Puzzle', village: 'Garden', journal: 'Pip', settings: 'Settings',
     stars: 'Stars', coins: 'Coins', music: 'Music', sfx: 'Sound effects', language: 'Language',
     soundHint: 'Music follows your sound settings. Tap once if playback is blocked.',
@@ -87,6 +89,8 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    paidShuffle:'추가 섞기',shuffleUnavailable:'블록과 특수를 유지하는 섞기를 준비하지 못했어요. 아무것도 쓰지 않았어요.',
+    buyerContinueTest:'검증된 Play 시험 혜택 · 광고 없이 이동 +5',
     pipPurpose:'퍼즐을 처음 완료하면 코인 40개와 별 1개를 받아요. 코인은 먹이·놀이·꾸미기에, 별은 꽃밭 확장에 사용해요.',
     pipGrowth:'성장',pipAffection:'친밀도',pipFeed:'당근 주기',pipPlay:'공놀이',
     pipCareEffect:'성장 +{growth} · 친밀도 +{affection}',pipFreeCare:'무료',
@@ -149,7 +153,7 @@ const strings = {
     pip: '정원사 토끼 핍', request: '“함께 꽃을 심어요!”',
     play: '시작하기', level: '스테이지', levelCompleted: '완료', levelLocked: '잠김', score: '점수', moves: '남은 이동', goal: '수집 목표',
     hint: '같은 블록 3개를 맞춰요. 특수 블록은 톡 눌러 사용해요!',
-    shuffle: '섞기', shuffleHelp: '스테이지당 무료 1회', restart: '다시 시작',
+    shuffle: '섞기', shuffleHelp: '회차당 무료 1회, 이후 20코인 1회', shuffleHelpTest:'시험 회차는 무료 섞기 1회', restart: '다시 시작',
     puzzle: '퍼즐', village: '정원', journal: '핍', settings: '설정',
     stars: '별', coins: '코인', music: '배경음', sfx: '효과음', language: '언어',
     soundHint: '설정에 따라 배경음을 재생해요. 소리가 시작되지 않으면 화면을 한 번 눌러 주세요.',

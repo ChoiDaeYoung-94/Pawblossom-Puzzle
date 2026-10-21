@@ -19,6 +19,8 @@ import { bindPracticeBoard } from './bindPracticeInputs';
 import { gardenArt } from './GardenArt';
 import { showResultPip } from './ResultPip';
 import { RoundFeedback } from './RoundFeedback';
+import { cloneSnapshot,prepareShuffle } from './puzzleHelp';
+import type { BoardSnapshot } from './core';
 import { APP_VERSION } from './appVersion';
 import { TEST_TOOLS_ENABLED } from './buildFlags';
 import { ANDROID_TEST_ADS_ENABLED } from './buildFlags';
@@ -50,7 +52,7 @@ let pipReaction:'feed'|'play'|'greet'|'tend'|undefined;
 let careReactionTimer:ReturnType<typeof setTimeout>|undefined;
 let clearedLeaves=0;
 let testingLevel=false;
-let testContinueUsed=false;
+let continueUsed=false,paidShuffleUsed=false,puzzleProcessing=false;
 let pickerReturnToResult=false;
 let selectedChapter=chapterForLevel(save.highestLevel).id;
 let selectedTestChapter=chapterForLevel(currentLevel).id;
@@ -175,6 +177,7 @@ previewDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='
 
 // 문서와 Android 상태 중 하나라도 비활성이면 오디오와 진행을 멈춥니다.
 function syncActivity(){
+  renderBuyerContinue();
   renderRewardContinue();
   const active=nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!billingModal();
   if(!active)practiceInputs?.cancel();
@@ -234,13 +237,42 @@ function updateGoals(){
   $('#goals').classList.toggle('has-many',level.goals.length+(total?1:0)>2);
   if(total)$('#goals').innerHTML+=`<div data-feedback-goal="leaves" class="goal-item ${remaining===0?'done':''}"><span class="sr-only">${descriptions[level.goals.length]}</span><img src="/assets/obstacles/leaf-pile.svg" alt=""/><strong aria-hidden="true">${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,clearedLeaves/total*100)}%"></span></div>`;
   $('#board-hint-text').textContent=(testingLevel?text('testRound')+' · ':'')+text(total?(level.leaves!.some(p=>p.layers===2)?'leafHintDouble':'leafHint'):'hint');
-  $('#shuffle-count').textContent=String(shuffles);$('#shuffle').toggleAttribute('disabled',shuffles<1);
+  const shuffle=$<HTMLButtonElement>('#shuffle'),free=shuffles>0;
+  shuffle.innerHTML=`${icon('shuffle',20)}<span>${text(free?'shuffle':'paidShuffle')}</span><span id="shuffle-count" class="${free?'':'shuffle-cost'}">${free?'1':paidShuffleUsed?'0':`${icon('coin',12)} 20`}</span>`;
+  shuffle.toggleAttribute('disabled',!free&&(testingLevel||paidShuffleUsed||save.coins<20));
+  $('.tool-note').textContent=text(testingLevel?'shuffleHelpTest':'shuffleHelp');
+  const expectedRound=round,expectedScene=scene,expectedSave=save;
+  shuffle.onclick=()=>shuffleRound(shuffle,expectedRound,expectedScene,expectedSave);
+}
+function roundCheckpoint(snapshot:BoardSnapshot,nextMoves=moves,free=shuffles,paid=paidShuffleUsed,continued=continueUsed):RoundCheckpoint {
+  return {...cloneSnapshot(snapshot),schema:1,levelId:currentLevel,levelSignature:levelSignature(levels[currentLevel-1]),moves:nextMoves,score,
+    collected:collected.slice(),shuffles:free,clearedLeaves,...(paid?{paidShuffleUsed:true}:{}),...(continued?{continueUsed:true}:{})};
+}
+function shuffleRound(button:HTMLButtonElement,expectedRound:number,expectedScene:BoardScene,expectedSave:SaveData):boolean {
+  const valid=()=>!puzzleProcessing&&!careDemo&&!roundEnded&&route==='puzzle'&&nativeActive&&!document.hidden&&!boardPending&&!resultTimer
+    &&!document.querySelector('dialog[open]')&&!testAds?.pausesGame&&!testBilling?.pausesGame&&game.scene.isActive('Board')
+    &&round===expectedRound&&scene===expectedScene&&save===expectedSave&&game.scene.getScene('Board')===scene
+    &&button.isConnected&&$('#shuffle')===button&&scene.keyboardState().available;
+  if(!valid())return false;
+  const free=shuffles>0;
+  if(!free&&(testingLevel||paidShuffleUsed||save.coins<20))return false;
+  if(careStorageBlocked()){notice('careSaveBlocked');return false;}
+  puzzleProcessing=true;
+  try{
+    const candidate=prepareShuffle(scene.snapshot());
+    if(!candidate){notice('shuffleUnavailable');return false;}
+    const next=JSON.parse(JSON.stringify(save)) as SaveData;
+    const paid=paidShuffleUsed||!free;
+    if(!testingLevel){next.coins-=free?0:20;next.inProgress=roundCheckpoint(candidate,moves,0,paid);
+      if(!saveData(next)){updateSaveStatus();notice('careSaveBlocked');return false;}}
+    // 후보 생성·저장·적용 사이에는 await가 없으며 현재 Scene/RNG를 재생성하지 않습니다.
+    if(!testingLevel)save=next;
+    shuffles=0;paidShuffleUsed=paid;scene.applyPreparedShuffle(candidate);updateWallet();updateGoals();renderViews();updateSaveStatus();return true;
+  }finally{puzzleProcessing=false;}
 }
 function checkpoint(){
   if(careDemo||testingLevel||roundEnded)return;
-  save.inProgress={schema:1,ruleVersion:scene.engine.ruleVersion,levelId:currentLevel,levelSignature:levelSignature(levels[currentLevel-1]),
-    board:scene.engine.board.map(row=>row.map(tile=>({...tile}))),leaves:scene.engine.leaves.map(row=>row.slice()),
-    moves,score,collected:collected.slice(),shuffles,clearedLeaves};
+  save.inProgress=roundCheckpoint(scene.snapshot());
   return persist();
 }
 function resumeNormal(){const saved=save.inProgress;return startLevel(saved?.levelId??save.highestLevel,false,saved);}
@@ -260,14 +292,14 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   if(!Number.isInteger(id)||id<1||id>levels.length)return;
   clearResumeNotice();
   clearTimeout(resultTimer);resultTimer=undefined;round++;
-  roundEnded=false;resultShown=false;firstReward=false;resultWon=undefined;clearBoardNotice();testContinueUsed=false;
+  roundEnded=false;resultShown=false;firstReward=false;resultWon=undefined;clearBoardNotice();continueUsed=false;paidShuffleUsed=false;
   const activeRound=round;
   const focusOrigin=document.activeElement;let focusRequested=options.focusBoard===true;
   testingLevel=TEST_TOOLS_ENABLED&&testPlay;
   pickerReturnToResult=false;
   $<HTMLDialogElement>('#result-dialog').close();
   currentLevel=id;moves=levels[id-1].moves;score=0;collected=Array(6).fill(0);shuffles=1;clearedLeaves=0;
-  if(restored&&!testingLevel){moves=restored.moves;score=restored.score;collected=restored.collected.slice();shuffles=restored.shuffles;clearedLeaves=restored.clearedLeaves;}
+  if(restored&&!testingLevel){moves=restored.moves;score=restored.score;collected=restored.collected.slice();shuffles=restored.shuffles;clearedLeaves=restored.clearedLeaves;continueUsed=restored.continueUsed===true;paidShuffleUsed=restored.paidShuffleUsed===true;}
   scene?.stopPlaying();
   const activeScene:BoardScene=scene=new BoardScene({audio,onBoardState:()=>{if(activeRound===round)updateBoardAccess();},onReady:()=>{
     if(activeRound!==round||scene!==activeScene)return;
@@ -455,9 +487,9 @@ function finish(won:boolean){
   const first=firstReward;
   audio.play(won?'win':'lose');
   const done=won&&!testingLevel&&currentLevel===LEVEL_COUNT;
-  const testContinue=TEST_TOOLS_ENABLED&&testingLevel&&!won&&!testContinueUsed&&moves===0;
+  const testContinue=TEST_TOOLS_ENABLED&&testingLevel&&!won&&!continueUsed&&moves===0;
   const dialog=$<HTMLDialogElement>('#result-dialog');
-  dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}${testContinue?' result-with-continue':''}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><span class="result-character"><img class="result-pip" src="/assets/pip.png" decoding="async" alt=""/></span><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line" id="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow" id="result-level">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p>${first?`<div class="result-rewards"><span>${icon('star',20)}<span class="sr-only" data-t="stars">${text('stars')}</span> +1</span><span>${icon('coin',20)}<span class="sr-only" data-t="coins">${text('coins')}</span> +40</span></div>`:''}<button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${testContinue?`<button class="result-test-button" id="result-continue" aria-describedby="result-continue-note">${text('testContinue')}</button><p id="result-continue-note">${text('testContinueNote')}</p>`:''}${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
+  dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}${testContinue?' result-with-continue':''}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><span class="result-character"><img class="result-pip" src="/assets/pip.png" decoding="async" alt=""/></span><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line" id="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow" id="result-level">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p>${first?`<div class="result-rewards"><span>${icon('star',20)}<span class="sr-only" data-t="stars">${text('stars')}</span> +1</span><span>${icon('coin',20)}<span class="sr-only" data-t="coins">${text('coins')}</span> +40</span></div>`:''}<button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${androidBillingEntry&&!won&&!continueUsed&&moves===0?`<button class="result-test-button" id="result-buyer-continue" hidden>${text('buyerContinueTest')}</button>`:''}${testContinue?`<button class="result-test-button" id="result-continue" aria-describedby="result-continue-note">${text('testContinue')}</button><p id="result-continue-note">${text('testContinueNote')}</p>`:''}${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
   dialog.showModal();syncActivity();
   $('#result-next').focus();
   $('#result-next').onclick=()=>{dialog.close();startLevel(won?Math.min(LEVEL_COUNT,currentLevel+1):currentLevel,testingLevel,undefined,{focusBoard:true});switchView('puzzle');};
@@ -465,6 +497,8 @@ function finish(won:boolean){
   if(testingLevel)$('#result-test').onclick=()=>{dialog.close();showTestPicker(true);};
   const continueButton=dialog.querySelector<HTMLButtonElement>('#result-continue');
   if(continueButton){const activeRound=round,activeScene=scene;continueButton.onclick=()=>{if(!testAds?.busy&&!rewardedContinue?.preparing)continueTestRound(activeRound,activeScene,continueButton);};}
+  const buyerButton=dialog.querySelector<HTMLButtonElement>('#result-buyer-continue');
+  if(buyerButton){const activeRound=round,activeScene=scene;buyerButton.onclick=()=>continueRound(activeRound,activeScene,buyerButton,'owned');}
   if(testContinue&&androidAdEntry&&continueButton){
     const controls=document.createElement('div');controls.className='result-reward-controls';
     controls.innerHTML=`<p id="result-ad-note"></p><p id="result-ad-status" role="status"></p><button class="result-test-button" id="result-ad-load"></button><button class="result-test-button" id="result-ad-show"></button><button class="text-button" id="result-ad-cancel"></button>`;
@@ -485,19 +519,39 @@ function bindRewardContinue(button:HTMLButtonElement){
   ensureTestAds();renderRewardContinue();void testAds!.connect();
 }
 function continueTestRound(activeRound:number,activeScene:BoardScene,button:HTMLButtonElement):boolean {
-  if(careDemo)return false;
+  return continueRound(activeRound,activeScene,button,'test');
+}
+function buyerContinueAvailable(){return androidBillingEntry&&testBilling?.verifiedOwned===true;}
+function renderBuyerContinue(){
+  if(!androidBillingEntry)return;
+  const button=$<HTMLDialogElement>('#result-dialog').querySelector<HTMLButtonElement>('#result-buyer-continue');if(!button)return;
+  button.hidden=!buyerContinueAvailable()||continueUsed||!roundEnded||!resultShown||resultWon!==false||moves!==0;
+  button.textContent=text('buyerContinueTest');
+  button.disabled=button.hidden||puzzleProcessing||Boolean(testAds?.busy)||Boolean(rewardedContinue?.preparing)||!nativeActive||document.hidden;
+}
+function continueRound(activeRound:number,activeScene:BoardScene,button:HTMLButtonElement,source:'test'|'ad'|'owned'):boolean {
+  if(careDemo||puzzleProcessing||!nativeActive||document.hidden||testAds?.busy||testBilling?.pausesGame||rewardedContinue?.preparing)return false;
+  if(previewDialog.open||billingModal()||$<HTMLDialogElement>('#tutorial-dialog').open
+    ||TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open
+    ||androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open)return false;
   const dialog=$<HTMLDialogElement>('#result-dialog');
-  if(!TEST_TOOLS_ENABLED||!testingLevel||testContinueUsed||activeRound!==round||activeScene!==scene
+  const key=source==='owned'?'#result-buyer-continue':'#result-continue';
+  if((source==='owned'?!buyerContinueAvailable():!TEST_TOOLS_ENABLED||!testingLevel)||continueUsed||activeRound!==round||activeScene!==scene
     ||route!=='puzzle'||boardPending||game.scene.getScene('Board')!==activeScene||resultTimer!==undefined
     ||!roundEnded||!resultShown||resultWon!==false||moves!==0||!dialog.open
-    ||dialog.querySelector('#result-continue')!==button)return false;
-  if(!activeScene.resumeAfterFailure())return false;
-  abandonRewardContinue();
-  testContinueUsed=true;moves+=5;roundEnded=false;resultShown=false;resultWon=undefined;firstReward=false;
-  clearBoardNotice();
-  dialog.close();updateGoals();syncActivity();
-  const board=$('#game-canvas');if(board.tabIndex===0)board.focus();
-  return true;
+    ||!button.isConnected||dialog.querySelector(key)!==button||!activeScene.canResumeAfterFailure())return false;
+  if(careStorageBlocked()){notice('careSaveBlocked');return false;}
+  puzzleProcessing=true;
+  try{
+    const next=JSON.parse(JSON.stringify(save)) as SaveData;
+    if(!testingLevel){next.inProgress=roundCheckpoint(activeScene.snapshot(),5,shuffles,paidShuffleUsed,true);
+      if(!saveData(next)){updateSaveStatus();notice('careSaveBlocked');return false;}}
+    if(!testingLevel)save=next;
+    activeScene.resumePreparedFailure();abandonRewardContinue();
+    continueUsed=true;moves=5;roundEnded=false;resultShown=false;resultWon=undefined;firstReward=false;clearBoardNotice();
+    dialog.close();updateGoals();renderViews();syncActivity();
+    const board=$('#game-canvas');if(board.tabIndex===0)board.focus({preventScroll:true});return true;
+  }finally{puzzleProcessing=false;}
 }
 function ensureTestAds(){
   if(!testAds)testAds=new TestAdsController(nativeTestAds(),()=>{renderAdDialog();syncActivity();});
@@ -507,7 +561,7 @@ function abandonRewardContinue(){
   if(testAds?.needsCancellation&&!testAds.busy)void testAds.command('cancel');
 }
 function rewardContextValid(context:NonNullable<typeof rewardedContinue>){
-  return context===rewardedContinue&&TEST_TOOLS_ENABLED&&androidAdEntry&&testingLevel&&!testContinueUsed
+  return context===rewardedContinue&&TEST_TOOLS_ENABLED&&androidAdEntry&&testingLevel&&!continueUsed
     &&context.round===round&&context.scene===scene&&game.scene.getScene('Board')===scene&&!boardPending&&resultTimer===undefined
     &&route==='puzzle'&&roundEnded&&resultShown&&resultWon===false&&moves===0
     &&$<HTMLDialogElement>('#result-dialog').open&&$<HTMLDialogElement>('#result-dialog').querySelector('#result-continue')===context.button;
@@ -530,7 +584,7 @@ function renderRewardContinue(){
   if(testBilling?.blocksAds){context.requestId=undefined;testAds.abandonReward();}
   if(context.requestId&&nativeActive&&!document.hidden&&!testBilling?.blocksAds&&testAds.takeReward(context.requestId)){
     const {round:activeRound,scene:activeScene,button}=context;
-    context.requestId=undefined;continueTestRound(activeRound,activeScene,button);return;
+    context.requestId=undefined;continueRound(activeRound,activeScene,button,'ad');return;
   }
   const copy=adCopy(save.language),value=testAds.snapshot,busy=testAds.busy||context.preparing;
   $('#result-ad-note').textContent=text('testAdContinueNote');
@@ -554,6 +608,7 @@ function updateResultCopy(){
   if(testingLevel)$('#result-test').textContent=text('testOther');
   const continueButton=$<HTMLDialogElement>('#result-dialog').querySelector<HTMLButtonElement>('#result-continue');
   if(continueButton){continueButton.textContent=text('testContinue');$('#result-continue-note').textContent=text('testContinueNote');}
+  renderBuyerContinue();
   renderRewardContinue();
 }
 function renderAdDialog(){
@@ -818,11 +873,11 @@ function switchView(name:string){
   document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(b=>{b.classList.toggle('active',b.dataset.route===name);if(b.dataset.route===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   updateSaveStatus();
   // Phaser refresh는 직전 parentSize로 계산하므로 숨김→표시 직후 부모 크기를 먼저 갱신합니다.
-  if(name==='puzzle'&&game.isBooted){game.scale.getParentBounds();game.scale.refresh();}
+  if(name==='puzzle'&&game.isBooted){game.scale.getParentBounds();game.scale.refresh();updateGoals();}
   if(returnToResult){
     const dialog=$<HTMLDialogElement>('#result-dialog');dialog.showModal();
     const button=dialog.querySelector<HTMLButtonElement>('#result-continue');
-    if(androidAdEntry&&button&&testingLevel&&!testContinueUsed&&resultWon===false&&moves===0)bindRewardContinue(button);
+    if(androidAdEntry&&button&&testingLevel&&!continueUsed&&resultWon===false&&moves===0)bindRewardContinue(button);
   }
   syncActivity();
   if(returnToResult)$('#result-next').focus({preventScroll:true});
@@ -838,7 +893,6 @@ $('#board-notice').addEventListener('animationend',()=>{
 });
 $('#restart').onclick=()=>showStagePreview(currentLevel,'restart',$('#restart'));
 if(TEST_TOOLS_ENABLED){$('#test-level-button').onclick=()=>showTestPicker();$<HTMLDialogElement>('#test-level-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTestPicker();});}
-$('#shuffle').onclick=()=>{if(!boardPending&&game.scene.isActive('Board')&&shuffles>0&&scene.shuffle()){shuffles--;updateGoals();checkpoint();}};
 $<HTMLDialogElement>('#result-dialog').addEventListener('cancel',event=>{event.preventDefault();if(testAds?.busy||rewardedContinue?.preparing)return;$<HTMLDialogElement>('#result-dialog').close();switchView('village');});
 $<HTMLDialogElement>('#tutorial-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTutorial();});
 document.addEventListener('pointerdown',()=>{void audio.unlock().catch(()=>{});},{passive:true,capture:true});

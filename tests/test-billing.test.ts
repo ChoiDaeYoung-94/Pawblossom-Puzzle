@@ -85,3 +85,13 @@ describe('광고 제거 네이티브 결과 연결',()=>{
     for(const lang of ['ko','en'] as const){const copy=billingCopy(lang);expect(copy.unconfigured.length).toBeGreaterThan(10);for(const text of Object.values(copy.entitlement))expect(text.length).toBeGreaterThan(10);}
   });
 });
+
+describe('광고 없는 이어하기용 검증 상태',()=>{
+  it('owned 문자열이나 광고 차단만으로 권한을 인정하지 않습니다',async()=>{
+    const h=harness({entitlement:'owned',adsBlocked:true});expect(h.controller.verifiedOwned).toBe(false);await h.controller.connect();expect(h.controller.verifiedOwned).toBe(true);
+    for(const patch of [{configured:false},{configured:true,available:false},{available:true,state:'querying' as const},{state:'failed' as const},{state:'idle' as const,error:'verify failed'},{error:'',overlay:true},{overlay:false,preparingPurchase:true},{preparingPurchase:false,entitlement:'unknown' as const}]){
+      h.emit(patch);expect(h.controller.verifiedOwned).toBe(false);
+    }
+    h.emit({entitlement:'owned'});expect(h.controller.verifiedOwned).toBe(true);await h.controller.dispose();expect(h.controller.verifiedOwned).toBe(false);
+  });
+});
