@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs><radialGradient id="berry" cx=".28" cy=".22" r=".8"><stop stop-color="#a4b8ff"/><stop offset=".5" stop-color="#6269d7"/><stop offset="1" stop-color="#373c93"/></radialGradient></defs>
+  <ellipse cx="51" cy="91" rx="33" ry="6" fill="#363465" opacity=".18"/>
+  <path d="M48 24c-4-15 13-19 23-15-2 11-12 18-23 15" fill="#75be53" stroke="#32623b" stroke-width="4"/>
+  <circle cx="38" cy="52" r="26" fill="url(#berry)" stroke="#32356d" stroke-width="4.5"/>
+  <circle cx="62" cy="67" r="26" fill="url(#berry)" stroke="#32356d" stroke-width="4.5"/>
+  <path d="m32 34 6-5 4 6 7 1-5 5 1 7-7-3-6 3 1-7-5-5Zm29 14 5-5 4 6 7 1-5 5 1 7-7-3-6 3 1-7-5-5Z" fill="#303572" stroke="#252b63" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M19 49c1-7 5-11 9-13M44 64c1-6 4-11 9-14" fill="none" stroke="#d8e5ff" stroke-width="5.5" stroke-linecap="round"/>
+  <path d="M79 72c-1 6-5 10-10 12" fill="none" stroke="#888ae9" stroke-width="3" stroke-linecap="round"/>
+</svg>
