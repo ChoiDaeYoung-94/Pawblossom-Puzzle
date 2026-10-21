@@ -436,17 +436,20 @@ function finish(won:boolean){
     const controls=document.createElement('div');controls.className='result-reward-controls';
     controls.innerHTML=`<p id="result-ad-note"></p><p id="result-ad-status" role="status"></p><button class="result-test-button" id="result-ad-load"></button><button class="result-test-button" id="result-ad-show"></button><button class="text-button" id="result-ad-cancel"></button>`;
     continueButton.before(controls);
-    rewardedContinue={round,scene,button:continueButton,preparing:false};
-    const context=rewardedContinue;
-    $('#result-ad-load').onclick=()=>{void prepareRewardContinue(context);};
-    $('#result-ad-show').onclick=()=>{
-      if(!context||!rewardContextValid(context)||!nativeActive||document.hidden||testBilling?.blocksAds||testAds?.busy||testAds?.snapshot.format!=='rewarded'||testAds.snapshot.state!=='ready')return;
-      context.requestId=crypto.randomUUID();void testAds.command('show',context.requestId);
-    };
-    $('#result-ad-cancel').onclick=()=>{if(!context||!rewardContextValid(context))return;context.requestId=undefined;void testAds?.command('cancel');};
-    ensureTestAds();renderRewardContinue();void testAds!.connect();
+    bindRewardContinue(continueButton);
   }
   showResultPip($<HTMLImageElement>('.result-pip'),won);
+}
+// 결과 재방문은 기존 DOM을 사용하되 떠날 때 폐기한 광고 요청은 되살리지 않습니다.
+function bindRewardContinue(button:HTMLButtonElement){
+  const context:NonNullable<typeof rewardedContinue>=rewardedContinue={round,scene,button,preparing:false};
+  $('#result-ad-load').onclick=()=>{void prepareRewardContinue(context);};
+  $('#result-ad-show').onclick=()=>{
+    if(!rewardContextValid(context)||!nativeActive||document.hidden||testBilling?.blocksAds||testAds?.busy||testAds?.snapshot.format!=='rewarded'||testAds.snapshot.state!=='ready')return;
+    context.requestId=crypto.randomUUID();void testAds.command('show',context.requestId);
+  };
+  $('#result-ad-cancel').onclick=()=>{if(!rewardContextValid(context))return;context.requestId=undefined;void testAds?.command('cancel');};
+  ensureTestAds();renderRewardContinue();void testAds!.connect();
 }
 function continueTestRound(activeRound:number,activeScene:BoardScene,button:HTMLButtonElement):boolean {
   const dialog=$<HTMLDialogElement>('#result-dialog');
@@ -642,6 +645,9 @@ function changeLanguage(language:'en'|'ko'){
 }
 function switchView(name:string){
   if(stagePreview)return;
+  const returnToResult=name==='puzzle'&&roundEnded&&resultShown&&resultWon!==undefined;
+  // 광고 취소 등으로 아직 표시할 수 없으면 종료 보드로 이동하지 않고 현재 화면을 유지합니다.
+  if(returnToResult&&(!nativeActive||document.hidden||testAds?.pausesGame||testBilling?.pausesGame||boardPending||resultTimer!==undefined||previewDialog.open||otherModal()||game.scene.getScene('Board')!==scene))return;
   if(name!=='puzzle')abandonRewardContinue();
   if(!scene.canLeave())return;
   if(name!=='puzzle'){clearResumeNotice();clearBoardNotice();}
@@ -650,7 +656,14 @@ function switchView(name:string){
   document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(b=>{b.classList.toggle('active',b.dataset.route===name);if(b.dataset.route===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   updateSaveStatus();
   // Phaser refresh는 직전 parentSize로 계산하므로 숨김→표시 직후 부모 크기를 먼저 갱신합니다.
-  if(name==='puzzle'&&game.isBooted){game.scale.getParentBounds();game.scale.refresh();}syncActivity();
+  if(name==='puzzle'&&game.isBooted){game.scale.getParentBounds();game.scale.refresh();}
+  if(returnToResult){
+    const dialog=$<HTMLDialogElement>('#result-dialog');dialog.showModal();
+    const button=dialog.querySelector<HTMLButtonElement>('#result-continue');
+    if(androidAdEntry&&button&&testingLevel&&!testContinueUsed&&resultWon===false&&moves===0)bindRewardContinue(button);
+  }
+  syncActivity();
+  if(returnToResult)$('#result-next').focus({preventScroll:true});
 }
 document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(button=>button.onclick=()=>switchView(button.dataset.route!));
 $('#settings-button').onclick=()=>switchView(route==='settings'?'puzzle':'settings');
