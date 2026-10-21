@@ -34,6 +34,8 @@ let roundEnded=false, resultShown=false, firstReward=false;
 let resultWon:boolean|undefined;
 let noticeKey:TextKey|undefined, boardNoticeKey:TextKey|undefined;
 let tutorialPage=0;
+let tutorialIntent:'onboarding'|'help'='onboarding';
+let tutorialReturn:{opener:HTMLButtonElement;id:string;scroll:{view:HTMLElement;top:number;left:number}[]}|undefined;
 let practice:SwapPractice|undefined;
 let specialPractice:SpecialTapPractice|undefined;
 let practiceInputs:ReturnType<typeof bindPracticeBoard>|undefined;
@@ -295,9 +297,9 @@ function renderTutorial(){
   const descriptions:TextKey[]=['tutorialSwapDesc','tutorialGoalDesc','tutorialMagicDesc',specialPractice?(specialPractice.completed?'specialPracticeDone':'specialPracticeDesc'):practice?.completed?'practiceDone':'practiceDesc'];
   const tile=(name:string)=>`<img src="/assets/tiles/${name}.svg" alt=""/>`;
   const art=tutorialPage===3?practiceArt():tutorialPage===0?`<div class="guide-swap" aria-hidden="true">${tile('strawberry')}${tile('strawberry')}<span>${tile('carrot')}<b>↕</b>${tile('strawberry')}</span></div>`:tutorialPage===1?`<div class="guide-goals" aria-hidden="true"><span>${tile('strawberry')} 12</span><span>${tile('carrot')} 10</span>${icon('leaf',24)}</div>`:`<div class="guide-specials">${(['tutorialFour','tutorialFive','tutorialShape'] as TextKey[]).map((key,i)=>`<div><span class="guide-special special-${i}" aria-hidden="true">${tile(['leaf','flower','blueberry'][i])}</span><small>${text(key)}</small></div>`).join('')}</div>`;
-  $('#tutorial-dialog').innerHTML=`<div class="guide-content"><div class="eyebrow">${text('tutorial')} · ${text('tutorialStep')} ${tutorialPage+1} / 4</div><h2 id="tutorial-title" tabindex="-1">${text(headings[tutorialPage])}</h2>${art}<p id="tutorial-description">${text(descriptions[tutorialPage])}</p><div class="guide-dots" aria-hidden="true">${[0,1,2,3].map(i=>`<i class="${i===tutorialPage?'active':''}"></i>`).join('')}</div><div class="guide-actions"><button id="guide-back" class="text-button" ${tutorialPage===0?'disabled':''}>${text('tutorialBack')}</button><button id="guide-next" class="primary" ${tutorialPage===3&&!practice?.completed?'disabled':''}>${text(tutorialPage===3?'tutorialStart':tutorialPage===2?'tutorialTry':'tutorialNext')}${icon('arrow',18)}</button></div><button id="guide-skip" class="text-button">${text('tutorialSkip')}</button></div>`;
+  $('#tutorial-dialog').innerHTML=`<div class="guide-content"><div class="eyebrow">${text('tutorial')} · ${text('tutorialStep')} ${tutorialPage+1} / 4</div><h2 id="tutorial-title" tabindex="-1">${text(headings[tutorialPage])}</h2>${art}<p id="tutorial-description">${text(descriptions[tutorialPage])}</p><div class="guide-dots" aria-hidden="true">${[0,1,2,3].map(i=>`<i class="${i===tutorialPage?'active':''}"></i>`).join('')}</div><div class="guide-actions"><button id="guide-back" class="text-button" ${tutorialPage===0?'disabled':''}>${text('tutorialBack')}</button><button id="guide-next" class="primary" ${tutorialPage===3&&tutorialIntent==='onboarding'&&!practice?.completed?'disabled':''}>${text(tutorialPage===3?(tutorialIntent==='help'?'tutorialClose':'tutorialStart'):tutorialPage===2?'tutorialTry':'tutorialNext')}${icon('arrow',18)}</button></div><button id="guide-skip" class="text-button">${text(tutorialIntent==='help'?'tutorialClose':'tutorialSkip')}</button></div>`;
   $('#guide-back').onclick=()=>{if(tutorialPage>0){tutorialPage--;specialPractice=undefined;renderTutorial();$('#tutorial-title').focus();}};
-  $('#guide-next').onclick=()=>{if(tutorialPage<3){tutorialPage++;if(tutorialPage===3){practice=new SwapPractice();specialPractice=undefined;}renderTutorial();$('#tutorial-title').focus();}else if(practice?.completed)closeTutorial();};
+  $('#guide-next').onclick=()=>{if(tutorialPage<3){tutorialPage++;if(tutorialPage===3){practice=new SwapPractice();specialPractice=undefined;}renderTutorial();$('#tutorial-title').focus();}else if(tutorialIntent==='help'||practice?.completed)closeTutorial();};
   $('#guide-skip').onclick=closeTutorial;
   if(tutorialPage===3){
     bindPracticeInputs();
@@ -333,16 +335,26 @@ function focusPracticeStart(){
   // touchup 뒤 합성 click이 끝나기 전에 스크롤하면 새 시작 버튼에 click이 닿을 수 있습니다.
   setTimeout(()=>{if(button.isConnected&&document.activeElement===button&&$<HTMLDialogElement>('#tutorial-dialog').open)button.scrollIntoView({block:'nearest'});},0);
 }
-function showTutorial(){
-  if(stagePreview)return;
-  if(!scene.canLeave()||resultTimer||$<HTMLDialogElement>('#result-dialog').open)return;
+function showTutorial(intent:'onboarding'|'help'='onboarding',opener?:HTMLButtonElement){
+  if(stagePreview||previewDialog.open||otherModal()||!scene.canLeave()||resultTimer)return;
+  // 첫 안내는 보드 부팅 중에도 열립니다. 사용자가 다시 여는 도움말만 활성 화면을 확인합니다.
+  if(intent==='help'&&(!nativeActive||document.hidden||boardPending||testAds?.pausesGame||testBilling?.pausesGame||!opener?.isConnected||opener.disabled||opener.hidden||!['settings','journal'].includes(route)||$('#'+route+'-view').hidden))return;
+  tutorialIntent=intent;
+  tutorialReturn=intent==='help'&&opener?{opener,id:opener.id,scroll:Array.from(document.querySelectorAll<HTMLElement>('.view'),view=>({view,top:view.scrollTop,left:view.scrollLeft}))}:undefined;
   tutorialPage=0;practice=undefined;specialPractice=undefined;renderTutorial();$<HTMLDialogElement>('#tutorial-dialog').showModal();
   syncActivity();
 }
 function closeTutorial(){
+  if(!$<HTMLDialogElement>('#tutorial-dialog').open)return;
+  const context=tutorialReturn;tutorialReturn=undefined;
   practiceInputs?.dispose();practiceInputs=undefined;
   $<HTMLDialogElement>('#tutorial-dialog').close();save.tutorialSeen=true;persist();
   syncActivity();
+  if(context){
+    const opener=context.opener.isConnected?context.opener:document.querySelector<HTMLButtonElement>('#'+context.id);
+    if(opener?.isConnected&&!opener.disabled&&!opener.hidden)opener.focus({preventScroll:true});
+    for(const {view,top,left} of context.scroll){view.scrollTop=top;view.scrollLeft=left;}
+  }
 }
 function chapterTabs(selected:number,test=false){
   const prefix=test?'test-':'';
@@ -572,7 +584,8 @@ function renderViews(grew=false){
   const focused=document.activeElement as HTMLElement|null,focusedId=focused?.id;
   const scroll=Array.from(document.querySelectorAll<HTMLElement>('.view'),view=>({view,top:view.scrollTop,left:view.scrollLeft}));
   $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('chapterMeadow')}</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div><div class="garden-card"><div class="garden-picture"><div class="garden-illustration" role="img" aria-label="${text('gardenImage').replace('{count}',String(save.garden))}">${gardenArt(save.garden,grew)}</div><span class="garden-pill">${icon('flower',17)} ${save.garden} / 5</span></div><h3>${text('garden')}</h3><p class="garden-stage" id="garden-stage" role="status" tabindex="-1">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div><div class="level-picker"><h3>${text('levelSelect')}</h3>${chapterTabs(selectedChapter)}<div class="level-grid" id="chapter-levels" role="tabpanel" aria-labelledby="chapter-${selectedChapter}">${levels.filter(l=>chapterForLevel(l.id).id===selectedChapter).map(l=>`<button data-level="${l.id}" ${l.id>save.highestLevel?'disabled':''} class="level-node ${save.completed.includes(l.id)?'completed':''} ${!testingLevel&&!roundEnded&&l.id===currentLevel?'current':''}" ${!testingLevel&&!roundEnded&&l.id===currentLevel?'aria-current="step"':''} aria-label="${text('level')} ${l.id}${!testingLevel&&!roundEnded&&l.id===currentLevel?' · '+text('previewCurrent'):''}${l.id>save.highestLevel?' · '+text('levelLocked'):save.completed.includes(l.id)?' · '+text('levelCompleted'):''}">${l.id>save.highestLevel?icon('lock',19):l.id}${save.completed.includes(l.id)?`<span>${icon('star',13)}</span>`:''}</button>`).join('')}</div></div>`;
-  $('#journal-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('friendsHeading')}</div><h2>${text('friendsTitle')}</h2><p>${text('friendsDesc')}</p></div><div class="journal-card"><span class="friend-number">01</span><img src="/assets/pip.png" alt="${text('pip')}" data-alt="pip"/><h3>${text('pip')}</h3><p>${text('pipDesc')}</p><span class="friend-tag">${icon('leaf',15)} ${text('chapterMeadow')}</span></div>`;
+  $('#journal-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('friendsHeading')}</div><h2>${text('friendsTitle')}</h2><p>${text('friendsDesc')}</p></div><button id="pip-tutorial-help" class="primary guide-help">${text('tutorial')}</button><div class="journal-card"><img src="/assets/pip.png" alt="${text('pip')}" data-alt="pip"/><h3>${text('pip')}</h3><p>${text('pipDesc')}</p><span class="friend-tag">${icon('leaf',15)} ${text('chapterMeadow')}</span></div>`;
+  $('#pip-tutorial-help').onclick=()=>showTutorial('help',$<HTMLButtonElement>('#pip-tutorial-help'));
   $('#settings-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><div class="storage-card" id="storage-card"><p id="save-status"></p><button id="save-retry" class="text-button" hidden></button><button id="save-reload" class="text-button" hidden></button></div><section class="support-note" aria-labelledby="support-title"><h3 id="support-title">${text('support')}</h3><p id="support-email">doeud1410@gmail.com</p></section><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v${APP_VERSION}</p>`;
   updateSaveStatus(focusedId);
   for(const id of ['#save-retry','#save-reload'])$(id).addEventListener('blur',()=>updateSaveStatus());
@@ -582,7 +595,7 @@ function renderViews(grew=false){
   $('#grow').onclick=()=>{if(growing||save.stars<2||save.garden>=5)return;growing=true;save.stars-=2;save.garden++;const stored=persist();updateWallet();renderViews(true);audio.play('reward');if(stored)notice('planted');setTimeout(()=>{growing=false;$('#grow').toggleAttribute('disabled',save.stars<2||save.garden>=5);},450);};
   document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach(button=>button.onclick=()=>showStagePreview(Number(button.dataset.level),'map',button));
   $('#music-toggle').onclick=()=>{save.music=!save.music;audio.setMusicEnabled(save.music);persist();$('#music-toggle').classList.toggle('on',save.music);$('#music-toggle').setAttribute('aria-checked',String(save.music));};
-  const help=document.createElement('button');help.id='tutorial-help';help.className='primary guide-help';help.textContent=text('tutorial');help.onclick=showTutorial;$('#settings-view').append(help);
+  const help=document.createElement('button');help.id='tutorial-help';help.className='primary guide-help';help.textContent=text('tutorial');help.onclick=()=>showTutorial('help',help);$('#settings-view').append(help);
   if(androidAdEntry){const entry=document.createElement('button');entry.id='test-ad-button';entry.className='text-button';entry.textContent=adCopy(save.language).title;entry.onclick=()=>{void showAdDialog();};$('#settings-view').append(entry);}
   if(androidBillingEntry){const entry=document.createElement('button');entry.id='test-billing-button';entry.className='text-button';entry.textContent=billingCopy(save.language).title;entry.onclick=()=>{void showBillingDialog();};$('#settings-view').append(entry);}
   $('#sfx-toggle').onclick=()=>{save.sfx=!save.sfx;audio.setSfxEnabled(save.sfx);persist();$('#sfx-toggle').classList.toggle('on',save.sfx);$('#sfx-toggle').setAttribute('aria-checked',String(save.sfx));};

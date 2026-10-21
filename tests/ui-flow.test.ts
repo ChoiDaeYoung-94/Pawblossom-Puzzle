@@ -41,7 +41,7 @@ class ElementStub {
   constructor(selector: string) { this.id = selector.slice(1); this.hidden = selector !== '#puzzle-view'; }
   setAttribute() {}
   removeAttribute() {}
-  append() {}
+  append(_child:ElementStub) {}
   before() {}
   focus() {}
   matches(){return true;}
@@ -76,6 +76,9 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     if (!elements.has(selector)) {
       elements.set(selector, new ElementStub(selector));
       if(selector==='#result-dialog')elements.get(selector)!.querySelector=child=>elements.get(selector)!.innerHTML.includes(`id="${child.slice(1)}"`)?element(child):null;
+      // 동적으로 만든 설정 도움말도 실제 onclick과 opener 참조로 검사합니다.
+      if(selector==='#settings-view')elements.get(selector)!.append=child=>{elements.set('#'+child.id,child);};
+      if(selector==='#pip-tutorial-help')elements.get(selector)!.hidden=false;
     }
     if(selector==='#practice-board')elements.get(selector)!.querySelectorAll=()=>Array.from({length:9},(_,i)=>{const button=element(`#practice-cell-${Math.floor(i/3)}-${i%3}`);button.dataset={row:String(Math.floor(i/3)),col:String(i%3)};return button;});
     return elements.get(selector)!;
@@ -139,7 +142,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     },
     document: {
       body:{append(){}},
-      createElement: () => new ElementStub('button'),
+      createElement: () => {const created=new ElementStub('button');created.hidden=false;return created;},
       querySelector:(selector:string)=>selector==='dialog[open]'?null:element(selector),
       querySelectorAll: (selector: string) => selector === '[data-test-level]'
         ? Array.from({length:30},(_,i)=>{const button=element(`#test-stage-${i+1}`);button.dataset.testLevel=String(i+1);return button;}) : selector === '[data-chapter]' || selector === '[data-test-chapter]'
@@ -187,6 +190,71 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     writes: () => writes, stored: () => JSON.parse(storageValues.get('pawblossom.save.v1')??'null'),
   };
 }
+
+describe('핍·설정 도움말과 원래 화면 복귀',()=>{
+  const open=(h:ReturnType<typeof mainHarness>,route:'settings'|'journal')=>{
+    h.run(`switchView('${route}')`);
+    h.element(route==='settings'?'#tutorial-help':'#pip-tutorial-help').onclick({detail:0,button:0});
+  };
+  it.each(['ko','en'])('%s에서는 첫 안내의 필수 교환과 다시 연 도움말의 즉시 닫기를 구분합니다',language=>{
+    const first=mainHarness(false,true);first.run(`changeLanguage('${language}')`);
+    for(let i=0;i<3;i++)first.element('#guide-next').onclick();
+    expect(first.element('#tutorial-dialog').innerHTML).toContain(t(language as 'ko'|'en','tutorialStart'));
+    first.element('#guide-next').onclick();expect(first.element('#tutorial-dialog').open).toBe(true);
+    for(const route of ['settings','journal'] as const){
+      const h=mainHarness();h.run(`changeLanguage('${language}')`);open(h,route);
+      expect(h.run('tutorialIntent')).toBe('help'); // 실제 onclick 이벤트를 전달해도 intent가 바뀌지 않습니다.
+      for(let i=0;i<3;i++)h.element('#guide-next').onclick();
+      expect(h.run('practice.completed')).toBe(false);
+      expect(h.element('#tutorial-dialog').innerHTML).toContain(t(language as 'ko'|'en','tutorialClose'));
+      expect(h.element('#tutorial-dialog').innerHTML).not.toMatch(/id="guide-next"[^>]*disabled/);
+      h.element('#guide-next').onclick();expect(h.element('#tutorial-dialog').open).toBe(false);
+      expect(h.run('route')).toBe(route);
+    }
+  });
+  it.each(['settings','journal'] as const)('%s 도움말의 닫기·Escape·native back은 본판·RNG·회차·지갑과 opener를 보존합니다',route=>{
+    for(const exit of ['last','close','escape','native-back']){
+      const h=mainHarness(false,false,false,exit==='native-back');
+      h.run('nativeActive=true;scene.hooks.onMove([1,0,0,0,0,0],10);globalThis.originalScene=scene;globalThis.originalEngine=scene.engine;globalThis.originalGame=game;globalThis.rngCalls=0;const rng=scene.engine.rng;scene.engine.rng=()=>{rngCalls++;return rng();}');
+      const state=()=>h.run('JSON.stringify({round,currentLevel,moves,score,collected,shuffles,clearedLeaves,save,board:scene.engine.board,leaves:scene.engine.leaves})');
+      const before=state();let focused=false;
+      h.run(`switchView('${route}');document.querySelector('#${route}-view').scrollTop=123`);
+      const opener=h.element(route==='settings'?'#tutorial-help':'#pip-tutorial-help');opener.focus=()=>{focused=true;};
+      opener.onclick();
+      expect(h.element('#tutorial-dialog').open).toBe(true);expect(h.run('game.paused')).toBe(true);
+      if(exit==='last'){for(let i=0;i<3;i++)h.element('#guide-next').onclick();h.element('#guide-next').onclick();}
+      else if(exit==='close')h.element('#guide-skip').onclick();
+      else if(exit==='escape')h.element('#tutorial-dialog').listeners.cancel({preventDefault(){}});
+      else h.nativeEvents.backButton({isActive:true});
+      expect(h.element('#tutorial-dialog').open).toBe(false);expect(h.run('route')).toBe(route);expect(focused).toBe(true);
+      expect(h.run(`document.querySelector('#${route}-view').scrollTop`)).toBe(123);
+      expect(state()).toBe(before);expect(h.run('scene===originalScene&&scene.engine===originalEngine&&game===originalGame&&rngCalls===0')).toBe(true);
+      expect(h.stored().tutorialSeen).toBe(true);expect(h.run('game.paused')).toBe(true);
+    }
+  });
+  it.each(['settings','journal'] as const)('%s opener는 언어 변경으로 교체되어도 새 같은 ID와 원래 스크롤로 복귀합니다',route=>{
+    const h=mainHarness();open(h,route);
+    const id=route==='settings'?'tutorial-help':'pip-tutorial-help';
+    h.run(`globalThis.oldOpener=tutorialReturn.opener;oldOpener.isConnected=false;globalThis.replacement=document.createElement('button');replacement.id='${id}';replacement.focus=options=>{globalThis.restored=options;};const query=document.querySelector;document.querySelector=selector=>selector==='#${id}'?replacement:query(selector);changeLanguage('ko')`);
+    expect(h.run('tutorialPage')).toBe(0);expect(h.element('#tutorial-dialog').innerHTML).toContain('안내 닫기');
+    h.element('#guide-skip').onclick();expect(h.run('restored.preventScroll')).toBe(true);
+    expect(h.run('route')).toBe(route);expect(h.run('save.language')).toBe('ko');
+  });
+  it.each(['hidden','inactive','pending','busy','result','picker','ad','billing','disabled-opener','hidden-opener','hidden-view','preview'])('%s 중 다시 열기는 현재 회차와 modal을 덮어쓰지 않습니다',reason=>{
+    const h=mainHarness(false,false,true);h.run("switchView('journal')");
+    const code:Record<string,string>={hidden:'document.hidden=true',inactive:'nativeActive=false',pending:'boardPending=true',busy:'scene.canLeave=()=>false',result:"document.querySelector('#result-dialog').open=true",picker:"document.querySelector('#test-level-dialog').open=true",ad:'testAds={pausesGame:true}',billing:'testBilling={pausesGame:true}','disabled-opener':"document.querySelector('#pip-tutorial-help').disabled=true",'hidden-opener':"document.querySelector('#pip-tutorial-help').hidden=true",'hidden-view':"document.querySelector('#journal-view').hidden=true",preview:'stagePreview={}'};
+    const disk=h.disk();h.run(`${code[reason]};document.querySelector('#pip-tutorial-help').onclick()`);
+    expect(h.element('#tutorial-dialog').open).toBe(false);expect(h.disk()).toEqual(disk);expect(h.run('tutorialReturn')).toBeUndefined();
+  });
+  it('이미 열린 도움말은 두 번째 열기로 단계나 opener를 초기화하지 않습니다',()=>{
+    const h=mainHarness();open(h,'journal');h.element('#guide-next').onclick();const opener=h.run('tutorialReturn');
+    h.element('#pip-tutorial-help').onclick();expect(h.run('tutorialPage')).toBe(1);expect(h.run('tutorialReturn')).toBe(opener);
+  });
+  it('첫 native 안내는 보드 부팅과 활성 상태 응답을 기다리는 동안에도 기존대로 열립니다',()=>{
+    const h=mainHarness(false,true,false,true,undefined,false);
+    expect(h.run('boardPending')).toBe(true);expect(h.run('nativeActive')).toBe(false);expect(h.element('#tutorial-dialog').open).toBe(true);
+  });
+});
 
 describe('스테이지 미리보기와 명시적 회차 교체',()=>{
   const snapshot=(h:ReturnType<typeof mainHarness>)=>h.run('JSON.stringify({round,currentLevel,testingLevel,moves,score,collected,clearedLeaves,shuffles,save,board:scene.engine.board,leaves:scene.engine.leaves})');
