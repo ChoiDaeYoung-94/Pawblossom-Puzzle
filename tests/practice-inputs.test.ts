@@ -1,6 +1,7 @@
 import {describe,expect,it,vi} from 'vitest';
 import {bindPracticeBoard} from '../src/bindPracticeInputs';
 import {SwapPractice} from '../src/SwapPractice';
+import {SpecialTapPractice} from '../src/SpecialTapPractice';
 
 // DOM 이벤트/캡처 대역. 실제 브라우저 capture와 Enter/Space는 별도 Chrome QA에서 확인합니다.
 function harness(){
@@ -53,5 +54,27 @@ describe('실습 정상 종료와 취소 뒤 click 차단',()=>{
   it('활동 중단 cancel 뒤 늦은 up/click은 무실행이며 새 입력은 회복합니다',()=>{
     const h=harness();h.send('pointerdown');h.binding.cancel();h.send('pointerup');h.send('click');expect(h.tap).not.toHaveBeenCalled();
     h.click();expect(h.tap).toHaveBeenCalledOnce();
+  });
+});
+
+describe('특수 탭 입력의 한 번 실행과 중단',()=>{
+  function specialHarness(){
+    const lesson=new SpecialTapPractice(),h=harness();h.binding.dispose();
+    const button=h.buttons[0];button.dataset.row='1';button.dataset.col='1';
+    const binding=bindPracticeBoard(h.board as unknown as HTMLElement,{tap:pos=>{lesson.tap(pos);},swipe:()=>{}});
+    return {...h,lesson,binding};
+  }
+  it.each(['pointercancel','lostpointercapture','cancel','dispose'])('%s 뒤 늦은 up/click은 무변경입니다',type=>{
+    const h=specialHarness(),before=JSON.stringify(h.lesson.board);h.send('pointerdown');
+    if(type==='cancel'||type==='dispose')h.binding[type]();else h.send(type);
+    h.send('pointerup');h.send('click');expect(h.lesson.completed).toBe(false);expect(JSON.stringify(h.lesson.board)).toBe(before);
+    if(type!=='dispose'){h.click();expect(h.lesson.completed).toBe(true);}
+  });
+  it('가로·세로 스와이프와 후속 click은 실행하지 않고 키보드 활성화는 한 번 완료합니다',()=>{
+    const h=specialHarness();
+    for(const values of [{clientX:90},{clientY:90}]){h.send('pointerdown');h.send('pointerup',0,values);h.send('click');}
+    expect(h.lesson.completed).toBe(false);
+    h.send('click',0,{detail:0});const result=h.lesson.result;h.send('click',0,{detail:0});
+    expect(h.lesson.completed).toBe(true);expect(h.lesson.result).toBe(result);
   });
 });

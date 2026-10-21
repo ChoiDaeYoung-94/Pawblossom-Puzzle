@@ -13,6 +13,7 @@ import { loadSave,saveData,retrySave,saveStatus,clearSave,levels,LEVEL_COUNT,cha
 import { t,type TextKey } from './i18n';
 import { icon } from './icons';
 import { SwapPractice } from './SwapPractice';
+import { SpecialTapPractice } from './SpecialTapPractice';
 import { bindPracticeBoard } from './bindPracticeInputs';
 import { gardenArt } from './GardenArt';
 import { showResultPip } from './ResultPip';
@@ -34,6 +35,7 @@ let resultWon:boolean|undefined;
 let noticeKey:TextKey|undefined, boardNoticeKey:TextKey|undefined;
 let tutorialPage=0;
 let practice:SwapPractice|undefined;
+let specialPractice:SpecialTapPractice|undefined;
 let practiceInputs:ReturnType<typeof bindPracticeBoard>|undefined;
 let growing=false;
 let clearedLeaves=0;
@@ -243,40 +245,51 @@ function showResumeNotice(){
 }
 function renderTutorial(){
   practiceInputs?.dispose();practiceInputs=undefined;
-  const headings:TextKey[]=['tutorialSwap','tutorialGoal','tutorialMagic','practiceTitle'];
-  const descriptions:TextKey[]=['tutorialSwapDesc','tutorialGoalDesc','tutorialMagicDesc',practice?.completed?'practiceDone':'practiceDesc'];
+  const headings:TextKey[]=['tutorialSwap','tutorialGoal','tutorialMagic',specialPractice?'specialPracticeTitle':'practiceTitle'];
+  const descriptions:TextKey[]=['tutorialSwapDesc','tutorialGoalDesc','tutorialMagicDesc',specialPractice?(specialPractice.completed?'specialPracticeDone':'specialPracticeDesc'):practice?.completed?'practiceDone':'practiceDesc'];
   const tile=(name:string)=>`<img src="/assets/tiles/${name}.svg" alt=""/>`;
   const art=tutorialPage===3?practiceArt():tutorialPage===0?`<div class="guide-swap" aria-hidden="true">${tile('strawberry')}${tile('strawberry')}<span>${tile('carrot')}<b>↕</b>${tile('strawberry')}</span></div>`:tutorialPage===1?`<div class="guide-goals" aria-hidden="true"><span>${tile('strawberry')} 12</span><span>${tile('carrot')} 10</span>${icon('leaf',24)}</div>`:`<div class="guide-specials">${(['tutorialFour','tutorialFive','tutorialShape'] as TextKey[]).map((key,i)=>`<div><span class="guide-special special-${i}" aria-hidden="true">${tile(['leaf','flower','blueberry'][i])}</span><small>${text(key)}</small></div>`).join('')}</div>`;
   $('#tutorial-dialog').innerHTML=`<div class="guide-content"><div class="eyebrow">${text('tutorial')} · ${text('tutorialStep')} ${tutorialPage+1} / 4</div><h2 id="tutorial-title" tabindex="-1">${text(headings[tutorialPage])}</h2>${art}<p id="tutorial-description">${text(descriptions[tutorialPage])}</p><div class="guide-dots" aria-hidden="true">${[0,1,2,3].map(i=>`<i class="${i===tutorialPage?'active':''}"></i>`).join('')}</div><div class="guide-actions"><button id="guide-back" class="text-button" ${tutorialPage===0?'disabled':''}>${text('tutorialBack')}</button><button id="guide-next" class="primary" ${tutorialPage===3&&!practice?.completed?'disabled':''}>${text(tutorialPage===3?'tutorialStart':tutorialPage===2?'tutorialTry':'tutorialNext')}${icon('arrow',18)}</button></div><button id="guide-skip" class="text-button">${text('tutorialSkip')}</button></div>`;
-  $('#guide-back').onclick=()=>{if(tutorialPage>0){tutorialPage--;renderTutorial();$('#tutorial-title').focus();}};
-  $('#guide-next').onclick=()=>{if(tutorialPage<3){tutorialPage++;if(tutorialPage===3)practice=new SwapPractice();renderTutorial();$('#tutorial-title').focus();}else if(practice?.completed)closeTutorial();};
+  $('#guide-back').onclick=()=>{if(tutorialPage>0){tutorialPage--;specialPractice=undefined;renderTutorial();$('#tutorial-title').focus();}};
+  $('#guide-next').onclick=()=>{if(tutorialPage<3){tutorialPage++;if(tutorialPage===3){practice=new SwapPractice();specialPractice=undefined;}renderTutorial();$('#tutorial-title').focus();}else if(practice?.completed)closeTutorial();};
   $('#guide-skip').onclick=closeTutorial;
-  if(tutorialPage===3)bindPracticeInputs();
+  if(tutorialPage===3){
+    bindPracticeInputs();
+    if(!specialPractice&&practice?.completed)$('#practice-special').onclick=()=>{specialPractice=new SpecialTapPractice();renderTutorial();};
+    if(specialPractice){if(specialPractice.completed)focusPracticeStart();else $('#practice-cell-1-1').focus();}
+  }
 }
 function practiceArt(){
-  const lesson=practice!;
+  const lesson=specialPractice??practice!;
   return `<div id="practice-board" class="practice-board" role="group" aria-label="${text('practiceBoard')}">${lesson.board.map((row,r)=>row.map((block,c)=>{
-    const pos={row:r,col:c}, target=lesson.isTarget(pos), selected=lesson.selected?.row===r&&lesson.selected?.col===c;
+    const pos={row:r,col:c}, target=lesson.isTarget(pos), selected=!specialPractice&&practice?.selected?.row===r&&practice?.selected?.col===c;
     const cleared=lesson.result?.steps[0].removed.some(p=>p.row===r&&p.col===c);
-    const name=text('practiceCell').replace('{tile}',text(tileNames[block.kind] as TextKey)).replace('{row}',String(r+1)).replace('{col}',String(c+1));
-    return `<button id="practice-cell-${r}-${c}" data-row="${r}" data-col="${c}" class="practice-cell ${target&&!lesson.completed?'practice-target':''} ${cleared?'practice-cleared':''}" aria-label="${name}" aria-pressed="${Boolean(selected)}" ${!target||lesson.completed?'disabled':''}><img src="/assets/tiles/${tileNames[block.kind]}.svg" alt=""/>${cleared?'<span aria-hidden="true">✓</span>':''}</button>`;
-  }).join('')).join('')}</div><div id="practice-feedback" class="practice-feedback" role="status">${text(lesson.completed?'practiceMatched':lesson.selected?'practiceSelected':'practicePrompt')}</div>`;
+    const name=specialPractice&&target?text('specialPracticeCell'):text('practiceCell').replace('{tile}',text(tileNames[block.kind] as TextKey)).replace('{row}',String(r+1)).replace('{col}',String(c+1));
+    return `<button id="practice-cell-${r}-${c}" data-row="${r}" data-col="${c}" class="practice-cell ${block.special==='row'?'special-0':''} ${target&&!lesson.completed?'practice-target':''} ${cleared?'practice-cleared':''}" aria-label="${name}" aria-pressed="${Boolean(selected)}" ${!target||lesson.completed?'disabled':''}><img src="/assets/tiles/${tileNames[block.kind]}.svg" alt=""/>${cleared?'<span aria-hidden="true">✓</span>':''}</button>`;
+  }).join('')).join('')}</div><div id="practice-feedback" class="practice-feedback" role="status">${specialPractice?text(lesson.completed?'specialPracticeMatched':'specialPracticePrompt'):practice?.completed?`<button id="practice-special" class="text-button">${text('specialPracticeTry')}</button>`:text(practice?.selected?'practiceSelected':'practicePrompt')}</div>`;
 }
 function bindPracticeInputs(){
   const refresh=(done:boolean,pos:{row:number,col:number})=>{
     renderTutorial();
-    if(done){audio.play('match');$('#guide-next').focus();}
+    if(done){audio.play('match');if(!specialPractice)focusPracticeStart();}
     else $(`#practice-cell-${pos.row}-${pos.col}`).focus();
   };
   const lesson=practice!;
+  const special=specialPractice;
   practiceInputs=bindPracticeBoard($('#practice-board'),{
-    tap:pos=>refresh(lesson.select(pos),pos),
-    swipe:(pos,dx,dy)=>{if(lesson.swipe(pos,dx,dy))refresh(true,pos);else $('#practice-feedback').textContent=text('practicePrompt');},
+    tap:pos=>{if(special){if(special.tap(pos))refresh(true,pos);}else refresh(lesson.select(pos),pos);},
+    swipe:(pos,dx,dy)=>{if(special)return;if(lesson.swipe(pos,dx,dy))refresh(true,pos);else $('#practice-feedback').textContent=text('practicePrompt');},
   });
+}
+function focusPracticeStart(){
+  const button=$('#guide-next');
+  button.focus({preventScroll:true});
+  // touchup 뒤 합성 click이 끝나기 전에 스크롤하면 새 시작 버튼에 click이 닿을 수 있습니다.
+  setTimeout(()=>{if(button.isConnected&&document.activeElement===button&&$<HTMLDialogElement>('#tutorial-dialog').open)button.scrollIntoView({block:'nearest'});},0);
 }
 function showTutorial(){
   if(!scene.canLeave()||resultTimer||$<HTMLDialogElement>('#result-dialog').open)return;
-  tutorialPage=0;practice=undefined;renderTutorial();$<HTMLDialogElement>('#tutorial-dialog').showModal();
+  tutorialPage=0;practice=undefined;specialPractice=undefined;renderTutorial();$<HTMLDialogElement>('#tutorial-dialog').showModal();
   syncActivity();
 }
 function closeTutorial(){
