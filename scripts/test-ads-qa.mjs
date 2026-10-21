@@ -32,7 +32,7 @@ async function open(native=false,language='ko'){
     const Audio=window.AudioContext;window.__contexts=[];
     window.AudioContext=function(options){const context=new Audio(options);window.__contexts.push(context);return context;};
     localStorage.setItem('pawblossom.save.v1',JSON.stringify({version:1,language,highestLevel:1,completed:[],stars:0,coins:0,garden:0,music:true,sfx:true,tutorialSeen:true}));
-    window.__adCalls=[];window.__adListeners=new Map();window.__adFailCancel=false;window.__adState={bridgeVersion:3,receipt:null,format:'interstitial',rewardEvents:0,available:true,state:'idle',revision:0,error:'',privacyRequired:false};
+    window.__adCalls=[];window.__billingCalls=[];window.__adListeners=new Map();window.__adFailCancel=false;window.__adState={bridgeVersion:3,receipt:null,format:'interstitial',rewardEvents:0,available:true,state:'idle',revision:0,error:'',privacyRequired:false};
     window.__billing={available:true,configured:true,state:'idle',entitlement:'not-owned',revision:0,error:'',price:'',overlay:false,adsBlocked:false,preparingPurchase:false};
     window.__billingEmit=patch=>{window.__billing={...window.__billing,...patch,revision:window.__billing.revision+1};for(const {plugin,event,callback} of __adListeners.values())if(plugin==='PawblossomTestBilling'&&event==='stateChange')callback({...__billing});};
     window.__app=active=>{for(const {plugin,event,callback} of __adListeners.values())if(plugin==='App'&&event==='appStateChange')callback({isActive:active});};
@@ -45,7 +45,11 @@ async function open(native=false,language='ko'){
       async nativePromise(plugin,method,options){
         if(method==='removeListener'){window.__adListeners.delete(options.callbackId);return;}
         if(plugin==='App')return {isActive:true};
-        if(plugin==='PawblossomTestBilling')return {...window.__billing};
+        if(plugin==='PawblossomTestBilling'){
+          window.__billingCalls.push(method);
+          if(method==='restore')window.__billingEmit({state:'idle',entitlement:'owned',adsBlocked:true});
+          return {...window.__billing};
+        }
         window.__adCalls.push(method);
         if(method==='getStatus')return {...window.__adState};
         if(method==='cancel'&&window.__adFailCancel)throw Error('QA cancel IPC failure');
@@ -156,6 +160,46 @@ try{
     report.checks.push('구형 snapshot 차단·return getStatus 복구·새 브리지 실행 수0/기본전면·비영속');
     report.checks.push('Android IPC 대역: 초기 요청 0회·명시적 load/show·중복 탭 각 1회·취소 실패 모달 유지·재시도 성공·닫힘 후 보드 복귀·게임 저장/음량 보존·리스너 1개','3개 비율×KO/EN×2형식×10상태: dialog 화면 내 배치·44px 버튼/select');
     await context.close();
+    for(const language of ['ko','en'])for(const format of ['interstitial','rewarded'])for(const phase of ['loading','ready']){
+      const {context,page}=await open(true,language);
+      await page.setViewportSize(phase==='loading'?{width:320,height:568}:{width:640,height:360});
+      await page.locator('#settings-button').click();await page.locator('#test-ad-button').click();await page.locator('#test-ad-format').selectOption(format);
+      const before=await page.evaluate(()=>({save:localStorage.getItem('pawblossom.save.v1'),moves:document.querySelector('#moves').textContent,score:document.querySelector('#score').textContent,canvases:document.querySelectorAll('canvas').length}));
+      await page.locator('#test-ad-load').click();await page.evaluate(state=>__adEmit({state}),phase);
+      const calls=await page.evaluate(()=>__adCalls.slice());
+      const owned=language==='ko'?'검증된 광고 제거 권한 · 전면·보상형 시험 광고를 표시하지 않아요':'Verified ad removal · Interstitial and rewarded test ads are blocked';
+      const held=language==='ko'?'구매 확인 또는 처리 중 · 모든 광고 표시를 보류하고 있어요.':'Purchase check or processing in progress · All ads are held.';
+      for(const patch of [{entitlement:'owned',adsBlocked:true,state:'idle'},{entitlement:'unknown',adsBlocked:true,state:'idle'},{entitlement:'pending',adsBlocked:true,state:'idle'},{entitlement:'not-owned',adsBlocked:false,state:'querying'}]){
+        await page.evaluate(patch=>{__billingEmit(patch);__adEmit({state:'ready'});},patch);
+        assert.equal(await page.locator('#test-ad-error').textContent(),patch.entitlement==='owned'?owned:held);
+        assert.equal(await page.locator('#test-ad-load').isDisabled(),true);assert.equal(await page.locator('#test-ad-show').isDisabled(),true);
+        // disabled 속성을 넘는 합성 클릭도 기존 JS 차단 조건을 통과하지 못해야 합니다.
+        await page.evaluate(()=>{for(const id of ['test-ad-load','test-ad-show'])document.getElementById(id).dispatchEvent(new MouseEvent('click',{bubbles:true}));});
+        assert.deepEqual(await page.evaluate(()=>__adCalls),calls);
+        assert.deepEqual(await page.evaluate(()=>({save:localStorage.getItem('pawblossom.save.v1'),moves:document.querySelector('#moves').textContent,score:document.querySelector('#score').textContent,canvases:document.querySelectorAll('canvas').length})),before);
+        await page.locator('#test-ad-show').scrollIntoViewIfNeeded();
+        assert.equal(await page.locator('#test-ad-show').evaluate(button=>{const r=button.getBoundingClientRect();return r.width>=43.9&&r.height>=43.9&&document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===button;}),true);
+        const bounds=await page.locator('#test-ad-dialog').boundingBox();assert.ok(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=page.viewportSize().width&&bounds.y+bounds.height<=page.viewportSize().height);
+        if(patch.entitlement==='owned')await page.screenshot({path:artifact(`all-ads-owned-${language}-${format}-${phase}.png`)});
+      }
+      // native 객체 폐기는 이 대역으로 증명하지 않습니다. 명시적 cancelled 뒤 새 요청만 보냅니다.
+      await page.evaluate(()=>{__adEmit({state:'cancelled',receipt:null});__billingEmit({state:'idle',entitlement:'not-owned',adsBlocked:false});});
+      await page.locator('#test-ad-load').click();assert.equal(await page.evaluate(()=>__adCalls.filter(call=>call==='prepare').length),2);
+      await page.evaluate(()=>{__adEmit({state:'showing',receipt:null});__billingEmit({entitlement:'owned',adsBlocked:true});});
+      await page.keyboard.press('Escape');await page.evaluate(()=>{for(const {plugin,event,callback} of __adListeners.values())if(plugin==='App'&&event==='backButton')callback({});});
+      assert.equal(await page.locator('#test-ad-dialog').evaluate(dialog=>dialog.open),true);assert.equal(await page.locator('#test-ad-close').isDisabled(),true);
+      await page.waitForFunction(()=>__contexts.at(-1)?.state==='suspended');
+      await page.evaluate(()=>__adEmit({state:'closed',receipt:null}));await page.locator('#test-ad-close').click();
+      await page.locator('#test-billing-button').click();assert.equal(await page.locator('#test-billing-status').textContent(),owned);
+      await page.locator('#test-billing-restore').click();assert.equal(await page.evaluate(()=>__billingCalls.filter(call=>call==='restore').length),1);
+      assert.equal(await page.locator('#test-billing-status').textContent(),owned);await page.locator('#test-billing-close').click();
+      await page.locator('#language').selectOption(language==='ko'?'en':'ko');await page.locator('#language').selectOption(language);
+      await page.locator('#test-ad-button').click();assert.equal(await page.locator('#test-ad-error').textContent(),owned);
+      await page.locator('#test-ad-close').click();await page.locator('#settings-button').click();
+      assert.deepEqual(await page.evaluate(()=>({save:localStorage.getItem('pawblossom.save.v1'),moves:document.querySelector('#moves').textContent,score:document.querySelector('#score').textContent,canvases:document.querySelectorAll('canvas').length})),before);
+      report.checks.push(`${language}/${format}/${phase}: 실제 dist 여부=${built}, owned/unknown/pending/busy 구분·합성 늦은ready/클릭의 추가 prepare/show IPC0·복원1·KOEN왕복·44px/hit/화면내 배치·owned overlay 실제closed 이벤트 전 보호·이동/점수/게임저장 불변. native 객체/SDK·보상 지급 검증은 별도입니다.`);
+      await context.close();
+    }
   }
   assert.deepEqual(report.errors,[]);assert.deepEqual(report.external,[]);
 }finally{

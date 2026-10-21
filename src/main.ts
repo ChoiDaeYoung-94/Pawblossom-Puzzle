@@ -398,6 +398,9 @@ async function prepareRewardContinue(context:typeof rewardedContinue){
     if(rewardContextValid(context)&&!testBilling?.blocksAds&&nativeActive&&!document.hidden&&testAds.snapshot.format==='rewarded')await testAds.command('prepare');
   }finally{context.preparing=false;renderRewardContinue();}
 }
+function adBlockMessage(){
+  return testBilling?.snapshot.entitlement==='owned'?billingCopy(save.language).entitlement.owned:text('testAdContinueBlocked');
+}
 function renderRewardContinue(){
   const context=rewardedContinue;
   if(!context||!testAds)return;
@@ -409,7 +412,7 @@ function renderRewardContinue(){
   }
   const copy=adCopy(save.language),value=testAds.snapshot,busy=testAds.busy||context.preparing;
   $('#result-ad-note').textContent=text('testAdContinueNote');
-  $('#result-ad-status').textContent=testBilling?.blocksAds?text('testAdContinueBlocked'):!value.available?copy.unavailable:value.state==='closed'?text('testAdContinueNoReward'):copy.states[value.state];
+  $('#result-ad-status').textContent=testBilling?.blocksAds?adBlockMessage():!value.available?copy.unavailable:value.state==='closed'?text('testAdContinueNoReward'):copy.states[value.state];
   $('#result-ad-load').textContent=text('testAdContinueLoad');$('#result-ad-show').textContent=text('testAdContinueShow');$('#result-ad-cancel').textContent=copy.cancel;
   $('#result-ad-load').toggleAttribute('disabled',!value.available||busy||value.state==='ready'||Boolean(testBilling?.blocksAds)||!nativeActive||document.hidden);
   $('#result-ad-show').toggleAttribute('disabled',!value.available||busy||value.state!=='ready'||value.format!=='rewarded'||Boolean(testBilling?.blocksAds)||!nativeActive||document.hidden);
@@ -451,7 +454,7 @@ function renderAdDialog(){
   $('#test-ad-format').toggleAttribute('disabled',!testAds.canSelectFormat);
   $('#test-ad-events').textContent=`${copy.events}: ${state.rewardEvents} · ${copy.eventNotice}`;
   $('#test-ad-status').textContent=state.available?copy.states[state.state]:copy.unavailable;
-  $('#test-ad-error').textContent=testBilling?.blocksAds?(save.language==='ko'?'광고 제거 권한 확인 또는 적용 중 · 광고 보류':'Ad removal is active or being checked · Ads held'):state.error?(state.error.startsWith('consent')?copy.blocked:copy.recovery):'';
+  $('#test-ad-error').textContent=testBilling?.blocksAds?adBlockMessage():state.error?(state.error.startsWith('consent')?copy.blocked:copy.recovery):'';
   $('#test-ad-load').textContent=copy.prepare;$('#test-ad-show').textContent=copy.show;$('#test-ad-cancel').textContent=copy.cancel;$('#test-ad-close').textContent=copy.close;$('#test-ad-privacy').textContent=copy.privacy;
   $('#test-ad-load').toggleAttribute('disabled',!state.available||testAds.busy||state.state==='ready'||Boolean(testBilling?.blocksAds));
   $('#test-ad-show').toggleAttribute('disabled',!state.available||testAds.busy||state.state!=='ready'||!nativeActive||document.hidden||Boolean(testBilling?.blocksAds));

@@ -1,5 +1,13 @@
 # 출시까지의 개발 순서
 
+## 현재 작업 현황 · 2026-10-21 · #160 모든 광고 제거 안내·통합 회귀
+
+기준 main/origin main `ad793a0b20e064aef5afe5c36f85914c9ddf9b63`, `codex/160-all-ads-removal-state`에서 owned의 전면·보상형 시험 광고 전체 차단과 확인/처리 중 보류를 KO/EN 공통 안내로 구분했습니다. 기존 차단/권한/보상/저장 동작·가격/SKU·native/Android·버전·최종 믹스는 그대로입니다. 두 실제 컨트롤러+합성 브리지의 loading/ready→owned/restore·늦은ready/earned/closed·미구매 재전환·새 요청만 지급·실제close 전 overlay 보호를 검증했습니다.
+
+**관련232개·최종 전체35파일2,403개 한 번·타입/store12/에셋/두 빌드 통과, 실제 testing dist 120배치+새8조합·12PNG·오류/외부요청0, production 광고/결제 진입·IPC0을 확인하여 커밋 전 총괄 독립검수 대기**입니다. testing flags3true/production3false·src/양bundle 서버마커0, production은 공통 번역2문구와 청크 참조 파일명만 달라졌고 CSS는 동일합니다. Git 밖 소스/산출물 SHA·최초 산출물 검사 가정 정정·명령/버전 경계는 [개발 기록](android-release.ko.md) 상단 및 `Pawblossom-builds/qa/issue-160-all-ads-state`에 보존했습니다.
+
+다음은 총괄 독립검수와 제출 승인 뒤 커밋·푸시·PR입니다. 현재 새 커밋/PR은 없으며 필수 PR/main CI는 아직 실행 전입니다. 합성 bridge 결과는 실제 native SDK/Play/단말 완료가 아니며 #73을 유지하고 #122 과거 실패도 해결로 처리하지 않습니다. 사용자 조치/질문은 없고 오늘17시 APK/Drive는 총괄이 별도 담당합니다. 아래 이전 현재/제출 전 표현은 당시 이력입니다.
+
 ## 현재 작업 현황 · 2026-10-21 · #122 트랜잭션 호출 관측
 
 기준 main `aac84bba5ac2477cbbead77bd08ae0eef2c524e4`, `codex/122-transaction-observation`에서 기존 검사 hook의 정확한 BEGIN/COMMIT/ROLLBACK 호출만 연결번호1..8·프로세스 시각·고정 결과로 최대8건 관측합니다. 원문 비노출·원래 단일 호출/반환/동일 예외·복원·관측 실패 분리·안전 투영/상한을 검증했고 ready/go·retry·5초/500ms/worker·업무 assertion·제품/CI는 유지했습니다. **안전15개·관련338개·최종 전체35파일2,390개 한 번·타입/store12/에셋/두 빌드·flags3false/마커0·기준 bundle 동일·diff 통과, 커밋 전 총괄 검수 대기**입니다. 최초 합성 회귀 타입 표기2실패와 보완 이후 실행은 [상세 기록](android-release.ko.md) 및 Git 밖 checkpoint에 구분했습니다.

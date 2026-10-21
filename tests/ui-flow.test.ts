@@ -3,7 +3,7 @@ import ts from 'typescript';
 import packageInfo from '../package.json';
 import {APP_VERSION} from '../src/appVersion';
 import { BoardEngine, seededRng, type BoardSnapshot } from '../src/core';
-import {TestAdsController,adCopy,type TestAdsBridge} from '../src/testAds';
+import {TestAdsController,adCopy,type TestAdsBridge,type AdSnapshot,type AdFormat} from '../src/testAds';
 import {TestBillingController,billingCopy,type TestBillingBridge,type BillingSnapshot} from '../src/testBilling';
 import {bindPracticeBoard} from '../src/bindPracticeInputs';
 import {t, type TextKey} from '../src/i18n';
@@ -51,7 +51,7 @@ class ElementStub {
   getBoundingClientRect(){return {left:0,top:0,right:180,bottom:180};}
   getAnimations():{playState:string}[]{return [];}
   querySelectorAll(_selector:string):ElementStub[]{return [];}
-  toggleAttribute() {}
+  toggleAttribute(name:string,force?:boolean) {if(name==='disabled')this.disabled=force??!this.disabled;}
   addEventListener(name: string, callback: (event: { preventDefault(): void }) => void) { this.listeners[name] = callback; }
   showModal() { this.open = true; }
   close() { this.open = false; }
@@ -353,6 +353,88 @@ describe('광고 제거 조회·구매창과 게임 활동 상태',()=>{
     await h.run('showBillingDialog()');emit({state:'products',preparingPurchase:false});h.run('closeBillingDialog()');expect(h.element('#test-billing-dialog').open).toBe(false);
   });
 });
+describe('모든 광고 제거와 두 실제 컨트롤러 통합',()=>{
+  async function setup(format:AdFormat='interstitial',rewardContinue=false){
+    let ad:AdSnapshot={bridgeVersion:3,receipt:null,format,rewardEvents:0,available:true,state:'idle',revision:0,error:'',privacyRequired:false};
+    let billing:BillingSnapshot={available:true,configured:true,state:'idle',entitlement:'not-owned',revision:0,error:'',price:'',overlay:false,adsBlocked:false,preparingPurchase:false};
+    let onAd!:(value:AdSnapshot)=>void,onBilling!:(value:BillingSnapshot)=>void,attempt=0;
+    const calls={prepare:0,show:0,cancel:0,restore:0};
+    const emitAd=(patch:Partial<AdSnapshot>)=>{ad={...ad,...patch,revision:ad.revision+1};onAd?.({...ad});return {...ad};};
+    // 네이티브의 폐기/overlay 보존을 흉내 내는 대역이며 실제 SDK 검증은 아닙니다.
+    const emitBilling=(patch:Partial<BillingSnapshot>)=>{
+      billing={...billing,...patch,revision:billing.revision+1};
+      if(billing.adsBlocked){
+        if(['consent','loading','ready'].includes(ad.state))emitAd({state:'failed',error:'billing-blocked',receipt:null});
+        else if(['presenting','showing'].includes(ad.state))emitAd({receipt:null});
+      }
+      onBilling?.({...billing});return {...billing};
+    };
+    const adsBridge:TestAdsBridge={getStatus:async()=>({...ad}),selectFormat:async({format})=>emitAd({format,state:'idle',receipt:null}),
+      prepare:async()=>{calls.prepare++;return emitAd({state:'loading',receipt:null});},
+      show:async({requestId})=>{calls.show++;return emitAd({state:'presenting',receipt:ad.format==='rewarded'?{requestId,attemptId:String(++attempt),earned:false,closed:false}:null});},
+      cancel:async()=>{calls.cancel++;return emitAd({state:'cancelled',receipt:null});},privacyOptions:async()=>emitAd({state:'privacy'}),
+      addListener:async(_name,callback)=>{onAd=callback;return {remove:async()=>{}};}};
+    const billingBridge:TestBillingBridge={getStatus:async()=>({...billing}),queryProduct:async()=>({...billing}),purchase:async()=>({...billing}),
+      restore:async()=>{calls.restore++;return emitBilling({state:'idle',entitlement:'owned',adsBlocked:true});},
+      addListener:async(_name,callback)=>{onBilling=callback;return {remove:async()=>{}};}};
+    const h=mainHarness(false,false,true,true,undefined,true,adsBridge,billingBridge);h.nativeEvents.appStateChange({isActive:true});
+    await h.run('testBilling.connect()');
+    if(rewardContinue){h.run('startLevel(6,true);moves=1;scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');h.flushResults();await h.run('testAds.connect()');}
+    else await h.run('showAdDialog()');
+    const unchanged=()=>({disk:h.disk(),memory:h.run('JSON.stringify(save)'),scene:h.run('scene'),engine:h.run('scene.engine'),round:h.run('round'),moves:h.run('moves'),used:h.run('testContinueUsed')});
+    const start=async()=>{await h.run('prepareRewardContinue(rewardedContinue)');emitAd({state:'ready',receipt:null});h.element('#result-ad-show').onclick();await Promise.resolve();};
+    return {h,calls,emitAd,emitBilling,unchanged,start,ad:()=>({...ad}),billing:()=>({...billing})};
+  }
+  for(const format of ['interstitial','rewarded'] as const)for(const phase of ['loading','ready'] as const)for(const acquisition of ['event','restore'] as const){
+    it(`${format} ${phase}에서 ${acquisition} owned 전환은 늦은 ready와 UI 요청을 막고 진행을 보존합니다`,async()=>{
+      const x=await setup(format),{h}=x,before=x.unchanged();h.element('#test-ad-load').onclick();await Promise.resolve();
+      if(phase==='ready')x.emitAd({state:'ready'});
+      if(acquisition==='restore')await h.run("testBilling.command('restore')");else x.emitBilling({entitlement:'owned',adsBlocked:true});
+      const counts={...x.calls};x.emitAd({state:'ready',receipt:null});
+      h.element('#test-ad-load').onclick();h.element('#test-ad-show').onclick();await Promise.resolve();
+      expect(x.calls).toEqual(counts);expect(x.calls.prepare).toBe(1);expect(x.calls.show).toBe(0);expect(x.calls.restore).toBe(acquisition==='restore'?1:0);
+      expect(h.element('#test-ad-load').disabled).toBe(true);expect(h.element('#test-ad-show').disabled).toBe(true);
+      expect(h.element('#test-ad-error').textContent).toBe(billingCopy('en').entitlement.owned);expect(x.unchanged()).toEqual(before);
+    });
+  }
+  it.each(['ko','en'] as const)('%s의 owned와 확인/처리 중 안내를 광고·이어하기·구매 화면에서 구분합니다',async language=>{
+    const x=await setup('rewarded',true),{h}=x;h.run(`changeLanguage('${language}');renderAdDialog()`);
+    const before=x.unchanged();
+    for(const patch of [{entitlement:'unknown',adsBlocked:true},{entitlement:'pending',adsBlocked:true},{entitlement:'not-owned',adsBlocked:false,state:'querying'},{entitlement:'owned',adsBlocked:true,state:'idle'}] as const){
+      x.emitBilling(patch);const expected=patch.entitlement==='owned'?billingCopy(language).entitlement.owned:t(language,'testAdContinueBlocked');
+      expect(h.element('#test-ad-error').textContent).toBe(expected);expect(h.element('#result-ad-status').textContent).toBe(expected);
+      expect(h.element('#test-billing-status').textContent).toContain(billingCopy(language).entitlement[patch.entitlement]);
+      h.element('#result-ad-load').onclick();h.element('#result-ad-show').onclick();await Promise.resolve();
+      expect(x.calls.prepare).toBe(0);expect(x.calls.show).toBe(0);expect(x.unchanged()).toEqual(before);
+    }
+  });
+  it.each([false,true])('보상 표시 중 owned 뒤 닫힘 전 미구매 전환 %s: 늦은 receipt는 지급하지 않고 새 요청만 이어갑니다',async unlockBeforeClose=>{
+    const x=await setup('rewarded',true),{h}=x,before=x.unchanged();await x.start();const old=x.ad().receipt!;
+    x.emitAd({state:'showing',receipt:{...old,earned:true}});x.emitBilling({entitlement:'owned',adsBlocked:true});
+    expect(h.run('testAds.overlay')).toBe(true);expect(h.run('game.paused')).toBe(true);expect(h.run('audio.suspended')).toBe(true);
+    if(unlockBeforeClose)x.emitBilling({entitlement:'not-owned',adsBlocked:false});
+    x.emitAd({state:'showing',receipt:{...old,earned:true},rewardEvents:1});
+    expect(x.unchanged()).toEqual(before);expect(h.run('testAds.overlay')).toBe(true);
+    x.emitAd({state:'closed',receipt:{...old,earned:true,closed:true}});expect(x.unchanged()).toEqual(before);
+    if(!unlockBeforeClose){x.emitBilling({entitlement:'not-owned',adsBlocked:false});x.emitAd({state:'closed',receipt:{...old,earned:true,closed:true}});expect(x.unchanged()).toEqual(before);}
+    expect(h.element('#result-dialog').open).toBe(true);expect(h.run('game.paused')).toBe(true);
+    await x.start();const fresh=x.ad().receipt!;expect(fresh.requestId).not.toBe(old.requestId);
+    x.emitAd({state:'showing',receipt:{...old,earned:true}});x.emitAd({state:'closed',receipt:{...old,earned:true,closed:true}});
+    expect(x.unchanged()).toEqual(before); // 이전 요청으로 새 claim도 성립하지 않습니다.
+    await x.start();const final=x.ad().receipt!;
+    x.emitAd({state:'showing',receipt:{...final,earned:true},rewardEvents:2});x.emitAd({state:'closed',receipt:{...final,earned:true,closed:true}});
+    expect(h.run('moves')).toBe(5);expect(h.run('testContinueUsed')).toBe(true);expect(h.run('scene')).toBe(before.scene);expect(h.run('scene.engine')).toBe(before.engine);
+    expect(h.disk()).toEqual(before.disk);expect(h.run('JSON.stringify(save)')).toBe(before.memory);expect(x.calls.show).toBe(3);
+  });
+  it.each(['interstitial','rewarded'] as const)('%s 표시 중 owned여도 실제 closed 전 닫기·Escape·뒤로가기 보호를 유지합니다',async format=>{
+    const x=await setup(format),{h}=x,before=x.unchanged();h.element('#test-ad-load').onclick();await Promise.resolve();x.emitAd({state:'ready'});
+    h.element('#test-ad-show').onclick();await Promise.resolve();x.emitAd({state:'showing'});x.emitBilling({entitlement:'owned',adsBlocked:true});
+    await h.run('closeAdDialog()');h.element('#test-ad-dialog').listeners.cancel({preventDefault(){}});h.nativeEvents.backButton({isActive:true});
+    expect(h.element('#test-ad-dialog').open).toBe(true);expect(h.run('testAds.overlay')).toBe(true);expect(h.run('game.paused')).toBe(true);expect(x.calls.cancel).toBe(0);
+    expect(x.unchanged()).toEqual(before);x.emitAd({state:'closed',receipt:null});await h.run('closeAdDialog()');
+    expect(h.element('#test-ad-dialog').open).toBe(false);expect(h.run('game.paused')).toBe(false);expect(x.unchanged()).toEqual(before);
+  });
+});
 describe('시험 광고와 기존 게임 활동 상태 통합',()=>{
   function setup(format:import('../src/testAds').AdFormat='interstitial'){
     let value={bridgeVersion:3,receipt:null,format,rewardEvents:0,available:true,state:'idle',revision:0,error:'',privacyRequired:false} as import('../src/testAds').AdSnapshot;
@@ -428,11 +510,10 @@ describe('보상형 시험 이어하기 요청 문맥',()=>{
     x.emit(done);h.element('#result-continue').onclick();expect(h.run('moves')).toBe(5);expect(h.disk()).toEqual(disk);
     h.run('scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');expect(h.run('moves')).toBe(4);
   });
-  it.each(['home','new-round','stale-dom','billing','no-reward','failed','cancelled'])('%s는 지급0이고 회차 자격을 소모하지 않습니다',async reason=>{
+  it.each(['home','new-round','stale-dom','no-reward','failed','cancelled'])('%s는 지급0이고 회차 자격을 소모하지 않습니다',async reason=>{
     const x=await setup(),{h}=x;await x.start();x.earned();
     if(reason==='home')h.run("switchView('village')");if(reason==='new-round')h.run('startLevel(6,true)');
     if(reason==='stale-dom')h.element('#result-dialog').querySelector=()=>new ElementStub('#result-continue');
-    if(reason==='billing')h.run('testBilling={blocksAds:true,pausesGame:false}');
     const before=h.run('moves'),disk=h.disk();
     if(reason==='failed'||reason==='cancelled')x.emit({state:reason,receipt:null});else x.closed(reason!=='no-reward');
     expect(h.run('moves')).toBe(before);expect(h.run('testContinueUsed')).toBe(false);expect(h.disk()).toEqual(disk);

@@ -81,6 +81,7 @@ describe('광고 제거 네이티브 결과 연결',()=>{
   });
   it('KO/EN에서 미완료 구성·시험 서비스·권한 불명확 상태를 정확히 안내합니다',()=>{
     expect(billingCopy('ko').intro).toContain('운영 서비스가 아닙니다');expect(billingCopy('en').intro).toContain('Not a live service');
+    expect(billingCopy('ko').entitlement.owned).toContain('전면·보상형');expect(billingCopy('en').entitlement.owned).toContain('Interstitial and rewarded');
     for(const lang of ['ko','en'] as const){const copy=billingCopy(lang);expect(copy.unconfigured.length).toBeGreaterThan(10);for(const text of Object.values(copy.entitlement))expect(text.length).toBeGreaterThan(10);}
   });
 });
