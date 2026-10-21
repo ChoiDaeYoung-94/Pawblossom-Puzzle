@@ -1,3 +1,11 @@
+## 현재 작업 · 2026-10-21 · #122 파일 원장 종료 재생의 단계 관측 (커밋 전 검수)
+
+기준 main `9fdf06153193956de47c051ddcdd83f198ac24a8`, 브랜치 `codex/122-terminal-replay-observation`입니다. 기존 고정 seed 종료 검증 한 case에 기존 `round-worker` trace와 open1·두 round의 seed/while/verify **7단계**만 연결했습니다. 대상 실패 시에만 `onTestFailed`가 고정 prefix와 `projectTrace` JSON을 콘솔에 남기며 출력 예외는 삼킵니다. 성공 로그·업무 호출/기대·마지막 won1/failed1 위치·5초·worker/DB/retry·afterEach·제품/CI 설정은 유지합니다. native hook·반복 카운터·새 helper/schema는 추가하지 않았고 빈 native 배열은 hook `not-requested`의 미관측 상태입니다.
+
+정확한 이름으로 실제 target을 **한 번 실행해1개 통과·155개 선택 제외**, 7단계 유한 시간과 성공 안전 출력0회를 확인했습니다(Node24.21.0, target475.7824ms). Git 밖 전용 root/config와 현재 설치 Vitest4.1.11의 fixture도 최초1회만 실행해 **성공1·의도된 assertion 실패2(exit1 예상)**를 확인했습니다. 기본 reporter를 포함한 출력 경로의 안전 JSON1회·합성 원문 비노출, 출력 예외 시 원래 assertion1개 유지와 console 복원을 확인했으며 실제5초 timeout을 재현한 것은 아닙니다. 전체/앱/서버 타입은 통과했습니다. 제품·설정 빌드 입력 해시와 기존 두 dist 각30파일의 동일 근거를 재확인해 재사용하며 웹 빌드·브라우저·Android를 반복하지 않습니다.
+
+Git 밖 `Pawblossom-builds/qa/issue-122-terminal-replay-observation`에 exact-t 명령·raw/safe metadata·예상 실패 fixture·타입·소스 LF/기존 dist SHA·전체 diff·STOP을 보존하고 총괄 독립 검수 전 커밋/푸시/PR을 보류합니다. 로컬 전체·기존8worker·CI 재실행은 하지 않았습니다. **main174 CI39543053732의 Node22 2490통과/1실패(동기 종료 case 5초), Node24 2491통과는 구분해 유지하며 이번 관측 추가가 원인 해결은 아닙니다.** 기존 #122의 callback4/기대7·다른 timeout/BUSY도 각각 미해결입니다. APK#169와16–17시 작업은 총괄의 별도 범위입니다. 사용자 조치·질문은 없습니다. 아래 현재/검수 대기 표현은 당시 이력입니다.
+
 ## 현재 작업 · 2026-10-21 · #122 callback 결과 안전 분류 (커밋 전 검수)
 
 기준 main `13eca6b850a444980eea1eff571c4c1ca1ff0791`, 브랜치 `codex/122-callback-outcome-trace`에서 [#122](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122)의 검사 전용 관측만 추가했습니다. 기존 reward callback 동시8worker 한 case만 opt-in envelope를 사용하고 부모는 원래 결과·순서·신규1/중복7/DB행1 기대를 유지합니다. 고정 kind/code·newGrant boolean/null·생성자/비동기 callback/close 단계와 관측 실패/누락을 최대8행으로 보존합니다. 기본 worker/child IPC·생성/처리/close 횟수·5초/DB500ms를 유지하며 서버 소스·DB hook·자동 retry를 추가하지 않았습니다. SQL/SSV/키/owner/경로/오류 원문을 진단에 복사하지 않습니다.
