@@ -40,6 +40,7 @@ vi.mock('phaser',async()=>{
   }}};
 });
 import { BoardScene } from '../src/BoardScene';
+import type { ResolveVisual } from '../src/RoundFeedback';
 // 렌더링은 대역을 유지하되 예약/만료/제거는 설치된 Phaser 3.90 Clock 원본을 사용합니다.
 const Clock=createRequire(import.meta.url)('phaser/src/time/Clock.js') as new(scene:unknown)=>Phaser.Time.Clock&{start():void};
 interface RenderScene {
@@ -135,13 +136,59 @@ describe('보드 포인터 종료 (Phaser 입력 대역)',()=>{
 });
 const snapshot=(engine:BoardEngine)=>({board:engine.board.map(row=>row.map(tile=>({...tile}))),leaves:engine.leaves.map(row=>row.slice())});
 function harness(){
-  const onMove=vi.fn(),onNotice=vi.fn();
-  const scene=new BoardScene({audio:{play(){}} as never,onStart(){},onMove,onNotice}) as unknown as RenderScene;
+  const onMove=vi.fn(),onNotice=vi.fn(),onResolveVisual=vi.fn<(event:ResolveVisual)=>void>(),onVisualCancel=vi.fn();
+  const scene=new BoardScene({audio:{play(){}} as never,onStart(){},onMove,onNotice,onResolveVisual,onVisualCancel}) as unknown as RenderScene;
   scene.engine=new BoardEngine(8,8,seededRng(42));
   scene.engine.board=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({kind:(r*2+c)%6})));
   scene.resetHint=()=>{};
-  return {scene,onMove,onNotice};
+  return {scene,onMove,onNotice,onResolveVisual,onVisualCancel};
 }
+
+describe('제거 단계 표시 훅과 엔진 정산 분리',()=>{
+  it('생성 보호 칸은 비행에서 빼고 각 단계 before의 종류·완전 낙엽 제거 좌표만 복사합니다',async()=>{
+    const {scene,onMove,onResolveVisual}=harness();
+    for(const [r,c,k] of [[3,0,5],[3,1,5],[3,2,1],[3,3,5],[4,2,5]])scene.engine.board[r][c]={kind:k};
+    scene.engine.setLeaves([{row:2,col:0,layers:2},{row:2,col:1,layers:1}]);
+    scene.create();const swap=vi.spyOn(scene.engine,'swap');
+    await scene.attempt({row:4,col:2},{row:3,col:2});
+    const result=swap.mock.results[0].value as ReturnType<BoardEngine['swap']>,steps=result.steps.filter(step=>step.removed.length);
+    expect(onResolveVisual.mock.calls.map(([payload])=>payload)).toEqual(steps.map(step=>({
+      cascade:result.steps.indexOf(step)+1,
+      removed:step.removed.map(p=>({x:44+p.col*56,y:44+p.row*56,kind:step.before[p.row][p.col].kind})),
+      clearedLeaves:(step.leaves?.hits??[]).filter(p=>p.after===0).map(p=>({x:44+p.col*56,y:44+p.row*56})),
+      specialCreated:Boolean(step.created?.length),specialActivated:Boolean(step.effects?.length),
+    })));
+    expect(steps[0].created?.length).toBeGreaterThan(0);
+    const protectedCell=steps[0].created![0];expect(onResolveVisual.mock.calls[0][0].removed).not.toContainEqual(expect.objectContaining({x:44+protectedCell.col*56,y:44+protectedCell.row*56}));
+    expect(onResolveVisual.mock.calls[0][0].clearedLeaves).toContainEqual({x:100,y:156});
+    expect(onResolveVisual.mock.calls[0][0].clearedLeaves).not.toContainEqual({x:44,y:156});
+    expect(onMove).toHaveBeenCalledExactlyOnceWith(result.collected,result.score,result.steps.length,result.leavesCleared??0);
+  });
+  it('무효 교환과 제거 없는 자동 섞기 단계는 표시 훅을 호출하지 않습니다',async()=>{
+    const {scene,onResolveVisual}=harness();scene.create();await scene.attempt({row:0,col:0},{row:0,col:1});expect(onResolveVisual).not.toHaveBeenCalled();
+    const board=snapshot(scene.engine).board;vi.spyOn(scene.engine,'swap').mockReturnValue({valid:true,steps:[{before:board,removed:[],after:board}],collected:[0,0,0,0,0,0],score:0});
+    await scene.attempt({row:0,col:0},{row:0,col:1});expect(onResolveVisual).not.toHaveBeenCalled();
+  });
+  it('콜백의 복사본 변경도 보드·난수·정산·대기·오디오를 바꾸지 않습니다',async()=>{
+    const run=async(visual:boolean)=>{
+      const h=harness(),rng=vi.fn(seededRng(42));
+      for(const [r,c,k] of [[3,0,5],[3,1,5],[3,2,1],[4,2,5]])h.scene.engine.board[r][c]={kind:k};
+      h.scene.engine=new BoardEngine(8,8,rng,snapshot(h.scene.engine));h.scene.create();
+      const hooks=(h.scene as unknown as {hooks:{onResolveVisual?:((event:ResolveVisual)=>void);audio:{play:ReturnType<typeof vi.fn>}}}).hooks;
+      hooks.audio.play=vi.fn();const wait=vi.spyOn(h.scene,'wait').mockResolvedValue();
+      if(visual)h.onResolveVisual.mockImplementation(payload=>{payload.removed[0].kind=99;payload.removed[0].x=-1;payload.clearedLeaves.length=0;});
+      else hooks.onResolveVisual=undefined;
+      await h.scene.attempt({row:4,col:2},{row:3,col:2});
+      return {board:snapshot(h.scene.engine),rng:rng.mock.calls.length,move:h.onMove.mock.calls,notice:h.onNotice.mock.calls,wait:wait.mock.calls,audio:hooks.audio.play.mock.calls};
+    };
+    expect(await run(true)).toEqual(await run(false));
+  });
+  it.each(['pause','sleep','shutdown','destroy','resize','stop','shuffle'])('%s는 화면 표시 취소를 전달합니다',boundary=>{
+    const {scene,onVisualCancel}=harness();scene.create();
+    if(boundary==='resize')scene.scale.emit('resize');else if(boundary==='stop')scene.stopPlaying();else if(boundary==='shuffle')scene.shuffle();else scene.events.emit(boundary);
+    expect(onVisualCancel).toHaveBeenCalledOnce();
+  });
+});
 
 describe('유휴 힌트 (실제 Phaser Clock)',()=>{
   function timed(){

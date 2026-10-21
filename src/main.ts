@@ -18,6 +18,7 @@ import { SpecialTapPractice } from './SpecialTapPractice';
 import { bindPracticeBoard } from './bindPracticeInputs';
 import { gardenArt } from './GardenArt';
 import { showResultPip } from './ResultPip';
+import { RoundFeedback } from './RoundFeedback';
 import { APP_VERSION } from './appVersion';
 import { TEST_TOOLS_ENABLED } from './buildFlags';
 import { ANDROID_TEST_ADS_ENABLED } from './buildFlags';
@@ -102,7 +103,7 @@ $('#app').innerHTML=`
     </section>
     <section class="game-panel">
       <div id="puzzle-view" class="view">
-        <div class="level-top"><div><div class="eyebrow"><span id="chapter-name"></span></div><h2><span data-t="level">${text('level')}</span> <span id="level-number">1</span><span class="level-flower">${icon('flower',21)}</span></h2></div><div class="level-actions">${TEST_TOOLS_ENABLED?`<button id="test-level-button" class="test-level-button">${label('testPick')}</button>`:''}<button id="restart" class="icon-button" aria-label="${text('restart')}">${icon('restart',20)}</button></div></div>
+        <div class="level-top"><div class="level-heading"><span id="header-pip" class="header-pip" aria-hidden="true"><img class="header-pip-image" src="/assets/pip.png" alt=""/></span><div class="level-copy"><div class="eyebrow"><span id="chapter-name"></span></div><h2><span data-t="level">${text('level')}</span> <span id="level-number">1</span></h2></div></div><div class="level-actions">${TEST_TOOLS_ENABLED?`<button id="test-level-button" class="test-level-button">${label('testPick')}</button>`:''}<button id="restart" class="icon-button" aria-label="${text('restart')}">${icon('restart',20)}</button></div></div>
         <div class="mission-bar"><div class="moves-box"><strong id="moves">22</strong>${label('moves')}</div><div class="goal-box"><div class="goal-heading">${label('goal')}<span class="score-label">${label('score')} <span id="score">0</span></span></div><div id="goals"></div></div></div>
         <div class="board-wrap"><div id="game-canvas" tabindex="-1" aria-label="${text('boardLabel')}" aria-describedby="board-keyboard-help board-keyboard-status" role="application"></div><div id="board-notice" aria-live="polite"></div></div>
         <p class="board-hint">${icon('leaf',15)} <span id="board-hint-text">${text('hint')}</span><span id="board-keyboard-help">${text('boardKeyboardHelp')}</span><span id="round-resumed-notice" role="status" aria-live="polite" aria-atomic="true" hidden></span></p>
@@ -115,7 +116,7 @@ $('#app').innerHTML=`
   </main>
   <footer class="page-footer"><span>${label('tagline')}</span><span>${label('prototype')}</span></footer>
   <div id="storage-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
-  <div id="toast" role="status"></div><dialog id="result-dialog" aria-labelledby="result-title" aria-describedby="result-description"></dialog><dialog id="tutorial-dialog" aria-labelledby="tutorial-title" aria-describedby="tutorial-description"></dialog>${TEST_TOOLS_ENABLED?'<dialog id="test-level-dialog" aria-labelledby="test-level-title"></dialog>':''}
+  <div id="round-feedback-layer" aria-hidden="true"></div><div id="toast" role="status"></div><dialog id="result-dialog" aria-labelledby="result-title" aria-describedby="result-description"></dialog><dialog id="tutorial-dialog" aria-labelledby="tutorial-title" aria-describedby="tutorial-description"></dialog>${TEST_TOOLS_ENABLED?'<dialog id="test-level-dialog" aria-labelledby="test-level-title"></dialog>':''}
 `;
 if(androidAdEntry){
   const dialog=document.createElement('dialog');dialog.id='test-ad-dialog';dialog.setAttribute('aria-labelledby','test-ad-title');document.body.append(dialog);
@@ -125,6 +126,10 @@ if(androidBillingEntry){
 }
 function billingModal(){return Boolean(androidBillingEntry&&$<HTMLDialogElement>('#test-billing-dialog').open);}
 const previewDialog=document.createElement('dialog');previewDialog.id='stage-preview-dialog';previewDialog.setAttribute('aria-labelledby','stage-preview-title');previewDialog.setAttribute('aria-describedby','stage-preview-description');document.body.append(previewDialog);
+const boardFeedback=new RoundFeedback({layer:$('#round-feedback-layer'),pip:$('#header-pip'),
+  canvas:()=>document.querySelector('#game-canvas canvas'),goal:key=>document.querySelector(`[data-feedback-goal="${key}"] img`),
+  active:()=>nativeActive&&!document.hidden&&!careDemo&&route==='puzzle'&&!boardPending&&!roundEnded&&!previewDialog.open&&!otherModal()&&!testAds?.pausesGame&&!testBilling?.pausesGame,
+});
 function otherModal(){return $<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open)||billingModal();}
 function previewEnvironment(){return !careDemo&&nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!otherModal()&&!boardPending&&Boolean(scene?.canLeave())&&!resultTimer;}
 function validPreview(context:StagePreview){return stagePreview===context&&context.round===round&&context.scene===scene&&context.testing===testingLevel&&context.route===route&&previewDialog.open&&previewEnvironment()&&Number.isInteger(context.id)&&context.id>=1&&context.id<=LEVEL_COUNT&&(context.intent==='restart'||context.id<=save.highestLevel);}
@@ -179,6 +184,7 @@ function syncActivity(){
   if(!game)return;
   const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
   const playing=active&&!careDemo&&route==='puzzle'&&!modal&&!previewDialog.open;
+  if(!playing)boardFeedback.cancel();
   if(playing){if(game.scene.isPaused('Board'))game.scene.resume('Board');}
   else if(game.scene.isActive('Board'))game.scene.pause('Board');
   updateBoardAccess();
@@ -222,11 +228,11 @@ function updateGoals(){
   const chapter=chapterForLevel(currentLevel);
   for(const id of ['#story-chapter-name','#chapter-name'])$(id).textContent=`${text(chapter.title)} · ${chapter.first}–${chapter.last}`;
   $('#level-number').textContent=String(currentLevel);$('#moves').textContent=String(moves);$('#score').textContent=score.toLocaleString(save.language==='ko'?'ko-KR':'en-US');
-  $('#goals').innerHTML=level.goals.map((goal,index)=>{const remaining=Math.max(0,goal.count-collected[goal.kind]);return `<div class="goal-item ${remaining===0?'done':''}"><span class="sr-only">${descriptions[index]}</span><img src="/assets/tiles-v2/${tileNames[goal.kind]}.svg" alt=""/><strong aria-hidden="true">${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,collected[goal.kind]/goal.count*100)}%"></span></div>`;}).join('');
+  $('#goals').innerHTML=level.goals.map((goal,index)=>{const remaining=Math.max(0,goal.count-collected[goal.kind]);return `<div data-feedback-goal="${goal.kind}" class="goal-item ${remaining===0?'done':''}"><span class="sr-only">${descriptions[index]}</span><img src="/assets/tiles-v2/${tileNames[goal.kind]}.svg" alt=""/><strong aria-hidden="true">${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,collected[goal.kind]/goal.count*100)}%"></span></div>`;}).join('');
   const total=level.leaves?.length??0,remaining=Math.max(0,total-clearedLeaves);
   $('#goals').classList.toggle('has-leaves',total>0);
   $('#goals').classList.toggle('has-many',level.goals.length+(total?1:0)>2);
-  if(total)$('#goals').innerHTML+=`<div class="goal-item ${remaining===0?'done':''}"><span class="sr-only">${descriptions[level.goals.length]}</span><img src="/assets/obstacles/leaf-pile.svg" alt=""/><strong aria-hidden="true">${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,clearedLeaves/total*100)}%"></span></div>`;
+  if(total)$('#goals').innerHTML+=`<div data-feedback-goal="leaves" class="goal-item ${remaining===0?'done':''}"><span class="sr-only">${descriptions[level.goals.length]}</span><img src="/assets/obstacles/leaf-pile.svg" alt=""/><strong aria-hidden="true">${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,clearedLeaves/total*100)}%"></span></div>`;
   $('#board-hint-text').textContent=(testingLevel?text('testRound')+' · ':'')+text(total?(level.leaves!.some(p=>p.layers===2)?'leafHintDouble':'leafHint'):'hint');
   $('#shuffle-count').textContent=String(shuffles);$('#shuffle').toggleAttribute('disabled',shuffles<1);
 }
@@ -248,6 +254,7 @@ function replaceBoard(){
 }
 function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{focusBoard?:boolean}={}){
   if(careDemo)return;
+  boardFeedback.cancel();
   if(stagePreview)closeStagePreview(false);
   abandonRewardContinue();
   if(!Number.isInteger(id)||id<1||id>levels.length)return;
@@ -273,11 +280,19 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
     board.focus({preventScroll:true});
     // 같은 DOM에 초점이 남아 있으면 focus 이벤트가 다시 발생하지 않습니다.
     if(alreadyFocused&&board.matches(':focus-visible'))activeScene.focusKeyboard();
-  },onStart:()=>{if(activeRound===round)void audio.unlock().catch(()=>{});},onNotice:key=>{
+  },onStart:()=>{
+    if(activeRound!==round||scene!==activeScene)return;
+    const level=levels[currentLevel-1];
+    boardFeedback.beginMove(level.goals.map(g=>({key:String(g.kind),remaining:Math.max(0,g.count-collected[g.kind]),src:`/assets/tiles-v2/${tileNames[g.kind]}.svg`}))
+      .concat([{key:'leaves',remaining:Math.max(0,(level.leaves?.length??0)-clearedLeaves),src:'/assets/obstacles/leaf-pile.svg'}]));
+    void audio.unlock().catch(()=>{});
+  },onResolveVisual:event=>{if(activeRound===round&&scene===activeScene)boardFeedback.show(event);},
+  onVisualCancel:()=>{if(activeRound===round&&scene===activeScene)boardFeedback.cancel();},onNotice:key=>{
     if(activeRound!==round)return;
     boardNoticeKey=key;$('#board-notice').textContent=text(key);$('#board-notice').classList.remove('pop');void $('#board-notice').offsetWidth;$('#board-notice').classList.add('pop');
   },onMove:(items,points,_chains,leavesCleared)=>{
     if(careDemo||activeRound!==round||roundEnded)return;
+    boardFeedback.cancel();
     moves--;score+=points;clearedLeaves+=leavesCleared??0;items.forEach((n,i)=>collected[i]+=n);updateGoals();
     const level=levels[currentLevel-1];
     const won=level.goals.every(g=>collected[g.kind]>=g.count)&&clearedLeaves>=(level.leaves?.length??0);
@@ -780,6 +795,7 @@ function localize(){
   if(boardNoticeKey)$('#board-notice').textContent=text(boardNoticeKey);
 }
 function changeLanguage(language:'en'|'ko'){
+  boardFeedback.cancel();
   const focused=document.activeElement as HTMLElement|null,focusedId=focused?.id;
   save.language=language;persist();localize();updateWallet();renderViews();updateGoals();updateBoardAccess();updateResultCopy();
   if($<HTMLDialogElement>('#tutorial-dialog').open)renderTutorial();
@@ -841,10 +857,11 @@ boardFocus.addEventListener('keydown',event=>{
   clearResumeNotice();
   boardFocus.dataset.keyboard='true';void audio.unlock().catch(()=>{});scene.focusKeyboard();scene.keyboardKey(event.key,event.repeat);
 });
-window.addEventListener('blur',()=>{boardFocus.dataset.keyboard='false';scene?.cancelInput();practiceInputs?.cancel();});
-window.addEventListener('resize',()=>practiceInputs?.cancel());
+window.addEventListener('blur',()=>{boardFocus.dataset.keyboard='false';scene?.cancelInput();practiceInputs?.cancel();boardFeedback.cancel();});
+window.addEventListener('resize',()=>{practiceInputs?.cancel();boardFeedback.cancel();});
+window.addEventListener('scroll',()=>boardFeedback.cancel(),{capture:true,passive:true});
 document.addEventListener('visibilitychange',()=>{syncActivity();if(testAds){renderAdDialog();if(!document.hidden)void testAds.refresh();}if(testBilling){renderBillingDialog();if(!document.hidden)void testBilling.refresh();}});
-window.addEventListener('pagehide',()=>{void testAds?.dispose();void testBilling?.dispose();});
+window.addEventListener('pagehide',()=>{boardFeedback.cancel();void testAds?.dispose();void testBilling?.dispose();});
 if(Capacitor.isNativePlatform()){
   void App.addListener('appStateChange',({isActive})=>{nativeRevision++;nativeActive=isActive;syncActivity();if(testAds){renderAdDialog();if(isActive)void testAds.refresh();}if(testBilling){renderBillingDialog();if(isActive)void testBilling.refresh();}}).then(async()=>{
     const revision=nativeRevision;
@@ -857,7 +874,7 @@ if(Capacitor.isNativePlatform()){
 if(androidAdEntry)$<HTMLDialogElement>('#test-ad-dialog').addEventListener('cancel',event=>{event.preventDefault();void closeAdDialog();});
 if(androidBillingEntry)$<HTMLDialogElement>('#test-billing-dialog').addEventListener('cancel',event=>{event.preventDefault();closeBillingDialog();});
 if(typeof ResizeObserver!=='undefined'){
-  new ResizeObserver(()=>{if(game?.isBooted&&route==='puzzle'){game.scale.getParentBounds();game.scale.refresh();}}).observe($('#game-canvas'));
+  new ResizeObserver(()=>{boardFeedback.cancel();if(game?.isBooted&&route==='puzzle'){game.scale.getParentBounds();game.scale.refresh();}}).observe($('#game-canvas'));
 }
 const resumed=Boolean(save.inProgress);
 const resumedStored=resumeNormal();updateWallet();renderViews();localize();

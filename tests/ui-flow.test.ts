@@ -66,6 +66,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   let games=0, destroys=0, frame=()=>{};
   let resultArtCalls=0;
   const documentEvents:Record<string,()=>void>={};
+  const windowEvents:Record<string,()=>void>={};
   const nativeEvents:Record<string,(state:{isActive:boolean})=>void>={};
   let resolveNativeState!:(state:{isActive:boolean})=>void;
   const nativeState=new Promise<{isActive:boolean}>(resolve=>{resolveNativeState=resolve;});
@@ -125,6 +126,12 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     suspend() {this.suspended=true;this.suspends++;}
     resume() {this.suspended=false;this.resumes++;}
   }
+  class FeedbackStub {
+    calls:{kind:string;payload?:unknown}[]=[];
+    beginMove(payload:unknown){this.calls.push({kind:'begin',payload});}
+    show(payload:unknown){this.calls.push({kind:'show',payload});}
+    cancel(){this.calls.push({kind:'cancel'});}
+  }
   const stateExports: Record<string, unknown> = {};
   const context = vm.createContext({
     crypto:globalThis.crypto,
@@ -152,11 +159,12 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
         ? ['puzzle', 'village', 'journal', 'settings'].map(name => element(`#${name}-view`)) : [],
       documentElement: {}, hidden:false, addEventListener:(name:string,callback:()=>void)=>{documentEvents[name]=callback;},
     },
-    window:{addEventListener(){}},
+    window:{addEventListener:(name:string,callback:()=>void)=>{windowEvents[name]=callback;}},
     Phaser: { Game: GameStub, AUTO: 0, Scale: { FIT: 0, CENTER_BOTH: 0 }, Core:{Events:{POST_RENDER:'postrender'}} },
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     bindPracticeBoard,
     showResultPip:()=>{resultArtCalls++;},
+    RoundFeedback:FeedbackStub,
     AudioManager: AudioStub, t: (_language: string, key: string) => key, icon: () => '',
     Capacitor: { isNativePlatform: () => native,getPlatform:()=>native?'android':'web',isPluginAvailable:(name:string)=>Boolean(name==='PawblossomTestBilling'?billingBridge:adsBridge) },
     App:{addListener:(name:string,callback:(state:{isActive:boolean})=>void)=>{nativeEvents[name]=callback;return Promise.resolve({remove(){}});},getState:()=>nativeState,minimizeApp:()=>Promise.resolve()}, confirm: () => true,
@@ -183,7 +191,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   return {
     setStorageFails:(value:boolean)=>{storageFails=value;},disk:()=>[...storageValues],
     resultArtCalls:()=>resultArtCalls,frame:()=>frame(),games:()=>games,destroys:()=>destroys,
-    documentEvents,nativeEvents,resolveNativeState,
+    documentEvents,windowEvents,nativeEvents,resolveNativeState,
     element, run: (code: string) => {const result=vm.runInContext(code, context);if(autoFrame)frame();return result;},
     resultTimers: () => [...timers.values()].filter(timer => timer.ms === 300),
     flushResults: () => [...timers].filter(([,timer]) => timer.ms === 300).forEach(([id,timer]) => {timers.delete(id);timer.callback();}),
@@ -192,6 +200,33 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     writes: () => writes, stored: () => JSON.parse(storageValues.get('pawblossom.save.v1')??'null'),
   };
 }
+
+describe('보드 피드백 연결과 정산 경계',()=>{
+  it('이동 시작 잔량과 단계 표시만 전달하고 실제 onMove 전에는 숫자·보드·세 저장 키가 같습니다',()=>{
+    const h=mainHarness(),disk=h.disk(),writes=h.writes();
+    const before=h.run('JSON.stringify({moves,score,collected,clearedLeaves,board:scene.engine.board,save})');
+    h.run('boardFeedback.calls=[];scene.hooks.onStart();scene.hooks.onResolveVisual({cascade:1,removed:[{kind:0,x:44,y:44}],clearedLeaves:[],specialCreated:false,specialActivated:false})');
+    expect(h.run('boardFeedback.calls.map(c=>c.kind)')).toEqual(['begin','show']);
+    expect(h.run('boardFeedback.calls[0].payload')).toEqual(h.run("levels[currentLevel-1].goals.map(g=>({key:String(g.kind),remaining:g.count-collected[g.kind],src:'/assets/tiles-v2/'+tileNames[g.kind]+'.svg'})).concat([{key:'leaves',remaining:0,src:'/assets/obstacles/leaf-pile.svg'}])"));
+    expect(h.run('JSON.stringify({moves,score,collected,clearedLeaves,board:scene.engine.board,save})')).toBe(before);
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    expect(h.element('#goals').innerHTML).toContain(`data-feedback-goal="${h.run('levels[currentLevel-1].goals[0].kind')}"`);
+    h.run('scene.hooks.onMove([1,0,0,0,0,0],10,1,0)');
+    expect(h.run('boardFeedback.calls.at(-1).kind')).toBe('cancel');expect(h.run('collected[0]')).toBe(1);expect(h.run('score')).toBe(10);
+  });
+  it.each(['blur','resize','scroll','pagehide'])('window %s는 남은 시각 효과를 취소합니다',boundary=>{
+    const h=mainHarness();h.run('boardFeedback.calls=[]');h.windowEvents[boundary]();expect(h.run('boardFeedback.calls.at(-1).kind')).toBe('cancel');
+  });
+  it('백그라운드·화면/언어 전환·새 회차는 취소하고 이전 scene 콜백을 다시 전달하지 않습니다',()=>{
+    const h=mainHarness();h.run('boardFeedback.calls=[];document.hidden=true');h.documentEvents.visibilitychange();expect(h.run('boardFeedback.calls.at(-1).kind')).toBe('cancel');
+    h.run("document.hidden=false;switchView('village')");expect(h.run('boardFeedback.calls.at(-1).kind')).toBe('cancel');
+    h.run("boardFeedback.calls=[];changeLanguage('ko')");expect(h.run('boardFeedback.calls[0].kind')).toBe('cancel');
+    h.run('globalThis.oldFeedbackHooks=scene.hooks;startLevel(2)');
+    h.run('boardFeedback.calls=[];oldFeedbackHooks.onStart();oldFeedbackHooks.onVisualCancel();oldFeedbackHooks.onResolveVisual({cascade:2,removed:[],clearedLeaves:[]})');
+    expect(h.run('boardFeedback.calls')).toEqual([]);
+    h.run('scene.hooks.onVisualCancel()');expect(h.run('boardFeedback.calls.at(-1).kind')).toBe('cancel');
+  });
+});
 
 describe('핍 육성·재화 소비와 정원 전용 체험',()=>{
   const normalState='JSON.stringify({round,currentLevel,moves,score,collected,shuffles,clearedLeaves,roundEnded,resultShown,firstReward,resultWon,testingLevel,testContinueUsed,board:scene.engine.board,leaves:scene.engine.leaves})';
