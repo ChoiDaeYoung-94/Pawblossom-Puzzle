@@ -1,4 +1,16 @@
-## 현재 작업 · 2026-10-21 · #160 모든 광고 제거 안내·통합 회귀 (커밋 전 검수)
+## 현재 작업 · 2026-10-21 · #161 통합 테스트 APK·Drive 전달 검증
+
+오늘 광고 전체 제거 결정 #159, 검사 전용 트랜잭션 관측 #162, 광고 제거 상태 안내·늦은 보상 회귀 #164, 선택형 특수 탭 실습·실제 터치 초점 보완 #165를 병합했습니다. APK의 게임 소스는 `08912a050b7929a78f588ec74e4d4b2fce725793`입니다. [정확 main CI39533204430](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39533204430)는 Node22·24 각각36파일2,418개/store12/타입/production·testing 웹 빌드와 flags 검사를 통과했습니다. 이전 main319의 CI39531343063은 Node22 보상권 소비 BEGIN/BUSY5 1실패이며 [#122 관측](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122#issuecomment-6306317059)에 보존했습니다. 새 UI 버전의 성공은 이전 잠금 원인 해결이나 같은 head 재실행을 뜻하지 않습니다.
+
+- `npm run android:sync:test` 뒤 Gradle `:app:assembleDebug :app:testDebugUnitTest :app:lintDebug`를 실행했습니다. 53초/169작업으로 성공했고, JVM은 BillingLogic8·RewardLedger7·기본 산술1의16개(의미 있는15개)가 새로 실행되어 실패/오류/skip0입니다. lint는 오류0·경고15개입니다. 경고는 AGP 버전1·아이콘3·manifest 순서1·구형 SDK 조건1·미사용 자원9로 기록했으며 실제 배포 적합성 완료로 처리하지 않습니다.
+- `Pawblossom-Puzzle-v0.1.7-2026-10-21-08912a0-debug.apk`, 14,476,717바이트, SHA256 `d31c9162d87727685ee71216a5f663ed014dab663d985cbf5fac60288b640603`입니다. appId `com.choidaeyoung.pawblossompuzzle`, 버전0.1.7/code8·min24/target36을 유지합니다. v2 서명과 이전 전달본의 동일 인증서 SHA256 `3db1481f54ab024e442493713f4d5dd400b985e4c2a41852b4b389a6e2df47b3`를 확인했으며 실제 설치·업데이트는 아직 검증하지 않았습니다.
+- APK 웹 파일30개 전수 크기/SHA는 testing dist와 일치하고, Capacitor 호환 파일2개는 실제 빈 파일입니다. 이번 testing·production dist의30개 전체는 #163 최종 브라우저 검증본과 각각 byte 동일합니다. APK의 testing flags3true, 공식 Google 시험 App ID·debug 광고/결제 브리지 및 SDK 클래스 descriptor 존재를 확인했습니다. 자동 광고 초기화 provider와 지정 광고 식별자 권한4개는 없습니다. 이 정적 존재 검사는 실제 SDK 실행·구매·보상 지급의 증명이 아닙니다.
+- APK 사본 보존 뒤 `npm run android:sync`로 현재 production을 복원했습니다. dist/Android 웹 파일30개 전수 SHA와 production flags3false를 대조했고, 실상품 로컬 설정은 없습니다. 새 AAB·폰 자동 검사·실계정 키/env·상품/콘솔·공개 배포·최종 오디오 믹스 변경은 하지 않았습니다.
+- 기존 작업용 `doeud1410@gmail.com`의 [Pawblossom Puzzle 테스트 폴더](https://drive.google.com/drive/u/1/folders/1dUUwNPZXmSpX8z0t1GsLjbnHuYI-MSHm)에 날짜/커밋으로 구분한 [APK](https://drive.google.com/file/d/1FcGg42rdwjAu-ZXXu7ocGX_vBX48cdya/view)와 `SHA256SUMS-2026-10-21-08912a0.txt`만 업로드했습니다. 실제 업로드 완료 목록과 파일 ID·제목을 확인하고 APK를 다시 다운로드해 크기14,476,717바이트·SHA256이 원본과 일치하는 것을 검증했습니다. Drive의 APK 형식 확인창을 확인한 정상 다운로드이며 Chrome 보안 차단을 우회하지 않았습니다. 기존 파일·공유 범위를 보존했고 별도 APK 테스트 안내 문서를 만들지 않았습니다. 안내는 채팅에 직접 제공합니다. 재다운로드 근거는 `drive-delivery.json`, 최종 폴더 증빙은 `drive-delivery-proof.jpg`입니다.
+
+Git 밖 `C:/Users/user/Documents/ChatGPT/Pawblossom-builds/2026-10-21-08912a0`에 사본·두 dist·기존 산출물 보존본·Gradle/JVM/lint·메타데이터·인증서/전체 에셋 검증·checkpoint를 보존합니다. APK 전용 검증 도구는 `qa/issue-161-apk-delivery`에 있으며 AAB를 요구하는 예전 스크립트를 그대로 실행하지 않았습니다. 실제 단말·청취·광고/구매/복원/환불·스토어와 #122 원인 추적은 미완료입니다. 이번 문서의 독립 검수·PR CI·정확 main CI는 제출 후 별도로 확인합니다.
+
+## 이전 작업 · 2026-10-21 · #160 모든 광고 제거 안내·통합 회귀 (당시 커밋 전 검수)
 
 기준 main/origin main `ad793a0b20e064aef5afe5c36f85914c9ddf9b63`, 브랜치 `codex/160-all-ads-removal-state`입니다. 기준의 [정확 main CI39529995708](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39529995708)는 총괄이 Node22·24 각각35파일2,390개·store12·타입·두 빌드 성공을 확인한 버전입니다. **이번 변경은 관련232개·전체35파일2,403개 한 번·타입/store12/에셋·두 웹 빌드·실제 testing/production dist 브라우저 검증을 통과했고 커밋 전 총괄 독립검수 대기**입니다. 커밋·푸시·PR은 아직 없으며 아래 이전 현재/제출 전 표현은 당시 이력입니다.
 
