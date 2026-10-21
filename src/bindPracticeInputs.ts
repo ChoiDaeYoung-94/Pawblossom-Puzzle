@@ -18,6 +18,9 @@ export function bindPracticeBoard(board:HTMLElement,actions:PracticeActions){
     const pos={row:Number(button.dataset.row),col:Number(button.dataset.col)};
     button.onpointerdown=event=>{
       if(!usable(button)||pointer||event.button!==0||!event.isPrimary)return;
+      // 터치 up에서 DOM을 교체한 뒤 브라우저가 모달로 초점을 다시 옮기지 않게 합니다.
+      // 정상 탭의 초점은 actions.tap이 새 DOM으로 직접 옮깁니다.
+      event.preventDefault();
       pointer={id:event.pointerId,x:event.clientX,y:event.clientY,pos,button};
       try{button.setPointerCapture(event.pointerId);}catch{cancel();}
     };

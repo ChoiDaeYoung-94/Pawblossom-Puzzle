@@ -1,4 +1,31 @@
-# 첫 교환 실습 검증
+# 첫 교환·특수 탭 실습 검증
+
+## 현재 상태 — 2026-10-21, #163 독립 검수 대기
+
+[이슈 #163](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/163) · 기준 `main 319af293e72f360273a5d3628ae014a9e5a82b06` · 작업 브랜치 `codex/163-special-tap-practice`. 아래 결과는 커밋 전 작업 소스의 로컬 검사입니다. 커밋·PR·필수 CI·정확 main CI·병합은 아직 진행하지 않았습니다. 기준 main의 [Node 22 원장 잠금 CI 실패](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39531343063)는 별도 추적 중이며 이번 UI로 해결했다고 해석하지 않습니다.
+
+### 동작과 상태 계약
+
+- 기존 4페이지와 `SwapPractice.completed/result`를 유지합니다. 마지막 3매치 성공 뒤 피드백 자리에 44px 이상의 선택 버튼을 표시합니다. 누르면 같은 3×3 격자를 별도 `SpecialTapPractice`로 바꿉니다. 새 페이지·저장 필드·외부 에셋·음원은 추가하지 않았습니다.
+- 별도 seeded `BoardEngine(3,3)`에 중앙 가로 특수 한 개를 놓고, 매치 없는 상태에서 실제 `activate()`를 한 번 실행합니다. 첫 단계 `before/removed`를 계속 표시하며 가로 3칸에 기존 체크를 씁니다. 기존 자체 SVG·줄무늬와 `match` 효과음을 재사용하고 믹스 값은 바꾸지 않았습니다.
+- 중앙 탭·Enter·Space만 완료합니다. 다른 칸·가로/세로 스와이프·취소·중복 입력은 결과를 바꾸지 않습니다. 특수 실습의 시작/완료와 무관하게 원래 교환 성공 뒤 퍼즐 시작은 계속 활성화됩니다. 실습을 생략하거나 진행 중 시작·건너뛰기·Escape·Android 뒤로가기로 나갈 수 있습니다.
+- 특수 진입 때 중앙, 완료 때 시작 버튼에 초점을 둡니다. 기존 입력 바인딩의 정상 pointerdown 기본 초점을 방지하고, 완료 초점은 `preventScroll:true`로 이동한 뒤 동일 DOM·현재 초점·열린 모달을 확인한 0ms 예약에서 스크롤합니다. 실제 touchup 뒤 호환 클릭이 시작 버튼에 닿거나 초점이 모달로 되돌아가는 현상을 막습니다. 키보드/보조 기술의 `detail=0`과 click이 누락돼도 정상 up으로 처리하는 계약은 유지합니다.
+- 재렌더/닫기 때 리스너·캡처를 정리합니다. 언어 재렌더는 두 실습 상태와 해당 초점을 유지합니다. 이전 페이지로 갔다 마지막 페이지에 다시 오거나 설정에서 다시 열면 교환부터 새로 시작합니다. 기존 `tutorialSeen` 저장은 그대로 호환되며 새 실습을 강제하지 않습니다.
+- 본판 Scene/엔진/RNG/보드/이동·별·코인/일반 회차 저장은 분리됩니다. 엔진·Scene·저장 스키마·밸런스·광고/결제·서버·Android·버전·최종 오디오 믹스는 변경하지 않았습니다.
+
+### 최종 로컬 검증
+
+- 관련 `vitest` 4파일 **196개**, 최종 전체 36파일 **2,418개** 성공. `npm run typecheck`, `store:check`, `store:test` **12개**, `assets:check`, `build:test`, `build` 성공. 브라우저에서 발견한 초점/스크롤 보완 전 전체 2,417개 성공은 과거 이력으로만 보존하며 최종 결과와 합산하지 않습니다.
+- `scripts/special-practice-qa.mjs --output=<새 QA 폴더> --playwright=<모듈 경로>`로 실제 dist를 수정 없이 자체 route에 제공했습니다. 격리 headless Chrome에서 KO/EN × 320×568/390×844/640×360 × 일반/모션 감소를 testing·production 각각 **12조합**, 합계 **24조합** 확인했고 페이지 오류는 **0건**입니다. 사용자 Chrome·5173·Drive를 사용하지 않았습니다.
+- 실제 touch·Enter/Space, touchcancel→후속 click, 가로/세로 드래그, 다른 칸·중복, 매치 후 즉시 시작, 특수 미완료 시작/Skip/Escape, 뒤로/재진입 초기화, 중앙·시작 초점, 최소 44×44px 버튼, 외부/모달 가로 overflow 없음, 모달 내부 스크롤로 버튼 접근을 검사했습니다. 일반 저장의 기존 `persist`에 따른 첫 backup 회전은 별도 확인 후 정규화하고 전체 localStorage를 비교했습니다. 실습 중에는 정규화 전에도 저장 무변경을 확인합니다. 복귀한 실제 본판 선택·취소도 저장을 바꾸지 않았습니다.
+- 원래 활성 교환 격자 209px, 완료 후 선택 전 201px, 특수 진입 205px입니다. 실제 완료→특수 전환에서 격자는 **4px 증가**합니다. 콘텐츠는 KO 320·EN 640에서 설명 줄바꿈으로 **27.796875px 증가**, 나머지에서는 4px 증가 또는 EN 320에서 2.203125px 감소합니다. 모든 특수 진입 콘텐츠는 원래 활성 교환 실습보다 작으며 모달 내부 스크롤로 접근됩니다. 높이 증가 0으로 주장하지 않습니다.
+- 두 빌드의 flags는 testing 모두 true, production 모두 false이며, production 시험 진입과 서버 코드 marker 제외를 검사합니다. 소스 LF SHA-256, 원본/최종 파일, 두 dist 전체 파일 SHA-256·tree SHA-256, 명령 로그·JSON·PNG·입력 이벤트·실패 정정 이력은 Git 밖 `C:/Users/user/Documents/ChatGPT/Pawblossom-builds/qa/issue-163-special-practice/`의 `source-build-review.json`, `checkpoint.json`과 하위 폴더에 보존합니다.
+
+Android/실제 폰/광고·결제 SDK/최종 청취/사용자 이해도·이탈률은 검증하지 않았습니다. 테스트 APK·Android sync·Drive 전달은 총괄의 별도 최종 작업입니다. 독립 검수와 최신 PR/main CI가 남아 있습니다.
+
+## 과거 기록 — 2026-10-11 첫 교환 실습
+
+이하 수치·Android 산출물·미구현 항목은 당시 기록입니다. 현재 상태와 구분하여 보존합니다.
 
 2026-10-11 · [이슈 #8](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/8)
 

@@ -22,6 +22,7 @@ const boardCode = compile(read('../src/BoardScene.ts'));
 const effectsCode = compile(read('../src/BoardEffects.ts'));
 const engineCode = compile(read('../src/core/BoardEngine.ts'));
 const practiceCode = compile(read('../src/SwapPractice.ts'));
+const specialPracticeCode = compile(read('../src/SpecialTapPractice.ts'));
 const i18nCode = compile(read('../src/i18n.ts'));
 const gardenCode = compile(read('../src/GardenArt.ts'));
 
@@ -164,6 +165,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const coreExports:Record<string,unknown>={}, practiceExports:Record<string,unknown>={};
   vm.runInNewContext(engineCode,{exports:coreExports});
   vm.runInNewContext(practiceCode,{exports:practiceExports,require:()=>coreExports});
+  vm.runInNewContext(specialPracticeCode,{exports:practiceExports,require:()=>coreExports});
   Object.assign(context,practiceExports);
   const i18nExports:Record<string,unknown>={};
   vm.runInNewContext(i18nCode,{exports:i18nExports});
@@ -869,6 +871,59 @@ describe('첫 플레이 안내', () => {
     for(let i=0;i<3;i++)h.element('#guide-next').onclick();
     expect(h.run('practice.completed')).toBe(false);
   });
+  it.each(['ko','en'])('%s 선택형 특수 탭은 기존 완료·본판 엔진·전체 저장을 보존하고 초점을 옮깁니다',language=>{
+    const h=mainHarness();h.run(`changeLanguage('${language}');switchView('settings');showTutorial()`);
+    for(let i=0;i<3;i++)h.element('#guide-next').onclick();
+    expect(h.element('#tutorial-dialog').innerHTML).not.toContain('id="practice-special"');
+    h.element('#practice-cell-0-2').onclick({detail:0,button:0});h.element('#practice-cell-1-2').onclick({detail:0,button:0});
+    expect(h.element('#tutorial-dialog').innerHTML).toContain('id="practice-special"');
+    const disk=h.disk(),state=h.run('JSON.stringify({moves,score,collected,save,board:scene.engine.board,leaves:scene.engine.leaves})');
+    h.run('globalThis.originalScene=scene;globalThis.originalResult=practice.result;globalThis.controlEngine=new (require("./core").BoardEngine)(8,8,require("./core").seededRng(42));');
+    let focused='';h.element('#practice-cell-1-1').focus=()=>{focused='center';};h.element('#guide-next').focus=()=>{focused='start';};
+    h.element('#practice-special').onclick();expect(focused).toBe('center');
+    expect(h.run('practice.completed&&practice.result===originalResult')).toBe(true);
+    expect(h.element('#tutorial-dialog').innerHTML).toContain('4 / 4');
+    expect(h.element('#tutorial-dialog').innerHTML).not.toMatch(/id="guide-next"[^>]*disabled/);
+    h.element('#practice-cell-1-1').onclick({detail:0,button:0});expect(focused).toBe('start');
+    expect(h.run('specialPractice.completed')).toBe(true);
+    expect(h.element('#tutorial-dialog').innerHTML.match(/practice-cleared/g)).toHaveLength(3);
+    expect(h.run('scene===originalScene&&practice.result===originalResult')).toBe(true);
+    expect(h.run('JSON.stringify({moves,score,collected,save,board:scene.engine.board,leaves:scene.engine.leaves})')).toBe(state);
+    expect(h.disk()).toEqual(disk);
+    expect(h.run('scene.engine.shuffle();controlEngine.shuffle();JSON.stringify(scene.engine.board)===JSON.stringify(controlEngine.board)')).toBe(true);
+  });
+  it('특수 실습의 언어 재렌더는 캡처를 취소하고 상태·초점을 유지하며 뒤로·재열기는 초기화합니다',()=>{
+    const h=mainHarness();h.run("switchView('settings');showTutorial()");
+    for(let i=0;i<3;i++)h.element('#guide-next').onclick();
+    h.run('practice.swipe({row:0,col:2},0,60);renderTutorial()');h.element('#practice-special').onclick();
+    let focused=0,released=0;h.element('#practice-cell-1-1').focus=()=>{focused++;};
+    h.element('#practice-cell-1-1').hasPointerCapture=()=>true;h.element('#practice-cell-1-1').releasePointerCapture=()=>{released++;};
+    h.run("document.querySelector('#practice-cell-1-1').onpointerdown({preventDefault(){},button:0,isPrimary:true,pointerId:1,clientX:30,clientY:30});changeLanguage('ko')");
+    expect(released).toBe(1);expect(focused).toBe(1);expect(h.run('specialPractice.completed')).toBe(false);
+    h.element('#practice-cell-1-1').onclick({detail:0,button:0});h.run("changeLanguage('en')");expect(h.run('specialPractice.completed')).toBe(true);
+    h.element('#guide-back').onclick();h.element('#guide-next').onclick();expect(h.run('specialPractice')).toBeUndefined();expect(h.run('practice.completed')).toBe(false);
+    h.element('#guide-skip').onclick();h.run('showTutorial()');expect(h.run('specialPractice')).toBeUndefined();expect(h.run('tutorialPage')).toBe(0);
+  });
+  it.each(['start','skip','escape'])('선택형 특수 실습 미완료에서도 %s로 즉시 나갈 수 있습니다',exit=>{
+    const h=mainHarness(false,true);for(let i=0;i<3;i++)h.element('#guide-next').onclick();
+    h.run('practice.swipe({row:0,col:2},0,60);renderTutorial()');h.element('#practice-special').onclick();
+    expect(h.run('specialPractice.completed')).toBe(false);
+    if(exit==='escape')h.element('#tutorial-dialog').listeners.cancel({preventDefault(){}});else h.element(exit==='start'?'#guide-next':'#guide-skip').onclick();
+    expect(h.element('#tutorial-dialog').open).toBe(false);expect(h.stored().tutorialSeen).toBe(true);expect(h.run('game.paused')).toBe(false);expect(h.run('moves')).toBe(26);
+  });
+  it('완료 초점은 즉시 이동하되 후속 터치 click 전에는 스크롤하지 않고 닫힌·교체된 DOM 예약은 무시합니다',()=>{
+    const h=mainHarness(false,true);for(let i=0;i<3;i++)h.element('#guide-next').onclick();
+    h.run(`globalThis.scrolls=0;globalThis.focusOptions=undefined;globalThis.pendingFocus=[];
+      setTimeout=callback=>{pendingFocus.push(callback);return pendingFocus.length;};
+      document.querySelector('#guide-next').focus=options=>{focusOptions=options;document.activeElement=document.querySelector('#guide-next');};
+      document.querySelector('#guide-next').scrollIntoView=()=>{scrolls++;};
+      practice.swipe({row:0,col:2},0,60);renderTutorial();focusPracticeStart();`);
+    expect(h.run('focusOptions.preventScroll')).toBe(true);expect(h.run('scrolls')).toBe(0);
+    h.run('pendingFocus.shift()()');expect(h.run('scrolls')).toBe(1);
+    h.run("focusPracticeStart();document.activeElement=document.querySelector('#guide-skip');pendingFocus.shift()()");expect(h.run('scrolls')).toBe(1);
+    h.run('focusPracticeStart();document.querySelector("#guide-next").isConnected=false;pendingFocus.shift()()');expect(h.run('scrolls')).toBe(1);
+    h.run('document.querySelector("#guide-next").isConnected=true;focusPracticeStart();closeTutorial();pendingFocus.shift()()');expect(h.run('scrolls')).toBe(1);
+  });
   it('실습 중 건너뛰기와 뒤로 이동은 게임 진행을 바꾸지 않습니다',()=>{
     const h=mainHarness(false,true);
     for(let i=0;i<3;i++)h.element('#guide-next').onclick();
@@ -882,11 +937,11 @@ describe('첫 플레이 안내', () => {
   it('실습 포인터는 다른 손가락의 놓기를 무시하고 취소 후 다시 밀 수 있습니다',()=>{
     const h=mainHarness(false,true);
     for(let i=0;i<3;i++)h.element('#guide-next').onclick();
-    h.run("document.querySelector('#practice-cell-0-2').onpointerdown({button:0,isPrimary:true,pointerId:1,clientX:0,clientY:0})");
+    h.run("document.querySelector('#practice-cell-0-2').onpointerdown({preventDefault(){},button:0,isPrimary:true,pointerId:1,clientX:0,clientY:0})");
     h.run("document.querySelector('#practice-cell-0-2').onpointerup({button:0,pointerId:2,clientX:0,clientY:60,preventDefault(){}})");
     expect(h.run('practice.completed')).toBe(false);
     h.run("document.querySelector('#practice-cell-0-2').onpointercancel({pointerId:1})");
-    h.run("document.querySelector('#practice-cell-0-2').onpointerdown({button:0,isPrimary:true,pointerId:3,clientX:0,clientY:0})");
+    h.run("document.querySelector('#practice-cell-0-2').onpointerdown({preventDefault(){},button:0,isPrimary:true,pointerId:3,clientX:0,clientY:0})");
     h.run("document.querySelector('#practice-cell-0-2').onpointerup({button:0,pointerId:3,clientX:0,clientY:60,preventDefault(){}})");
     expect(h.run('practice.completed')).toBe(true);
     expect(h.run('moves')).toBe(26);
