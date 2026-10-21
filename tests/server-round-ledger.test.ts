@@ -12,7 +12,7 @@ import {BoardEngine} from '../src/core/BoardEngine';
 import {RoundLedger,type RoundLedgerOptions,type RoundSnapshot,type RoundCommandRequest} from '../server/game/roundLedger';
 import {advanceState,publicState,startState,type RoundState} from '../server/game/roundState';
 import {PlayFabSessionAuthenticator} from '../server/auth/playfabSession';
-import {createTrace,step,asyncStep,elapsed,workerRow,observeWorker,receiveWorker,terminateWorker,workerFailure,safeRows,safeError,withSqliteDiagnostics,type LedgerTrace} from './helpers/ledgerDiagnostics';
+import {createTrace,step,asyncStep,elapsed,workerRow,observeWorker,receiveWorker,terminateWorker,workerFailure,safeRows,safeError,withSqliteDiagnostics,projectTrace,type LedgerTrace} from './helpers/ledgerDiagnostics';
 import {retryLedgerOpen} from './helpers/ledgerOpenRetry';
 const key=new Uint8Array(32).fill(67),epoch=1_792_233_000_000,owner={ownerId:'synthetic-round-owner-private'};
 const dirs:string[]=[],ledgers:RoundLedger[]=[],dbs:DatabaseSync[]=[],workers:Worker[]=[];
@@ -417,15 +417,19 @@ describe('서버 영구 회차·멱등 명령 원장',()=>{
     expect(ledger.command(owner,command(ledger,end.snapshot))).toEqual(denied('round-terminal'));
     expect(apply(ledger,r).snapshot).toEqual(end.snapshot);expect(apply(ledger,r).applied).toBe(false);
   });
-  it('고정 seed 합성 초기 상태로 파일 원장의 won/failed/failed→abandon을 확정 검증',()=>{
-    const {ledger,path}=open();let won=0,failed=0;
+  it('고정 seed 합성 초기 상태로 파일 원장의 won/failed/failed→abandon을 확정 검증',({task,onTestFailed})=>{
+    const trace=task.meta.ledgerDiagnostic=createTrace('round-worker');
+    onTestFailed(()=>{try{console.error('[pawblossom:round-terminal-replay]',JSON.stringify(projectTrace(trace)));}catch{}});
+    const {ledger,path}=step(trace,'round-open',()=>open());let won=0,failed=0;
     for(let n=0;n<2;n++){
-      let s=seededRound(ledger,path,n===0?1:30,'game-'+n);
-      while(s.state.status==='active')s=apply(ledger,command(ledger,s)).snapshot;
-      expect(s.state.status).toBe(n===0?'won':'failed');
-      expect(ledger.command(owner,command(ledger,s))).toEqual(denied('round-terminal'));
-      expect(ledger.command(owner,command(ledger,s,{command:{type:'activate',at:{row:0,col:0}}}))).toEqual(denied('round-terminal'));
-      if(s.state.status==='won')won++;else{failed++;expect(ledger.get(owner,{roundId:s.roundId})).toEqual({kind:'round-snapshot',snapshot:s});const abandoned=apply(ledger,command(ledger,s,{command:{type:'abandon'}})).snapshot;expect(abandoned.state.status).toBe('abandoned');}
+      let s=step(trace,'seed',()=>seededRound(ledger,path,n===0?1:30,'game-'+n));
+      step(trace,'command',()=>{while(s.state.status==='active')s=apply(ledger,command(ledger,s)).snapshot;});
+      step(trace,'verify',()=>{
+        expect(s.state.status).toBe(n===0?'won':'failed');
+        expect(ledger.command(owner,command(ledger,s))).toEqual(denied('round-terminal'));
+        expect(ledger.command(owner,command(ledger,s,{command:{type:'activate',at:{row:0,col:0}}}))).toEqual(denied('round-terminal'));
+        if(s.state.status==='won')won++;else{failed++;expect(ledger.get(owner,{roundId:s.roundId})).toEqual({kind:'round-snapshot',snapshot:s});const abandoned=apply(ledger,command(ledger,s,{command:{type:'abandon'}})).snapshot;expect(abandoned.state.status).toBe('abandoned');}
+      });
     }
     expect(won).toBe(1);expect(failed).toBe(1);
   });
