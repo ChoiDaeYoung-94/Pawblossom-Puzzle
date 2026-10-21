@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "status": "browser-preview-draft-not-for-console-submission",
+  "capturedOn": "2026-10-21",
+  "issue": 179,
+  "gameSourceCommit": "e4429b84c3a8a3186f34d47f1498b398a005fcfd",
+  "docsBaseCommit": "907750d502cfd09c018a626951a5008d0c040dcd",
+  "build": "production, same frozen web source as delivered debug APK",
+  "capture": {
+    "tool": "Codex in-app browser screenshot via cua_repl",
+    "viewport": {
+      "width": 540,
+      "height": 960
+    },
+    "devicePixelRatioControlAvailable": false,
+    "postProcessing": "none; original screenshot JPEG bytes copied without scaling, cropping or recompression",
+    "state": "Natural QA progress: completed levels 1–3, current level 4, 1 star, 120 coins, 1 of 5 flower beds. UI navigation and language toggle only.",
+    "stateInjection": false,
+    "physicalDevice": false
+  },
+  "guidance": {
+    "checkedOn": "2026-10-21",
+    "source": "https://support.google.com/googleplay/android-developer/answer/9866151?hl=en",
+    "basicImageDimensionsSatisfied": true,
+    "aspectRatio": "9:16",
+    "gamePromotionRecommended1080x1920Satisfied": false,
+    "note": "540×960 browser drafts show current UI. Native phone captures at 1080×1920 or above and final approval remain required; no upscaling to imply that resolution."
+  },
+  "pending": [
+    "Physical Android screenshots and safe-area/native rendering verification",
+    "Final user visual review and release asset/content rights review",
+    "Localized store configuration and Play Console upload approval"
+  ],
+  "assets": [
+    {
+      "path": "assets/store/screenshots-v1/ko-puzzle.jpg",
+      "locale": "ko-KR",
+      "view": "puzzle",
+      "width": 540,
+      "height": 960,
+      "format": "jpeg",
+      "channels": 3,
+      "hasAlpha": false,
+      "bytes": 69760,
+      "sha256": "34fb345a8ed11316fb1893b3fd8ae21f19ce8dc87ebaf21235384769fe6a46cd",
+      "alt": "26회 이동과 도토리·잎·낙엽 목표가 표시된 스테이지4 매치3 보드",
+      "rawCaptureByteIdentical": true
+    },
+    {
+      "path": "assets/store/screenshots-v1/ko-garden.jpg",
+      "locale": "ko-KR",
+      "view": "garden",
+      "width": 540,
+      "height": 960,
+      "format": "jpeg",
+      "channels": 3,
+      "hasAlpha": false,
+      "bytes": 49393,
+      "sha256": "9513d1dd25098fc69b9b3dd82afc1aec1774072517cc8f06a84e1657e66ee6fb",
+      "alt": "꽃밭 하나를 심은 핍의 정원과 완료한 스테이지1~3, 다음 스테이지4",
+      "rawCaptureByteIdentical": true
+    },
+    {
+      "path": "assets/store/screenshots-v1/ko-goals.jpg",
+      "locale": "ko-KR",
+      "view": "goals",
+      "width": 540,
+      "height": 960,
+      "format": "jpeg",
+      "channels": 3,
+      "hasAlpha": false,
+      "bytes": 44095,
+      "sha256": "b98fd4d8fc1c3f56a390059cac51c8a96b2128bd52a43df64053c3ce612d573a",
+      "alt": "현재 퍼즐과 새 퍼즐의 목표를 비교하고 이어하기 또는 처음부터 시작을 고르는 화면",
+      "rawCaptureByteIdentical": true
+    },
+    {
+      "path": "assets/store/screenshots-v1/en-puzzle.jpg",
+      "locale": "en-US",
+      "view": "puzzle",
+      "width": 540,
+      "height": 960,
+      "format": "jpeg",
+      "channels": 3,
+      "hasAlpha": false,
+      "bytes": 72187,
+      "sha256": "c65f62154ac76a91a3b3b18d28ee66590ba644eaef09805d9a24c9a62a9ab7b2",
+      "alt": "Level 4 match-3 board with 26 moves and goals for acorns, leaves and leaf piles",
+      "rawCaptureByteIdentical": true
+    },
+    {
+      "path": "assets/store/screenshots-v1/en-garden.jpg",
+      "locale": "en-US",
+      "view": "garden",
+      "width": 540,
+      "height": 960,
+      "format": "jpeg",
+      "channels": 3,
+      "hasAlpha": false,
+      "bytes": 51673,
+      "sha256": "996d7907600a0b9eec00228c709a914e066f0defa3431470de4f1798a273b281",
+      "alt": "Pip’s garden with one flower bed planted, completed levels 1 to 3 and level 4 ready",
+      "rawCaptureByteIdentical": true
+    },
+    {
+      "path": "assets/store/screenshots-v1/en-goals.jpg",
+      "locale": "en-US",
+      "view": "goals",
+      "width": 540,
+      "height": 960,
+      "format": "jpeg",
+      "channels": 3,
+      "hasAlpha": false,
+      "bytes": 46602,
+      "sha256": "3c0774664b2bf600803d12caffbadf696e1ad2d4605ed0a1f41cd8867c2df4bc",
+      "alt": "Level goals preview comparing the current puzzle and a fresh start, with continue and restart choices",
+      "rawCaptureByteIdentical": true
+    }
+  ]
+}
