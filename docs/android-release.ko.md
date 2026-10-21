@@ -1,4 +1,14 @@
-## 현재 작업 · 2026-10-21 · #181 종료된 퍼즐의 결과 복귀
+## 최종 전달 · 2026-10-21 · #169 결과 복귀 수정을 포함한 APK
+
+결과 정원→퍼즐 복귀 수정 [PR182](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/182)을 최초 필수 CI39552922868 성공 후 병합했습니다. 게임 main `f375ed6a209c56ad439af3f88b1ec8ebd079b568`의 [정확한 최초 CI39553093859](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39553093859)도 Node22·24 각각37파일2,523개·스토어12개·타입/두 웹 빌드/flags 성공입니다. [PR180](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/180)의 한영 소개 화면6장은 브라우저 초안이며 게임 런타임에는 포함하지 않습니다. 이전 #181의 커밋 전 표현은 아래 검증 당시의 이력입니다.
+
+최종 파일은 **`Pawblossom-Puzzle-v0.1.7-2026-10-21-f375ed6-debug.apk`**, **14,479,213바이트**, SHA256 **`3f073bc15ec071463314f49d7bb2314d837dad11a28e5a940440749f8276d985`**입니다. [기존 Drive 폴더의 새 APK](https://drive.google.com/file/d/1pukXwa1aAJFVsbAIG9vf7mhmkP7tZuu-/view)와 전용 checksum만 추가하고 실제 재다운로드 크기·SHA 일치를 확인했습니다. 오전089와 오후e442 APK·기존 자료·공유 범위는 보존했으며 새 테스트 안내 파일은 만들지 않았습니다. 이 문서 PR은 제품 변경이 없는 전달 근거 기록입니다.
+
+testing sync→debug assemble/unit/lint→APK 보존→production sync 복원을 완료했습니다. Gradle20초/169작업(실행40·UP-TO-DATE129) 성공이며 **JVM16개(유의미15개)는 오전 동일 native 결과 UP-TO-DATE 재사용**입니다. 결과 XML3개 SHA가 동일하고 Android/설정/의존성/스크립트 변경0을 확인했습니다. lintAnalyzeDebug 실행·unit/androidTest 분석과 report 캐시를 구분하며 오류0/기존 경고15개입니다. APK의 testing 웹30개/빈 호환2개와 production30개가 #181 동결본과 각각 전수 일치하고, 저장소 dist/Android public의 최종 production 복원을 확인했습니다.
+
+버전0.1.7/code8·appId/min24/target36·기존 v2 인증서 SHA256 `3db1481f54ab024e442493713f4d5dd400b985e4c2a41852b4b389a6e2df47b3`를 유지했습니다. Google 공식 시험 앱 ID·광고/결제 SDK와 시험 플러그인 정적 포함, 광고 식별자4권한/자동 초기화 provider·실상품 properties 제외도 확인했습니다. Git 밖 `Pawblossom-builds/2026-10-21-f375ed6`의 전수 검증·로그·실재다운로드·깨끗한 Drive 화면과 `qa/issue-169-final-apk/independent-f375-artifact-review.json`의 독립 검수를 보존합니다. 실제 단말 설치/업데이트/청취·실SDK/Play 구매·복원·환불·스토어는 미검증이며 #73을 유지합니다. 현재 녹색은 #122 과거 실패 원인 해결이 아닙니다. AAB/공개 배포·콘솔/상품·실키env·폰 자동 검사·최종 믹스 보류를 유지하고17시 채팅에 테스트 안내와 미정 사항을 모읍니다.
+
+## 검증 기록 · 2026-10-21 · #181 종료된 퍼즐의 결과 복귀
 
 기준 main `5ce9444ae879599870377182ee2667971b26de22`, `codex/181-ended-round-return`입니다. production에서 스테이지1을 자연 완료한 뒤 결과의 정원 버튼→하단 퍼즐로 돌아오면 결과창이 닫힌 채 종료 보드/tabindex=-1만 남는 문제를 재현했습니다. 명시적인 퍼즐 복귀 시 기존 결과 DOM과 다음/재시도 버튼을 다시 표시하고 초점을 돌려줍니다. 비활성·다른 modal·보드 준비·결과 타이머·현재 Scene 불일치·시험 광고/결제 중단 중이면 화면을 옮기기 전에 거절하여 현재 화면을 유지하며, 조건 해제만으로 자동 결과창/초점 이동은 하지 않습니다. 보상/저장·완료 처리·결과 아트·효과음·Scene/보드/RNG는 다시 실행하지 않습니다.
 
