@@ -46,6 +46,8 @@ let selectedChapter=chapterForLevel(save.highestLevel).id;
 let selectedTestChapter=chapterForLevel(currentLevel).id;
 let nativeActive=!Capacitor.isNativePlatform();
 let nativeRevision=0;
+type StagePreview={id:number;intent:'map'|'restart';round:number;scene:BoardScene;testing:boolean;route:string;opener:HTMLElement;scroll:{view:HTMLElement;top:number;left:number}[]};
+let stagePreview:StagePreview|undefined;
 let audioActive:boolean|undefined;
 const androidAdEntry=typeof ANDROID_TEST_ADS_ENABLED!=='undefined'&&ANDROID_TEST_ADS_ENABLED&&Capacitor.isNativePlatform()&&Capacitor.getPlatform()==='android'&&Capacitor.isPluginAvailable('PawblossomTestAds');
 let testAds:TestAdsController|undefined;
@@ -112,6 +114,49 @@ if(androidBillingEntry){
   const dialog=document.createElement('dialog');dialog.id='test-billing-dialog';dialog.setAttribute('aria-labelledby','test-billing-title');document.body.append(dialog);
 }
 function billingModal(){return Boolean(androidBillingEntry&&$<HTMLDialogElement>('#test-billing-dialog').open);}
+const previewDialog=document.createElement('dialog');previewDialog.id='stage-preview-dialog';previewDialog.setAttribute('aria-labelledby','stage-preview-title');previewDialog.setAttribute('aria-describedby','stage-preview-description');document.body.append(previewDialog);
+function otherModal(){return $<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open)||billingModal();}
+function previewEnvironment(){return nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!otherModal()&&!boardPending&&Boolean(scene?.canLeave())&&!resultTimer;}
+function validPreview(context:StagePreview){return stagePreview===context&&context.round===round&&context.scene===scene&&context.testing===testingLevel&&context.route===route&&previewDialog.open&&previewEnvironment()&&Number.isInteger(context.id)&&context.id>=1&&context.id<=LEVEL_COUNT&&(context.intent==='restart'||context.id<=save.highestLevel);}
+function canContinuePreview(context:StagePreview){return context.intent==='map'&&!testingLevel&&!roundEnded&&context.id===currentLevel;}
+function closeStagePreview(restore=true){
+  const context=stagePreview;stagePreview=undefined;previewDialog.close();syncActivity();
+  if(!restore||!context)return;
+  const opener=context.opener.isConnected?context.opener:document.querySelector<HTMLElement>(context.intent==='restart'?'#restart':`[data-level="${context.id}"]`);
+  opener?.focus({preventScroll:true});
+  for(const {view,top,left} of context.scroll){view.scrollTop=top;view.scrollLeft=left;}
+}
+function confirmStagePreview(context:StagePreview,action:'continue'|'start'){
+  if(!validPreview(context))return;
+  if(action==='continue'&&!canContinuePreview(context))return;
+  const testPlay=context.intent==='restart'&&context.testing;
+  closeStagePreview(false);
+  if(action==='start')startLevel(context.id,testPlay);
+  switchView('puzzle');
+  if(action==='continue')$('#game-canvas').focus({preventScroll:true});
+}
+function renderStagePreview(){
+  const context=stagePreview;if(!context)return;
+  const level=levels[context.id-1],continuing=canContinuePreview(context);
+  const goal=(name:TextKey,count:number,src:string)=>`<span class="preview-goal"><img src="${src}" alt=""/><span>${text(name)} <strong>${count}</strong></span></span>`;
+  const goals=(remaining:boolean)=>level.goals.map(g=>goal(tileNames[g.kind] as TextKey,Math.max(0,g.count-(remaining?collected[g.kind]:0)),`/assets/tiles/${tileNames[g.kind]}.svg`)).join('')+((level.leaves?.length??0)?goal('leafPile',Math.max(0,level.leaves!.length-(remaining?clearedLeaves:0)),'/assets/obstacles/leaf-pile.svg'):'');
+  previewDialog.innerHTML=`<div class="stage-preview"><div class="eyebrow">${text(chapterForLevel(context.id).title)}${context.testing&&context.intent==='restart'?' · '+text('testRound'):''}</div><h2 id="stage-preview-title" tabindex="-1">${text('level')} ${context.id}</h2><p id="stage-preview-description">${text(context.intent==='restart'?'previewRestart':continuing?'previewResume':'previewStart')}</p><section aria-labelledby="preview-initial"><h3 id="preview-initial">${text('previewInitial')} · ${text('movesRemaining').replace('{count}',String(level.moves))}</h3><div class="preview-goals">${goals(false)}</div>${level.leaves?.some(p=>p.layers===2)?`<p class="preview-leaf-note">${text('previewDouble')}</p>`:''}</section>${continuing?`<section aria-labelledby="preview-remaining"><h3 id="preview-remaining">${text('previewRemaining')} · ${text('movesRemaining').replace('{count}',String(moves))}</h3><div class="preview-goals">${goals(true)}</div></section>`:''}${!roundEnded?`<p class="preview-warning">${text(continuing?'previewRestartWarning':'previewReplaceWarning')}</p>`:''}<p class="preview-kept">${text('previewKept')}</p><div class="preview-actions">${continuing?`<button id="preview-continue" class="primary">${text('previewContinue')}</button>`:''}<button id="preview-start" class="${continuing?'text-button':'primary'}">${text(context.intent==='restart'||continuing?'previewRestartAction':'previewStartAction')}</button><button id="preview-cancel" class="text-button">${text('previewCancel')}</button></div></div>`;
+  let pointerTarget:HTMLElement|undefined;
+  for(const action of ['continue','start'] as const){
+    if(action==='continue'&&!continuing)continue;
+    const button=$<HTMLButtonElement>(`#preview-${action}`);
+    button.onpointerdown=event=>{pointerTarget=event.isPrimary!==false&&event.button===0?button:undefined;};
+    button.onclick=event=>{const allowed=button.isConnected&&previewDialog.contains(button)&&event.isTrusted&&(event.detail===0||pointerTarget===button);pointerTarget=undefined;if(allowed)confirmStagePreview(context,action);};
+  }
+  $('#preview-cancel').onclick=()=>{if(stagePreview===context)closeStagePreview();};
+}
+function showStagePreview(id:number,intent:'map'|'restart',opener:HTMLElement){
+  if(stagePreview||previewDialog.open||!opener.isConnected||!previewEnvironment()||!Number.isInteger(id)||id<1||id>LEVEL_COUNT||(intent==='map'&&(route!=='village'||id>save.highestLevel))||(intent==='restart'&&route!=='puzzle'))return;
+  stagePreview={id,intent,round,scene,testing:testingLevel,route,opener,scroll:Array.from(document.querySelectorAll<HTMLElement>('.view')).map(view=>({view,top:view.scrollTop,left:view.scrollLeft}))};
+  renderStagePreview();scene.cancelInput();previewDialog.showModal();syncActivity();$('#stage-preview-title').focus({preventScroll:true});
+}
+previewDialog.addEventListener('cancel',event=>{event.preventDefault();closeStagePreview();});
+previewDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();});
 
 // 문서와 Android 상태 중 하나라도 비활성이면 오디오와 진행을 멈춥니다.
 function syncActivity(){
@@ -121,7 +166,7 @@ function syncActivity(){
   if(audioActive!==active){audioActive=active;if(active)audio.resume();else audio.suspend();}
   if(!game)return;
   const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
-  const playing=active&&route==='puzzle'&&!modal;
+  const playing=active&&route==='puzzle'&&!modal&&!previewDialog.open;
   if(playing){if(game.scene.isPaused('Board'))game.scene.resume('Board');}
   else if(game.scene.isActive('Board'))game.scene.pause('Board');
   updateBoardAccess();
@@ -129,7 +174,7 @@ function syncActivity(){
 function updateBoardAccess(){
   const board=$('#game-canvas'),state=scene?.keyboardState();
   const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
-  const visible=nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!billingModal()&&route==='puzzle'&&!modal&&!boardPending;
+  const visible=nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!billingModal()&&route==='puzzle'&&!modal&&!previewDialog.open&&!boardPending;
   const available=visible&&Boolean(state?.available);
   board.tabIndex=visible&&(available||state?.busy)?0:-1;
   board.setAttribute('aria-disabled',String(!available));board.setAttribute('aria-busy',String(Boolean(state?.busy)));
@@ -190,6 +235,7 @@ function replaceBoard(){
   game.scene.add('Board',scene,true);
 }
 function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint){
+  if(stagePreview)closeStagePreview(false);
   abandonRewardContinue();
   if(!Number.isInteger(id)||id<1||id>levels.length)return;
   clearResumeNotice();
@@ -288,6 +334,7 @@ function focusPracticeStart(){
   setTimeout(()=>{if(button.isConnected&&document.activeElement===button&&$<HTMLDialogElement>('#tutorial-dialog').open)button.scrollIntoView({block:'nearest'});},0);
 }
 function showTutorial(){
+  if(stagePreview)return;
   if(!scene.canLeave()||resultTimer||$<HTMLDialogElement>('#result-dialog').open)return;
   tutorialPage=0;practice=undefined;specialPractice=undefined;renderTutorial();$<HTMLDialogElement>('#tutorial-dialog').showModal();
   syncActivity();
@@ -322,6 +369,7 @@ function renderTestPicker(){
   $('#test-close').onclick=closeTestPicker;
 }
 function showTestPicker(fromResult=false){
+  if(stagePreview)return;
   if(!TEST_TOOLS_ENABLED||!scene.canLeave()||resultTimer||$<HTMLDialogElement>('#result-dialog').open||$<HTMLDialogElement>('#tutorial-dialog').open)return;
   pickerReturnToResult=fromResult;selectedTestChapter=chapterForLevel(currentLevel).id;
   renderTestPicker();$<HTMLDialogElement>('#test-level-dialog').showModal();
@@ -523,7 +571,7 @@ function closeBillingDialog(){
 function renderViews(grew=false){
   const focused=document.activeElement as HTMLElement|null,focusedId=focused?.id;
   const scroll=Array.from(document.querySelectorAll<HTMLElement>('.view'),view=>({view,top:view.scrollTop,left:view.scrollLeft}));
-  $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('chapterMeadow')}</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div><div class="garden-card"><div class="garden-picture"><div class="garden-illustration" role="img" aria-label="${text('gardenImage').replace('{count}',String(save.garden))}">${gardenArt(save.garden,grew)}</div><span class="garden-pill">${icon('flower',17)} ${save.garden} / 5</span></div><h3>${text('garden')}</h3><p class="garden-stage" id="garden-stage" role="status" tabindex="-1">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div><div class="level-picker"><h3>${text('levelSelect')}</h3>${chapterTabs(selectedChapter)}<div class="level-grid" id="chapter-levels" role="tabpanel" aria-labelledby="chapter-${selectedChapter}">${levels.filter(l=>chapterForLevel(l.id).id===selectedChapter).map(l=>`<button data-level="${l.id}" ${l.id>save.highestLevel?'disabled':''} class="level-node ${save.completed.includes(l.id)?'completed':''}" aria-label="${text('level')} ${l.id}${l.id>save.highestLevel?' · '+text('levelLocked'):save.completed.includes(l.id)?' · '+text('levelCompleted'):''}">${l.id>save.highestLevel?icon('lock',19):l.id}${save.completed.includes(l.id)?`<span>${icon('star',13)}</span>`:''}</button>`).join('')}</div></div>`;
+  $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('chapterMeadow')}</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div><div class="garden-card"><div class="garden-picture"><div class="garden-illustration" role="img" aria-label="${text('gardenImage').replace('{count}',String(save.garden))}">${gardenArt(save.garden,grew)}</div><span class="garden-pill">${icon('flower',17)} ${save.garden} / 5</span></div><h3>${text('garden')}</h3><p class="garden-stage" id="garden-stage" role="status" tabindex="-1">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div><div class="level-picker"><h3>${text('levelSelect')}</h3>${chapterTabs(selectedChapter)}<div class="level-grid" id="chapter-levels" role="tabpanel" aria-labelledby="chapter-${selectedChapter}">${levels.filter(l=>chapterForLevel(l.id).id===selectedChapter).map(l=>`<button data-level="${l.id}" ${l.id>save.highestLevel?'disabled':''} class="level-node ${save.completed.includes(l.id)?'completed':''} ${!testingLevel&&!roundEnded&&l.id===currentLevel?'current':''}" ${!testingLevel&&!roundEnded&&l.id===currentLevel?'aria-current="step"':''} aria-label="${text('level')} ${l.id}${!testingLevel&&!roundEnded&&l.id===currentLevel?' · '+text('previewCurrent'):''}${l.id>save.highestLevel?' · '+text('levelLocked'):save.completed.includes(l.id)?' · '+text('levelCompleted'):''}">${l.id>save.highestLevel?icon('lock',19):l.id}${save.completed.includes(l.id)?`<span>${icon('star',13)}</span>`:''}</button>`).join('')}</div></div>`;
   $('#journal-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('friendsHeading')}</div><h2>${text('friendsTitle')}</h2><p>${text('friendsDesc')}</p></div><div class="journal-card"><span class="friend-number">01</span><img src="/assets/pip.png" alt="${text('pip')}" data-alt="pip"/><h3>${text('pip')}</h3><p>${text('pipDesc')}</p><span class="friend-tag">${icon('leaf',15)} ${text('chapterMeadow')}</span></div>`;
   $('#settings-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><div class="storage-card" id="storage-card"><p id="save-status"></p><button id="save-retry" class="text-button" hidden></button><button id="save-reload" class="text-button" hidden></button></div><section class="support-note" aria-labelledby="support-title"><h3 id="support-title">${text('support')}</h3><p id="support-email">doeud1410@gmail.com</p></section><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v${APP_VERSION}</p>`;
   updateSaveStatus(focusedId);
@@ -532,7 +580,7 @@ function renderViews(grew=false){
   $('#save-reload').onclick=()=>{if(confirm(text('saveReloadConfirm')))window.location.reload();};
   bindChapterTabs();
   $('#grow').onclick=()=>{if(growing||save.stars<2||save.garden>=5)return;growing=true;save.stars-=2;save.garden++;const stored=persist();updateWallet();renderViews(true);audio.play('reward');if(stored)notice('planted');setTimeout(()=>{growing=false;$('#grow').toggleAttribute('disabled',save.stars<2||save.garden>=5);},450);};
-  document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach(button=>button.onclick=()=>{if(!scene.canLeave())return;const id=Number(button.dataset.level);if(id>save.highestLevel)return;startLevel(id);switchView('puzzle');});
+  document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach(button=>button.onclick=()=>showStagePreview(Number(button.dataset.level),'map',button));
   $('#music-toggle').onclick=()=>{save.music=!save.music;audio.setMusicEnabled(save.music);persist();$('#music-toggle').classList.toggle('on',save.music);$('#music-toggle').setAttribute('aria-checked',String(save.music));};
   const help=document.createElement('button');help.id='tutorial-help';help.className='primary guide-help';help.textContent=text('tutorial');help.onclick=showTutorial;$('#settings-view').append(help);
   if(androidAdEntry){const entry=document.createElement('button');entry.id='test-ad-button';entry.className='text-button';entry.textContent=adCopy(save.language).title;entry.onclick=()=>{void showAdDialog();};$('#settings-view').append(entry);}
@@ -563,14 +611,17 @@ function changeLanguage(language:'en'|'ko'){
   save.language=language;persist();localize();updateWallet();renderViews();updateGoals();updateBoardAccess();updateResultCopy();
   if($<HTMLDialogElement>('#tutorial-dialog').open)renderTutorial();
   if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)renderTestPicker();
+  if(stagePreview)renderStagePreview();
   if(androidAdEntry&&testAds)renderAdDialog();if(androidBillingEntry&&testBilling)renderBillingDialog();
   if(focusedId&&!focused?.isConnected)document.querySelector<HTMLElement>('#'+focusedId)?.focus();
 }
 function switchView(name:string){
+  if(stagePreview)return;
   if(name!=='puzzle')abandonRewardContinue();
   if(!scene.canLeave())return;
   if(name!=='puzzle'){clearResumeNotice();clearBoardNotice();}
   route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
+  if(name==='village')renderViews();
   document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(b=>{b.classList.toggle('active',b.dataset.route===name);if(b.dataset.route===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   updateSaveStatus();
   // Phaser refresh는 직전 parentSize로 계산하므로 숨김→표시 직후 부모 크기를 먼저 갱신합니다.
@@ -585,7 +636,7 @@ $('#board-notice').addEventListener('animationend',()=>{
   if($('#board-notice').getAnimations?.().some(animation=>animation.playState==='running'))return;
   clearBoardNotice();
 });
-$('#restart').onclick=()=>{if(scene.canLeave())startLevel(currentLevel,testingLevel);};
+$('#restart').onclick=()=>showStagePreview(currentLevel,'restart',$('#restart'));
 if(TEST_TOOLS_ENABLED){$('#test-level-button').onclick=()=>showTestPicker();$<HTMLDialogElement>('#test-level-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTestPicker();});}
 $('#shuffle').onclick=()=>{if(!boardPending&&game.scene.isActive('Board')&&shuffles>0&&scene.shuffle()){shuffles--;updateGoals();checkpoint();}};
 $<HTMLDialogElement>('#result-dialog').addEventListener('cancel',event=>{event.preventDefault();if(testAds?.busy||rewardedContinue?.preparing)return;$<HTMLDialogElement>('#result-dialog').close();switchView('village');});
@@ -617,7 +668,7 @@ if(Capacitor.isNativePlatform()){
     // 늦게 반환된 초기 상태가 이후의 복귀 이벤트를 덮어쓰지 않도록 합니다.
     if(revision===nativeRevision){nativeActive=state.isActive;syncActivity();}
   }).catch(()=>{ /* 네이티브 상태를 확인할 수 없으면 비활성 상태를 유지합니다. */ });
-  void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if(billingModal())closeBillingDialog();else if(testBilling?.pausesGame)return;else if(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open){void closeAdDialog();}else if(testAds?.pausesGame)return;else if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('village');}else if(route!=='puzzle')switchView('puzzle');else void App.minimizeApp();});
+  void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if(billingModal())closeBillingDialog();else if(testBilling?.pausesGame)return;else if(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open){void closeAdDialog();}else if(testAds?.pausesGame)return;else if(stagePreview)closeStagePreview();else if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('village');}else if(route!=='puzzle')switchView('puzzle');else void App.minimizeApp();});
 }
 if(androidAdEntry)$<HTMLDialogElement>('#test-ad-dialog').addEventListener('cancel',event=>{event.preventDefault();void closeAdDialog();});
 if(androidBillingEntry)$<HTMLDialogElement>('#test-billing-dialog').addEventListener('cancel',event=>{event.preventDefault();closeBillingDialog();});

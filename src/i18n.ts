@@ -1,6 +1,9 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    previewStart:'Check the goals before you start.',previewResume:'Your current puzzle is ready to continue.',previewRestart:'Start this stage again?',
+    previewInitial:'New puzzle',previewRemaining:'Current puzzle',previewContinue:'Continue puzzle',previewStartAction:'Start stage',previewRestartAction:'Start from beginning',previewCancel:'Cancel',previewDouble:'Includes leaf piles with two layers.',
+    previewRestartWarning:'Starting from the beginning replaces this puzzle.',previewReplaceWarning:'Starting replaces your current puzzle.',previewKept:'Completed stages, stars, coins and your garden are kept.',previewCurrent:'Current',
     testContinue: 'Test continue +5 moves', testContinueNote: 'Test feature without ads. Once per round. Your progress and rewards stay the same.',
     testAdContinueLoad:'Load rewarded test ad', testAdContinueShow:'Watch test ad for +5 moves',
     testAdContinueNote:'Optional Google test ad. Complete it, then close it to continue this board with +5 moves. Once per round, shared with the no-ad test below. No saved rewards.',
@@ -69,6 +72,9 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    previewStart:'목표를 확인하고 시작해요.',previewResume:'진행 중인 퍼즐을 그대로 이어갈 수 있어요.',previewRestart:'이 스테이지를 처음부터 시작할까요?',
+    previewInitial:'새 퍼즐',previewRemaining:'진행 중인 퍼즐',previewContinue:'퍼즐 이어하기',previewStartAction:'스테이지 시작',previewRestartAction:'처음부터 시작',previewCancel:'취소',previewDouble:'두 겹 낙엽이 포함돼요.',
+    previewRestartWarning:'처음부터 시작하면 현재 퍼즐이 교체돼요.',previewReplaceWarning:'시작하면 진행 중인 퍼즐이 교체돼요.',previewKept:'완료 기록·별·코인·꽃밭은 유지돼요.',previewCurrent:'현재',
     testContinue: '시험 이어하기 +5', testContinueNote: '광고 없이 진행하는 시험 기능이에요. 회차당 한 번, 기록과 보상은 그대로예요.',
     testAdContinueLoad:'보상형 시험 광고 불러오기', testAdContinueShow:'시험 광고 보고 이동 +5',
     testAdContinueNote:'선택 사항인 Google 시험 광고예요. 완료 후 닫으면 이 보드에서 이동 +5로 이어해요. 아래 무광고 시험과 합쳐 회차당 한 번, 저장 보상은 없어요.',

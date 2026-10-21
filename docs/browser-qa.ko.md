@@ -1,3 +1,15 @@
+## 2026-10-21 · #167 스테이지 미리보기·이어하기 검수 대기
+
+기준 main `a550c12adf02ee2a63e7072f6fc18919ecc4652d`의 `codex/167-stage-preview-resume`에서 지도 선택과 다시 시작에 목표·초기 이동 미리보기를 추가했습니다. 같은 일반 회차는 기존 Scene·보드·RNG 그대로 이어가고, 새 회차는 명시적 확인 뒤 시작합니다. 취소·Escape·Android 뒤로가기, 잠금·이전 회차·모달·백그라운드 보호와 시험 회차 구분을 구현했으며 현재 미커밋·독립 검수 대기입니다.
+
+**최신 전체 검사는 36파일 2,455통과·1실패입니다.** `full-04-layout-final.log`의 `reward-ledger.test.ts:100` 동시 8 worker 검사에서 신규 1건 assertion은 통과했으나 duplicate 기대 7·실제 4가 관측됐습니다. 나머지 3건 결과·BEGIN/BUSY·DB 행수는 이 원문으로 확정하지 않습니다. 이전 소스의 전체 성공은 이력이며 최신 전체 성공으로 합산하지 않습니다. 실패 뒤 재실행·기대값·timeout·worker·서버 코드 변경 없이 중단했고, 원인 미확정 #122는 이번 UI 작업과 분리합니다.
+
+최신 관련 UI·엔진·저장·스테이지·낙엽 검사 5파일 280개는 통과했습니다. 실제 testing/production dist에서 KO/EN × 320×568·390×844·640×360 × 일반/감소 모션의 24조합을 확인했습니다. 초기 진행 저장 fixture로 30번을 시작한 뒤 실제 Scene의 합법 교환을 trusted 터치로 실행하고, 전체 localStorage·Scene·보드·낙엽·RNG·이동·점수·지갑 보존, 취소·이어하기·명시적 재시작/다른 스테이지 시작, 기본 초점·Escape·44px 버튼·모달 접근과 빌드별 시험 진입 구분을 검사했습니다. 72PNG와 pageerror 0·외부 요청 0을 보존했습니다. 초기 큰 레이아웃과 정정 후 결과는 버전별로 구분합니다.
+
+별도 actual testing dist의 Capacitor App bridge stub 5항목은 등록된 native back 콜백의 취소 우선순위, 비활성 상태 확인 차단, 언어 재렌더·원래 버튼 초점 복귀, 시험 회차의 일반 이어하기 구분과 시험 재시작의 정상 체크포인트 보존을 통과했습니다. 실제 Android 기기·TalkBack·실제 광고/결제 SDK·스토어 검증은 아닙니다. 최신 두 빌드는 타입·에셋 검사와 flags 구분/서버 마커 0을 확인했으며 APK·Android sync·Drive·버전·최종 오디오 믹스는 변경하지 않았습니다.
+
+원문·명령·버전별 산출물·SHA는 Git 밖 `Pawblossom-builds/qa/issue-167-stage-preview/`의 `STOP-checkpoint.json`, `source-dist-freeze.json`, `actual-dist-report.json`, `native-language-report.json`과 로그에 보존했습니다. 이번 기록은 문서만 추가하며 기존 소스/dist 동결 manifest는 유지하고 문서 LF 해시는 별도로 보존합니다. 검사·빌드 재실행과 커밋·푸시·PR은 아직 수행하지 않습니다. 아래 과거 작업 상태는 당시 이력입니다.
+
 ## 2026-10-20 19시 연장 · #153 최신 main 통합 산출물 대조
 
 PR157 반영·정확한 main CI39406780626 성공 후 main `90845643e37197674a901936892c06b03a7f947b`를 PR155 작업에 병합했습니다. 문서 충돌은 양쪽 이력을 보존했으며 제품 main.ts LF SHA256=`8f2c6de414246d661d95f000648020892a3e0e97ace6f10e70e71f0b0cc564ef`, UI 검사=`18dcc693221f9871929495376a0a995bf5352803333c781070d25a5b71f427ae`로 원래 head9ad4579와 같습니다. 새 검사 진단은 최신 main의 그대로이며 통합 전체2,379개·타입·스토어12·두 빌드를 통과했습니다.

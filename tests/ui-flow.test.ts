@@ -188,6 +188,66 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   };
 }
 
+describe('스테이지 미리보기와 명시적 회차 교체',()=>{
+  const snapshot=(h:ReturnType<typeof mainHarness>)=>h.run('JSON.stringify({round,currentLevel,testingLevel,moves,score,collected,clearedLeaves,shuffles,save,board:scene.engine.board,leaves:scene.engine.leaves})');
+  const open=(h:ReturnType<typeof mainHarness>,id=2)=>h.run(`switchView('village');showStagePreview(${id},'map',document.querySelector('#map-opener'))`);
+  it.each(['cancel','escape','continue','native-back'])('%s는 저장 전체·Scene·엔진·RNG·회차 집계를 보존합니다',reason=>{
+    const h=mainHarness(false,false,false,reason==='native-back');h.run('nativeActive=true;globalThis.originalScene=scene;globalThis.originalEngine=scene.engine;globalThis.rngCalls=0;const rng=scene.engine.rng;scene.engine.rng=()=>{rngCalls++;return rng();};scene.hooks.onMove([1,2,0,0,0,0],30)');
+    const before=snapshot(h),disk=h.disk(),writes=h.writes();open(h);
+    expect(h.run('previewDialog.open')).toBe(true);expect(h.run('game.paused')).toBe(true);expect(h.element('#game-canvas').tabIndex).toBe(-1);
+    expect(h.run('previewDialog.innerHTML')).toContain('Current puzzle · Moves remaining: 23.');
+    if(reason==='cancel')h.element('#preview-cancel').onclick();
+    if(reason==='escape')h.run('previewDialog.listeners.cancel({preventDefault(){}})');
+    if(reason==='continue')h.run("confirmStagePreview(stagePreview,'continue')");
+    if(reason==='native-back')h.nativeEvents.backButton({isActive:true});
+    expect(snapshot(h)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    expect(h.run('scene===originalScene&&scene.engine===originalEngine&&rngCalls===0')).toBe(true);
+    expect(h.run('route')).toBe(reason==='continue'?'puzzle':'village');expect(h.run('previewDialog.open')).toBe(false);
+  });
+  it.each(['restart','switch'])('%s 확인만 새 회차를 정확히 한 번 만들고 영구 진행을 보존합니다',reason=>{
+    const h=mainHarness();h.run('globalThis.oldScene=scene;scene.hooks.onMove([1,0,0,0,0,0],10)');const disk=h.disk(),beforeRound=h.run('round');
+    if(reason==='restart')h.element('#restart').onclick();else open(h,1);
+    expect(h.disk()).toEqual(disk);h.run('globalThis.oldPreview=stagePreview');
+    h.run("confirmStagePreview(oldPreview,'start');confirmStagePreview(oldPreview,'start')");
+    expect(h.run('round')).toBe(beforeRound+1);expect(h.run('scene===oldScene')).toBe(false);expect(h.run('currentLevel')).toBe(reason==='restart'?2:1);
+    expect(h.stored()).toMatchObject({completed:[1],stars:1,coins:40,garden:0,inProgress:{score:0}});
+  });
+  it('실제 엔진의 유효 교환 뒤에도 미리보기 취소와 이어하기는 같은 난수 흐름을 유지합니다',()=>{
+    const h=mainHarness();h.run('globalThis.originalScene=scene;const move=scene.engine.legalMoves()[0];const result=scene.engine.swap(move.a,move.b);if(!result.valid)throw Error("유효 교환 실패");scene.hooks.onMove(result.collected,result.score,result.steps.length,result.leavesCleared);globalThis.rngCalls=0;const rng=scene.engine.rng;scene.engine.rng=()=>{rngCalls++;return rng();}');
+    const before=snapshot(h),disk=h.disk();open(h);h.element('#preview-cancel').onclick();open(h);h.run("confirmStagePreview(stagePreview,'continue')");expect(snapshot(h)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.run('scene===originalScene&&rngCalls===0')).toBe(true);
+  });
+  it.each(['hidden','native','pending','busy','tutorial','result','picker','ad','billing'])('%s 중에는 열기 자체도 거부합니다',reason=>{
+    const h=mainHarness(false,false,true);const code:Record<string,string>={hidden:'document.hidden=true',native:'nativeActive=false',pending:'boardPending=true',busy:'scene.canLeave=()=>false',tutorial:"document.querySelector('#tutorial-dialog').open=true",result:"document.querySelector('#result-dialog').open=true",picker:"document.querySelector('#test-level-dialog').open=true",ad:'testAds={pausesGame:true}',billing:'testBilling={pausesGame:true}'};
+    const disk=h.disk();h.run(`${code[reason]};showStagePreview(2,'restart',document.querySelector('#restart'))`);expect(h.run('stagePreview')).toBeUndefined();expect(h.disk()).toEqual(disk);
+  });
+  it.each(['hidden','background','pending','busy','tutorial','result','picker','ad','billing','stale-round','stale-scene','locked'])('%s 조건의 지연 확인은 회차를 바꾸지 않습니다',reason=>{
+    const h=mainHarness(false,false,true);open(h,1);h.run('globalThis.oldPreview=stagePreview');
+    const code:Record<string,string>={hidden:'document.hidden=true',background:'nativeActive=false',pending:'boardPending=true',busy:'scene.canLeave=()=>false',tutorial:"document.querySelector('#tutorial-dialog').open=true",result:"document.querySelector('#result-dialog').open=true",picker:"document.querySelector('#test-level-dialog').open=true",ad:'testAds={pausesGame:true}',billing:'testBilling={pausesGame:true}', 'stale-round':'round++','stale-scene':'scene={...scene}',locked:'save.highestLevel=0'};
+    const disk=h.disk();h.run(`${code[reason]};globalThis.expectedRound=round;confirmStagePreview(oldPreview,'start')`);expect(h.run('round')).toBe(h.run('expectedRound'));expect(h.disk()).toEqual(disk);
+  });
+  it.each(['0','31','1.5','NaN','3'])('잘못되거나 잠긴 id %s와 분리된 DOM은 미리보기를 열지 않습니다',id=>{
+    const h=mainHarness(),disk=h.disk();open(h,Number(id));expect(h.run('stagePreview')).toBeUndefined();h.run("document.querySelector('#map-opener').isConnected=false;showStagePreview(1,'map',document.querySelector('#map-opener'))");expect(h.run('stagePreview')).toBeUndefined();expect(h.disk()).toEqual(disk);
+  });
+  it('시험 회차를 같은 일반 회차로 이어가지 않으며 시험 재시작은 정상 체크포인트를 보존합니다',()=>{
+    const h=mainHarness(false,false,true),disk=h.disk();h.run('startLevel(2,true)');open(h);expect(h.run('previewDialog.innerHTML')).not.toContain('preview-continue');h.run("confirmStagePreview(stagePreview,'continue')");expect(h.run('testingLevel')).toBe(true);h.run('closeStagePreview();switchView("puzzle")');h.element('#restart').onclick();h.run("confirmStagePreview(stagePreview,'start')");expect(h.run('testingLevel')).toBe(true);expect(h.disk()).toEqual(disk);
+  });
+  it('언어 재렌더·중첩·시험 진입은 선택과 회차를 보존하고 다른 시작은 이전 미리보기를 무효화합니다',()=>{
+    const h=mainHarness(false,false,true);open(h,1);h.run('globalThis.oldPreview=stagePreview;showStagePreview(2,"map",document.querySelector("#map-opener"));showTestPicker();showTutorial();changeLanguage("ko")');
+    expect(h.run('stagePreview===oldPreview')).toBe(true);expect(h.run('previewDialog.innerHTML')).toContain('스테이지 1');expect(h.element('#test-level-dialog').open).toBe(false);expect(h.element('#tutorial-dialog').open).toBe(false);
+    h.run('startLevel(2)');const round=h.run('round');h.run("confirmStagePreview(oldPreview,'start')");expect(h.run('round')).toBe(round);expect(h.run('previewDialog.open')).toBe(false);
+  });
+  it('접근성 detail=0 활성화는 DOM 초점 강제 없이 허용하고 새 pointerdown 없는 호환 클릭은 거절합니다',()=>{
+    const h=mainHarness();h.element('#restart').onclick();const before=h.run('round');
+    h.run("previewDialog.contains=()=>true;document.querySelector('#preview-start').onclick({isTrusted:true,detail:1})");expect(h.run('round')).toBe(before);
+    h.run("document.querySelector('#preview-start').onclick({isTrusted:true,detail:0})");expect(h.run('round')).toBe(before+1);
+  });
+  it.each([22,30])('%s의 세 목표 또는 두 겹 낙엽은 원래 수량과 초기 이동을 표시합니다',id=>{
+    const h=mainHarness();h.run('save.highestLevel=30');open(h,id);const html=h.run('previewDialog.innerHTML');expect(html.match(/class="preview-goal"/g)).toHaveLength(3);
+    if(id===30){expect(html).toContain('leaf-pile.svg');expect(html).toContain('two layers');}
+    expect(html).toContain('preview-initial');expect(html).not.toContain('preview-remaining');
+  });
+});
+
 type Pointer = { id: number; x: number; y: number };
 describe('목표·남은 이동 접근성 안내',()=>{
   const sentences=(h:ReturnType<typeof mainHarness>)=>Array.from(h.element('#goals').innerHTML.matchAll(/<span class="sr-only">([^<]+)<\/span>/g),match=>match[1]);
@@ -303,7 +363,7 @@ describe('시험 실패 회차 이어하기',()=>{
   });
   it.each(['restart','new-test','normal'])('%s로 생성한 새 round에서는 오래된 callback을 차단하고 시험 새 회차만 사용 횟수를 초기화합니다',reason=>{
     const h=setup(),callback=h.element('#result-continue').onclick;callback();
-    if(reason==='restart')h.element('#restart').onclick();else h.run(`startLevel(6,${reason==='new-test'})`);
+    if(reason==='restart'){h.element('#restart').onclick();h.run("confirmStagePreview(stagePreview,'start')");}else h.run(`startLevel(6,${reason==='new-test'})`);
     fail(h);const currentRound=h.run('round'),moves=h.run('moves');callback();
     expect(h.run('round')).toBe(currentRound);expect(h.run('moves')).toBe(moves);expect(h.run('testContinueUsed')).toBe(false);
     if(reason!=='normal'){h.element('#result-continue').onclick();expect(h.run('moves')).toBe(5);}
@@ -621,7 +681,7 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     h.element('#test-level-button').onclick();expect(h.element('#test-level-dialog').open).toBe(true);expect(h.run('game.paused')).toBe(true);
     h.element('#test-stage-6').onclick();expect(h.run('currentLevel')).toBe(6);expect(h.run('testingLevel')).toBe(true);
     expect(h.element('#test-level-dialog').open).toBe(false);expect(h.run('game.paused')).toBe(false);
-    h.element('#restart').onclick();expect(h.run('testingLevel')).toBe(true);
+    h.element('#restart').onclick();h.run("confirmStagePreview(stagePreview,'start')");expect(h.run('testingLevel')).toBe(true);
     h.run('scene.hooks.onMove([12,0,0,0,0,16],280,1,4)');h.flushResults();
     expect(h.stored()).toEqual(before);expect(h.writes()).toBe(writes);
     h.element('#result-next').onclick();expect(h.run('currentLevel')).toBe(7);expect(h.run('testingLevel')).toBe(true);
@@ -683,7 +743,8 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     const h=mainHarness();h.run(`changeLanguage('${language}')`);
     const html=h.element('#village-view').innerHTML;
     expect(html).toContain(`aria-label="${t(language,'level')} 1 · ${t(language,'levelCompleted')}"`);
-    expect(html).toContain(`aria-label="${t(language,'level')} 2"`);
+    expect(html).toContain(`aria-label="${t(language,'level')} 2 · ${t(language,'previewCurrent')}"`);
+    expect(html).toContain('aria-current="step"');
     expect(html).toMatch(new RegExp(`data-level="3" disabled[^>]+aria-label="${t(language,'level')} 3 · ${t(language,'levelLocked')}"`));
   });
   it('정원 DOM 갱신은 내부 스크롤과 심기 뒤 상태 초점을 복원합니다',()=>{
@@ -1078,13 +1139,13 @@ describe('정상 회차 복구와 종료 확정',()=>{
   it('시험·시험 재시작·완료는 정상 저장을 보존하고 일반 복귀와 재실행은 이어갑니다',()=>{
     const app=mainHarness(false,false,true);app.element('#shuffle').onclick();const normal=app.stored();
     app.run('startLevel(30,true);scene.hooks.onMove([2,0,0,0,0,0],20,1,0)');
-    app.element('#restart').onclick();app.run('finish(true)');expect(app.stored()).toEqual(normal);
+    app.element('#restart').onclick();app.run("confirmStagePreview(stagePreview,'start');finish(true)");expect(app.stored()).toEqual(normal);
     const relaunched=mainHarness(false,false,true,false,app.stored());expect(relaunched.run('testingLevel')).toBe(false);expect(relaunched.stored()).toEqual(normal);
     app.element('#result-test').onclick();app.element('#test-normal').onclick();expect(app.stored()).toEqual(normal);expect(app.run('shuffles')).toBe(0);
   });
   it('정상 재시작·다른 선택·초기화는 새 회차이며 이전 콜백을 무시합니다',()=>{
     const app=mainHarness();app.element('#shuffle').onclick();const stale=app.run('scene.hooks.onMove');
-    app.element('#restart').onclick();expect(app.stored().inProgress.shuffles).toBe(1);
+    app.element('#restart').onclick();app.run("confirmStagePreview(stagePreview,'start')");expect(app.stored().inProgress.shuffles).toBe(1);
     const restarted=app.stored();stale([20,20,20,20,20,20],999);expect(app.stored()).toEqual(restarted);
     app.run('startLevel(1)');expect(app.stored().inProgress.levelId).toBe(1);
     app.element('#reset').onclick();expect(app.stored()).toMatchObject({completed:[],coins:0,stars:0,garden:0,inProgress:{levelId:1,score:0,moves:26}});
