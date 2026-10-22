@@ -320,7 +320,7 @@ main.workspace>.game-panel{flex:1}
 @media(orientation:landscape) and (max-height:600px){main.workspace{max-width:980px}.level-top{display:grid;height:88px;min-height:88px;max-height:88px;grid-template-columns:88px minmax(0,1fr);grid-template-rows:38px 44px;gap:6px 8px}.level-heading{display:contents}.header-pip{grid-column:1;grid-row:1 / 3;flex-basis:88px;width:88px;height:88px}.level-copy{grid-column:2;grid-row:1;align-self:center}.level-copy h2{flex-direction:row;font-size:14px;gap:4px;margin:0}.level-copy #level-number{font-size:21px}.level-actions{grid-column:2;grid-row:2;gap:4px;justify-content:flex-start}.test-level-button{padding:7px 4px;font-size:10px}}
 
 /* 높이320px에서도44px 동작 버튼과 보드의 마지막 줄이 메뉴 뒤로 숨지 않게 합니다. */
-@media(orientation:landscape) and (max-height:340px){.level-top{height:72px;min-height:72px;max-height:72px;grid-template-rows:22px 44px;grid-template-columns:72px minmax(0,1fr)}.header-pip{flex-basis:72px;width:72px;height:72px}}
+@media(orientation:landscape) and (max-height:340px){#puzzle-view{row-gap:2px}.level-top{height:72px;min-height:72px;max-height:72px;grid-template-rows:22px 44px;grid-template-columns:72px minmax(0,1fr)}.header-pip{flex-basis:72px;width:72px;height:72px}.moves-box{height:44px;padding:3px 4px}.moves-box strong{font-size:22px;line-height:1}.moves-box>span{font-size:9px;line-height:1.2}.board-hint{max-height:32px;line-height:16px;align-self:center}}
 
 /* 정사각 실습에서 생성한 폭탄은 완료 후에도 본판처럼 선명하게 보여 줍니다. */
 .practice-cell.practice-created:disabled{opacity:1;background:#fff2dc;border:2px solid #bb9661}
