@@ -1,5 +1,13 @@
 # 출시까지 남은 작업
 
+## 최신100판 검수 후보 · 2026-10-22 · #221
+
+- [x] 100판/11장·기존 난이도 재설계·구40→41·100저장/정원/끝판·KO/EN 장 가로 선택과 재열기 수정(PR220).
+- [x] PR5ac 첫CI39729150932 양Node44/2,909·store12·타입/두빌드, 독립 코드/아티팩트 검수·작은 실제 화면과 정상 진행 복귀.
+- [x] [34031f1 APK](https://drive.google.com/file/d/1L6dRtO4sJook8Erle_A2ALkdM-VMMZJT/view)0.1.7/code8·11,146,331bytes/SHA `7fa11bfc90ba5ee17e227107428098a1e747d1a6a24577c9ef9b0538840d21c6`·웹38/비웹536·기존v2·production복원·Drive 실제재다운로드 크기/해시일치. Native16/실질15·lint0/15는63b→9fa동일근거재사용이며신규실행아님.
+- [ ] 정확main340 최초CI39729465596 Node24 2,908+1실패/Node22 2,909성공. #122 원장 BEGIN BUSY5/owner미확정 유지. PR/후속문서CI를 이 실패의 원인해결로 합산하지 않음. 이 APK는UI검수후보입니다.
+- [ ] 사용자100판 체감·장기재미·40이후육성/재화사용 흐름,실단말/청취·실UMP/GMA/Play구매·복원·환불·스토어(#73),개발자명/공개지원·개인정보호스팅.
+
 ## 최신 최종 전달과 남은 검증 · 2026-10-22 오후 · #210
 
 - [x] [최신 main9fa APK](https://drive.google.com/file/d/13dAbsmALhEHyLpNktoE6wB--JVrWvKvV/view)0.1.7/code8·11,145,015bytes/SHA256 `c660f802dba6737a81967a04a96f7d36cb9e1a513bffb6aea61f3884fb4c9b81`·기존v2/웹38·production복원·기존Drive 실제재다운로드 크기/해시일치·독립artifact검수완료.
