@@ -1,5 +1,15 @@
 # 출시까지의 개발 순서
 
+## 원장 검사 관측 후속 · 2026-10-22 · #204
+
+#122에서 관측한 긴 BEGIN/COMMIT wall이 같은 worker의 CPU 실행/배정 대기와 어떤 관계인지 좁히기 위해 검사 전용 opt-in 관측을 추가했습니다. 기존 서로 다른 명령8worker 경쟁 한 case의 BEGIN/COMMIT만 대상으로 같은 스레드의 동기 schedstat·threadCpuUsage 차이와 probe 포함 구간을 기록합니다. sysctl0만으로 통계를 무효화하지 않고, 지원 실패·전부0·비단조·포함관계 불일치는 고정 상태/null로 구분합니다. 유효한 runqueue 차이0은 그대로 유지합니다.
+
+기존 호출 구간은 약간의 JS 기록 비용을 포함하므로 정확한 SQLite syscall 시간으로 해석하지 않습니다. probe 포함 구간 E와 기존 구간 W의 차이 P, runqueue 차이 R이 유효할 때만 호출 내부 runnable 대기의 기여를 대략 max(0,R-P)~min(R,W) 범위로 참고할 수 있습니다. CPU·runqueue를 더하거나 잔차를 정확한 blocked 시간으로 만들지 않습니다. runtime 통계의 지연 갱신과 probe가 go 이후 경쟁 타이밍에 미치는 영향도 남습니다. 과거377ms·잠금 owner·fsync/대기 원인이나 #122 해결을 확정하지 않습니다.
+
+제품/src/server/에셋/엔진/DB/profile·8worker/go/500ms/5초/seed/엄격 applied1·conflict7·CI workflow는 바꾸지 않았습니다. 기본 경로와 비지원 Windows에서는 추가 파일·CPU·probe clock을 호출하지 않으며 업무 검사는 유지합니다. 관측 실패가 native1회·원래 반환/동일 예외·descriptor 복원을 덮지 않도록 검사했습니다. 확장 DTO는 기존최대8행의 고정 enum/유한숫자만 안전 투영하고 SQL·키·환경변수·PID/TID·DB 원문을 출력하지 않습니다.
+
+최초 관련 server-round-ledger1파일197개와 전체/앱/서버 타입 검사가 통과했고 원문·변경4파일·검수 근거는 Git 밖 `qa/integration-20261022/204`에 보존합니다. Windows 성공은 실제 Linux 통계 가용성이나 긴 호출 재현 성공을 뜻하지 않습니다. 이후 정상 최초 PR/main CI에서만 관측하며 성공해서 추가 실패 수치가 없거나 지원이 없으면 원인 미확정을 유지하고 같은head를 재실행하지 않습니다. 이 검사 전용 변경은20ff9d9 게임 APK 재빌드 사유가 아닙니다.
+
 ## 현재 구현 인계 · 2026-10-22 · #202 별·코인 설명 진입
 
 기준 main `d81a20196c3ecdc6970716cfcb04955f0dcfd27c`, 브랜치 `codex/202-resource-help`에서 상단 별/코인에44px 사용처 설명 버튼과 닫기 전용 한영dialog를 추가했습니다. 일반/체험 잔액·시험 무보상과 실제 별/코인 역할을 게임 안에서 바로 확인할 수 있습니다. 다른모달/연쇄/전환/광고/결제busy 가드와 보드입력차단·Escape/native뒤로·원버튼초점/스크롤복귀를 연결했으며 지출·이동·상품·지급·저장/경제/엔진/RNG/음원은 변경하지 않았습니다. 큰 잔액의 헤더 숫자만 언어별 compact 표기를 쓰고 ARIA/dialog 원값은 유지합니다.

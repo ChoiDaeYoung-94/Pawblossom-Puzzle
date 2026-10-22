@@ -2,6 +2,7 @@
 import {performance} from 'node:perf_hooks';
 import type {Worker} from 'node:worker_threads';
 import {DatabaseSync,StatementSync} from 'node:sqlite';
+import {projectSchedulerSummary,projectScheduling,schedulerField,unavailableScheduling,type SchedulerProbe,type SchedulerSummary,type Scheduling} from './ledgerSchedulerProbe.ts';
 
 const phases=['unknown','fixture','service-open','adapter-create','adapter-call','prepare','workers','reward-open','redeem','round-open','apply','start','command','get','close','open','seed','retry','invalid-limits','child-create','child-send','child-result','child-exit','reconcile','verify','reprofile','eligibility'] as const;
 type Phase=typeof phases[number];
@@ -14,7 +15,7 @@ const sqliteOperations=['database-exec','database-prepare','statement-run','stat
 const sqliteSites=['unknown','transaction-begin','transaction-commit','transaction-rollback','pragma-synchronous-full'] as const;
 const transactionSites=['unknown','transaction-begin','transaction-commit','transaction-rollback'] as const;
 const transactionOutcomes=['unknown','returned','threw'] as const;
-interface SqliteTransactionRow {connectionIndex:number|null;phase:Phase;site:typeof transactionSites[number];startedAtProcessMs:number|null;finishedAtProcessMs:number|null;outcome:typeof transactionOutcomes[number];}
+interface SqliteTransactionRow {connectionIndex:number|null;phase:Phase;site:typeof transactionSites[number];startedAtProcessMs:number|null;finishedAtProcessMs:number|null;outcome:typeof transactionOutcomes[number];scheduling?:Scheduling;}
 interface SqliteErrorRow {operation:typeof sqliteOperations[number];site:typeof sqliteSites[number];phase:Phase;errorCode:ReturnType<typeof safeError>['errorCode'];extendedCode:number|null;baseCode:number|null;transactionActive:boolean|null;connectionClosed:boolean|null;}
 export interface ConstructorAttempt {attempt:number;opened:boolean;nativeCount:number;closeObserved:boolean;closeSucceeded:boolean;closeFailed:boolean;closeHookInstalled:boolean;closeHookRestored:boolean;retryScheduled:boolean;waitMs:number;}
 const hookInstallStates=['not-requested','pending','installed','failed','unknown'] as const,hookRestoreStates=['not-needed','pending','restored','failed','unknown'] as const;
@@ -32,6 +33,7 @@ export interface PhaseTrace {
   sqliteTransactions:SqliteTransactionRow[];sqliteTransactionsTruncated:boolean;sqliteTransactionObservationFailed:boolean;
   sqliteHook:SqliteHookState;
   constructorAttempts:ConstructorAttempt[];
+  schedulerProbe?:SchedulerSummary;
 }
 export interface WorkerRow extends ReturnType<typeof safeResult> {
   index:number;readyAtMs:number|null;goAtMs:number|null;resultAtMs:number|null;exitAtMs:number|null;exitCode:number|null;
@@ -102,8 +104,18 @@ function finishTransactionObservation(trace:PhaseTrace,row:SqliteTransactionRow|
 }
 // 단발 worker의 동기 execute 범위에서만 사용합니다.
 // SQL은 고정 literal과의 완전 일치만 분류하며 원문·인자·errstr·원문 오류는 저장/출력하지 않습니다.
-export function withSqliteDiagnostics<T>(trace:PhaseTrace|null,work:()=>T):T {
+export function withSqliteDiagnostics<T>(trace:PhaseTrace|null,work:()=>T,options?:{schedulerProbe?:SchedulerProbe}):T {
   if(!trace)return work();
+  const scheduler=schedulerField(options,'schedulerProbe') as SchedulerProbe|undefined;let schedulingCount=0;
+  if(scheduler)try{const summary=projectSchedulerSummary(schedulerField(scheduler,'summary'));if(summary)trace.schedulerProbe=summary;}catch{}
+  const finishScheduling=(row:SqliteTransactionRow|null,attempted:boolean,sampled:boolean,sample:unknown)=>{
+    if(!attempted||!row)return;
+    try{
+      let dto=unavailableScheduling();
+      if(sampled)try{dto=scheduler!.after(sample,{startedAtProcessMs:row.startedAtProcessMs,finishedAtProcessMs:row.finishedAtProcessMs});}catch{}
+      row.scheduling=projectScheduling(dto,{startedAtProcessMs:row.startedAtProcessMs,finishedAtProcessMs:row.finishedAtProcessMs})??unavailableScheduling();
+    }catch{transactionObservationFailed(trace);}
+  };
   const targets:[object,string,SqliteErrorRow['operation']][]=[[DatabaseSync.prototype,'exec','database-exec'],[DatabaseSync.prototype,'prepare','database-prepare'],[StatementSync.prototype,'run','statement-run'],[StatementSync.prototype,'get','statement-get'],[StatementSync.prototype,'all','statement-all']];
   const state=trace.sqliteHook,saved:{prototype:object;key:string;operation:SqliteErrorRow['operation'];descriptor:PropertyDescriptor}[]=[];
   let attempted=false,installed=false;state.installation='pending';state.restoration='not-needed';state.installedMethods=0;state.restoreFailures=0;
@@ -117,10 +129,13 @@ export function withSqliteDiagnostics<T>(trace:PhaseTrace|null,work:()=>T):T {
     for(const [prototype,key,operation] of targets){const descriptor=Object.getOwnPropertyDescriptor(prototype,key);if(!descriptor||typeof descriptor.value!=='function'||!descriptor.configurable)throw new Error('검사 SQLite 관측 준비 실패');saved.push({prototype,key,operation,descriptor});}
     attempted=true;
     for(const {prototype,key,operation,descriptor} of saved){Object.defineProperty(prototype,key,{...descriptor,value:function(this:unknown,...args:unknown[]){
+      let schedulingAttempted=false,sampled=false,sample:unknown;
+      try{if(scheduler?.active===true&&operation==='database-exec'&&(trace.phase==='round-open'||trace.phase==='command')&&(args[0]==='BEGIN IMMEDIATE'||args[0]==='COMMIT')&&trace.sqliteTransactions.length<8&&schedulingCount<8){schedulingAttempted=true;schedulingCount++;sample=scheduler.before();sampled=true;}}catch{}
       const transaction=operation==='database-exec'?beginTransactionObservation(trace,args[0],this):null;
-      try{const result=Reflect.apply(descriptor.value,this,args);finishTransactionObservation(trace,transaction,'returned');return result;}
+      try{const result=Reflect.apply(descriptor.value,this,args);finishTransactionObservation(trace,transaction,'returned');finishScheduling(transaction,schedulingAttempted,sampled,sample);return result;}
       catch(error){
         finishTransactionObservation(trace,transaction,'threw');
+        finishScheduling(transaction,schedulingAttempted,sampled,sample);
         // 수집 실패도 원래 예외의 종류/참조를 바꾸지 않습니다.
         try{if(trace.sqliteErrors.length<8){const errorCode=safeError(error).errorCode;const row:SqliteErrorRow={operation,site:sqliteSite(operation,args[0]),phase:trace.phase,errorCode,...sqliteCode(errorCode==='ERR_SQLITE_ERROR'?field(error,'errcode'):undefined),transactionActive:operation==='database-exec'?nativeBoolean(this as object,'isTransaction'):null,connectionClosed:null};if(operation==='database-exec'&&this!==null&&typeof this==='object')nativeDatabases.set(row,this);trace.sqliteErrors.push(row);}else trace.sqliteErrorsTruncated=true;}catch{}
         throw error;
@@ -134,15 +149,16 @@ export function withSqliteDiagnostics<T>(trace:PhaseTrace|null,work:()=>T):T {
 function methodCount(value:unknown):number {return typeof value==='number'&&Number.isInteger(value)&&value>=0&&value<=5?value:0;}
 export function projectTrace(value:unknown):PhaseTrace {
   const steps=field(value,'steps'),sqliteErrors=field(value,'sqliteErrors'),transactions=field(value,'sqliteTransactions'),hook=field(value,'sqliteHook'),attempts=field(value,'constructorAttempts');
+  const schedulerProbe=projectSchedulerSummary(schedulerField(value,'schedulerProbe'));
   return {phase:allowed(field(value,'phase'),phases,'unknown'),elapsedMs:number(field(value,'elapsedMs'))??0,
     resultPhase:field(value,'resultPhase')===null?null:allowed(field(value,'resultPhase'),phases,'unknown'),errorPhase:field(value,'errorPhase')===null?null:allowed(field(value,'errorPhase'),phases,'unknown'),
     errorName:field(value,'errorName')===null?null:allowed(field(value,'errorName'),names,'other'),errorCode:field(value,'errorCode')===null?null:allowed(field(value,'errorCode'),errorCodes,'other'),
     steps:Array.isArray(steps)?steps.slice(0,8).map(row=>({phase:allowed(field(row,'phase'),phases,'unknown'),startedAtMs:number(field(row,'startedAtMs'))??0,durationMs:number(field(row,'durationMs'))})):[],
     sqliteErrors:Array.isArray(sqliteErrors)?sqliteErrors.slice(0,8).map(row=>{const operation=allowed(field(row,'operation'),sqliteOperations,'unknown'),errorCode=field(row,'errorCode')===null?null:allowed(field(row,'errorCode'),errorCodes,'other');return {operation,site:operation==='database-exec'?allowed(field(row,'site'),sqliteSites,'unknown'):'unknown',phase:allowed(field(row,'phase'),phases,'unknown'),errorCode,...sqliteCode(errorCode==='ERR_SQLITE_ERROR'?field(row,'extendedCode'):undefined),transactionActive:booleanOrNull(field(row,'transactionActive')),connectionClosed:booleanOrNull(field(row,'connectionClosed'))};}):[],sqliteErrorsTruncated:field(value,'sqliteErrorsTruncated')===true||(Array.isArray(sqliteErrors)&&sqliteErrors.length>8),
-    sqliteTransactions:Array.isArray(transactions)?transactions.slice(0,8).map(row=>{const connection=field(row,'connectionIndex'),startedAtProcessMs=number(field(row,'startedAtProcessMs')),finished=number(field(row,'finishedAtProcessMs'));return {connectionIndex:typeof connection==='number'&&Number.isInteger(connection)&&connection>=1&&connection<=8?connection:null,phase:allowed(field(row,'phase'),phases,'unknown'),site:allowed(field(row,'site'),transactionSites,'unknown'),startedAtProcessMs,finishedAtProcessMs:startedAtProcessMs!==null&&finished!==null&&finished>=startedAtProcessMs?finished:null,outcome:allowed(field(row,'outcome'),transactionOutcomes,'unknown')};}):[],
+    sqliteTransactions:Array.isArray(transactions)?transactions.slice(0,8).map(row=>{const connection=field(row,'connectionIndex'),startedAtProcessMs=number(field(row,'startedAtProcessMs')),finished=number(field(row,'finishedAtProcessMs')),scheduling=projectScheduling(schedulerField(row,'scheduling'),{startedAtProcessMs,finishedAtProcessMs:finished});return {connectionIndex:typeof connection==='number'&&Number.isInteger(connection)&&connection>=1&&connection<=8?connection:null,phase:allowed(field(row,'phase'),phases,'unknown'),site:allowed(field(row,'site'),transactionSites,'unknown'),startedAtProcessMs,finishedAtProcessMs:startedAtProcessMs!==null&&finished!==null&&finished>=startedAtProcessMs?finished:null,outcome:allowed(field(row,'outcome'),transactionOutcomes,'unknown'),...(scheduling?{scheduling}:{})};}):[],
     sqliteTransactionsTruncated:field(value,'sqliteTransactionsTruncated')===true||(Array.isArray(transactions)&&transactions.length>8),sqliteTransactionObservationFailed:field(value,'sqliteTransactionObservationFailed')===true,
     sqliteHook:{installation:allowed(field(hook,'installation'),hookInstallStates,'unknown'),restoration:allowed(field(hook,'restoration'),hookRestoreStates,'unknown'),installedMethods:methodCount(field(hook,'installedMethods')),restoreFailures:methodCount(field(hook,'restoreFailures'))},
-    constructorAttempts:Array.isArray(attempts)?attempts.slice(0,3).map(row=>({attempt:boundedCount(field(row,'attempt'),3),opened:field(row,'opened')===true,nativeCount:boundedCount(field(row,'nativeCount'),8),closeObserved:field(row,'closeObserved')===true,closeSucceeded:field(row,'closeSucceeded')===true,closeFailed:field(row,'closeFailed')===true,closeHookInstalled:field(row,'closeHookInstalled')===true,closeHookRestored:field(row,'closeHookRestored')===true,retryScheduled:field(row,'retryScheduled')===true,waitMs:field(row,'waitMs')===25?25:0})):[]};
+    constructorAttempts:Array.isArray(attempts)?attempts.slice(0,3).map(row=>({attempt:boundedCount(field(row,'attempt'),3),opened:field(row,'opened')===true,nativeCount:boundedCount(field(row,'nativeCount'),8),closeObserved:field(row,'closeObserved')===true,closeSucceeded:field(row,'closeSucceeded')===true,closeFailed:field(row,'closeFailed')===true,closeHookInstalled:field(row,'closeHookInstalled')===true,closeHookRestored:field(row,'closeHookRestored')===true,retryScheduled:field(row,'retryScheduled')===true,waitMs:field(row,'waitMs')===25?25:0})):[],...(schedulerProbe?{schedulerProbe}:{})};
 }
 function booleanOrNull(value:unknown):boolean|null {return typeof value==='boolean'?value:null;}
 function boundedCount(value:unknown,max:number):number {return typeof value==='number'&&Number.isInteger(value)&&value>=0&&value<=max?value:0;}
