@@ -97,13 +97,6 @@ $('#app').innerHTML=`
     <div class="header-right"><button id="stars-help" type="button" class="wallet wallet-help stars" aria-haspopup="dialog">${icon('star',18)}<strong id="star-count" aria-hidden="true">0</strong><span class="sr-only">${text('stars')}</span></button><button id="coins-help" type="button" class="wallet wallet-help coins" aria-haspopup="dialog">${icon('coin',18)}<strong id="coin-count" aria-hidden="true">0</strong><span class="sr-only">${text('coins')}</span></button><select id="language-toggle" class="language-button" aria-label="${text('language')}"><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option><option value="en" ${save.language==='en'?'selected':''}>English</option></select><button id="settings-button" class="icon-button" aria-label="${text('settings')}">${icon('settings',21)}</button></div>
   </header>
   <main class="workspace">
-    <section class="story-panel">
-      <div class="eyebrow"><span class="tiny-leaf">${icon('leaf',15)}</span><span id="story-chapter-name"></span></div>
-      <h1>${label('greeting')}</h1><p class="story-copy">${label('story')}</p>
-      <div class="meadow-art"><img class="environment" src="/assets/meadow.png" loading="lazy" decoding="async" alt=""/><img class="pip" src="/assets/pip.png" alt="${text('pip')}" data-alt="pip"/></div>
-      <div class="friend-message"><span class="friend-avatar"><img src="/assets/pip.png" alt=""/></span><div><strong>${label('pip')}</strong><p>${label('request')}</p></div><span class="message-flower">${icon('flower',25)}</span></div>
-      <div class="garden-status"><div><span>${icon('leaf',16)} ${label('garden')}</span><strong id="garden-count">0 / 5</strong></div><div class="garden-track"><i id="garden-fill"></i></div></div>
-    </section>
     <section class="game-panel">
       <div id="puzzle-view" class="view">
         <div class="level-top"><div class="level-heading"><span id="header-pip" class="header-pip" aria-hidden="true"><img class="header-pip-image" src="/assets/pip.png" alt=""/></span><div class="level-copy"><div class="eyebrow"><span id="chapter-name"></span></div><h2><span data-t="level">${text('level')}</span> <span id="level-number">1</span></h2></div></div><div class="level-actions">${TEST_TOOLS_ENABLED?`<button id="test-level-button" class="test-level-button">${label('testPick')}</button>`:''}<button id="restart" class="icon-button" aria-label="${text('restart')}">${icon('restart',20)}</button></div></div>
@@ -250,7 +243,7 @@ function walletCount(count:number):string {return count>=10_000?new Intl.NumberF
 function updateWallet(){
   $('.wallet.stars .sr-only').textContent=text('stars');$('.wallet.coins .sr-only').textContent=text('coins');
   for(const kind of ['stars','coins'] as const)$('#'+kind+'-help').setAttribute('aria-label',text('resourceHelpButton').replace('{name}',text(kind)).replace('{count}',String(save[kind]))+(careDemo?' · '+text('resourceDemoBalance'):''));
-  $('#star-count').textContent=walletCount(save.stars);$('#coin-count').textContent=walletCount(save.coins);$('#garden-count').textContent=`${save.garden} / 5`;$('#garden-fill').style.width=`${save.garden*20}%`;
+  $('#star-count').textContent=walletCount(save.stars);$('#coin-count').textContent=walletCount(save.coins);
 }
 function updateGoals(){
   $('#game-canvas').setAttribute('aria-label',text('boardLabel'));
@@ -259,7 +252,7 @@ function updateGoals(){
   const level=levels[currentLevel-1];
   const descriptions=goalDescriptions();
   const chapter=chapterForLevel(currentLevel);
-  for(const id of ['#story-chapter-name','#chapter-name'])$(id).textContent=`${text(chapter.title)} · ${chapter.first}–${chapter.last}`;
+  $('#chapter-name').textContent=`${text(chapter.title)} · ${chapter.first}–${chapter.last}`;
   $('#level-number').textContent=String(currentLevel);$('#moves').textContent=String(moves);$('#score').textContent=score.toLocaleString(save.language==='ko'?'ko-KR':'en-US');
   $('#goals').innerHTML=level.goals.map((goal,index)=>{const remaining=Math.max(0,goal.count-collected[goal.kind]);return `<div data-feedback-goal="${goal.kind}" class="goal-item ${remaining===0?'done':''}"><span class="sr-only">${descriptions[index]}</span><img src="/assets/tiles-v2/${tileNames[goal.kind]}.svg" alt=""/><strong aria-hidden="true">${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,collected[goal.kind]/goal.count*100)}%"></span></div>`;}).join('');
   const total=level.leaves?.length??0,remaining=Math.max(0,total-clearedLeaves);

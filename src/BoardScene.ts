@@ -169,10 +169,11 @@ export class BoardScene extends Phaser.Scene {
       if(tile.special){
         const halo=this.add.graphics().setName(`special-body-${tile.special}`);
         if(tile.special==='row'||tile.special==='column'){
-          const across=tile.special==='row',w=across?52:42,h=across?42:52;
-          halo.fillStyle(0x244d60,1);halo.fillRoundedRect(-w/2,-h/2+2,w,h,12);
-          halo.fillStyle(across?0x2684b0:0x248665,1);halo.fillRoundedRect(-w/2,-h/2,w,h-2,12);
-          halo.lineStyle(2,across?0xb5f2ff:0xc1ffda,1);halo.strokeRoundedRect(-w/2+2,-h/2+2,w-4,h-6,10);
+          const across=tile.special==='row';
+          // 몸체는 정사각형으로 유지하고 방향은 띠/화살표로 구분합니다.
+          halo.fillStyle(0x244d60,1);halo.fillRoundedRect(-24,-24,48,48,12);
+          halo.fillStyle(across?0x2684b0:0x248665,1);halo.fillRoundedRect(-23,-24,46,46,11);
+          halo.lineStyle(2,across?0xb5f2ff:0xc1ffda,1);halo.strokeRoundedRect(-22,-22,44,44,10);
         }else{
           halo.fillStyle(tile.special==='bomb'?0x493354:0x354d68,1);halo.fillCircle(0,1,25);
           halo.lineStyle(3,tile.special==='bomb'?0xeea864:0xffe9ad,1);halo.strokeCircle(0,0,24);
