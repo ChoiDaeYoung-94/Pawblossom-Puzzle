@@ -28,6 +28,11 @@ describe('핍 육성과 저장 확장',()=>{
     const capped=preparePipAction(10,partial,'feed')!;
     expect(capped.pip).toMatchObject({growth:100,affection:100});
     expect(preparePipAction(0,capped.pip,'play')).toMatchObject({coins:0,cost:0,pip:{growth:100,affection:100}});
+    for(const action of ['feed','play'] as const){
+      let current=freshPip(),coins=250;
+      for(let count=0;count<25;count++){const result=preparePipAction(coins,current,action)!;expect(result.cost).toBe(10);current=result.pip;coins=result.coins;}
+      expect({coins,growth:current.growth,affection:current.affection}).toEqual({coins:0,growth:100,affection:100});expect(preparePipAction(coins,current,action)?.cost).toBe(0);
+    }
   });
   it('손상된 신규 수치·소유·장착 조건을 허용하지 않습니다',()=>{
     for(const value of [null,[],{...freshPip(),growth:-1},{...freshPip(),growth:1.5},{...freshPip(),affection:101},

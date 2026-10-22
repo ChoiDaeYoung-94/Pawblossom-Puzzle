@@ -808,7 +808,7 @@ function enterCareDemo():boolean {
   const returnRoute=route as 'village'|'journal';
   const demo:SaveData=JSON.parse(JSON.stringify(save));
   careDemo={normalSave:save,returnRoute,chapter:selectedChapter,plot:selectedGardenPlot,area:selectedGardenArea};careGeneration++;
-  demo.coins=1600;demo.stars=100;demo.garden=0;demo.pip=freshPip();demo.gardenDesign=freshGardenDesign();save=demo;selectedGardenPlot=0;selectedGardenArea='flowers';
+  demo.coins=1800;demo.stars=100;demo.garden=0;demo.pip=freshPip();demo.gardenDesign=freshGardenDesign();save=demo;selectedGardenPlot=0;selectedGardenArea='flowers';
   clearCareReaction();scene.cancelInput();renderViews();localize();updateWallet();syncActivity();
   document.querySelector<HTMLButtonElement>('#care-demo-exit-'+returnRoute)?.focus({preventScroll:true});
   return true;
