@@ -1363,6 +1363,7 @@ describe('100스테이지 진행과 선택 묶음',()=>{
     app.element('#test-stage-30').onclick();app.run('finish(true)');expect(app.stored()).toEqual(before);
     app.run("showTestPicker();document.querySelector('#test-chapter-3').onkeydown({key:'End',preventDefault(){}})");expect(app.element('#test-level-dialog').innerHTML).toContain('data-test-level="100"');
     app.run("globalThis.tabStrip={scrollLeft:0,getBoundingClientRect:()=>({left:0,right:96,width:96})};const lastTab=document.querySelector('#test-chapter-11');lastTab.parentElement=tabStrip;lastTab.getBoundingClientRect=()=>({left:960,right:1056});document.querySelector('#village-view').scrollTop=77;revealChapterTab(lastTab)");expect(app.run('tabStrip.scrollLeft')).toBe(960);expect(app.run("document.querySelector('#village-view').scrollTop")).toBe(77);
+    app.run("document.querySelector('#test-level-dialog').close();startLevel(100,true);tabStrip.scrollLeft=0;tabStrip.getBoundingClientRect=()=>document.querySelector('#test-level-dialog').open?({left:0,right:96,width:96}):({left:0,right:0,width:0});showTestPicker()");expect(app.run('tabStrip.scrollLeft')).toBe(960);
   });
 });
 

@@ -498,6 +498,7 @@ function showTestPicker(fromResult=false){
   if(!TEST_TOOLS_ENABLED||!scene.canLeave()||resultTimer||$<HTMLDialogElement>('#result-dialog').open||$<HTMLDialogElement>('#tutorial-dialog').open)return;
   pickerReturnToResult=fromResult;selectedTestChapter=chapterForLevel(currentLevel).id;
   renderTestPicker();$<HTMLDialogElement>('#test-level-dialog').showModal();
+  const selected=document.querySelector<HTMLElement>(`#test-chapter-${selectedTestChapter}`);if(selected)revealChapterTab(selected);
   syncActivity();
 }
 function closeTestPicker(){
