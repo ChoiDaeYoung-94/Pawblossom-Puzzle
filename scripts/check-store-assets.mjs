@@ -20,7 +20,7 @@ const requiredReferences = [
   'assets/branding/pawblossom-mark.json','assets/branding/pawblossom-color.svg',
   'assets/store/play-icon-source-v1.svg','assets/store/play-icon-preview-v1.svg',
   'assets/store/play-feature-source-v1.png','assets/store/play-feature-base-v1.png',
-  'public/assets/pip.png','public/assets/meadow.png','assets/source/pip-win-v1.png',
+  'public/assets/pip.png','assets/source/meadow.png','assets/source/pip-win-v1.png',
 ];
 
 export function checkManifest(manifest) {
