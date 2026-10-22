@@ -6,21 +6,28 @@ export const gardenProjects=[
   {id:'lantern',plots:3,growth:80,affection:80,diversity:3,cost:20},
 ] as const;
 export type GardenProject=typeof gardenProjects[number]['id'];
-export interface GardenDesign {schema:1;flowers:FlowerStyle[];owned:GardenProject[];placed:GardenProject[];lanternPlot?:number;}
+export const gardenThemes=[
+  {id:'sunset',clears:20,plots:4,growth:100,affection:80,cost:80},
+  {id:'starlight',clears:40,plots:5,growth:100,affection:100,cost:80},
+] as const;
+export type OwnedGardenTheme=typeof gardenThemes[number]['id'];
+export type GardenTheme='meadow'|OwnedGardenTheme;
+export interface GardenDesign {schema:1;flowers:FlowerStyle[];owned:GardenProject[];placed:GardenProject[];lanternPlot?:number;ownedThemes?:OwnedGardenTheme[];theme?:GardenTheme;}
 type Care={growth:number;affection:number};
-export type GardenAction={kind:'flower';plot:number;flower:FlowerStyle}|{kind:'claim'|'toggle';project:GardenProject}|{kind:'placeLantern';plot:number};
+export type GardenAction={kind:'flower';plot:number;flower:FlowerStyle}|{kind:'claim'|'toggle';project:GardenProject}|{kind:'placeLantern';plot:number}|{kind:'buyTheme';theme:OwnedGardenTheme}|{kind:'selectTheme';theme:GardenTheme};
 export const freshGardenDesign=():GardenDesign=>({schema:1,flowers:Array(5).fill('meadow') as FlowerStyle[],owned:[],placed:[]});
-export const gardenDesignFor=(design?:GardenDesign):GardenDesign=>design?{...design,flowers:design.flowers.slice(),owned:design.owned.slice(),placed:design.placed.slice()}:freshGardenDesign();
+export const gardenDesignFor=(design?:GardenDesign):GardenDesign=>design?{...design,flowers:design.flowers.slice(),owned:design.owned.slice(),placed:design.placed.slice(),...(design.ownedThemes===undefined?{}:{ownedThemes:design.ownedThemes.slice()})}:freshGardenDesign();
 export const flowerDiversity=(design:GardenDesign,plots:number)=>new Set(design.flowers.slice(0,plots)).size;
 export function projectReady(project:typeof gardenProjects[number],plots:number,pip:Care,design:GardenDesign):boolean {
   return plots>=project.plots&&pip.growth>=project.growth&&pip.affection>=project.affection&&flowerDiversity(design,plots)>=project.diversity;
 }
+export const themeReady=(theme:typeof gardenThemes[number],plots:number,pip:Care,completed:number)=>completed>=theme.clears&&plots>=theme.plots&&pip.growth>=theme.growth&&pip.affection>=theme.affection;
 /** 소유는 영구적입니다. 꽃 다양성은 첫 획득 때만 확인하고 이후 교체로 취소하지 않습니다. */
-export function validateGardenDesign(value:unknown,plots:number,pip:Care):GardenDesign|undefined {
+export function validateGardenDesign(value:unknown,plots:number,pip:Care,completed=0):GardenDesign|undefined {
   if(!value||typeof value!=='object'||Array.isArray(value)||!Number.isInteger(plots)||plots<0||plots>5
-    ||![pip.growth,pip.affection].every(n=>Number.isInteger(n)&&n>=0&&n<=100))return;
+    ||![pip.growth,pip.affection].every(n=>Number.isInteger(n)&&n>=0&&n<=100)||!Number.isInteger(completed)||completed<0||completed>40)return;
   const v=value as Record<string,unknown>;
-  if(Object.keys(v).some(k=>!['schema','flowers','owned','placed','lanternPlot'].includes(k))||v.schema!==1
+  if(Object.keys(v).some(k=>!['schema','flowers','owned','placed','lanternPlot','ownedThemes','theme'].includes(k))||v.schema!==1
     ||!Array.isArray(v.flowers)||v.flowers.length!==5||!Array.isArray(v.owned)||v.owned.length>3||!Array.isArray(v.placed)||v.placed.length>3)return;
   const flowers:FlowerStyle[]=[],owned:GardenProject[]=[],placed:GardenProject[]=[],sourceOwned=v.owned;
   for(let i=0;i<5;i++){if(!flowerStyles.includes(v.flowers[i] as FlowerStyle)||i>=plots&&v.flowers[i]!=='meadow')return;flowers.push(v.flowers[i] as FlowerStyle);}
@@ -31,14 +38,27 @@ export function validateGardenDesign(value:unknown,plots:number,pip:Care):Garden
   }
   for(let i=0;i<v.placed.length;i++){const id=v.placed[i] as GardenProject;if(!owned.includes(id)||placed.includes(id))return;placed.push(id);}
   if(v.lanternPlot!==undefined&&(typeof v.lanternPlot!=='number'||!Number.isInteger(v.lanternPlot)||v.lanternPlot<0||v.lanternPlot>=plots||!owned.includes('lantern')))return;
-  return {schema:1,flowers,owned,placed,...(v.lanternPlot===undefined?{}:{lanternPlot:v.lanternPlot as number})};
+  const ownedThemes:OwnedGardenTheme[]=[];
+  if(v.ownedThemes!==undefined){
+    if(!Array.isArray(v.ownedThemes)||v.ownedThemes.length>2)return;
+    for(let i=0;i<v.ownedThemes.length;i++){const theme=gardenThemes.find(t=>t.id===(v.ownedThemes as unknown[])[i]);if(!theme||ownedThemes.includes(theme.id)||!themeReady(theme,plots,pip,completed))return;ownedThemes.push(theme.id);}
+  }
+  if(v.theme!==undefined&&v.theme!=='meadow'&&!ownedThemes.includes(v.theme as OwnedGardenTheme))return;
+  return {schema:1,flowers,owned,placed,...(v.lanternPlot===undefined?{}:{lanternPlot:v.lanternPlot as number}),...(v.ownedThemes===undefined?{}:{ownedThemes}),...(v.theme===undefined?{}:{theme:v.theme as GardenTheme})};
 }
 /** 재화와 선택을 함께 계산하고 입력 객체/배열은 바꾸지 않습니다. */
-export function prepareGardenAction(coins:number,plots:number,pip:Care,current:GardenDesign|undefined,action:GardenAction):{coins:number;design:GardenDesign;cost:number}|undefined {
+export function prepareGardenAction(coins:number,plots:number,pip:Care,current:GardenDesign|undefined,action:GardenAction,completed=0):{coins:number;design:GardenDesign;cost:number}|undefined {
   if(!Number.isInteger(coins)||coins<0||coins>1_000_000||!Number.isInteger(plots)||plots<0||plots>5)return;
-  const design=validateGardenDesign(current??freshGardenDesign(),plots,pip);if(!design)return;
+  const design=validateGardenDesign(current??freshGardenDesign(),plots,pip,completed);if(!design)return;
   let cost=0;
-  if(action.kind==='flower'){
+  if(action.kind==='buyTheme'){
+    const theme=gardenThemes.find(t=>t.id===action.theme);
+    if(!theme||design.ownedThemes?.includes(theme.id)||!themeReady(theme,plots,pip,completed)||coins<theme.cost)return;
+    cost=theme.cost;design.ownedThemes=[...(design.ownedThemes??[]),theme.id];design.theme=theme.id;
+  }else if(action.kind==='selectTheme'){
+    if(action.theme===(design.theme??'meadow')||action.theme!=='meadow'&&!design.ownedThemes?.includes(action.theme))return;
+    design.theme=action.theme;
+  }else if(action.kind==='flower'){
     if(!Number.isInteger(action.plot)||action.plot<0||action.plot>=plots||!flowerStyles.includes(action.flower)||design.flowers[action.plot]===action.flower)return;
     design.flowers[action.plot]=action.flower;
   }else if(action.kind==='placeLantern'){

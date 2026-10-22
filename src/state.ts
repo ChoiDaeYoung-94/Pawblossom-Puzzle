@@ -79,9 +79,9 @@ function normalizeSave(x:unknown,backup=false):SaveData|undefined {
     // 구형 저장은 핍 필드 없이 그대로 보존합니다. 첫 육성 때 기본 상태에서 확장합니다.
     const pip=x.pip===undefined?undefined:validatePip(x.pip);
     if(x.pip!==undefined&&!pip)return;
-    const gardenDesign=x.gardenDesign===undefined?undefined:validateGardenDesign(x.gardenDesign,x.garden,pip??{growth:0,affection:0});
-    if(x.gardenDesign!==undefined&&!gardenDesign)return;
     const completed:number[]=Array.isArray(x.completed)? [...new Set<number>(x.completed.slice(0,LEVEL_COUNT*4).filter((n: unknown): n is number => typeof n==='number'&&Number.isInteger(n)&&n>=1&&n<=LEVEL_COUNT))]:[];
+    const gardenDesign=x.gardenDesign===undefined?undefined:validateGardenDesign(x.gardenDesign,x.garden,pip??{growth:0,affection:0},completed.length);
+    if(x.gardenDesign!==undefined&&!gardenDesign)return;
     // 기존 마지막 스테이지까지 완료한 저장도 새 콘텐츠의 첫 미완료 스테이지로 이어집니다.
     let frontier=1;while(frontier<LEVEL_COUNT&&completed.includes(frontier))frontier++;
     const highestLevel=Math.max(frontier,safeNumber(x.highestLevel,1,LEVEL_COUNT));
