@@ -1,6 +1,15 @@
 # 출시까지 남은 작업
 
-## 최신 오후 검수 전달 · 2026-10-22 · #210
+## 최신 최종 전달과 남은 검증 · 2026-10-22 오후 · #210
+
+- [x] [최신 main9fa APK](https://drive.google.com/file/d/13dAbsmALhEHyLpNktoE6wB--JVrWvKvV/view)0.1.7/code8·11,145,015bytes/SHA256 `c660f802dba6737a81967a04a96f7d36cb9e1a513bffb6aea61f3884fb4c9b81`·기존v2/웹38·production복원·기존Drive 실제재다운로드 크기/해시일치·독립artifact검수완료.
+- [x] PR217 head7b 최초CI39725948588/정확main9fa 최초CI39726135273 양Node44파일2,846개·스토어12개·타입/두빌드/flags성공·동일tree. 최종500체험 전체구매→50잔액·일반430/20노을/21번복귀 확인. production38동일에 따른 자연11–20기존근거재사용과 native16/실질15·lint0오류15경고의63b새실행재사용을 구분.
+- [ ] #122 최초63b CI39723554260 Node24 worker3 명령BEGIN BUSY5 원인/owner미확정. 새head/main/문서CI성공을 원인 해결로 합산하지 않음. timeout500ms/5초/8worker/기대/seed 완화·동일head재실행없음.
+- [ ] #73 실UMP/GMA·동의/연령·Play구매/복원/pending/환불·단말/청취·스토어·장기육성/난이도/아트감각검수·개발자명/공개지원·개인정보호스팅결정.
+
+아래 afb/63b·오전 APK와 당시 PR217 Draft/미병합 체크는 이력입니다. 테스트 안내는 채팅에 직접 제공하며 새 안내파일/예약을 만들지 않습니다. 가격/광고제거범위·기존 보류는 유지합니다.
+
+## 이전 중간 오후 검수 전달 · 2026-10-22 · #210
 
 - [x] Slack4이미지 직접 확인 후 PR209/212/214/215 main 통합: 핍 반응 확대·중복 소개 제거·기어/특수 비율, 꽃3종·공동 작품3개·성장 연결, 등불 무료 위치 선택·작은 화면 보강·미사용 원본 보존/배포 제외.
 - [x] mainafb7f32 정확 최초CI39721755586 양Node44파일2,837개·스토어12개·타입/두빌드 성공. [해당 main APK](https://drive.google.com/file/d/1pJfnS-l1R7m4jRIxapsF8cDTSxM9xwoK/view)와 [풍경 포함 후보63b APK](https://drive.google.com/file/d/1iCm8KDUUqG9gOGmrW3huqlm4BbYPPld4/view)를 별도 제작·기존Drive 실제재다운로드 크기/SHA일치/공유보존 확인.

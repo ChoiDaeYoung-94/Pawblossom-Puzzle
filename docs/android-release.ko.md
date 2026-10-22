@@ -1,6 +1,20 @@
-## 최신 검수 전달 · 2026-10-22 오후 · #210
+## 최신 main 검수 APK · 2026-10-22 오후 · #210 최종
 
-풍경 기능까지 확인할 사용자 테스트 후보는 [Pawblossom-Puzzle-v0.1.7-2026-10-22-63b6188-debug.apk](https://drive.google.com/file/d/1iCm8KDUUqG9gOGmrW3huqlm4BbYPPld4/view)입니다. 게임 소스 `63b618841c362481aa4dcf22b555987bb0bd5767`, 11,145,019바이트, SHA256 `06adcd45cf485d8bddc2f1ec1dfc0fe26f2da0113f96f83f2dab063a2f10f20e`, 버전0.1.7/code8입니다. **이 후보의 PR217은 필수 CI 실패로 Draft·미병합 상태이며, main 통합 완료본이 아닙니다.** 두 APK 모두 기존 작업 계정의 테스트 폴더에 추가하고 실제 재다운로드 크기·SHA 일치를 확인했습니다. 기존 파일과 공유 범위는 유지했습니다.
+이번 사용자 검수용 최신 파일은 [Pawblossom-Puzzle-v0.1.7-2026-10-22-9fa15f0-debug.apk](https://drive.google.com/file/d/13dAbsmALhEHyLpNktoE6wB--JVrWvKvV/view)입니다. 게임 main `9fa15f096a85b439883bd3a17d4959f609f5b4c6`, 버전0.1.7/code8, 11,145,015바이트, SHA256 `c660f802dba6737a81967a04a96f7d36cb9e1a513bffb6aea61f3884fb4c9b81`입니다. 기존 작업 계정/테스트 폴더에 고유 APK·checksum을 추가하고 실제 재다운로드 크기·해시 일치를 확인했습니다. 기존 파일·공유 범위는 유지했으며 아래 afb/63b와 오전20ff는 중간/이전 전달 이력입니다.
+
+PR209/212/214/215의 핍 반응/기어·특수 비율·정원 꽃/공동 작품·등불 위치·작은 화면 개선에 PR217의20/40완료 풍경과 체험500 보강까지 포함합니다. 실제 전체 체험 비용450이 최초400보다50 부족했던 점을 발견해 testing 전용 체험 잔액만500으로 바꾸고, 한 번에 성장/친밀도100·소품2개·5꽃밭·작품3개·풍경2개 구매 후50잔액과 종료 후 일반430코인/20노을/21번28이동0점 복귀를 확인했습니다. 정상 가격/재화·production 체험 미노출은 유지합니다.
+
+체험 보완 head7b123df 최초 PR [CI39725948588](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39725948588)와 Squash된 정확 main9fa 최초 [CI39726135273](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39726135273)은 Node22/24 각각44파일2,846개·스토어12개·타입/production·testing 두빌드/flags가 모두 성공했습니다. 7b와9fa의 전체 Git tree가 같음을 확인했습니다. **앞선63b 최초 CI39723554260의 원장1실패는 별도 미해결 근거로 보존하며, 이번 새head 성공을 #122 원인 해결로 표현하지 않습니다.** 체험 잔액 보완은 실제 검수 결함 수정이며 동일head CI재실행이 아닙니다. 이 전달 문서의 CI도 별도 단계입니다.
+
+최종 testing38파일은 실제 전체500체험을 확인한 budget 빌드와 전수 바이트가 같고 production38은 budget·63b와 모두 같습니다. 따라서 정상11–20진행→20노을80구매/재실행430코인·별빛20/40잠금·21번 준비의 앞선 production 근거를 같은 파일의 수용 근거로 재사용하며 새 자연 플레이를 실행했다고 합산하지 않습니다. 최종 소스4파일의 LF 캡처 SHA와 main checkout의 CRLF 바이트 차이는 Git blob/LF 정규화 비교로 줄바꿈만임을 독립 확인했고 원본 캡처와 현재 raw 해시를 각각 보존했습니다.
+
+APK의38웹파일/빈cordova2개·비웹536항목·v2/기존 인증서·appId/min24/target36를 독립 검수했습니다. 최종 Gradle은 app clean/assemble만 실행했고 제작 후 production dist와 Android 웹 자산을 복원했습니다. 단위16개(실질15+예제1)/lint오류0·경고15는63b에서 이번 세션에 새 실행한 결과를 재사용했습니다. native/config/deps diff0과 최종 비웹536항목의 압축 해제 SHA 동일이 재사용 근거이며, 최종9fa에서 단위/lint를 다시 실행한 것으로 표현하지 않습니다. 최종 APK는 오전20ff보다3,351,436바이트 작습니다.
+
+최종 근거는 Git 밖 `2026-10-22-9fa15f0`의 artifact-verification/source-proof/native-validation/independent-artifact-review/drive-delivery·화면과 `qa/integration-20261022-afternoon/216`의 budget/자연 진행·CI 원문에 보존합니다. 별도 사용자 테스트 안내 파일은 만들지 않았습니다. 실제 폰·최초 자동 재생/청취·UMP/GMA·Play 구매/복원/pending/환불·스토어·장기 재미는 미검증이며 #73/#122는 유지합니다. AAB·공개배포·PlayConsole/상품·실키env·최종믹스·자동 폰 테스트·새 예약은 보류합니다. 아래 후보의 Draft·미병합 표현은 당시 시점 이력이고 현재 PR217은 위 성공 근거로 병합됐습니다.
+
+## 이전 중간 검수 전달 · 2026-10-22 오후 · #210
+
+당시 풍경 기능까지 확인할 사용자 테스트 후보는 [Pawblossom-Puzzle-v0.1.7-2026-10-22-63b6188-debug.apk](https://drive.google.com/file/d/1iCm8KDUUqG9gOGmrW3huqlm4BbYPPld4/view)입니다. 게임 소스 `63b618841c362481aa4dcf22b555987bb0bd5767`, 11,145,019바이트, SHA256 `06adcd45cf485d8bddc2f1ec1dfc0fe26f2da0113f96f83f2dab063a2f10f20e`, 버전0.1.7/code8입니다. **당시 이 후보의 PR217은 필수 CI 실패로 Draft·미병합 상태였습니다. 이후 실제 체험 보완을 거쳐 현재는 위 main9fa로 통합됐습니다.** 두 APK 모두 기존 작업 계정의 테스트 폴더에 추가하고 실제 재다운로드 크기·SHA 일치를 확인했습니다. 기존 파일과 공유 범위는 유지했습니다.
 
 필수 검사까지 성공한 main 기반 전달본은 [afb7f32 APK](https://drive.google.com/file/d/1pJfnS-l1R7m4jRIxapsF8cDTSxM9xwoK/view)입니다. 소스 `afb7f329a8d306236d9fbfb2edd3830d0cf683c3`, 11,143,331바이트, SHA256 `d69238d1e0174a0907691809fc43ae1f7d004a1825ed37cf89602e0f766e3963`이며 노을/별빛 풍경만 포함하지 않습니다. PR209/212/214/215의 퍼즐 핍 반응 확대·중복 소개 제거·정사각형 기어/특수 비율, 꽃3종·정원 작품3개와 핍 성장 연결, 무료 등불 위치 선택·작은 화면 초점/영문 넘침 개선을 포함합니다. 정확 main [CI39721755586](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39721755586)은 Node22/24 각각44파일2,837개·스토어12개·타입/두 웹빌드·flags 성공입니다.
 
