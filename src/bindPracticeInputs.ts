@@ -30,10 +30,10 @@ export function bindPracticeBoard(board:HTMLElement,actions:PracticeActions){
       if(!pointer||pointer.id!==event.pointerId||event.button!==0)return;
       const down=pointer;pointer=undefined;
       if(!usable(button)||button!==down.button)return;
-      const bounds=board.getBoundingClientRect();
-      if(event.clientX<bounds.left||event.clientX>=bounds.right||event.clientY<bounds.top||event.clientY>=bounds.bottom)return;
+      if(!Number.isFinite(event.clientX)||!Number.isFinite(event.clientY))return;
       const rect=button.getBoundingClientRect();
       const dx=event.clientX-down.x,dy=event.clientY-down.y;
+      // 정상 capture 종료는 보드 밖에서도 방향만 사용합니다. 실습 모델이 인접 목표를 검증합니다.
       if(Math.hypot(dx,dy)>16){event.preventDefault();actions.swipe(down.pos,dx,dy);}
       else if(event.clientX>=rect.left&&event.clientX<rect.right&&event.clientY>=rect.top&&event.clientY<rect.bottom)actions.tap(down.pos);
     };
