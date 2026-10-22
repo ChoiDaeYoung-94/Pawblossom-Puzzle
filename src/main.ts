@@ -94,7 +94,7 @@ function updateSaveStatus(restoreControl?:string){
 $('#app').innerHTML=`
   <header class="topbar">
     <a class="brand" href="#puzzle" aria-label="Pawblossom Puzzle"><span class="brand-mark">${icon('paw',26)}</span><span>Pawblossom<small>PUZZLE</small></span></a>
-    <div class="header-right"><div class="wallet stars">${icon('star',18)}<strong id="star-count">0</strong><span class="sr-only">${text('stars')}</span></div><div class="wallet coins">${icon('coin',18)}<strong id="coin-count">0</strong><span class="sr-only">${text('coins')}</span></div><select id="language-toggle" class="language-button" aria-label="${text('language')}"><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option><option value="en" ${save.language==='en'?'selected':''}>English</option></select><button id="settings-button" class="icon-button" aria-label="${text('settings')}">${icon('settings',21)}</button></div>
+    <div class="header-right"><button id="stars-help" type="button" class="wallet wallet-help stars" aria-haspopup="dialog">${icon('star',18)}<strong id="star-count" aria-hidden="true">0</strong><span class="sr-only">${text('stars')}</span></button><button id="coins-help" type="button" class="wallet wallet-help coins" aria-haspopup="dialog">${icon('coin',18)}<strong id="coin-count" aria-hidden="true">0</strong><span class="sr-only">${text('coins')}</span></button><select id="language-toggle" class="language-button" aria-label="${text('language')}"><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option><option value="en" ${save.language==='en'?'selected':''}>English</option></select><button id="settings-button" class="icon-button" aria-label="${text('settings')}">${icon('settings',21)}</button></div>
   </header>
   <main class="workspace">
     <section class="story-panel">
@@ -129,11 +129,36 @@ if(androidBillingEntry){
 }
 function billingModal(){return Boolean(androidBillingEntry&&$<HTMLDialogElement>('#test-billing-dialog').open);}
 const previewDialog=document.createElement('dialog');previewDialog.id='stage-preview-dialog';previewDialog.setAttribute('aria-labelledby','stage-preview-title');previewDialog.setAttribute('aria-describedby','stage-preview-description');document.body.append(previewDialog);
+const resourceDialog=document.createElement('dialog');resourceDialog.id='resource-help-dialog';resourceDialog.setAttribute('aria-labelledby','resource-help-title');resourceDialog.setAttribute('aria-describedby','resource-help-description');document.body.append(resourceDialog);
+type ResourceKind='stars'|'coins';
+let resourceHelp:{kind:ResourceKind;opener:HTMLElement;save:SaveData;round:number;scene:BoardScene;route:string;demo:typeof careDemo;scroll:{view:HTMLElement;top:number;left:number}[]}|undefined;
+function renderResourceHelp(){
+  const context=resourceHelp;if(!context)return;
+  const stars=context.kind==='stars',name=text(context.kind),label=text(careDemo?'resourceDemoBalance':'resourceNormalBalance');
+  resourceDialog.innerHTML=`<div class="resource-help-content"><h2 id="resource-help-title" tabindex="-1">${icon(stars?'star':'coin',25)}${text(stars?'starsHelpTitle':'coinsHelpTitle')}</h2><p class="resource-help-balance">${label} · ${name} <strong>${save[context.kind]}</strong></p><div id="resource-help-description"><p>${text(stars?'starsHelpEarn':'coinsHelpEarn')}</p><p>${text(stars?'starsHelpUse':'coinsHelpUse')}</p>${careDemo?`<p class="resource-help-note">${text('resourceDemoNote')}</p>`:testingLevel?`<p class="resource-help-note">${text('resourceTestNote')}</p>`:''}</div><button id="resource-help-close" type="button" class="primary">${text('resourceHelpClose')}</button></div>`;
+  $('#resource-help-close').onclick=()=>{if(resourceHelp===context)closeResourceHelp();};
+}
+function closeResourceHelp(restore=true){
+  const context=resourceHelp;resourceHelp=undefined;resourceDialog.close();syncActivity();
+  if(!restore||!context||!nativeActive||document.hidden||testAds?.pausesGame||testBilling?.pausesGame||otherModal()||previewDialog.open||context.save!==save||context.round!==round||context.scene!==scene||context.route!==route||context.demo!==careDemo)return;
+  if(context.opener.isConnected&&$('#'+context.opener.id)===context.opener)context.opener.focus({preventScroll:true});
+  for(const {view,top,left} of context.scroll){view.scrollTop=top;view.scrollLeft=left;}
+}
+function showResourceHelp(kind:ResourceKind,opener:HTMLElement){
+  if(resourceHelp||resourceDialog.open||!['stars','coins'].includes(kind)||!opener.isConnected||opener.hidden||(opener as HTMLButtonElement).disabled||$('#'+kind+'-help')!==opener
+    ||!nativeActive||document.hidden||boardPending||resultTimer||puzzleProcessing||careProcessing||growing||rewardedContinue?.preparing
+    ||testAds?.busy||testAds?.pausesGame||testBilling?.busy||testBilling?.pausesGame||stagePreview||previewDialog.open||otherModal()
+    ||!scene?.canLeave()||game.scene.getScene('Board')!==scene||roundEnded&&route==='puzzle')return;
+  resourceHelp={kind,opener,save,round,scene,route,demo:careDemo,scroll:Array.from(document.querySelectorAll<HTMLElement>('.view')).map(view=>({view,top:view.scrollTop,left:view.scrollLeft}))};
+  renderResourceHelp();scene.cancelInput();resourceDialog.showModal();syncActivity();$('#resource-help-title').focus({preventScroll:true});
+}
+resourceDialog.addEventListener('cancel',event=>{event.preventDefault();closeResourceHelp();});
+resourceDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();});
 const boardFeedback=new RoundFeedback({layer:$('#round-feedback-layer'),pip:$('#header-pip'),
   canvas:()=>document.querySelector('#game-canvas canvas'),goal:key=>document.querySelector(`[data-feedback-goal="${key}"] img`),
   active:()=>nativeActive&&!document.hidden&&!careDemo&&route==='puzzle'&&!boardPending&&!roundEnded&&!previewDialog.open&&!otherModal()&&!testAds?.pausesGame&&!testBilling?.pausesGame,
 });
-function otherModal(){return $<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open)||billingModal();}
+function otherModal(){return resourceDialog.open||$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open)||billingModal();}
 function previewEnvironment(){return !careDemo&&nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!otherModal()&&!boardPending&&Boolean(scene?.canLeave())&&!resultTimer;}
 function validPreview(context:StagePreview){return stagePreview===context&&context.round===round&&context.scene===scene&&context.testing===testingLevel&&context.route===route&&previewDialog.open&&previewEnvironment()&&Number.isInteger(context.id)&&context.id>=1&&context.id<=LEVEL_COUNT&&(context.intent==='restart'||context.id<=save.highestLevel);}
 function canContinuePreview(context:StagePreview){return context.intent==='map'&&!testingLevel&&!roundEnded&&context.id===currentLevel;}
@@ -187,7 +212,7 @@ function syncActivity(){
   if(active&&Capacitor.isNativePlatform()&&!nativeAudioAttempted){nativeAudioAttempted=true;if(save.music)void audio.unlock().catch(()=>{});}
   if(!game)return;
   const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
-  const playing=active&&!careDemo&&route==='puzzle'&&!modal&&!previewDialog.open;
+  const playing=active&&!careDemo&&route==='puzzle'&&!modal&&!previewDialog.open&&!resourceDialog.open;
   if(!playing)boardFeedback.cancel();
   if(playing){if(game.scene.isPaused('Board'))game.scene.resume('Board');}
   else if(game.scene.isActive('Board'))game.scene.pause('Board');
@@ -196,7 +221,7 @@ function syncActivity(){
 function updateBoardAccess(){
   const board=$('#game-canvas'),state=scene?.keyboardState();
   const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
-  const visible=!careDemo&&nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!billingModal()&&route==='puzzle'&&!modal&&!previewDialog.open&&!boardPending;
+  const visible=!careDemo&&nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!billingModal()&&route==='puzzle'&&!modal&&!previewDialog.open&&!resourceDialog.open&&!boardPending;
   const available=visible&&Boolean(state?.available);
   board.tabIndex=visible&&(available||state?.busy)?0:-1;
   board.setAttribute('aria-disabled',String(!available));board.setAttribute('aria-busy',String(Boolean(state?.busy)));
@@ -221,9 +246,11 @@ function goalDescriptions(){
   if(level.crates?.length)descriptions.push(describe('woodenCrate',Math.max(0,level.crates.length-clearedCrates)));
   return descriptions;
 }
+function walletCount(count:number):string {return count>=10_000?new Intl.NumberFormat(save.language==='ko'?'ko-KR':'en-US',{notation:'compact',maximumFractionDigits:1}).format(count):String(count);}
 function updateWallet(){
   $('.wallet.stars .sr-only').textContent=text('stars');$('.wallet.coins .sr-only').textContent=text('coins');
-  $('#star-count').textContent=String(save.stars);$('#coin-count').textContent=String(save.coins);$('#garden-count').textContent=`${save.garden} / 5`;$('#garden-fill').style.width=`${save.garden*20}%`;
+  for(const kind of ['stars','coins'] as const)$('#'+kind+'-help').setAttribute('aria-label',text('resourceHelpButton').replace('{name}',text(kind)).replace('{count}',String(save[kind]))+(careDemo?' · '+text('resourceDemoBalance'):''));
+  $('#star-count').textContent=walletCount(save.stars);$('#coin-count').textContent=walletCount(save.coins);$('#garden-count').textContent=`${save.garden} / 5`;$('#garden-fill').style.width=`${save.garden*20}%`;
 }
 function updateGoals(){
   $('#game-canvas').setAttribute('aria-label',text('boardLabel'));
@@ -291,6 +318,7 @@ function replaceBoard(){
 }
 function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{focusBoard?:boolean}={}){
   if(careDemo)return;
+  if(resourceHelp)closeResourceHelp(false);
   boardFeedback.cancel();
   if(stagePreview)closeStagePreview(false);
   abandonRewardContinue();
@@ -464,6 +492,7 @@ function renderTestPicker(){
 }
 function showTestPicker(fromResult=false){
   if(careDemo)return;
+  if(resourceDialog.open)return;
   if(stagePreview)return;
   if(!TEST_TOOLS_ENABLED||!scene.canLeave()||resultTimer||$<HTMLDialogElement>('#result-dialog').open||$<HTMLDialogElement>('#tutorial-dialog').open)return;
   pickerReturnToResult=fromResult;selectedTestChapter=chapterForLevel(currentLevel).id;
@@ -648,6 +677,7 @@ function renderAdDialog(){
   $('#test-ad-close').toggleAttribute('disabled',testAds.busy);
 }
 async function showAdDialog(){
+  if(resourceDialog.open)return;
   if(careDemo)return;
   if(!androidAdEntry||testBilling?.pausesGame||!scene.canLeave()||document.querySelector('dialog[open]'))return;
   ensureTestAds();
@@ -683,6 +713,7 @@ function renderBillingDialog(){
   $('#test-billing-close').toggleAttribute('disabled',testBilling.pausesGame);
 }
 async function showBillingDialog(){
+  if(resourceDialog.open)return;
   if(careDemo)return;
   if(!androidBillingEntry||!scene.canLeave()||testAds?.busy||document.querySelector('dialog[open]'))return;
   renderBillingDialog();$<HTMLDialogElement>('#test-billing-dialog').showModal();syncActivity();$('#test-billing-title').focus();
@@ -823,7 +854,7 @@ function renderViews(grew=false){
   for(const id of ['#save-retry','#save-reload'])$(id).addEventListener('blur',()=>updateSaveStatus());
   const renderedSave=save,renderedGeneration=careGeneration;
   const renderedControls=new Map(['save-retry','save-reload','music-toggle','sfx-toggle','language','reset'].map(id=>[id,$('#'+id)]));
-  const settingsAction=(id:string)=>!careDemo&&currentControl(renderedControls.get(id)!,renderedSave,renderedGeneration);
+  const settingsAction=(id:string)=>!resourceDialog.open&&!careDemo&&currentControl(renderedControls.get(id)!,renderedSave,renderedGeneration);
   $('#save-retry').onclick=()=>{if(!settingsAction('save-retry'))return;retrySave(save);updateSaveStatus();};
   $('#save-reload').onclick=()=>{if(!settingsAction('save-reload'))return;if(confirm(text('saveReloadConfirm')))window.location.reload();};
   bindChapterTabs();
@@ -862,10 +893,12 @@ function changeLanguage(language:'en'|'ko'){
   if($<HTMLDialogElement>('#tutorial-dialog').open)renderTutorial();
   if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)renderTestPicker();
   if(stagePreview)renderStagePreview();
+  if(resourceHelp)renderResourceHelp();
   if(androidAdEntry&&testAds)renderAdDialog();if(androidBillingEntry&&testBilling)renderBillingDialog();
   if(focusedId&&!focused?.isConnected)document.querySelector<HTMLElement>('#'+focusedId)?.focus();
 }
 function switchView(name:string){
+  if(resourceDialog.open)return;
   if(careDemo&&!['village','journal'].includes(name)&&!exitCareDemo(false))return;
   if(stagePreview)return;
   const returnToResult=name==='puzzle'&&roundEnded&&resultShown&&resultWon!==undefined;
@@ -897,6 +930,7 @@ $('#board-notice').addEventListener('animationend',()=>{
   if($('#board-notice').getAnimations?.().some(animation=>animation.playState==='running'))return;
   clearBoardNotice();
 });
+for(const kind of ['stars','coins'] as const)$('#'+kind+'-help').onclick=()=>showResourceHelp(kind,$('#'+kind+'-help'));
 $('#restart').onclick=()=>showStagePreview(currentLevel,'restart',$('#restart'));
 if(TEST_TOOLS_ENABLED){$('#test-level-button').onclick=()=>showTestPicker();$<HTMLDialogElement>('#test-level-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTestPicker();});}
 $<HTMLDialogElement>('#result-dialog').addEventListener('cancel',event=>{event.preventDefault();if(testAds?.busy||rewardedContinue?.preparing)return;$<HTMLDialogElement>('#result-dialog').close();switchView('village');});
@@ -929,7 +963,7 @@ if(Capacitor.isNativePlatform()){
     // 늦게 반환된 초기 상태가 이후의 복귀 이벤트를 덮어쓰지 않도록 합니다.
     if(revision===nativeRevision){nativeActive=state.isActive;syncActivity();}
   }).catch(()=>{ /* 네이티브 상태를 확인할 수 없으면 비활성 상태를 유지합니다. */ });
-  void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if(billingModal())closeBillingDialog();else if(testBilling?.pausesGame)return;else if(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open){void closeAdDialog();}else if(testAds?.pausesGame)return;else if(stagePreview)closeStagePreview();else if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('village');}else if(route!=='puzzle')switchView('puzzle');else void App.minimizeApp();});
+  void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if(billingModal())closeBillingDialog();else if(testBilling?.pausesGame)return;else if(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open){void closeAdDialog();}else if(testAds?.pausesGame)return;else if(resourceHelp)closeResourceHelp();else if(stagePreview)closeStagePreview();else if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('village');}else if(route!=='puzzle')switchView('puzzle');else void App.minimizeApp();});
 }
 if(androidAdEntry)$<HTMLDialogElement>('#test-ad-dialog').addEventListener('cancel',event=>{event.preventDefault();void closeAdDialog();});
 if(androidBillingEntry)$<HTMLDialogElement>('#test-billing-dialog').addEventListener('cancel',event=>{event.preventDefault();closeBillingDialog();});

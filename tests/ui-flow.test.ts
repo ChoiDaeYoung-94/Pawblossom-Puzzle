@@ -36,13 +36,14 @@ class ElementStub {
   innerHTML = '';
   textContent = '';
   style: Record<string, string> = {};
+  attributes:Record<string,string>={};
   dataset: Record<string, string> = {};
   listeners: Record<string, (event: { preventDefault(): void }) => void> = {};
   onclick: (event?:{detail:number;button:number}) => void = () => {};
   classList = { add() {}, remove() {}, toggle() {} };
   constructor(selector: string) { this.id = selector.slice(1); this.hidden = selector !== '#puzzle-view'; }
-  setAttribute() {}
-  removeAttribute() {}
+  setAttribute(name:string,value:string) {this.attributes[name]=value;}
+  removeAttribute(name:string) {delete this.attributes[name];}
   append(_child:ElementStub) {}
   before() {}
   focus() {}
@@ -78,6 +79,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const element = (selector: string): ElementStub => {
     if (!elements.has(selector)) {
       elements.set(selector, new ElementStub(selector));
+      if(selector==='#stars-help'||selector==='#coins-help')elements.get(selector)!.hidden=false;
       if(selector==='#result-dialog')elements.get(selector)!.querySelector=child=>elements.get(selector)!.innerHTML.includes(`id="${child.slice(1)}"`)?element(child):null;
       // 동적으로 만든 설정 도움말도 실제 onclick과 opener 참조로 검사합니다.
       if(selector==='#settings-view')elements.get(selector)!.append=child=>{elements.set('#'+child.id,child);};
@@ -1895,5 +1897,57 @@ describe('나무상자 챕터와 별도 목표·저장 연결',()=>{
     const app=mainHarness(false,false,true),before=app.disk();app.run('showTestPicker()');app.element('#test-chapter-5').onclick();
     expect(app.element('#test-level-dialog').innerHTML).toContain('data-test-level="40"');expect(app.element('#test-level-dialog').innerHTML).toContain(t('en','testCrates'));
     app.element('#test-stage-40').onclick();expect(app.run('scene.engine.remainingCrates()')).toBe(8);app.run('finish(true)');expect(app.disk()).toEqual(before);
+  });
+});
+
+
+describe('별·코인 사용처의 읽기 전용 안내',()=>{
+  const state=(h:ReturnType<typeof mainHarness>)=>h.run('JSON.stringify({round,currentLevel,testingLevel,moves,score,collected,clearedLeaves,clearedCrates,shuffles,paidShuffleUsed,continueUsed,save,careDemo,board:scene.engine.board,leaves:scene.engine.leaves,crates:scene.engine.crates})');
+  it.each(['ko','en'] as const)('%s 별·코인 버튼은 정확한 잔액/사용처와 닫기만 제공하고 상태·RNG를 보존합니다',language=>{
+    const h=mainHarness();h.run("changeLanguage('"+language+"');globalThis.resourceEngine=scene.engine;globalThis.resourceRngCalls=0;const resourceRng=scene.engine.rng;scene.engine.rng=()=>{resourceRngCalls++;return resourceRng();};");
+    for(const kind of ['stars','coins'] as const){
+      const before=state(h),disk=h.disk(),writes=h.writes(),count=h.run('save.'+kind);
+      expect(h.element('#'+kind+'-help').attributes['aria-label']).toBe(t(language,'resourceHelpButton').replace('{name}',t(language,kind)).replace('{count}',String(count)));
+      h.element('#'+kind+'-help').onclick();expect(h.run('resourceDialog.open')).toBe(true);expect(h.run('game.paused')).toBe(true);expect(h.element('#game-canvas').tabIndex).toBe(-1);expect(h.element('#game-canvas').attributes['aria-disabled']).toBe('true');
+      const html=h.run('resourceDialog.innerHTML');expect(html).toContain(t(language,kind==='stars'?'starsHelpUse':'coinsHelpUse'));expect(html).toContain(t(language,'resourceNormalBalance'));expect(html.match(/<button /g)).toHaveLength(1);
+      expect(h.run('resourceDialog.attributes["aria-describedby"]')).toBe('resource-help-description');
+      h.element('#resource-help-close').onclick();expect(h.run('resourceDialog.open')).toBe(false);expect(h.run('game.paused')).toBe(false);expect(h.element('#game-canvas').tabIndex).toBe(0);
+      expect(state(h)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('scene.engine===resourceEngine&&resourceRngCalls===0')).toBe(true);
+    }
+  });
+  it.each(['close','escape','native-back'])('%s는 원래 버튼 초점/스크롤/화면과 동일 보드를 복귀합니다',exit=>{
+    const h=mainHarness(false,false,false,exit==='native-back');h.run("nativeActive=true;switchView('journal');document.querySelector('#journal-view').scrollTop=123;document.querySelector('#journal-view').scrollLeft=7;globalThis.helpFocus=[];document.querySelector('#coins-help').focus=options=>helpFocus.push(options);");
+    const before=state(h),disk=h.disk();h.element('#coins-help').onclick();
+    h.run("document.querySelector('#journal-view').scrollTop=0;document.querySelector('#journal-view').scrollLeft=0");
+    if(exit==='close')h.element('#resource-help-close').onclick();else if(exit==='escape')h.run('resourceDialog.listeners.cancel({preventDefault(){}})');else h.nativeEvents.backButton({isActive:true});
+    expect(h.run('resourceHelp')).toBeUndefined();expect(h.run('resourceDialog.open')).toBe(false);expect(h.run('helpFocus')).toEqual([{preventScroll:true}]);expect(h.run('route')).toBe('journal');expect(h.run("document.querySelector('#journal-view').scrollTop")).toBe(123);expect(h.run("document.querySelector('#journal-view').scrollLeft")).toBe(7);
+    expect(state(h)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.run('game.paused')).toBe(true);
+  });
+  it.each(['hidden','inactive','pending','busy','scene-mismatch','result-delay','result','picker','tutorial','preview','ad','ad-busy','billing','billing-busy','care-processing','puzzle-processing','growing','reward-preparing','opener-hidden','opener-disabled','opener-detached'] as const)('안전하지 않은 %s 진입은 모달·저장·회차를 바꾸지 않습니다',reason=>{
+    const h=mainHarness(false,false,true),disk=h.disk();
+    const patches:Record<string,string>={hidden:'document.hidden=true',inactive:'nativeActive=false',pending:'boardPending=true',busy:'scene.canLeave=()=>false','scene-mismatch':'game.scene.board={}','result-delay':'resultTimer=77',result:"document.querySelector('#result-dialog').open=true",picker:"document.querySelector('#test-level-dialog').open=true",tutorial:"document.querySelector('#tutorial-dialog').open=true",preview:'previewDialog.open=true',ad:'testAds={pausesGame:true}','ad-busy':'testAds={busy:true}',billing:'testBilling={pausesGame:true}','billing-busy':'testBilling={busy:true,pausesGame:false}','care-processing':'careProcessing=true','puzzle-processing':'puzzleProcessing=true',growing:'growing=true','reward-preparing':'rewardedContinue={preparing:true}','opener-hidden':"document.querySelector('#stars-help').hidden=true",'opener-disabled':"document.querySelector('#stars-help').disabled=true",'opener-detached':"document.querySelector('#stars-help').isConnected=false"};
+    const before=state(h);h.run(patches[reason]+";document.querySelector('#stars-help').onclick()");expect(h.run('resourceHelp')).toBeUndefined();expect(h.run('resourceDialog.open')).toBe(false);expect(state(h)).toBe(before);expect(h.disk()).toEqual(disk);
+  });
+  it('다른 안내·모달·화면·섞기·설정 소비를 겹치지 않고 오래된 닫기는 새 안내를 닫지 않습니다',async()=>{
+    const h=mainHarness(false,false,true);h.run("switchView('settings')");const disk=h.disk(),before=state(h);h.element('#stars-help').onclick();const close=h.element('#resource-help-close').onclick;
+    h.element('#coins-help').onclick();h.run("showTestPicker();showTutorial();showStagePreview(2,'restart',document.querySelector('#restart'));switchView('village')");await h.run('showAdDialog();showBillingDialog()');h.element('#music-toggle').onclick();h.element('#reset').onclick();h.element('#shuffle').onclick();
+    expect(h.run('resourceHelp.kind')).toBe('stars');expect(h.run('route')).toBe('settings');expect(h.element('#tutorial-dialog').open).toBe(false);expect(h.element('#test-level-dialog').open).toBe(false);expect(h.run('previewDialog.open')).toBe(false);expect(state(h)).toBe(before);expect(h.disk()).toEqual(disk);
+    close();h.element('#coins-help').onclick();close();expect(h.run('resourceHelp.kind')).toBe('coins');expect(h.run('resourceDialog.open')).toBe(true);h.element('#resource-help-close').onclick();
+  });
+  it.each(['ko','en'] as const)('%s 체험은 체험 잔액을 명시하고 일반 저장·체험 객체를 그대로 유지합니다',language=>{
+    const h=mainHarness(false,false,true);h.run("switchView('journal');enterCareDemo();changeLanguage('"+language+"');globalThis.helpDemo=careDemo;globalThis.helpDemoSave=save");const disk=h.disk(),before=state(h),writes=h.writes();
+    h.element('#coins-help').onclick();expect(h.run('resourceDialog.innerHTML')).toContain(t(language,'resourceDemoBalance'));expect(h.run('resourceDialog.innerHTML')).toContain(t(language,'resourceDemoNote'));expect(h.element('#coins-help').attributes['aria-label']).toContain(t(language,'resourceDemoBalance'));
+    h.element('#resource-help-close').onclick();expect(h.run('careDemo===helpDemo&&save===helpDemoSave')).toBe(true);expect(state(h)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('시험 회차는 일반 잔액/무보상을 명시하고 저장 충돌 중에도 읽기만 허용합니다',()=>{
+    const h=mainHarness(false,false,true);h.run('startLevel(36,true)');const disk=h.disk(),before=state(h);h.element('#coins-help').onclick();expect(h.run('resourceDialog.innerHTML')).toContain(t('en','resourceTestNote'));h.element('#resource-help-close').onclick();expect(state(h)).toBe(before);expect(h.disk()).toEqual(disk);
+    const blocked=mainHarness();blocked.run("localStorage.setItem('pawblossom.save.v1',JSON.stringify({...save,coins:99}));persist()");expect(blocked.run('saveStatus().load')).toBe('conflict');const writes=blocked.writes(),blockedDisk=blocked.disk();blocked.element('#stars-help').onclick();expect(blocked.run('resourceDialog.open')).toBe(true);blocked.element('#resource-help-close').onclick();expect(blocked.writes()).toBe(writes);expect(blocked.disk()).toEqual(blockedDisk);
+  });
+  it('최대 잔액 ARIA는 원값을 유지하고 열린 안내의 언어를 변경합니다',()=>{
+    const h=mainHarness();h.run('save.stars=40;save.coins=1000000;updateWallet()');expect(h.element('#coin-count').textContent).toBe('1M');expect(h.element('#coins-help').attributes['aria-label']).toContain('1000000');h.element('#coins-help').onclick();h.run("changeLanguage('ko')");expect(h.element('#coin-count').textContent).toBe('100만');expect(h.run('resourceDialog.innerHTML')).toContain(t('ko','coinsHelpTitle'));expect(h.run('resourceDialog.innerHTML')).toContain('1000000');expect(h.run('resourceDialog.open')).toBe(true);
+  });
+  it('작은 화면 버튼/대화상자는 기본44px와 viewport안쪽 스크롤을 사용합니다',()=>{
+    const css=read('../src/style.css'),source=read('../src/main.ts');expect(source).toContain('id="stars-help" type="button"');expect(source).toContain('id="coins-help" type="button"');
+    expect(css).toMatch(/\.wallet-help\{[^}]*min-width:44px;min-height:44px/);expect(css).toMatch(/#resource-help-dialog\{[^}]*max-height:calc\(100dvh - 24px\);overflow:auto/);
   });
 });
