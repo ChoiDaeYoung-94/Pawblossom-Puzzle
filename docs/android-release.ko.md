@@ -1,4 +1,18 @@
-## 최신 100스테이지 검수 후보 · 2026-10-22 · #221
+## 최신 입력·정원·핍 검수 후보 · 2026-10-22 저녁 · #229
+
+사용자 확인용 최신 파일은 [Pawblossom-Puzzle-v0.1.7-2026-10-22-47316a6-debug.apk](https://drive.google.com/file/d/1VxJDmZ1RvuUnYY3vnQFLRZITvDBOhtpA/view)입니다. 게임 소스 main `47316a6350a83a04cb045aa308f4611c137c9bca`, 버전0.1.7/code8, 11,155,455바이트, SHA256 `4408da7b37b67f7aacd85abba95e2b52ec53876b88527aee5cf61b764113f6bc`입니다. 기존 작업 계정의 테스트 폴더에 고유 APK와 checksum만 추가했으며 실제 재다운로드 크기·해시가 일치합니다. 비공개 공유 범위와 기존 파일을 유지하고 추가 Chrome 탭만 닫았습니다. 아래340과 이전 APK는 새 입력·후반 정원·핍 안내를 포함하지 않는 전달 이력입니다.
+
+가장자리 여백/같은 캔버스의 정상 한 손가락 이동을 보완한 [PR226](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/226), 연못·쉼터·꽃아치의 단계별 복원/선택 꾸미기·미리보기·핍 방문을 연결한 [PR228](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/228), 성장 완료 후 무료 교감과 소품·소유 상태 안내를 보완한 [PR230](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/230)을 포함합니다. 핵심 복원은 기존 꽃밭 포함 별94개, 선택 콘텐츠는 기존450+신규1080코인이며 강제 코인 구매나 새 현금 상품이 아닙니다. 체험은 임시1600코인/100별/100완료 조건으로 끝까지 확인할 수 있고 정상 진행을 대체하지 않습니다. 장기 성장·100이후 재미 전체 완료는 아닙니다.
+
+**이 APK는 debug UI·게임 검수 후보이며 출시 검증 완료본이 아닙니다.** PR230 head `f7c8a657b05de4a3ec298b5b6313d23b00b9c312`의 첫 [CI39743466761](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39743466761)은 Node22/24 각각44파일2,954검사·스토어12·타입·두 빌드가 성공했고 main과 전체 tree가 같습니다. 정확 main 첫 [CI39743972189](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39743972189)은 Node22 전 단계 성공, Node24는2,953성공/서버 원장1실패이며 이후 빌드 단계는 미실행입니다. 마지막 녹색 제품 main은 `bec1a88843059655327fc253d60616d71f0c25ea`/[CI39742035758](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39742035758), 양Node2,952개입니다. main473의 worker0 명령 BEGIN501.070ms BUSY5·conflict6/기대7과 원인/잠금 소유자 미확정은 [#122 기록](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122#issuecomment-6335825875)에 보존했습니다. 같은 head CI/전체 재실행이나 제한·기대 완화는 하지 않았으며 후속 문서 CI도 이 실패의 원인 해결이 아닙니다.
+
+마지막 녹색bec 이후 서버·엔진·네이티브/의존성 변경0, 성공한 PR과 동일 tree·관련 UI387개/두 웹 빌드·실화면 확인을 근거로 제한적인 검수후보를 제작했습니다. testing `index-CZCxoOR-.js`/38파일은 실제 한영 무료 교감·꾸미기와 정상 회차 복원을 확인한 최종 QA 빌드와 전수 일치합니다. APK 웹38+빈cordova2, 중복 ZIP항목0, 기존v2 인증서·appId/min24/target36, production dist38/Android38+빈2 복원을 독립 검수했습니다. 비웹536 압축해제 SHA는340 APK와 모두 같습니다. Gradle은 app clean+assembleDebug(54실행/38캐시)만 실행했고 native16개(실질15)/lint오류0·경고15는63b→9fa→340의 동일 코드·비웹 근거를 재사용했으며 이번에 새 실행한 것이 아닙니다. 실서버 SQLite marker는 웹 번들에 포함되지 않습니다.
+
+실제 UI로 정상21–30을 처음 완료해31번 비정형 보드/26이동/0점/별20·코인830에 진입했습니다. 21–23은5654dd4 production, 이후는225/227의 testing 정상 진행으로 소스별 분리했고28번 첫 실패·재도전 성공과 브라우저 대기 초과도 보존했습니다. 현재 보이는 칸만 읽고 외부 인접 매치 후보를 실제 입력했으며 저장·Scene·RNG 주입은 없습니다. 사람 난이도·100판 전수 완주 검증이 아닙니다. KO320세로/EN640가로의 핍 마지막+8 유료10→양쪽100무료, 소품 이름/무료 장착, 연못 소유 후 무료 왕복과 체험 종료/reload의 정상28회차 복원을 별도로 확인했습니다.
+
+근거는 Git 밖 `qa/issue-223-edge-swipe`, `qa/issue-225-garden-spaces`, `qa/issue-227-pip-care-labels`, `qa/integration-20261022-evening`, `2026-10-22-47316a6`에 보존합니다. 테스트 안내는 채팅에 직접 제공하며 새 안내 파일·예약을 만들지 않습니다. #224 장기 성장/재미, #122 원인 추적, #73 실제 단말·청취/UMP/GMA·연령/Play구매·복원/pending/환불·스토어, 개발자명·공개 지원/개인정보 호스팅은 미완료입니다. AAB·공개배포·콘솔상품·실키/env·최종믹스·자동 폰 테스트 보류를 유지합니다.
+
+## 이전 100스테이지 검수 후보 · 2026-10-22 · #221
 
 사용자 확인용 최신 파일은 [Pawblossom-Puzzle-v0.1.7-2026-10-22-34031f1-debug.apk](https://drive.google.com/file/d/1L6dRtO4sJook8Erle_A2ALkdM-VMMZJT/view)입니다. 게임 소스 main `34031f1082457c940cb7f05deb3c744dec19f6b5`, 버전0.1.7/code8, 11,146,331바이트, SHA256 `7fa11bfc90ba5ee17e227107428098a1e747d1a6a24577c9ef9b0538840d21c6`입니다. 기존 작업 계정/테스트 폴더에 고유 APK와 checksum만 추가했고 실제 재다운로드 크기·해시가 일치합니다. 기존 파일/공유 범위는 유지했으며 추가 Chrome 탭 두 개만 닫았습니다. 별도 테스트 안내 파일은 만들지 않았습니다.
 
