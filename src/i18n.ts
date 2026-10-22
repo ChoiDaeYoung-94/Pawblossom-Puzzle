@@ -1,6 +1,7 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    gardenLanternDefault:'Original garden position',gardenLanternAt:'Beside flower bed {number}',gardenLanternMove:'Place beside selected bed {number} · Free',gardenLanternShown:'Showing',gardenLanternHidden:'Hidden',
     gardenEdit:'Make this garden yours',gardenChoosePlot:'Choose a flower bed',gardenPlot:'Flower bed {number}',gardenChooseFlower:'Choose flowers',gardenFreeChange:'Change flowers for free',gardenFirstPlot:'Grow a flower bed with stars to choose flowers.',
     gardenMeadow:'Meadow blossom',gardenDaisy:'Daisy',gardenViolet:'Purple bell',gardenTogether:'Garden projects with Pip',gardenNext:'Our next project',gardenProjectsDone:'All three projects are yours. Keep arranging your garden.',gardenOpenEditor:'Choose flowers & projects',
     gardenBench:'Pip’s resting place',gardenButterflies:'Butterfly flower path',gardenLantern:'Little lantern',gardenConditions:'Beds {plots}/{needPlots} · Growth {growth}/{needGrowth} · Friendship {affection}/{needAffection} · Flower types {types}/{needTypes}',
@@ -9,7 +10,7 @@ const strings = {
     starsHelpTitle:'What are stars for?',starsHelpEarn:'Earn stars when you clear each stage for the first time.',starsHelpUse:'Use stars in Garden to grow flower beds.',
     coinsHelpTitle:'What are coins for?',coinsHelpEarn:'Earn coins when you clear each stage for the first time.',coinsHelpUse:'Use coins in Pip for food, play and decorations, and in Garden for the little lantern after meeting its project conditions. In normal puzzle play, you can also spend coins on one extra shuffle per round after using the free shuffle.',
     resourceDemoNote:'These are demo stars and coins. Your saved balance stays the same, and demo progress disappears when you leave the demo.',resourceTestNote:'Test puzzles give no rewards and do not spend your saved coins or stars.',
-    chapterCrates:'Woodland clearing',woodenCrate:'Wooden crate',cratesCleared:'Crates cleared!',testCrates:'Wooden crates · clear them all',cratePlayHint:'Match beside crates or hit them with specials.',
+    chapterCrates:'Forest glade',woodenCrate:'Wooden crate',cratesCleared:'Crates cleared!',testCrates:'Wooden crates · clear them all',cratePlayHint:'Match beside crates or hit them with specials.',
     crateHint:'Crates stay in place and block falling tiles. A match directly beside a crate or a direct line/bomb hit clears it in one hit. A color clear affects colored tiles; two color clears together clear every crate. Clear all crates and collect the color goals.',
     boardCrateCell:'Row {row}, column {col}: wooden crate. Cannot select or swap. Match beside it or hit it with a special.',
     paidShuffle:'Shuffle',shuffleUnavailable:'This shuffle could not preserve your tiles. Nothing was spent.',
@@ -100,6 +101,7 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    gardenLanternDefault:'원래 정원 위치',gardenLanternAt:'꽃밭 {number} 옆',gardenLanternMove:'선택한 꽃밭 {number} 옆에 두기 · 무료',gardenLanternShown:'표시 중',gardenLanternHidden:'숨김 중',
     gardenEdit:'내가 고르는 정원',gardenChoosePlot:'꽃밭 선택',gardenPlot:'꽃밭 {number}',gardenChooseFlower:'꽃 종류 선택',gardenFreeChange:'꽃 교체는 무료예요',gardenFirstPlot:'별로 꽃밭을 늘리면 꽃을 고를 수 있어요.',
     gardenMeadow:'초원꽃',gardenDaisy:'데이지',gardenViolet:'보라꽃',gardenTogether:'핍과 만드는 정원 작품',gardenNext:'다음 공동 목표',gardenProjectsDone:'작품 세 가지를 모두 모았어요. 원하는 조합으로 꾸며 보세요.',gardenOpenEditor:'꽃과 정원 작품 고르기',
     gardenBench:'핍의 쉼터',gardenButterflies:'나비 꽃길',gardenLantern:'작은 등불',gardenConditions:'꽃밭 {plots}/{needPlots} · 성장 {growth}/{needGrowth} · 친밀도 {affection}/{needAffection} · 꽃 {types}/{needTypes}종',

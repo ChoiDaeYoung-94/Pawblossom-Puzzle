@@ -790,7 +790,13 @@ function pipDecoration(){
 const projectName=(id:GardenProject)=>text(({bench:'gardenBench',butterflies:'gardenButterflies',lantern:'gardenLantern'} as const)[id]);
 const flowerName=(id:typeof flowerStyles[number])=>text(({meadow:'gardenMeadow',daisy:'gardenDaisy',violet:'gardenViolet'} as const)[id]);
 function gardenVisitor(){return `<div class="garden-visitor ${pipReaction==='greet'?'pip-reaction-greet':''}"><img src="${pipReaction==='greet'?'/assets/pip-play-v1.webp':'/assets/pip.png'}" alt="${text('pip')}"/>${pipDecoration()}</div>`;}
-function gardenDescription(){const design=gardenDesignFor(save.gardenDesign);return [text('gardenImage').replace('{count}',String(save.garden)),...design.flowers.slice(0,save.garden).map((flower,i)=>text('gardenPlot').replace('{number}',String(i+1))+' '+flowerName(flower)),...design.placed.map(projectName)].join(' · ');}
+const lanternLocation=(plot:number|undefined)=>plot===undefined?text('gardenLanternDefault'):text('gardenLanternAt').replace('{number}',String(plot+1));
+function gardenDescription(){const design=gardenDesignFor(save.gardenDesign);return [text('gardenImage').replace('{count}',String(save.garden)),...design.flowers.slice(0,save.garden).map((flower,i)=>text('gardenPlot').replace('{number}',String(i+1))+' '+flowerName(flower)),...design.placed.map(project=>projectName(project)+(project==='lantern'?' · '+lanternLocation(design.lanternPlot):''))].join(' · ');}
+function lanternPlacement(){
+  const design=gardenDesignFor(save.gardenDesign);if(!design.owned.includes('lantern'))return '';
+  const shown=design.placed.includes('lantern');
+  return `<div class="garden-lantern-placement"><p id="garden-lantern-position" role="status">${text('gardenLantern')} · ${lanternLocation(design.lanternPlot)} · ${text(shown?'gardenLanternShown':'gardenLanternHidden')}</p><button id="garden-lantern-place" type="button" class="text-button" aria-describedby="garden-lantern-position" ${careStorageBlocked()||selectedGardenPlot>=save.garden||design.lanternPlot===selectedGardenPlot&&shown?'disabled':''}>${text('gardenLanternMove').replace('{number}',String(selectedGardenPlot+1))}</button></div>`;
+}
 function projectConditions(project:typeof gardenProjects[number]){
   const pip=save.pip??freshPip(),design=gardenDesignFor(save.gardenDesign);
   return text('gardenConditions').replace('{plots}',String(save.garden)).replace('{needPlots}',String(project.plots)).replace('{growth}',String(pip.growth)).replace('{needGrowth}',String(project.growth)).replace('{affection}',String(pip.affection)).replace('{needAffection}',String(project.affection)).replace('{types}',String(flowerDiversity(design,save.garden))).replace('{needTypes}',String(project.diversity));
@@ -803,7 +809,7 @@ function gardenEditor(){
   const design=gardenDesignFor(save.gardenDesign),pip=save.pip??freshPip(),blocked=careStorageBlocked();
   selectedGardenPlot=Math.max(0,Math.min(selectedGardenPlot,Math.max(0,save.garden-1)));
   const reaction=pipReaction==='tend'?'pipTendReaction':pipReaction==='greet'?design.placed.includes('lantern')?'gardenVisitLantern':design.placed.includes('butterflies')?'gardenVisitButterflies':design.placed.includes('bench')?'gardenVisitBench':'pipGreetReaction':'gardenVisitInvite';
-  return `<div class="garden-companion"><div><p class="garden-visit-line" role="status">${text(reaction)}</p><div class="garden-visit-actions"><button id="garden-visit" class="text-button">${text('gardenVisit')}</button><button id="garden-tend" class="text-button" ${pipLevel(pip)<3?'disabled':''}>${text('pipTend')}</button></div></div></div><section class="garden-editor" aria-labelledby="garden-edit-title"><h3 id="garden-edit-title" tabindex="-1">${text('gardenEdit')}</h3><div class="garden-plots" role="group" aria-label="${text('gardenChoosePlot')}">${Array.from({length:5},(_,i)=>`<button id="garden-plot-${i}" type="button" aria-pressed="${i===selectedGardenPlot&&i<save.garden}" aria-label="${text('gardenPlot').replace('{number}',String(i+1))} · ${i<save.garden?flowerName(design.flowers[i]):text('levelLocked')}" ${i>=save.garden?'disabled':''}>${i<save.garden?flowerArt(design.flowers[i]):icon('lock',18)}<span>${i+1}</span></button>`).join('')}</div><p class="garden-selection" role="status">${save.garden?text('gardenPlot').replace('{number}',String(selectedGardenPlot+1))+' · '+flowerName(design.flowers[selectedGardenPlot])+' · '+text('gardenFreeChange'):text('gardenFirstPlot')}</p><div class="garden-flowers" role="group" aria-label="${text('gardenChooseFlower')}">${flowerStyles.map(style=>`<button id="garden-flower-${style}" type="button" aria-pressed="${save.garden>0&&design.flowers[selectedGardenPlot]===style}" ${blocked||save.garden===0?'disabled':''}>${flowerArt(style)}<span>${flowerName(style)}</span></button>`).join('')}</div><h4>${text('gardenTogether')}</h4><div class="garden-projects">${gardenProjects.map(project=>{
+  return `<div class="garden-companion"><div><p class="garden-visit-line" role="status">${text(reaction)}</p><div class="garden-visit-actions"><button id="garden-visit" class="text-button">${text('gardenVisit')}</button><button id="garden-tend" class="text-button" ${pipLevel(pip)<3?'disabled':''}>${text('pipTend')}</button></div></div></div><section class="garden-editor" aria-labelledby="garden-edit-title"><h3 id="garden-edit-title" tabindex="-1">${text('gardenEdit')}</h3><div class="garden-plots" role="group" aria-label="${text('gardenChoosePlot')}">${Array.from({length:5},(_,i)=>`<button id="garden-plot-${i}" type="button" aria-pressed="${i===selectedGardenPlot&&i<save.garden}" aria-label="${text('gardenPlot').replace('{number}',String(i+1))} · ${i<save.garden?flowerName(design.flowers[i]):text('levelLocked')}" ${i>=save.garden?'disabled':''}>${i<save.garden?flowerArt(design.flowers[i]):icon('lock',18)}<span>${i+1}</span></button>`).join('')}</div><p class="garden-selection" role="status">${save.garden?text('gardenPlot').replace('{number}',String(selectedGardenPlot+1))+' · '+flowerName(design.flowers[selectedGardenPlot])+' · '+text('gardenFreeChange'):text('gardenFirstPlot')}</p><div class="garden-flowers" role="group" aria-label="${text('gardenChooseFlower')}">${flowerStyles.map(style=>`<button id="garden-flower-${style}" type="button" aria-pressed="${save.garden>0&&design.flowers[selectedGardenPlot]===style}" ${blocked||save.garden===0?'disabled':''}>${flowerArt(style)}<span>${flowerName(style)}</span></button>`).join('')}</div>${lanternPlacement()}<h4>${text('gardenTogether')}</h4><div class="garden-projects">${gardenProjects.map(project=>{
     const owned=design.owned.includes(project.id),placed=design.placed.includes(project.id),ready=projectReady(project,save.garden,pip,design);
     return `<article class="garden-project"><div><strong>${projectName(project.id)}</strong><p>${owned?text('gardenOwned'):projectConditions(project)}</p></div><button id="garden-project-${project.id}" type="button" ${owned?`aria-pressed="${placed}"`:''} ${blocked||!owned&&(!ready||save.coins<project.cost)?'disabled':''}>${owned?text(placed?'gardenHide':'gardenPlace'):project.cost?text('gardenBuy').replace('{cost}',String(project.cost)):text('gardenClaim')}</button></article>`;
   }).join('')}</div>${blocked?`<p class="pip-save-note" role="status">${text('careSaveBlocked')}</p>`:''}</section>`;
@@ -857,6 +863,7 @@ function bindCareControls(){
     }
   };
   const plot=selectedGardenPlot;
+  bind('garden-lantern-place',button=>changeGarden(button,{kind:'placeLantern',plot}));
   for(const flower of flowerStyles)bind('garden-flower-'+flower,button=>changeGarden(button,{kind:'flower',plot,flower}));
   for(const project of gardenProjects){const owned=save.gardenDesign?.owned.includes(project.id);bind('garden-project-'+project.id,button=>changeGarden(button,{kind:owned?'toggle':'claim',project:project.id}));}
   bind('garden-visit',()=>{if(route==='village'&&careEnvironment()&&!careProcessing){reactPip('greet');renderViews();}});
@@ -897,14 +904,17 @@ function renderViews(grew=false){
   $<HTMLSelectElement>('#language').onchange=event=>{if(settingsAction('language'))changeLanguage((event.target as HTMLSelectElement).value==='ko'?'ko':'en');};
   $('#reset').onclick=()=>{if(!settingsAction('reset')||!confirm(text('resetConfirm')))return;const cleared=clearSave();updateSaveStatus();if(!cleared)return;clearCareReaction();careGeneration++;clearTimeout(growthTimer);growthTimer=undefined;growing=false;save=cleared;selectedChapter=1;audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');showTutorial();};
   // DOM 교체 뒤에도 읽던 위치를 유지합니다. 심기 버튼이 비활성이면 갱신된 상태로 초점을 잇습니다.
+  let fallbackFocus:HTMLElement|undefined;
   if(focusedId&&!focused?.isConnected){
     const replacement=document.querySelector<HTMLElement>('#'+focusedId);
     const target=focusedId==='grow'&&(replacement as HTMLButtonElement|null)?.disabled?$('#garden-stage')
       :focusedId.startsWith('garden-')&&(!replacement||(replacement as HTMLButtonElement).disabled)?$('#garden-edit-title')
       :focusedId.startsWith('pip-')&&(!replacement||(replacement as HTMLButtonElement).disabled)?$('#pip-care-title'):replacement;
     target?.focus({preventScroll:true});
+    if(target&&target!==replacement)fallbackFocus=target;
   }
   for(const {view,top,left} of scroll){view.scrollTop=top;view.scrollLeft=left;}
+  fallbackFocus?.scrollIntoView?.({block:'start'});
 }
 function localize(){
   document.documentElement.lang=save.language;

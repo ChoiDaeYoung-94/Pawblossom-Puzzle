@@ -5,6 +5,9 @@ export const flowerArt=(style:FlowerStyle)=>`<svg viewBox="-17 -18 34 36" aria-h
 export function gardenArt(value:number,celebrate=false,selection?:GardenDesign):string {
   const stage=Number.isFinite(value)?Math.max(0,Math.min(5,Math.floor(value))):0;
   const design=gardenDesignFor(selection);
+  // 핍의 왼쪽 전경을 피해 꽃밭의 오른쪽 아래에 놓습니다. 미선택 구 저장은 원래 위치입니다.
+  const lanternPositions=[[211,173],[338,161],[454,178],[270,244],[405,244]];
+  const [lanternX,lanternY]=lanternPositions[design.lanternPlot??-1]??[419,217];
   // 왼쪽 전경에 핍이 설 자리를 두고 다섯 꽃밭을 오른쪽에 모읍니다.
   const plots=[[158,153],[285,141],[413,153],[218,222],[351,222]];
   const colors=['#e9a9b1','#efcd79','#b9add8','#e7afa0','#d7b1d1'];
@@ -32,6 +35,6 @@ export function gardenArt(value:number,celebrate=false,selection?:GardenDesign):
     ${design.placed.includes('bench')?'<g data-decoration="bench" transform="translate(124 91)" stroke="#775d43" stroke-width="3" stroke-linecap="round"><path d="M-29-13H29V0H-29Z" fill="#d5ac76"/><path d="M-32 4H32V11H-32Z" fill="#d5ac76"/><path d="M-25 11v10m50-10v10M-25 0v4m50-4v4"/></g>':''}
     ${beds}
     ${design.placed.includes('butterflies')?`<g data-decoration="butterflies">${[[189,107],[282,191],[351,101]].map(([x,y],i)=>`<g transform="translate(${x} ${y}) rotate(${i*20-15})"><path d="M0 0Q-19-18-18-1Q-19 12 0 3Q19 12 18-1Q19-18 0 0" fill="#edbf76" stroke="#b88961" stroke-width="1.4"/><path d="M0-4V7" stroke="#6e5d59" stroke-width="2.5"/></g>`).join('')}</g>`:''}
-    ${design.placed.includes('lantern')?'<g data-decoration="lantern" transform="translate(419 217)"><circle cy="-18" r="25" fill="#fff1b5" opacity=".45"/><path d="M-2-39V16M-10 16H10M-10-35H10" stroke="#736851" stroke-width="4" stroke-linecap="round"/><rect x="-12" y="-32" width="24" height="25" rx="5" fill="#f3d68a" stroke="#8f7650" stroke-width="2"/><path d="M0-27v15" stroke="#fff6d2" stroke-width="5" stroke-linecap="round"/></g>':''}
+    ${design.placed.includes('lantern')?`<g data-decoration="lantern" transform="translate(${lanternX} ${lanternY})"><circle cy="-18" r="25" fill="#fff1b5" opacity=".45"/><path d="M-2-39V16M-10 16H10M-10-35H10" stroke="#736851" stroke-width="4" stroke-linecap="round"/><rect x="-12" y="-32" width="24" height="25" rx="5" fill="#f3d68a" stroke="#8f7650" stroke-width="2"/><path d="M0-27v15" stroke="#fff6d2" stroke-width="5" stroke-linecap="round"/></g>`:''}
   </svg>`;
 }

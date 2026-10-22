@@ -38,6 +38,14 @@ describe('선택하는 꽃과 영구 정원 작품',()=>{
     expect(validateGardenDesign(design,3,grown)?.owned).toEqual(['bench','butterflies','lantern']);
     expect(prepareGardenAction(19,3,grown,diverse(),{kind:'claim',project:'lantern'})).toBeUndefined();
     expect(prepareGardenAction(50,3,grown,freshGardenDesign(),{kind:'toggle',project:'lantern'})).toBeUndefined();
+    expect(prepareGardenAction(0,5,grown,undefined,{kind:'placeLantern',plot:4})).toBeUndefined();
+    for(let plot=0;plot<5;plot++){
+      const before=JSON.stringify(design),moved=prepareGardenAction(0,5,grown,design,{kind:'placeLantern',plot})!;
+      expect(moved).toMatchObject({coins:0,cost:0,design:{lanternPlot:plot}});expect(JSON.stringify(design)).toBe(before);
+      expect(prepareGardenAction(0,5,grown,moved.design,{kind:'placeLantern',plot})).toBeUndefined();
+      const hidden=prepareGardenAction(0,5,grown,moved.design,{kind:'toggle',project:'lantern'})!;
+      const restored=prepareGardenAction(0,5,grown,hidden.design,{kind:'placeLantern',plot})!;expect(restored.design.placed).toContain('lantern');expect(restored.design.lanternPlot).toBe(plot);design=restored.design;
+    }
   });
   it('잘못된 schema/꽃/배열 hole/중복·미소유배치/불가능 소유 조건을 엄격히 거절합니다',()=>{
     const flowers=freshGardenDesign().flowers;delete flowers[0];const owned=Array(1),placed=Array(1);
@@ -49,12 +57,25 @@ describe('선택하는 꽃과 영구 정원 작품',()=>{
     expect(validateGardenDesign(diverse(),1,grown)).toBeUndefined();
     for(const pip of [{growth:NaN,affection:20},{growth:20,affection:101}])
       for(const current of [undefined,freshGardenDesign()])expect(prepareGardenAction(20,1,pip,current,{kind:'flower',plot:0,flower:'daisy'})).toBeUndefined();
+    const lantern={...freshGardenDesign(),owned:['lantern'],placed:[]} as GardenDesign;
+    for(const lanternPlot of [null,NaN,Infinity,-1,.5,3,5,'0',[],Array(1)]){
+      expect(validateGardenDesign({...lantern,lanternPlot},3,grown)).toBeUndefined();
+      expect(prepareGardenAction(0,3,grown,lantern,{kind:'placeLantern',plot:lanternPlot as number})).toBeUndefined();
+    }
+    expect(validateGardenDesign({...freshGardenDesign(),lanternPlot:0},3,grown)).toBeUndefined();
+    expect(validateGardenDesign({...lantern,lanternPlot:undefined},3,grown)).not.toHaveProperty('lanternPlot');
   });
   it('꽃은 색뿐 아니라 모양이 다르고 소유·배치와 열린 칸만 그림에 반영합니다',()=>{
     const design=diverse();design.owned=['bench','butterflies','lantern'];design.placed=['bench','lantern'];const before=JSON.stringify(design),svg=gardenArt(3,false,design);
     expect(svg.match(/data-planted="true"/g)).toHaveLength(3);expect(svg).toContain('data-flower="daisy"');expect(svg).toContain('data-flower="violet"');expect(svg).toContain('data-decoration="bench"');expect(svg).toContain('data-decoration="lantern"');expect(svg).not.toContain('data-decoration="butterflies"');
     expect(flowerArt('meadow').match(/<ellipse/g)).toHaveLength(5);expect(flowerArt('daisy').match(/<ellipse/g)).toHaveLength(10);expect(flowerArt('violet')).toContain('<path');expect(flowerArt('violet')).not.toContain('<ellipse');expect(JSON.stringify(design)).toBe(before);
     for(const color of ['#e9a9b1','#efcd79','#b9add8','#e7afa0','#d7b1d1'])expect(gardenArt(5)).toContain(`fill="${color}"`);
+    expect(svg).toContain('data-decoration="lantern" transform="translate(419 217)"');expect(design).not.toHaveProperty('lanternPlot');
+    const positions=[[211,173],[338,161],[454,178],[270,244],[405,244]];
+    for(let plot=0;plot<5;plot++){
+      const [x,y]=positions[plot],image=gardenArt(5,false,{...design,lanternPlot:plot});expect(image).toContain(`data-decoration="lantern" transform="translate(${x} ${y})"`);
+      expect(x).toBeGreaterThanOrEqual(205);expect(x+25).toBeLessThanOrEqual(480);expect(y-43).toBeGreaterThanOrEqual(0);expect(y+16).toBeLessThanOrEqual(280);
+    }
   });
 });
 describe('선택 필드와 기존 저장 보호',()=>{
@@ -65,8 +86,11 @@ describe('선택 필드와 기존 저장 보호',()=>{
   });
   it('선택/소유/배치는 reload로 복원하며 꽃 변경으로 다양성이 줄어도 소유를 잃지 않습니다',()=>{
     const h=setup(legacy),save=h.store.load(),design=freshGardenDesign();design.owned=['bench'];design.placed=['bench'];expect(h.store.save({...save,pip:{growth:20,affection:20,owned:[],equipped:'none'},gardenDesign:design})).toBe(true);expect(h.store.load().gardenDesign).toEqual(design);
+    expect(h.store.load().gardenDesign).not.toHaveProperty('lanternPlot');
+    const lantern:GardenDesign={...freshGardenDesign(),owned:['lantern'],placed:['lantern'],lanternPlot:4};expect(h.store.save({...h.store.load(),garden:5,pip:{growth:100,affection:100,owned:[],equipped:'none'},gardenDesign:lantern})).toBe(true);expect(h.store.load().gardenDesign).toEqual(lantern);
   });
   it('손상된 선택 primary는 유효 backup을 읽고 원문을 보존하며 손상 backup 저장은 거절합니다',()=>{
     const bad={...legacy,gardenDesign:{...freshGardenDesign(),placed:['lantern']}},h=setup(bad,legacy),raw=h.disk.get(SAVE_KEY);expect(h.store.load()).toEqual(legacy);expect(h.store.status.load).toBe('recovered');expect(h.disk.get(SAVE_KEY)).toBe(raw);expect(h.store.save(bad as never)).toBe(false);
+    const broken=setup({...legacy,gardenDesign:{...freshGardenDesign(),lanternPlot:null}},legacy),brokenRaw=broken.disk.get(SAVE_KEY);expect(broken.store.load()).toEqual(legacy);expect(broken.disk.get(SAVE_KEY)).toBe(brokenRaw);
   });
 });
