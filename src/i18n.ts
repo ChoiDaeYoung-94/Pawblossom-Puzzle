@@ -1,6 +1,10 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    resourceHelpButton:'{name}: {count}. View uses.',resourceHelpClose:'Close',resourceNormalBalance:'Your saved balance',resourceDemoBalance:'Demo balance',
+    starsHelpTitle:'What are stars for?',starsHelpEarn:'Earn stars when you clear each stage for the first time.',starsHelpUse:'Use stars in Garden to grow flower beds.',
+    coinsHelpTitle:'What are coins for?',coinsHelpEarn:'Earn coins when you clear each stage for the first time.',coinsHelpUse:'Use coins in Pip for food, play and decorations. In normal puzzle play, you can also spend coins on one extra shuffle per round after using the free shuffle.',
+    resourceDemoNote:'These are demo stars and coins. Your saved balance stays the same, and demo progress disappears when you leave the demo.',resourceTestNote:'Test puzzles give no rewards and do not spend your saved coins or stars.',
     chapterCrates:'Woodland clearing',woodenCrate:'Wooden crate',cratesCleared:'Crates cleared!',testCrates:'Wooden crates · clear them all',cratePlayHint:'Match beside crates or hit them with specials.',
     crateHint:'Crates stay in place and block falling tiles. A match directly beside a crate or a direct line/bomb hit clears it in one hit. A color clear affects colored tiles; two color clears together clear every crate. Clear all crates and collect the color goals.',
     boardCrateCell:'Row {row}, column {col}: wooden crate. Cannot select or swap. Match beside it or hit it with a special.',
@@ -92,6 +96,10 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    resourceHelpButton:'{name} {count}개. 사용처 보기.',resourceHelpClose:'닫기',resourceNormalBalance:'저장된 잔액',resourceDemoBalance:'체험용 잔액',
+    starsHelpTitle:'별은 어디에 쓰나요?',starsHelpEarn:'각 스테이지를 처음 완료하면 별을 받아요.',starsHelpUse:'정원에서 별을 써서 꽃밭을 늘릴 수 있어요.',
+    coinsHelpTitle:'코인은 어디에 쓰나요?',coinsHelpEarn:'각 스테이지를 처음 완료하면 코인을 받아요.',coinsHelpUse:'핍의 먹이·놀이·소품에 코인을 써요. 일반 퍼즐에서는 무료 섞기를 쓴 뒤 회차당 한 번 더 섞을 때도 사용할 수 있어요.',
+    resourceDemoNote:'지금은 체험용 별과 코인이에요. 저장된 잔액은 그대로이며, 체험을 나가면 체험 내용은 사라져요.',resourceTestNote:'시험 퍼즐은 보상을 주거나 저장된 코인·별을 쓰지 않아요.',
     chapterCrates:'숲속 빈터',woodenCrate:'나무상자',cratesCleared:'상자를 치웠어요!',testCrates:'나무상자 · 모두 치우기',cratePlayHint:'상자 바로 옆 매치나 특수로 치워요.',
     crateHint:'상자는 움직이지 않고 블록의 낙하를 막아요. 바로 옆 매치나 줄·폭탄의 직접 타격 한 번으로 치워요. 같은 색 제거는 색 블록에만 닿고, 같은 색 제거 두 개를 합치면 모든 상자도 치워요. 상자와 색 목표를 모두 완료해 주세요.',
     boardCrateCell:'{row}행 {col}열: 나무상자. 선택하거나 교환할 수 없어요. 바로 옆 매치나 특수로 치워 주세요.',
