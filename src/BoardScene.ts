@@ -13,7 +13,7 @@ export class BoardScene extends Phaser.Scene {
   engine: BoardEngine;
   private pieces: (Phaser.GameObjects.Container|null)[][] = [];
   private selected?: Position;
-  private down?: {pos:Position,x:number,y:number,pointerId:number,downTime:number};
+  private down?: {pos:Position,x:number,y:number,pointerId:number,downTime:number,wasTouch:boolean,identifier:number,element:EventTarget|null};
   private busy = false;
   private finished = false;
   private ready = false;
@@ -52,8 +52,16 @@ export class BoardScene extends Phaser.Scene {
     this.input.on('pointerupoutside',this.pointerOutside,this);
     const cancelGesture=()=>{this.cancelInput();this.hooks.onVisualCancel?.();};
     const cancelPointer=()=>{if(this.down)this.cancelInput();};
+    const canvasOut=(_time:number,event?:TouchEvent|MouseEvent)=>{
+      const d=this.down,touch=event as TouchEvent|undefined;
+      // Phaser는 canvas에서 시작한 정상 touchmove도 경계 밖이면 gameout으로 알립니다.
+      // 그 한 손가락만 정상 종료까지 보존하며 mouse 이탈/다중 터치/기타 취소는 유지합니다.
+      if(d?.wasTouch&&this.canInteract()&&touch?.type==='touchmove'&&d.element&&touch.target===d.element&&
+        touch.touches.length===1&&touch.changedTouches.length===1&&touch.touches[0].identifier===d.identifier&&touch.changedTouches[0].identifier===d.identifier)return;
+      cancelPointer();
+    };
     const cancelResize=()=>{cancelPointer();this.hooks.onVisualCancel?.();};
-    this.input.on('gameout',cancelPointer);
+    this.input.on('gameout',canvasOut);
     this.scale.on(Phaser.Scale.Events.RESIZE,cancelResize);
     this.events.on(Phaser.Scenes.Events.PAUSE,cancelGesture);
     this.events.on(Phaser.Scenes.Events.RESUME,cancelGesture);
@@ -62,7 +70,7 @@ export class BoardScene extends Phaser.Scene {
     const onCreate=()=>{this.ready=true;this.hooks.onReady?.();this.resetHint();this.changed();};
     const dispose=()=>{
       this.input.off('pointerdown',this.pointerDown,this);this.input.off('pointerup',this.pointerUp,this);
-      this.input.off('pointerupoutside',this.pointerOutside,this);this.input.off('gameout',cancelPointer);
+      this.input.off('pointerupoutside',this.pointerOutside,this);this.input.off('gameout',canvasOut);
       this.scale.off(Phaser.Scale.Events.RESIZE,cancelResize);
       for(const event of [Phaser.Scenes.Events.PAUSE,Phaser.Scenes.Events.RESUME,Phaser.Scenes.Events.SLEEP,Phaser.Scenes.Events.WAKE])this.events.off(event,cancelGesture);
       this.events.off(Phaser.Scenes.Events.SHUTDOWN,dispose);this.events.off(Phaser.Scenes.Events.DESTROY,dispose);
@@ -79,7 +87,7 @@ export class BoardScene extends Phaser.Scene {
     this.syncMotion();
     // TouchEvent에는 isPrimary가 없습니다. 이미 다른 손가락이 내려간 뒤의 새 제스처는 받지 않습니다.
     if(p.wasTouch&&(p.event as TouchEvent).touches.length!==1)return;
-    const pos=this.position(p.x,p.y);if(pos)this.down={pos,x:p.x,y:p.y,pointerId:p.id,downTime:p.downTime};
+    const pos=this.position(p.x,p.y);if(pos)this.down={pos,x:p.x,y:p.y,pointerId:p.id,downTime:p.downTime,wasTouch:p.wasTouch,identifier:p.identifier,element:p.downElement};
   }
   private pointerOutside(p:Phaser.Input.Pointer){
     if(this.down?.pointerId===p.id&&(p.wasTouch||p.button===0))this.cancelInput();
@@ -88,12 +96,14 @@ export class BoardScene extends Phaser.Scene {
     if(!this.down||this.down.pointerId!==p.id||(!p.wasTouch&&p.button!==0))return;
     const d=this.down;this.down=undefined;
     // Phaser 3.90은 touchcancel도 pointerup으로 전달합니다. 비활성/취소 종료도 down부터 비웁니다.
-    if(p.wasCanceled||p.downTime!==d.downTime||!this.canInteract()||!this.position(p.x,p.y))return;
+    if(p.wasCanceled||p.downTime!==d.downTime||!this.canInteract()||!Number.isFinite(p.x)||!Number.isFinite(p.y))return;
     const dx=p.x-d.x,dy=p.y-d.y;
     if(Math.hypot(dx,dy)>16){
+      // 종료점이 여백/비정형 빈칸이어도 시작 칸의 바로 이웃만 교환합니다.
+      // 외부 target 종료/취소는 별도 경계에서 무효화하며 정상 한 손가락 touchmove만 경계 밖까지 추적합니다.
       const to={row:d.pos.row+(Math.abs(dy)>Math.abs(dx)?Math.sign(dy):0),col:d.pos.col+(Math.abs(dx)>=Math.abs(dy)?Math.sign(dx):0)};
       if(to.row>=0&&to.row<8&&to.col>=0&&to.col<8)void this.attempt(d.pos,to);
-    }else this.tap(d.pos);
+    }else if(this.position(p.x,p.y))this.tap(d.pos);
   }
   private canInteract(){return !this.busy&&!this.finished&&this.pieces.length===this.engine.rows&&this.sys.isActive();}
   /** 조회는 엔진 판정/난수/이동을 소비하지 않습니다. */

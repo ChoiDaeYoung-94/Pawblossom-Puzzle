@@ -44,9 +44,17 @@ describe('실습 정상 종료와 취소 뒤 click 차단',()=>{
   it('캡처로 보낸 버튼 밖 짧은 종료도 click을 승인하지 않습니다',()=>{
     const h=harness();h.send('pointerdown',0,{clientX:59});h.send('pointerup',0,{clientX:62});h.send('click');expect(h.tap).not.toHaveBeenCalled();
   });
-  it('보드 밖 긴 스와이프는 실행하지 않고 다음 정상 스와이프는 회복합니다',()=>{
-    const h=harness();h.send('pointerdown');h.send('pointerup',0,{clientY:200});h.send('click');expect(h.swipe).not.toHaveBeenCalled();expect(h.tap).not.toHaveBeenCalled();
-    h.send('pointerdown');h.send('pointerup',0,{clientY:90});expect(h.lesson.completed).toBe(true);
+  it('정상 capture의 보드 밖 긴 스와이프도 바로 이웃을 한 번만 실행합니다',()=>{
+    const h=harness();h.send('pointerdown');h.send('pointerup',0,{clientY:200});h.send('click');h.send('pointerup',0,{clientY:200});
+    expect(h.swipe).toHaveBeenCalledExactlyOnceWith({row:0,col:2},0,170);expect(h.tap).not.toHaveBeenCalled();expect(h.lesson.completed).toBe(true);
+  });
+  it.each(['pointercancel','lostpointercapture'])('보드 밖 종료라도 %s 뒤에는 스와이프하지 않습니다',type=>{
+    const h=harness();h.send('pointerdown');h.send(type);h.send('pointerup',0,{clientY:200});h.send('click');
+    expect(h.swipe).not.toHaveBeenCalled();expect(h.lesson.completed).toBe(false);
+  });
+  it('바깥 방향의 무효 이웃과 비유한 좌표는 실습 완료를 만들지 않습니다',()=>{
+    const h=harness();h.send('pointerdown');h.send('pointerup',0,{clientY:-200});expect(h.lesson.completed).toBe(false);
+    h.send('pointerdown');h.send('pointerup',0,{clientY:Infinity});expect(h.swipe).toHaveBeenCalledOnce();expect(h.tap).not.toHaveBeenCalled();
   });
   it('취소 뒤 detail=0 키보드 활성화는 두 칸 선택을 완료합니다',()=>{
     const h=harness();h.send('pointerdown');h.send('pointercancel');h.send('click',0,{detail:0,pointerId:-1});h.send('click',1,{detail:0,pointerId:-1});expect(h.lesson.completed).toBe(true);

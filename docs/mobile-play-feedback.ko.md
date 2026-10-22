@@ -1,5 +1,13 @@
 # 실기기 플레이 피드백 수정
 
+## 2026-10-22 · #223 가장자리 스와이프
+
+최신 사용자 제보를 바탕으로390×844 브라우저의21번 동일 보드에서 내부→오른쪽 최외곽 교환을 비교했습니다. 종료점이 canvas 오른쪽 여백일 때30이동/0점으로 누락되고, 같은 시작에서 타일 안에 놓으면29이동/70점/낙엽8→6으로 정상 처리되어 종료점 gate 결함을 확인했습니다. Android 실단말의 모든 제보 원인을 확정한 것은 아닙니다.
+
+정상 pointerup은 시작 칸과 주방향의 바로 이웃으로만 교환하고 종료점이 여백·비정형 빈칸이어도 해당 이웃이 유효하면 처리합니다. Phaser가 canvas 시작 터치의 정상 touchmove에도 gameout을 보내므로 동일 target·동일 identifier의 단일 터치만 종료까지 보존합니다. 마우스/기타 gameout, 외부 target의 pointerupoutside, touchcancel, 다른 포인터, 세대 변경, resize·일시정지·모달 취소 보호는 유지합니다. 실습도 정상 pointer capture 종료에서 같은 방향 규칙을 사용하며 취소/DOM교체/합성click 중복은 계속 차단합니다. 실제 매치 없는 교환의 왕복은 입력 누락과 구분합니다. 설치 Phaser Pointer·InputManager의 touchmove→setCanvasOut→InputPlugin gameout→touchend/cancel 원본 호출 회귀, 보드/실습 입력과 타입 검사를 확인했습니다(최종 보드216개/관련4파일 최초243개, 타입3설정 성공). 최종 브라우저·CI·단말 검증은 총괄 후속입니다. 원문·소스 동결·검사 로그는 Git 밖 `qa/issue-223-edge-swipe`에 보존합니다.
+
+총괄의 최종 전체 검사는44파일2,940개를 통과했고 타입·에셋과 production/testing 두 빌드를 확인했습니다. 동결 production `index-xNSqbFYW.js`의390×844 실제 브라우저에서 상단 여백 종료가29→28이동·70→120점·꽃22→19·낙엽6→5로 정상 처리됐습니다. canvas 밖 마우스 종료는 기존대로 취소됐습니다. 초기에 읽은 canvas Y가 폰트/레이아웃 정착 후293.609→301.297로 달라져 바깥 종료와 내부 여백 종료를 실제 hit target으로 구분했으며, 이를 입력 실패로 합산하지 않았습니다. 수정 전/후 그림·실제 좌표·접근성 읽기는 Git 밖 before/after-repro.json에 보존합니다. 필수 PR/정확 main CI와 Android 실단말은 아직 별도이며 APK를 재생성하지 않았습니다.
+
 ## 최신 100스테이지 전달 · 2026-10-22 · #221
 
 [34031f1 검수 후보 APK](https://drive.google.com/file/d/1L6dRtO4sJook8Erle_A2ALkdM-VMMZJT/view)0.1.7/code8·11,146,331bytes/SHA256 `7fa11bfc90ba5ee17e227107428098a1e747d1a6a24577c9ef9b0538840d21c6`를 기존Drive에 추가하고 실제 재다운로드 크기/해시 일치·웹38/비웹536·기존서명·production복원을 확인했습니다.100판/11장과 오늘 핍·정원 개선을 포함하며 별도 테스트 안내 파일/새예약은 없습니다. 상세 검증 수명은 android-release 상단을 기준으로 합니다.

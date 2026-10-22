@@ -56,7 +56,7 @@ interface RenderScene {
   leafObjects:(Piece|Graphic)[];
   busy:boolean;finished:boolean;
   keyboardState:BoardScene['keyboardState'];focusKeyboard:BoardScene['focusKeyboard'];keyboardKey:BoardScene['keyboardKey'];cancelInput:BoardScene['cancelInput'];stopPlaying:BoardScene['stopPlaying'];
-  create():void;down?:unknown;input:{emit(event:string,pointer?:unknown):void;listenerCount(event:string):number};events:{emit(event:string):void;listenerCount(event:string):number};scale:{emit(event:string):void;listenerCount(event:string):number};
+  create():void;down?:unknown;input:{emit(event:string,...args:unknown[]):void;listenerCount(event:string):number};events:{emit(event:string):void;listenerCount(event:string):number};scale:{emit(event:string):void;listenerCount(event:string):number};
   showHint():void;selectionMark?:Graphic;hintMark?:Graphic;cursorMark?:Graphic;hintPieces:Piece[];
   tweens:{add(config:Record<string,unknown>):void;killTweensOf(target:unknown):void};wait(ms:number):Promise<void>;
 }
@@ -117,6 +117,61 @@ describe('보드 포인터 종료 (Phaser 입력 대역)',()=>{
     const {scene}=create();const swap=vi.spyOn(scene.engine,'swap');
     scene.input.emit('pointerdown',pointer({x:212,y:212}));scene.input.emit('pointerup',pointer({x:212+dx,y:212+dy}));
     await vi.waitFor(()=>expect(scene.busy).toBe(false));expect(swap).toHaveBeenCalledExactlyOnceWith({row:3,col:3},{row:3+Math.sign(dy),col:3+Math.sign(dx)});
+  });
+  it.each([
+    [1,3,0,3,212,100,212,8],[6,3,7,3,212,380,212,472],
+    [3,1,3,0,100,212,8,212],[3,6,3,7,380,212,472,212],
+    [0,3,1,3,212,44,212,100],[7,3,6,3,212,436,212,380],
+    [3,0,3,1,44,212,100,212],[3,7,3,6,436,212,380,212],
+  ])('내부/최외곽 %s,%s→%s,%s는 종료점과 무관하게 인접 교환을 한 번만 시도합니다',async(row,col,toRow,toCol,x,y,upX,upY)=>{
+    const {scene,onMove}=create(),swap=vi.spyOn(scene.engine,'swap');const before=snapshot(scene.engine);
+    // 임계값 직후의 짧은 제스처와 여백까지 지난 긴 제스처 모두 한 이웃만 처리합니다.
+    for(const [endX,endY] of [[x+(toCol-col)*17,y+(toRow-row)*17],[upX,upY],[x+(toCol-col)*500,y+(toRow-row)*500]]){
+      swap.mockClear();scene.input.emit('pointerdown',pointer({x,y}));scene.input.emit('pointerup',pointer({x:endX,y:endY}));scene.input.emit('pointerup',pointer({x:endX,y:endY}));
+      await vi.waitFor(()=>expect(scene.busy).toBe(false));expect(swap).toHaveBeenCalledExactlyOnceWith({row,col},{row:toRow,col:toCol});
+      // 이 고정판은 매치가 없어 정상적으로 왕복합니다. 입력 누락과 무효 교환을 구분합니다.
+      expect(swap.mock.results[0].value.valid).toBe(false);expect(snapshot(scene.engine)).toEqual(before);expect(onMove).not.toHaveBeenCalled();
+      expect(scene.pieces[row][col]).toMatchObject({x:44+col*56,y:44+row*56});
+    }
+  });
+  it('비정형 빈칸에서 끝나도 유효 이웃을 실행하고 빈칸/상자 이웃 자체는 실행하지 않습니다',async()=>{
+    const {scene,onMove}=harness(),mask=Array.from({length:8},()=>Array(8).fill(true));mask[3][7]=false;
+    scene.engine=new BoardEngine(8,8,seededRng(42),undefined,2,mask);
+    scene.engine.board=mask.map((line,r)=>line.map((active,c)=>active?{kind:(r*2+c)%6}:null));scene.engine.board[3][6]!.special='row';scene.create();
+    const swap=vi.spyOn(scene.engine,'swap');
+    scene.input.emit('pointerdown',pointer({x:324,y:212}));scene.input.emit('pointerup',pointer({x:436,y:212}));
+    await vi.waitFor(()=>expect(scene.busy).toBe(false));expect(swap).toHaveBeenCalledExactlyOnceWith({row:3,col:5},{row:3,col:6});expect(onMove).toHaveBeenCalledOnce();
+    swap.mockClear();scene.input.emit('pointerdown',pointer({x:380,y:212}));scene.input.emit('pointerup',pointer({x:500,y:212}));expect(swap).not.toHaveBeenCalled();
+    scene.engine.crates[3][6]=1;scene.engine.board[3][6]=null;
+    for(const [x,upX] of [[324,436],[436,324]]){scene.input.emit('pointerdown',pointer({x,y:212}));scene.input.emit('pointerup',pointer({x:upX,y:212}));}
+    expect(swap).not.toHaveBeenCalled();
+  });
+  it.each([[44,212,-30,212],[436,212,520,212],[212,44,212,-30],[212,436,212,520]])('실제 바깥 이웃 방향은 교환하지 않습니다 (%s,%s)',(x,y,upX,upY)=>{
+    const {scene}=create(),swap=vi.spyOn(scene.engine,'swap');scene.input.emit('pointerdown',pointer({x,y}));scene.input.emit('pointerup',pointer({x:upX,y:upY}));expect(swap).not.toHaveBeenCalled();
+  });
+  it('설치 Phaser touchmove→gameout→touchend는 소유 터치를 보존하고 취소·외부 target을 구분합니다',async()=>{
+    const canvas={};vi.stubGlobal('document',{elementFromPoint:()=>null});
+    const require=createRequire(import.meta.url),Pointer=require('phaser/src/input/Pointer.js'),InputPlugin=require('phaser/src/input/InputPlugin.js'),InputManager=require('phaser/src/input/InputManager.js'),inputTypes=require('phaser/src/input/const.js');
+    const {scene,onMove}=create();scene.engine.board[3][7]!.special='row';const swap=vi.spyOn(scene.engine,'swap');
+    // ScaleManager의 DOM bounds만 390px 화면 대역이며 Pointer/좌표 변환/이탈·up 분기는 원본입니다.
+    const manager:any={time:1,game:{canvas},canvas,isOver:true,scaleManager:{transformX:(x:number)=>(x-23)*480/344,transformY:(y:number)=>(y-294)*480/344},transformPointer:InputManager.prototype.transformPointer,setCanvasOut:InputManager.prototype.setCanvasOut};
+    const p=new Pointer(manager,1),touch=(x:number,target=canvas)=>({identifier:9,target,pageX:23+x*344/480,pageY:294+212*344/480,clientX:23+x*344/480,clientY:294+212*344/480});manager.pointers=[{},p];
+    const plugin={_temp:[],_eventData:{},_eventContainer:{},manager,isActive:()=>true,emit:(event:string,...args:unknown[])=>scene.input.emit(event,...args)};
+    manager.events={emit:(_name:string,event:unknown)=>InputPlugin.prototype.onGameOut.call(plugin,event)};
+    manager.updateInputPlugins=(kind:number,changed:unknown[])=>{if(kind===inputTypes.TOUCH_END||kind===inputTypes.TOUCH_CANCEL)for(const point of changed)InputPlugin.prototype.processUpEvents.call(plugin,point);};
+    p.touchstart(touch(380),{timeStamp:1,touches:[{}]});scene.input.emit('pointerdown',p);
+    const move={type:'touchmove',target:canvas,timeStamp:2,touches:[touch(500)],changedTouches:[touch(500)]};
+    InputManager.prototype.onTouchMove.call(manager,move);expect(manager.isOver).toBe(false);expect(scene.down).toBeDefined();
+    InputManager.prototype.onTouchEnd.call(manager,{timeStamp:3,touches:[],changedTouches:[touch(500)]});expect(p.x).toBeCloseTo(500);expect(p.upElement).toBe(canvas);
+    await vi.waitFor(()=>expect(scene.busy).toBe(false));expect(swap).toHaveBeenCalledExactlyOnceWith({row:3,col:6},{row:3,col:7});expect(onMove).toHaveBeenCalledOnce();
+    swap.mockClear();manager.isOver=true;p.touchstart(touch(380),{timeStamp:4,touches:[{}]});scene.input.emit('pointerdown',p);
+    InputManager.prototype.onTouchMove.call(manager,{...move,timeStamp:5});expect(scene.down).toBeDefined();
+    InputManager.prototype.onTouchCancel.call(manager,{timeStamp:6,touches:[],changedTouches:[touch(500)]});expect(swap).not.toHaveBeenCalled();expect(scene.down).toBeUndefined();
+    p.touchstart(touch(380),{timeStamp:5,touches:[{}]});scene.input.emit('pointerdown',p);p.touchend(touch(500,{}),{timeStamp:6,touches:[]});InputPlugin.prototype.processUpEvents.call(plugin,p);expect(swap).not.toHaveBeenCalled();expect(scene.down).toBeUndefined();
+    for(const event of [{...move,type:'mouseout'},{...move,target:{}},{...move,touches:[touch(500),{identifier:10}]},{...move,changedTouches:[{identifier:10}]}]){
+      p.touchstart(touch(380),{timeStamp:7,touches:[{}]});scene.input.emit('pointerdown',p);InputPlugin.prototype.onGameOut.call(plugin,event);expect(scene.down).toBeUndefined();
+      p.touchend(touch(500),{timeStamp:8,touches:[]});InputPlugin.prototype.processUpEvents.call(plugin,p);expect(swap).not.toHaveBeenCalled();
+    }
   });
   it('두 칸 탭 특수 교환은 한 번만 실행합니다',async()=>{
     const {scene,onMove}=create();scene.engine.board[0][1]!.special='row';const swap=vi.spyOn(scene.engine,'swap');
