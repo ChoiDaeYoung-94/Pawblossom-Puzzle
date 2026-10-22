@@ -8,6 +8,7 @@ import {TestBillingController,billingCopy,type TestBillingBridge,type BillingSna
 import {bindPracticeBoard} from '../src/bindPracticeInputs';
 import {cloneSnapshot,prepareShuffle} from '../src/puzzleHelp';
 import {t, type TextKey} from '../src/i18n';
+import {icon as renderIcon} from '../src/icons';
 
 // 테스트에만 사용하는 Node API입니다. 별도 @types/node 설치 없이 런타임에서 읽습니다.
 const fsModule = 'node:fs', vmModule = 'node:vm';
@@ -1949,5 +1950,27 @@ describe('별·코인 사용처의 읽기 전용 안내',()=>{
   it('작은 화면 버튼/대화상자는 기본44px와 viewport안쪽 스크롤을 사용합니다',()=>{
     const css=read('../src/style.css'),source=read('../src/main.ts');expect(source).toContain('id="stars-help" type="button"');expect(source).toContain('id="coins-help" type="button"');
     expect(css).toMatch(/\.wallet-help\{[^}]*min-width:44px;min-height:44px/);expect(css).toMatch(/#resource-help-dialog\{[^}]*max-height:calc\(100dvh - 24px\);overflow:auto/);
+  });
+});
+
+
+describe('중복 소개 제거와 큰 퍼즐 핍·정사각 아이콘',()=>{
+  it.each(['ko','en'] as const)('%s 모든 화면에서 소개 배너를 중복하지 않고 같은 피드백 host를 유지합니다',language=>{
+    const h=mainHarness(false,false,true);h.run("changeLanguage('"+language+"');globalThis.feedbackHost=document.querySelector('#header-pip');const queryBeforeIntroRemoval=document.querySelector;document.querySelector=selector=>['#story-chapter-name','#garden-count','#garden-fill'].includes(selector)?null:queryBeforeIntroRemoval(selector);");
+    const disk=h.disk(),before=h.run('JSON.stringify({round,currentLevel,moves,score,collected,clearedLeaves,clearedCrates,save,board:scene.engine.board})');
+    for(const route of ['village','journal','settings','puzzle'])h.run("switchView('"+route+"');updateWallet();updateGoals()");
+    expect(h.element('#app').innerHTML).not.toContain('class="story-panel"');expect(h.element('#app').innerHTML).not.toContain('class="friend-message"');expect(h.element('#app').innerHTML).not.toContain('/assets/meadow.png');
+    expect(h.element('#app').innerHTML.match(/id="header-pip"/g)).toHaveLength(1);expect(h.element('#app').innerHTML).toContain('id="header-pip" class="header-pip" aria-hidden="true"');expect(h.run("document.querySelector('#header-pip')===feedbackHost")).toBe(true);
+    expect(h.run('JSON.stringify({round,currentLevel,moves,score,collected,clearedLeaves,clearedCrates,save,board:scene.engine.board})')).toBe(before);expect(h.disk()).toEqual(disk);
+  });
+  it('큰 핍의 전체 아트와 짧은 화면/190px 가로 배치를 분리하고 보드 정사각을 유지합니다',()=>{
+    const css=read('../src/style.css');expect(css).toMatch(/\.header-pip\{[^}]*width:112px;height:112px/);expect(css).toMatch(/\.header-pip-image\{[^}]*width:100%;height:100%;[^}]*object-fit:contain/);
+    expect(css).toContain('grid-template-columns:88px minmax(0,1fr);grid-template-rows:38px 44px');expect(css).toContain('flex-basis:88px;width:88px;height:88px');expect(css).toContain('.header-pip{flex-basis:80px;width:80px;height:80px}');
+    expect(css).toContain('#game-canvas{width:min(100cqw,100cqh);height:min(100cqw,100cqh);aspect-ratio:1');expect(css).not.toContain('.header-pip-image.happy{left:');
+  });
+  it('설정 톱니의 아트 외곽은 가로/세로 대칭이고 터치44px/SVG22px를 분리합니다',()=>{
+    const svg=renderIcon('settings',22),d=svg.match(/<path d="([^"]+)"/)![1],coords=[...d.matchAll(/[ML]([\d.]+) ([\d.]+)/g)].map(m=>[Number(m[1]),Number(m[2])]);
+    const xs=coords.map(p=>p[0]),ys=coords.map(p=>p[1]);expect(coords).toHaveLength(32);expect([Math.min(...xs),Math.max(...xs),Math.min(...ys),Math.max(...ys)]).toEqual([3,21,3,21]);
+    expect(svg).toContain('width="22" height="22" viewBox="0 0 24 24"');const css=read('../src/style.css');expect(css).toContain('#settings-button{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px');expect(css).toContain('#settings-button svg{display:block;flex:none;width:22px;height:22px;aspect-ratio:1}');
   });
 });

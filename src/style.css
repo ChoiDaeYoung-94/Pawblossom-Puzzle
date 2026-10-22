@@ -299,22 +299,28 @@ dialog::backdrop,#tutorial-dialog::backdrop{backdrop-filter:none}
 @media(max-width:380px){.pip-care-card{padding:10px 8px}.pip-care-hero{grid-template-columns:minmax(104px,42%) minmax(0,1fr);gap:8px}.pip-portrait{height:136px;max-width:136px}.pip-care-card h3{font-size:16px;gap:3px 5px}.pip-level{font-size:10px;padding:3px 6px}.pip-care-card .pip-reaction-line{font-size:10px;line-height:1.4;margin-bottom:7px}.pip-stats{gap:6px}.pip-stats progress{height:7px}.pip-view-heading{padding-bottom:9px}.pip-view-heading h2{font-size:21px}.pip-care-card .pip-next{font-size:10px;margin:7px 0 8px;padding:6px 8px}.pip-care-actions{gap:7px}.pip-care-actions .primary{font-size:11px;min-height:56px;padding:8px 5px}.pip-care-actions small{font-size:9px}.pip-shop-item{gap:7px}}
 @media(orientation:landscape) and (max-height:520px){.pip-view-heading{padding:0 0 4px}.pip-view-heading .eyebrow{display:none}.pip-view-heading h2{font-size:18px;margin:0;line-height:1.2}.pip-care-hero{grid-template-columns:130px minmax(0,1fr);gap:12px}.pip-portrait{height:110px;width:130px}.pip-care-card{padding:8px 10px}.pip-care-card h3{font-size:18px;margin-bottom:4px}.pip-care-card .pip-reaction-line{margin-bottom:7px}.pip-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.pip-care-card .pip-next{font-size:10px;line-height:1.4;margin:5px 0 7px;padding:5px 8px}.pip-care-actions .primary{min-height:50px;padding:8px 7px;font-size:11px;gap:3px}}
 @media(prefers-reduced-motion:reduce){.pip-reaction-greet>img{animation:none}}
-/* 보드 피드백은 기존44px 헤더 안에 두며 장식 꽃의 숨김 규칙과 분리합니다. */
-.level-top{height:44px;min-height:44px;max-height:44px;gap:6px}
-.level-heading{display:flex;align-items:center;gap:8px;min-width:0}
+/* 중복 소개 대신 실제 수집/연쇄에 반응하는 핍을 퍼즐 안에 한 번만 표시합니다. */
+main.workspace{display:flex;flex-direction:column;max-width:590px;gap:0}
+main.workspace>.game-panel{flex:1}
+.level-top{height:112px;min-height:112px;max-height:112px;gap:6px}
+.level-heading{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
 .level-copy{min-width:0}
 .level-copy .eyebrow{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.level-copy h2{white-space:nowrap;gap:5px}
-.header-pip{position:relative;display:block;flex:0 0 36px;width:36px;height:36px;overflow:hidden;border:1px solid #b6c9a4;border-radius:50%;background:#edf3df;pointer-events:none}
-.header-pip-image{position:absolute;display:block;width:250%;height:250%;max-width:none;left:-78%;top:-55%;object-fit:contain}
-.header-pip-image.happy{left:-82%;top:-48%}
-.header-pip[data-mood="happy"]{border-color:#b58b31;background:#fff0b7;box-shadow:0 0 0 2px #e8d98b66}
+.level-copy h2{white-space:nowrap;flex-direction:column;align-items:flex-start;gap:2px;font-size:17px;line-height:1.1}
+.level-copy #level-number{font-size:25px}
+.header-pip{position:relative;display:block;flex:0 0 112px;width:112px;height:112px;overflow:visible;border:0;border-radius:18px;background:transparent;pointer-events:none;transform-origin:center bottom}
+.header-pip-image{position:static;display:block;width:100%;height:100%;max-width:none;object-fit:contain}
+.header-pip[data-mood="happy"]{background:radial-gradient(ellipse at 50% 72%,#fff0b7,transparent 72%)}
 #round-feedback-layer{position:fixed;inset:0;z-index:5;overflow:hidden;pointer-events:none}
 .goal-flight{position:absolute;left:0;top:0;width:22px;height:22px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 1px 2px #52683a55)}
 .goal-feedback-static{outline:2px solid #a78332;outline-offset:2px;border-radius:6px}
 @media(max-width:420px){.level-heading{gap:6px}.level-copy h2{font-size:18px;gap:4px}.level-copy .eyebrow{font-size:7px;letter-spacing:0}}
-/* 왼쪽190px 안에 얼굴·두 자리 번호·시험/재시작44px 버튼을 함께 유지합니다. */
-@media(orientation:landscape) and (max-height:600px){.level-heading{gap:5px;flex:1}.level-copy h2{display:flex;flex-direction:column;align-items:flex-start;font-size:10px;line-height:1;gap:2px;margin:0}.level-copy #level-number{font-size:20px}.level-actions{gap:4px}.test-level-button{padding:7px 4px;font-size:10px}}
+@media(max-height:700px) and (orientation:portrait){.level-top{height:80px;min-height:80px;max-height:80px}.header-pip{flex-basis:80px;width:80px;height:80px}}
+/* 왼쪽190px에서는 큰 핍 옆에 제목과44px 동작 버튼을 두 행으로 둡니다. */
+@media(orientation:landscape) and (max-height:600px){main.workspace{max-width:980px}.level-top{display:grid;height:88px;min-height:88px;max-height:88px;grid-template-columns:88px minmax(0,1fr);grid-template-rows:38px 44px;gap:6px 8px}.level-heading{display:contents}.header-pip{grid-column:1;grid-row:1 / 3;flex-basis:88px;width:88px;height:88px}.level-copy{grid-column:2;grid-row:1;align-self:center}.level-copy h2{flex-direction:row;font-size:14px;gap:4px;margin:0}.level-copy #level-number{font-size:21px}.level-actions{grid-column:2;grid-row:2;gap:4px;justify-content:flex-start}.test-level-button{padding:7px 4px;font-size:10px}}
+
+/* 높이320px에서도44px 동작 버튼과 보드의 마지막 줄이 메뉴 뒤로 숨지 않게 합니다. */
+@media(orientation:landscape) and (max-height:340px){.level-top{height:72px;min-height:72px;max-height:72px;grid-template-rows:22px 44px;grid-template-columns:72px minmax(0,1fr)}.header-pip{flex-basis:72px;width:72px;height:72px}}
 
 /* 정사각 실습에서 생성한 폭탄은 완료 후에도 본판처럼 선명하게 보여 줍니다. */
 .practice-cell.practice-created:disabled{opacity:1;background:#fff2dc;border:2px solid #bb9661}

@@ -64,15 +64,17 @@ export class RoundFeedback {
     for(const source of event.removed){const key=String(source.kind);const group=groups.get(key)??[];group.push(source);groups.set(key,group);}
     if(event.clearedLeaves.length)groups.set('leaves',event.clearedLeaves);
     if(event.clearedCrates?.length)groups.set('crates',event.clearedCrates);
+    let goalCollected=false;
     for(const [key,sources] of groups){
       const goal=this.goals.get(key);if(!goal||goal.remaining<=0)continue;
       const count=Math.min(goal.remaining,sources.length);
+      if(count>0)goalCollected=true;
       // 대표 세 개만 그려도 실제 제거 수만큼 잔량을 소모합니다. DOM 숫자는 정산 전 값입니다.
       goal.remaining-=count;
       if(reduced){this.pulse(key,true);continue;}
       for(let i=0;i<Math.min(3,count)&&this.flights.size<12;i++)this.fly(sources[i],goal,i);
     }
-    const strength=event.specialActivated||event.cascade>=3?2:event.specialCreated||event.cascade>=2?1:0;
+    const strength=event.specialActivated||event.cascade>=3?2:event.specialCreated||event.cascade>=2||goalCollected&&this.reactions===0?1:0;
     if(strength&&this.reactions<2&&strength>=this.strength){this.reactions++;this.strength=strength;this.cheer(reduced);}
   }
   private pulse(key:string,reduced:boolean){

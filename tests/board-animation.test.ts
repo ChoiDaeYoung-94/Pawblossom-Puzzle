@@ -280,7 +280,11 @@ describe('블록 객체 보존과 낙하 연출',()=>{
     for(const [col,special] of (['row','column','bomb','rainbow'] as const).entries())scene.engine.board[0][col]!.special=special;
     scene.paint(scene.engine.board);
     const body=(col:number)=>scene.pieces[0][col].children.find(child=>child.name.startsWith('special-body')) as Graphic;
-    expect(body(0).rectangles[0].slice(2,4)).toEqual([52,42]);expect(body(1).rectangles[0].slice(2,4)).toEqual([42,52]);
+    expect(body(0).rectangles[0].slice(2,4)).toEqual([48,48]);expect(body(1).rectangles[0].slice(2,4)).toEqual([48,48]);
+    for(const col of [0,1])expect(body(col).rectangles.every(rect=>rect[2]===rect[3])).toBe(true);
+    const direction=(col:number)=>scene.pieces[0][col].children.find(child=>child.name===`special-mark-${col===0?'row':'column'}`) as Graphic;
+    expect(direction(0).lines.slice(0,2).every(line=>line[1]===line[3]&&line[0]!==line[2])).toBe(true);
+    expect(direction(1).lines.slice(0,2).every(line=>line[0]===line[2]&&line[1]!==line[3])).toBe(true);
     expect(body(2).circles).toContainEqual([0,1,25]);expect(body(2).rectangles.some(rect=>rect[2]===16&&rect[3]===8)).toBe(true);
     const rainbow=scene.pieces[0][3].children.find(child=>child.name==='special-mark-rainbow') as Graphic;
     expect(rainbow.circles).toHaveLength(6);
@@ -288,6 +292,7 @@ describe('블록 객체 보존과 낙하 연출',()=>{
       const image=scene.pieces[0][col].children.find(child=>child instanceof Piece) as Piece;
       expect(image.texture).toBe(['strawberry','carrot','blueberry','acorn','leaf'][scene.engine.board[0][col]!.kind]);
       expect(image.width).toBe(col===4?45:col===3?29:col===2?32:35);
+      expect(image.height).toBe(image.width);
     }
   });
   it.each([false,true])('실패 복귀는 살아 있는 paused=%s 보드·엔진·낙엽·컨테이너를 그대로 유지합니다',paused=>{

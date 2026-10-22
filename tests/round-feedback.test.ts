@@ -110,11 +110,18 @@ describe('표시 수명과 핍 비동기 경계',()=>{
     const h=setup();h.feedback.show(event());const flight=h.layer.children[0].animations[0];
     h.setReduced(true);flight.finish();expect(h.goals.get('0')!.animations).toHaveLength(0);expect(h.goals.get('0')!.classes.has('goal-feedback-static')).toBe(true);
   });
-  it('일반 매치에는 핍 요청이 없고 특수/연쇄 반응은 이동당 최대2회이며 다음 이동에서 다시 허용합니다',()=>{
-    const h=setup();h.feedback.show(event());expect(ImageStub.created).toHaveLength(0);
+  it('남은 목표가 없는 일반 매치에는 핍 요청이 없고 특수/연쇄 반응은 이동당 최대2회입니다',()=>{
+    const h=setup();h.feedback.beginMove([{key:'1',remaining:3,src:'/1.svg'}]);h.feedback.show(event());expect(ImageStub.created).toHaveLength(0);
     for(let cascade=2;cascade<8;cascade++)h.feedback.show(event({cascade}));
     expect(h.pip.animations).toHaveLength(2);expect(ImageStub.created).toHaveLength(1);
     h.begin();h.feedback.show(event({specialCreated:true}));expect(h.pip.animations).toHaveLength(3);
+  });
+  it.each([false,true])('실제 남은 목표를 모으면 첫 핍 반응을 보이고 특수와 합쳐2회 상한·취소를 지킵니다 (감소=%s)',reduced=>{
+    const h=setup(reduced);h.begin(8);const input=event(),before=JSON.stringify(input);
+    h.feedback.show(input);expect(h.pip.dataset.mood).toBe('happy');expect(ImageStub.created).toHaveLength(1);expect(JSON.stringify(input)).toBe(before);
+    for(let n=0;n<3;n++)h.feedback.show(event());expect(h.pip.animations).toHaveLength(reduced?0:1);
+    h.feedback.show(event({specialActivated:true}));h.feedback.show(event({cascade:4}));expect(h.pip.animations).toHaveLength(reduced?0:2);
+    expect(h.pip.children).toEqual([h.base]);h.feedback.cancel();expect(h.pip.dataset.mood).toBeUndefined();expect(h.pip.children).toEqual([h.base]);
   });
   it('늦은 decode는 취소/새 이동/분리된 슬롯을 덮지 않으며 해독된 노드는 전용 슬롯에서만 재사용합니다',async()=>{
     const h=setup();h.feedback.show(event({specialActivated:true}));const image=ImageStub.created[0];let decoded!:()=>void;

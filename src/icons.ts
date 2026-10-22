@@ -1,3 +1,9 @@
+// 같은 반지름의 여덟 톱니를 직접 구성해 외곽의 가로·세로 크기를 맞춥니다.
+const settingsGear=Array.from({length:32},(_,i)=>{
+  const part=i%4,angle=(-90+Math.floor(i/4)*45+[-22.5,-11,11,22.5][part])*Math.PI/180;
+  const radius=part===1||part===2?9/Math.cos(11*Math.PI/180):7.1;
+  return `${i?'L':'M'}${(12+Math.cos(angle)*radius).toFixed(3)} ${(12+Math.sin(angle)*radius).toFixed(3)}`;
+}).join('')+'Z';
 export const icon = (name: string, size = 24) => {
   const paths: Record<string,string> = {
     leaf:'<path d="M20 4C9 3 3 9 5 15s13 6 15-11Z"/><path d="m4 21 12-13M9 15v-5m0 5h5"/>',
@@ -6,7 +12,7 @@ export const icon = (name: string, size = 24) => {
     coin:'<circle cx="12" cy="12" r="9"/><path d="M12 9c-3-5-7-1-4 2-5 2-2 7 1 4 0 5 6 5 5 0 5 3 7-2 3-4 3-4-2-7-5-2Z"/><circle cx="12" cy="12" r="1.7"/>',
     puzzle:'<rect x="4" y="4" width="6" height="6" rx="1.8"/><rect x="14" y="4" width="6" height="6" rx="1.8"/><rect x="4" y="14" width="6" height="6" rx="1.8"/><rect x="14" y="14" width="6" height="6" rx="1.8"/>',
     home:'<path d="m3 11 9-8 9 8M5 10v10h14V10M10 20v-6h4v6"/>',
-    settings:'<path d="m9 3-1 3-3 1 1 3-2 2 2 2-1 3 3 1 1 3h6l1-3 3-1-1-3 2-2-2-2 1-3-3-1-1-3Z"/><circle cx="12" cy="12" r="3"/>',
+    settings:`<path d="${settingsGear}"/><circle cx="12" cy="12" r="3"/>`,
     arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>',
     shuffle:'<path d="m17 3 4 4-4 4M3 5c7 0 7 14 14 14h4m-4-4 4 4-4 4M3 19c7 0 7-12 14-12h4"/>',
     restart:'<path d="M3 10a9 9 0 1 1 1 7M3 3v7h7"/>',
