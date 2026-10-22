@@ -6,8 +6,8 @@ import { reducedMotion } from './reducedMotion';
 import type { ResolveVisual } from './RoundFeedback';
 
 export const tileNames = ['strawberry','carrot','blueberry','acorn','leaf','flower'];
-type Notice='matched'|'chain'|'specialCreated'|'noMoves'|'rowClear'|'columnClear'|'bombClear'|'colorClear'|'comboClear'|'leafThinned'|'leavesCleared';
-interface Hooks { audio: AudioManager; onStart:()=>void; onReady?:()=>void; onBoardState?:()=>void; onResolveVisual?:(event:ResolveVisual)=>void; onVisualCancel?:()=>void; onMove:(collected:number[],score:number,chains:number,leavesCleared:number)=>void; onNotice:(kind:Notice)=>void; }
+type Notice='matched'|'chain'|'specialCreated'|'noMoves'|'rowClear'|'columnClear'|'bombClear'|'colorClear'|'comboClear'|'leafThinned'|'leavesCleared'|'cratesCleared';
+interface Hooks { audio: AudioManager; onStart:()=>void; onReady?:()=>void; onBoardState?:()=>void; onResolveVisual?:(event:ResolveVisual)=>void; onVisualCancel?:()=>void; onMove:(collected:number[],score:number,chains:number,leavesCleared:number,cratesCleared?:number)=>void; onNotice:(kind:Notice)=>void; }
 const CELL = 56, PAD = 16;
 export class BoardScene extends Phaser.Scene {
   engine: BoardEngine;
@@ -20,6 +20,7 @@ export class BoardScene extends Phaser.Scene {
   private hooks: Hooks;
   private hintTimer?: Phaser.Time.TimerEvent;
   private leafObjects:(Phaser.GameObjects.Graphics|Phaser.GameObjects.Image|Phaser.GameObjects.Text)[]=[];
+  private crateObjects:Phaser.GameObjects.Image[]=[];
   private effects:BoardEffects;
   private cursor?:Position;
   private cursorMark?:Phaser.GameObjects.Graphics;
@@ -27,11 +28,11 @@ export class BoardScene extends Phaser.Scene {
   private hintMark?:Phaser.GameObjects.Graphics;
   private hintPieces:Phaser.GameObjects.Container[]=[];
   private motionReduced=reducedMotion();
-  constructor(hooks: Hooks, snapshot?:BoardSnapshot, mask?:BoardMask) {super('Board');this.hooks=hooks;this.engine=new BoardEngine(8,8,Math.random,snapshot,undefined,mask);this.effects=new BoardEffects(this);}
+  constructor(hooks: Hooks, snapshot?:BoardSnapshot, mask?:BoardMask, crates?:readonly Position[]) {super('Board');this.hooks=hooks;this.engine=new BoardEngine(8,8,Math.random,snapshot,undefined,mask,crates);this.effects=new BoardEffects(this);}
   configureLeaves(piles:LeafPile[]){this.engine.setLeaves(piles);}
   preload() {
     for(const name of tileNames)if(!this.textures.exists(name))this.load.svg(name,`/assets/tiles-v2/${name}.svg`,{width:100,height:100});
-    for(const name of ['leaf-pile','leaf-single'])if(!this.textures.exists(name))this.load.svg(name,`/assets/obstacles/${name}.svg`,{width:100,height:100});
+    for(const name of ['leaf-pile','leaf-single','wooden-crate'])if(!this.textures.exists(name))this.load.svg(name,`/assets/obstacles/${name}.svg`,{width:100,height:100});
   }
   create() {
     this.ready=false;this.finished=false;this.busy=false;this.motionReduced=reducedMotion();
@@ -45,6 +46,7 @@ export class BoardScene extends Phaser.Scene {
     }
     this.paint(this.engine.board);
     this.paintLeaves(this.engine.leaves);
+    this.paintCrates(this.engine.crates);
     this.input.on('pointerdown',this.pointerDown,this);
     this.input.on('pointerup',this.pointerUp,this);
     this.input.on('pointerupoutside',this.pointerOutside,this);
@@ -65,7 +67,7 @@ export class BoardScene extends Phaser.Scene {
       for(const event of [Phaser.Scenes.Events.PAUSE,Phaser.Scenes.Events.RESUME,Phaser.Scenes.Events.SLEEP,Phaser.Scenes.Events.WAKE])this.events.off(event,cancelGesture);
       this.events.off(Phaser.Scenes.Events.SHUTDOWN,dispose);this.events.off(Phaser.Scenes.Events.DESTROY,dispose);
       this.events.off(Phaser.Scenes.Events.CREATE,onCreate);
-      this.ready=false;this.stopPlaying();this.effects?.clear();this.cursorMark=undefined;this.selectionMark=undefined;this.hintMark=undefined;this.pieces=[];this.leafObjects=[];
+      this.ready=false;this.stopPlaying();this.effects?.clear();this.cursorMark=undefined;this.selectionMark=undefined;this.hintMark=undefined;this.pieces=[];this.leafObjects=[];this.crateObjects=[];
     };
     this.events.once(Phaser.Scenes.Events.SHUTDOWN,dispose);
     this.events.once(Phaser.Scenes.Events.DESTROY,dispose);
@@ -98,7 +100,7 @@ export class BoardScene extends Phaser.Scene {
   keyboardState(){
     const pos=this.cursor,tile=pos?this.engine.board[pos.row][pos.col]:undefined;
     return {available:this.canInteract(),busy:this.busy,finished:this.finished,cursor:pos?{...pos}:undefined,
-      tile:tile?{...tile}:undefined,layers:pos?this.engine.leaves[pos.row][pos.col]:0,selected:this.selected?{...this.selected}:undefined};
+      tile:tile?{...tile}:undefined,layers:pos?this.engine.leaves[pos.row][pos.col]:0,...(this.engine.hasCrates?{crate:Boolean(pos&&this.engine.crates[pos.row][pos.col])}:{}),selected:this.selected?{...this.selected}:undefined};
   }
   private changed(){this.hooks.onBoardState?.();}
   focusKeyboard(){if(!this.canInteract())return;this.syncMotion();this.cursor??=this.engine.mask.flatMap((line,row)=>line.flatMap((active,col)=>active?[{row,col}]:[]))[0];this.drawCursor();this.changed();}
@@ -221,6 +223,13 @@ export class BoardScene extends Phaser.Scene {
       this.leafObjects.push(ground,badge,count);
     }
   }
+  private paintCrates(crates:number[][]){
+    this.crateObjects.forEach(item=>item.destroy());this.crateObjects=[];
+    for(let row=0;row<this.engine.rows;row++)for(let col=0;col<this.engine.cols;col++)if(crates[row][col]){
+      const {x,y}=this.point({row,col});
+      this.crateObjects.push(this.add.image(x,y,'wooden-crate').setDisplaySize(51,51).setDepth(3).setName(`crate-${row}-${col}`));
+    }
+  }
   private showLeafHits(step:ResolveStep){
     if(!step.leaves)return;
     // 동기 엔진의 최종 상태 대신 각 연쇄 단계의 바닥층을 표시합니다.
@@ -245,7 +254,7 @@ export class BoardScene extends Phaser.Scene {
     this.pieces=next;
   }
   private tap(pos:Position) {
-    if(!this.canInteract()||!this.engine.isActive(pos))return;
+    if(!this.canInteract()||!this.engine.isPlayable(pos))return;
     const reduced=this.syncMotion();
     this.resetHint();this.hooks.audio.play('tap');
     if(this.selected&&Math.abs(pos.row-this.selected.row)+Math.abs(pos.col-this.selected.col)===1){void this.attempt(this.selected,pos);return;}
@@ -280,7 +289,7 @@ export class BoardScene extends Phaser.Scene {
   }
   private wait(ms:number){return new Promise<void>(resolve=>this.time.delayedCall(ms,()=>resolve()));}
   private async attempt(a:Position,b?:Position) {
-    if(!this.canInteract()||!this.engine.isActive(a)||(b&&!this.engine.isActive(b)))return;
+    if(!this.canInteract()||!this.engine.isPlayable(a)||(b&&!this.engine.isPlayable(b)))return;
     const reduced=this.syncMotion();this.clearHint();
     this.down=undefined;
     this.busy=true;this.stopHintTimer();this.clearSelection();this.hooks.onStart();
@@ -308,10 +317,11 @@ export class BoardScene extends Phaser.Scene {
         }
         const special=step.created?.length||step.effects?.length;
         this.hooks.audio.play(special?'special':'match',i+1);
-        this.hooks.onNotice(step.effects?.length?this.effectNotice(step):step.leaves?.hits.some(p=>p.after===0)?'leavesCleared':step.leaves?.hits.length?'leafThinned':step.created?.length?'specialCreated':i>0?'chain':'matched');
+        this.hooks.onNotice(step.effects?.length?this.effectNotice(step):step.crates?.hits.length?'cratesCleared':step.leaves?.hits.some(p=>p.after===0)?'leavesCleared':step.leaves?.hits.length?'leafThinned':step.created?.length?'specialCreated':i>0?'chain':'matched');
         // 대량 파편보다 실제 제거범위 표시를 먼저 확보합니다.
         if(step.effects?.length)this.showEffect(step);
         this.showLeafHits(step);
+        if(step.crates)this.paintCrates(step.crates.before);
         this.effects?.match(step,i+1);
         if(step.effects?.length){
           this.effects?.special(step);
@@ -323,18 +333,20 @@ export class BoardScene extends Phaser.Scene {
         this.hooks.onResolveVisual?.({cascade:i+1,
           removed:step.removed.map(p=>({...this.point(p),kind:step.before[p.row][p.col]!.kind})),
           clearedLeaves:(step.leaves?.hits??[]).filter(p=>p.after===0).map(p=>this.point(p)),
+          ...(step.crates?{clearedCrates:step.crates.hits.map(p=>this.point(p))}:{}),
           specialActivated:Boolean(step.effects?.length),specialCreated:Boolean(step.created?.length)});
         step.removed.forEach(p=>{
           const item=this.pieces[p.row][p.col];this.tweens.add({targets:item,...(reducedRemoval?{}:{scale:.25}),alpha:0,duration:180,ease:reducedRemoval?'Linear':'Back.easeIn'});
         });
-        await this.wait(200);if(this.finished)return;this.drop(step);if(step.leaves)this.paintLeaves(step.leaves.after);await this.wait(300);if(this.finished)return;
+        await this.wait(200);if(this.finished)return;if(step.crates)this.paintCrates(step.crates.after);this.drop(step);if(step.leaves)this.paintLeaves(step.leaves.after);await this.wait(300);if(this.finished)return;
       }
-      this.hooks.onMove(result.collected,result.score,result.steps.length,result.leavesCleared??0);
+      if(this.engine.hasCrates)this.hooks.onMove(result.collected,result.score,result.steps.length,result.leavesCleared??0,result.cratesCleared??0);
+      else this.hooks.onMove(result.collected,result.score,result.steps.length,result.leavesCleared??0);
     }
     this.busy=false;if(!this.finished)this.resetHint();this.changed();
   }
   stopPlaying(){this.finished=true;this.stopHintTimer();this.cancelInput();this.effects.clear();this.hooks.onVisualCancel?.();}
-  snapshot():BoardSnapshot {return JSON.parse(JSON.stringify({board:this.engine.board,leaves:this.engine.leaves,ruleVersion:this.engine.ruleVersion}));}
+  snapshot():BoardSnapshot {return JSON.parse(JSON.stringify({board:this.engine.board,leaves:this.engine.leaves,ruleVersion:this.engine.ruleVersion,...(this.engine.hasCrates?{crates:this.engine.crates}:{})}));}
   canResumeAfterFailure():boolean {
     return this.ready&&this.finished&&!this.busy&&(this.sys.isActive()||this.sys.isPaused())
       &&this.pieces.length===this.engine.rows&&this.pieces.every(row=>row.length===this.engine.cols);
@@ -344,7 +356,8 @@ export class BoardScene extends Phaser.Scene {
   applyPreparedShuffle(snapshot:BoardSnapshot){
     this.cancelInput();this.hooks.onVisualCancel?.();
     this.engine.board=JSON.parse(JSON.stringify(snapshot.board));this.engine.leaves=snapshot.leaves.map(row=>row.slice());
-    this.paint(this.engine.board);this.paintLeaves(this.engine.leaves);this.hooks.audio.play('special');this.resetHint();this.changed();
+    if(snapshot.crates)this.engine.crates=snapshot.crates.map(row=>row.slice());
+    this.paint(this.engine.board);this.paintLeaves(this.engine.leaves);this.paintCrates(this.engine.crates);this.hooks.audio.play('special');this.resetHint();this.changed();
   }
   /** 현재 실패 보드의 안정 상태만 복귀합니다. 라운드 자격/1회 제한은 호출자가 검사합니다. */
   resumeAfterFailure():boolean {

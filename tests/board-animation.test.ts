@@ -517,6 +517,29 @@ describe('모션 설정 경계와 정적 표시',()=>{
   });
 });
 describe('비정형 보드의 실제 표시·입력·엔진 낙하 재생',()=>{
+  it('상자는 별도 객체이며 키보드로 읽고 입력을 거절하며 실제 단계 파괴·보충을 함께 재생합니다',async()=>{
+    const {scene,onMove,onResolveVisual}=harness();
+    scene.engine=new BoardEngine(8,8,seededRng(42),undefined,2,undefined,[{row:3,col:3},{row:5,col:5}]);
+    scene.engine.board=scene.engine.mask.map((line,r)=>line.map((_,c)=>scene.engine.isPlayable({row:r,col:c})?{kind:(r*2+c)%5}:null));
+    scene.engine.board[3][0]!.special='row';scene.create();scene.events.emit('create');
+    const rendered=scene as unknown as {crateObjects:Piece[]};expect(rendered.crateObjects).toHaveLength(2);expect(scene.pieces[3][3]).toBeNull();
+    scene.focusKeyboard();for(let i=0;i<3;i++)scene.keyboardKey('ArrowDown');for(let i=0;i<3;i++)scene.keyboardKey('ArrowRight');
+    expect(scene.keyboardState()).toMatchObject({cursor:{row:3,col:3},crate:true,tile:undefined});
+    scene.keyboardKey('Enter');scene.keyboardKey(' ');await scene.attempt({row:3,col:2},{row:3,col:3});expect(onMove).not.toHaveBeenCalled();
+    const initialCrates=rendered.crateObjects.slice(),drops:ResolveStep[]=[],drop=scene.drop.bind(scene);
+    scene.drop=step=>{
+      const old=scene.pieces.map(line=>line.slice());drop(step);drops.push(step);
+      if(step.crates){expect(rendered.crateObjects.map(p=>p.name)).not.toContain('crate-3-3');expect(initialCrates[0].destroyed).toBe(true);}
+      for(const f of step.falls!)if(f.from&&!step.created?.some(p=>p.row===f.from!.row&&p.col===f.from!.col))expect(scene.pieces[f.to.row][f.to.col]).toBe(old[f.from.row][f.from.col]);
+    };
+    await scene.attempt({row:3,col:0});expect(onMove).toHaveBeenCalledOnce();expect(onMove.mock.calls[0][4]).toBeGreaterThanOrEqual(1);
+    expect(drops[0].crates!.hits).toContainEqual({row:3,col:3});expect(scene.pieces[3][3]).not.toBeNull();
+    expect(onResolveVisual.mock.calls[0][0].clearedCrates).toContainEqual({x:212,y:212});
+    expect(onResolveVisual.mock.calls[0][0].removed).not.toContainEqual(expect.objectContaining({x:212,y:212}));
+    const saved=scene.snapshot();expect(saved.crates).toEqual(scene.engine.crates);
+    const candidate=prepareShuffle(saved,seededRng(83),scene.engine.mask);expect(candidate).toBeDefined();scene.applyPreparedShuffle(candidate!);expect(scene.snapshot().crates).toEqual(saved.crates);
+    scene.stopPlaying();scene.events.emit('shutdown');expect(rendered.crateObjects).toEqual([]);
+  });
   it('inactive 칸 배경과 객체가 없고 시작 커서는 첫 활성 칸이며 빈칸 입력은 무시합니다',async()=>{
     const {scene,onMove}=harness();scene.engine=new BoardEngine(8,8,seededRng(42),undefined,2,levels[30].mask);
     const graphics:Graphic[]=[],add=(scene as unknown as {add:{graphics:()=>Graphic}}).add,original=add.graphics;

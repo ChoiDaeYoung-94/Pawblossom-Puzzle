@@ -1,6 +1,9 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    chapterCrates:'Woodland clearing',woodenCrate:'Wooden crate',cratesCleared:'Crates cleared!',testCrates:'Wooden crates · clear them all',cratePlayHint:'Match beside crates or hit them with specials.',
+    crateHint:'Crates stay in place and block falling tiles. A match directly beside a crate or a direct line/bomb hit clears it in one hit. A color clear affects colored tiles; two color clears together clear every crate. Clear all crates and collect the color goals.',
+    boardCrateCell:'Row {row}, column {col}: wooden crate. Cannot select or swap. Match beside it or hit it with a special.',
     paidShuffle:'Shuffle',shuffleUnavailable:'This shuffle could not preserve your tiles. Nothing was spent.',
     buyerContinueTest:'Verified Play test benefit · +5 moves, no ad',
     pipPurpose:'First clears earn 40 coins and 1 star. Use coins for food, play and decorations; use stars to grow your garden.',
@@ -89,6 +92,9 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    chapterCrates:'숲속 빈터',woodenCrate:'나무상자',cratesCleared:'상자를 치웠어요!',testCrates:'나무상자 · 모두 치우기',cratePlayHint:'상자 바로 옆 매치나 특수로 치워요.',
+    crateHint:'상자는 움직이지 않고 블록의 낙하를 막아요. 바로 옆 매치나 줄·폭탄의 직접 타격 한 번으로 치워요. 같은 색 제거는 색 블록에만 닿고, 같은 색 제거 두 개를 합치면 모든 상자도 치워요. 상자와 색 목표를 모두 완료해 주세요.',
+    boardCrateCell:'{row}행 {col}열: 나무상자. 선택하거나 교환할 수 없어요. 바로 옆 매치나 특수로 치워 주세요.',
     paidShuffle:'추가 섞기',shuffleUnavailable:'블록과 특수를 유지하는 섞기를 준비하지 못했어요. 아무것도 쓰지 않았어요.',
     buyerContinueTest:'검증된 Play 시험 혜택 · 광고 없이 이동 +5',
     pipPurpose:'퍼즐을 처음 완료하면 코인 40개와 별 1개를 받아요. 코인은 먹이·놀이·꾸미기에, 별은 꽃밭 확장에 사용해요.',

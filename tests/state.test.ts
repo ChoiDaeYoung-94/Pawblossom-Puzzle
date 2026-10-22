@@ -128,7 +128,7 @@ describe('추가 콘텐츠의 저장 호환',()=>{
     expect(saveData(save)).toBe(true);expect(loadSave()).toEqual(save);
   });
   it('중복·잘못된 ID를 버리고 건너뛴 완료 기록으로 새 스테이지를 해제하지 않습니다',()=>{
-    storage({version:1,completed:[1,1,3,30,36,-1,'2'],highestLevel:1});
+    storage({version:1,completed:[1,1,3,30,41,-1,'2'],highestLevel:1});
     expect(loadSave()).toMatchObject({completed:[1,3,30],highestLevel:2});
   });
 });

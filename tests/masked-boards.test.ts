@@ -7,7 +7,7 @@ import {levelSignature,validateCheckpoint} from '../src/state';
 import {startState,validateState,advanceState,publicState} from '../server/game/roundState';
 const hash=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const golden=JSON.parse(readFileSync(new URL('./helpers/board-v2-golden.json',import.meta.url),'utf8'));
-const masked=levels.slice(30);
+const masked=levels.slice(30,35);
 const make=(mask:BoardMask,rng=seededRng(42))=>new BoardEngine(8,8,rng,undefined,2,mask);
 function checkFalls(step:ResolveStep,mask:BoardMask){
   const seen=new Set<string>(),removed=new Set(step.removed.map(p=>`${p.row},${p.col}`));

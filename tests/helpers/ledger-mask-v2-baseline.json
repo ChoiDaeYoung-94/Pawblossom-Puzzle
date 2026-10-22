@@ -1,0 +1,55 @@
+{
+  "sourceCommit": "e57fbb4",
+  "engineLfSha256": "682b986c23f8999d238789abdbbd42852bf963c330fb8878c7ee8f9c3e80c81e",
+  "description": "Actual current mask V2 DB before crate changes, synthetic key67/owner, never resign.",
+  "round": [
+    {
+      "name": "round_meta",
+      "sql": "CREATE TABLE round_meta (id INTEGER PRIMARY KEY CHECK(id=1),profile TEXT NOT NULL,high_water INTEGER NOT NULL CHECK(high_water>=0),meta_mac TEXT NOT NULL) STRICT",
+      "rows": [
+        {
+          "id": 1,
+          "profile": "{\"version\":2,\"environment\":\"test\",\"engine\":\"pawblossom-board-mask-v2\",\"source\":\"682b986c23f8999d238789abdbbd42852bf963c330fb8878c7ee8f9c3e80c81e\",\"content\":\"9eb2c5dfdbdc7e310f2b4c3816819ddebbf2747bef7181d2227241ec08c58ed6\",\"rows\":1000,\"operations\":64,\"ttl\":3600000,\"keyCheck\":\"86fdda70f46b3791cb3834518e115dc759f71022d045c92626ee2dd91e651950\"}",
+          "high_water": 1792620000000,
+          "meta_mac": "0525f0da9969beafa463e6f3e327031982d7989702656cd2855d2974e4949990"
+        }
+      ]
+    },
+    {
+      "name": "round_ops",
+      "sql": "CREATE TABLE round_ops (\n    round_id TEXT NOT NULL REFERENCES round_rounds(round_id), op_hash TEXT NOT NULL CHECK(length(op_hash)=64),\n    request_digest TEXT NOT NULL CHECK(length(request_digest)=64), revision INTEGER NOT NULL CHECK(revision BETWEEN 1 AND 128),\n    outcome TEXT NOT NULL CHECK(outcome IN('valid-swap','invalid-swap','valid-activation','invalid-activation','shuffled','abandoned','reward-applied')), receipt_mac TEXT NOT NULL CHECK(length(receipt_mac)=64),\n    PRIMARY KEY(round_id,op_hash), UNIQUE(round_id,revision)\n  ) STRICT",
+      "rows": [
+        {
+          "round_id": "NGKodZt_hD0YosJKwHUpKUQBbR-7wsLd0AO3I9NaF0w",
+          "op_hash": "73d931aa62319d839e792670223134e8cb178142bf23cc42f35be6c5f3d19c67",
+          "request_digest": "f0e8824b3f82fb8a33d0e1486b8b4edfbeab0f54406ab72381b2cc4950717407",
+          "revision": 1,
+          "outcome": "valid-swap",
+          "receipt_mac": "3aa4bc140f97a8a87162f73d138ce0f3117d53cac20a4e39b1f5155742566afe"
+        }
+      ]
+    },
+    {
+      "name": "round_rewards",
+      "sql": "CREATE TABLE round_rewards (\n    round_id TEXT PRIMARY KEY REFERENCES round_rounds(round_id), grant_id TEXT NOT NULL UNIQUE CHECK(length(grant_id)=64),\n    revision INTEGER NOT NULL CHECK(revision BETWEEN 1 AND 128), reward_mac TEXT NOT NULL CHECK(length(reward_mac)=64),\n    FOREIGN KEY(round_id,revision) REFERENCES round_ops(round_id,revision)\n  ) STRICT",
+      "rows": []
+    },
+    {
+      "name": "round_rounds",
+      "sql": "CREATE TABLE round_rounds (\n    round_id TEXT PRIMARY KEY CHECK(length(round_id)=43), owner_hash TEXT NOT NULL CHECK(length(owner_hash)=64),\n    create_hash TEXT NOT NULL CHECK(length(create_hash)=64), create_digest TEXT NOT NULL CHECK(length(create_digest)=64),\n    created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL CHECK(expires_at>created_at), revision INTEGER NOT NULL CHECK(revision BETWEEN 0 AND 128),\n    state_json TEXT NOT NULL CHECK(length(state_json) BETWEEN 1 AND 32768), state_mac TEXT NOT NULL CHECK(length(state_mac)=64),\n    UNIQUE(owner_hash,create_hash)\n  ) STRICT",
+      "rows": [
+        {
+          "round_id": "NGKodZt_hD0YosJKwHUpKUQBbR-7wsLd0AO3I9NaF0w",
+          "owner_hash": "ccd539377f84895c80e76776e98a6c9d3dd865660157e33d4b223599dcc8389d",
+          "create_hash": "9f4bec87a4b8c22e6844d2e4f71fab84ed3dd8ba51faec0551f0b40718bf3c3e",
+          "create_digest": "34f38e69a59179a122780ffa8d8180db00ddc92496eb9f24aea1911fa5bd8e92",
+          "created_at": 1792620000000,
+          "expires_at": 1792623600000,
+          "revision": 1,
+          "state_json": "{\"ruleVersion\":2,\"level\":{\"id\":32,\"moves\":28,\"goals\":[{\"kind\":0,\"count\":16},{\"kind\":5,\"count\":14}],\"mask\":[[true,true,true,true,true,true,true,true],[true,true,true,true,true,true,true,true],[true,true,true,true,true,true,true,true],[true,true,true,false,false,true,true,true],[true,true,true,false,false,true,true,true],[true,true,true,true,true,true,true,true],[true,true,true,true,true,true,true,true],[true,true,true,true,true,true,true,true]]},\"rngState\":3658783709,\"moves\":27,\"collected\":[3,0,0,0,0,0],\"score\":30,\"shuffles\":1,\"clearedLeaves\":0,\"status\":\"active\",\"board\":[[{\"kind\":2},{\"kind\":0},{\"kind\":4},{\"kind\":3},{\"kind\":0},{\"kind\":3},{\"kind\":3},{\"kind\":0}],[{\"kind\":1},{\"kind\":4},{\"kind\":1},{\"kind\":1},{\"kind\":0},{\"kind\":1},{\"kind\":5},{\"kind\":4}],[{\"kind\":0},{\"kind\":1},{\"kind\":4},{\"kind\":5},{\"kind\":5},{\"kind\":0},{\"kind\":5},{\"kind\":0}],[{\"kind\":0},{\"kind\":2},{\"kind\":3},null,null,{\"kind\":4},{\"kind\":4},{\"kind\":0}],[{\"kind\":1},{\"kind\":1},{\"kind\":4},null,null,{\"kind\":5},{\"kind\":1},{\"kind\":2}],[{\"kind\":1},{\"kind\":3},{\"kind\":0},{\"kind\":4},{\"kind\":1},{\"kind\":5},{\"kind\":4},{\"kind\":2}],[{\"kind\":4},{\"kind\":0},{\"kind\":0},{\"kind\":4},{\"kind\":3},{\"kind\":0},{\"kind\":1},{\"kind\":4}],[{\"kind\":0},{\"kind\":1},{\"kind\":4},{\"kind\":1},{\"kind\":5},{\"kind\":1},{\"kind\":3},{\"kind\":0}]],\"leaves\":[[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]]}",
+          "state_mac": "e4c8a8541daed2b94dc6a0f26a29fe93e247ae6d67770af1c529c22b4d9b64e0"
+        }
+      ]
+    }
+  ]
+}

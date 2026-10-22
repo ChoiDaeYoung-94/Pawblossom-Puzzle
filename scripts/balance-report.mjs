@@ -14,8 +14,11 @@ const {levels}=load('../src/levels.ts');
 const args=process.argv.slice(2);
 const runs=Number(args.find(arg=>arg.startsWith('--runs='))?.split('=')[1]??100);
 if(!Number.isInteger(runs)||runs<1||runs>10000)throw new Error('--runs는 1~10000 정수입니다.');
-if(args.some(arg=>arg!=='--baseline'&&!/^--runs=\d+$/.test(arg)))throw new Error('지원 옵션: --baseline --runs=100');
-const configs=args.includes('--baseline')?Array.from({length:10},(_,i)=>({id:i+1,moves:i<3?22:24,goals:[{kind:i%6,count:12+Math.floor(i/2)*2},{kind:(i+1)%6,count:10+Math.floor(i/3)*2}]})):levels;
+if(args.some(arg=>arg!=='--baseline'&&!/^--runs=\d+$/.test(arg)&&!/^--levels=\d+-\d+$/.test(arg)))throw new Error('지원 옵션: --baseline --runs=100 --levels=36-40');
+const range=args.find(arg=>arg.startsWith('--levels='))?.slice(9).split('-').map(Number);
+if(range&&(range[0]<1||range[1]>levels.length||range[0]>range[1]))throw new Error('레벨 범위를 확인해 주세요.');
+const allConfigs=args.includes('--baseline')?Array.from({length:10},(_,i)=>({id:i+1,moves:i<3?22:24,goals:[{kind:i%6,count:12+Math.floor(i/2)*2},{kind:(i+1)%6,count:10+Math.floor(i/3)*2}]})):levels;
+const configs=range?allConfigs.filter(level=>level.id>=range[0]&&level.id<=range[1]):allConfigs;
 
 // 현재 보드의 즉시 매치와 특수만 봅니다. swap() 결과나 보충 난수로 후보를 평가하지 않습니다.
 function value(engine,move,remaining){
@@ -25,7 +28,7 @@ function value(engine,move,remaining){
     const matches=engine.findMatches(),removed=new Set(),near=new Set(),direct=new Set();
     const key=p=>p.row*engine.cols+p.col;
     const inside=p=>engine.isActive(p);
-    const add=p=>{if(inside(p))removed.add(key(p));};
+    const add=p=>{if(engine.isPlayable(p))removed.add(key(p));};
     const hit=p=>{if(inside(p)){direct.add(key(p));add(p);}};
     for(const p of matches){add(p);for(const [dr,dc] of [[0,0],[-1,0],[1,0],[0,-1],[0,1]]){const q={row:p.row+dr,col:p.col+dc};if(inside(q))near.add(key(q));}}
     if(x.special)hit(b);if(y.special)hit(a);
@@ -46,21 +49,21 @@ function value(engine,move,remaining){
     }
     const counts=Array(6).fill(0);for(const id of removed)counts[board[Math.floor(id/engine.cols)][id%engine.cols].kind]++;
     let score=counts.reduce((sum,count,kind)=>sum+Math.min(count,remaining[kind]),0)+(matches.length>=4?2:0);
-    for(const id of new Set([...near,...direct])){const layers=engine.leaves[Math.floor(id/engine.cols)][id%engine.cols];if(layers)score+=direct.has(id)?layers*4:4;}
+    for(const id of new Set([...near,...direct])){const row=Math.floor(id/engine.cols),col=id%engine.cols,layers=engine.leaves[row][col];if(layers)score+=direct.has(id)?layers*4:4;if(engine.crates[row][col])score+=6;}
     return score;
   }finally{[board[a.row][a.col],board[b.row][b.col]]=[x,y];}
 }
 const rows=[];
 for(const policy of ['random','goal'])for(const level of configs){
-  let wins=0,totalUsed=0,totalShortfall=0,totalLeafShortfall=0,totalRemoved=0,totalCreated=0,totalCascades=0,totalReshuffles=0;
+  let wins=0,totalUsed=0,totalShortfall=0,totalLeafShortfall=0,totalCrateShortfall=0,totalRemoved=0,totalCreated=0,totalCascades=0,totalReshuffles=0;
   const winningMoves=[];
   for(let seed=1;seed<=runs;seed++){
-    const engine=new BoardEngine(8,8,seededRng(seed),undefined,2,level.mask);
+    const engine=new BoardEngine(8,8,seededRng(seed),undefined,2,level.mask,level.crates);
     engine.setLeaves(level.leaves??[]);
     const choose=seededRng(seed+1000000);
     const remaining=Array(6).fill(0);level.goals.forEach(g=>remaining[g.kind]=g.count);
     let used=0;
-    while(used<level.moves&&(remaining.some(count=>count>0)||engine.remainingLeaves()>0)){
+    while(used<level.moves&&(remaining.some(count=>count>0)||engine.remainingLeaves()>0||engine.remainingCrates()>0)){
       const moves=engine.legalMoves();
       if(!moves.length)throw new Error('엔진이 이동 없는 보드를 남겼습니다.');
       let candidates=moves;
@@ -79,15 +82,16 @@ for(const policy of ['random','goal'])for(const level of configs){
     }
     const shortfall=remaining.reduce((a,b)=>a+b,0);
     const leafShortfall=engine.remainingLeaves();totalLeafShortfall+=leafShortfall;
+    const crateShortfall=engine.remainingCrates();totalCrateShortfall+=crateShortfall;
     totalUsed+=used;totalShortfall+=shortfall;
-    if(!shortfall&&!leafShortfall){wins++;winningMoves.push(used);}
+    if(!shortfall&&!leafShortfall&&!crateShortfall){wins++;winningMoves.push(used);}
   }
   winningMoves.sort((a,b)=>a-b);
   const activeCells=(level.mask??Array.from({length:8},()=>Array(8).fill(true))).flat().filter(Boolean).length;
   rows.push({policy,level:level.id,runs,wins,totalMoves:totalUsed,removedFractionPerMove:totalRemoved/(totalUsed*activeCells),activeCells,totalRemoved,totalCreated,totalCascades,totalReshuffles,removedPerMove:totalRemoved/totalUsed,createdPerMove:totalCreated/totalUsed,winPercent:Math.round(wins/runs*1000)/10,
     meanMoves:Math.round(totalUsed/runs*10)/10,
     medianWinningMoves:winningMoves.length?winningMoves[Math.floor((winningMoves.length-1)/2)]:null,
-    meanShortfall:Math.round(totalShortfall/runs*10)/10,meanLeafShortfall:Math.round(totalLeafShortfall/runs*10)/10});
+    meanShortfall:Math.round(totalShortfall/runs*10)/10,meanLeafShortfall:Math.round(totalLeafShortfall/runs*10)/10,meanCrateShortfall:Math.round(totalCrateShortfall/runs*10)/10});
 }
-console.log(JSON.stringify({schema:3,notes:'고정 seed 표본이며 사람 난이도/전체 seed 결과가 아닙니다. totalReshuffles는 이동 후 자동 섞기 단계 수로 생성 fallback 횟수와 다릅니다.',configuration:args.includes('--baseline')?'baseline':'current',
+console.log(JSON.stringify({schema:4,notes:'고정 seed 표본이며 사람 난이도/전체 seed 결과가 아닙니다. 상자는 현재 보드의 직교 매치·직접 특수 범위만 목표 정책에 반영합니다. totalReshuffles는 이동 후 자동 섞기 단계 수로 생성 fallback 횟수와 다릅니다.',configuration:args.includes('--baseline')?'baseline':'current',
   seeds:[1,runs],manualShuffle:false,policies:['random','goal'],levels:configs,results:rows},null,2));

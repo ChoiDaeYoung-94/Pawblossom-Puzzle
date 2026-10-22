@@ -73,6 +73,15 @@ describe('이동 잔량 안의 목표 비행과 정산 없는 도착',()=>{
     h.feedback.show(event({clearedLeaves:[{x:44,y:44},{x:100,y:44}]}));
     expect(h.layer.children.map(node=>node.src)).toEqual(['/leaf.svg']);expect(goals[0].remaining).toBe(1);
   });
+  it('상자 제거도 별도 목표 잔량·종류당3·468ms 안에서 표시하고 감소 모션/취소를 공유합니다',()=>{
+    const h=setup();h.goals.set('crates',new NodeStub());h.begin(4);
+    const clearedCrates=Array.from({length:6},(_,i)=>({x:44+i*56,y:100}));
+    h.feedback.show(event({removed:[],clearedCrates}));expect(h.layer.children.map(n=>n.src)).toEqual(['/crates.svg','/crates.svg','/crates.svg']);
+    expect(h.layer.children.every(n=>Number(n.animations[0].options.duration)+Number(n.animations[0].options.delay)<=468)).toBe(true);
+    for(const n of [...h.layer.children])n.animations[0].finish();h.feedback.show(event({removed:[],clearedCrates}));expect(h.layer.children).toHaveLength(0);
+    h.setReduced(true);h.begin(2);h.feedback.show(event({removed:[],clearedCrates}));expect(h.layer.children).toHaveLength(0);expect(h.goals.get('crates')!.classes.has('goal-feedback-static')).toBe(true);
+    h.feedback.cancel();expect(h.goals.get('crates')!.classes.size).toBe(0);
+  });
 });
 
 describe('표시 수명과 핍 비동기 경계',()=>{

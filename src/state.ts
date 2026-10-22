@@ -6,6 +6,7 @@ export interface RoundCheckpoint extends BoardSnapshot {
   schema: 1; levelId: number; levelSignature: string; moves: number; score: number;
   collected: number[]; shuffles: number; clearedLeaves: number;
   paidShuffleUsed?:boolean; continueUsed?:boolean;
+  clearedCrates?:number;
 }
 export interface SaveData { version: 1; language: Language; highestLevel: number; completed: number[]; stars: number; coins: number; garden: number; music: boolean; sfx: boolean; tutorialSeen: boolean; pip?:PipCare; inProgress?: RoundCheckpoint; }
 export const SAVE_KEY = 'pawblossom.save.v1';
@@ -17,6 +18,7 @@ const safeNumber = (x: unknown, fallback: number, max: number) => typeof x === '
 export function levelSignature(level:Level):string {
   const parts:unknown[]=[level.id,level.moves,level.goals.map(g=>[g.kind,g.count]),(level.leaves??[]).map(p=>[p.row,p.col,p.layers])];
   if(level.mask)parts.push(level.mask); // mask 없는 기존 서명은 바이트 그대로 보존합니다.
+  if(level.crates)parts.push(level.crates.map(p=>[p.row,p.col]));
   return JSON.stringify(parts);
 }
 const integer=(x:unknown,max:number):x is number=>typeof x==='number'&&Number.isInteger(x)&&x>=0&&x<=max;
@@ -28,12 +30,16 @@ export function validateCheckpoint(value:unknown,highestLevel:number):RoundCheck
   const ruleVersion=value.ruleVersion===undefined?1:value.ruleVersion;
   if(ruleVersion!==1&&ruleVersion!==2)return;
   const level=levels[value.levelId-1];
-  if(level.mask&&ruleVersion!==2)return;
+  if((level.mask||level.crates)&&ruleVersion!==2)return;
   if(value.levelSignature!==levelSignature(level)||!integer(value.moves,level.moves)||value.moves<1||!integer(value.score,100_000_000)||!integer(value.shuffles,1))return;
   if(['paidShuffleUsed','continueUsed'].some(key=>value[key]!==undefined&&typeof value[key]!=='boolean')
     ||value.paidShuffleUsed===true&&value.shuffles!==0||value.continueUsed===true&&value.moves>5)return;
   if(!Array.isArray(value.collected)||value.collected.length!==6||!value.collected.every(n=>integer(n,1_000_000)))return;
   if(!grid(value.board)||!grid(value.leaves))return;
+  const crateTotal=level.crates?.length??0;
+  if(crateTotal?(!grid(value.crates)||!integer(value.clearedCrates,crateTotal)):(value.crates!==undefined||value.clearedCrates!==undefined))return;
+  const crates=crateTotal?(value.crates as number[][]).map(row=>row.slice()):undefined;
+  let remainingCrates=0;
   const board:Cell[][]=[];
   const leafMax=Array.from({length:8},()=>Array(8).fill(0));
   for(const pile of level.leaves??[])leafMax[pile.row][pile.col]=pile.layers;
@@ -42,7 +48,9 @@ export function validateCheckpoint(value:unknown,highestLevel:number):RoundCheck
     board[row]=[];
     for(let col=0;col<8;col++){
       const tile=value.board[row][col],layers=value.leaves[row][col];
-      if(level.mask?.[row][col]===false){if(tile!==null||layers!==0)return;board[row][col]=null;continue;}
+      const crate=crates?crates[row][col]:0;
+      if(!integer(crate,1)||crate===1&&!level.crates?.some(p=>p.row===row&&p.col===col))return;
+      if(level.mask?.[row][col]===false||crate){if(tile!==null||layers!==0)return;board[row][col]=null;remainingCrates+=crate;continue;}
       if(!record(tile)||!integer(tile.kind,5)||(tile.special!==undefined&&!['row','column','bomb','rainbow'].includes(tile.special as string)))return;
       board[row][col]={kind:tile.kind,...(tile.special!==undefined?{special:tile.special as Special}:{})};
       if(!integer(layers,leafMax[row][col]))return;
@@ -50,13 +58,14 @@ export function validateCheckpoint(value:unknown,highestLevel:number):RoundCheck
     }
   }
   const total=level.leaves?.length??0;
-  if(value.clearedLeaves!==total-remaining||level.goals.every(g=>(value.collected as number[])[g.kind]>=g.count)&&remaining===0)return;
+  if(crateTotal&&value.clearedCrates!==crateTotal-remainingCrates)return;
+  if(value.clearedLeaves!==total-remaining||level.goals.every(g=>(value.collected as number[])[g.kind]>=g.count)&&remaining===0&&remainingCrates===0)return;
   const leaves=(value.leaves as number[][]).map(row=>row.slice());
   // 초기 생성 없이 조회하므로 실제 게임의 보충 난수를 소비하지 않습니다.
-  const engine=new BoardEngine(8,8,()=>{throw Error('저장 검증 중 난수 사용');},{board,leaves,ruleVersion},undefined,level.mask);
+  const engine=new BoardEngine(8,8,()=>{throw Error('저장 검증 중 난수 사용');},{board,leaves,ruleVersion,...(crates?{crates}:{})},undefined,level.mask,level.crates);
   if(engine.findMatches().length||!engine.hasMoves())return;
   return {schema:1,...(value.ruleVersion===undefined?{}:{ruleVersion}),levelId:level.id,levelSignature:levelSignature(level),board,leaves,moves:value.moves,score:value.score,
-    collected:value.collected.slice() as number[],shuffles:value.shuffles,clearedLeaves:total-remaining,
+    collected:value.collected.slice() as number[],shuffles:value.shuffles,clearedLeaves:total-remaining,...(crates?{crates,clearedCrates:crateTotal-remainingCrates}:{}),
     ...(value.paidShuffleUsed===undefined?{}:{paidShuffleUsed:value.paidShuffleUsed as boolean}),...(value.continueUsed===undefined?{}:{continueUsed:value.continueUsed as boolean})};
 }
 /** 구형 v1의 선택 필드는 정규화하되, 영구 기록의 필수 구조는 추측하지 않습니다. */

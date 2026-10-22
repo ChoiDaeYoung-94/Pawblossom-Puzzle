@@ -51,6 +51,7 @@ let careDemo:{normalSave:SaveData;returnRoute:'village'|'journal';chapter:number
 let pipReaction:'feed'|'play'|'greet'|'tend'|undefined;
 let careReactionTimer:ReturnType<typeof setTimeout>|undefined;
 let clearedLeaves=0;
+let clearedCrates=0;
 let testingLevel=false;
 let continueUsed=false,paidShuffleUsed=false,puzzleProcessing=false;
 let pickerReturnToResult=false;
@@ -156,8 +157,8 @@ function renderStagePreview(){
   const context=stagePreview;if(!context)return;
   const level=levels[context.id-1],continuing=canContinuePreview(context);
   const goal=(name:TextKey,count:number,src:string)=>`<span class="preview-goal"><img src="${src}" alt=""/><span>${text(name)} <strong>${count}</strong></span></span>`;
-  const goals=(remaining:boolean)=>level.goals.map(g=>goal(tileNames[g.kind] as TextKey,Math.max(0,g.count-(remaining?collected[g.kind]:0)),`/assets/tiles-v2/${tileNames[g.kind]}.svg`)).join('')+((level.leaves?.length??0)?goal('leafPile',Math.max(0,level.leaves!.length-(remaining?clearedLeaves:0)),'/assets/obstacles/leaf-pile.svg'):'');
-  previewDialog.innerHTML=`<div class="stage-preview"><div class="eyebrow">${text(chapterForLevel(context.id).title)}${context.testing&&context.intent==='restart'?' · '+text('testRound'):''}</div><h2 id="stage-preview-title" tabindex="-1">${text('level')} ${context.id}</h2><p id="stage-preview-description">${text(context.intent==='restart'?'previewRestart':continuing?'previewResume':'previewStart')}</p><section aria-labelledby="preview-initial"><h3 id="preview-initial">${text('previewInitial')} · ${text('movesRemaining').replace('{count}',String(level.moves))}</h3><div class="preview-goals">${goals(false)}</div>${level.mask?`<p class="preview-leaf-note">${text('maskHint')}</p>`:''}${level.leaves?.some(p=>p.layers===2)?`<p class="preview-leaf-note">${text('previewDouble')}</p>`:''}</section>${continuing?`<section aria-labelledby="preview-remaining"><h3 id="preview-remaining">${text('previewRemaining')} · ${text('movesRemaining').replace('{count}',String(moves))}</h3><div class="preview-goals">${goals(true)}</div></section>`:''}${!roundEnded?`<p class="preview-warning">${text(continuing?'previewRestartWarning':'previewReplaceWarning')}</p>`:''}<p class="preview-kept">${text('previewKept')}</p><div class="preview-actions">${continuing?`<button id="preview-continue" class="primary">${text('previewContinue')}</button>`:''}<button id="preview-start" class="${continuing?'text-button':'primary'}">${text(context.intent==='restart'||continuing?'previewRestartAction':'previewStartAction')}</button><button id="preview-cancel" class="text-button">${text('previewCancel')}</button></div></div>`;
+  const goals=(remaining:boolean)=>level.goals.map(g=>goal(tileNames[g.kind] as TextKey,Math.max(0,g.count-(remaining?collected[g.kind]:0)),`/assets/tiles-v2/${tileNames[g.kind]}.svg`)).join('')+((level.leaves?.length??0)?goal('leafPile',Math.max(0,level.leaves!.length-(remaining?clearedLeaves:0)),'/assets/obstacles/leaf-pile.svg'):'')+((level.crates?.length??0)?goal('woodenCrate',Math.max(0,level.crates!.length-(remaining?clearedCrates:0)),'/assets/obstacles/wooden-crate.svg'):'');
+  previewDialog.innerHTML=`<div class="stage-preview"><div class="eyebrow">${text(chapterForLevel(context.id).title)}${context.testing&&context.intent==='restart'?' · '+text('testRound'):''}</div><h2 id="stage-preview-title" tabindex="-1">${text('level')} ${context.id}</h2><p id="stage-preview-description">${text(context.intent==='restart'?'previewRestart':continuing?'previewResume':'previewStart')}</p><section aria-labelledby="preview-initial"><h3 id="preview-initial">${text('previewInitial')} · ${text('movesRemaining').replace('{count}',String(level.moves))}</h3><div class="preview-goals">${goals(false)}</div>${level.crates?`<p class="preview-leaf-note">${text('crateHint')}</p>`:''}${level.mask?`<p class="preview-leaf-note">${text('maskHint')}</p>`:''}${level.leaves?.some(p=>p.layers===2)?`<p class="preview-leaf-note">${text('previewDouble')}</p>`:''}</section>${continuing?`<section aria-labelledby="preview-remaining"><h3 id="preview-remaining">${text('previewRemaining')} · ${text('movesRemaining').replace('{count}',String(moves))}</h3><div class="preview-goals">${goals(true)}</div></section>`:''}${!roundEnded?`<p class="preview-warning">${text(continuing?'previewRestartWarning':'previewReplaceWarning')}</p>`:''}<p class="preview-kept">${text('previewKept')}</p><div class="preview-actions">${continuing?`<button id="preview-continue" class="primary">${text('previewContinue')}</button>`:''}<button id="preview-start" class="${continuing?'text-button':'primary'}">${text(context.intent==='restart'||continuing?'previewRestartAction':'previewStartAction')}</button><button id="preview-cancel" class="text-button">${text('previewCancel')}</button></div></div>`;
   let pointerTarget:HTMLElement|undefined;
   for(const action of ['continue','start'] as const){
     if(action==='continue'&&!continuing)continue;
@@ -205,7 +206,8 @@ function updateBoardAccess(){
       .replace('{tile}',text(tileNames[state.tile.kind] as TextKey)).replace('{special}',text(state.tile.special==='row'?'boardRow':state.tile.special==='column'?'boardColumn':state.tile.special==='bomb'?'boardBomb':state.tile.special==='rainbow'?'boardRainbow':'boardOrdinary'))
       .replace('{layers}',String(state.layers));
     description+=' '+(state.selected?text('boardSelected').replace('{row}',String(state.selected.row+1)).replace('{col}',String(state.selected.col+1)):text('boardUnselected'));
-  }else if(available)description=text('boardKeyboardHelp');
+  }else if(available&&state?.cursor&&state.crate)description=text('boardCrateCell').replace('{row}',String(state.cursor.row+1)).replace('{col}',String(state.cursor.col+1));
+  else if(available)description=text('boardKeyboardHelp');
   if(available)description+=' '+text('movesRemaining').replace('{count}',String(moves))+' '+goalDescriptions().join(' ');
   const status=$('#board-keyboard-status');if(status.textContent!==description)status.textContent=description;
 }
@@ -216,6 +218,7 @@ function goalDescriptions(){
   const descriptions=level.goals.map(goal=>describe(tileNames[goal.kind] as TextKey,Math.max(0,goal.count-collected[goal.kind])));
   const total=level.leaves?.length??0;
   if(total)descriptions.push(describe('leafPile',Math.max(0,total-clearedLeaves)));
+  if(level.crates?.length)descriptions.push(describe('woodenCrate',Math.max(0,level.crates.length-clearedCrates)));
   return descriptions;
 }
 function updateWallet(){
@@ -234,9 +237,11 @@ function updateGoals(){
   $('#goals').innerHTML=level.goals.map((goal,index)=>{const remaining=Math.max(0,goal.count-collected[goal.kind]);return `<div data-feedback-goal="${goal.kind}" class="goal-item ${remaining===0?'done':''}"><span class="sr-only">${descriptions[index]}</span><img src="/assets/tiles-v2/${tileNames[goal.kind]}.svg" alt=""/><strong aria-hidden="true">${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,collected[goal.kind]/goal.count*100)}%"></span></div>`;}).join('');
   const total=level.leaves?.length??0,remaining=Math.max(0,total-clearedLeaves);
   $('#goals').classList.toggle('has-leaves',total>0);
-  $('#goals').classList.toggle('has-many',level.goals.length+(total?1:0)>2);
+  $('#goals').classList.toggle('has-many',level.goals.length+(total?1:0)+(level.crates?.length?1:0)>2);
   if(total)$('#goals').innerHTML+=`<div data-feedback-goal="leaves" class="goal-item ${remaining===0?'done':''}"><span class="sr-only">${descriptions[level.goals.length]}</span><img src="/assets/obstacles/leaf-pile.svg" alt=""/><strong aria-hidden="true">${remaining===0?icon('check',18):remaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,clearedLeaves/total*100)}%"></span></div>`;
-  $('#board-hint-text').textContent=(testingLevel?text('testRound')+' · ':'')+text(level.mask?'maskPlayHint':total?(level.leaves!.some(p=>p.layers===2)?'leafHintDouble':'leafHint'):'hint');
+  const crateTotal=level.crates?.length??0,crateRemaining=Math.max(0,crateTotal-clearedCrates);
+  if(crateTotal)$('#goals').innerHTML+=`<div data-feedback-goal="crates" class="goal-item ${crateRemaining===0?'done':''}"><span class="sr-only">${descriptions[level.goals.length+(total?1:0)]}</span><img src="/assets/obstacles/wooden-crate.svg" alt=""/><strong aria-hidden="true">${crateRemaining===0?icon('check',18):crateRemaining}</strong><span class="goal-progress" style="--progress:${Math.min(100,clearedCrates/crateTotal*100)}%"></span></div>`;
+  $('#board-hint-text').textContent=(testingLevel?text('testRound')+' · ':'')+text(crateTotal?'cratePlayHint':level.mask?'maskPlayHint':total?(level.leaves!.some(p=>p.layers===2)?'leafHintDouble':'leafHint'):'hint');
   const shuffle=$<HTMLButtonElement>('#shuffle'),free=shuffles>0;
   shuffle.innerHTML=`${icon('shuffle',20)}<span>${text(free?'shuffle':'paidShuffle')}</span><span id="shuffle-count" class="${free?'':'shuffle-cost'}">${free?'1':paidShuffleUsed?'0':`${icon('coin',12)} 20`}</span>`;
   shuffle.toggleAttribute('disabled',!free&&(testingLevel||paidShuffleUsed||save.coins<20));
@@ -246,7 +251,7 @@ function updateGoals(){
 }
 function roundCheckpoint(snapshot:BoardSnapshot,nextMoves=moves,free=shuffles,paid=paidShuffleUsed,continued=continueUsed):RoundCheckpoint {
   return {...cloneSnapshot(snapshot),schema:1,levelId:currentLevel,levelSignature:levelSignature(levels[currentLevel-1]),moves:nextMoves,score,
-    collected:collected.slice(),shuffles:free,clearedLeaves,...(paid?{paidShuffleUsed:true}:{}),...(continued?{continueUsed:true}:{})};
+    collected:collected.slice(),shuffles:free,clearedLeaves,...(levels[currentLevel-1].crates?{clearedCrates}:{}),...(paid?{paidShuffleUsed:true}:{}),...(continued?{continueUsed:true}:{})};
 }
 function shuffleRound(button:HTMLButtonElement,expectedRound:number,expectedScene:BoardScene,expectedSave:SaveData):boolean {
   const valid=()=>!puzzleProcessing&&!careDemo&&!roundEnded&&route==='puzzle'&&nativeActive&&!document.hidden&&!boardPending&&!resultTimer
@@ -298,8 +303,8 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   testingLevel=TEST_TOOLS_ENABLED&&testPlay;
   pickerReturnToResult=false;
   $<HTMLDialogElement>('#result-dialog').close();
-  currentLevel=id;moves=levels[id-1].moves;score=0;collected=Array(6).fill(0);shuffles=1;clearedLeaves=0;
-  if(restored&&!testingLevel){moves=restored.moves;score=restored.score;collected=restored.collected.slice();shuffles=restored.shuffles;clearedLeaves=restored.clearedLeaves;continueUsed=restored.continueUsed===true;paidShuffleUsed=restored.paidShuffleUsed===true;}
+  currentLevel=id;moves=levels[id-1].moves;score=0;collected=Array(6).fill(0);shuffles=1;clearedLeaves=0;clearedCrates=0;
+  if(restored&&!testingLevel){moves=restored.moves;score=restored.score;collected=restored.collected.slice();shuffles=restored.shuffles;clearedLeaves=restored.clearedLeaves;clearedCrates=restored.clearedCrates??0;continueUsed=restored.continueUsed===true;paidShuffleUsed=restored.paidShuffleUsed===true;}
   scene?.stopPlaying();
   const activeScene:BoardScene=scene=new BoardScene({audio,onBoardState:()=>{if(activeRound===round)updateBoardAccess();},onReady:()=>{
     if(activeRound!==round||scene!==activeScene)return;
@@ -316,21 +321,22 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
     if(activeRound!==round||scene!==activeScene)return;
     const level=levels[currentLevel-1];
     boardFeedback.beginMove(level.goals.map(g=>({key:String(g.kind),remaining:Math.max(0,g.count-collected[g.kind]),src:`/assets/tiles-v2/${tileNames[g.kind]}.svg`}))
-      .concat([{key:'leaves',remaining:Math.max(0,(level.leaves?.length??0)-clearedLeaves),src:'/assets/obstacles/leaf-pile.svg'}]));
+      .concat([{key:'leaves',remaining:Math.max(0,(level.leaves?.length??0)-clearedLeaves),src:'/assets/obstacles/leaf-pile.svg'}])
+      .concat(level.crates?[{key:'crates',remaining:Math.max(0,level.crates.length-clearedCrates),src:'/assets/obstacles/wooden-crate.svg'}]:[]));
     void audio.unlock().catch(()=>{});
   },onResolveVisual:event=>{if(activeRound===round&&scene===activeScene)boardFeedback.show(event);},
   onVisualCancel:()=>{if(activeRound===round&&scene===activeScene)boardFeedback.cancel();},onNotice:key=>{
     if(activeRound!==round)return;
     boardNoticeKey=key;$('#board-notice').textContent=text(key);$('#board-notice').classList.remove('pop');void $('#board-notice').offsetWidth;$('#board-notice').classList.add('pop');
-  },onMove:(items,points,_chains,leavesCleared)=>{
+  },onMove:(items,points,_chains,leavesCleared,cratesCleared)=>{
     if(careDemo||activeRound!==round||roundEnded)return;
     boardFeedback.cancel();
-    moves--;score+=points;clearedLeaves+=leavesCleared??0;items.forEach((n,i)=>collected[i]+=n);updateGoals();
+    moves--;score+=points;clearedLeaves+=leavesCleared??0;clearedCrates+=cratesCleared??0;items.forEach((n,i)=>collected[i]+=n);updateGoals();
     const level=levels[currentLevel-1];
-    const won=level.goals.every(g=>collected[g.kind]>=g.count)&&clearedLeaves>=(level.leaves?.length??0);
+    const won=level.goals.every(g=>collected[g.kind]>=g.count)&&clearedLeaves>=(level.leaves?.length??0)&&clearedCrates>=(level.crates?.length??0);
     if(won||moves<=0){settleRound(won);scene.stopPlaying();resultTimer=setTimeout(()=>{if(activeRound!==round)return;resultTimer=undefined;finish(won);},300);}
     else checkpoint();
-  }},restored,levels[id-1].mask);
+  }},restored,levels[id-1].mask,levels[id-1].crates);
   if(!restored)scene.configureLeaves(levels[id-1].leaves??[]);
   // 엔진 생성/복원 직후부터 안정 상태를 유지하며 연쇄 도중에는 갱신하지 않습니다.
   const stored=checkpoint();
@@ -447,7 +453,7 @@ function bindChapterTabs(test=false){
 function renderTestPicker(){
   if(!TEST_TOOLS_ENABLED)return;
   const dialog=$<HTMLDialogElement>('#test-level-dialog');
-  dialog.innerHTML=`<div class="test-picker"><h2 id="test-level-title">${text('testPickTitle')}</h2><p>${text('testPickDesc')}</p>${chapterTabs(selectedTestChapter,true)}<div class="test-level-grid" id="test-chapter-levels" role="tabpanel" aria-labelledby="test-chapter-${selectedTestChapter}">${levels.filter(level=>chapterForLevel(level.id).id===selectedTestChapter).map(level=>`<button id="test-stage-${level.id}" data-test-level="${level.id}" class="test-stage"><strong>${text('level')} ${level.id}</strong><small>${text(level.mask?'testMasked':!level.leaves?'testBasic':level.leaves.some(p=>p.layers===2)?'testDouble':'testSingle')}</small></button>`).join('')}</div><button id="test-normal" class="primary">${text('testNormal')}</button><button id="test-close" class="text-button">${text('testClose')}</button></div>`;
+  dialog.innerHTML=`<div class="test-picker"><h2 id="test-level-title">${text('testPickTitle')}</h2><p>${text('testPickDesc')}</p>${chapterTabs(selectedTestChapter,true)}<div class="test-level-grid" id="test-chapter-levels" role="tabpanel" aria-labelledby="test-chapter-${selectedTestChapter}">${levels.filter(level=>chapterForLevel(level.id).id===selectedTestChapter).map(level=>`<button id="test-stage-${level.id}" data-test-level="${level.id}" class="test-stage"><strong>${text('level')} ${level.id}</strong><small>${text(level.crates?'testCrates':level.mask?'testMasked':!level.leaves?'testBasic':level.leaves.some(p=>p.layers===2)?'testDouble':'testSingle')}</small></button>`).join('')}</div><button id="test-normal" class="primary">${text('testNormal')}</button><button id="test-close" class="text-button">${text('testClose')}</button></div>`;
   document.querySelectorAll<HTMLButtonElement>('[data-test-level]').forEach(button=>button.onclick=()=>{
     if(!scene.canLeave()||resultTimer)return;
     pickerReturnToResult=false;dialog.close();startLevel(Number(button.dataset.testLevel),true);switchView('puzzle');

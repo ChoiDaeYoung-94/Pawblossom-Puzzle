@@ -7,7 +7,7 @@ import {RoundLedger,type RoundSnapshot} from '../../server/game/roundLedger';
 import {startState,type Command} from '../../server/game/roundState';
 import {BoardEngine} from '../../src/core';
 
-/** 현재 mask 지원 V2 엔진으로 새 상태·명령 영수증을 만듭니다. 옛 DB의 해시/상태를 덮어 호환을 가장하지 않습니다.
+/** 현재 상자 지원 V2 엔진으로 새 상태·명령 영수증을 만듭니다. 옛 DB의 해시/상태를 덮어 호환을 가장하지 않습니다.
  * 이전 보상 voucher와 결합할 합성 회차 ID만 재사용하고, 보드·RNG·점수·명령은 새로 계산합니다. */
 export function squareRoundFixture(legacy:any,key:Uint8Array,owner:{ownerId:string},epoch:number){
   const directory=mkdtempSync(join(tmpdir(),'pawblossom-square-fixture-')),path=join(directory,'round.sqlite');
