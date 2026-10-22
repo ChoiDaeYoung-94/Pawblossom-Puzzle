@@ -16,7 +16,8 @@ import { icon } from './icons';
 import { SwapPractice } from './SwapPractice';
 import { SpecialTapPractice } from './SpecialTapPractice';
 import { bindPracticeBoard } from './bindPracticeInputs';
-import { gardenArt } from './GardenArt';
+import { gardenArt,flowerArt } from './GardenArt';
+import { flowerStyles,gardenProjects,gardenDesignFor,freshGardenDesign,flowerDiversity,projectReady,prepareGardenAction,type GardenProject,type GardenAction } from './gardenDesign';
 import { showResultPip } from './ResultPip';
 import { RoundFeedback } from './RoundFeedback';
 import { cloneSnapshot,prepareShuffle } from './puzzleHelp';
@@ -47,7 +48,8 @@ let practiceInputs:ReturnType<typeof bindPracticeBoard>|undefined;
 let growing=false;
 let growthTimer:ReturnType<typeof setTimeout>|undefined;
 let careProcessing=false,careGeneration=0;
-let careDemo:{normalSave:SaveData;returnRoute:'village'|'journal';chapter:number}|undefined;
+let selectedGardenPlot=0;
+let careDemo:{normalSave:SaveData;returnRoute:'village'|'journal';chapter:number;plot:number}|undefined;
 let pipReaction:'feed'|'play'|'greet'|'tend'|undefined;
 let careReactionTimer:ReturnType<typeof setTimeout>|undefined;
 let clearedLeaves=0;
@@ -752,8 +754,8 @@ function enterCareDemo():boolean {
   if(!TEST_TOOLS_ENABLED||careDemo||careProcessing||growing||!careEnvironment())return false;
   const returnRoute=route as 'village'|'journal';
   const demo:SaveData=JSON.parse(JSON.stringify(save));
-  careDemo={normalSave:save,returnRoute,chapter:selectedChapter};careGeneration++;
-  demo.coins=240;demo.stars=10;demo.garden=0;demo.pip=freshPip();save=demo;
+  careDemo={normalSave:save,returnRoute,chapter:selectedChapter,plot:selectedGardenPlot};careGeneration++;
+  demo.coins=400;demo.stars=10;demo.garden=0;demo.pip=freshPip();demo.gardenDesign=freshGardenDesign();save=demo;selectedGardenPlot=0;
   clearCareReaction();scene.cancelInput();renderViews();localize();updateWallet();syncActivity();
   document.querySelector<HTMLButtonElement>('#care-demo-exit-'+returnRoute)?.focus({preventScroll:true});
   return true;
@@ -762,7 +764,7 @@ function exitCareDemo(navigate=true):boolean {
   if(!careDemo||careProcessing||otherModal()||previewDialog.open)return false;
   const context=careDemo;careDemo=undefined;careGeneration++;
   clearTimeout(growthTimer);growthTimer=undefined;growing=false;clearCareReaction();
-  save=context.normalSave;selectedChapter=context.chapter;
+  save=context.normalSave;selectedChapter=context.chapter;selectedGardenPlot=context.plot;
   // 저장이나 회차 재생성 없이 원래 언어·오디오 설정만 복원합니다.
   audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);
   renderViews();localize();updateWallet();updateGoals();updateResultCopy();syncActivity();
@@ -785,6 +787,27 @@ function pipDecoration(){
   if(equipped==='wateringCan'||pipReaction==='tend')return '<svg class="pip-accessory pip-watering-can" viewBox="0 0 76 70" aria-hidden="true"><path d="M48 27Q73 7 68 34Q65 45 51 43M19 33 7 19 1 23 18 47" fill="none" stroke="#527c70" stroke-width="7"/><path d="M16 26Q33 21 51 26L54 59Q35 66 14 59Z" fill="#91b8a0" stroke="#456b5b" stroke-width="3"/><path d="M25 25V16Q34 11 43 16V25" fill="none" stroke="#456b5b" stroke-width="4"/><path d="M26 40h17m-8-8v17" stroke="#f6e6ad" stroke-width="4" stroke-linecap="round"/></svg>';
   return '';
 }
+const projectName=(id:GardenProject)=>text(({bench:'gardenBench',butterflies:'gardenButterflies',lantern:'gardenLantern'} as const)[id]);
+const flowerName=(id:typeof flowerStyles[number])=>text(({meadow:'gardenMeadow',daisy:'gardenDaisy',violet:'gardenViolet'} as const)[id]);
+function gardenVisitor(){return `<div class="garden-visitor ${pipReaction==='greet'?'pip-reaction-greet':''}"><img src="${pipReaction==='greet'?'/assets/pip-play-v1.webp':'/assets/pip.png'}" alt="${text('pip')}"/>${pipDecoration()}</div>`;}
+function gardenDescription(){const design=gardenDesignFor(save.gardenDesign);return [text('gardenImage').replace('{count}',String(save.garden)),...design.flowers.slice(0,save.garden).map((flower,i)=>text('gardenPlot').replace('{number}',String(i+1))+' '+flowerName(flower)),...design.placed.map(projectName)].join(' · ');}
+function projectConditions(project:typeof gardenProjects[number]){
+  const pip=save.pip??freshPip(),design=gardenDesignFor(save.gardenDesign);
+  return text('gardenConditions').replace('{plots}',String(save.garden)).replace('{needPlots}',String(project.plots)).replace('{growth}',String(pip.growth)).replace('{needGrowth}',String(project.growth)).replace('{affection}',String(pip.affection)).replace('{needAffection}',String(project.affection)).replace('{types}',String(flowerDiversity(design,save.garden))).replace('{needTypes}',String(project.diversity));
+}
+function nextGardenProject(){
+  const design=gardenDesignFor(save.gardenDesign),next=gardenProjects.find(project=>!design.owned.includes(project.id));
+  return `<section class="pip-project" aria-label="${text('gardenTogether')}"><strong>${next?text('gardenNext')+' · '+projectName(next.id):text('gardenProjectsDone')}</strong>${next?`<p>${projectConditions(next)}</p>`:''}<button id="pip-open-garden" class="text-button">${text('gardenOpenEditor')}</button></section>`;
+}
+function gardenEditor(){
+  const design=gardenDesignFor(save.gardenDesign),pip=save.pip??freshPip(),blocked=careStorageBlocked();
+  selectedGardenPlot=Math.max(0,Math.min(selectedGardenPlot,Math.max(0,save.garden-1)));
+  const reaction=pipReaction==='tend'?'pipTendReaction':pipReaction==='greet'?design.placed.includes('lantern')?'gardenVisitLantern':design.placed.includes('butterflies')?'gardenVisitButterflies':design.placed.includes('bench')?'gardenVisitBench':'pipGreetReaction':'gardenVisitInvite';
+  return `<div class="garden-companion"><div><p class="garden-visit-line" role="status">${text(reaction)}</p><div class="garden-visit-actions"><button id="garden-visit" class="text-button">${text('gardenVisit')}</button><button id="garden-tend" class="text-button" ${pipLevel(pip)<3?'disabled':''}>${text('pipTend')}</button></div></div></div><section class="garden-editor" aria-labelledby="garden-edit-title"><h3 id="garden-edit-title" tabindex="-1">${text('gardenEdit')}</h3><div class="garden-plots" role="group" aria-label="${text('gardenChoosePlot')}">${Array.from({length:5},(_,i)=>`<button id="garden-plot-${i}" type="button" aria-pressed="${i===selectedGardenPlot&&i<save.garden}" aria-label="${text('gardenPlot').replace('{number}',String(i+1))} · ${i<save.garden?flowerName(design.flowers[i]):text('levelLocked')}" ${i>=save.garden?'disabled':''}>${i<save.garden?flowerArt(design.flowers[i]):icon('lock',18)}<span>${i+1}</span></button>`).join('')}</div><p class="garden-selection" role="status">${save.garden?text('gardenPlot').replace('{number}',String(selectedGardenPlot+1))+' · '+flowerName(design.flowers[selectedGardenPlot])+' · '+text('gardenFreeChange'):text('gardenFirstPlot')}</p><div class="garden-flowers" role="group" aria-label="${text('gardenChooseFlower')}">${flowerStyles.map(style=>`<button id="garden-flower-${style}" type="button" aria-pressed="${save.garden>0&&design.flowers[selectedGardenPlot]===style}" ${blocked||save.garden===0?'disabled':''}>${flowerArt(style)}<span>${flowerName(style)}</span></button>`).join('')}</div><h4>${text('gardenTogether')}</h4><div class="garden-projects">${gardenProjects.map(project=>{
+    const owned=design.owned.includes(project.id),placed=design.placed.includes(project.id),ready=projectReady(project,save.garden,pip,design);
+    return `<article class="garden-project"><div><strong>${projectName(project.id)}</strong><p>${owned?text('gardenOwned'):projectConditions(project)}</p></div><button id="garden-project-${project.id}" type="button" ${owned?`aria-pressed="${placed}"`:''} ${blocked||!owned&&(!ready||save.coins<project.cost)?'disabled':''}>${owned?text(placed?'gardenHide':'gardenPlace'):project.cost?text('gardenBuy').replace('{cost}',String(project.cost)):text('gardenClaim')}</button></article>`;
+  }).join('')}</div>${blocked?`<p class="pip-save-note" role="status">${text('careSaveBlocked')}</p>`:''}</section>`;
+}
 function pipCareCard(){
   const pip=save.pip??freshPip(),level=pipLevel(pip),cost=careCost(pip),blocked=careStorageBlocked();
   const next=level===1?20:level===2?60:100;
@@ -796,7 +819,7 @@ function pipCareCard(){
     const owned=pip.owned.includes(item),equipped=pip.equipped===item,name=text(item==='ribbon'?'pipRibbon':'pipWateringCan');
     return `<div class="pip-shop-item"><div><strong>${name}</strong><small>${owned?text('pipOwned'):text('pipUnlockAt').replace('{level}',String(required))}</small></div><button id="pip-${owned?'equip':'buy'}-${item}" class="text-button" ${blocked||equipped||(!owned&&(level<required||save.coins<price))?'disabled':''}>${equipped?text('pipEquipped'):owned?text('pipEquipFree'):`${icon('coin',15)} ${price}`}</button></div>`;
   };
-  return `<section class="journal-card pip-care-card" aria-labelledby="pip-care-title"><div class="pip-care-hero"><div class="pip-portrait ${pipReaction?'pip-reaction-'+pipReaction:''}"><img src="${image}" alt="${text(pipReaction==='feed'?'pipFeedAlt':pipReaction==='play'?'pipPlayAlt':'pip')}"/>${pipDecoration()}</div><div class="pip-summary"><h3 id="pip-care-title" tabindex="-1"><span class="pip-name">${text('pip')}</span><span class="pip-level">Lv. ${level}</span></h3><p class="pip-reaction-line" role="status" aria-live="polite">${text(reactionKey)}</p><div class="pip-stats"><label>${text('pipGrowth')} <strong>${pip.growth} / 100</strong><progress max="100" value="${pip.growth}"></progress></label><label>${text('pipAffection')} <strong>${pip.affection} / 100</strong><progress max="100" value="${pip.affection}"></progress></label></div></div></div><p class="pip-next">${text(level<3?'pipNextUnlock':'pipAllUnlocked').replace('{count}',String(Math.max(0,next-pip.growth))).replace('{reward}',text(level===1?'pipLevel2Unlock':'pipLevel3Unlock'))}</p><div class="pip-care-actions"><button id="pip-feed" class="primary" ${blocked||save.coins<cost?'disabled':''}><span>${text('pipFeed')} · ${price}</span><small>${effect('feed')}</small></button><button id="pip-play" class="primary" ${blocked||save.coins<cost?'disabled':''}><span>${text('pipPlay')} · ${price}</span><small>${effect('play')}</small></button></div><p class="pip-purpose">${text('pipPurpose')}</p><p class="pip-care-note">${text('pipNoDecay')}</p><div class="pip-reactions"><button id="pip-greet" class="text-button" ${level<2?'disabled':''}>${text('pipGreet')}</button><button id="pip-tend" class="text-button" ${level<3?'disabled':''}>${text('pipTend')}</button></div><h4>${text('pipDecorate')}</h4><p class="pip-shop-note">${text('pipShopHint')}</p>${decoration('ribbon',2,40)}${decoration('wateringCan',3,80)}<button id="pip-equip-none" class="text-button" ${blocked||pip.equipped==='none'?'disabled':''}>${text('pipUnequip')}</button>${blocked?`<p class="pip-save-note" role="status">${text('careSaveBlocked')}</p>`:''}</section>`;
+  return `<section class="journal-card pip-care-card" aria-labelledby="pip-care-title"><div class="pip-care-hero"><div class="pip-portrait ${pipReaction?'pip-reaction-'+pipReaction:''}"><img src="${image}" alt="${text(pipReaction==='feed'?'pipFeedAlt':pipReaction==='play'?'pipPlayAlt':'pip')}"/>${pipDecoration()}</div><div class="pip-summary"><h3 id="pip-care-title" tabindex="-1"><span class="pip-name">${text('pip')}</span><span class="pip-level">Lv. ${level}</span></h3><p class="pip-reaction-line" role="status" aria-live="polite">${text(reactionKey)}</p><div class="pip-stats"><label>${text('pipGrowth')} <strong>${pip.growth} / 100</strong><progress max="100" value="${pip.growth}"></progress></label><label>${text('pipAffection')} <strong>${pip.affection} / 100</strong><progress max="100" value="${pip.affection}"></progress></label></div></div></div><p class="pip-next">${text(level<3?'pipNextUnlock':'pipAllUnlocked').replace('{count}',String(Math.max(0,next-pip.growth))).replace('{reward}',text(level===1?'pipLevel2Unlock':'pipLevel3Unlock'))}</p>${nextGardenProject()}<div class="pip-care-actions"><button id="pip-feed" class="primary" ${blocked||save.coins<cost?'disabled':''}><span>${text('pipFeed')} · ${price}</span><small>${effect('feed')}</small></button><button id="pip-play" class="primary" ${blocked||save.coins<cost?'disabled':''}><span>${text('pipPlay')} · ${price}</span><small>${effect('play')}</small></button></div><p class="pip-purpose">${text('pipPurpose')}</p><p class="pip-care-note">${text('pipNoDecay')}</p><div class="pip-reactions"><button id="pip-greet" class="text-button" ${level<2?'disabled':''}>${text('pipGreet')}</button><button id="pip-tend" class="text-button" ${level<3?'disabled':''}>${text('pipTend')}</button></div><h4>${text('pipDecorate')}</h4><p class="pip-shop-note">${text('pipShopHint')}</p>${decoration('ribbon',2,40)}${decoration('wateringCan',3,80)}<button id="pip-equip-none" class="text-button" ${blocked||pip.equipped==='none'?'disabled':''}>${text('pipUnequip')}</button>${blocked?`<p class="pip-save-note" role="status">${text('careSaveBlocked')}</p>`:''}</section>`;
 }
 // 상점까지 내리거나 화면을 회전한 뒤에도 반응 그림과 돌보기 버튼을 함께 보여 줍니다.
 function revealPipCare(){
@@ -825,6 +848,19 @@ function bindCareControls(){
     }
   });
   for(const kind of ['greet','tend'] as const)bind('pip-'+kind,()=>{if(route==='journal'&&careEnvironment()&&pipLevel(save.pip??freshPip())>=(kind==='greet'?2:3)){reactPip(kind);renderViews();revealPipCare();}});
+  bind('pip-open-garden',()=>{if(route!=='journal'||!careEnvironment()||careProcessing)return;switchView('village');const title=$('#garden-edit-title');title.focus({preventScroll:true});title.scrollIntoView?.({block:'start'});});
+  for(let plot=0;plot<5;plot++)bind('garden-plot-'+plot,()=>{if(route!=='village'||!careEnvironment()||careProcessing||plot>=save.garden)return;selectedGardenPlot=plot;renderViews();});
+  const changeGarden=(button:HTMLButtonElement,action:GardenAction)=>{
+    if(route!=='village'||growing)return;
+    if(commitCare(button,expectedSave,generation,next=>{const result=prepareGardenAction(next.coins,next.garden,next.pip??freshPip(),next.gardenDesign,action);if(!result)return false;next.coins=result.coins;next.gardenDesign=result.design;return true;})){
+      reactPip('greet');renderViews();
+    }
+  };
+  const plot=selectedGardenPlot;
+  for(const flower of flowerStyles)bind('garden-flower-'+flower,button=>changeGarden(button,{kind:'flower',plot,flower}));
+  for(const project of gardenProjects){const owned=save.gardenDesign?.owned.includes(project.id);bind('garden-project-'+project.id,button=>changeGarden(button,{kind:owned?'toggle':'claim',project:project.id}));}
+  bind('garden-visit',()=>{if(route==='village'&&careEnvironment()&&!careProcessing){reactPip('greet');renderViews();}});
+  bind('garden-tend',()=>{if(route==='village'&&careEnvironment()&&!careProcessing&&pipLevel(save.pip??freshPip())>=3){reactPip('tend');renderViews();}});
   bind('grow',button=>{
     if(route!=='village'||growing)return;
     if(!commitCare(button,expectedSave,generation,next=>{if(next.stars<2||next.garden>=5)return false;next.stars-=2;next.garden++;return true;}))return;
@@ -836,7 +872,7 @@ function bindCareControls(){
 function renderViews(grew=false){
   const focused=document.activeElement as HTMLElement|null,focusedId=focused?.id;
   const scroll=Array.from(document.querySelectorAll<HTMLElement>('.view'),view=>({view,top:view.scrollTop,left:view.scrollLeft}));
-  $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('chapterMeadow')}</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div><div class="garden-card"><div class="garden-picture"><div class="garden-illustration" role="img" aria-label="${text('gardenImage').replace('{count}',String(save.garden))}">${gardenArt(save.garden,grew)}</div><span class="garden-pill">${icon('flower',17)} ${save.garden} / 5</span></div><h3>${text('garden')}</h3><p class="garden-stage" id="garden-stage" role="status" tabindex="-1">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div><div class="level-picker"><h3>${text('levelSelect')}</h3>${chapterTabs(selectedChapter)}<div class="level-grid" id="chapter-levels" role="tabpanel" aria-labelledby="chapter-${selectedChapter}">${levels.filter(l=>chapterForLevel(l.id).id===selectedChapter).map(l=>`<button data-level="${l.id}" ${l.id>save.highestLevel?'disabled':''} class="level-node ${save.completed.includes(l.id)?'completed':''} ${!testingLevel&&!roundEnded&&l.id===currentLevel?'current':''}" ${!testingLevel&&!roundEnded&&l.id===currentLevel?'aria-current="step"':''} aria-label="${text('level')} ${l.id}${!testingLevel&&!roundEnded&&l.id===currentLevel?' · '+text('previewCurrent'):''}${l.id>save.highestLevel?' · '+text('levelLocked'):save.completed.includes(l.id)?' · '+text('levelCompleted'):''}">${l.id>save.highestLevel?icon('lock',19):l.id}${save.completed.includes(l.id)?`<span>${icon('star',13)}</span>`:''}</button>`).join('')}</div></div>`;
+  $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('chapterMeadow')}</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div><section class="garden-workshop"><div class="garden-picture garden-preview"><div class="garden-illustration" role="img" aria-label="${gardenDescription()}">${gardenArt(save.garden,grew,save.gardenDesign)}</div>${gardenVisitor()}<span class="garden-pill">${icon('flower',17)} ${save.garden} / 5</span></div><div class="garden-card garden-growth"><h3>${text('garden')}</h3><p class="garden-stage" id="garden-stage" role="status" tabindex="-1">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div>${gardenEditor()}</section><div class="level-picker"><h3>${text('levelSelect')}</h3>${chapterTabs(selectedChapter)}<div class="level-grid" id="chapter-levels" role="tabpanel" aria-labelledby="chapter-${selectedChapter}">${levels.filter(l=>chapterForLevel(l.id).id===selectedChapter).map(l=>`<button data-level="${l.id}" ${l.id>save.highestLevel?'disabled':''} class="level-node ${save.completed.includes(l.id)?'completed':''} ${!testingLevel&&!roundEnded&&l.id===currentLevel?'current':''}" ${!testingLevel&&!roundEnded&&l.id===currentLevel?'aria-current="step"':''} aria-label="${text('level')} ${l.id}${!testingLevel&&!roundEnded&&l.id===currentLevel?' · '+text('previewCurrent'):''}${l.id>save.highestLevel?' · '+text('levelLocked'):save.completed.includes(l.id)?' · '+text('levelCompleted'):''}">${l.id>save.highestLevel?icon('lock',19):l.id}${save.completed.includes(l.id)?`<span>${icon('star',13)}</span>`:''}</button>`).join('')}</div></div>`;
   if(careDemo)$('#village-view').innerHTML=$('#village-view').innerHTML.split('<div class="level-picker">')[0];
   $('#village-view').innerHTML=careDemoPanel('village')+$('#village-view').innerHTML;
   $('#grow').toggleAttribute('disabled',growing||careStorageBlocked()||save.stars<2||save.garden>=5);
@@ -864,6 +900,7 @@ function renderViews(grew=false){
   if(focusedId&&!focused?.isConnected){
     const replacement=document.querySelector<HTMLElement>('#'+focusedId);
     const target=focusedId==='grow'&&(replacement as HTMLButtonElement|null)?.disabled?$('#garden-stage')
+      :focusedId.startsWith('garden-')&&(!replacement||(replacement as HTMLButtonElement).disabled)?$('#garden-edit-title')
       :focusedId.startsWith('pip-')&&(!replacement||(replacement as HTMLButtonElement).disabled)?$('#pip-care-title'):replacement;
     target?.focus({preventScroll:true});
   }
