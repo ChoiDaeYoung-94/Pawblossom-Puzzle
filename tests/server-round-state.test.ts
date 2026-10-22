@@ -27,14 +27,15 @@ describe('서버 순수 회차 상태·기존 엔진 기준 동등성',()=>{
   });
   it.each(levels.map(l=>l.id))('level %s: 전체 회차 점수/수집/낙엽/이동/승패를 기준 엔진과 비교',id=>{
     const seed=id*9876543;let s=startState(id,seed),score=0,leaves=0,moves=levels[id-1].moves,items=[0,0,0,0,0,0];
-    const e=new BoardEngine(8,8,seededRng(seed),undefined,2,levels[id-1].mask);e.setLeaves(levels[id-1].leaves??[]);
+    const e=new BoardEngine(8,8,seededRng(seed),undefined,2,levels[id-1].mask,levels[id-1].crates);e.setLeaves(levels[id-1].leaves??[]);
     expect(s.board).toEqual(e.board);
     for(let n=0;n<40&&s.status==='active';n++){
       if(n===3){e.shuffle();s=advanceState(clone(s),{type:'shuffle'}).state;expect(s.moves).toBe(moves);expect(s.shuffles).toBe(0);}
       const legal=e.legalMoves(),m=legal[(n*7)%legal.length],result=e.swap(m.a,m.b);moves--;score+=result.score;leaves+=result.leavesCleared??0;result.collected.forEach((x,k)=>items[k]+=x);
       s=advanceState(clone(s),{type:'swap',...m}).state;
-      const won=levels[id-1].goals.every(g=>items[g.kind]>=g.count)&&leaves>=(levels[id-1].leaves?.length??0);
+      const won=levels[id-1].goals.every(g=>items[g.kind]>=g.count)&&leaves>=(levels[id-1].leaves?.length??0)&&e.remainingCrates()===0;
       expect(s).toMatchObject({board:e.board,leaves:e.leaves,moves,score,collected:items,clearedLeaves:leaves,status:won?'won':moves===0?'failed':'active'});
+      if(e.hasCrates)expect(s).toMatchObject({crates:e.crates,clearedCrates:levels[id-1].crates!.length-e.remainingCrates()});
       validateState(s);
     }
     expect(s.status).not.toBe('active');

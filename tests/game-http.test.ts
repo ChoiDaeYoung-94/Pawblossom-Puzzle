@@ -54,6 +54,13 @@ afterEach(()=>{vi.restoreAllMocks();for(const r of resources.splice(0).reverse()
   for(const dir of dirs.splice(0)){if(!dir.startsWith(join(tmpdir(),'pawblossom-game-http-')))throw new Error('정리 경로 오류');rmSync(dir,{recursive:true,force:true});}});
 
 describe('게임 HTTP·실제 인증/SQLite/SSV 통합',()=>{
+  it('상자 레벨의 공개 canonical 좌표·격자 null·별도 목표는 무효 상자 교환과 조회에서 보존됩니다',async()=>{
+    const {http}=setup().open(),started=JSON.parse((await http(request('start',{requestId:'crate-http',levelId:36}))).body),snapshot=started.snapshot;
+    expect(snapshot.state.level.crates).toEqual(levels[35].crates);expect(snapshot.state.board[2][2]).toBeNull();expect(snapshot.state.crates[2][2]).toBe(1);expect(snapshot.state.clearedCrates).toBe(0);expect(snapshot.state).not.toHaveProperty('rngState');
+    const moved=JSON.parse((await http(request('command',{roundId:snapshot.roundId,operationId:'crate',expectedRevision:0,command:{type:'swap',a:{row:2,col:1},b:{row:2,col:2}}}))).body);
+    expect(moved.outcome).toBe('invalid-swap');expect(moved.snapshot.state).toEqual(snapshot.state);
+    const loaded=JSON.parse((await http(request('get',{roundId:snapshot.roundId}))).body);expect(loaded.snapshot.state).toEqual(snapshot.state);
+  });
   it('비정형 레벨 생성/조회/무효 교환 응답에 canonical mask와 null을 유지하고 RNG를 숨깁니다',async()=>{
     const {http}=setup().open(),started=JSON.parse((await http(request('start',{requestId:'mask-http',levelId:32}))).body),snapshot=started.snapshot;
     expect(snapshot.state.level.mask).toEqual(levels[31].mask);expect(snapshot.state.board[3][3]).toBeNull();expect(snapshot.state.leaves[3][3]).toBe(0);expect(snapshot.state).not.toHaveProperty('rngState');

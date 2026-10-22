@@ -9,7 +9,7 @@ export function prepareShuffle<T extends BoardSnapshot>(snapshot:T,rng?:()=>numb
   try{
     if(!rng){const seed=new Uint32Array(1);globalThis.crypto.getRandomValues(seed);rng=seededRng(seed[0]);}
     const source=cloneSnapshot(snapshot),engine=new BoardEngine(8,8,rng,source,undefined,mask);
-    const positions=engine.mask.flatMap((line,row)=>line.flatMap((active,col)=>active?[{row,col}]:[]));
+    const positions=engine.mask.flatMap((line,row)=>line.flatMap((_,col)=>engine.isPlayable({row,col})?[{row,col}]:[]));
     const tiles:Tile[]=positions.map(p=>engine.board[p.row][p.col]!);let found=false;
     // 유료 후보에는 엔진의 재생성 fallback을 사용하지 않습니다.
     for(let attempt=0;attempt<300;attempt++){
@@ -20,7 +20,7 @@ export function prepareShuffle<T extends BoardSnapshot>(snapshot:T,rng?:()=>numb
     if(!found)return;
     const candidate={...source,board:engine.board,leaves:engine.leaves,ruleVersion:engine.ruleVersion};
     // 엔진의 재생성 fallback으로 특수/종류가 손실되면 비용 없이 거절합니다.
-    if(inventory(source)!==inventory(candidate)||JSON.stringify(source.leaves)!==JSON.stringify(candidate.leaves)
+    if(inventory(source)!==inventory(candidate)||JSON.stringify(source.leaves)!==JSON.stringify(candidate.leaves)||JSON.stringify(source.crates)!==JSON.stringify(candidate.crates)
       ||engine.findMatches().length||!engine.hasMoves())return;
     return cloneSnapshot(candidate);
   }catch{return;}

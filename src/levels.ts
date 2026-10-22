@@ -1,7 +1,7 @@
-import type { BoardMask, LeafPile } from './core';
+import type { BoardMask, LeafPile, Position } from './core';
 import type { TextKey } from './i18n';
 export interface LevelGoal { kind: number; count: number }
-export interface Level { id: number; moves: number; goals: LevelGoal[]; leaves?: LeafPile[]; mask?: BoardMask }
+export interface Level { id: number; moves: number; goals: LevelGoal[]; leaves?: LeafPile[]; mask?: BoardMask; crates?:Position[] }
 
 const patches=(cells:number[][],layers:1|2=1):LeafPile[]=>cells.map(([row,col])=>({row,col,layers}));
 const center=[[2,2],[2,5],[5,2],[5,5]];
@@ -60,6 +60,12 @@ export const levels: Level[] = [
   {id:33,moves:28,goals:[{"kind":3,"count":14},{"kind":4,"count":14}],mask:shapes.hourglass},
   {id:34,moves:28,goals:[{"kind":2,"count":16},{"kind":5,"count":12}],mask:shapes.u},
   {id:35,moves:30,goals:[{"kind":0,"count":18},{"kind":1,"count":16}],mask:shapes.slant},
+  // 36~40: 고정 1hit 나무상자. 색 목표와 별개로 모두 제거해야 합니다.
+  {id:36,moves:28,goals:[{kind:3,count:14},{kind:5,count:14}],crates:center.map(([row,col])=>({row,col}))},
+  {id:37,moves:30,goals:[{kind:2,count:16},{kind:4,count:14}],mask:shapes.rounded,crates:[...center,[3,1],[3,6]].map(([row,col])=>({row,col}))},
+  {id:38,moves:30,goals:[{kind:1,count:18},{kind:5,count:16}],mask:shapes.pond,crates:center.map(([row,col])=>({row,col}))},
+  {id:39,moves:32,goals:[{kind:0,count:20},{kind:1,count:18}],mask:shapes.hourglass,crates:[[1,1],[1,6],[2,2],[5,5],[6,1],[6,6]].map(([row,col])=>({row,col}))},
+  {id:40,moves:34,goals:[{kind:3,count:20},{kind:5,count:20}],mask:shapes.u,crates:[[3,1],[3,6],[4,2],[4,5],[5,1],[5,6],[6,3],[6,4]].map(([row,col])=>({row,col}))},
 ];
 
 export const LEVEL_COUNT=levels.length;
@@ -68,5 +74,6 @@ export const chapters:{id:number;first:number;last:number;title:TextKey}[]=[
   {id:2,first:11,last:20,title:'chapterPath'},
   {id:3,first:21,last:30,title:'chapterSunshine'},
   {id:4,first:31,last:35,title:'chapterPond'},
+  {id:5,first:36,last:40,title:'chapterCrates'},
 ];
 export const chapterForLevel=(id:number)=>chapters.find(chapter=>id>=chapter.first&&id<=chapter.last)??chapters[0];

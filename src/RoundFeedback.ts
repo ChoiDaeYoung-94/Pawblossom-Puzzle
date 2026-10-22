@@ -5,6 +5,7 @@ export interface ResolveVisual {
   cascade:number;
   removed:(VisualPoint&{kind:number})[];
   clearedLeaves:VisualPoint[];
+  clearedCrates?:VisualPoint[];
   specialActivated:boolean;
   specialCreated:boolean;
 }
@@ -62,6 +63,7 @@ export class RoundFeedback {
     const groups=new Map<string,VisualPoint[]>();
     for(const source of event.removed){const key=String(source.kind);const group=groups.get(key)??[];group.push(source);groups.set(key,group);}
     if(event.clearedLeaves.length)groups.set('leaves',event.clearedLeaves);
+    if(event.clearedCrates?.length)groups.set('crates',event.clearedCrates);
     for(const [key,sources] of groups){
       const goal=this.goals.get(key);if(!goal||goal.remaining<=0)continue;
       const count=Math.min(goal.remaining,sources.length);

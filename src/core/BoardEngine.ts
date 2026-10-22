@@ -3,7 +3,7 @@ export type RuleVersion = 1 | 2;
 export interface Tile { kind: number; special?: Special }
 export type Cell = Tile | null;
 export type BoardMask = readonly (readonly boolean[])[];
-export interface BoardSnapshot { board: Cell[][]; leaves: number[][]; ruleVersion?: RuleVersion }
+export interface BoardSnapshot { board: Cell[][]; leaves: number[][]; ruleVersion?: RuleVersion; crates?: number[][] }
 /** from 부재는 새 타일이며 startRow는 해당 세로 구간의 보충 시작점입니다. */
 export interface Fall { from?: Position; to: Position; startRow: number }
 export interface Position { row: number; col: number }
@@ -18,6 +18,7 @@ export interface ResolveStep {
   created?: (Position & { tile: Tile })[];
   effects?: (Position & { special: Special })[];
   leaves?: { before: number[][]; after: number[][]; hits: LeafHit[] };
+  crates?: { before: number[][]; after: number[][]; hits: Position[] };
 }
 export interface SwapResult {
   valid: boolean;
@@ -25,6 +26,7 @@ export interface SwapResult {
   collected: number[];
   score: number;
   leavesCleared?: number;
+  cratesCleared?: number;
 }
 interface Run { cells: Position[]; horizontal?: boolean; square?: true }
 const clone = (board: Cell[][]): Cell[][] => board.map(row => row.map(tile => tile ? { ...tile } : null));
@@ -46,8 +48,10 @@ export class BoardEngine {
   public board: Cell[][];
   public readonly mask: BoardMask;
   public leaves: number[][];
+  public crates: number[][];
+  public readonly hasCrates:boolean;
   public readonly ruleVersion:RuleVersion;
-  constructor(public readonly rows = 8, public readonly cols = 8, private readonly rng: () => number = Math.random, snapshot?: BoardSnapshot, ruleVersion?:RuleVersion, mask?:BoardMask) {
+  constructor(public readonly rows = 8, public readonly cols = 8, private readonly rng: () => number = Math.random, snapshot?: BoardSnapshot, ruleVersion?:RuleVersion, mask?:BoardMask, cratePositions?:readonly Position[]) {
     if (!Number.isInteger(rows) || !Number.isInteger(cols) || rows < 3 || cols < 3) {
       throw new RangeError('보드의 행과 열은 각각 3 이상의 정수여야 합니다.');
     }
@@ -57,8 +61,25 @@ export class BoardEngine {
     this.ruleVersion=rules;
     if(mask&&(mask.length!==rows||mask.some(row=>row.length!==cols||row.some(cell=>typeof cell!=='boolean'))))throw new RangeError('mask 크기와 활성 칸을 확인해 주세요.');
     this.mask=Object.freeze(Array.from({length:rows},(_,r)=>Object.freeze(Array.from({length:cols},(_,c)=>mask?.[r][c]??true))));
-    if(!this.fallbackOrigin())throw new RangeError('보드에는 활성 3×3 구간이 필요합니다.');
-    if(snapshot&&(snapshot.board.length!==rows||snapshot.leaves.length!==rows||snapshot.board.some((row,r)=>row.length!==cols||row.some((tile,c)=>this.mask[r][c]?!tile:tile!==null))||snapshot.leaves.some((row,r)=>row.length!==cols||row.some((n,c)=>!this.mask[r][c]&&n!==0))))throw new RangeError('저장판과 canonical mask가 일치하지 않습니다.');
+    this.hasCrates=Boolean(cratePositions?.length||snapshot?.crates!==undefined);
+    this.crates=Array.from({length:rows},()=>Array(cols).fill(0));
+    for(const p of cratePositions??[]){if(!this.isActive(p)||this.crates[p.row][p.col])throw new RangeError('상자 좌표·중복을 확인해 주세요.');this.crates[p.row][p.col]=1;}
+    if(this.hasCrates&&rules!==2)throw new RangeError('상자는 V2 규칙에서만 지원합니다.');
+    if(snapshot&&this.hasCrates){
+      const grid=snapshot.crates;
+      const invalid=()=>new RangeError('저장 상자가 canonical 좌표와 일치하지 않습니다.');
+      if(!Array.isArray(grid)||grid.length!==rows)throw invalid();
+      for(let r=0;r<rows;r++){
+        if(!Object.hasOwn(grid,r)||!Array.isArray(grid[r])||grid[r].length!==cols)throw invalid();
+        for(let c=0;c<cols;c++){
+          const n=grid[r][c];
+          if(!Object.hasOwn(grid[r],c)||(n!==0&&n!==1)||n===1&&(!this.mask[r][c]||cratePositions!==undefined&&!this.crates[r][c]))throw invalid();
+        }
+      }
+      this.crates=grid.map(line=>line.slice());
+    }
+    if(!this.hasCrates&&!this.fallbackOrigin()||this.hasCrates&&!this.crateMotifs().length)throw new RangeError('보드에는 합법 교환을 만들 수 있는 열린 구간이 필요합니다.');
+    if(snapshot&&(snapshot.board.length!==rows||snapshot.leaves.length!==rows||snapshot.board.some((row,r)=>row.length!==cols||row.some((tile,c)=>this.isPlayable({row:r,col:c})?!tile:tile!==null))||snapshot.leaves.some((row,r)=>row.length!==cols||row.some((n,c)=>!this.isPlayable({row:r,col:c})&&n!==0))))throw new RangeError('저장판과 canonical mask·상자가 일치하지 않습니다.');
     // 저장 검증을 마친 스냅샷은 초기 생성 난수를 소비하지 않고 복원합니다.
     this.board = snapshot ? clone(snapshot.board) : [];
     this.leaves = snapshot ? snapshot.leaves.map(row=>row.slice()) : Array.from({length:rows},()=>Array(cols).fill(0));
@@ -69,13 +90,14 @@ export class BoardEngine {
   public setLeaves(piles: LeafPile[]): void {
     const keys=new Set<number>();
     for(const pile of piles){
-      if(!this.isActive(pile)||(pile.layers!==1&&pile.layers!==2)||keys.has(this.key(pile)))throw new RangeError('낙엽 좌표·겹 수·중복 설정을 확인해 주세요.');
+      if(!this.isPlayable(pile)||(pile.layers!==1&&pile.layers!==2)||keys.has(this.key(pile)))throw new RangeError('낙엽 좌표·겹 수·중복 설정을 확인해 주세요.');
       keys.add(this.key(pile));
     }
     this.leaves=Array.from({length:this.rows},()=>Array(this.cols).fill(0));
     piles.forEach(p=>{this.leaves[p.row][p.col]=p.layers;});
   }
   public remainingLeaves(): number {return this.leaves.flat().filter(layers=>layers>0).length;}
+  public remainingCrates():number {return this.crates.flat().filter(Boolean).length;}
 
   private randomIndex(length: number): number {
     const value = this.rng();
@@ -88,6 +110,30 @@ export class BoardEngine {
     return Number.isInteger(p.row) && Number.isInteger(p.col) && p.row >= 0 && p.row < this.rows && p.col >= 0 && p.col < this.cols;
   }
   public isActive(p:Position):boolean {return this.inside(p)&&this.mask[p.row][p.col];}
+  public isPlayable(p:Position):boolean {return this.isActive(p)&&this.crates[p.row][p.col]===0;}
+  private crateMotifs():Position[][] {
+    const motifs:Position[][]=[];
+    for(const vertical of [false,true])for(let row=0;row<this.rows;row++)for(let col=0;col<this.cols;col++){
+      const cells=[0,1].flatMap(r=>[0,1,2].map(c=>({row:row+(vertical?c:r),col:col+(vertical?r:c)})));
+      if(cells.every(p=>this.isPlayable(p)))motifs.push(cells);
+    }
+    return motifs;
+  }
+  /** RNG를 추가 소비하지 않는 유한 fallback. 고정 2×3 모티프 주변도 매치 없이 채웁니다. */
+  private generateCrateFallback():void {
+    for(const motif of this.crateMotifs()){
+      this.board=this.mask.map(line=>line.map(()=>null));
+      motif.forEach((p,i)=>{this.board[p.row][p.col]={kind:[0,1,0,2,0,3][i]};});
+      let valid=true;
+      for(let row=0;row<this.rows&&valid;row++)for(let col=0;col<this.cols;col++)if(this.isPlayable({row,col})&&!this.board[row][col]){
+        let found=false;
+        for(let kind=0;kind<6;kind++){this.board[row][col]={kind};if(!this.findMatches().length){found=true;break;}}
+        if(!found){valid=false;break;}
+      }
+      if(valid&&!this.findMatches().length&&this.hasMoves())return;
+    }
+    throw new RangeError('상자 배치에 안정적인 합법 교환을 만들 수 없습니다.');
+  }
   private fallbackOrigin():Position|undefined {
     for(let row=0;row<=this.rows-3;row++)for(let col=0;col<=this.cols-3;col++)if([0,1,2].every(dr=>[0,1,2].every(dc=>this.mask[row+dr][col+dc])))return {row,col};
   }
@@ -138,9 +184,9 @@ export class BoardEngine {
   private *scanMoves(): Generator<LegalMove> {
     for (let row = 0; row < this.rows; row++) for (let col = 0; col < this.cols; col++) {
       const a = { row, col };
-      if(!this.isActive(a))continue;
+      if(!this.isPlayable(a))continue;
       for (const b of [{ row, col: col + 1 }, { row: row + 1, col }]) {
-        if (!this.isActive(b)) continue;
+        if (!this.isPlayable(b)) continue;
         if (this.specialSwap(a, b)) { yield {a,b}; continue; }
         this.exchange(a, b);
         const matches = this.findMatches();
@@ -153,7 +199,7 @@ export class BoardEngine {
     for (let attempt = 0; attempt < 100; attempt++) {
       this.board = Array.from({ length: this.rows }, () => [] as Cell[]);
       for (let row = 0; row < this.rows; row++) for (let col = 0; col < this.cols; col++) {
-        if(!this.mask[row][col]){this.board[row][col]=null;continue;}
+        if(!this.isPlayable({row,col})){this.board[row][col]=null;continue;}
         const choices = [0, 1, 2, 3, 4, 5].filter(kind =>
           !(col >= 2 && this.board[row][col - 1]?.kind === kind && this.board[row][col - 2]?.kind === kind) &&
           !(row >= 2 && this.board[row - 1][col]?.kind === kind && this.board[row - 2][col]?.kind === kind) &&
@@ -163,6 +209,7 @@ export class BoardEngine {
       if (this.hasMoves()) return;
     }
     // 전체 판에서는 기존 좌상단 패턴·RNG 순서를 유지하며 mask에서는 활성 3×3 안으로 옮깁니다.
+    if(this.hasCrates){this.generateCrateFallback();return;}
     const origin=this.fallbackOrigin()!;
     this.board = this.mask.map((line,row)=>line.map((active,col)=>active?{kind:(((row-origin.row)*2+col-origin.col)%6+6)%6}:null));
     this.board[origin.row][origin.col+2] = {kind:0};this.board[origin.row+1][origin.col+1] = {kind:0};
@@ -175,7 +222,7 @@ export class BoardEngine {
         const j = this.randomIndex(i + 1);
         [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
       }
-      let index=0;this.board=this.mask.map(line=>line.map(active=>active?{...tiles[index++]}:null));
+      let index=0;this.board=this.mask.map((line,row)=>line.map((_,col)=>this.isPlayable({row,col})?{...tiles[index++]}:null));
       if (!this.findMatches().length && this.hasMoves()) return;
     }
     this.generate();
@@ -207,7 +254,7 @@ export class BoardEngine {
 
   public swap(a: Position, b: Position): SwapResult {
     const result: SwapResult = { valid: false, steps: [], collected: [0, 0, 0, 0, 0, 0], score: 0 };
-    if (!this.isActive(a) || !this.isActive(b) || Math.abs(a.row - b.row) + Math.abs(a.col - b.col) !== 1) return result;
+    if (!this.isPlayable(a) || !this.isPlayable(b) || Math.abs(a.row - b.row) + Math.abs(a.col - b.col) !== 1) return result;
     const combined = this.specialSwap(a, b);
     this.exchange(a, b);
     const runs = this.runs();
@@ -219,7 +266,7 @@ export class BoardEngine {
   }
   /** 특수블록은 매치 없이 탭으로 사용할 수 있습니다. rainbow 탭은 자체 색을 제거합니다. */
   public activate(p:Position):SwapResult {
-    if(!this.isActive(p)||!this.board[p.row][p.col]!.special)return {valid:false,steps:[],collected:[0,0,0,0,0,0],score:0};
+    if(!this.isPlayable(p)||!this.board[p.row][p.col]!.special)return {valid:false,steps:[],collected:[0,0,0,0,0,0],score:0};
     return this.resolve(p,p,false,[p]);
   }
   private resolve(a:Position,b:Position,combined:boolean,trigger:Position[]=[]):SwapResult {
@@ -234,11 +281,12 @@ export class BoardEngine {
       const queue: Position[] = [];
       const effects: (Position & { special: Special })[] = [];
       const specialTargets=new Set<number>();
+      const crateTargets=new Set<number>();
       const add = (p: Position): void => {
-        if (!this.isActive(p) || protectedKeys.has(this.key(p)) || removed.has(this.key(p))) return;
+        if (!this.isPlayable(p) || protectedKeys.has(this.key(p)) || removed.has(this.key(p))) return;
         removed.add(this.key(p)); queue.push(p);
       };
-      const hit=(p:Position):void=>{if(this.isActive(p))specialTargets.add(this.key(p));add(p);};
+      const hit=(p:Position):void=>{if(this.isActive(p)){specialTargets.add(this.key(p));if(this.crates[p.row][p.col])crateTargets.add(this.key(p));}add(p);};
       const area = (p: Position, radius: number): void => {
         for (let row = p.row - radius; row <= p.row + radius; row++) for (let col = p.col - radius; col <= p.col + radius; col++) hit({ row, col });
       };
@@ -251,7 +299,7 @@ export class BoardEngine {
           const other = x.special === 'rainbow' ? y : x;
           for (let row = 0; row < this.rows; row++) for (let col = 0; col < this.cols; col++) {
             if (this.mask[row][col]&&(other.special === 'rainbow' || before[row][col]?.kind === other.kind)) {
-              if (other.special && other.special !== 'rainbow' && !protectedKeys.has(row * this.cols + col)) this.board[row][col]!.special = other.special;
+              if (other.special && other.special !== 'rainbow' && this.board[row][col] && !protectedKeys.has(row * this.cols + col)) this.board[row][col]!.special = other.special;
               hit({ row, col });
             }
           }
@@ -284,8 +332,12 @@ export class BoardEngine {
       const leafTargets=new Set(specialTargets);
       // 한 단계에서 여러 매치가 같은 더미에 닿아도 한 겹만 제거합니다. 대각선은 제외합니다.
       for(const run of runs)for(const p of run.cells)for(const [dr,dc] of [[0,0],[-1,0],[1,0],[0,-1],[0,1]]){
-        const q={row:p.row+dr,col:p.col+dc};if(this.isActive(q))leafTargets.add(this.key(q));
+        const q={row:p.row+dr,col:p.col+dc};if(this.isActive(q)){leafTargets.add(this.key(q));if(this.crates[q.row][q.col])crateTargets.add(this.key(q));}
       }
+      const crateHits=[...crateTargets].sort((x,y)=>x-y).map(key=>this.position(key));
+      const crateBefore=crateHits.length?this.crates.map(row=>row.slice()):undefined;
+      crateHits.forEach(p=>{this.crates[p.row][p.col]=0;});
+      if(crateHits.length)result.cratesCleared=(result.cratesCleared??0)+crateHits.length;
       const leafHits:LeafHit[]=[...leafTargets].sort((x,y)=>x-y).flatMap(key=>{
         const p=this.position(key),before=this.leaves[p.row][p.col];
         return before>0?[{...p,before,after:specialTargets.has(key)?0:before-1}]:[];
@@ -298,15 +350,15 @@ export class BoardEngine {
       positions.forEach(p => { result.collected[before[p.row][p.col]!.kind]++; });
       result.score += positions.length * 10 * (result.steps.length + 1)+cleared*20;
       created.forEach(p => { this.board[p.row][p.col] = { ...p.tile }; });
-      const next: (Cell | undefined)[][] = this.mask.map(line=>line.map(active=>active?undefined:null));
+      const next: (Cell | undefined)[][] = this.mask.map((line,row)=>line.map((_,col)=>this.isPlayable({row,col})?undefined:null));
       const falls:Fall[]=[];
       for (let col = 0; col < this.cols; col++) {
         let top=0;
         while(top<this.rows){
-          if(!this.mask[top][col]){top++;continue;}
-          let bottom=top;while(bottom+1<this.rows&&this.mask[bottom+1][col])bottom++;
+          if(!this.isPlayable({row:top,col})){top++;continue;}
+          let bottom=top;while(bottom+1<this.rows&&this.isPlayable({row:bottom+1,col}))bottom++;
           const survivors:Position[]=[];
-          for(let row=top;row<=bottom;row++)if(!removed.has(row*this.cols+col))survivors.push({row,col});
+          for(let row=top;row<=bottom;row++)if(this.board[row][col]&&!removed.has(row*this.cols+col))survivors.push({row,col});
           const missing=bottom-top+1-survivors.length;
           survivors.forEach((from,i)=>{
             const to={row:top+missing+i,col};next[to.row][col]={...this.board[from.row][col]!};
@@ -334,7 +386,7 @@ export class BoardEngine {
         next[row][col] = { kind: choices[this.randomIndex(choices.length)] };
       }
       this.board = next as Cell[][];
-      result.steps.push({ before, removed: positions, after: clone(this.board), falls, ...(created.length ? { created: created.map(p => ({ ...p, tile: { ...p.tile } })) } : {}), ...(effects.length?{effects}: {}), ...(leafBefore?{leaves:{before:leafBefore,after:this.leaves.map(row=>row.slice()),hits:leafHits}}:{}) });
+      result.steps.push({ before, removed: positions, after: clone(this.board), falls, ...(created.length ? { created: created.map(p => ({ ...p, tile: { ...p.tile } })) } : {}), ...(effects.length?{effects}: {}), ...(leafBefore?{leaves:{before:leafBefore,after:this.leaves.map(row=>row.slice()),hits:leafHits}}:{}), ...(crateBefore?{crates:{before:crateBefore,after:this.crates.map(row=>row.slice()),hits:crateHits}}:{}) });
       first = false;
       runs = this.runs();
     }

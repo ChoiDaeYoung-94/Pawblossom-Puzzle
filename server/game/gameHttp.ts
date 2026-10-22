@@ -131,7 +131,7 @@ function project(result:Result,route:Route):{status:GameHttpResponse['status'];b
   const s=result.snapshot,state=s.state;
   const snapshot={roundId:s.roundId,revision:s.revision,createdAt:s.createdAt,expiresAt:s.expiresAt,state:{
     ruleVersion:state.ruleVersion,level:state.level,board:state.board,leaves:state.leaves,moves:state.moves,collected:state.collected,score:state.score,
-    shuffles:state.shuffles,clearedLeaves:state.clearedLeaves,status:state.status}};
+    shuffles:state.shuffles,clearedLeaves:state.clearedLeaves,status:state.status,...(state.crates?{crates:state.crates,clearedCrates:state.clearedCrates}:{})}};
   if(route==='start'&&result.kind==='round-started')return {status:200,body:{kind:result.kind,created:result.created,snapshot}};
   if(route==='get'&&result.kind==='round-snapshot')return {status:200,body:{kind:result.kind,snapshot}};
   if(route==='apply'&&result.kind==='reward-result')return {status:200,body:{kind:result.kind,applied:result.applied,snapshot}};
