@@ -1,4 +1,17 @@
-## 최신 main 검수 APK · 2026-10-22 오후 · #210 최종
+## 최신 100스테이지 검수 후보 · 2026-10-22 · #221
+
+사용자 확인용 최신 파일은 [Pawblossom-Puzzle-v0.1.7-2026-10-22-34031f1-debug.apk](https://drive.google.com/file/d/1L6dRtO4sJook8Erle_A2ALkdM-VMMZJT/view)입니다. 게임 소스 main `34031f1082457c940cb7f05deb3c744dec19f6b5`, 버전0.1.7/code8, 11,146,331바이트, SHA256 `7fa11bfc90ba5ee17e227107428098a1e747d1a6a24577c9ef9b0538840d21c6`입니다. 기존 작업 계정/테스트 폴더에 고유 APK와 checksum만 추가했고 실제 재다운로드 크기·해시가 일치합니다. 기존 파일/공유 범위는 유지했으며 추가 Chrome 탭 두 개만 닫았습니다. 별도 테스트 안내 파일은 만들지 않았습니다.
+
+**이 파일은 UI·게임 검수 후보이며 출시 검증 완료본이 아닙니다.** [PR220](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/220) 최종head5ac75333의 최초 [CI39729150932](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39729150932)는 Node22/24 각각44파일2,909개·스토어12·타입/두빌드가 성공했습니다. Squash main과 전체tree가 같습니다. 그러나 정확main 최초 [CI39729465596](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39729465596)은 Node24 원장8worker에서2,908성공/1실패, Node22는2,909·스토어12·타입/두빌드 성공입니다. worker0 command BEGIN의501.126ms BUSY5로 revision-conflict가7개 중6개였으며 적용1회 검사는 통과했습니다. 원인/잠금owner는 [#122 기록](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122#issuecomment-6333736093)에서 미확정입니다. 같은head 재실행이나 제한·기대 완화는 하지 않았습니다.
+
+100판/11장, 기존1–10 학습 유지·11–40 재조정·새60판의 회복/도전 배치·구40완주→41·100 저장/정원/최종 완료를 포함합니다. 카탈로그는 최종20seed×2정책×100판 표본의 정의와 전수 일치합니다. 교환만 쓰는 자동 정책의 후반 성공률은 사람 난이도·최적성이나 출시 밸런스 완료를 뜻하지 않습니다. 오늘의 핍 반응 확대·중복 소개 제거·정사각형 설정/특수 비율·꽃3종/작품3개·등불 위치·풍경20/40·체험500도 포함합니다.
+
+최종 testing38 파일의 320×640 KO/640×360 EN/390×844에서 보드8행·세 목표·페이지 스크롤 없음, 장 End키/100선택/재열기 현재 장 가시성을 확인했습니다. 최초 실화면에서 닫힌dialog 너비0 때문에 현재11장 탭이 화면 밖에 남아 showModal 뒤 가로 위치를 복구하는 실제 결함을 보완했고 UI371개·두빌드·독립검수·새head 최초CI로 확인했습니다. 최초eac CI39728992746은 이 실제 보완으로 취소됐으며 성공으로 합산하지 않습니다. 실제100번 교환은34→33이동/110점/낙엽8→7, 일반21번 복귀는30이동/0점/430코인/별10/노을 정원을 보존했습니다. 정원 첫 진입scrollTop0과 이미 보이는 무료 반응 반복75→75도 확인했습니다. 사람100판 완주·단말·실SDK 검증은 아닙니다.
+
+APK의웹38+빈cordova2/비웹536·기존v2인증서·appId/min24/target36·production dist/Android 웹 자산 복원을 독립 검수했습니다. 최종 Gradle은 clean+assemble만 실행했습니다. unit16(실질15)/lint오류0·경고15는 앞선63b 새실행을9fa와 같은 native/config/deps 및 압축해제 비웹536 전수SHA에 근거해 재사용하며 이번에 새 실행한 것으로 표현하지 않습니다. .env/키·billing-test.properties는 포함되지 않습니다.
+
+원문·동결·실화면·CI 실패와 진단은 Git 밖 `qa/content-100-20261022`, APK·전달 증빙은 `2026-10-22-34031f1`에 보존합니다. #73 실UMP/GMA·동의/연령·Play구매/복원/pending/환불·폰/청취·스토어, #122 원장 원인 추적은 미완료입니다. 개발자명/공개 지원·개인정보 호스팅·100판의 장기 재미와40이후 성장/재화 사용 흐름은 후속 검토입니다. AAB/공개배포/콘솔상품/실키env/최종믹스/자동 폰 테스트·새예약은 보류합니다. 아래9fa/63b/afb/오전 APK와 당시 검증 문구는100판 추가 이전 이력입니다.
+## 이전40판 main 검수 APK · 2026-10-22 오후 · #210 최종
 
 이번 사용자 검수용 최신 파일은 [Pawblossom-Puzzle-v0.1.7-2026-10-22-9fa15f0-debug.apk](https://drive.google.com/file/d/13dAbsmALhEHyLpNktoE6wB--JVrWvKvV/view)입니다. 게임 main `9fa15f096a85b439883bd3a17d4959f609f5b4c6`, 버전0.1.7/code8, 11,145,015바이트, SHA256 `c660f802dba6737a81967a04a96f7d36cb9e1a513bffb6aea61f3884fb4c9b81`입니다. 기존 작업 계정/테스트 폴더에 고유 APK·checksum을 추가하고 실제 재다운로드 크기·해시 일치를 확인했습니다. 기존 파일·공유 범위는 유지했으며 아래 afb/63b와 오전20ff는 중간/이전 전달 이력입니다.
 
