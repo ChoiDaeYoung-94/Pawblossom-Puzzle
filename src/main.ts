@@ -755,7 +755,7 @@ function enterCareDemo():boolean {
   const returnRoute=route as 'village'|'journal';
   const demo:SaveData=JSON.parse(JSON.stringify(save));
   careDemo={normalSave:save,returnRoute,chapter:selectedChapter,plot:selectedGardenPlot};careGeneration++;
-  demo.coins=400;demo.stars=10;demo.garden=0;demo.pip=freshPip();demo.gardenDesign=freshGardenDesign();save=demo;selectedGardenPlot=0;
+  demo.coins=500;demo.stars=10;demo.garden=0;demo.pip=freshPip();demo.gardenDesign=freshGardenDesign();save=demo;selectedGardenPlot=0;
   clearCareReaction();scene.cancelInput();renderViews();localize();updateWallet();syncActivity();
   document.querySelector<HTMLButtonElement>('#care-demo-exit-'+returnRoute)?.focus({preventScroll:true});
   return true;
