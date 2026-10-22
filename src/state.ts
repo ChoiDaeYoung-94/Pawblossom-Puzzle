@@ -2,13 +2,14 @@ import type { Language } from './i18n';
 import { LEVEL_COUNT, levels, type Level } from './levels';
 import { BoardEngine, type BoardSnapshot, type Cell, type Special } from './core';
 import { validatePip, type PipCare } from './pipCare';
+import { validateGardenDesign, type GardenDesign } from './gardenDesign';
 export interface RoundCheckpoint extends BoardSnapshot {
   schema: 1; levelId: number; levelSignature: string; moves: number; score: number;
   collected: number[]; shuffles: number; clearedLeaves: number;
   paidShuffleUsed?:boolean; continueUsed?:boolean;
   clearedCrates?:number;
 }
-export interface SaveData { version: 1; language: Language; highestLevel: number; completed: number[]; stars: number; coins: number; garden: number; music: boolean; sfx: boolean; tutorialSeen: boolean; pip?:PipCare; inProgress?: RoundCheckpoint; }
+export interface SaveData { version: 1; language: Language; highestLevel: number; completed: number[]; stars: number; coins: number; garden: number; music: boolean; sfx: boolean; tutorialSeen: boolean; pip?:PipCare; gardenDesign?:GardenDesign; inProgress?: RoundCheckpoint; }
 export const SAVE_KEY = 'pawblossom.save.v1';
 export const BACKUP_KEY = `${SAVE_KEY}.backup`;
 export const RESET_KEY = `${SAVE_KEY}.reset`;
@@ -78,6 +79,8 @@ function normalizeSave(x:unknown,backup=false):SaveData|undefined {
     // 구형 저장은 핍 필드 없이 그대로 보존합니다. 첫 육성 때 기본 상태에서 확장합니다.
     const pip=x.pip===undefined?undefined:validatePip(x.pip);
     if(x.pip!==undefined&&!pip)return;
+    const gardenDesign=x.gardenDesign===undefined?undefined:validateGardenDesign(x.gardenDesign,x.garden,pip??{growth:0,affection:0});
+    if(x.gardenDesign!==undefined&&!gardenDesign)return;
     const completed:number[]=Array.isArray(x.completed)? [...new Set<number>(x.completed.slice(0,LEVEL_COUNT*4).filter((n: unknown): n is number => typeof n==='number'&&Number.isInteger(n)&&n>=1&&n<=LEVEL_COUNT))]:[];
     // 기존 마지막 스테이지까지 완료한 저장도 새 콘텐츠의 첫 미완료 스테이지로 이어집니다.
     let frontier=1;while(frontier<LEVEL_COUNT&&completed.includes(frontier))frontier++;
@@ -86,7 +89,7 @@ function normalizeSave(x:unknown,backup=false):SaveData|undefined {
     if(backup&&(completed.length!==x.completed.length||!x.completed.every(n=>integer(n,LEVEL_COUNT)&&n>=1)||(x.inProgress!==undefined&&!inProgress)))return;
     return {version:1,language:x.language==='en'?'en':'ko', highestLevel,completed,
       stars:safeNumber(x.stars,0,LEVEL_COUNT), coins:safeNumber(x.coins,0,1000000), garden:safeNumber(x.garden,0,5),
-      music:x.music!==false,sfx:x.sfx!==false,tutorialSeen:typeof x.tutorialSeen==='boolean'?x.tutorialSeen:completed.length>0,...(pip?{pip}:{}),...(inProgress?{inProgress}:{})};
+      music:x.music!==false,sfx:x.sfx!==false,tutorialSeen:typeof x.tutorialSeen==='boolean'?x.tutorialSeen:completed.length>0,...(pip?{pip}:{}),...(gardenDesign?{gardenDesign}:{}),...(inProgress?{inProgress}:{})};
 }
 type LoadState='new'|'loaded'|'recovered'|'corrupt'|'unsupported'|'read-error'|'conflict';
 type WriteState='idle'|'saved'|'blocked'|'failed'|'backup-failed'|'reset-failed';
