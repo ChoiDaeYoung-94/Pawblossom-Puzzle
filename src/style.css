@@ -108,6 +108,7 @@ html:lang(ko) h1,html:lang(ko) h2,html:lang(ko) h3,html:lang(ko) .moves-box stro
 #puzzle-view:has(#game-canvas[data-keyboard="true"]:focus) #board-keyboard-help{display:inline}
 /* 스테이지는 10개 단위로 선택하며 잠금과 보상 기록은 그대로 유지합니다. */
 .chapter-tabs{display:flex;gap:6px;margin:12px 0}.chapter-tabs button{flex:1;min-width:0;min-height:44px;padding:7px 3px;border:1px solid #cbd7bd;border-radius:11px;background:#f1f5e9;color:#506849}.chapter-tabs button[aria-selected="true"]{background:#dfeaca;border-color:#789363;color:#3f623b}.chapter-tabs strong,.chapter-tabs small{display:block}.chapter-tabs strong{font-size:12px}.chapter-tabs small{font-size:10px;margin-top:3px}.chapter-tabs button:focus-visible{outline:3px solid #80582f;outline-offset:2px}
+.chapter-tabs{overflow-x:auto;overscroll-behavior-x:contain;padding-bottom:4px}.chapter-tabs button{flex:0 0 96px;min-width:96px}
 @media(max-width:360px){.test-picker{padding:10px 14px}.test-picker>p{margin-bottom:8px}.test-level-grid{gap:6px;margin-bottom:8px}.test-stage{padding:6px 4px;min-height:44px}.test-picker .chapter-tabs{margin:8px 0}}
 @media(orientation:landscape) and (max-height:600px){.test-picker{padding:10px 16px}.test-picker h2{font-size:18px;margin-bottom:6px}.test-picker>p{font-size:11px;line-height:1.4;margin-bottom:6px}.test-picker .chapter-tabs{margin:6px 0}.test-picker .chapter-tabs button{min-height:40px;padding:4px}.test-picker>.primary{min-height:40px;padding:8px}.test-picker>.text-button{min-height:36px;padding:8px}}
 
@@ -350,3 +351,6 @@ main.workspace>.game-panel{flex:1}
 .garden-project{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px 0;border-top:1px solid #e0e6d3}.garden-project strong{font-size:12px}.garden-project p{font-size:10px;line-height:1.6;margin-top:3px;overflow-wrap:anywhere;color:#53634b}.garden-project button{min-width:64px;max-width:100px;min-height:44px;padding:7px;border:1px solid #c2d0b3;border-radius:10px;background:#eaf1dd;color:#3f623b;font-size:11px;line-height:1.4;overflow-wrap:anywhere}.garden-project button[aria-pressed="true"]{border-color:#527957;background:#dce9cb}
 .pip-project{margin:8px 0 10px;padding:9px;border:1px solid #cbd9bd;border-radius:12px;background:#eef4e4;text-align:left}.pip-project strong{font-size:12px}.pip-project p{font-size:10px;line-height:1.6;margin:4px 0;overflow-wrap:anywhere}.pip-project button{width:100%;min-height:44px;font-size:12px;padding:8px;color:#3f623b;text-decoration:underline;text-underline-offset:3px}
 @media(max-width:359px){.garden-editor{padding:9px}.garden-plots{gap:3px}.garden-plots svg{width:20px;height:24px}.garden-project{gap:6px}.garden-project button{max-width:82px}}
+
+/* 11개 장도 시험 가로 화면에서44px 터치 높이를 유지합니다. */
+.test-picker .chapter-tabs button{min-height:44px}

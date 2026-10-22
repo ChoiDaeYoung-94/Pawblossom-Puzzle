@@ -465,13 +465,19 @@ function chapterTabs(selected:number,test=false){
   const prefix=test?'test-':'';
   return `<div class="chapter-tabs" role="tablist" aria-label="${text('chapterSelect')}">${chapters.map(chapter=>`<button id="${prefix}chapter-${chapter.id}" data-${prefix}chapter="${chapter.id}" role="tab" aria-selected="${chapter.id===selected}" aria-controls="${prefix}chapter-levels" tabindex="${chapter.id===selected?0:-1}"><strong>${chapter.first}–${chapter.last}</strong><small>${text(chapter.title)}</small></button>`).join('')}</div>`;
 }
+function revealChapterTab(button:HTMLElement){
+  const strip=button.parentElement;if(!strip)return;
+  const bounds=strip.getBoundingClientRect(),tab=button.getBoundingClientRect();if(bounds.width<=0)return;
+  if(tab.left<bounds.left)strip.scrollLeft-=bounds.left-tab.left;else if(tab.right>bounds.right)strip.scrollLeft+=tab.right-bounds.right;
+}
 function bindChapterTabs(test=false){
   const prefix=test?'test-':'';
   document.querySelectorAll<HTMLButtonElement>(`[data-${prefix}chapter]`).forEach(button=>{
-    const select=(id:number)=>{if(test){selectedTestChapter=id;renderTestPicker();}else{selectedChapter=id;renderViews();}$(`#${prefix}chapter-${id}`).focus();};
+    const select=(id:number)=>{if(test){selectedTestChapter=id;renderTestPicker();}else{selectedChapter=id;renderViews();}const target=$(`#${prefix}chapter-${id}`);target.focus({preventScroll:true});revealChapterTab(target);};
     button.onclick=()=>select(Number(test?button.dataset.testChapter:button.dataset.chapter));
     button.onkeydown=event=>{const index=chapters.findIndex(chapter=>chapter.id===Number(test?button.dataset.testChapter:button.dataset.chapter));const next=event.key==='ArrowRight'?(index+1)%chapters.length:event.key==='ArrowLeft'?(index+chapters.length-1)%chapters.length:event.key==='Home'?0:event.key==='End'?chapters.length-1:-1;if(next>=0){event.preventDefault();select(chapters[next].id);}};
   });
+  const selected=document.querySelector<HTMLElement>(`#${prefix}chapter-${test?selectedTestChapter:selectedChapter}`);if(selected)revealChapterTab(selected);
 }
 function renderTestPicker(){
   if(!TEST_TOOLS_ENABLED)return;

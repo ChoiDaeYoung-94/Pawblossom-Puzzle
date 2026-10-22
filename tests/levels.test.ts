@@ -20,12 +20,28 @@ describe('출시 전 레벨 데이터 점검',()=>{
     for(const level of levels){
       expect(Number.isInteger(level.moves)&&level.moves>0).toBe(true);
       expect(level.goals.length).toBeGreaterThan(0);
-      expect(level.goals.length+(level.leaves?.length?1:0)).toBeLessThanOrEqual(3);
+      expect(level.goals.length+(level.leaves?.length?1:0)+(level.crates?.length?1:0)).toBeLessThanOrEqual(3);
       expect(new Set(level.goals.map(goal=>goal.kind)).size).toBe(level.goals.length);
       for(const goal of level.goals){
         expect(Number.isInteger(goal.kind)&&goal.kind>=0&&goal.kind<6).toBe(true);
         expect(Number.isInteger(goal.count)&&goal.count>0).toBe(true);
       }
+    }
+  });
+  it('100판/11장에 활성·비중복 장애물과 생성 공간을 보장하고 새60판은 명시된 파형을 가집니다',()=>{
+    expect(LEVEL_COUNT).toBe(100);expect(chapters).toHaveLength(11);expect(new Set(levels.slice(40).map(l=>JSON.stringify({...l,id:0}))).size).toBe(60);
+    for(const level of levels){
+      const active=(r:number,c:number)=>r>=0&&r<8&&c>=0&&c<8&&level.mask?.[r][c]!==false;
+      const crates=new Set((level.crates??[]).map(p=>`${p.row},${p.col}`)),leaves=new Set((level.leaves??[]).map(p=>`${p.row},${p.col}`));
+      expect(crates.size).toBe(level.crates?.length??0);expect(leaves.size).toBe(level.leaves?.length??0);
+      for(const p of [...level.leaves??[],...level.crates??[]])expect(active(p.row,p.col)).toBe(true);
+      for(const p of level.leaves??[])expect(crates.has(`${p.row},${p.col}`)).toBe(false);
+      const playable=(r:number,c:number)=>active(r,c)&&!crates.has(`${r},${c}`),cells=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({r,c}))).flat().filter(p=>playable(p.r,p.c)),queue=[cells[0]],seen=new Set([`${cells[0].r},${cells[0].c}`]);
+      for(let i=0;i<queue.length;i++)for(const [dr,dc] of [[0,1],[0,-1],[1,0],[-1,0]]){const r=queue[i].r+dr,c=queue[i].c+dc,key=`${r},${c}`;if(playable(r,c)&&!seen.has(key)){seen.add(key);queue.push({r,c});}}
+      expect(seen.size).toBe(cells.length);
+      const window=(h:number,w:number)=>Array.from({length:9-h},(_,r)=>Array.from({length:9-w},(_,c)=>Array.from({length:h},(_,dy)=>Array.from({length:w},(_,dx)=>active(r+dy,c+dx)&&!crates.has(`${r+dy},${c+dx}`))).flat().every(Boolean))).flat().some(Boolean);
+      expect(level.crates?window(2,3)||window(3,2):window(3,3)).toBe(true);
+      for(const seed of [0,19]){const engine=new BoardEngine(8,8,seed===0?()=>0:seededRng(seed),undefined,2,level.mask,level.crates);engine.setLeaves(level.leaves??[]);expect(engine.findMatches()).toEqual([]);expect(engine.hasMoves()).toBe(true);}
     }
   });
 });

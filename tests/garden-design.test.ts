@@ -1,3 +1,4 @@
+import {LEVEL_COUNT} from '../src/levels';
 import {describe,it,expect} from 'vitest';
 import {createHash} from 'node:crypto';
 import {freshGardenDesign,gardenDesignFor,gardenProjects,gardenThemes,projectReady,themeReady,prepareGardenAction,validateGardenDesign,flowerDiversity,type GardenDesign} from '../src/gardenDesign';
@@ -29,6 +30,8 @@ describe('20·40 고유 완료의 영구 풍경',()=>{
     expect(validateGardenDesign({...freshGardenDesign(),ownedThemes:['sunset'],theme:'sunset'},5,grown,19)).toBeUndefined();
     expect(validateGardenDesign({...freshGardenDesign(),ownedThemes:['starlight'],theme:'starlight'},5,grown,39)).toBeUndefined();
     expect(validateGardenDesign(freshGardenDesign(),5,grown,40)).not.toHaveProperty('ownedThemes');expect(validateGardenDesign(freshGardenDesign(),5,grown,40)).not.toHaveProperty('theme');
+    expect(validateGardenDesign({...freshGardenDesign(),ownedThemes:['sunset','starlight'],theme:'starlight'},5,grown,100)?.theme).toBe('starlight');expect(validateGardenDesign(freshGardenDesign(),5,grown,LEVEL_COUNT+1)).toBeUndefined();
+    for(const count of [41,100])expect(prepareGardenAction(0,5,grown,{...freshGardenDesign(),ownedThemes:['sunset','starlight'],theme:'starlight'},{kind:'flower',plot:0,flower:'daisy'},count)?.design.theme).toBe('starlight');
     expect(prepareGardenAction(80,5,grown,undefined,{kind:'selectTheme',theme:'sunset'},40)).toBeUndefined();
   });
   it('기본 초원12출력을 변경 전 SHA로 유지하고 풍경만 바꿔 꽃·장식·위치를 보존합니다',()=>{
@@ -128,8 +131,8 @@ describe('선택 필드와 기존 저장 보호',()=>{
   });
   it('풍경 소유는 completed 정규화 뒤 고유 범위 개수를 검증하고 구 필드를 삽입하지 않습니다',()=>{
     const base={...legacy,highestLevel:40,garden:5,coins:200,pip:{...grown,owned:[],equipped:'none'}},theme={...freshGardenDesign(),ownedThemes:['sunset'],theme:'sunset'};
-    for(const completed of [Array(20).fill(1),[...Array.from({length:19},(_,i)=>i+1),0,41,1.5,'20']]){const h=setup({...base,completed,gardenDesign:theme},legacy),raw=h.disk.get(SAVE_KEY);expect(h.store.load()).toEqual(legacy);expect(h.store.status.load).toBe('recovered');expect(h.disk.get(SAVE_KEY)).toBe(raw);}
-    const h=setup({...base,completed:[...Array.from({length:20},(_,i)=>i+1),1,2,41],gardenDesign:theme}),save=h.store.load();expect(save.completed).toHaveLength(20);expect(save.gardenDesign?.theme).toBe('sunset');expect(h.writes()).toBe(0);expect(h.store.save(save)).toBe(true);expect(h.store.load().gardenDesign?.ownedThemes).toEqual(['sunset']);
+    for(const completed of [Array(20).fill(1),[...Array.from({length:19},(_,i)=>i+1),0,LEVEL_COUNT+1,1.5,'20']]){const h=setup({...base,completed,gardenDesign:theme},legacy),raw=h.disk.get(SAVE_KEY);expect(h.store.load()).toEqual(legacy);expect(h.store.status.load).toBe('recovered');expect(h.disk.get(SAVE_KEY)).toBe(raw);}
+    const h=setup({...base,completed:[...Array.from({length:20},(_,i)=>i+1),1,2,LEVEL_COUNT+1],gardenDesign:theme}),save=h.store.load();expect(save.completed).toHaveLength(20);expect(save.gardenDesign?.theme).toBe('sunset');expect(h.writes()).toBe(0);expect(h.store.save(save)).toBe(true);expect(h.store.load().gardenDesign?.ownedThemes).toEqual(['sunset']);
     const old=setup({...base,completed:Array.from({length:40},(_,i)=>i+1),gardenDesign:freshGardenDesign()}),oldSave=old.store.load();expect(oldSave.gardenDesign).not.toHaveProperty('ownedThemes');expect(oldSave.gardenDesign).not.toHaveProperty('theme');expect(old.store.save(oldSave)).toBe(true);expect(old.store.load().gardenDesign).not.toHaveProperty('theme');
     const stars=setup({...base,completed:Array.from({length:40},(_,i)=>i+1),gardenDesign:{...theme,ownedThemes:['sunset','starlight'],theme:'starlight'}});expect(stars.store.load().gardenDesign?.theme).toBe('starlight');
   });

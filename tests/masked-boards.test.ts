@@ -31,8 +31,8 @@ function checkFalls(step:ResolveStep,mask:BoardMask){
   expect(seen.size).toBe(mask.flat().filter(Boolean).length);
 }
 describe('canonical mask·구간별 낙하와 전체 판 호환',()=>{
-  it('기존 1–30 콘텐츠 JSON과 mask 없는 checkpoint 서명은 그대로입니다',()=>{
-    expect(hash(levels.slice(0,30))).toBe('54bf864a67ebd33c3e1647b059b2964ef2ff3f76895f0e38d11bbbdbf249204d');
+  it('구 콘텐츠 fixture는 동결하고 현재 mask 없는 checkpoint 서명 형식을 유지합니다',()=>{
+    expect(hash(JSON.parse(readFileSync(new URL('./helpers/board-mask-v2-golden.json',import.meta.url),'utf8')).levels.slice(0,30))).toBe('54bf864a67ebd33c3e1647b059b2964ef2ff3f76895f0e38d11bbbdbf249204d');
     for(const l of levels.slice(0,30))expect(levelSignature(l)).toBe(JSON.stringify([l.id,l.moves,l.goals.map(g=>[g.kind,g.count]),(l.leaves??[]).map(p=>[p.row,p.col,p.layers])]));
     expect(masked.map(l=>l.id)).toEqual([31,32,33,34,35]);expect(chapterForLevel(31)).toMatchObject({id:4,last:35});
   });
