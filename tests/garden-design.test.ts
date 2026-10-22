@@ -3,9 +3,52 @@ import {describe,it,expect} from 'vitest';
 import {createHash} from 'node:crypto';
 import {freshGardenDesign,gardenDesignFor,gardenProjects,gardenThemes,projectReady,themeReady,prepareGardenAction,validateGardenDesign,flowerDiversity,type GardenDesign} from '../src/gardenDesign';
 import {gardenArt,flowerArt} from '../src/GardenArt';
+import {freshGardenSpaces,gardenSpacesFor,gardenSpaceSpecs,prepareSpaceAction,previewSpaceAction,validateGardenSpaces} from '../src/gardenSpaces';
+import {gardenSpaceArt} from '../src/GardenSpaceArt';
 import {SaveStore,SAVE_KEY,BACKUP_KEY} from '../src/state';
 const grown={growth:100,affection:100};
 const diverse=():GardenDesign=>({...freshGardenDesign(),flowers:['meadow','daisy','violet','meadow','meadow']});
+
+describe('50–100 고유 완료의 세 공간과 별/코인 분리',()=>{
+  it('여섯 단계는 순서대로84별, 선택 스타일은1080코인 한 번이며 무료 전환·깊은 복제를 유지합니다',()=>{
+    let stars=100,coins=1600,spaces=freshGardenSpaces();const original=JSON.stringify(spaces);
+    for(const spec of gardenSpaceSpecs){
+      for(const clears of spec.clears){
+        const before=JSON.stringify(spaces),action={kind:'restore',space:spec.id} as const;
+        expect(previewSpaceAction(spaces,action,clears-1)?.costStars).toBe(spec.stars);
+        expect(prepareSpaceAction(stars,coins,spaces,action,clears-1)).toBeUndefined();expect(prepareSpaceAction(spec.stars-1,coins,spaces,action,clears)).toBeUndefined();
+        const result=prepareSpaceAction(stars,coins,spaces,action,clears)!;expect(result.costCoins).toBe(0);expect(result.costStars).toBe(spec.stars);expect(JSON.stringify(spaces)).toBe(before);
+        ({stars,coins,spaces}=result);
+      }
+      expect(prepareSpaceAction(stars,coins,spaces,{kind:'restore',space:spec.id},100)).toBeUndefined();
+      expect(prepareSpaceAction(stars,spec.altCoins-1,spaces,{kind:'style',space:spec.id,style:'alt'},100)).toBeUndefined();
+      const result=prepareSpaceAction(stars,coins,spaces,{kind:'style',space:spec.id,style:'alt'},100)!;({stars,coins,spaces}=result);expect(result.costCoins).toBe(spec.altCoins);expect(result.costStars).toBe(0);
+      expect(prepareSpaceAction(stars,coins,spaces,{kind:'style',space:spec.id,style:'alt'},100)).toBeUndefined();
+      for(const style of ['base','alt'] as const){const switched=prepareSpaceAction(stars,coins,spaces,{kind:'style',space:spec.id,style},100)!;expect(switched.costCoins).toBe(0);spaces=switched.spaces;}
+    }
+    expect({stars,coins}).toEqual({stars:16,coins:520});expect(JSON.stringify(freshGardenSpaces())).toBe(original);
+    const design={...freshGardenDesign(),spaces},copy=gardenDesignFor(design);copy.spaces!.pond.phase=0;expect(design.spaces.pond.phase).toBe(2);
+    expect(gardenArt(5,false,design)).toBe(gardenArt(5,false,freshGardenDesign()));
+    const legacyAction=prepareGardenAction(coins,5,grown,design,{kind:'flower',plot:0,flower:'daisy'},100)!;expect(legacyAction.design.spaces).toEqual(spaces);expect(legacyAction.design.spaces).not.toBe(spaces);
+    expect(gardenSpacesFor(spaces).pond).not.toBe(spaces.pond);
+  });
+  it('미소유/미완성/손상/추가 키/빠진 셀/완료 경계를 엄격 거절하고 optional 부재는 보존합니다',()=>{
+    const spaces=freshGardenSpaces();
+    for(const value of [undefined,null,[],{},Array(3),{...spaces,extra:{}},{...spaces,pond:undefined},{...spaces,pond:{phase:1,altOwned:false,style:'base',extra:0}},...[-1,.5,3,NaN,undefined,null].map(phase=>({...spaces,pond:{phase,altOwned:false,style:'base'}})),{...spaces,pond:{phase:0,altOwned:true,style:'base'}},{...spaces,pond:{phase:2,altOwned:false,style:'alt'}},{...spaces,pond:{phase:1,altOwned:false,style:'alt'}}])expect(validateGardenSpaces(value,100)).toBeUndefined();
+    for(const count of [-1,.5,NaN,LEVEL_COUNT+1])expect(validateGardenSpaces(spaces,count)).toBeUndefined();
+    const completed={...spaces,pond:{phase:2 as const,altOwned:true,style:'alt' as const}};expect(validateGardenSpaces(completed,59)).toBeUndefined();expect(validateGardenSpaces(completed,60)).toEqual(completed);
+    expect(validateGardenDesign({...freshGardenDesign(),spaces:undefined},5,grown,100)).toBeUndefined();expect(validateGardenDesign(freshGardenDesign(),5,grown,100)).not.toHaveProperty('spaces');
+    expect(prepareSpaceAction(100,1600,undefined,{kind:'style',space:'pond',style:'alt'},100)).toBeUndefined();
+  });
+  it('새 전용 장면은0/1/2와 별도 구조 alt를 크게 그리며 기존 꽃밭과 겹치지 않습니다',()=>{
+    for(const spec of gardenSpaceSpecs){
+      const images=[0,1,2].map(phase=>gardenSpaceArt(spec.id,{phase:phase as 0|1|2,altOwned:false,style:'base'}));expect(new Set(images).size).toBe(3);
+      const alt=gardenSpaceArt(spec.id,{phase:2,altOwned:true,style:'alt'});expect(alt).not.toBe(images[2]);expect(alt).toContain('viewBox="0 0 480 280"');expect(alt).not.toContain('garden-plot');expect(alt).not.toMatch(/<image|<animate|<filter/);
+      expect(gardenSpaceArt(spec.id,{phase:2,altOwned:true,style:'alt'},'starlight','preview-space')).toContain('id="preview-space-sky"');
+      expect(gardenSpaceArt(spec.id,{phase:2,altOwned:true,style:'alt'},'sunset')).toContain('#f5d2b0');
+    }
+  });
+});
 
 describe('20·40 고유 완료의 영구 풍경',()=>{
   it('완료·꽃밭·성장·친밀도 경계와80코인 일회 소유/무료 전환을 검증하고 기존 행동에도 context를 보존합니다',()=>{
@@ -117,6 +160,16 @@ describe('선택하는 꽃과 영구 정원 작품',()=>{
 describe('선택 필드와 기존 저장 보호',()=>{
   const legacy={version:1,language:'ko',highestLevel:3,completed:[1,2],stars:0,coins:70,garden:1,music:false,sfx:true,tutorialSeen:true};
   const setup=(primary:unknown,backup?:unknown)=>{const disk=new Map([[SAVE_KEY,JSON.stringify(primary)],...(backup?[[BACKUP_KEY,JSON.stringify(backup)]]:[])] as [string,string][]);let writes=0;const store=new SaveStore(()=>({getItem:key=>disk.get(key)??null,setItem:(key,value)=>{writes++;disk.set(key,value);},removeItem:key=>{disk.delete(key);}}));return {store,disk,writes:()=>writes};};
+  it('새 공간은 실제 고유 완료로 검증하고 구 저장 무삽입·정상 재저장·손상 backup 분리를 보존합니다',()=>{
+    const spaces=freshGardenSpaces();spaces.pond={phase:1,altOwned:false,style:'base'};
+    const source={...legacy,garden:5,stars:38,coins:100,completed:Array.from({length:50},(_,i)=>i+1),highestLevel:51,pip:{...grown,owned:[],equipped:'none'},gardenDesign:{...freshGardenDesign(),spaces}};
+    const h=setup(source),save=h.store.load();expect(save.gardenDesign?.spaces).toEqual(spaces);expect(h.writes()).toBe(0);expect(h.store.save(save)).toBe(true);expect(h.store.load().gardenDesign?.spaces).toEqual(spaces);
+    for(const completed of [Array(50).fill(1),[...Array.from({length:49},(_,i)=>i+1),0,LEVEL_COUNT+1,1.5,'50']]){
+      const bad={...source,completed},broken=setup(bad,legacy),raw=broken.disk.get(SAVE_KEY);expect(broken.store.load()).toEqual(legacy);expect(broken.store.status.load).toBe('recovered');expect(broken.disk.get(SAVE_KEY)).toBe(raw);expect(broken.store.save(bad as never)).toBe(false);
+    }
+    const old=setup({...legacy,gardenDesign:freshGardenDesign()}),oldSave=old.store.load();gardenSpacesFor(oldSave.gardenDesign?.spaces);expect(oldSave.gardenDesign).not.toHaveProperty('spaces');expect(old.store.save(oldSave)).toBe(true);expect(old.store.load().gardenDesign).not.toHaveProperty('spaces');
+    const corrupt={...source,gardenDesign:{...source.gardenDesign,spaces:{...spaces,pond:{phase:2,altOwned:true,style:'alt'}}}};const recovery=setup(null,corrupt);expect(recovery.store.load().completed).toEqual([]);expect(recovery.store.status.load).toBe('corrupt');
+  });
   it('구 저장과 백업은 로드/렌더/재저장만으로 gardenDesign을 삽입하지 않습니다',()=>{
     for(const recover of [false,true]){const h=setup(recover?null:legacy,recover?legacy:undefined),raw=h.disk.get(SAVE_KEY),save=h.store.load();expect(save).toEqual(legacy);gardenArt(save.garden,false,save.gardenDesign);expect(h.writes()).toBe(0);expect(h.disk.get(SAVE_KEY)).toBe(raw);expect(h.store.save(save)).toBe(true);expect(JSON.parse(h.disk.get(SAVE_KEY)!)).not.toHaveProperty('gardenDesign');}
   });
