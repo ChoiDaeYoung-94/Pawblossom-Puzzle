@@ -14,6 +14,7 @@ import {advanceState,publicState,startState,type RoundState} from '../server/gam
 import {PlayFabSessionAuthenticator} from '../server/auth/playfabSession';
 import {createTrace,step,asyncStep,elapsed,workerRow,observeWorker,receiveWorker,terminateWorker,workerFailure,safeRows,safeError,withSqliteDiagnostics,projectTrace,type LedgerTrace} from './helpers/ledgerDiagnostics';
 import {retryLedgerOpen} from './helpers/ledgerOpenRetry';
+import {createSchedulerProbe,projectScheduling,unavailableScheduling,type SchedulerProvider,type SchedulerProbe} from './helpers/ledgerSchedulerProbe';
 const key=new Uint8Array(32).fill(67),epoch=1_792_233_000_000,owner={ownerId:'synthetic-round-owner-private'};
 const dirs:string[]=[],ledgers:RoundLedger[]=[],dbs:DatabaseSync[]=[],workers:Worker[]=[];
 const workerUrl=new URL('./helpers/round-ledger-worker.mjs',import.meta.url);
@@ -33,7 +34,7 @@ function command(ledger:RoundLedger,s:RoundSnapshot,extra:Partial<RoundCommandRe
 }
 function apply(ledger:RoundLedger,r:RoundCommandRequest){const v=ledger.command(owner,r);if(v.kind!=='command-result')throw new Error('fixture-command:'+JSON.stringify(v));return v;}
 function invalid(s:RoundSnapshot){const e=new BoardEngine(8,8,()=>{throw new Error();},s.state as any),legal=e.legalMoves();for(let r=0;r<8;r++)for(let c=0;c<7;c++){const a={row:r,col:c},b={row:r,col:c+1};if(!legal.some(m=>JSON.stringify(m)===JSON.stringify({a,b})))return {type:'swap' as const,a,b};}throw new Error();}
-function data(path:string,action:string,request:unknown,extra:{retryConstructorBusy?:boolean;notifyConstructorBusy?:boolean;constructorReleaseGate?:SharedArrayBuffer}={}){return {path,action,request,key:[...key],now:epoch,owner,...extra};}
+function data(path:string,action:string,request:unknown,extra:{retryConstructorBusy?:boolean;notifyConstructorBusy?:boolean;constructorReleaseGate?:SharedArrayBuffer;schedulerProbe?:boolean}={}){return {path,action,request,key:[...key],now:epoch,owner,...extra};}
 async function child(input:ReturnType<typeof data>){
   // 기존 엔진의 parameter property는 유지하며 Node22/24 타입 변환으로 실행합니다.
   const process=fork(workerUrl,[],{execArgv:['--experimental-transform-types'],stdio:['ignore','ignore','ignore','ipc']});
@@ -73,6 +74,100 @@ afterEach(async()=>{
   dbs.splice(0).forEach(d=>{try{d.exec('ROLLBACK');}catch{}d.close();});ledgers.splice(0).forEach(l=>l.close());
   dirs.splice(0).forEach(p=>{const root=join(tmpdir(),'pawblossom-round-');if(!p.startsWith(root))throw new Error('unsafe-cleanup');rmSync(p,{recursive:true,force:true});});
 });
+describe('Round 검사 전용 scheduler probe 합성 경계',()=>{
+  function sample(options:{sched?:unknown[];cpu?:unknown[];outer?:number[];inner?:[number,number];provider?:Partial<SchedulerProvider>}={}){
+    let s=0,c=0,t=0;const provider:SchedulerProvider={platform:'linux',readSysctl:vi.fn(()=> '0\n'),readSched:vi.fn(()=> (options.sched??['1000000 1000000 10\n','51000000 6000000 12\n'])[s++]),threadCpu:vi.fn(()=> (options.cpu??[{user:1000,system:2000},{user:3000,system:5000}])[c++]),clock:vi.fn(()=> (options.outer??[0,30])[t++]),...options.provider};
+    const probe=createSchedulerProbe(provider),baseline=probe.before(),inner=options.inner??[10,20];return {probe,provider,result:probe.after(baseline,{startedAtProcessMs:inner[0],finishedAtProcessMs:inner[1]})};
+  }
+  it('sysctl0도 유효하며 넓은 E/P와 runtime 갱신 지연을 CPU·native wall과 혼동하지 않습니다',()=>{
+    const {probe,provider,result}=sample();expect(probe.summary).toEqual({mode:'linux-thread-v1',platform:'linux',schedSysctl:'0'});expect(provider.readSysctl).toHaveBeenCalledOnce();
+    expect(result).toEqual({cpuStatus:'ok',schedStatus:'ok',windowStatus:'ok',envelopeMs:30,outsideMs:20,cpuUserMs:2,cpuSystemMs:3,schedRuntimeMs:50,runqueueMs:5,timeslices:2});
+    expect(Math.max(0,result.runqueueMs!-result.outsideMs!)).toBe(0);
+    const narrow=sample({outer:[0,100],inner:[10,90],sched:['1 1 1','2 50000001 2']}).result;
+    expect(narrow).toMatchObject({windowStatus:'ok',envelopeMs:100,outsideMs:20,runqueueMs:50});expect(Math.max(0,narrow.runqueueMs!-narrow.outsideMs!)).toBe(30);
+    expect(result).not.toHaveProperty('blockedMs');expect(result).not.toHaveProperty('nativeWaitMs');
+  });
+  it.each(['','1 2','1 2 3 4','-1 2 3','1.5 2 3','1e2 2 3','1 2 3\n\n','1 2 3\r\n',' 1 2 3','1 2 3 ','18446744073709551616 2 3',1,{}])('잘못된 schedstat %j는 원문 없이 invalid입니다',value=>{
+    const result=sample({sched:['1 2 3',value]}).result;expect(result.schedStatus).toBe('invalid');expect([result.schedRuntimeMs,result.runqueueMs,result.timeslices]).toEqual([null,null,null]);expect(result.cpuStatus).toBe('ok');
+  });
+  it('rq delta0은 valid이고 전체0·missing·read-failed·비단조는 독립된 사유입니다',()=>{
+    expect(sample({sched:['100 200 3','100 200 3']}).result).toMatchObject({schedStatus:'ok',runqueueMs:0,schedRuntimeMs:0,timeslices:0});
+    for(const sched of [['0 0 0','1 1 1'],['1 1 1','0 0 0']])expect(sample({sched}).result.schedStatus).toBe('all-zero');
+    expect(sample({sched:['1 2 3',undefined]}).result.schedStatus).toBe('missing');
+    for(const after of ['0 2 3','1 1 3','1 2 2'])expect(sample({sched:['1 2 3',after]}).result.schedStatus).toBe('nonmonotonic');
+    for(const [code,expected] of [['ENOENT','missing'],['EACCES','read-failed']])expect(sample({provider:{readSched:()=>{throw Object.assign(new Error('synthetic-scheduler-private'),{code});}}}).result).toMatchObject({schedStatus:expected,cpuStatus:'ok'});
+  });
+  it('큰 누적ns는 BigInt 차감 뒤 작은delta만 변환하며 과대한 delta는 무효입니다',()=>{
+    const result=sample({sched:['18446744073709551600 18446744073709551600 10','18446744073709551601 18446744073709551601 11']}).result;
+    expect(result).toMatchObject({schedStatus:'ok',schedRuntimeMs:.000001,runqueueMs:.000001,timeslices:1});expect(()=>JSON.stringify(result)).not.toThrow();
+    expect(sample({sched:['1 1 1','9007199254740993 2 2']}).result.schedStatus).toBe('invalid');
+  });
+  it.each([null,undefined,{user:-1,system:0},{user:1.1,system:0},{user:NaN,system:0},{user:Infinity,system:0},{user:1,system:1}])('CPU %j 누락/불량/역행은 sched와 분리합니다',cpu=>{
+    const result=sample({cpu:[{user:1000,system:2000},cpu]}).result;expect(result.cpuStatus).toBe(cpu===null||cpu===undefined?'missing':'invalid');expect([result.cpuUserMs,result.cpuSystemMs]).toEqual([null,null]);expect(result.schedStatus).toBe('ok');
+  });
+  it('CPU API 부재·읽기실패와 sysctl 읽기실패는 대체 CPU나 가짜0을 만들지 않습니다',()=>{
+    expect(sample({provider:{threadCpu:undefined,readSysctl:()=>{throw Error('synthetic-scheduler-private');}}}).result).toMatchObject({cpuStatus:'unsupported',cpuUserMs:null,schedStatus:'ok'});
+    expect(sample({provider:{threadCpu:()=>{throw Error('synthetic-scheduler-private');}}}).result).toMatchObject({cpuStatus:'read-failed',cpuUserMs:null,schedStatus:'ok'});
+  });
+  it.each([{outer:[20,10]},{outer:[NaN,30]},{outer:[0,Infinity]},{outer:[11,30]},{outer:[0,19]},{outer:[0,30],inner:[20,10]}])('시계·포함관계 오류 %j를 clamp하지 않습니다',options=>{
+    const result=sample(options as {outer:number[];inner?:[number,number]}).result;expect(result.windowStatus).toBe('invalid');expect(Object.values(result).filter(v=>typeof v==='number')).toEqual([]);
+  });
+  it('R>E/CPU>E는 해당 관측을 invalid로 남기고 전체0으로 성공시키지 않습니다',()=>{
+    expect(sample({sched:['1 1 1','2 31000001 2']}).result).toMatchObject({schedStatus:'invalid',runqueueMs:null,cpuStatus:'ok'});
+    expect(sample({cpu:[{user:0,system:0},{user:30001,system:0}]}).result).toMatchObject({cpuStatus:'invalid',cpuUserMs:null,schedStatus:'ok'});
+  });
+  it('Windows/optout/null trace는 추가 파일·CPU·clock을 호출하지 않습니다',()=>{
+    const fail=vi.fn(()=>{throw Error('synthetic-scheduler-private');}),provider:SchedulerProvider={platform:'win32',readSched:fail,readSysctl:fail,threadCpu:fail,clock:fail},probe=createSchedulerProbe(provider);
+    expect(probe.summary).toEqual({mode:'linux-thread-v1',platform:'unsupported',schedSysctl:'unavailable'});expect(probe.after(probe.before(),{startedAtProcessMs:0,finishedAtProcessMs:1})).toEqual(unavailableScheduling('unsupported'));expect(fail).not.toHaveBeenCalled();
+    const connection=db(':memory:'),sentinel={},native=vi.spyOn(DatabaseSync.prototype,'exec').mockReturnValue(sentinel as any),before=vi.fn(),after=vi.fn(),active={active:true,summary:probe.summary,before,after} as unknown as SchedulerProbe;
+    for(const mode of ['default','windows','null'] as const){
+      const trace=createTrace('round-worker');trace.phase='command';const reads=vi.spyOn(performance,'now');
+      try{expect(withSqliteDiagnostics(mode==='null'?null:trace,()=>connection.exec('COMMIT'),mode==='default'?undefined:{schedulerProbe:mode==='windows'?probe:active}) as unknown).toBe(sentinel);expect(reads).toHaveBeenCalledTimes(mode==='null'?0:2);}finally{reads.mockRestore();}
+      expect(trace.sqliteTransactions.some(row=>row.scheduling!==undefined)).toBe(false);if(mode==='default')expect(trace.schedulerProbe).toBeUndefined();
+    }
+    expect(native).toHaveBeenCalledTimes(3);expect(fail).not.toHaveBeenCalled();expect(before).not.toHaveBeenCalled();expect(after).not.toHaveBeenCalled();
+  });
+  it('같은 worker 순서의 outer/inner 경계를 분리하고 native receiver/인자/반환·descriptor를 보존합니다',()=>{
+    const trace=createTrace('round-worker');trace.phase='command';const connection=db(':memory:'),events:string[]=[],sentinel={},argument={};let outer=0,inner=0,sched=0,cpu=0;
+    const probe=createSchedulerProbe({platform:'linux',readSysctl:()=> '1\n',clock:()=>{events.push('outer');return [0,40][outer++];},readSched:()=>{events.push('sched');return ['1 1 1','2 2 2'][sched++];},threadCpu:()=>{events.push('cpu');return [{user:0,system:0},{user:1,system:1}][cpu++];}});
+    const native=vi.spyOn(DatabaseSync.prototype,'exec').mockImplementation(()=>{events.push('native');return sentinel as any;}),descriptor=Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'exec'),read=vi.spyOn(performance,'now').mockImplementation(()=>{events.push('inner');return [10,20][inner++];});
+    try{expect(withSqliteDiagnostics(trace,()=>Reflect.apply(DatabaseSync.prototype.exec,connection,['COMMIT',argument]),{schedulerProbe:probe})).toBe(sentinel);}finally{read.mockRestore();}
+    expect(events).toEqual(['outer','sched','cpu','inner','native','inner','cpu','sched','outer']);expect(native).toHaveBeenCalledExactlyOnceWith('COMMIT',argument);expect(native.mock.contexts[0]).toBe(connection);expect(Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'exec')).toEqual(descriptor);
+    expect(trace.sqliteTransactions[0]).toMatchObject({startedAtProcessMs:10,finishedAtProcessMs:20,outcome:'returned',scheduling:{envelopeMs:40,outsideMs:30,windowStatus:'ok'}});
+  });
+  it('BEGIN/COMMIT의 두 phase만 관측하고 cap8 뒤에는 추가 probe도 없습니다',()=>{
+    const trace=createTrace('round-worker'),connection=db(':memory:'),before=vi.fn(()=>({})),after=vi.fn(()=>unavailableScheduling()),probe:SchedulerProbe={active:true,summary:{mode:'linux-thread-v1',platform:'linux',schedSysctl:'0'},before,after};
+    vi.spyOn(DatabaseSync.prototype,'exec').mockReturnValue(undefined);withSqliteDiagnostics(trace,()=>{
+      trace.phase='start';connection.exec('COMMIT');trace.phase='round-open';connection.exec('BEGIN IMMEDIATE');connection.exec('ROLLBACK');connection.exec('PRAGMA synchronous=FULL');
+      trace.phase='command';connection.exec('COMMIT;');for(let i=0;i<9;i++)connection.exec('COMMIT');
+    },{schedulerProbe:probe});
+    expect(trace.sqliteTransactions).toHaveLength(8);expect(trace.sqliteTransactionsTruncated).toBe(true);expect(before).toHaveBeenCalledTimes(6);expect(after).toHaveBeenCalledTimes(6);
+    expect(trace.sqliteTransactions.slice(0,3).map(row=>Boolean(row.scheduling))).toEqual([false,true,false]);
+  });
+  it.for(['pre','post','frozen-row','attach','projection','summary'] as const)('%s 실패도 native1회·같은 반환/예외·descriptor 복원을 유지합니다',mode=>{
+    const connection=db(':memory:'),nativeError=new Error('synthetic-native-private'),probeError=new Error('synthetic-probe-private'),sentinel={};let throws=false;
+    const native=vi.spyOn(DatabaseSync.prototype,'exec').mockImplementation(()=>{if(throws)throw nativeError;return sentinel as any;}),descriptor=Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'exec');
+    for(const fail of [false,true]){
+      throws=fail;const trace=createTrace('round-worker');trace.phase='command';const getter=vi.fn(()=>{throw probeError;});
+      const observer:SchedulerProbe={active:true,summary:{mode:'linux-thread-v1',platform:'linux',schedSysctl:'0'},before:()=>{if(mode==='pre')throw probeError;return {};},after:()=>{if(mode==='post')throw probeError;return mode==='projection'?new Proxy({},{getOwnPropertyDescriptor(){throw probeError;}}) as ReturnType<typeof unavailableScheduling>:unavailableScheduling();}};
+      if(mode==='summary')Object.defineProperty(observer,'summary',{get:getter});
+      if(mode==='frozen-row'||mode==='attach'){const push=trace.sqliteTransactions.push;vi.spyOn(trace.sqliteTransactions,'push').mockImplementation(function(this:unknown,...rows){for(const row of rows){if(mode==='frozen-row')Object.freeze(row);else Object.defineProperty(row,'scheduling',{set:getter});}return Reflect.apply(push,this,rows);});}
+      const count=native.mock.calls.length;let returned:unknown,thrown:unknown;
+      try{returned=withSqliteDiagnostics(trace,()=>connection.exec('COMMIT'),{schedulerProbe:observer});}catch(error){thrown=error;}
+      expect(fail?thrown===nativeError&&returned===undefined:returned===sentinel&&thrown===undefined).toBe(true);expect(native.mock.calls.length-count).toBe(1);expect(Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'exec')).toEqual(descriptor);expect(trace.sqliteHook.restoration).toBe('restored');
+      if(mode==='summary')expect(getter).not.toHaveBeenCalled();if(mode==='frozen-row'||mode==='attach')expect(trace.sqliteTransactionObservationFailed).toBe(true);
+      const safe=JSON.stringify(projectTrace(trace));expect(safe).not.toContain('synthetic-native-private');expect(safe).not.toContain('synthetic-probe-private');
+    }
+  });
+  it('확장DTO는 own enum/유한숫자만 cap8 투영하고 getter·원문·SQL·path·TID를 내보내지 않습니다',()=>{
+    const privateValue='synthetic-scheduler-private',getter=vi.fn(()=>{throw Error(privateValue);}),good={cpuStatus:'ok',schedStatus:'ok',windowStatus:'ok',envelopeMs:10,outsideMs:2,cpuUserMs:1,cpuSystemMs:1,schedRuntimeMs:20,runqueueMs:0,timeslices:0};
+    const invalid:any={...good,cpuStatus:{toString:getter},schedStatus:privateValue,envelopeMs:NaN,outsideMs:Infinity,cpuUserMs:-1,cpuSystemMs:{value:privateValue},timeslices:1.5,sql:privateValue,path:privateValue,TID:privateValue,key:privateValue};Object.defineProperty(invalid,'runqueueMs',{get:getter});
+    const row=workerRow(0),trace=createTrace('round-parallel');trace.workers.push(row);receiveWorker({kind:'synthetic-worker-report',result:{kind:'command-result'},diagnostic:{schedulerProbe:{mode:privateValue,platform:privateValue,schedSysctl:privateValue,key:privateValue},sqliteTransactions:Array.from({length:9},(_,i)=>({connectionIndex:1,phase:'command',site:'transaction-commit',startedAtProcessMs:1,finishedAtProcessMs:9,outcome:'returned',scheduling:i?invalid:good,path:privateValue}))}},row);
+    expect(row.diagnostic?.sqliteTransactions).toHaveLength(8);expect(row.diagnostic?.sqliteTransactionsTruncated).toBe(true);expect(row.diagnostic?.sqliteTransactions[0].scheduling).toEqual(good);expect(row.diagnostic?.sqliteTransactions[1].scheduling).toMatchObject({cpuStatus:'invalid',schedStatus:'invalid',windowStatus:'invalid',runqueueMs:null,envelopeMs:null});expect(row.diagnostic?.schedulerProbe).toEqual({mode:'linux-thread-v1',platform:'unsupported',schedSysctl:'unavailable'});expect(getter).not.toHaveBeenCalled();expect(safeRows(trace)).not.toContain(privateValue);
+    expect(projectScheduling({...good,runqueueMs:11})).toMatchObject({schedStatus:'invalid',runqueueMs:null});
+  });
+});
+
 describe('Round 검사 전용 생성자 BUSY5 재개방',()=>{
   it.for([{plan:['ok'],calls:1,waits:0},{plan:['busy','ok'],calls:2,waits:1},{plan:['busy','busy','busy'],calls:3,waits:2}])('Round factory/wait 상한 %#',({plan,calls,waits})=>{
     const trace=createTrace('round-worker'),marker={kind:'service-error',code:'storage-unavailable'},nativeError=Object.assign(new Error('synthetic-private-round'),{code:'ERR_SQLITE_ERROR',errcode:5}),originalClose=DatabaseSync.prototype.close;
@@ -405,7 +500,7 @@ describe('서버 영구 회차·멱등 명령 원장',()=>{
   });
   it('8worker 다른 명령이 같은 revision에서 경쟁하면 1회만 적용',async({task})=>{
     const trace=task.meta.ledgerDiagnostic=createTrace('round-parallel');const {path,r}=step(trace,'prepare',()=>{const {ledger,path}=open(),s=start(ledger),r=command(ledger,s);close(ledger);return {path,r};});
-    const outputs=await asyncStep(trace,'workers',()=>concurrent(Array.from({length:8},(_,n)=>data(path,'command',{...r,operationId:'compete-'+n,command:n%2?{type:'shuffle'}:r.command},{retryConstructorBusy:true})),trace));
+    const outputs=await asyncStep(trace,'workers',()=>concurrent(Array.from({length:8},(_,n)=>data(path,'command',{...r,operationId:'compete-'+n,command:n%2?{type:'shuffle'}:r.command},{retryConstructorBusy:true,schedulerProbe:true})),trace));
     expect(outputs.filter(r=>r.kind==='command-result'&&r.applied).length,safeRows(trace)).toBe(1);expect(outputs.filter(r=>r.code==='revision-conflict').length,safeRows(trace)).toBe(7);
     const stored=db(path).prepare('SELECT revision FROM round_rounds').get();expect(stored?.revision).toBe(1);
   });

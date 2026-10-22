@@ -3,6 +3,7 @@ import {parentPort,workerData} from 'node:worker_threads';
 import {RoundLedger} from '../../server/game/roundLedger.ts';
 import {createTrace,step,recordError,resultAt,withSqliteDiagnostics} from './ledgerDiagnostics.ts';
 import {retryLedgerOpen} from './ledgerOpenRetry.ts';
+import {createSchedulerProbe} from './ledgerSchedulerProbe.ts';
 function execute(data,diagnostic) {
   let ledger;
   try {
@@ -18,6 +19,6 @@ function execute(data,diagnostic) {
   }catch(error){if(diagnostic)recordError(diagnostic,error);return resultAt(diagnostic,{kind:'worker-error'});}
   finally{step(diagnostic,'close',()=>{try{ledger?.close();}catch(error){if(diagnostic)recordError(diagnostic,error);}});}
 }
-function run(data){const diagnostic=data.diagnostics===true?createTrace('round-worker'):null;const result=withSqliteDiagnostics(diagnostic,()=>execute(data,diagnostic));return diagnostic?{kind:'synthetic-worker-report',result,diagnostic}:result;}
+function run(data){const diagnostic=data.diagnostics===true?createTrace('round-worker'):null;const schedulerProbe=parentPort&&diagnostic&&data.schedulerProbe===true?createSchedulerProbe():undefined;const result=withSqliteDiagnostics(diagnostic,()=>execute(data,diagnostic),schedulerProbe?{schedulerProbe}:undefined);return diagnostic?{kind:'synthetic-worker-report',result,diagnostic}:result;}
 if(parentPort){parentPort.postMessage('ready');parentPort.once('message',()=>parentPort.postMessage(run(workerData)));}
 else process.once('message',data=>{process.send?.(run(data));process.disconnect?.();});
