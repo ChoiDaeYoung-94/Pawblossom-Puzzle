@@ -216,6 +216,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     flushResults: () => [...timers].filter(([,timer]) => timer.ms === 300).forEach(([id,timer]) => {timers.delete(id);timer.callback();}),
     flushToasts: () => [...timers.values()].filter(timer => timer.ms === 3200).forEach(timer => timer.callback()),
     flushGrowth: () => [...timers.values()].filter(timer => timer.ms === 450).forEach(timer => timer.callback()),
+    flushCareReaction: () => [...timers].filter(([,timer]) => timer.ms === 2400).forEach(([id,timer]) => {timers.delete(id);timer.callback();}),
     writes: () => writes, stored: () => JSON.parse(storageValues.get('pawblossom.save.v1')??'null'),
   };
 }
@@ -259,6 +260,38 @@ describe('핍 육성·재화 소비와 정원 전용 체험',()=>{
     h.element('#pip-play').onclick();expect(h.stored()).toMatchObject({coins:20,pip:{growth:14,affection:14}});
     expect(h.element('#journal-view').innerHTML).toContain('/assets/pip-play-v1.webp');
     expect(h.run('JSON.stringify(save.inProgress)===beforeCheckpoint')).toBe(true);
+  });
+  it.each(['ko','en'] as const)('%s의실제 잔여 증가량·무료반응·소품 접근성 이름·소유 꾸미기 설명은 행동과 일치합니다',language=>{
+    const base={version:1,language,highestLevel:2,completed:[1],stars:1,coins:200,garden:0,music:true,sfx:true,tutorialSeen:true};
+    const button=(h:ReturnType<typeof mainHarness>,id:string)=>h.element('#journal-view').innerHTML.match(new RegExp(`<button id="${id}"[\\s\\S]*?</button>`))![0];
+    const cases=[
+      {growth:100,affection:96,kind:'feed',gainGrowth:0,gainAffection:4,afterGrowth:100,afterAffection:100},
+      {growth:96,affection:100,kind:'play',gainGrowth:4,gainAffection:0,afterGrowth:100,afterAffection:100},
+      {growth:99,affection:98,kind:'feed',gainGrowth:1,gainAffection:2,afterGrowth:100,afterAffection:100},
+      {growth:100,affection:20,kind:'feed',gainGrowth:0,gainAffection:4,afterGrowth:100,afterAffection:24},
+      {growth:100,affection:100,kind:'play',gainGrowth:0,gainAffection:0,afterGrowth:100,afterAffection:100},
+    ];
+    for(const example of cases){
+      const h=mainHarness(false,false,false,false,{...base,pip:{growth:example.growth,affection:example.affection,owned:[],equipped:'none'}});h.run("switchView('journal')");
+      const before=button(h,'pip-'+example.kind);expect(before).not.toContain('+0');
+      for(const [key,gain] of [['pipGrowth',example.gainGrowth],['pipAffection',example.gainAffection]] as const){if(gain)expect(before).toContain(t(language,key)+' +'+gain);else expect(before).not.toContain(t(language,key)+' +');}
+      const free=example.growth===100&&example.affection===100;if(free)expect(before).toContain(t(language,'pipPlayFreeReaction'));else expect(before).toContain('10');
+      const old=h.element('#pip-'+example.kind).onclick;old();old();expect(h.stored()).toMatchObject({coins:free?200:190,pip:{growth:example.afterGrowth,affection:example.afterAffection}});
+      if(example.afterGrowth===100&&example.afterAffection===100){
+        const settled=h.stored();for(const kind of ['feed','play'] as const){expect(button(h,'pip-'+kind)).toContain(t(language,kind==='feed'?'pipFeedFreeReaction':'pipPlayFreeReaction'));h.element('#pip-'+kind).onclick();expect(h.element('#journal-view').innerHTML).toContain('/assets/pip-'+kind+'-v1.webp');expect(h.element('#journal-view').innerHTML).toContain(t(language,kind==='feed'?'pipFeedReaction':'pipPlayReaction'));expect(h.run('audio.plays.at(-1)')).toBe('reward');expect(h.stored()).toEqual(settled);h.flushCareReaction();expect(h.run('pipReaction')).toBeUndefined();expect(h.stored()).toEqual(settled);}
+      }
+    }
+    const shop=mainHarness(false,false,false,false,{...base,pip:{growth:100,affection:100,owned:[],equipped:'none'}});shop.run("switchView('journal')");
+    for(const [item,key,price] of [['ribbon','pipRibbon',40],['wateringCan','pipWateringCan',80]] as const){
+      expect(button(shop,'pip-buy-'+item)).toContain(`aria-label="${t(language,key)} · ${t(language,'gardenBuy').replace('{cost}',String(price))}"`);
+      shop.element('#pip-buy-'+item).onclick();expect(button(shop,'pip-equip-'+item)).toContain(`aria-label="${t(language,key)} · ${t(language,'pipEquipped')}"`);expect(button(shop,'pip-equip-'+item)).toMatch(/ disabled/);
+      shop.element('#pip-equip-none').onclick();expect(button(shop,'pip-equip-'+item)).toContain(`aria-label="${t(language,key)} · ${t(language,'pipEquipFree')}"`);const coins=shop.run('save.coins');shop.element('#pip-equip-'+item).onclick();expect(shop.run('save.coins')).toBe(coins);
+    }
+    expect(shop.run('save.coins')).toBe(80);
+    for(const [space,price] of [['pond',240],['shelter',360],['arch',480]] as const){
+      const unowned=shop.run(`gardenSpacePanel('${language}','${space}',{...freshGardenSpaces(),${space}:{phase:2,altOwned:false,style:'base'}},100,100)`);expect(unowned).toContain(t(language,'spaceStyleConditions').replace('{cost}',String(price)));
+      for(const style of ['base','alt']){const owned=shop.run(`gardenSpacePanel('${language}','${space}',{...freshGardenSpaces(),${space}:{phase:2,altOwned:true,style:'${style}'}},100,100)`);expect(owned).toContain(t(language,'spaceOwned')+' · '+t(language,'spaceSwitchFree'));expect(owned).not.toContain(t(language,'spaceStyleConditions').replace('{cost}',String(price)));expect(owned).not.toContain(t(language,'spaceBuyStyle').replace('{cost}',String(price)));}
+    }
   });
   it('성장 해금·소품 구매·무료 장착 변경을 실제 카드에 표시합니다',()=>{
     const h=mainHarness();h.run("save.coins=100;switchView('journal')");
