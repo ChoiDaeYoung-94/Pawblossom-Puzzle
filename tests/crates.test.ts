@@ -31,10 +31,18 @@ function falls(step:ResolveStep,engine:BoardEngine){
   expect(seen.size).toBe(engine.mask.flat().filter(Boolean).length-crate.flat().filter(Boolean).length);
 }
 describe('고정 나무상자와 기존 엔진 호환',()=>{
-  it('1–35 콘텐츠·서명·실제 mask V2 행동 결과와 RNG를 보존합니다',()=>{
-    expect(levels.slice(0,35)).toEqual(before.levels);expect(hash(levels.slice(0,35))).toBe(before.contentHash);
+  it('재설계 전 실제30 checkpoint는 primary의 회차만 버리고 영구기록을 유지하며 backup은 엄격히 거절합니다',()=>{
+    const old=before.levels[29] as typeof levels[number],e=new BoardEngine(8,8,seededRng(42),undefined,2);e.setLeaves(old.leaves??[]);
+    const progress={schema:1,ruleVersion:2,levelId:30,levelSignature:levelSignature(old),board:e.board,leaves:e.leaves,moves:24,score:0,collected:[0,0,0,0,0,0],shuffles:1,clearedLeaves:0};
+    const pip={growth:34,affection:22,owned:[],equipped:'none'},data={version:1,language:'ko',highestLevel:40,completed:Array.from({length:40},(_,i)=>i+1),stars:7,coins:240,garden:2,music:true,sfx:true,tutorialSeen:true,pip,inProgress:progress};
+    const raw=JSON.stringify(data),disk=new Map([[SAVE_KEY,raw]]),access=()=>({getItem:(k:string)=>disk.get(k)??null,setItem:(k:string,v:string)=>{disk.set(k,v);},removeItem:(k:string)=>{disk.delete(k);}}),store=new SaveStore(access),loaded=store.load();
+    expect(loaded).toMatchObject({highestLevel:41,stars:7,coins:240,garden:2,pip});expect(loaded.completed).toHaveLength(40);expect(loaded.inProgress).toBeUndefined();expect(disk.get(SAVE_KEY)).toBe(raw);
+    disk.set(SAVE_KEY,'{');disk.set(SAVE_KEY+'.backup',raw);const recovered=new SaveStore(access);expect(recovered.load().completed).toEqual([]);expect(recovered.status.load).toBe('corrupt');
+  });
+  it('동결1–35 fixture의 엔진 행동·서명 형식과 RNG를 보존합니다',()=>{
+    expect(hash(before.levels)).toBe(before.contentHash);
     for(const run of before.runs){
-      const level=levels[run.id-1];let calls=0;const next=seededRng(level.id*9876543),e=new BoardEngine(8,8,()=>{calls++;return next();},undefined,2,level.mask);e.setLeaves(level.leaves??[]);
+      const level=before.levels[run.id-1] as typeof levels[number];let calls=0;const next=seededRng(level.id*9876543),e=new BoardEngine(8,8,()=>{calls++;return next();},undefined,2,level.mask);e.setLeaves(level.leaves??[]);
       expect(levelSignature(level)).toBe(JSON.stringify([level.id,level.moves,level.goals.map(g=>[g.kind,g.count]),(level.leaves??[]).map(p=>[p.row,p.col,p.layers]),...(level.mask?[level.mask]:[])]));
       expect({calls,digest:hash({board:e.board,leaves:e.leaves})}).toEqual(run.initial);
       for(const step of run.steps){const r=e.swap(step.command.a,step.command.b);expect({calls,result:hash(r),state:hash({board:e.board,leaves:e.leaves})}).toEqual({calls:step.calls,result:step.result,state:step.state});}

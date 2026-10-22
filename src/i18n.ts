@@ -1,6 +1,7 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    chapterPetals:'Petal arcade',chapterRipples:'Ripple walk',chapterHourglass:'Hourglass path',chapterFork:'Woodland fork',chapterHills:'Slanted hills',chapterFestival:'Blossom festival',
     gardenThemes:'Garden scenery',gardenThemeMeadow:'Meadow',gardenThemeSunset:'Sunset garden',gardenThemeStarlight:'Starlight garden',gardenThemeConditions:'Stages cleared {clears}/{needClears} · Beds {plots}/{needPlots} · Growth {growth}/{needGrowth} · Friendship {affection}/{needAffection}',gardenThemeOwned:'Yours forever · Switch free',gardenThemeSelected:'Selected',gardenThemeSelect:'Select free',gardenThemesDone:'Both scenery milestones are yours. Arrange your garden at your own pace.',
     gardenLanternDefault:'Original garden position',gardenLanternAt:'Beside flower bed {number}',gardenLanternMove:'Place beside selected bed {number} · Free',gardenLanternShown:'Showing',gardenLanternHidden:'Hidden',
     gardenEdit:'Make this garden yours',gardenChoosePlot:'Choose a flower bed',gardenPlot:'Flower bed {number}',gardenChooseFlower:'Choose flowers',gardenFreeChange:'Change flowers for free',gardenFirstPlot:'Grow a flower bed with stars to choose flowers.',
@@ -102,6 +103,7 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    chapterPetals:'꽃잎 회랑',chapterRipples:'물결 산책',chapterHourglass:'모래시계 길',chapterFork:'숲의 갈림길',chapterHills:'비스듬한 언덕',chapterFestival:'꽃빛 축제',
     gardenThemes:'정원 풍경',gardenThemeMeadow:'기본 초원',gardenThemeSunset:'노을 정원',gardenThemeStarlight:'별빛 정원',gardenThemeConditions:'완료 스테이지 {clears}/{needClears} · 꽃밭 {plots}/{needPlots} · 성장 {growth}/{needGrowth} · 친밀도 {affection}/{needAffection}',gardenThemeOwned:'영구 소유 · 무료로 바꿔요',gardenThemeSelected:'선택 중',gardenThemeSelect:'무료 선택',gardenThemesDone:'풍경 두 가지를 모두 모았어요. 편안하게 정원을 꾸며 보세요.',
     gardenLanternDefault:'원래 정원 위치',gardenLanternAt:'꽃밭 {number} 옆',gardenLanternMove:'선택한 꽃밭 {number} 옆에 두기 · 무료',gardenLanternShown:'표시 중',gardenLanternHidden:'숨김 중',
     gardenEdit:'내가 고르는 정원',gardenChoosePlot:'꽃밭 선택',gardenPlot:'꽃밭 {number}',gardenChooseFlower:'꽃 종류 선택',gardenFreeChange:'꽃 교체는 무료예요',gardenFirstPlot:'별로 꽃밭을 늘리면 꽃을 고를 수 있어요.',

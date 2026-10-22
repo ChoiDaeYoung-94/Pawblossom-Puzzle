@@ -1,3 +1,4 @@
+import {LEVEL_COUNT,chapters as currentChapters} from '../src/levels';
 import { describe, expect, it } from 'vitest';
 import ts from 'typescript';
 import packageInfo from '../package.json';
@@ -162,8 +163,8 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
       createElement: () => {const created=new ElementStub('button');created.hidden=false;return created;},
       querySelector:(selector:string)=>selector==='dialog[open]'?null:element(selector),
       querySelectorAll: (selector: string) => selector === '[data-test-level]'
-        ? Array.from({length:40},(_,i)=>{const button=element(`#test-stage-${i+1}`);button.dataset.testLevel=String(i+1);return button;}) : selector === '[data-chapter]' || selector === '[data-test-chapter]'
-        ? Array.from({length:5},(_,i)=>{const test=selector.includes('test-');const button=element(`#${test?'test-':''}chapter-${i+1}`);button.dataset[test?'testChapter':'chapter']=String(i+1);return button;}) : selector === '#practice-board button'
+        ? Array.from({length:LEVEL_COUNT},(_,i)=>{const button=element(`#test-stage-${i+1}`);button.dataset.testLevel=String(i+1);return button;}) : selector === '[data-chapter]' || selector === '[data-test-chapter]'
+        ? Array.from({length:currentChapters.length},(_,i)=>{const test=selector.includes('test-');const button=element(`#${test?'test-':''}chapter-${i+1}`);button.dataset[test?'testChapter':'chapter']=String(i+1);return button;}) : selector === '#practice-board button'
         ? Array.from({length:9},(_,i)=>{const button=element(`#practice-cell-${Math.floor(i/3)}-${i%3}`);button.dataset={row:String(Math.floor(i/3)),col:String(i%3)};return button;}) : selector === '.view'
         ? ['puzzle', 'village', 'journal', 'settings'].map(name => element(`#${name}-view`)) : [],
       documentElement: {}, hidden:false, addEventListener:(name:string,callback:()=>void)=>{documentEvents[name]=callback;},
@@ -184,7 +185,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const levelExports: Record<string, unknown> = {};
   vm.runInNewContext(levelsCode, {exports:levelExports});
   const pipCareExports:Record<string,unknown>={};vm.runInNewContext(pipCareCode,{exports:pipCareExports});Object.assign(context,pipCareExports);
-  const gardenDesignExports:Record<string,unknown>={};vm.runInNewContext(gardenDesignCode,{exports:gardenDesignExports});Object.assign(context,gardenDesignExports);
+  const gardenDesignExports:Record<string,unknown>={};vm.runInNewContext(gardenDesignCode,{exports:gardenDesignExports,require:()=>levelExports});Object.assign(context,gardenDesignExports);
   Object.assign(context,{require:(name:string) => {if(name==='./levels')return levelExports;if(name==='./core')return coreExports;if(name==='./pipCare')return pipCareExports;if(name==='./gardenDesign')return gardenDesignExports;throw new Error(name);}});
   const coreExports:Record<string,unknown>={}, practiceExports:Record<string,unknown>={};
   vm.runInNewContext(engineCode,{exports:coreExports});
@@ -925,7 +926,7 @@ describe('종료된 회차의 명시적 퍼즐 복귀',()=>{
     }
     expect(focus).toBe(3);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('audio.plays')).toEqual(sounds);expect(h.resultArtCalls()).toBe(art);
     expect(h.run('scene')).toBe(scene);expect(h.run('scene.engine')).toBe(engine);expect(h.run('round')).toBe(round);expect(h.element('#result-dialog').innerHTML).toBe(html);expect(h.element('#result-next').onclick).toBe(next);
-    h.element('#result-next').onclick();expect(h.run('currentLevel')).toBe(won?Math.min(40,level+1):level);expect(h.run('testingLevel')).toBe(test);expect(h.element('#result-dialog').open).toBe(false);
+    h.element('#result-next').onclick();expect(h.run('currentLevel')).toBe(won?Math.min(LEVEL_COUNT,level+1):level);expect(h.run('testingLevel')).toBe(test);expect(h.element('#result-dialog').open).toBe(false);
   });
   it.each([true,false])('Escape로 닫은 결과 won=%s도 명시적으로 돌아올 수 있습니다',won=>{
     const h=ended(false,won);h.element('#result-dialog').listeners.cancel({preventDefault(){}});expect(h.run('route')).toBe('village');
@@ -1028,7 +1029,7 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     h.run('showTestPicker();startLevel(2,true)');expect(h.element('#test-level-dialog').open).toBe(false);expect(h.run('testingLevel')).toBe(false);
     const test=mainHarness(false,false,true);test.run('startLevel(10,true)');expect(test.stored()).not.toHaveProperty('testingLevel');
     expect(test.run('loadSave().highestLevel')).toBe(2);
-    test.run('startLevel(99,true)');expect(test.run('currentLevel')).toBe(10);
+    test.run('startLevel(101,true)');expect(test.run('currentLevel')).toBe(10);
     test.run("showTestPicker();changeLanguage('ko')");expect(test.element('#test-level-dialog').innerHTML).toContain('낙엽 두 겹');
     test.element('#test-level-dialog').listeners.cancel({preventDefault(){}});expect(test.run('game.paused')).toBe(false);
   });
@@ -1334,19 +1335,21 @@ describe('첫 플레이 안내', () => {
 });
 
 
-describe('40스테이지 진행과 선택 묶음',()=>{
+describe('100스테이지 진행과 선택 묶음',()=>{
   it('10번 완료는 11번을 해제하고 마지막 완료 안내를 표시하지 않습니다',()=>{
     const app=mainHarness();app.run('startLevel(10);finish(true)');
     expect(app.stored().highestLevel).toBe(11);
     expect(app.element('#result-dialog').innerHTML).toContain('Next level');
     app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(11);
     expect(app.element('#chapter-name').textContent).toContain('Flower Path');
+    app.run('startLevel(40);finish(true)');expect(app.stored().highestLevel).toBe(41);expect(app.element('#result-dialog').innerHTML).toContain('Next level');expect(app.element('#result-dialog').innerHTML).not.toContain('All 100 prototype levels');
+    const earned=app.stored();app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(41);app.run('startLevel(40);finish(true)');expect(app.stored().coins).toBe(earned.coins);expect(app.stored().stars).toBe(earned.stars);expect(app.stored().completed).toEqual(earned.completed);
   });
-  it('40번 완료는 범위를 넘지 않으며 재플레이 보상을 중복 지급하지 않습니다',()=>{
-    const app=mainHarness();app.run('startLevel(40);finish(true)');
-    expect(app.stored().highestLevel).toBe(40);
-    expect(app.element('#result-dialog').innerHTML).toContain('All 40 prototype levels');
-    app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(40);
+  it('100번 완료는 범위를 넘지 않으며 재플레이 보상을 중복 지급하지 않습니다',()=>{
+    const app=mainHarness();app.run('startLevel(100);finish(true)');
+    expect(app.stored().highestLevel).toBe(100);
+    expect(app.element('#result-dialog').innerHTML).toContain('All 100 prototype levels');
+    app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(100);
     const before=app.stored();app.run('finish(true)');expect(app.stored()).toEqual({...before,inProgress:undefined});
   });
   it('일반 선택 묶음은 잠금을 유지하고 테스트 30번은 진행 기록을 바꾸지 않습니다',()=>{
@@ -1358,6 +1361,9 @@ describe('40스테이지 진행과 선택 묶음',()=>{
     expect(app.element('#test-level-dialog').innerHTML).toContain('data-test-level="30"');
     expect(app.element('#test-level-dialog').innerHTML).not.toContain('data-test-level="1"');
     app.element('#test-stage-30').onclick();app.run('finish(true)');expect(app.stored()).toEqual(before);
+    app.run("showTestPicker();document.querySelector('#test-chapter-3').onkeydown({key:'End',preventDefault(){}})");expect(app.element('#test-level-dialog').innerHTML).toContain('data-test-level="100"');
+    app.run("globalThis.tabStrip={scrollLeft:0,getBoundingClientRect:()=>({left:0,right:96,width:96})};const lastTab=document.querySelector('#test-chapter-11');lastTab.parentElement=tabStrip;lastTab.getBoundingClientRect=()=>({left:960,right:1056});document.querySelector('#village-view').scrollTop=77;revealChapterTab(lastTab)");expect(app.run('tabStrip.scrollLeft')).toBe(960);expect(app.run("document.querySelector('#village-view').scrollTop")).toBe(77);
+    app.run("document.querySelector('#test-level-dialog').close();startLevel(100,true);tabStrip.scrollLeft=0;tabStrip.getBoundingClientRect=()=>document.querySelector('#test-level-dialog').open?({left:0,right:96,width:96}):({left:0,right:0,width:0});showTestPicker()");expect(app.run('tabStrip.scrollLeft')).toBe(960);
   });
 });
 
@@ -1667,7 +1673,7 @@ describe('열린 화면의 언어 변경은 진행·결과 처리를 보존합�
     {id:2,won:true,test:false,replay:false,title:'win',description:'winDesc'},
     {id:1,won:true,test:false,replay:true,title:'win',description:'replayDesc'},
     {id:2,won:false,test:false,replay:false,title:'lose',description:'loseDesc'},
-    {id:40,won:true,test:false,replay:false,title:'complete',description:'completeDesc'},
+    {id:100,won:true,test:false,replay:false,title:'complete',description:'completeDesc'},
     {id:30,won:true,test:true,replay:false,title:'win',description:'testResultDesc'},
     {id:30,won:false,test:true,replay:false,title:'lose',description:'testResultDesc'},
   ])('$id번 성공=$won 시험=$test 재완료=$replay 결과 문구만 바꿉니다',({id,won,test,title,description})=>{
@@ -1676,7 +1682,7 @@ describe('열린 화면의 언어 변경은 진행·결과 처리를 보존합�
     const scene=app.run('scene'),dialog=app.element('#result-dialog'),html=dialog.innerHTML,next=app.element('#result-next').onclick,home=app.element('#result-home').onclick;
     const sounds=app.run('audio.plays.slice()'),art=app.resultArtCalls();
     app.run("document.activeElement=document.querySelector('#result-next');changeLanguage('ko')");
-    expect(app.element('#result-title').textContent).toBe(t('ko',title as TextKey));expect(app.element('#result-description').textContent).toBe(t('ko',description as TextKey).replace('{count}','40'));
+    expect(app.element('#result-title').textContent).toBe(t('ko',title as TextKey));expect(app.element('#result-description').textContent).toBe(t('ko',description as TextKey).replace('{count}',String(LEVEL_COUNT)));
     expect(dialog.innerHTML).toBe(html);expect(dialog.open).toBe(true);
     expect(app.element('#result-next').onclick).toBe(next);expect(app.element('#result-home').onclick).toBe(home);
     expect(app.run("document.activeElement===document.querySelector('#result-next')")).toBe(true);

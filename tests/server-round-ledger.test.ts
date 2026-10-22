@@ -9,6 +9,7 @@ import {Worker} from 'node:worker_threads';
 import {performance} from 'node:perf_hooks';
 import {isDeepStrictEqual} from 'node:util';
 import {BoardEngine} from '../src/core/BoardEngine';
+import {LEVEL_COUNT} from '../src/levels';
 import {RoundLedger,type RoundLedgerOptions,type RoundSnapshot,type RoundCommandRequest} from '../server/game/roundLedger';
 import {advanceState,publicState,startState,type RoundState} from '../server/game/roundState';
 import {PlayFabSessionAuthenticator} from '../server/auth/playfabSession';
@@ -533,7 +534,7 @@ describe('서버 영구 회차·멱등 명령 원장',()=>{
     const s=start(ledger);expect(Object.isFrozen(s)).toBe(true);expect(Object.isFrozen(s.state.board[0][0])).toBe(true);expect(Object.isFrozen(s.state.level.leaves?.[0])).toBe(true);
     expect(()=>{(s.state.collected as any)[0]=99;}).toThrow();const read=ledger.get(owner,{roundId:s.roundId});expect(read).toEqual({kind:'round-snapshot',snapshot:s});if(read.kind==='round-snapshot')expect(read.snapshot.state.board).not.toBe(s.state.board);
   });
-  it.each([undefined,null,{},[],{requestId:'x',levelId:0},{requestId:'x',levelId:41},{requestId:'x',levelId:1.1},{requestId:'',levelId:1},{requestId:'x'.repeat(129),levelId:1},{requestId:'x y',levelId:1},{requestId:'x',levelId:1,score:99},{requestId:'x',levelId:1,board:[]},{requestId:'x',levelId:1,rng:42},{requestId:'x',levelId:1,owner:'x'}])('생성 입력 엄격 검사 %j',r=>{const {ledger}=open();expect(ledger.start(owner,r as any)).toEqual(denied('invalid-input'));});
+  it.each([undefined,null,{},[],{requestId:'x',levelId:0},{requestId:'x',levelId:LEVEL_COUNT+1},{requestId:'x',levelId:1.1},{requestId:'',levelId:1},{requestId:'x'.repeat(129),levelId:1},{requestId:'x y',levelId:1},{requestId:'x',levelId:1,score:99},{requestId:'x',levelId:1,board:[]},{requestId:'x',levelId:1,rng:42},{requestId:'x',levelId:1,owner:'x'}])('생성 입력 엄격 검사 %j',r=>{const {ledger}=open();expect(ledger.start(owner,r as any)).toEqual(denied('invalid-input'));});
   it.each([null,{},[],{ownerId:''},{ownerId:'x y'},{ownerId:'x\n'},{ownerId:'x'.repeat(257)},{ownerId:'x',roundId:'x'}])('신뢰 context 구조 검사 %j',context=>{const {ledger}=open();expect(ledger.start(context as any,{requestId:'x',levelId:1})).toEqual(denied('invalid-input'));});
   it.each(['round','op','revision','command','score','board','rng','owner','coordinate'])('명령 %s의 잘못된 입력 거절',mode=>{
     const {ledger}=open(),s=start(ledger),r:any=command(ledger,s);

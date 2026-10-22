@@ -1,3 +1,4 @@
+import {LEVEL_COUNT} from './levels';
 export const flowerStyles=['meadow','daisy','violet'] as const;
 export type FlowerStyle=typeof flowerStyles[number];
 export const gardenProjects=[
@@ -25,7 +26,7 @@ export const themeReady=(theme:typeof gardenThemes[number],plots:number,pip:Care
 /** 소유는 영구적입니다. 꽃 다양성은 첫 획득 때만 확인하고 이후 교체로 취소하지 않습니다. */
 export function validateGardenDesign(value:unknown,plots:number,pip:Care,completed=0):GardenDesign|undefined {
   if(!value||typeof value!=='object'||Array.isArray(value)||!Number.isInteger(plots)||plots<0||plots>5
-    ||![pip.growth,pip.affection].every(n=>Number.isInteger(n)&&n>=0&&n<=100)||!Number.isInteger(completed)||completed<0||completed>40)return;
+    ||![pip.growth,pip.affection].every(n=>Number.isInteger(n)&&n>=0&&n<=100)||!Number.isInteger(completed)||completed<0||completed>LEVEL_COUNT)return;
   const v=value as Record<string,unknown>;
   if(Object.keys(v).some(k=>!['schema','flowers','owned','placed','lanternPlot','ownedThemes','theme'].includes(k))||v.schema!==1
     ||!Array.isArray(v.flowers)||v.flowers.length!==5||!Array.isArray(v.owned)||v.owned.length>3||!Array.isArray(v.placed)||v.placed.length>3)return;

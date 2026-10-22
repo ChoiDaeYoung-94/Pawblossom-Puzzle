@@ -13,6 +13,7 @@ describe('서버 순수 회차 상태·기존 엔진 기준 동등성',()=>{
     expect(createHash('sha256').update(source).digest('hex')).toBe(ENGINE_SOURCE_SHA256);
     expect(createHash('sha256').update(JSON.stringify(levels)).digest('hex')).toBe(CONTENT_HASH);
     const l=levelSnapshot(1);l.moves=1;expect(levelSnapshot(1)).toEqual(levels[0]);
+    const last=startState(100,42);expect(()=>validateState(last)).not.toThrow();expect(levelSnapshot(100).id).toBe(100);expect(()=>startState(101,42)).toThrow();
   });
   it.each([0,1,0xffffffff,0x6d2b79f5,123456789])('seed %s: 초기 생성/수천 난수 진행·복원 뒤 셔플이 기존 Mulberry32와 동일',seed=>{
     let s=startState(4,seed),calls=0;const next=seededRng(seed),rng=()=>{calls++;return next();};
