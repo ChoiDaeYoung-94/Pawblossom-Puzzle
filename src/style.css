@@ -103,9 +103,13 @@ html:lang(ko) h1,html:lang(ko) h2,html:lang(ko) h3,html:lang(ko) .moves-box stro
 /* 보드 초점과 칸 커서는 선택 확대와 별도로 표시합니다. */
 #game-canvas:focus{outline:none}
 #game-canvas:focus-visible{outline:3px solid #294f40;outline-offset:-3px;border-radius:12px}
-#board-keyboard-help{display:none}
-#puzzle-view:has(#game-canvas[data-keyboard="true"]:focus) #board-hint-text{display:none}
-#puzzle-view:has(#game-canvas[data-keyboard="true"]:focus) #board-keyboard-help{display:inline}
+/* 안내 모드를 바꿔도 첫 포인터 입력 중 보드 크기/위치가 변하지 않게 긴 쪽의 공간을 유지합니다. */
+.board-hint{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:8px}
+.board-hint>svg{grid-area:1/1;align-self:center}
+#board-hint-text,#board-keyboard-help{display:block;grid-area:1/2;min-width:0}
+#board-keyboard-help{visibility:hidden}
+#puzzle-view:has(#game-canvas[data-keyboard="true"]:focus) #board-hint-text{visibility:hidden}
+#puzzle-view:has(#game-canvas[data-keyboard="true"]:focus) #board-keyboard-help{visibility:visible}
 /* 스테이지는 10개 단위로 선택하며 잠금과 보상 기록은 그대로 유지합니다. */
 .chapter-tabs{display:flex;gap:6px;margin:12px 0}.chapter-tabs button{flex:1;min-width:0;min-height:44px;padding:7px 3px;border:1px solid #cbd7bd;border-radius:11px;background:#f1f5e9;color:#506849}.chapter-tabs button[aria-selected="true"]{background:#dfeaca;border-color:#789363;color:#3f623b}.chapter-tabs strong,.chapter-tabs small{display:block}.chapter-tabs strong{font-size:12px}.chapter-tabs small{font-size:10px;margin-top:3px}.chapter-tabs button:focus-visible{outline:3px solid #80582f;outline-offset:2px}
 .chapter-tabs{overflow-x:auto;overscroll-behavior-x:contain;padding-bottom:4px}.chapter-tabs button{flex:0 0 96px;min-width:96px}
