@@ -330,6 +330,21 @@ describe('유휴 힌트 (실제 Phaser Clock)',()=>{
   });
 });
 describe('블록 객체 보존과 낙하 연출',()=>{
+  it('자체 특수 그림을 읽으면 같은 타일 종류 위에 사용하고 실패한 종류만 기존 몸체로 대체합니다',()=>{
+    const {scene}=harness();
+    (scene as unknown as {textures:{exists(key:string):boolean}}).textures={exists:key=>key==='special-art-row'||key==='special-art-bomb'||key==='special-art-rainbow'};
+    for(const [col,special] of (['row','column','bomb','rainbow'] as const).entries())scene.engine.board[0][col]!.special=special;
+    const before=JSON.stringify(scene.engine.board);scene.paint(scene.engine.board);
+    for(const col of [0,2,3]){
+      const children=scene.pieces[0][col].children,kind=scene.engine.board[0][col]!.kind,special=scene.engine.board[0][col]!.special;
+      const body=children.find(p=>p.name===`special-body-image-${special}`) as Piece;
+      expect(body.texture).toBe(`special-art-${special}`);expect(body.width).toBe(56);expect(body.height).toBe(56);
+      expect(children.some(p=>p instanceof Piece&&p.texture===['strawberry','carrot','blueberry','acorn','leaf','flower'][kind])).toBe(true);
+    }
+    expect(scene.pieces[0][1].children.some(p=>p.name==='special-body-column'&&p instanceof Graphic)).toBe(true);
+    expect(scene.pieces[0][1].children.some(p=>p.name==='special-body-image-column')).toBe(false);
+    expect(JSON.stringify(scene.engine.board)).toBe(before);
+  });
   it('일반 타일 색을 유지하면서 특수의 방향판·폭탄·다색 구슬을 서로 다른 외형으로 만듭니다',()=>{
     const {scene}=harness();
     for(const [col,special] of (['row','column','bomb','rainbow'] as const).entries())scene.engine.board[0][col]!.special=special;
@@ -631,7 +646,9 @@ describe('비정형 보드의 실제 표시·입력·엔진 낙하 재생',()=>{
     const graphics:Graphic[]=[],add=(scene as unknown as {add:{graphics:()=>Graphic}}).add,original=add.graphics;
     add.graphics=()=>{const g=original();graphics.push(g);return g;};scene.create();scene.events.emit('create');
     const active=levels[30].mask!.flat().filter(Boolean).length;
-    expect(graphics[0].rectangles).toHaveLength(active+1);expect(scene.pieces[0][0]).toBeNull();
+    const pockets=graphics[0].rectangles.filter(rect=>rect[2]===52&&rect[3]===49);
+    expect(pockets).toHaveLength(active);expect(scene.pieces[0][0]).toBeNull();
+    for(let row=0;row<8;row++)for(let col=0;col<8;col++)expect(pockets.some(rect=>rect[0]===18+col*56&&rect[1]===18+row*56)).toBe(levels[30].mask![row][col]);
     expect(scene.pieces.flat().filter(Boolean)).toHaveLength(active);
     scene.input.emit('pointerdown',{id:1,x:44,y:44,button:0});expect(scene.down).toBeUndefined();
     await scene.attempt({row:0,col:0},{row:0,col:1});scene.tap({row:0,col:0});expect(onMove).not.toHaveBeenCalled();

@@ -1,0 +1,111 @@
+{
+  "date": "2026-10-24",
+  "status": "own prototype art; pending final user feel and release verification",
+  "processing": "RGBA alpha>16 bounds for crop only; keep original alpha; aspect fit236 into256 transparent canvas; LANCZOS; WebP94/method6/exact",
+  "assets": [
+    {
+      "kind": "row",
+      "source": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-1cb083f0-ab44-40d1-ada7-a75f55e1e512.png",
+      "sourceSHA256": "7abbc861f67e88a1062bee561ed406b4a5de49ce990eca413a9a6cf0554418ba",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "alphaCrop": [
+        119,
+        134,
+        1135,
+        1120
+      ],
+      "renderedSize": [
+        236,
+        229
+      ],
+      "export": "public\\assets\\specials-v4\\row.webp",
+      "bytes": 14124,
+      "sha256": "d308926364dc80cf961a4a1d0e654c2333efefe38070a9c661d0f91f7f38b4d0",
+      "prompt": "Use case: stylized-concept. Asset type: one original premium mobile match-three special tile BODY sprite for Pawblossom Puzzle, a cozy rabbit gardener game. Create ONE turquoise-blue rounded square enamel garden charm, front-facing square silhouette, softly inflated cushion volume, thick rounded beveled edges, a narrow pale warm-gold rim, rich teal-blue underside and subtle soft cyan center. The center 55 percent must remain clean and unobstructed so the game can overlay its own fruit icon and direction markings. The object should feel tactile, juicy and beautifully polished: broad coherent upper-left studio highlight, restrained sharp white glint near the upper-left rim, rich saturated midtones, soft reflected light on the lower right, clear material separation at the edge. Premium hand-painted 2.5D casual mobile game rendering, confident simple volume readable at 32 pixels. Entire isolated silhouette centered inside the square image with 8 percent transparent margin; actual fully transparent background, no cast floor shadow. Only this one blue rounded square object, no text, no letters, no numbers, no arrows, no symbols, no fruit, no candy, no face, no logo, no watermark, no extra objects, no UI screenshot. Do not reproduce any existing game's artwork. Avoid noisy textures, tiny sparkles, painterly fuzz, thin outlines, empty outline-only frames, or photorealistic material.",
+      "reference": "none",
+      "tool": "built-in image_gen",
+      "transparent_background": true
+    },
+    {
+      "kind": "column",
+      "source": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-44a9d313-b507-40b2-a726-59fe1511f1cf.png",
+      "sourceSHA256": "44d00c6c18fd188564e49fbe810c9f82128e5d7123579076780a9e7f8124c00f",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "alphaCrop": [
+        116,
+        133,
+        1138,
+        1120
+      ],
+      "renderedSize": [
+        236,
+        228
+      ],
+      "export": "public\\assets\\specials-v4\\column.webp",
+      "bytes": 16026,
+      "sha256": "3a009c003165fc8b3775e3179b8330a6c2e8479ae87da3eebde246af920b1d1d",
+      "prompt": "Use case: precise-object-edit. Create a companion JADE-GREEN special tile body asset from this original turquoise game charm. Change ONLY the blue/cyan enamel body to rich fresh emerald-jade green with a soft lime-mint center and deep forest green underside. Preserve the exact rounded square silhouette, inflated cushion volume, warm-gold rim, upper-left highlight placement, edge thickness, camera, scale and transparent margin. Keep the center clean for a fruit icon and directional marks which the game will overlay. Same beautifully polished tactile hand-painted 2.5D casual game material. Actual transparent background, clean alpha edges. No arrows, no text, no symbols, no numbers, no logo, no watermark, no extra objects or cast floor shadow. Do not add a background or colored halo.",
+      "reference": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-1cb083f0-ab44-40d1-ada7-a75f55e1e512.png",
+      "tool": "built-in image_gen",
+      "transparent_background": true
+    },
+    {
+      "kind": "bomb",
+      "source": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-296cd4dd-0e53-4df8-9857-e795f6033139.png",
+      "sourceSHA256": "991d8715c1b0389ab4aad52ab9c6b3fc47a87b2e93b30fb860d55a2c5de5f505",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "alphaCrop": [
+        155,
+        48,
+        1100,
+        1207
+      ],
+      "renderedSize": [
+        192,
+        236
+      ],
+      "export": "public\\assets\\specials-v4\\bomb.webp",
+      "bytes": 18814,
+      "sha256": "3474e1ec19739bb1e03acdc3cf81c1c5d862df7bcbf3a3341a8f77d00f3ea465",
+      "prompt": "Use case: stylized-concept. Asset type: one ORIGINAL flower-burst special tile BODY sprite for Pawblossom Puzzle. The reference is our own blue charm and is MATERIAL/LIGHTING guidance only, not an edit target. Generate a distinct new object: a plump round raspberry-pink enamel garden seed capsule, front view, warm-gold narrow rim around its round face, deeper berry-magenta lower edge and a clean soft rose center occupying 55 percent where the game will overlay a fruit icon. At its top add one small dark plum rounded fuse cap and a short curling golden fuse extending toward upper-right, ending in one simple warm star-like glint. Entire compact object including fuse fits inside a square with 8 percent true transparent margin. Premium hand-painted 2.5D casual game rendering with juicy inflated volume, broad upper-left highlight, crisp readable silhouette and rich saturated colors consistent with the reference charm. One object only. Actual transparent background, no floor shadow, no surrounding haze, no text, no lettering, no fruit, no face, no numbers, no logo, no watermark, no existing game asset. Avoid photorealism, tiny detail noise and flat vector/outline style.",
+      "reference": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-1cb083f0-ab44-40d1-ada7-a75f55e1e512.png",
+      "tool": "built-in image_gen",
+      "transparent_background": true
+    },
+    {
+      "kind": "rainbow",
+      "source": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-7ff53648-808f-49ad-895a-d966f0e310ac.png",
+      "sourceSHA256": "1e368e9c56432b4c4b0a424cdefa346a407254350e1e3b7f72dae50ad5b97f55",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "alphaCrop": [
+        91,
+        43,
+        1162,
+        1178
+      ],
+      "renderedSize": [
+        223,
+        236
+      ],
+      "export": "public\\assets\\specials-v4\\rainbow.webp",
+      "bytes": 25384,
+      "sha256": "188d57b9b8ed2b1553dd6b1783e1436e0de68bef42c947747d1a4c7341be7352",
+      "prompt": "Use case: stylized-concept. Asset type: one ORIGINAL multicolor seed-orb special tile BODY sprite for Pawblossom Puzzle. Our reference blue charm gives only the polished enamel material, warm-gold rim and upper-left lighting language. Create one round plump deep amethyst-violet seed orb, front view, slightly iridescent softly glowing pale lavender center occupying 50 percent for a game fruit overlay. Around its outer rim arrange exactly SIX large polished jewel-like round petal lobes in red-coral, amber-yellow, lime-green, cyan, indigo and pink, evenly spaced as an original garden rosette. Warm pale-gold thin edging unifies the silhouette. Rich tactile inflated volume and broad clean upper-left specular highlights; premium hand-painted 2.5D mobile puzzle game art, readable as one bold object at 32 pixels. Centered whole silhouette inside square with 8 percent transparent margin. Actual transparent background including petal gaps. No fuse, no chocolate, no sprinkles, no candy wrapper, no fruit, no face, no text, no numbers, no logo, no watermark, no floor shadow or colored haze. Not a copy of another game's asset. Avoid micro-details, blur and flat clipart.",
+      "reference": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-1cb083f0-ab44-40d1-ada7-a75f55e1e512.png",
+      "tool": "built-in image_gen",
+      "transparent_background": true
+    }
+  ]
+}

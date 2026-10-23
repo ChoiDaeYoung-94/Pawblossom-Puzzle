@@ -4,6 +4,7 @@ import type { AudioManager } from './audio/AudioManager';
 import { BoardEffects } from './BoardEffects';
 import { reducedMotion } from './reducedMotion';
 import type { ResolveVisual } from './RoundFeedback';
+import {specialArtKinds,specialBodyKey,specialBodyPath} from './SpecialTileArt';
 
 export const tileNames = ['strawberry','carrot','blueberry','acorn','leaf','flower'];
 type Notice='matched'|'chain'|'specialCreated'|'noMoves'|'rowClear'|'columnClear'|'bombClear'|'colorClear'|'comboClear'|'leafThinned'|'leavesCleared'|'cratesCleared';
@@ -32,17 +33,26 @@ export class BoardScene extends Phaser.Scene {
   configureLeaves(piles:LeafPile[]){this.engine.setLeaves(piles);}
   preload() {
     for(const name of tileNames)if(!this.textures.exists(name))this.load.image(name,`/assets/tiles-v3/${name}.webp`);
+    for(const kind of specialArtKinds)if(!this.textures.exists(specialBodyKey(kind)))this.load.image(specialBodyKey(kind),specialBodyPath(kind));
     for(const name of ['leaf-pile','leaf-single','wooden-crate'])if(!this.textures.exists(name))this.load.svg(name,`/assets/obstacles/${name}.svg`,{width:100,height:100});
   }
   create() {
     this.ready=false;this.finished=false;this.busy=false;this.motionReduced=reducedMotion();
     this.effects.clear();this.effects=new BoardEffects(this);
-    this.cameras.main.setBackgroundColor('#dae6d7');
+    this.cameras.main.setBackgroundColor('#284c42');
     const g=this.add.graphics();
-    g.fillStyle(0xb9cdb5,1);g.fillRoundedRect(6,6,468,468,24);
+    g.fillStyle(0x172f2a,1);g.fillRoundedRect(4,7,472,470,25);
+    g.fillStyle(0xa98a50,1);g.fillRoundedRect(4,3,472,471,25);
+    g.fillStyle(0x527b66,1);g.fillRoundedRect(9,8,462,461,21);
+    g.lineStyle(2,0xf5e5b8,.9);g.strokeRoundedRect(6,5,468,467,23);
     for(let r=0;r<8;r++)for(let c=0;c<8;c++){
       if(!this.engine.isActive({row:r,col:c}))continue;
-      g.fillStyle((r+c)%2?0xe7eee0:0xf1f3e7,1);g.fillRoundedRect(PAD+c*CELL+2,PAD+r*CELL+2,52,52,11);
+      const x=PAD+c*CELL,y=PAD+r*CELL;
+      g.fillStyle(0x203f34,.5);g.fillRoundedRect(x+2,y+4,52,51,11);
+      g.fillStyle((r+c)%2?0xc6d8be:0xdce5cc,1);g.fillRoundedRect(x+2,y+2,52,49,11);
+      g.fillStyle(0xfffbea,.35);g.fillRoundedRect(x+5,y+4,46,13,8);
+      g.lineStyle(1,0xf9ffe9,.55);g.strokeRoundedRect(x+2,y+2,52,49,11);
+      g.fillStyle(0x365542,.13);g.fillRoundedRect(x+12,y+36,32,8,4);
     }
     this.paint(this.engine.board);
     this.paintLeaves(this.engine.leaves);
@@ -176,25 +186,29 @@ export class BoardScene extends Phaser.Scene {
   }
   private makePiece(tile:Tile,pos:Position) {
       const point=this.point(pos);const item=this.add.container(point.x,point.y).setDepth(2);
+      const textured=Boolean(tile.special&&this.textures?.exists(specialBodyKey(tile.special)));
       if(tile.special){
-        const halo=this.add.graphics().setName(`special-body-${tile.special}`);
-        if(tile.special==='row'||tile.special==='column'){
-          const across=tile.special==='row';
-          // 몸체는 정사각형으로 유지하고 방향은 띠/화살표로 구분합니다.
-          halo.fillStyle(0x244d60,1);halo.fillRoundedRect(-24,-24,48,48,12);
-          halo.fillStyle(across?0x298fbf:0x27976c,1);halo.fillRoundedRect(-23,-24,46,46,11);
-          halo.lineStyle(3,across?0xb5f2ff:0xc1ffda,1);halo.strokeRoundedRect(-22,-22,44,44,10);
-          halo.fillStyle(0xffffff,.22);halo.fillCircle(-13,-14,6);
-        }else{
-          halo.fillStyle(tile.special==='bomb'?0x8c3a58:0x5264a3,1);halo.fillCircle(0,1,25);
-          halo.lineStyle(3,tile.special==='bomb'?0xffcb73:0xffe9ad,1);halo.strokeCircle(0,0,24);
-          halo.fillStyle(0xffffff,.28);halo.fillCircle(-12,-13,6);
-          if(tile.special==='bomb'){
-            halo.fillStyle(0x33283f,1);halo.fillRoundedRect(-8,-25,16,8,3);
-            halo.lineStyle(3,0xffd48e,1);halo.lineBetween(5,-25,11,-27);halo.lineBetween(11,-27,16,-23);
+        if(textured)item.add(this.add.image(0,0,specialBodyKey(tile.special)).setDisplaySize(56,56).setName(`special-body-image-${tile.special}`));
+        else{
+          const halo=this.add.graphics().setName(`special-body-${tile.special}`);
+          if(tile.special==='row'||tile.special==='column'){
+            const across=tile.special==='row';
+            // 몸체는 정사각형으로 유지하고 방향은 띠/화살표로 구분합니다.
+            halo.fillStyle(0x244d60,1);halo.fillRoundedRect(-24,-24,48,48,12);
+            halo.fillStyle(across?0x298fbf:0x27976c,1);halo.fillRoundedRect(-23,-24,46,46,11);
+            halo.lineStyle(3,across?0xb5f2ff:0xc1ffda,1);halo.strokeRoundedRect(-22,-22,44,44,10);
+            halo.fillStyle(0xffffff,.22);halo.fillCircle(-13,-14,6);
+          }else{
+            halo.fillStyle(tile.special==='bomb'?0x8c3a58:0x5264a3,1);halo.fillCircle(0,1,25);
+            halo.lineStyle(3,tile.special==='bomb'?0xffcb73:0xffe9ad,1);halo.strokeCircle(0,0,24);
+            halo.fillStyle(0xffffff,.28);halo.fillCircle(-12,-13,6);
+            if(tile.special==='bomb'){
+              halo.fillStyle(0x33283f,1);halo.fillRoundedRect(-8,-25,16,8,3);
+              halo.lineStyle(3,0xffd48e,1);halo.lineBetween(5,-25,11,-27);halo.lineBetween(11,-27,16,-23);
+            }
           }
+          item.add(halo);
         }
-        item.add(halo);
       }
       const size=tile.special?(tile.special==='rainbow'?29:tile.special==='bomb'?32:35):45;
       const image=this.add.image(0,tile.special==='bomb'?2:0,tileNames[tile.kind]).setDisplaySize(size,size);item.add(image);
@@ -208,10 +222,12 @@ export class BoardScene extends Phaser.Scene {
           for(const x of [-16,16])mark.lineBetween(x,-15,x,15);
           for(const y of [-21,21]){const inward=y>0?-6:6;mark.lineStyle(5,0x175e45);mark.lineBetween(0,y,-6,y+inward);mark.lineBetween(0,y,6,y+inward);mark.lineStyle(3,0xfffaf0);mark.lineBetween(0,y,-6,y+inward);mark.lineBetween(0,y,6,y+inward);}
         }
-        if(tile.special==='bomb') {mark.lineStyle(3,0xffe3b8);mark.lineBetween(-17,-12,-13,-16);mark.fillStyle(0xffdf81);mark.fillCircle(17,-23,3);}
+        if(tile.special==='bomb'&&!textured) {mark.lineStyle(3,0xffe3b8);mark.lineBetween(-17,-12,-13,-16);mark.fillStyle(0xffdf81);mark.fillCircle(17,-23,3);}
         if(tile.special==='rainbow') {
-          const colors=[0xff788f,0xffc65b,0x9bdc64,0x73ddeb,0x9e9bff,0xf5a2df];
-          colors.forEach((color,i)=>{const angle=(i*60-90)*Math.PI/180;mark.fillStyle(color);mark.fillCircle(Math.cos(angle)*19,Math.sin(angle)*19,5);});
+          if(!textured){
+            const colors=[0xff788f,0xffc65b,0x9bdc64,0x73ddeb,0x9e9bff,0xf5a2df];
+            colors.forEach((color,i)=>{const angle=(i*60-90)*Math.PI/180;mark.fillStyle(color);mark.fillCircle(Math.cos(angle)*19,Math.sin(angle)*19,5);});
+          }
           mark.lineStyle(2,0xfff8dc,.8);mark.strokeCircle(0,0,13);
         }
         item.add(mark);
