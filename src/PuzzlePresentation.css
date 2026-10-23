@@ -1,0 +1,43 @@
+/* 플레이 중에는 목표와 남은 이동을 우선합니다. 재화는 지도, 언어는 설정에서도 확인합니다. */
+#app[data-route="puzzle"] .topbar .wallet,
+#app[data-route="puzzle"] .topbar .language-button{display:none}
+#app[data-route="puzzle"] .brand{font-size:18px}
+#app[data-route="puzzle"] .brand small{display:none}
+#app[data-route="puzzle"] .game-panel{background:linear-gradient(#fffdf7,#f4f5e9)}
+#puzzle-view .mission-bar{padding:8px;border:1px solid #d9e3ca;border-radius:20px;background:#f4f7e9;gap:12px}
+#puzzle-view .moves-box{border:0;border-radius:14px;background:#537b51;color:#fffdf0;min-width:64px}
+#puzzle-view .moves-box strong{color:#fffdf0;font-size:32px}
+#puzzle-view .moves-box>span{color:#fffdf0}
+#puzzle-view .goal-box{padding-block:2px;align-self:center}
+#puzzle-view .goal-heading{color:#456044;font-size:10px}
+#puzzle-view .score-label{font-size:9px;color:#647354}
+#puzzle-view .goal-item{gap:7px}
+#puzzle-view .goal-item img{width:34px;height:34px;filter:drop-shadow(0 2px 1px #425b3120)}
+#puzzle-view .goal-item strong{font-size:21px;color:#3f5d3e}
+/* Phaser가 부모에 쓰는 inline 100%보다 정사각 크기를 우선합니다. */
+#game-canvas{width:min(100cqw,100cqh)!important;height:min(100cqw,100cqh)!important}
+.header-pip::after{content:'';position:absolute;inset:0;background:url('/assets/pip-idle-blink-v2.webp') center/contain no-repeat;opacity:0;pointer-events:none}
+.header-pip[data-idle-active="true"]:not([data-mood]){animation:pip-breathe 3.8s ease-in-out infinite}
+.header-pip[data-idle-active="true"][data-idle-ready="true"]:not([data-mood])>.header-pip-image{animation:pip-eyes-open 6.4s step-end infinite}
+.header-pip[data-idle-active="true"][data-idle-ready="true"]:not([data-mood])::after{animation:pip-eyes-blink 6.4s step-end infinite}
+@keyframes pip-breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-1px) scale(1.015)}}
+@keyframes pip-eyes-open{0%,91%,95%,100%{opacity:1}92%{opacity:0}}
+@keyframes pip-eyes-blink{0%,91%,95%,100%{opacity:0}92%{opacity:1}}
+@media(max-width:359px){#puzzle-view .mission-bar{padding:6px;gap:8px}#puzzle-view .moves-box{min-width:54px}#puzzle-view .goal-item{gap:4px}#puzzle-view .goal-item img{width:28px;height:28px}#puzzle-view .goal-item strong{font-size:18px}}
+@media(orientation:portrait) and (max-height:650px){
+  #app[data-route="puzzle"] .topbar{height:44px}
+  #app[data-route="puzzle"] .workspace{padding:5px 8px}
+  #app[data-route="puzzle"] .game-panel{padding:7px 10px 0}
+  #puzzle-view{gap:5px}
+  #puzzle-view .level-top{height:60px;min-height:60px;max-height:60px}
+  #puzzle-view .header-pip{flex-basis:60px;width:60px;height:60px}
+  #puzzle-view .level-copy h2{font-size:16px;gap:2px}
+  #puzzle-view .level-copy #level-number{font-size:22px}
+  #puzzle-view .mission-bar{padding:4px 6px}
+  #puzzle-view .moves-box strong{font-size:27px}
+  #puzzle-view .board-hint{font-size:10px;line-height:1.2}
+  #app[data-route="puzzle"] .bottom-nav{margin-inline:-10px;padding:4px 10px}
+  #app[data-route="puzzle"] .bottom-nav button{min-height:44px;flex-direction:row;gap:5px}
+}
+@media(orientation:landscape) and (max-height:600px){#puzzle-view .mission-bar{padding:6px;gap:7px;border-radius:14px}#puzzle-view .moves-box{min-width:46px}#puzzle-view .moves-box strong{font-size:26px}#puzzle-view #goals{gap:6px}#puzzle-view .goal-item{gap:3px}#puzzle-view .goal-item img{width:24px;height:24px}#puzzle-view .goal-item strong{font-size:16px}#puzzle-view .goal-heading{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.header-pip,.header-pip>.header-pip-image,.header-pip::after{animation:none!important}.header-pip>.header-pip-image{opacity:1!important}.header-pip::after{opacity:0!important}}

@@ -181,6 +181,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     cloneSnapshot,prepareShuffle,
     showResultPip:()=>{resultArtCalls++;},
     RoundFeedback:FeedbackStub,
+    createPipIdle:(pip:ElementStub)=>({setActive:(active:boolean)=>{pip.dataset.idleActive=String(active);}}),
     AudioManager: AudioStub, t: (_language: string, key: string) => key, icon: () => '',
     Capacitor: { isNativePlatform: () => native,getPlatform:()=>native?'android':'web',isPluginAvailable:(name:string)=>Boolean(name==='PawblossomTestBilling'?billingBridge:adsBridge) },
     App:{addListener:(name:string,callback:(state:{isActive:boolean})=>void)=>{nativeEvents[name]=callback;return Promise.resolve({remove(){}});},getState:()=>nativeState,minimizeApp:()=>Promise.resolve()}, confirm: () => true,
@@ -2259,5 +2260,27 @@ describe('후반 정원 공간과 확정 전 미리보기',()=>{
     h.element('#garden-area-arch').onclick();h.element('#garden-space-restore').onclick();expect(h.run('spaceDialog.innerHTML')).toContain(t('ko','spaceDemo'));h.element('#space-preview-cancel').onclick();expect(h.run('exitCareDemo()')).toBe(true);expect(h.run('selectedGardenArea')).toBe('shelter');expect(h.run('selectedGardenPlot')).toBe(3);expect(h.run('JSON.stringify(save)')).toBe(normal);expect(h.run(roundState)).toBe(round);expect(h.disk()).toEqual(disk);
     h.run("switchView('journal')");expect(h.element('#journal-view').innerHTML).toContain(t('ko','spaceNext'));h.element('#pip-open-space').onclick();expect(h.run('selectedGardenArea')).toBe('pond');expect(h.run('route')).toBe('village');
     const css=read('../src/style.css');expect(css).toContain('grid-template-columns:repeat(4,minmax(0,1fr))');expect(css).toContain('.garden-area-tabs button{min-width:0;min-height:44px');expect(css).toContain('#garden-space-dialog{width:min(500px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto}');
+  });
+});
+
+
+describe('퍼즐 핍 idle 표시 수명',()=>{
+  it.each([true,false])('승패 %s 정산부터 결과창 전300ms에도 idle을 즉시 멈춥니다',won=>{
+    const h=mainHarness();h.run('startLevel(1)');expect(h.element('#header-pip').dataset.idleActive).toBe('true');
+    h.run(won?'scene.hooks.onMove([12,10,0,0,0,0],220)':'moves=1;scene.hooks.onMove([0,0,0,0,0,0],0)');
+    expect(h.run('roundEnded')).toBe(true);expect(h.run('resultShown')).toBe(false);
+    expect(h.resultTimers()).toHaveLength(1);expect(h.element('#header-pip').dataset.idleActive).toBe('false');
+  });
+  it('지도/설정/모달/숨김/종료 상태에서는 멈추고 실제 퍼즐 복귀에서만 재개합니다',()=>{
+    const h=mainHarness(false,false,false,false,undefined,true,undefined,undefined,true);
+    const active=()=>h.element('#header-pip').dataset.idleActive;
+    expect(active()).toBe('false');h.run("switchView('puzzle')");expect(active()).toBe('true');
+    h.run("switchView('settings')");expect(active()).toBe('false');h.run("switchView('puzzle')");expect(active()).toBe('true');
+    h.run('document.hidden=true');h.documentEvents.visibilitychange();expect(active()).toBe('false');
+    h.run('document.hidden=false');h.documentEvents.visibilitychange();expect(active()).toBe('true');
+    h.run("showStagePreview(currentLevel,'restart',document.querySelector('#restart'))");expect(active()).toBe('false');
+    h.run('closeStagePreview()');expect(active()).toBe('true');
+    expect(h.run("boardPending=true;syncActivity();document.querySelector('#header-pip').dataset.idleActive")).toBe('false');
+    h.run('boardPending=false;roundEnded=true;syncActivity()');expect(active()).toBe('false');
   });
 });
