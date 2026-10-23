@@ -40,6 +40,7 @@ class ElementStub {
   hidden: boolean;
   open = false;
   tabIndex = -1;
+  scrollTop=0;scrollLeft=0;
   innerHTML = '';
   textContent = '';
   style: Record<string, string> = {};
@@ -68,7 +69,7 @@ class ElementStub {
   close() { this.open = false; }
 }
 
-function mainHarness(storageFails = false, firstUse = false, testTools = false, native = false, initial?:unknown, autoFrame=true, adsBridge?:TestAdsBridge,billingBridge?:TestBillingBridge) {
+function mainHarness(storageFails = false, firstUse = false, testTools = false, native = false, initial?:unknown, autoFrame=true, adsBridge?:TestAdsBridge,billingBridge?:TestBillingBridge,bootMap=false) {
   const elements = new Map<string, ElementStub>();
   const timers = new Map<number, { callback: () => void; ms: number }>();
   let timerId = 0, writes = 0;
@@ -170,7 +171,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
         ? Array.from({length:LEVEL_COUNT},(_,i)=>{const button=element(`#test-stage-${i+1}`);button.dataset.testLevel=String(i+1);return button;}) : selector === '[data-chapter]' || selector === '[data-test-chapter]'
         ? Array.from({length:currentChapters.length},(_,i)=>{const test=selector.includes('test-');const button=element(`#${test?'test-':''}chapter-${i+1}`);button.dataset[test?'testChapter':'chapter']=String(i+1);return button;}) : selector === '#practice-board button'
         ? Array.from({length:9},(_,i)=>{const button=element(`#practice-cell-${Math.floor(i/3)}-${i%3}`);button.dataset={row:String(Math.floor(i/3)),col:String(i%3)};return button;}) : selector === '.view'
-        ? ['puzzle', 'village', 'journal', 'settings'].map(name => element(`#${name}-view`)) : [],
+        ? ['map','puzzle', 'village', 'journal', 'settings'].map(name => element(`#${name}-view`)) : [],
       documentElement: {}, hidden:false, addEventListener:(name:string,callback:()=>void)=>{documentEvents[name]=callback;},
     },
     window:{addEventListener:(name:string,callback:()=>void)=>{windowEvents[name]=callback;}},
@@ -207,6 +208,8 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   Object.assign(context, stateExports);
   vm.runInContext(mainCode, context);
   if(autoFrame)frame();
+  // 기존 퍼즐 회귀는 실제 지도 부팅 뒤 퍼즐로 진입합니다. 지도 초기 상태는 bootMap으로 따로 검증합니다.
+  if(!bootMap)vm.runInContext("switchView('puzzle')",context);
   return {
     setStorageFails:(value:boolean)=>{storageFails=value;},disk:()=>[...storageValues],
     resultArtCalls:()=>resultArtCalls,frame:()=>frame(),games:()=>games,destroys:()=>destroys,
@@ -220,6 +223,41 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     writes: () => writes, stored: () => JSON.parse(storageValues.get('pawblossom.save.v1')??'null'),
   };
 }
+
+describe('독립 스테이지 지도',()=>{
+  const boot=()=>mainHarness(false,false,false,false,undefined,true,undefined,undefined,true);
+  it('지도에서 부팅하고 보드는 같은 Scene으로 일시중단하며100단계 잠금/완료/현재 상태를 표시합니다',()=>{
+    const h=boot();expect(h.run('route')).toBe('map');expect(h.run('game.paused')).toBe(true);expect(h.element('#game-canvas').tabIndex).toBe(-1);
+    const html=h.element('#map-view').innerHTML;expect(html.match(/data-level="/g)).toHaveLength(100);
+    expect(html).toMatch(/id="map-stage-2"[^>]+aria-current="step"/);
+    expect(html).toMatch(/data-level="3" disabled/);expect(html).toContain(t('en','levelCompleted'));
+    expect(h.element('#village-view').innerHTML).not.toContain('data-level=');
+  });
+  it('지도 미리보기의 취소/이어하기는 보드·회차·지갑·저장 쓰기를 보존하고 잠금은 거부합니다',()=>{
+    const h=boot(),before=h.run('JSON.stringify({round,moves,collected,save,board:scene.engine.board})'),disk=h.disk(),writes=h.writes();
+    h.element('#map-play').onclick();expect(h.run('stagePreview.route')).toBe('map');expect(h.run('previewDialog.innerHTML')).not.toContain('id="preview-remaining"');expect(h.run('previewDialog.innerHTML')).toContain(t('en','previewStartAction'));h.element('#preview-cancel').onclick();
+    expect(h.run('route')).toBe('map');expect(h.run('JSON.stringify({round,moves,collected,save,board:scene.engine.board})')).toBe(before);
+    h.run("showStagePreview(3,'map',document.querySelector('#map-stage-3'))");expect(h.run('stagePreview')).toBeUndefined();
+    h.element('#map-play').onclick();h.run("confirmStagePreview(stagePreview,'continue')");expect(h.run('route')).toBe('puzzle');
+    expect(h.run('JSON.stringify({round,moves,collected,save,board:scene.engine.board})')).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('탐색 위치와 진행을 언어 변경·설정 왕복에서도 보존하고 현재 위치 버튼만 명시 이동합니다',()=>{
+    const h=boot();h.run("document.querySelector('#campaign-scroll').scrollTop=613;globalThis.beforeMap=JSON.stringify(scene.engine.board);changeLanguage('ko')");
+    expect(h.element('#campaign-scroll').scrollTop).toBe(613);expect(h.element('#map-view').innerHTML).toContain('핍과 함께 한 걸음');
+    h.element('#settings-button').onclick();expect(h.run('route')).toBe('settings');h.element('#settings-button').onclick();expect(h.run('route')).toBe('map');
+    expect(h.element('#campaign-scroll').scrollTop).toBe(613);expect(h.run('JSON.stringify(scene.engine.board)')).toBe(h.run('beforeMap'));
+    h.run("globalThis.located=false;document.querySelector('#map-stage-2').scrollIntoView=()=>{located=true}");h.element('#map-locate').onclick();expect(h.run('located')).toBe(true);
+  });
+  it('저장된 진행 판도 지도에서 복원하고 이어하기가 같은 보드와 잔량을 유지합니다',()=>{
+    const original=mainHarness();original.run('scene.hooks.onMove([1,2,0,0,0,0],30)');
+    const h=mainHarness(false,false,false,false,original.stored(),true,undefined,undefined,true);
+    expect(h.run('route')).toBe('map');expect(h.run('game.paused')).toBe(true);expect(h.run('moves')).toBe(23);
+    expect(h.run('JSON.stringify(scene.engine.board)')).toBe(original.run('JSON.stringify(scene.engine.board)'));
+    const state=h.run('JSON.stringify({round,moves,score,collected,save,board:scene.engine.board})'),disk=h.disk(),writes=h.writes();
+    h.element('#map-play').onclick();expect(h.run('previewDialog.innerHTML')).toContain('id="preview-remaining"');expect(h.run('previewDialog.innerHTML')).toContain('Moves remaining: 23.');
+    h.run("confirmStagePreview(stagePreview,'continue')");expect(h.run('route')).toBe('puzzle');expect(h.run('JSON.stringify({round,moves,score,collected,save,board:scene.engine.board})')).toBe(state);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+});
 
 describe('보드 피드백 연결과 정산 경계',()=>{
   it('이동 시작 잔량과 단계 표시만 전달하고 실제 onMove 전에는 숫자·보드·세 저장 키가 같습니다',()=>{
@@ -353,7 +391,7 @@ describe('핍 육성·재화 소비와 정원 전용 체험',()=>{
     expect(h.run('careDemo')).toBeUndefined();expect(h.run('save===normalSaveRef&&scene===normalSceneRef&&scene.engine===normalEngineRef')).toBe(true);
     expect(h.run('JSON.stringify(save)===normalSaveJson')).toBe(true);expect(h.run(normalState)).toBe(roundState);expect(h.run('game.scene.adds')).toBe(adds);
     expect(h.run('save.language')).toBe('en');expect(h.run('audio.music&&audio.sfx')).toBe(true);
-    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('route')).toBe(method==='explicit'?'village':method==='brand'?'puzzle':method);
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('route')).toBe(method==='explicit'?'village':method==='brand'?'map':method);
     expect(h.run('careFocusCalls')).toEqual(method==='explicit'?[{id:'care-demo-enter-village',preventScroll:true}]:[]);
   });
   it('끝난 회차와 늦은 일반/체험/설정 버튼 콜백도 복원 뒤 다시 적용되지 않습니다',()=>{
@@ -371,13 +409,13 @@ describe('핍 육성·재화 소비와 정원 전용 체험',()=>{
     expect(h.element('#journal-view').innerHTML).not.toContain('care-demo-');expect(h.element('#village-view').innerHTML).not.toContain('care-demo-');
     expect(h.disk()).toEqual(disk);expect(h.run(normalState)).toBe(state);
   });
-  it('체험 중 비활성·복귀에서도 보드를 멈추고 Android 뒤로가기는 원래 회차로 돌아갑니다',()=>{
+  it('체험 중 비활성·복귀에서도 보드를 멈추고 Android 뒤로가기는 원래 저장의 지도로 돌아갑니다',()=>{
     const h=mainHarness(false,false,true,true);h.run("nativeActive=true;switchView('journal');globalThis.careOriginalScene=scene;globalThis.careOriginalSave=save");
     const disk=h.disk(),state=h.run(normalState);expect(h.run('enterCareDemo()')).toBe(true);
     h.element('#pip-play').onclick();h.run('document.hidden=true');h.documentEvents.visibilitychange();h.nativeEvents.appStateChange({isActive:false});
     h.run('document.hidden=false');h.documentEvents.visibilitychange();h.nativeEvents.appStateChange({isActive:true});
     expect(h.run('game.paused')).toBe(true);expect(h.run(normalState)).toBe(state);
-    h.nativeEvents.backButton({isActive:true});expect(h.run('careDemo')).toBeUndefined();expect(h.run('route')).toBe('puzzle');
+    h.nativeEvents.backButton({isActive:true});expect(h.run('careDemo')).toBeUndefined();expect(h.run('route')).toBe('map');
     expect(h.run('scene===careOriginalScene&&save===careOriginalSave')).toBe(true);expect(h.run(normalState)).toBe(state);expect(h.disk()).toEqual(disk);
   });
   it('비활성·모달·회차교체·정산·육성 처리 중에는 체험을 시작하지 않습니다',()=>{
@@ -906,14 +944,14 @@ describe('보상형 시험 이어하기 요청 문맥',()=>{
     x.emit(oldReceipt);oldShow();expect(h.run('moves')).toBe(0);expect(h.run('continueUsed')).toBe(false);
     await x.start();x.earned();x.closed();expect(h.run('moves')).toBe(5);expect(h.run('continueUsed')).toBe(true);expect(h.disk()).toEqual(disk);
   });
-  it('준비 광고 취소 중 즉시 퍼즐 복귀는 정원에 머물고 취소 뒤 명시 복귀만 결과를 엽니다',async()=>{
+  it('준비 광고 취소 중 즉시 퍼즐 복귀는 지도에 머물고 취소 뒤 명시 복귀만 결과를 엽니다',async()=>{
     const x=await setup(),{h}=x;await h.run('prepareRewardContinue(rewardedContinue)');x.emit({state:'ready'});
     let finishCancel!:()=>void;
     x.bridge.cancel=()=>new Promise<ReturnType<typeof x.state>>(resolve=>{finishCancel=()=>resolve(x.emit({state:'cancelled',receipt:null}));});
     h.element('#result-home').onclick();expect(h.run('testAds.pending')).toBe(true);
-    h.run("switchView('puzzle')");expect(h.run('route')).toBe('village');expect(h.element('#result-dialog').open).toBe(false);
+    h.run("switchView('puzzle')");expect(h.run('route')).toBe('map');expect(h.element('#result-dialog').open).toBe(false);
     finishCancel();await h.run('testAds.connect()');
-    expect(h.run('testAds.pending')).toBe(false);expect(h.run('route')).toBe('village');expect(h.element('#result-dialog').open).toBe(false);
+    expect(h.run('testAds.pending')).toBe(false);expect(h.run('route')).toBe('map');expect(h.element('#result-dialog').open).toBe(false);
     h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(h.run('moves')).toBe(0);expect(h.run('rewardedContinue.requestId')).toBeUndefined();
   });
 });
@@ -967,12 +1005,12 @@ describe('종료된 회차의 명시적 퍼즐 복귀',()=>{
     h.run(`startLevel(${level},${test});moves=1;scene.hooks.onMove(${won?'[99,99,99,99,99,99]':'[0,0,0,0,0,0]'},100,1,${won?'64':'0'})`);
     h.flushResults();return h;
   }
-  it.each([{test:false,won:true,level:2},{test:false,won:false,level:2},{test:true,won:true,level:6},{test:true,won:false,level:6},{test:false,won:true,level:30}])('정원 왕복은 $test/$won/$level 결과와 회차·보상·아트·소리를 다시 만들지 않습니다',({test,won,level})=>{
+  it.each([{test:false,won:true,level:2},{test:false,won:false,level:2},{test:true,won:true,level:6},{test:true,won:false,level:6},{test:false,won:true,level:30}])('지도 왕복은 $test/$won/$level 결과와 회차·보상·아트·소리를 다시 만들지 않습니다',({test,won,level})=>{
     const h=ended(test,won,level),disk=h.disk(),writes=h.writes(),scene=h.run('scene'),engine=h.run('scene.engine'),round=h.run('round');
     const sounds=h.run('audio.plays.slice()'),art=h.resultArtCalls(),html=h.element('#result-dialog').innerHTML,next=h.element('#result-next').onclick;
     let focus=0;h.element('#result-next').focus=()=>{focus++;};
     for(let i=0;i<3;i++){
-      h.element('#result-home').onclick();expect(h.run('route')).toBe('village');expect(h.element('#result-dialog').open).toBe(false);
+      h.element('#result-home').onclick();expect(h.run('route')).toBe('map');expect(h.element('#result-dialog').open).toBe(false);
       h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(h.run('game.paused')).toBe(true);expect(h.element('#game-canvas').tabIndex).toBe(-1);
     }
     expect(focus).toBe(3);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('audio.plays')).toEqual(sounds);expect(h.resultArtCalls()).toBe(art);
@@ -980,19 +1018,19 @@ describe('종료된 회차의 명시적 퍼즐 복귀',()=>{
     h.element('#result-next').onclick();expect(h.run('currentLevel')).toBe(won?Math.min(LEVEL_COUNT,level+1):level);expect(h.run('testingLevel')).toBe(test);expect(h.element('#result-dialog').open).toBe(false);
   });
   it.each([true,false])('Escape로 닫은 결과 won=%s도 명시적으로 돌아올 수 있습니다',won=>{
-    const h=ended(false,won);h.element('#result-dialog').listeners.cancel({preventDefault(){}});expect(h.run('route')).toBe('village');
+    const h=ended(false,won);h.element('#result-dialog').listeners.cancel({preventDefault(){}});expect(h.run('route')).toBe('map');
     h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(h.run('resultWon')).toBe(won);
   });
-  it('Android 뒤로가기로 정원에 나간 결과도 다시 선택할 수 있습니다',()=>{
-    const h=ended(false,false,2,true);h.nativeEvents.backButton({isActive:true});expect(h.run('route')).toBe('village');
+  it('Android 뒤로가기로 지도에 나간 결과도 다시 선택할 수 있습니다',()=>{
+    const h=ended(false,false,2,true);h.nativeEvents.backButton({isActive:true});expect(h.run('route')).toBe('map');
     h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(h.run('resultWon')).toBe(false);
   });
   it.each(['hidden','native','pending','timer','tutorial','ads','billing','wrong-scene'])('%s 중에는 화면 전환 전에 막고 자동으로 초점을 가져가지 않습니다',reason=>{
     const h=ended();h.element('#result-home').onclick();let focus=0;h.element('#result-next').focus=()=>{focus++;};
     const changes:Record<string,string>={hidden:'document.hidden=true',native:'nativeActive=false',pending:'boardPending=true',timer:'resultTimer=123',tutorial:"document.querySelector('#tutorial-dialog').open=true",ads:'testAds={pausesGame:true}',billing:'testBilling={pausesGame:true}', 'wrong-scene':'game.scene.board=undefined'};
-    h.run(changes[reason]+";switchView('puzzle')");expect(h.run('route')).toBe('village');expect(h.element('#result-dialog').open).toBe(false);expect(focus).toBe(0);
+    h.run(changes[reason]+";switchView('puzzle')");expect(h.run('route')).toBe('map');expect(h.element('#result-dialog').open).toBe(false);expect(focus).toBe(0);
     h.run("document.hidden=false;nativeActive=true;boardPending=false;resultTimer=undefined;document.querySelector('#tutorial-dialog').open=false;testAds=undefined;testBilling=undefined;game.scene.board=scene;syncActivity()");
-    expect(h.run('route')).toBe('village');expect(h.element('#result-dialog').open).toBe(false);expect(focus).toBe(0);
+    expect(h.run('route')).toBe('map');expect(h.element('#result-dialog').open).toBe(false);expect(focus).toBe(0);
     h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(focus).toBe(1);
   });
   it('진행 중 회차와 새 회차에는 닫았던 결과를 표시하지 않습니다',()=>{
@@ -1116,9 +1154,9 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
   });
   it.each(['ko','en'] as const)('스테이지 이름에 %s 완료·잠금 상태를 포함하고 잠금은 비활성으로 유지합니다',language=>{
     const h=mainHarness();h.run(`changeLanguage('${language}')`);
-    const html=h.element('#village-view').innerHTML;
+    const html=h.element('#map-view').innerHTML;
     expect(html).toContain(`aria-label="${t(language,'level')} 1 · ${t(language,'levelCompleted')}"`);
-    expect(html).toContain(`aria-label="${t(language,'level')} 2 · ${t(language,'previewCurrent')}"`);
+    expect(html).toContain(`aria-label="${t(language,'level')} 2 · ${t(language,'mapAvailable')} · ${t(language,'previewCurrent')}"`);
     expect(html).toContain('aria-current="step"');
     expect(html).toMatch(new RegExp(`data-level="3" disabled[^>]+aria-label="${t(language,'level')} 3 · ${t(language,'levelLocked')}"`));
   });
@@ -1405,9 +1443,9 @@ describe('100스테이지 진행과 선택 묶음',()=>{
   });
   it('일반 선택 묶음은 잠금을 유지하고 테스트 30번은 진행 기록을 바꾸지 않습니다',()=>{
     const app=mainHarness(false,false,true), before=app.stored();
-    app.element('#chapter-3').onclick();
-    expect(app.element('#village-view').innerHTML).toContain('data-level="30" disabled');
-    expect(app.element('#village-view').innerHTML).not.toContain('data-level="1"');
+    app.run("switchView('map');document.querySelector('#map-chapter-select').onchange({target:{value:'3'}})");expect(app.run('selectedChapter')).toBe(3);
+    expect(app.element('#map-view').innerHTML).toContain('data-level="30" disabled');
+    expect(app.element('#map-view').innerHTML).toContain('data-level="1"');
     app.run('showTestPicker()');app.element('#test-chapter-3').onclick();
     expect(app.element('#test-level-dialog').innerHTML).toContain('data-test-level="30"');
     expect(app.element('#test-level-dialog').innerHTML).not.toContain('data-test-level="1"');
@@ -2092,7 +2130,7 @@ describe('꽃 선택·공동 작품과 핍의 정원 연결',()=>{
   it('선택 버튼은44px·눌림 상태이며 긴 문구와 작은 화면은 내부 스크롤을 사용합니다',()=>{
     const css=read('../src/style.css');expect(css).toMatch(/\.garden-plots button,\.garden-flowers button\{[^}]*min-height:44px/);expect(css).toContain('grid-template-columns:repeat(5,minmax(0,1fr))');expect(css).toContain('grid-template-columns:repeat(3,minmax(0,1fr))');expect(css).toContain('.view{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}');
     expect(css).toContain('.garden-preview{position:sticky;top:0;z-index:1}');expect(css).toContain('scroll-margin-top:min(340px,calc(58.333vw - 12px))');
-    const h=mainHarness();const html=h.element('#village-view').innerHTML;expect(html).toMatch(/class="garden-workshop">[\s\S]*class="garden-picture garden-preview">[\s\S]*class="garden-visitor [^"]*">[\s\S]*id="garden-edit-title"[\s\S]*<\/section><div class="level-picker">/);
+    const h=mainHarness();const html=h.element('#village-view').innerHTML;expect(html).toMatch(/class="garden-workshop">[\s\S]*class="garden-picture garden-preview">[\s\S]*class="garden-visitor [^"]*">[\s\S]*id="garden-edit-title"[\s\S]*<\/section>/);expect(html).not.toContain('data-level=');
   });
   it('해금 뒤 비활성 버튼은 편집 제목으로 초점을 복귀하고 선택 칸/스크롤은 체험 왕복에 보존합니다',()=>{
     const h=mainHarness(false,false,true,false,{...initial(),gardenDesign:{schema:1,flowers:Array(5).fill('meadow'),owned:['lantern'],placed:[]}});h.run("switchView('village');selectedGardenPlot=2;renderViews();globalThis.gardenFocus=[];document.activeElement={id:'garden-flower-violet',isConnected:false};document.querySelector('#garden-flower-violet').disabled=true;document.querySelector('#garden-edit-title').focus=options=>gardenFocus.push(options?.preventScroll);globalThis.gardenScroll=[];document.querySelector('#garden-edit-title').scrollIntoView=options=>gardenScroll.push(options?.block);document.querySelector('#village-view').scrollTop=175;renderViews()");

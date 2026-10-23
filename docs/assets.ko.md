@@ -1,5 +1,15 @@
 # 에셋 제작 기록
 
+## 2026-10-23 · #236 자체 생성 스테이지 지도 배경
+
+내장 `image_gen`으로 외부 참고 그림 없이 새 숲/정원 지도를 생성했습니다. 원본은1024×1536 PNG이며 Git 밖 생성 폴더에 보존하고, 배포용은 Pillow의 LANCZOS 축소와 WebP quality86으로768×1152·265,426바이트로 내보낸 `public/assets/campaign/meadow-journey.webp`입니다. 내용 수정이나 타 게임 에셋 합성은 하지 않았습니다. 길·스테이지 번호·잠금·현재 핍·완료 표시는 실제 UI로 별도 구성해 번역/저장/키보드 접근을 유지합니다.
+
+생성 프롬프트 원문:
+
+> Use case: stylized-concept. Asset type: original portrait mobile match-three campaign map environment background, production game illustration for Pawblossom Puzzle. Create an original welcoming animal-garden meadow seen from a high, nearly overhead three-quarter view. A broad softly lit grassy open center occupies the middle 65 percent for real stage buttons that will be drawn later by game code. Around the left and right edges: dimensional rounded shrubs, a few daisies and tiny peach blossoms, worn little garden stones, leafy trees cropped by edges, one small wooden footbridge near the upper edge with a glimpse of a pond. Natural spring greens, warm cream highlights, restrained peach/coral flower accents, soft painted material texture, confident shapes and clear lighting, polished casual mobile game environment, attractive to adults as well as children. Portrait composition. No characters, no candy or sweets, no castle, no text, no numbers, no buttons, no symbols, no roads with numbered nodes, no UI, no logo, no watermark. Keep center quiet and continuous grassy space, peripheral detail, no single giant centerpiece. Must be fully original and not imitate any existing game artwork.
+
+생성 도구는 내장 image_gen이며 상업용 통합을 목표로 한 자체 생성 시제품입니다. 작은 화면의 배치 검수와 최종 사용자 미술 감각 검수·출시 검수는 구분합니다. 기존 핍·블록·스토어 아이콘은 이번 지도 에셋으로 교체하지 않습니다.
+
 ## 2026-10-22 · #225 자체 벡터 후반 세 공간
 
 `src/GardenSpaceArt.ts`에서 외부 그림·생성 bitmap 없이 SVG path/ellipse/rect로 연못·쉼터·꽃아치 전용480×280 장면을 직접 제작했습니다. 연못은 마른 터→돌로 둘린 기초→물/수련, 선택 꾸미기는 큰 아치형 나무다리를 추가합니다. 쉼터는 터→바닥/기둥→박공지붕/벤치, 선택 꾸미기는 둥근 초가지붕과 매달린 꽃으로 실루엣을 바꿉니다. 꽃아치는 터→기둥 기초→곡선 꽃 아치, 선택 꾸미기는 여러 가로보가 보이는 덩굴 그늘막입니다. 크기/구조 변화이며 색만 바꾸지 않습니다.

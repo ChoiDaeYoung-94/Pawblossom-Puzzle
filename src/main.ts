@@ -7,6 +7,7 @@ import '@fontsource/nunito/latin-700.css';
 import '@fontsource/nunito/latin-800.css';
 import '@fontsource/fraunces/latin-600.css';
 import './style.css';
+import './CampaignMap.css';
 import { BoardScene,tileNames } from './BoardScene';
 import { AudioManager } from './audio/AudioManager';
 import { loadSave,saveData,retrySave,saveStatus,clearSave,levels,LEVEL_COUNT,chapters,chapterForLevel,levelSignature,type RoundCheckpoint,type SaveData } from './state';
@@ -33,7 +34,9 @@ import { TestAdsController,nativeTestAds,adCopy,type AdFormat } from './testAds'
 import { TestBillingController,nativeTestBilling,billingCopy } from './testBilling';
 
 let save=loadSave(), currentLevel=save.highestLevel, moves=0, score=0, collected=Array(6).fill(0) as number[], shuffles=1;
-let scene:BoardScene, game:Phaser.Game, route='puzzle', toastTimer:ReturnType<typeof setTimeout>;
+let scene:BoardScene, game:Phaser.Game, route='map', toastTimer:ReturnType<typeof setTimeout>;
+let settingsReturnRoute='map';
+let mapPositioned:number|undefined;
 let resultTimer:ReturnType<typeof setTimeout>|undefined;
 let resumeNoticeTimer:ReturnType<typeof setTimeout>|undefined;
 let round=0;
@@ -99,12 +102,13 @@ function updateSaveStatus(restoreControl?:string){
 
 $('#app').innerHTML=`
   <header class="topbar">
-    <a class="brand" href="#puzzle" aria-label="Pawblossom Puzzle"><span class="brand-mark">${icon('paw',26)}</span><span>Pawblossom<small>PUZZLE</small></span></a>
+    <a class="brand" href="#map" aria-label="Pawblossom Puzzle"><span class="brand-mark">${icon('paw',26)}</span><span>Pawblossom<small>PUZZLE</small></span></a>
     <div class="header-right"><button id="stars-help" type="button" class="wallet wallet-help stars" aria-haspopup="dialog">${icon('star',18)}<strong id="star-count" aria-hidden="true">0</strong><span class="sr-only">${text('stars')}</span></button><button id="coins-help" type="button" class="wallet wallet-help coins" aria-haspopup="dialog">${icon('coin',18)}<strong id="coin-count" aria-hidden="true">0</strong><span class="sr-only">${text('coins')}</span></button><select id="language-toggle" class="language-button" aria-label="${text('language')}"><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option><option value="en" ${save.language==='en'?'selected':''}>English</option></select><button id="settings-button" class="icon-button" aria-label="${text('settings')}">${icon('settings',21)}</button></div>
   </header>
   <main class="workspace">
     <section class="game-panel">
-      <div id="puzzle-view" class="view">
+      <div id="map-view" class="view"></div>
+      <div id="puzzle-view" class="view" hidden>
         <div class="level-top"><div class="level-heading"><span id="header-pip" class="header-pip" aria-hidden="true"><img class="header-pip-image" src="/assets/pip.png" alt=""/></span><div class="level-copy"><div class="eyebrow"><span id="chapter-name"></span></div><h2><span data-t="level">${text('level')}</span> <span id="level-number">1</span></h2></div></div><div class="level-actions">${TEST_TOOLS_ENABLED?`<button id="test-level-button" class="test-level-button">${label('testPick')}</button>`:''}<button id="restart" class="icon-button" aria-label="${text('restart')}">${icon('restart',20)}</button></div></div>
         <div class="mission-bar"><div class="moves-box"><strong id="moves">22</strong>${label('moves')}</div><div class="goal-box"><div class="goal-heading">${label('goal')}<span class="score-label">${label('score')} <span id="score">0</span></span></div><div id="goals"></div></div></div>
         <div class="board-wrap"><div id="game-canvas" tabindex="-1" aria-label="${text('boardLabel')}" aria-describedby="board-keyboard-help board-keyboard-status" role="application"></div><div id="board-notice" aria-live="polite"></div></div>
@@ -113,13 +117,14 @@ $('#app').innerHTML=`
         <div class="tools"><button id="shuffle" class="shuffle-button">${icon('shuffle',20)}${label('shuffle')}<span id="shuffle-count">1</span></button><span class="tool-note">${label('shuffleHelp')}</span></div>
       </div>
       <div id="village-view" class="view" hidden></div><div id="journal-view" class="view" hidden></div><div id="settings-view" class="view" hidden></div>
-      <nav class="bottom-nav" aria-label="${text('navLabel')}">${(['puzzle','village','journal'] as const).map((name,i)=>`<button data-route="${name}" class="${i===0?'active':''}" ${i===0?'aria-current="page"':''}>${icon(['puzzle','home','paw'][i],21)}${label(name)}</button>`).join('')}</nav>
+      <nav class="bottom-nav" aria-label="${text('navLabel')}">${(['map','village','journal'] as const).map((name,i)=>`<button data-route="${name}" class="${i===0?'active':''}" ${i===0?'aria-current="page"':''}>${icon(['map','home','paw'][i],21)}${label(name)}</button>`).join('')}</nav>
     </section>
   </main>
   <footer class="page-footer"><span>${label('tagline')}</span><span>${label('prototype')}</span></footer>
   <div id="storage-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
   <div id="round-feedback-layer" aria-hidden="true"></div><div id="toast" role="status"></div><dialog id="result-dialog" aria-labelledby="result-title" aria-describedby="result-description"></dialog><dialog id="tutorial-dialog" aria-labelledby="tutorial-title" aria-describedby="tutorial-description"></dialog>${TEST_TOOLS_ENABLED?'<dialog id="test-level-dialog" aria-labelledby="test-level-title"></dialog>':''}
 `;
+$('#app').dataset.route=route;
 if(androidAdEntry){
   const dialog=document.createElement('dialog');dialog.id='test-ad-dialog';dialog.setAttribute('aria-labelledby','test-ad-title');document.body.append(dialog);
 }
@@ -200,6 +205,7 @@ const boardFeedback=new RoundFeedback({layer:$('#round-feedback-layer'),pip:$('#
 function otherModal(includeSpace=true){return includeSpace&&spaceDialog.open||resourceDialog.open||$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open)||billingModal();}
 function previewEnvironment(){return !careDemo&&nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!otherModal()&&!boardPending&&Boolean(scene?.canLeave())&&!resultTimer;}
 function validPreview(context:StagePreview){return stagePreview===context&&context.round===round&&context.scene===scene&&context.testing===testingLevel&&context.route===route&&previewDialog.open&&previewEnvironment()&&Number.isInteger(context.id)&&context.id>=1&&context.id<=LEVEL_COUNT&&(context.intent==='restart'||context.id<=save.highestLevel);}
+function hasRoundProgress(){return !testingLevel&&!roundEnded&&(moves<levels[currentLevel-1].moves||shuffles<1||continueUsed||paidShuffleUsed);}
 function canContinuePreview(context:StagePreview){return context.intent==='map'&&!testingLevel&&!roundEnded&&context.id===currentLevel;}
 function closeStagePreview(restore=true){
   const context=stagePreview;stagePreview=undefined;previewDialog.close();syncActivity();
@@ -219,21 +225,21 @@ function confirmStagePreview(context:StagePreview,action:'continue'|'start'){
 }
 function renderStagePreview(){
   const context=stagePreview;if(!context)return;
-  const level=levels[context.id-1],continuing=canContinuePreview(context);
+  const level=levels[context.id-1],continuing=canContinuePreview(context),progressed=continuing&&hasRoundProgress();
   const goal=(name:TextKey,count:number,src:string)=>`<span class="preview-goal"><img src="${src}" alt=""/><span>${text(name)} <strong>${count}</strong></span></span>`;
   const goals=(remaining:boolean)=>level.goals.map(g=>goal(tileNames[g.kind] as TextKey,Math.max(0,g.count-(remaining?collected[g.kind]:0)),`/assets/tiles-v2/${tileNames[g.kind]}.svg`)).join('')+((level.leaves?.length??0)?goal('leafPile',Math.max(0,level.leaves!.length-(remaining?clearedLeaves:0)),'/assets/obstacles/leaf-pile.svg'):'')+((level.crates?.length??0)?goal('woodenCrate',Math.max(0,level.crates!.length-(remaining?clearedCrates:0)),'/assets/obstacles/wooden-crate.svg'):'');
-  previewDialog.innerHTML=`<div class="stage-preview"><div class="eyebrow">${text(chapterForLevel(context.id).title)}${context.testing&&context.intent==='restart'?' · '+text('testRound'):''}</div><h2 id="stage-preview-title" tabindex="-1">${text('level')} ${context.id}</h2><p id="stage-preview-description">${text(context.intent==='restart'?'previewRestart':continuing?'previewResume':'previewStart')}</p><section aria-labelledby="preview-initial"><h3 id="preview-initial">${text('previewInitial')} · ${text('movesRemaining').replace('{count}',String(level.moves))}</h3><div class="preview-goals">${goals(false)}</div>${level.crates?`<p class="preview-leaf-note">${text('crateHint')}</p>`:''}${level.mask?`<p class="preview-leaf-note">${text('maskHint')}</p>`:''}${level.leaves?.some(p=>p.layers===2)?`<p class="preview-leaf-note">${text('previewDouble')}</p>`:''}</section>${continuing?`<section aria-labelledby="preview-remaining"><h3 id="preview-remaining">${text('previewRemaining')} · ${text('movesRemaining').replace('{count}',String(moves))}</h3><div class="preview-goals">${goals(true)}</div></section>`:''}${!roundEnded?`<p class="preview-warning">${text(continuing?'previewRestartWarning':'previewReplaceWarning')}</p>`:''}<p class="preview-kept">${text('previewKept')}</p><div class="preview-actions">${continuing?`<button id="preview-continue" class="primary">${text('previewContinue')}</button>`:''}<button id="preview-start" class="${continuing?'text-button':'primary'}">${text(context.intent==='restart'||continuing?'previewRestartAction':'previewStartAction')}</button><button id="preview-cancel" class="text-button">${text('previewCancel')}</button></div></div>`;
+  previewDialog.innerHTML=`<div class="stage-preview"><div class="eyebrow">${text(chapterForLevel(context.id).title)}${context.testing&&context.intent==='restart'?' · '+text('testRound'):''}</div><h2 id="stage-preview-title" tabindex="-1">${text('level')} ${context.id}</h2><p id="stage-preview-description">${text(context.intent==='restart'?'previewRestart':progressed?'previewResume':'previewStart')}</p><section aria-labelledby="preview-initial"><h3 id="preview-initial">${text('previewInitial')} · ${text('movesRemaining').replace('{count}',String(level.moves))}</h3><div class="preview-goals">${goals(false)}</div>${level.crates?`<p class="preview-leaf-note">${text('crateHint')}</p>`:''}${level.mask?`<p class="preview-leaf-note">${text('maskHint')}</p>`:''}${level.leaves?.some(p=>p.layers===2)?`<p class="preview-leaf-note">${text('previewDouble')}</p>`:''}</section>${progressed?`<section aria-labelledby="preview-remaining"><h3 id="preview-remaining">${text('previewRemaining')} · ${text('movesRemaining').replace('{count}',String(moves))}</h3><div class="preview-goals">${goals(true)}</div></section>`:''}${hasRoundProgress()?`<p class="preview-warning">${text(continuing?'previewRestartWarning':'previewReplaceWarning')}</p>`:''}<p class="preview-kept">${text('previewKept')}</p><div class="preview-actions">${continuing?`<button id="preview-continue" class="primary">${text(progressed?'previewContinue':'previewStartAction')}</button>`:''}${!continuing||progressed||context.intent==='restart'?`<button id="preview-start" class="${continuing?'text-button':'primary'}">${text(context.intent==='restart'||continuing?'previewRestartAction':'previewStartAction')}</button>`:''}<button id="preview-cancel" class="text-button">${text('previewCancel')}</button></div></div>`;
   let pointerTarget:HTMLElement|undefined;
   for(const action of ['continue','start'] as const){
     if(action==='continue'&&!continuing)continue;
-    const button=$<HTMLButtonElement>(`#preview-${action}`);
+    const button=$<HTMLButtonElement>(`#preview-${action}`);if(!button)continue;
     button.onpointerdown=event=>{pointerTarget=event.isPrimary!==false&&event.button===0?button:undefined;};
     button.onclick=event=>{const allowed=button.isConnected&&previewDialog.contains(button)&&event.isTrusted&&(event.detail===0||pointerTarget===button);pointerTarget=undefined;if(allowed)confirmStagePreview(context,action);};
   }
   $('#preview-cancel').onclick=()=>{if(stagePreview===context)closeStagePreview();};
 }
 function showStagePreview(id:number,intent:'map'|'restart',opener:HTMLElement){
-  if(stagePreview||previewDialog.open||!opener.isConnected||!previewEnvironment()||!Number.isInteger(id)||id<1||id>LEVEL_COUNT||(intent==='map'&&(route!=='village'||id>save.highestLevel))||(intent==='restart'&&route!=='puzzle'))return;
+  if(stagePreview||previewDialog.open||!opener.isConnected||!previewEnvironment()||!Number.isInteger(id)||id<1||id>LEVEL_COUNT||(intent==='map'&&(!['map','village'].includes(route)||id>save.highestLevel))||(intent==='restart'&&route!=='puzzle'))return;
   stagePreview={id,intent,round,scene,testing:testingLevel,route,opener,scroll:Array.from(document.querySelectorAll<HTMLElement>('.view')).map(view=>({view,top:view.scrollTop,left:view.scrollLeft}))};
   renderStagePreview();scene.cancelInput();previewDialog.showModal();syncActivity();$('#stage-preview-title').focus({preventScroll:true});
 }
@@ -509,7 +515,7 @@ function closeTutorial(){
 }
 function chapterTabs(selected:number,test=false){
   const prefix=test?'test-':'';
-  return `<div class="chapter-tabs" role="tablist" aria-label="${text('chapterSelect')}">${chapters.map(chapter=>`<button id="${prefix}chapter-${chapter.id}" data-${prefix}chapter="${chapter.id}" role="tab" aria-selected="${chapter.id===selected}" aria-controls="${prefix}chapter-levels" tabindex="${chapter.id===selected?0:-1}"><strong>${chapter.first}–${chapter.last}</strong><small>${text(chapter.title)}</small></button>`).join('')}</div>`;
+  return `<div class="chapter-tabs" ${test?'role="tablist"':'role="navigation"'} aria-label="${text('chapterSelect')}">${chapters.map(chapter=>`<button id="${prefix}chapter-${chapter.id}" data-${prefix}chapter="${chapter.id}" ${test?`role="tab" aria-selected="${chapter.id===selected}" aria-controls="test-chapter-levels" tabindex="${chapter.id===selected?0:-1}"`:`aria-controls="map-chapter-${chapter.id}"`}><strong>${chapter.first}–${chapter.last}</strong><small>${text(chapter.title)}</small></button>`).join('')}</div>`;
 }
 function revealChapterTab(button:HTMLElement){
   const strip=button.parentElement;if(!strip)return;
@@ -519,7 +525,7 @@ function revealChapterTab(button:HTMLElement){
 function bindChapterTabs(test=false){
   const prefix=test?'test-':'';
   document.querySelectorAll<HTMLButtonElement>(`[data-${prefix}chapter]`).forEach(button=>{
-    const select=(id:number)=>{if(test){selectedTestChapter=id;renderTestPicker();}else{selectedChapter=id;renderViews();}const target=$(`#${prefix}chapter-${id}`);target.focus({preventScroll:true});revealChapterTab(target);};
+    const select=(id:number)=>{if(test){selectedTestChapter=id;renderTestPicker();}else{selectedChapter=id;document.querySelector(`#map-chapter-${id}`)?.scrollIntoView?.({block:'start',behavior:'auto'});}const target=$(`#${prefix}chapter-${id}`);target.focus({preventScroll:true});revealChapterTab(target);};
     button.onclick=()=>select(Number(test?button.dataset.testChapter:button.dataset.chapter));
     button.onkeydown=event=>{const index=chapters.findIndex(chapter=>chapter.id===Number(test?button.dataset.testChapter:button.dataset.chapter));const next=event.key==='ArrowRight'?(index+1)%chapters.length:event.key==='ArrowLeft'?(index+chapters.length-1)%chapters.length:event.key==='Home'?0:event.key==='End'?chapters.length-1:-1;if(next>=0){event.preventDefault();select(chapters[next].id);}};
   });
@@ -576,7 +582,7 @@ function finish(won:boolean){
   dialog.showModal();syncActivity();
   $('#result-next').focus();
   $('#result-next').onclick=()=>{dialog.close();startLevel(won?Math.min(LEVEL_COUNT,currentLevel+1):currentLevel,testingLevel,undefined,{focusBoard:true});switchView('puzzle');};
-  $('#result-home').onclick=()=>{dialog.close();switchView('village');};
+  $('#result-home').onclick=()=>{dialog.close();switchView('map');};
   if(testingLevel)$('#result-test').onclick=()=>{dialog.close();showTestPicker(true);};
   const continueButton=dialog.querySelector<HTMLButtonElement>('#result-continue');
   if(continueButton){const activeRound=round,activeScene=scene;continueButton.onclick=()=>{if(!testAds?.busy&&!rewardedContinue?.preparing)continueTestRound(activeRound,activeScene,continueButton);};}
@@ -990,11 +996,43 @@ function gardenWorkshop(grew:boolean){
   const progress=flowers?`${icon('flower',17)} ${save.garden} / 5`:spacePhaseName(save.language,spaces[selectedGardenArea as Exclude<GardenArea,'flowers'>]);
   return `<section class="garden-workshop">${gardenAreaTabs(save.language,selectedGardenArea)}<div id="garden-area-panel" role="tabpanel" aria-labelledby="garden-area-${selectedGardenArea}"><div class="garden-picture garden-preview"><div class="garden-illustration" role="img" aria-label="${gardenDescription()}">${image}</div>${gardenVisitor()}<span class="garden-pill">${progress}</span></div>${flowers?`<div class="garden-card garden-growth"><h3>${text('garden')}</h3><p class="garden-stage" id="garden-stage" role="status" tabindex="-1">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div>${save.garden===5?`<section class="pip-project garden-next-space">${nextSpaceGoal(save.language,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}<button id="garden-open-space" class="text-button">${text('spaceOpen')}</button></section>`:''}${gardenEditor()}`:`${gardenVisitControls()}${gardenSpacePanel(save.language,selectedGardenArea as Exclude<GardenArea,'flowers'>,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}`}</div></section>`;
 }
+function mapCurrentLevel(){return !testingLevel&&!roundEnded?currentLevel:save.highestLevel;}
+function revealMapStage(){
+  selectedChapter=chapterForLevel(mapCurrentLevel()).id;
+  $<HTMLSelectElement>('#map-chapter-select').value=String(selectedChapter);
+  const target=document.querySelector<HTMLElement>(`#map-stage-${mapCurrentLevel()}`);
+  target?.scrollIntoView?.({block:'center',behavior:'auto'});
+}
+function renderCampaignMap(){
+  const current=mapCurrentLevel(),active=hasRoundProgress();
+  const positions=[50,69,62,38,29,46,68,60,36,50];
+  const status=(id:number)=>id>save.highestLevel?'levelLocked':save.completed.includes(id)?'levelCompleted':'mapAvailable';
+  return `<div class="campaign-heading"><div><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('mapJourney')}</h2></div><button id="map-locate" class="map-locate" aria-label="${text('mapLocate')}">${icon('paw',20)}<span>${text('mapLocate')}</span></button></div><div class="campaign-chapters"><select id="map-chapter-select" aria-label="${text('chapterSelect')}">${chapters.map(chapter=>`<option value="${chapter.id}" ${chapter.id===selectedChapter?'selected':''}>${chapter.first}–${chapter.last} · ${text(chapter.title)}</option>`).join('')}</select></div><div id="campaign-scroll" class="campaign-scroll" aria-label="${text('mapStages')}">${chapters.map(chapter=>{
+    const stages=levels.filter(level=>level.id>=chapter.first&&level.id<=chapter.last),height=stages.length*90;
+    const points=stages.map((_,index)=>[positions[index%positions.length],45+index*90]);
+    const path=points.map(([x,y],index)=>index?`Q ${points[index-1][0]} ${y} ${x} ${y}`:`M ${x} ${y}`).join(' ');
+    return `<section class="campaign-chapter" id="map-chapter-${chapter.id}" aria-labelledby="map-chapter-title-${chapter.id}"><h3 id="map-chapter-title-${chapter.id}"><span>${chapter.first}–${chapter.last}</span>${text(chapter.title)}</h3><div class="campaign-path" style="height:${height}px"><svg class="campaign-trail" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true"><path d="${path}"/></svg>${stages.map((level,index)=>{
+      const completed=save.completed.includes(level.id),locked=level.id>save.highestLevel,here=level.id===current;
+      const name=`${text('level')} ${level.id} · ${text(status(level.id))}${here?' · '+text('previewCurrent'):''}`;
+      return `<div class="campaign-stop" style="left:${positions[index%positions.length]}%;top:${index*90}px"><button id="map-stage-${level.id}" data-level="${level.id}" ${locked?'disabled':''} class="campaign-node ${completed?'completed':''} ${here?'current':''}" ${here?'aria-current="step"':''} aria-label="${name}"><span>${level.id}</span>${locked?icon('lock',16):completed?`<i>${icon('star',15)}</i>`:''}</button>${here?`<span class="campaign-pip" aria-hidden="true"><img src="/assets/pip.png" alt=""/></span>`:''}</div>`;
+    }).join('')}</div></section>`;
+  }).join('')}</div><div class="campaign-play"><div><span>${text(chapterForLevel(current).title)}</span><strong>${text('level')} ${current}</strong></div><button id="map-play" class="primary">${text(active?'mapResume':'mapPlay')}${icon('arrow',20)}</button></div>`;
+}
 function renderViews(grew=false){
   if(spacePreview)closeSpacePreview(false);
   const focused=document.activeElement as HTMLElement|null,focusedId=focused?.id;
   const scroll=Array.from(document.querySelectorAll<HTMLElement>('.view'),view=>({view,top:view.scrollTop,left:view.scrollLeft}));
-  $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('chapterMeadow')}</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div>${gardenWorkshop(grew)}<div class="level-picker"><h3>${text('levelSelect')}</h3>${chapterTabs(selectedChapter)}<div class="level-grid" id="chapter-levels" role="tabpanel" aria-labelledby="chapter-${selectedChapter}">${levels.filter(l=>chapterForLevel(l.id).id===selectedChapter).map(l=>`<button data-level="${l.id}" ${l.id>save.highestLevel?'disabled':''} class="level-node ${save.completed.includes(l.id)?'completed':''} ${!testingLevel&&!roundEnded&&l.id===currentLevel?'current':''}" ${!testingLevel&&!roundEnded&&l.id===currentLevel?'aria-current="step"':''} aria-label="${text('level')} ${l.id}${!testingLevel&&!roundEnded&&l.id===currentLevel?' · '+text('previewCurrent'):''}${l.id>save.highestLevel?' · '+text('levelLocked'):save.completed.includes(l.id)?' · '+text('levelCompleted'):''}">${l.id>save.highestLevel?icon('lock',19):l.id}${save.completed.includes(l.id)?`<span>${icon('star',13)}</span>`:''}</button>`).join('')}</div></div>`;
+  const mapScroll=document.querySelector<HTMLElement>('#campaign-scroll')?.scrollTop??0;
+  $('#map-view').innerHTML=renderCampaignMap();
+  $('#map-play').onclick=()=>showStagePreview(mapCurrentLevel(),'map',$('#map-play'));
+  $('#map-locate').onclick=()=>revealMapStage();
+  $<HTMLSelectElement>('#map-chapter-select').onchange=event=>{
+    if(route!=='map'||stagePreview||otherModal())return;
+    const id=Number((event.target as HTMLSelectElement).value);if(!chapters.some(chapter=>chapter.id===id))return;
+    selectedChapter=id;document.querySelector(`#map-chapter-${id}`)?.scrollIntoView?.({block:'start',behavior:'auto'});
+  };
+  $('#campaign-scroll').scrollTop=mapScroll;
+  $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('chapterMeadow')}</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div>${gardenWorkshop(grew)}`;
   if(careDemo)$('#village-view').innerHTML=$('#village-view').innerHTML.split('<div class="level-picker">')[0];
   $('#village-view').innerHTML=careDemoPanel('village')+$('#village-view').innerHTML;
   document.querySelector<HTMLButtonElement>('#grow')?.toggleAttribute('disabled',growing||careStorageBlocked()||save.stars<2||save.garden>=5);
@@ -1008,7 +1046,6 @@ function renderViews(grew=false){
   const settingsAction=(id:string)=>!spaceDialog.open&&!resourceDialog.open&&!careDemo&&currentControl(renderedControls.get(id)!,renderedSave,renderedGeneration);
   $('#save-retry').onclick=()=>{if(!settingsAction('save-retry'))return;retrySave(save);updateSaveStatus();};
   $('#save-reload').onclick=()=>{if(!settingsAction('save-reload'))return;if(confirm(text('saveReloadConfirm')))window.location.reload();};
-  bindChapterTabs();
   bindCareControls();
   document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach(button=>button.onclick=()=>showStagePreview(Number(button.dataset.level),'map',button));
   $('#music-toggle').onclick=()=>{if(!settingsAction('music-toggle'))return;save.music=!save.music;audio.setMusicEnabled(save.music);persist();$('#music-toggle').classList.toggle('on',save.music);$('#music-toggle').setAttribute('aria-checked',String(save.music));};
@@ -1064,8 +1101,9 @@ function switchView(name:string){
   if(name!=='puzzle')abandonRewardContinue();
   if(!scene.canLeave())return;
   if(name!=='puzzle'){clearResumeNotice();clearBoardNotice();}
-  route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
-  if(name==='village')renderViews();
+  route=name;$('#app').dataset.route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
+  if(name==='village'||name==='map')renderViews();
+  if(name==='map'&&mapPositioned!==mapCurrentLevel()){revealMapStage();mapPositioned=mapCurrentLevel();}
   document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(b=>{b.classList.toggle('active',b.dataset.route===name);if(b.dataset.route===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   updateSaveStatus();
   // Phaser refresh는 직전 parentSize로 계산하므로 숨김→표시 직후 부모 크기를 먼저 갱신합니다.
@@ -1079,8 +1117,8 @@ function switchView(name:string){
   if(returnToResult)$('#result-next').focus({preventScroll:true});
 }
 document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(button=>button.onclick=()=>switchView(button.dataset.route!));
-$('#settings-button').onclick=()=>switchView(route==='settings'?'puzzle':'settings');
-$('.brand').onclick=e=>{e.preventDefault();switchView('puzzle');};
+$('#settings-button').onclick=()=>{if(route==='settings')switchView(settingsReturnRoute);else{settingsReturnRoute=route;switchView('settings');}};
+$('.brand').onclick=e=>{e.preventDefault();switchView('map');};
 $('#language-toggle').onchange=event=>changeLanguage((event.target as HTMLSelectElement).value==='en'?'en':'ko');
 $('#board-notice').addEventListener('animationend',()=>{
   // 이전 애니메이션의 늦은 종료 이벤트는 현재 재생 중인 새 안내를 지우지 않습니다.
@@ -1090,7 +1128,7 @@ $('#board-notice').addEventListener('animationend',()=>{
 for(const kind of ['stars','coins'] as const)$('#'+kind+'-help').onclick=()=>showResourceHelp(kind,$('#'+kind+'-help'));
 $('#restart').onclick=()=>showStagePreview(currentLevel,'restart',$('#restart'));
 if(TEST_TOOLS_ENABLED){$('#test-level-button').onclick=()=>showTestPicker();$<HTMLDialogElement>('#test-level-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTestPicker();});}
-$<HTMLDialogElement>('#result-dialog').addEventListener('cancel',event=>{event.preventDefault();if(testAds?.busy||rewardedContinue?.preparing)return;$<HTMLDialogElement>('#result-dialog').close();switchView('village');});
+$<HTMLDialogElement>('#result-dialog').addEventListener('cancel',event=>{event.preventDefault();if(testAds?.busy||rewardedContinue?.preparing)return;$<HTMLDialogElement>('#result-dialog').close();switchView('map');});
 $<HTMLDialogElement>('#tutorial-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTutorial();});
 document.addEventListener('pointerdown',()=>{void audio.unlock().catch(()=>{});},{passive:true,capture:true});
 // 한 Game 동안 DOM에 한 번만 등록합니다. 회차 교체는 현재 scene을 조회합니다.
@@ -1120,7 +1158,7 @@ if(Capacitor.isNativePlatform()){
     // 늦게 반환된 초기 상태가 이후의 복귀 이벤트를 덮어쓰지 않도록 합니다.
     if(revision===nativeRevision){nativeActive=state.isActive;syncActivity();}
   }).catch(()=>{ /* 네이티브 상태를 확인할 수 없으면 비활성 상태를 유지합니다. */ });
-  void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if(billingModal())closeBillingDialog();else if(testBilling?.pausesGame)return;else if(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open){void closeAdDialog();}else if(testAds?.pausesGame)return;else if(spacePreview)closeSpacePreview();else if(resourceHelp)closeResourceHelp();else if(stagePreview)closeStagePreview();else if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('village');}else if(route!=='puzzle')switchView('puzzle');else void App.minimizeApp();});
+  void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if(billingModal())closeBillingDialog();else if(testBilling?.pausesGame)return;else if(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open){void closeAdDialog();}else if(testAds?.pausesGame)return;else if(spacePreview)closeSpacePreview();else if(resourceHelp)closeResourceHelp();else if(stagePreview)closeStagePreview();else if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('map');}else if(route==='settings')switchView(settingsReturnRoute);else if(route!=='map')switchView('map');else void App.minimizeApp();});
 }
 if(androidAdEntry)$<HTMLDialogElement>('#test-ad-dialog').addEventListener('cancel',event=>{event.preventDefault();void closeAdDialog();});
 if(androidBillingEntry)$<HTMLDialogElement>('#test-billing-dialog').addEventListener('cancel',event=>{event.preventDefault();closeBillingDialog();});
@@ -1128,7 +1166,7 @@ if(typeof ResizeObserver!=='undefined'){
   new ResizeObserver(()=>{boardFeedback.cancel();if(game?.isBooted&&route==='puzzle'){game.scale.getParentBounds();game.scale.refresh();}}).observe($('#game-canvas'));
 }
 const resumed=Boolean(save.inProgress);
-const resumedStored=resumeNormal();updateWallet();renderViews();localize();
+const resumedStored=resumeNormal();updateWallet();renderViews();localize();switchView('map');
 if(androidBillingEntry){
   testBilling=new TestBillingController(nativeTestBilling(),()=>{renderBillingDialog();if(testAds)renderAdDialog();syncActivity();});
   void testBilling.connect();
