@@ -907,7 +907,8 @@ function nextGardenProject(){
 }
 function gardenVisitControls(){
   const design=gardenDesignFor(save.gardenDesign),pip=save.pip??freshPip();
-  const reaction:TextKey=pipReaction==='tend'?'pipTendReaction':selectedGardenArea!=='flowers'?(gardenSpacesFor(design.spaces)[selectedGardenArea].phase===0?'spaceVisitEmpty':({pond:'spaceVisitPond',shelter:'spaceVisitShelter',arch:'spaceVisitArch'} as const)[selectedGardenArea]):pipReaction==='greet'?design.placed.includes('lantern')?'gardenVisitLantern':design.placed.includes('butterflies')?'gardenVisitButterflies':design.placed.includes('bench')?'gardenVisitBench':'pipGreetReaction':'gardenVisitInvite';
+  const phase=selectedGardenArea==='flowers'?undefined:gardenSpacesFor(design.spaces)[selectedGardenArea].phase;
+  const reaction:TextKey=pipReaction==='tend'?'pipTendReaction':selectedGardenArea!=='flowers'?(phase===0?'spaceVisitEmpty':phase===1?'spaceVisitBuilding':({pond:'spaceVisitPond',shelter:'spaceVisitShelter',arch:'spaceVisitArch'} as const)[selectedGardenArea]):pipReaction==='greet'?design.placed.includes('lantern')?'gardenVisitLantern':design.placed.includes('butterflies')?'gardenVisitButterflies':design.placed.includes('bench')?'gardenVisitBench':'pipGreetReaction':'gardenVisitInvite';
   const activityLine=gardenActivity?text(gardenActivity.kind==='flower'?'gardenFlowerMoment':gardenActivity.kind==='lily'?'gardenLilyMoment':'gardenRippleMoment').replace('{flower}',flowerName(design.flowers[gardenActivity.plot])).replace('{number}',String(gardenActivity.plot+1)):text(reaction);
   return `<div class="garden-companion"><div><p class="garden-visit-line" role="status">${activityLine}</p><div class="garden-visit-actions"><button id="garden-visit" class="text-button">${text('gardenVisit')}</button><button id="garden-tend" class="text-button" ${pipLevel(pip)<3?'disabled':''}>${text('pipTend')}</button></div></div></div>`;
 }
