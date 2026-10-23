@@ -1109,7 +1109,7 @@ function switchView(name:string){
   route=name;$('#app').dataset.route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
   if(name==='village'||name==='map')renderViews();
   if(name==='map'&&mapPositioned!==mapCurrentLevel()){revealMapStage();mapPositioned=mapCurrentLevel();}
-  document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(b=>{b.classList.toggle('active',b.dataset.route===name);if(b.dataset.route===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+  document.querySelectorAll<HTMLButtonElement>('.bottom-nav button[data-route]').forEach(b=>{b.classList.toggle('active',b.dataset.route===name);if(b.dataset.route===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   updateSaveStatus();
   // Phaser refresh는 직전 parentSize로 계산하므로 숨김→표시 직후 부모 크기를 먼저 갱신합니다.
   if(name==='puzzle'&&game.isBooted){game.scale.getParentBounds();game.scale.refresh();updateGoals();}
@@ -1121,7 +1121,7 @@ function switchView(name:string){
   syncActivity();
   if(returnToResult)$('#result-next').focus({preventScroll:true});
 }
-document.querySelectorAll<HTMLButtonElement>('[data-route]').forEach(button=>button.onclick=()=>switchView(button.dataset.route!));
+document.querySelectorAll<HTMLButtonElement>('.bottom-nav button[data-route]').forEach(button=>button.onclick=()=>switchView(button.dataset.route!));
 $('#settings-button').onclick=()=>{if(route==='settings')switchView(settingsReturnRoute);else{settingsReturnRoute=route;switchView('settings');}};
 $('.brand').onclick=e=>{e.preventDefault();switchView('map');};
 $('#language-toggle').onchange=event=>changeLanguage((event.target as HTMLSelectElement).value==='en'?'en':'ko');
