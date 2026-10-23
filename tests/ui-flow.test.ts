@@ -167,7 +167,8 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
       body:{append(){}},
       createElement: () => {const created=new ElementStub('button');created.hidden=false;return created;},
       querySelector:(selector:string)=>selector==='dialog[open]'?null:element(selector),
-      querySelectorAll: (selector: string) => selector === '[data-test-level]'
+      querySelectorAll: (selector: string) => selector === '.bottom-nav button[data-route]' || selector === '[data-route]'
+        ? [...(selector==='[data-route]'?[element('#app')]:[]),...['map','village','journal'].map(route=>{const button=element('#nav-'+route);button.dataset.route=route;return button;})] : selector === '[data-test-level]'
         ? Array.from({length:LEVEL_COUNT},(_,i)=>{const button=element(`#test-stage-${i+1}`);button.dataset.testLevel=String(i+1);return button;}) : selector === '[data-chapter]' || selector === '[data-test-chapter]'
         ? Array.from({length:currentChapters.length},(_,i)=>{const test=selector.includes('test-');const button=element(`#${test?'test-':''}chapter-${i+1}`);button.dataset[test?'testChapter':'chapter']=String(i+1);return button;}) : selector === '#practice-board button'
         ? Array.from({length:9},(_,i)=>{const button=element(`#practice-cell-${Math.floor(i/3)}-${i%3}`);button.dataset={row:String(Math.floor(i/3)),col:String(i%3)};return button;}) : selector === '.view'
@@ -2200,6 +2201,17 @@ describe('후반 고유 완료 풍경과 정원 거래 context',()=>{
   });
 });
 
+
+describe('경로 표시 컨테이너와 메뉴 버튼의 이벤트 경계',()=>{
+  it('내부 버튼 클릭이 app까지 버블링되어도 복원 미리보기를 닫지 않고 실제 메뉴만 경로를 바꿉니다',()=>{
+    const h=mainHarness(false,false,true,false,{version:1,language:'ko',highestLevel:61,completed:Array.from({length:60},(_,i)=>i+1),coins:120,stars:30,garden:1,music:true,sfx:true,tutorialSeen:true});
+    h.element('#nav-village').onclick();expect(h.run('route')).toBe('village');expect(h.element('#nav-village').attributes['aria-current']).toBe('page');expect(h.element('#app').attributes['aria-current']).toBeUndefined();
+    h.element('#garden-area-pond').onclick();h.element('#app').onclick();const before=h.disk(),writes=h.writes();h.element('#garden-space-restore').onclick();h.element('#app').onclick();
+    expect(h.run('spaceDialog.open')).toBe(true);expect(h.run('Boolean(spacePreview)')).toBe(true);expect(h.disk()).toEqual(before);expect(h.writes()).toBe(writes);
+    h.element('#space-preview-confirm').onclick();expect(h.run('spaceDialog.open')).toBe(false);expect(h.run('save.stars')).toBe(18);expect(h.run('save.gardenDesign.spaces.pond.phase')).toBe(1);
+    h.element('#nav-map').onclick();expect(h.run('route')).toBe('map');expect(h.element('#nav-map').attributes['aria-current']).toBe('page');expect(h.element('#nav-village').attributes['aria-current']).toBeUndefined();
+  });
+});
 
 describe('후반 정원 공간과 확정 전 미리보기',()=>{
   const initial=(language:'en'|'ko'='en',clears=100)=>({version:1,language,highestLevel:Math.min(100,clears+1),completed:Array.from({length:clears},(_,i)=>i+1),coins:2000,stars:100,garden:5,music:true,sfx:true,tutorialSeen:true,pip:{growth:100,affection:100,owned:[],equipped:'none'}});
