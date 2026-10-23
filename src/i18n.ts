@@ -57,7 +57,7 @@ const strings = {
     saveResetPending: 'Reset is recorded. Older saves will not return. Until saving succeeds, latest progress may be lost when you close the app. Retry here.',
     saveRetry: 'Retry saving current progress', saveAttention: 'Check save status',
 
-    boardKeyboardHelp: 'Tab to the board · Arrow keys: move · Enter/Space: select, swap or use power-up · Esc: cancel selection',
+    boardKeyboardHelp: 'Arrows: move · Enter/Space: select, swap or use · Shift+Enter: select a power-up to swap · Esc: cancel',
     boardCell: 'Row {row}, column {col}: {tile}. {special}. Leaf layers remaining: {layers}.',
     boardSelected: 'Selected: row {row}, column {col}.', boardUnselected: 'No tile selected.',
     boardOrdinary: 'Ordinary tile', boardRow: 'Row clear power-up', boardColumn: 'Column clear power-up', boardBomb: 'Bomb power-up', boardRainbow: 'Color clear power-up',
@@ -163,7 +163,7 @@ const strings = {
     saveResetPending: '초기화는 기록됐으며 이전 저장은 되살아나지 않아요. 저장되기 전에 앱을 닫으면 최신 진행은 사라질 수 있어요. 재시도해 주세요.',
     saveRetry: '현재 진행 저장 재시도', saveAttention: '저장 상태 확인 필요',
 
-    boardKeyboardHelp: 'Tab: 보드 진입 · 방향키: 칸 이동 · Enter/Space: 선택·교환·특수 사용 · Esc: 선택 취소',
+    boardKeyboardHelp: '방향키: 이동 · Enter/Space: 선택·교환·사용 · Shift+Enter: 교환할 특수 선택 · Esc: 취소',
     boardCell: '{row}행 {col}열: {tile}. {special}. 낙엽 남은 겹: {layers}.',
     boardSelected: '선택한 칸: {row}행 {col}열.', boardUnselected: '선택한 칸 없음.',
     boardOrdinary: '일반 블록', boardRow: '가로 제거 특수', boardColumn: '세로 제거 특수', boardBomb: '주변 폭발 특수', boardRainbow: '같은 색 제거 특수',

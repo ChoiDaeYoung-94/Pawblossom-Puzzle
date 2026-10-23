@@ -1149,7 +1149,7 @@ boardFocus.addEventListener('keydown',event=>{
   event.preventDefault();
   if(!scene.keyboardState().available)return;
   clearResumeNotice();
-  boardFocus.dataset.keyboard='true';void audio.unlock().catch(()=>{});scene.focusKeyboard();scene.keyboardKey(event.key,event.repeat);
+  boardFocus.dataset.keyboard='true';void audio.unlock().catch(()=>{});scene.focusKeyboard();scene.keyboardKey(event.key,event.repeat,event.shiftKey&&event.key==='Enter');
 });
 window.addEventListener('blur',()=>{if(spacePreview)closeSpacePreview(false);boardFocus.dataset.keyboard='false';scene?.cancelInput();practiceInputs?.cancel();boardFeedback.cancel();});
 window.addEventListener('resize',()=>{practiceInputs?.cancel();boardFeedback.cancel();});
