@@ -19,6 +19,8 @@ const shapes={
   pond:shape(['########','########','########','###..###','###..###','########','########','########']),
   hourglass:shape(['########','########','.######.','..####..','..####..','.######.','########','########']),
   u:shape(['##....##','##....##','##....##','########','########','########','########','########']),
+  // 첫 U자 판만 양팔을 3칸으로 열어 가로 매치와 특수 생성 선택을 익힙니다.
+  uIntro:shape(['###..###','###..###','###..###','########','########','########','########','########']),
   slant:shape(['#######.','#######.','.######.','.######.','.######.','.######.','.#######','.#######']),
 };
 
@@ -58,14 +60,14 @@ export const levels: Level[] = [
   {id:31,moves:26,goals:[{"kind":1,"count":22},{"kind":2,"count":20}],mask:shapes.rounded},
   {id:32,moves:28,goals:[{"kind":0,"count":22},{"kind":5,"count":22}],mask:shapes.pond},
   {id:33,moves:28,goals:[{"kind":3,"count":24},{"kind":4,"count":22}],mask:shapes.hourglass},
-  {id:34,moves:30,goals:[{"kind":2,"count":26},{"kind":5,"count":22}],mask:shapes.u},
+  {id:34,moves:30,goals:[{"kind":2,"count":26},{"kind":5,"count":22}],mask:shapes.uIntro},
   {id:35,moves:30,goals:[{"kind":0,"count":28},{"kind":1,"count":24}],mask:shapes.slant},
   // 36~40: 고정 1hit 나무상자. 색 목표와 별개로 모두 제거해야 합니다.
   {id:36,moves:28,goals:[{kind:3,count:24},{kind:5,count:22}],crates:center.map(([row,col])=>({row,col}))},
   {id:37,moves:30,goals:[{kind:2,count:26},{kind:4,count:24}],mask:shapes.rounded,crates:[...center,[3,1],[3,6]].map(([row,col])=>({row,col}))},
   {id:38,moves:30,goals:[{kind:1,count:28},{kind:5,count:24}],mask:shapes.pond,crates:center.map(([row,col])=>({row,col}))},
   {id:39,moves:32,goals:[{kind:0,count:26},{kind:1,count:24}],mask:shapes.hourglass,crates:[[1,1],[1,6],[2,3],[5,4],[6,1],[6,6]].map(([row,col])=>({row,col}))},
-  {id:40,moves:34,goals:[{kind:3,count:28},{kind:5,count:26}],mask:shapes.u,crates:[[3,1],[3,6],[4,2],[4,5],[5,1],[5,6],[6,3],[6,4]].map(([row,col])=>({row,col}))},
+  {id:40,moves:34,goals:[{kind:3,count:28},{kind:5,count:26}],mask:shapes.u,crates:[[2,0],[2,7],[4,0],[4,7],[5,1],[5,6],[7,2],[7,5]].map(([row,col])=>({row,col}))},
 ];
 
 
@@ -127,7 +129,7 @@ const plans:Plan[]=[
   ['slant',31,36,27,'','11 16 32 35 61 66'],
   ['u',33,36,27,'112 162 322 352 422 452 522 552',''],
   ['slant',31,36,0,'222 252 322 352 422 452 522 552','11 16 61 66'],
-  ['pond',30,38,0,'222 252 322 352 422 452 522 552','11 16 61 66'],
+  ['pond',30,34,0,'222 252 322 352 422 452 522 552','11 16 61 66'],
   // 91–100 꽃빛 축제: 다섯 형태를 재방문하고 마지막 혼합 목표를 완성합니다.
   ['rounded',34,34,30,'111 161 321 351 521 551',''],
   ['hourglass',32,36,27,'','11 16 32 35 61 66'],
@@ -138,7 +140,7 @@ const plans:Plan[]=[
   ['rounded',31,37,29,'','11 16 32 35 61 66'],
   ['hourglass',31,39,29,'112 162 222 252 322 352 522 552',''],
   ['pond',31,38,0,'222 252 322 352 422 452 522 552','11 16 61 66'],
-  ['u',34,39,0,'322 352 422 452 522 552 622 652','11 16 61 66'],
+  ['u',34,35,0,'322 352 422 452 522 552 622 652','11 16 61 66'],
 ];
 for(const [index,[form,moves,a,b,leafSpec,crateSpec]] of plans.entries()){
   const id=index+41,goals=[{kind:id%6,count:a},...(b?[{kind:(id+3)%6,count:b}]:[])];
