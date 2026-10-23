@@ -8,6 +8,7 @@ import '@fontsource/nunito/latin-800.css';
 import '@fontsource/fraunces/latin-600.css';
 import './style.css';
 import './CampaignMap.css';
+import './PuzzlePresentation.css';
 import { BoardScene,tileNames } from './BoardScene';
 import { AudioManager } from './audio/AudioManager';
 import { loadSave,saveData,retrySave,saveStatus,clearSave,levels,LEVEL_COUNT,chapters,chapterForLevel,levelSignature,type RoundCheckpoint,type SaveData } from './state';
@@ -24,6 +25,7 @@ import {gardenAreas,gardenAreaName,gardenAreaTabs,gardenSpacePanel,gardenSpacePr
 import { flowerStyles,gardenProjects,gardenThemes,gardenDesignFor,freshGardenDesign,flowerDiversity,projectReady,themeReady,prepareGardenAction,type GardenTheme,type GardenProject,type GardenAction } from './gardenDesign';
 import { showResultPip } from './ResultPip';
 import { RoundFeedback } from './RoundFeedback';
+import { createPipIdle } from './PipIdle';
 import { cloneSnapshot,prepareShuffle } from './puzzleHelp';
 import type { BoardSnapshot } from './core';
 import { APP_VERSION } from './appVersion';
@@ -109,7 +111,7 @@ $('#app').innerHTML=`
     <section class="game-panel">
       <div id="map-view" class="view"></div>
       <div id="puzzle-view" class="view" hidden>
-        <div class="level-top"><div class="level-heading"><span id="header-pip" class="header-pip" aria-hidden="true"><img class="header-pip-image" src="/assets/pip.png" alt=""/></span><div class="level-copy"><div class="eyebrow"><span id="chapter-name"></span></div><h2><span data-t="level">${text('level')}</span> <span id="level-number">1</span></h2></div></div><div class="level-actions">${TEST_TOOLS_ENABLED?`<button id="test-level-button" class="test-level-button">${label('testPick')}</button>`:''}<button id="restart" class="icon-button" aria-label="${text('restart')}">${icon('restart',20)}</button></div></div>
+        <div class="level-top"><div class="level-heading"><span id="header-pip" class="header-pip" aria-hidden="true"><img class="header-pip-image" src="/assets/pip-idle-open-v2.webp" alt=""/></span><div class="level-copy"><div class="eyebrow"><span id="chapter-name"></span></div><h2><span data-t="level">${text('level')}</span> <span id="level-number">1</span></h2></div></div><div class="level-actions">${TEST_TOOLS_ENABLED?`<button id="test-level-button" class="test-level-button">${label('testPick')}</button>`:''}<button id="restart" class="icon-button" aria-label="${text('restart')}">${icon('restart',20)}</button></div></div>
         <div class="mission-bar"><div class="moves-box"><strong id="moves">22</strong>${label('moves')}</div><div class="goal-box"><div class="goal-heading">${label('goal')}<span class="score-label">${label('score')} <span id="score">0</span></span></div><div id="goals"></div></div></div>
         <div class="board-wrap"><div id="game-canvas" tabindex="-1" aria-label="${text('boardLabel')}" aria-describedby="board-keyboard-help board-keyboard-status" role="application"></div><div id="board-notice" aria-live="polite"></div></div>
         <p class="board-hint">${icon('leaf',15)} <span id="board-hint-text">${text('hint')}</span><span id="board-keyboard-help">${text('boardKeyboardHelp')}</span><span id="round-resumed-notice" role="status" aria-live="polite" aria-atomic="true" hidden></span></p>
@@ -198,6 +200,7 @@ function showResourceHelp(kind:ResourceKind,opener:HTMLElement){
 }
 resourceDialog.addEventListener('cancel',event=>{event.preventDefault();closeResourceHelp();});
 resourceDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();});
+const pipIdle=createPipIdle($('#header-pip'));
 const boardFeedback=new RoundFeedback({layer:$('#round-feedback-layer'),pip:$('#header-pip'),
   canvas:()=>document.querySelector('#game-canvas canvas'),goal:key=>document.querySelector(`[data-feedback-goal="${key}"] img`),
   active:()=>nativeActive&&!document.hidden&&!careDemo&&route==='puzzle'&&!boardPending&&!roundEnded&&!previewDialog.open&&!otherModal()&&!testAds?.pausesGame&&!testBilling?.pausesGame,
@@ -259,6 +262,7 @@ function syncActivity(){
   if(!game)return;
   const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
   const playing=active&&!careDemo&&route==='puzzle'&&!modal&&!previewDialog.open&&!resourceDialog.open&&!spaceDialog.open;
+  pipIdle.setActive(playing&&!boardPending&&!roundEnded);
   if(!playing)boardFeedback.cancel();
   if(playing){if(game.scene.isPaused('Board'))game.scene.resume('Board');}
   else if(game.scene.isActive('Board'))game.scene.pause('Board');
@@ -563,6 +567,7 @@ function closeTestPicker(){
 function settleRound(won:boolean){
   if(careDemo||roundEnded)return;
   roundEnded=true;
+  pipIdle.setActive(false);
   firstReward=won&&!testingLevel&&!save.completed.includes(currentLevel);
   if(testingLevel)return;
   delete save.inProgress;

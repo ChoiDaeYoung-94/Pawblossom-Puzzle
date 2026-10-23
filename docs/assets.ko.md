@@ -1,5 +1,19 @@
 # 에셋 제작 기록
 
+## 2026-10-23 · #238 퍼즐 핍의 기본·눈 깜빡임 프레임
+
+기존 자체 캐릭터 `public/assets/pip.png`를 눈으로 확인한 뒤 내장 image_gen의 identity-preserve 편집으로 같은 핍의 열린 눈/감은 눈 두 셀을 생성했습니다. 참조 캐릭터의 크림색 털·녹색 작업복·당근을 유지하며 타 게임 캐릭터나 에셋을 사용하지 않았습니다. 생성 PNG 원본은 Git 밖 `C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-28b3d918-4e72-4bff-b4a2-730b880a85ae.png`(1774×887)에 보존합니다.
+
+Pillow로887×887 두 셀을 분리하고 alpha>16의 경계(left158,10,835,871 / right111,10,789,871)를 자른 뒤 동일288/874 배율·가운데 정렬·발 기준 y304로320×320 투명 캔버스에 놓았습니다. 이는 기계적인 sprite 분리·크기 맞춤이며 그림 재편집이 아닙니다. WebP quality90/method6/exact로 `public/assets/pip-idle-open-v2.webp`(20,400바이트), `pip-idle-blink-v2.webp`(19,980바이트)를 내보냈습니다. 전신과 귀·발·알파를 시각 확인했으며 두 셀의 미세한 그림 차이가 있어 엄밀한 관절 애니메이션으로 표현하지 않습니다.
+
+기본 얼굴·짧은 blink·1px 호흡은 표시 전용이며 기존 매치 기쁨 반응을 우선합니다. 로드/해독 실패는 기본 그림을 유지하고 화면/모달 비활성·모션 감소에서 idle 움직임을 멈춥니다. 기존 정원/결과/놀이 그림·블록·음원/최종 믹스는 그대로입니다. 자체 시제품 에셋이며 사용자 감각·LDPlayer/실단말·출시 최종 검수는 별도입니다.
+
+생성일2026-10-23, 도구 내장 image_gen, 투명 배경, 참조 `public/assets/pip.png`, 원문 프롬프트:
+
+> Use case: identity-preserve. Asset type: two-frame idle animation sprite sheet for an original mobile game mascot. Reference image is the existing original Pawblossom Puzzle character Pip. Preserve this exact cream rabbit identity, large pink inner ears, brown eyes, peach cheeks, sage-green gardener overalls with wooden buttons and little leaf pocket embroidery, holding the same orange carrot in the same paws, warm hand-painted dimensional texture. Create ONE landscape sprite sheet with exactly TWO equal SQUARE cells in a single row. Each cell shows the same complete full-body Pip in precisely the same pose, same scale, same ear positions, same carrot and clothing folds, same lighting and same foot baseline, centered with 8 percent safe padding. Left cell: relaxed open eyes and a small warm smile. Right cell: exactly the same drawing and pose, only both eyes gently closed in a natural blink. The two frames will be alternated in-game, so all silhouettes and body positions must align perfectly; do not vary the head tilt or body pose. Full rabbit including ear tips and feet inside each square. Actual transparent background, no floor, no cast ground shadow, no borders, no grid lines, no writing, no labels, no logo, no watermark, no extra props or characters. Original character derivative only; do not imitate another game.
+
+
+
 ## 2026-10-23 · #236 자체 생성 스테이지 지도 배경
 
 내장 `image_gen`으로 외부 참고 그림 없이 새 숲/정원 지도를 생성했습니다. 원본은1024×1536 PNG이며 Git 밖 생성 폴더에 보존하고, 배포용은 Pillow의 LANCZOS 축소와 WebP quality86으로768×1152·265,426바이트로 내보낸 `public/assets/campaign/meadow-journey.webp`입니다. 내용 수정이나 타 게임 에셋 합성은 하지 않았습니다. 길·스테이지 번호·잠금·현재 핍·완료 표시는 실제 UI로 별도 구성해 번역/저장/키보드 접근을 유지합니다.
