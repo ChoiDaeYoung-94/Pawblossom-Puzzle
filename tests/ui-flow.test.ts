@@ -266,7 +266,7 @@ describe('보드 피드백 연결과 정산 경계',()=>{
     const before=h.run('JSON.stringify({moves,score,collected,clearedLeaves,board:scene.engine.board,save})');
     h.run('boardFeedback.calls=[];scene.hooks.onStart();scene.hooks.onResolveVisual({cascade:1,removed:[{kind:0,x:44,y:44}],clearedLeaves:[],specialCreated:false,specialActivated:false})');
     expect(h.run('boardFeedback.calls.map(c=>c.kind)')).toEqual(['begin','show']);
-    expect(h.run('boardFeedback.calls[0].payload')).toEqual(h.run("levels[currentLevel-1].goals.map(g=>({key:String(g.kind),remaining:g.count-collected[g.kind],src:'/assets/tiles-v2/'+tileNames[g.kind]+'.svg'})).concat([{key:'leaves',remaining:0,src:'/assets/obstacles/leaf-pile.svg'}])"));
+    expect(h.run('boardFeedback.calls[0].payload')).toEqual(h.run("levels[currentLevel-1].goals.map(g=>({key:String(g.kind),remaining:g.count-collected[g.kind],src:'/assets/tiles-v3/'+tileNames[g.kind]+'.webp'})).concat([{key:'leaves',remaining:0,src:'/assets/obstacles/leaf-pile.svg'}])"));
     expect(h.run('JSON.stringify({moves,score,collected,clearedLeaves,board:scene.engine.board,save})')).toBe(before);
     expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
     expect(h.element('#goals').innerHTML).toContain(`data-feedback-goal="${h.run('levels[currentLevel-1].goals[0].kind')}"`);
@@ -998,6 +998,18 @@ function boardHarness() {
   scene.create();
   return { handlers, lifecycle, attempts, taps, scene };
 }
+
+describe('게임 블록 bitmap과 장애물 SVG 로더',()=>{
+  it('일반 여섯 소재는 image로 읽고 캐시된 그림은 재요청하지 않으며 장애물 SVG는 유지합니다',()=>{
+    const h=boardHarness(),images:string[][]=[],vectors:string[][]=[];
+    const scene=h.scene as unknown as {preload():void;textures:{exists(name:string):boolean};load:{image(name:string,url:string):void;svg(name:string,url:string):void}};
+    scene.textures={exists:name=>name==='carrot'};
+    scene.load={image:(name,url)=>{images.push([name,url]);},svg:(name,url)=>{vectors.push([name,url]);}};
+    scene.preload();
+    expect(images).toEqual(['strawberry','blueberry','acorn','leaf','flower'].map(name=>[name,`/assets/tiles-v3/${name}.webp`]));
+    expect(vectors).toEqual(['leaf-pile','leaf-single','wooden-crate'].map(name=>[name,`/assets/obstacles/${name}.svg`]));
+  });
+});
 
 describe('종료된 회차의 명시적 퍼즐 복귀',()=>{
   function ended(test=false,won=true,level=2,native=false){
