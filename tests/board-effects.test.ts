@@ -4,12 +4,12 @@ import type {ResolveStep} from '../src/core';
 
 class ObjectStub {
   destroyed=false;name='';x=0;y=0;
-  rectangles:number[][]=[];
+  rectangles:number[][]=[];lines:number[][]=[];
   constructor(public kind:string,public value=''){}
   setDepth(){return this;}setName(name:string){this.name=name;return this;}setOrigin(){return this;}
   setPosition(x:number,y:number){this.x=x;this.y=y;return this;}setDisplaySize(){return this;}setAngle(){return this;}
   lineStyle(){return this;}fillStyle(){return this;}strokeRoundedRect(){return this;}fillRoundedRect(...values:number[]){this.rectangles.push(values);return this;}
-  lineBetween(){return this;}strokeCircle(){return this;}destroy(){this.destroyed=true;}
+  lineBetween(...values:number[]){this.lines.push(values);return this;}strokeCircle(){return this;}destroy(){this.destroyed=true;}
 }
 function harness(){
   const objects:ObjectStub[]=[],tweens:Record<string,unknown>[]=[],killed:unknown[]=[];
@@ -21,6 +21,7 @@ function harness(){
   return {effects,objects,tweens,killed,finish};
 }
 const step:ResolveStep={before:[],after:[],removed:Array.from({length:64},(_,i)=>({row:Math.floor(i/8),col:i%8})),effects:[{row:2,col:2,special:'row'},{row:4,col:4,special:'bomb'}]};
+const colorStep=():ResolveStep=>({...step,before:Array.from({length:8},(_,row)=>Array.from({length:8},(_,col)=>({kind:(row+col)%6}))),effects:[{row:0,col:0,special:'rainbow'},{row:1,col:1,special:'rainbow'}]});
 afterEach(()=>vi.unstubAllGlobals());
 describe('낙엽과 퍼즐 임시 연출',()=>{
   it('한 겹 감소는 추가 숫자 팝업 없이 날림만, 완전 제거는 체크를 표시합니다',()=>{
@@ -66,9 +67,44 @@ describe('낙엽과 퍼즐 임시 연출',()=>{
     h.effects.clear();expect(h.killed).toHaveLength(120);expect(h.objects.every(obj=>obj.destroyed)).toBe(true);
     h.finish();expect(h.effects.activeCount).toBe(0);
   });
+  it('행·열 빛은 원래 칸에서 올바른 축의 양 끝으로만 이동하고 같은 행을 중복하지 않습니다',()=>{
+    const h=harness();h.effects.special({...step,effects:[{row:2,col:1,special:'row'},{row:2,col:5,special:'row'},{row:3,col:4,special:'column'}]});
+    const motes=h.objects.filter(obj=>obj.name==='special-line-mote');expect(motes).toHaveLength(4);
+    const paths=motes.map(obj=>({obj,tween:h.tweens.find(tween=>tween.targets===obj)!}));
+    expect(paths.slice(0,2).map(({obj,tween})=>[obj.x,obj.y,tween.x,tween.y])).toEqual([[100,156,16,undefined],[100,156,464,undefined]]);
+    expect(paths.slice(2).map(({obj,tween})=>[obj.x,obj.y,tween.x,tween.y])).toEqual([[268,212,undefined,16],[268,212,undefined,464]]);
+    expect(paths.every(({tween})=>(tween.duration as number)<=300)).toBe(true);
+    h.finish();expect(h.effects.activeCount).toBe(0);expect(motes.every(obj=>obj.destroyed)).toBe(true);
+  });
+  it('색 연결은 단계당 하나로 제한하고 실제 제거된 타일만 중복·원점 없이 최대 12칸 연결합니다',()=>{
+    const h=harness(),source=colorStep();source.before[0][2]=null;
+    source.removed=[{row:0,col:0},{row:0,col:1},{row:0,col:1},{row:0,col:2},{row:7,col:7}];
+    const original=JSON.stringify(source),random=vi.spyOn(Math,'random');
+    try{
+      h.effects.special(source);
+      const threads=h.objects.filter(obj=>obj.name==='special-color-connections');expect(threads).toHaveLength(1);
+      expect(threads[0].lines).toEqual([[44,44,100,44],[44,44,100,44],[44,44,436,436],[44,44,436,436]]);
+      expect(random).not.toHaveBeenCalled();expect(JSON.stringify(source)).toBe(original);
+    }finally{random.mockRestore();}
+    h.finish();expect(h.effects.activeCount).toBe(0);
+    const large=harness(),many=colorStep();many.effects=Array.from({length:8},(_,col)=>({row:0,col,special:'rainbow'}));
+    large.effects.special(many);
+    const threads=large.objects.filter(obj=>obj.name==='special-color-connections');expect(threads).toHaveLength(1);
+    const ends=new Set(threads[0].lines.map(line=>`${line[2]},${line[3]}`));expect(ends.size).toBe(12);expect(ends.has('44,44')).toBe(false);
+    for(const line of threads[0].lines)expect(many.removed.some(p=>many.before[p.row]?.[p.col]&&44+p.col*56===line[2]&&44+p.row*56===line[3])).toBe(true);
+    expect(threads[0].lines).toHaveLength(24);
+    for(let i=0;i<4;i++){large.effects.special(many);large.effects.match(many,4);}
+    expect(large.effects.activeCount).toBeLessThanOrEqual(120);large.effects.clear();large.finish();
+    expect(large.effects.activeCount).toBe(0);expect(large.objects.every(obj=>obj.destroyed)).toBe(true);
+  });
+  it('유효한 색 특수 원점이나 제거 타일이 없으면 연결 장식을 만들지 않습니다',()=>{
+    const h=harness();h.effects.special({...colorStep(),removed:[]});h.effects.special({...colorStep(),before:[]});
+    expect(h.objects.some(obj=>obj.name==='special-color-connections')).toBe(false);
+    h.effects.clear();h.finish();expect(h.effects.activeCount).toBe(0);
+  });
   it('움직임 줄이기에서는 겹 숫자와 완료 표시는 남기고 날림·이동 장식을 생략합니다',()=>{
     vi.stubGlobal('window',{matchMedia:()=>({matches:true})});
-    const h=harness();h.effects.leafHit({row:1,col:1,before:2,after:1});h.effects.anticipate(step);h.effects.match(step,1);h.effects.special(step);
+    const h=harness();h.effects.leafHit({row:1,col:1,before:2,after:1});h.effects.anticipate(step);h.effects.match(step,1);h.effects.special(step);h.effects.special(colorStep());
     expect(h.objects.map(obj=>obj.name)).toEqual(['leaf-hit-pulse']);
     h.effects.leafHit({row:1,col:1,before:1,after:0});
     expect(h.tweens.every(config=>config.x===undefined&&config.y===undefined&&config.angle===undefined)).toBe(true);

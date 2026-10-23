@@ -83,7 +83,29 @@ export class BoardEffects {
   }
   special(step:ResolveStep){
     if(reducedMotion())return;
-    for(const p of uniqueEffects(step)){
+    const effects=uniqueEffects(step);
+    // 색 폭발과 같은 해결 단계의 실제 제거 칸만 연결합니다. 다른 특수와 겹친 칸도 포함됩니다.
+    // Graphics 하나 안의 선 수도 제한하여 객체 상한과 별도로 그리기 비용을 관리합니다.
+    const rainbow=effects.find(p=>p.special==='rainbow'&&step.before[p.row]?.[p.col]);
+    if(rainbow){
+      const seen=new Set<string>(),targets=step.removed.filter(p=>{
+        const key=`${p.row},${p.col}`;
+        if(seen.has(key)||p.row===rainbow.row&&p.col===rainbow.col||!step.before[p.row]?.[p.col])return false;
+        seen.add(key);return true;
+      });
+      if(targets.length){
+        const origin=point(rainbow),threads=this.scene.add.graphics().setDepth(11).setName('special-color-connections');
+        const count=Math.min(12,targets.length);
+        for(let i=0;i<count;i++){
+          const p=targets[count===1?0:Math.round(i*(targets.length-1)/(count-1))],end=point(p);
+          threads.lineStyle(7,colors[step.before[p.row][p.col]!.kind],.45);threads.lineBetween(origin.x,origin.y,end.x,end.y);
+          threads.lineStyle(2,0xfff9e6,.95);threads.lineBetween(origin.x,origin.y,end.x,end.y);
+          threads.strokeCircle(end.x,end.y,7);
+        }
+        this.animate(threads,{alpha:0,duration:260,ease:'Cubic.easeOut'});
+      }
+    }
+    for(const p of effects){
       const {x,y}=point(p);
       if(p.special==='row'||p.special==='column'){
         const across=p.special==='row',beam=this.scene.add.graphics().setPosition(x,y).setDepth(12).setName('special-sweep');
@@ -92,6 +114,12 @@ export class BoardEffects {
         beam.fillStyle(0xfffce7,.98);
         beam.fillRoundedRect(across?16-x:-3,across?-3:16-y,across?448:6,across?6:448,3);
         this.animate(beam,{...(across?{scaleY:.45}:{scaleX:.45}),alpha:0,duration:210,ease:'Cubic.easeOut'});
+        for(const edge of [16,464]){
+          const mote=this.scene.add.graphics().setPosition(x,y).setDepth(13).setName('special-line-mote');
+          mote.lineStyle(6,specialColor(p.special),.6);mote.lineBetween(-7,0,7,0);mote.lineBetween(0,-7,0,7);
+          mote.lineStyle(2,0xfffbe7,1);mote.lineBetween(-7,0,7,0);mote.lineBetween(0,-7,0,7);
+          this.animate(mote,{...(across?{x:edge}:{y:edge}),alpha:0,scaleX:.35,scaleY:.35,duration:260,ease:'Cubic.easeOut'});
+        }
       }else{
         const ring=this.scene.add.graphics().setDepth(12).setPosition(x,y).setName('special-ripple');
         ring.lineStyle(5,specialColor(p.special),.95);ring.strokeCircle(0,0,18);
