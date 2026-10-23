@@ -2216,6 +2216,15 @@ describe('경로 표시 컨테이너와 메뉴 버튼의 이벤트 경계',()=>{
 describe('무료 정원 공간 교감',()=>{
   const initial=(language:'ko'|'en'='ko',garden=1,phase:0|1|2=2,style:'base'|'alt'='base')=>({version:1,language,highestLevel:61,completed:Array.from({length:60},(_,i)=>i+1),coins:180,stars:6,garden,music:true,sfx:true,tutorialSeen:true,pip:{growth:0,affection:0,owned:[],equipped:'none'},gardenDesign:{schema:1,flowers:Array.from({length:5},(_,i)=>i<garden?i===0?'daisy':i===1?'violet':'meadow':'meadow'),owned:[],placed:[],spaces:{...freshGardenSpaces(),pond:{phase,altOwned:style==='alt',style}}}});
   const roundState='JSON.stringify({round,currentLevel,moves,score,collected,board:scene.engine.board,inProgress:save.inProgress})';
+  it.each(['ko','en'] as const)('%s: 빈터·기초 복원·완성 상태의 인사를 구분하며 중간 상태에는 완성 공간을 말하지 않습니다',language=>{
+    for(const area of ['pond','shelter','arch'] as const)for(const phase of [0,1,2] as const){
+      const data={...initial(language,1),highestLevel:100,completed:Array.from({length:100},(_,i)=>i+1)};
+      data.gardenDesign.spaces={...freshGardenSpaces(),[area]:{phase,altOwned:false,style:'base'}};
+      const h=mainHarness(false,false,false,false,data);h.run("switchView('village')");h.element('#garden-area-'+area).onclick();
+      const line=h.run('gardenVisitControls()'),key=phase===0?'spaceVisitEmpty':phase===1?'spaceVisitBuilding':({pond:'spaceVisitPond',shelter:'spaceVisitShelter',arch:'spaceVisitArch'} as const)[area];
+      expect(line).toContain(t(language,key));if(phase===1)expect(line).not.toContain(t(language,({pond:'spaceVisitPond',shelter:'spaceVisitShelter',arch:'spaceVisitArch'} as const)[area]));
+    }
+  });
   it.each(['ko','en'] as const)('%s: 실제 꽃밭/꽃 종류에 반응하고 무료 활동은 저장·성장·회차를 바꾸지 않습니다',language=>{
     const h=mainHarness(false,false,false,false,initial(language,2));h.run("switchView('village');globalThis.activitySave=save;globalThis.activityScene=scene");
     const disk=h.disk(),writes=h.writes(),before=h.run('JSON.stringify(save)'),round=h.run(roundState);
