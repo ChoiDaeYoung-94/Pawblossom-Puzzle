@@ -470,6 +470,32 @@ describe('블록 객체 보존과 낙하 연출',()=>{
 });
 
 describe('보드 키보드 입력과 읽기 상태',()=>{
+  it.each(['row','rainbow'] as const)('교환 전용 선택은 %s 특수를 즉시 쓰지 않고 이웃 특수와 기존 swap을 한 번 호출합니다',async special=>{
+    const {scene,onMove,onNotice}=harness();scene.engine.board[0][0]!.special=special;scene.engine.board[0][1]!.special='column';scene.paint(scene.engine.board);
+    const rng=vi.fn(seededRng(42));scene.engine=new BoardEngine(8,8,rng,snapshot(scene.engine));rng.mockClear();
+    const before=snapshot(scene.engine),swap=vi.spyOn(scene.engine,'swap'),activate=vi.spyOn(scene.engine,'activate');
+    scene.focusKeyboard();scene.keyboardKey('Enter',false,true);scene.keyboardKey('Enter',true,true);
+    expect(scene.keyboardState().selected).toEqual({row:0,col:0});expect(snapshot(scene.engine)).toEqual(before);expect(rng).not.toHaveBeenCalled();expect(onMove).not.toHaveBeenCalled();expect(activate).not.toHaveBeenCalled();
+    scene.keyboardKey('ArrowRight');scene.keyboardKey('Enter');scene.keyboardKey('Enter',true);
+    await vi.waitFor(()=>expect(scene.busy).toBe(false));
+    expect(swap).toHaveBeenCalledExactlyOnceWith({row:0,col:0},{row:0,col:1});expect(activate).not.toHaveBeenCalled();expect(onMove).toHaveBeenCalledOnce();expect(onNotice).toHaveBeenCalledWith('comboClear');
+  });
+  it('교환 전용 선택은 이웃 선택을 바꾸거나 취소할 뿐 자동 교환하지 않습니다',()=>{
+    const {scene,onMove}=harness();scene.engine.board[0][0]!.special='row';scene.engine.board[0][1]!.special='column';scene.paint(scene.engine.board);scene.focusKeyboard();
+    const before=snapshot(scene.engine);scene.keyboardKey('Enter',false,true);scene.keyboardKey('ArrowRight');scene.keyboardKey('Enter',false,true);
+    expect(scene.keyboardState().selected).toEqual({row:0,col:1});expect(onMove).not.toHaveBeenCalled();expect(snapshot(scene.engine)).toEqual(before);
+    scene.keyboardKey('Escape');expect(scene.keyboardState().selected).toBeUndefined();
+  });
+  it('색 제거를 교환 전용으로 선택하면 이웃 일반 블록의 색을 기존 swap으로 제거합니다',async()=>{
+    const {scene,onMove}=harness();scene.engine.board[0][0]!.special='rainbow';scene.paint(scene.engine.board);
+    const swap=vi.spyOn(scene.engine,'swap'),activate=vi.spyOn(scene.engine,'activate');scene.focusKeyboard();
+    scene.keyboardKey('Enter',false,true);scene.keyboardKey('ArrowRight');scene.keyboardKey(' ');
+    await vi.waitFor(()=>expect(scene.busy).toBe(false));
+    expect(swap).toHaveBeenCalledExactlyOnceWith({row:0,col:0},{row:0,col:1});expect(activate).not.toHaveBeenCalled();expect(onMove).toHaveBeenCalledOnce();
+    const result=swap.mock.results[0].value as ReturnType<BoardEngine['swap']>;
+    const first=result.steps[0];expect(first.removed.some(p=>first.before[p.row][p.col]?.kind===1)).toBe(true);
+    expect(first.removed.filter(p=>first.before[p.row][p.col]?.kind===0&&first.before[p.row][p.col]?.special!=='rainbow')).toHaveLength(0);
+  });
   it('8×8 경계를 넘지 않으며 커서 조회와 선택·취소는 난수와 이동을 소비하지 않습니다',()=>{
     const {scene,onMove}=harness();scene.paint(scene.engine.board);
     const rng=vi.fn(seededRng(42));scene.engine=new BoardEngine(8,8,rng,snapshot(scene.engine));rng.mockClear();
@@ -585,7 +611,7 @@ describe('비정형 보드의 실제 표시·입력·엔진 낙하 재생',()=>{
     const rendered=scene as unknown as {crateObjects:Piece[]};expect(rendered.crateObjects).toHaveLength(2);expect(scene.pieces[3][3]).toBeNull();
     scene.focusKeyboard();for(let i=0;i<3;i++)scene.keyboardKey('ArrowDown');for(let i=0;i<3;i++)scene.keyboardKey('ArrowRight');
     expect(scene.keyboardState()).toMatchObject({cursor:{row:3,col:3},crate:true,tile:undefined});
-    scene.keyboardKey('Enter');scene.keyboardKey(' ');await scene.attempt({row:3,col:2},{row:3,col:3});expect(onMove).not.toHaveBeenCalled();
+    scene.keyboardKey('Enter');scene.keyboardKey(' ');scene.keyboardKey('Enter',false,true);expect(scene.keyboardState().selected).toBeUndefined();await scene.attempt({row:3,col:2},{row:3,col:3});expect(onMove).not.toHaveBeenCalled();
     const initialCrates=rendered.crateObjects.slice(),drops:ResolveStep[]=[],drop=scene.drop.bind(scene);
     scene.drop=step=>{
       const old=scene.pieces.map(line=>line.slice());drop(step);drops.push(step);

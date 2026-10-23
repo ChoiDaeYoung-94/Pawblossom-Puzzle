@@ -1075,6 +1075,10 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     h.run(`boardPending=false;document.querySelector=(selector)=>selector==='dialog[open]'?{}:board;sendKey();`);
     expect(h.run('keys.length')).toBe(2);expect(h.run('blocked')).toBe(2);
   });
+  it('Shift+Enter만 교환 전용 선택으로 전달하고 Space/일반 Enter와 반복 여부를 구분합니다',()=>{
+    const h=mainHarness();h.run(`globalThis.keys=[];const board=document.querySelector('#game-canvas');document.activeElement=board;scene.keyboardKey=(...args)=>keys.push(args);for(const event of [{key:'Enter',shiftKey:true,repeat:false},{key:'Enter',shiftKey:false,repeat:false},{key:' ',shiftKey:true,repeat:false},{key:'Enter',shiftKey:true,repeat:true}])board.listeners.keydown({target:board,preventDefault(){},...event});`);
+    expect(h.run('keys')).toEqual([['Enter',false,true],['Enter',false,false],[' ',false,false],['Enter',true,true]]);
+  });
   it('busy/finished 보드 키는 전달하지 않으며 대기 중 스크롤만 막습니다',()=>{
     const h=mainHarness();h.run(`globalThis.keys=0;globalThis.blocked=0;const board=document.querySelector('#game-canvas');document.activeElement=board;scene.keyboardKey=()=>keys++;scene.keyboardState=()=>({available:false,busy:true});board.listeners.keydown({target:board,key:' ',preventDefault(){blocked++}});scene.keyboardState=()=>({available:false,finished:true});board.listeners.keydown({target:board,key:'Enter',preventDefault(){blocked++}});`);
     expect(h.run('keys')).toBe(0);expect(h.run('blocked')).toBe(2);

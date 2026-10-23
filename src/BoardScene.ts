@@ -119,11 +119,11 @@ export class BoardScene extends Phaser.Scene {
     this.down=undefined;this.hideKeyboardCursor();this.clearHint();this.clearSelection();
     if(this.ready&&this.canInteract())this.resetHint();else this.stopHintTimer();
   }
-  keyboardKey(key:string,repeat=false){
+  keyboardKey(key:string,repeat=false,selectOnly=false){
     if(!this.canInteract()||!this.cursor)return false;
     this.syncMotion();
     if(key==='Escape'){this.down=undefined;this.clearSelection();this.resetHint();return true;}
-    if(key==='Enter'||key===' '){this.down=undefined;if(!repeat)this.tap({...this.cursor});return true;}
+    if(key==='Enter'||key===' '){this.down=undefined;if(!repeat)this.tap({...this.cursor},selectOnly);return true;}
     const delta=key==='ArrowUp'?[-1,0]:key==='ArrowDown'?[1,0]:key==='ArrowLeft'?[0,-1]:key==='ArrowRight'?[0,1]:undefined;
     if(!delta)return false;
     this.down=undefined;
@@ -264,12 +264,12 @@ export class BoardScene extends Phaser.Scene {
     }
     this.pieces=next;
   }
-  private tap(pos:Position) {
+  private tap(pos:Position,selectOnly=false) {
     if(!this.canInteract()||!this.engine.isPlayable(pos))return;
     const reduced=this.syncMotion();
     this.resetHint();this.hooks.audio.play('tap');
-    if(this.selected&&Math.abs(pos.row-this.selected.row)+Math.abs(pos.col-this.selected.col)===1){void this.attempt(this.selected,pos);return;}
-    if(this.engine.board[pos.row][pos.col]!.special){void this.attempt(pos);return;}
+    if(!selectOnly&&this.selected&&Math.abs(pos.row-this.selected.row)+Math.abs(pos.col-this.selected.col)===1){void this.attempt(this.selected,pos);return;}
+    if(!selectOnly&&this.engine.board[pos.row][pos.col]!.special){void this.attempt(pos);return;}
     this.clearSelection();this.selected=pos;this.drawSelection(reduced);
     if(!reduced)this.tweens.add({targets:this.pieces[pos.row][pos.col],y:this.point(pos).y-3,duration:180,yoyo:true,repeat:1});
     this.changed();
