@@ -9,7 +9,9 @@ import '@fontsource/fraunces/latin-600.css';
 import './style.css';
 import './CampaignMap.css';
 import './PuzzlePresentation.css';
+import './SpecialTileArt.css';
 import { BoardScene,tileNames } from './BoardScene';
+import {specialTileArt} from './SpecialTileArt';
 import { AudioManager } from './audio/AudioManager';
 import { loadSave,saveData,retrySave,saveStatus,clearSave,levels,LEVEL_COUNT,chapters,chapterForLevel,levelSignature,type RoundCheckpoint,type SaveData } from './state';
 import { freshPip,pipLevel,careCost,preparePipAction,type PipAction } from './pipCare';
@@ -422,7 +424,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   const stored=checkpoint();
   boardPending=true;
   if(!game){
-    game=new Phaser.Game({type:Phaser.AUTO,width:480,height:480,parent:'game-canvas',backgroundColor:'#dae6d7',scene:[],transparent:false,
+    game=new Phaser.Game({type:Phaser.AUTO,width:480,height:480,parent:'game-canvas',backgroundColor:'#284c42',scene:[],transparent:false,
       scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true,roundPixels:false},audio:{noAudio:true},input:{activePointers:2}});
     game.events.on(Phaser.Core.Events.POST_RENDER,replaceBoard);
   }
@@ -452,7 +454,7 @@ function renderTutorial(){
   const headings:TextKey[]=['tutorialSwap','tutorialGoal','tutorialMagic',specialPractice?'specialPracticeTitle':squarePractice?'squarePracticeTitle':'practiceTitle'];
   const descriptions:TextKey[]=['tutorialSwapDesc','tutorialGoalDesc','tutorialMagicDesc',specialPractice?(specialPractice.completed?'specialPracticeDone':'specialPracticeDesc'):squarePractice?(squarePractice.completed?'squarePracticeDone':'squarePracticeDesc'):practice?.completed?'practiceDone':'practiceDesc'];
   const tile=(name:string)=>`<img src="/assets/tiles-v3/${name}.webp" alt=""/>`;
-  const art=tutorialPage===3?practiceArt():tutorialPage===0?`<div class="guide-swap" aria-hidden="true">${tile('strawberry')}${tile('strawberry')}<span>${tile('carrot')}<b>↕</b>${tile('strawberry')}</span></div>`:tutorialPage===1?`<div class="guide-goals" aria-hidden="true"><span>${tile('strawberry')} 12</span><span>${tile('carrot')} 10</span>${icon('leaf',24)}</div>`:`<div class="guide-specials">${(['tutorialFour','tutorialFive','tutorialShape'] as TextKey[]).map((key,i)=>`<div><span class="guide-special special-${i}" aria-hidden="true">${tile(['leaf','flower','blueberry'][i])}</span><small>${text(key)}</small></div>`).join('')}</div>`;
+  const art=tutorialPage===3?practiceArt():tutorialPage===0?`<div class="guide-swap" aria-hidden="true">${tile('strawberry')}${tile('strawberry')}<span>${tile('carrot')}<b>↕</b>${tile('strawberry')}</span></div>`:tutorialPage===1?`<div class="guide-goals" aria-hidden="true"><span>${tile('strawberry')} 12</span><span>${tile('carrot')} 10</span>${icon('leaf',24)}</div>`:`<div class="guide-specials">${(['tutorialFour','tutorialFive','tutorialShape'] as TextKey[]).map((key,i)=>`<div>${specialTileArt(['leaf','flower','blueberry'][i],(['row','rainbow','bomb'] as const)[i])}<small>${text(key)}</small></div>`).join('')}</div>`;
   $('#tutorial-dialog').innerHTML=`<div class="guide-content"><div class="eyebrow">${text('tutorial')} · ${text('tutorialStep')} ${tutorialPage+1} / 4</div><h2 id="tutorial-title" tabindex="-1">${text(headings[tutorialPage])}</h2>${art}<p id="tutorial-description">${text(descriptions[tutorialPage])}</p><div class="guide-dots" aria-hidden="true">${[0,1,2,3].map(i=>`<i class="${i===tutorialPage?'active':''}"></i>`).join('')}</div><div class="guide-actions"><button id="guide-back" class="text-button" ${tutorialPage===0?'disabled':''}>${text('tutorialBack')}</button><button id="guide-next" class="primary" ${tutorialPage===3&&tutorialIntent==='onboarding'&&!practice?.completed?'disabled':''}>${text(tutorialPage===3?(tutorialIntent==='help'?'tutorialClose':'tutorialStart'):tutorialPage===2?'tutorialTry':'tutorialNext')}${icon('arrow',18)}</button></div><button id="guide-skip" class="text-button">${text(tutorialIntent==='help'?'tutorialClose':'tutorialSkip')}</button></div>`;
   $('#guide-back').onclick=()=>{if(tutorialPage>0){tutorialPage--;specialPractice=undefined;squarePractice=undefined;renderTutorial();$('#tutorial-title').focus();}};
   $('#guide-next').onclick=()=>{if(tutorialPage<3){tutorialPage++;if(tutorialPage===3){practice=new SwapPractice();specialPractice=undefined;squarePractice=undefined;}renderTutorial();$('#tutorial-title').focus();}else if(tutorialIntent==='help'||practice?.completed)closeTutorial();};
@@ -474,7 +476,7 @@ function practiceArt(){
     const shown=lesson.result?.steps[0].created?.find(p=>p.row===r&&p.col===c)?.tile??block;
     const name=(shown.special==='bomb'?text('squarePracticeBombCell'):specialPractice&&target?text('specialPracticeCell'):text('practiceCell').replace('{tile}',text(tileNames[block.kind] as TextKey))).replace('{row}',String(r+1)).replace('{col}',String(c+1));
     const image=`<img src="/assets/tiles-v3/${tileNames[shown.kind]}.webp" alt=""/>`;
-    return `<button id="practice-cell-${r}-${c}" data-row="${r}" data-col="${c}" class="practice-cell ${shown.special==='row'?'special-0':shown.special==='bomb'?'practice-created':''} ${target&&!lesson.completed?'practice-target':''} ${cleared?'practice-cleared':''}" aria-label="${name}" aria-pressed="${Boolean(selected)}" ${!target||lesson.completed?'disabled':''}>${shown.special==='bomb'?`<span class="practice-bomb" aria-hidden="true">${image}<i class="practice-bomb-spark"></i></span>`:image}${cleared?'<span aria-hidden="true">✓</span>':''}</button>`;
+    return `<button id="practice-cell-${r}-${c}" data-row="${r}" data-col="${c}" class="practice-cell ${shown.special?'practice-created':''} ${target&&!lesson.completed?'practice-target':''} ${cleared?'practice-cleared':''}" aria-label="${name}" aria-pressed="${Boolean(selected)}" ${!target||lesson.completed?'disabled':''}>${shown.special?specialTileArt(tileNames[shown.kind],shown.special):image}${cleared?'<span class="practice-check" aria-hidden="true">✓</span>':''}</button>`;
   }).join('')).join('')}</div><div id="practice-feedback" class="practice-feedback" role="status">${specialPractice?text(lesson.completed?'specialPracticeMatched':'specialPracticePrompt'):squarePractice?text(lesson.completed?'squarePracticeMatched':'squarePracticePrompt'):practice?.completed?`<button id="practice-special" class="text-button">${text('specialPracticeTry')}</button><button id="practice-square" class="text-button">${text('squarePracticeTry')}</button>`:text(practice?.selected?'practiceSelected':'practicePrompt')}</div>`;
 }
 function bindPracticeInputs(){

@@ -1,0 +1,15 @@
+.special-tile-art{position:relative;isolation:isolate;display:inline-grid;place-items:center;width:64px;height:64px;flex:none;pointer-events:none}
+/* 그림을 읽지 못해도 의미를 구분할 수 있는 바탕·방향 표시는 남깁니다. */
+.special-tile-art::before{content:'';position:absolute;inset:7%;border:1px solid #e6cb84;border-radius:25%;background:radial-gradient(circle at 30% 25%,#96eaff,#207b9b 75%);box-shadow:inset 0 -2px 1px #123b5b66}
+.special-tile-art-column::before{background:radial-gradient(circle at 30% 25%,#b2edbd,#277c59 75%)}
+.special-tile-art-bomb::before{inset:29% 17% 7%;border-radius:50%;background:radial-gradient(circle at 30% 25%,#efabc5,#983459 75%)}
+.special-tile-art-rainbow::before{inset:28%;border-radius:50%;background:conic-gradient(#ec85b1,#e9bc58,#89cc69,#64c4d8,#8b91d3,#c185ce,#ec85b1)}
+.special-art-body{position:absolute;inset:0;background-position:center;background-size:contain;background-repeat:no-repeat}
+.special-tile-art>.special-art-kind{position:relative;z-index:1;width:62.5%;height:62.5%;object-fit:contain;padding:0;border:0;border-radius:0;background:none}
+.special-tile-art-bomb>.special-art-kind{width:57%;height:57%;transform:translateY(2px)}
+.special-tile-art-rainbow>.special-art-kind{width:52%;height:52%}
+.special-art-mark{position:absolute;z-index:2;inset:0;width:100%;height:100%;overflow:visible;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.special-art-arrow-edge{stroke:#174e57;stroke-width:4.5}
+.special-tile-art-column .special-art-arrow-edge{stroke:#175e45}
+.special-art-arrow{stroke:#fffbea;stroke-width:2.5}
+.practice-cell .special-tile-art{width:48px;height:48px}

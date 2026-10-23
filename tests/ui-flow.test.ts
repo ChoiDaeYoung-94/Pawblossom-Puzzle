@@ -11,6 +11,7 @@ import {cloneSnapshot,prepareShuffle} from '../src/puzzleHelp';
 import {freshGardenSpaces} from '../src/gardenSpaces';
 import {t, type TextKey} from '../src/i18n';
 import {icon as renderIcon} from '../src/icons';
+import {specialTileArt,specialArtKinds,specialBodyKey,specialBodyPath} from '../src/SpecialTileArt';
 
 // 테스트에만 사용하는 Node API입니다. 별도 @types/node 설치 없이 런타임에서 읽습니다.
 const fsModule = 'node:fs', vmModule = 'node:vm';
@@ -178,6 +179,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     window:{addEventListener:(name:string,callback:()=>void)=>{windowEvents[name]=callback;}},
     Phaser: { Game: GameStub, AUTO: 0, Scale: { FIT: 0, CENTER_BOTH: 0 }, Core:{Events:{POST_RENDER:'postrender'}} },
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
+    specialTileArt,
     bindPracticeBoard,
     cloneSnapshot,prepareShuffle,
     showResultPip:()=>{resultArtCalls++;},
@@ -984,7 +986,7 @@ function boardHarness() {
     require: (name: string) => name === 'phaser' ? { default: {
       Scene: PhaserSceneStub,
       Scenes: { Events: { PAUSE: 'pause', RESUME: 'resume', SLEEP: 'sleep', WAKE:'wake', SHUTDOWN: 'shutdown', DESTROY:'destroy', CREATE:'create' } },Scale:{Events:{RESIZE:'resize'}},
-    } } : name==='./BoardEffects'?effectsExports:name==='./reducedMotion'?motionExports:engineExports,
+    } } : name==='./BoardEffects'?effectsExports:name==='./reducedMotion'?motionExports:name==='./SpecialTileArt'?{specialArtKinds,specialBodyKey,specialBodyPath}:engineExports,
   });
   const Constructor = boardExports.BoardScene as new (hooks: object) => {
     create(): void; paint: () => void; resetHint: () => void; pieces:unknown[][];
@@ -1004,10 +1006,10 @@ describe('게임 블록 bitmap과 장애물 SVG 로더',()=>{
   it('일반 여섯 소재는 image로 읽고 캐시된 그림은 재요청하지 않으며 장애물 SVG는 유지합니다',()=>{
     const h=boardHarness(),images:string[][]=[],vectors:string[][]=[];
     const scene=h.scene as unknown as {preload():void;textures:{exists(name:string):boolean};load:{image(name:string,url:string):void;svg(name:string,url:string):void}};
-    scene.textures={exists:name=>name==='carrot'};
+    scene.textures={exists:name=>name==='carrot'||name==='special-art-column'};
     scene.load={image:(name,url)=>{images.push([name,url]);},svg:(name,url)=>{vectors.push([name,url]);}};
     scene.preload();
-    expect(images).toEqual(['strawberry','blueberry','acorn','leaf','flower'].map(name=>[name,`/assets/tiles-v3/${name}.webp`]));
+    expect(images).toEqual([...['strawberry','blueberry','acorn','leaf','flower'].map(name=>[name,`/assets/tiles-v3/${name}.webp`]),...['row','bomb','rainbow'].map(kind=>[`special-art-${kind}`,`/assets/specials-v4/${kind}.webp`])]);
     expect(vectors).toEqual(['leaf-pile','leaf-single','wooden-crate'].map(name=>[name,`/assets/obstacles/${name}.svg`]));
   });
 });
@@ -1267,6 +1269,23 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
 });
 
 describe('첫 플레이 안내', () => {
+  it.each(['ko','en'] as const)('%s 안내와 실제 특수 탭 실습은 본판과 같은 자체 특수 원본을 쓰고 회차를 보존합니다',language=>{
+    const h=mainHarness(false,true);h.run(`changeLanguage('${language}')`);
+    const disk=h.disk(),round=h.run('JSON.stringify({round,moves,score,collected,board:scene.engine.board})');
+    h.element('#guide-next').onclick();h.element('#guide-next').onclick();
+    const html=h.element('#tutorial-dialog').innerHTML;
+    for(const special of ['row','rainbow','bomb'])expect(html).toContain(`/assets/specials-v4/${special}.webp`);
+    expect(html).not.toContain('guide-special special-');
+    h.element('#guide-next').onclick();h.element('#practice-cell-0-2').onclick({detail:0,button:0});h.element('#practice-cell-1-2').onclick({detail:0,button:0});
+    h.element('#practice-special').onclick();
+    expect(h.element('#tutorial-dialog').innerHTML).toContain('/assets/specials-v4/row.webp');
+    expect(h.element('#tutorial-dialog').innerHTML).toContain('special-tile-art-row');
+    h.element('#practice-cell-1-1').onclick({detail:0,button:0});
+    const completed=h.element('#tutorial-dialog').innerHTML;
+    expect(completed).toContain('special-tile-art-row');expect(completed).toContain('class="practice-check"');
+    expect(completed).toMatch(/id="practice-cell-1-1"[^>]+practice-cleared/);
+    expect(h.run('JSON.stringify({round,moves,score,collected,board:scene.engine.board})')).toBe(round);expect(h.disk()).toEqual(disk);
+  });
   it('언어 전환 때 별·코인 보조 라벨이 갱신되며 지갑 숫자는 유지됩니다',()=>{
     const h=mainHarness();
     expect(h.element('.wallet.stars .sr-only').textContent).toBe('Stars');
@@ -1742,7 +1761,7 @@ describe('V1 회차 보존과 V2 정사각 안내',()=>{
     expect(h.run('squarePractice.result.steps[0].created[0].tile.special')).toBe('bomb');
     const html=h.element('#tutorial-dialog').innerHTML;
     expect(html.split(t(language,'squarePracticeDone'))).toHaveLength(2);
-    expect(html).toContain(t(language,'squarePracticeMatched'));expect(html).toContain('class="practice-bomb"');
+    expect(html).toContain(t(language,'squarePracticeMatched'));expect(html).toContain('special-tile-art-bomb');expect(html).toContain('/assets/specials-v4/bomb.webp');
     expect(html).toContain(t(language,'squarePracticeBombCell').replace('{row}','2').replace('{col}','2'));
     expect(html).toMatch(/id="practice-cell-1-1"[^>]+practice-created[^>]+disabled/);
     expect(h.disk()).toEqual(saved);expect(h.run('JSON.stringify({round,moves,score,collected,board:scene.engine.board,leaves:scene.engine.leaves})')).toBe(before);
