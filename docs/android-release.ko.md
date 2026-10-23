@@ -1,3 +1,19 @@
+## 최신 지도·퍼즐·자체 에셋 통합 APK · 2026-10-23 · #243
+
+사용자 확인용 파일은 [Pawblossom-Puzzle-v0.1.7-2026-10-23-faf484d-debug.apk](https://drive.google.com/file/d/1jE_OvxdIfGMRS9G3DO7T3IqsWsb53mP3/view?usp=drive_link)입니다. 게임 소스 main `faf484d47a8d8f6dc6676018d13d5275427adf13`, 버전0.1.7/code8,11,578,781바이트, SHA256 `6aa44558490cef92b27ad729630fb90e187c63168a339f564821e8f6601582e1`입니다. 기존 작업 계정 doeud1410@gmail.com/Pawblossom 테스트 폴더에 고유 APK와 checksum만 추가했고 실제 재다운로드 크기·해시가 일치합니다. 기존 파일·비공개 공유 범위는 유지했습니다. 아래473과 이전 파일은 오늘 개편 전 이력이며, 과거 Draft234는 이 전달의 근거로 병합하지 않았습니다.
+
+오늘 제품 변경은 독립100단계 지도/현재 위치/목표 미리보기/동일 판 이어하기 [PR237](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/237), 목표·이동 중심 HUD/정사각 보드 보정/자체 핍 idle [PR239](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/239), 여섯 자체 입체 소재의 본판·목표·안내 일관성 [PR241](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/241), Shift+Enter 특수 선택·교환/합성 [PR242](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/242)입니다. 기존100판 목표·엔진/RNG·골든·저장·경제·가격·오디오 믹스는 그대로이며 새 수익화/특수/정원 장기 루프 완료를 뜻하지 않습니다.
+
+게임 main의 최초 정확 [CI39938013181](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39938013181)은 Node22/24 각각45파일2,977개·스토어12개·타입/production·testing 두 빌드/플래그가 성공했습니다. PR242 head77fea2e의 첫 CI39937616639 성공과 별도로 확인했습니다. 앞선 mainfb4의 CI39935166481 Node24 원장 경쟁1실패는 [#122 comment6362302786](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122#issuecomment-6362302786)에 보존했고 잠금 보유자/근본 원인은 미확정입니다. 새 UI/에셋 head의 녹색을 그 원인 해결로 합산하지 않으며 같은 head CI 재실행·조건 완화는 하지 않았습니다.
+
+APK 웹47개는 최종 testing 빌드와 전수 해시 일치하고 빈 Cordova2개/중복 항목0입니다. appId·min24/target36·기존 v2 인증서 동일을 확인했고 비웹536개는473 APK와 압축 해제 해시가 모두 같습니다. 네이티브/config/deps diff0이며 이번 Gradle은 app clean+assembleDebug의92개 작업 실행/1분13초 성공입니다. native unit16개(실질15)/lint0오류·15경고는 기존 동일 네이티브 근거 재사용이며 오늘 새 실행한 것으로 계산하지 않습니다. production dist47/Android47+빈2와 시험 플래그false 복원을 독립 읽기 검수했습니다.
+
+지정 LDPlayer emulator-5554/Chrome WebView124에서 첫 설치·KO 첫 안내/건너뛰기·지도/목표 미리보기·900×1600세로/1600×900가로·실제 스와이프26→25회/30점과 칸 특수 생성·특수 탭25→24회/110점/목표9·9·Android 뒤로 지도 복귀·정원/핍 화면을 확인했습니다. 앱 프로세스를 종료하고 다시 열어 지도→잔여24회 미리보기→같은 보드24회/110점 복원을 확인했고 원래 rotation lock0을 복원했습니다. 현재 앱 PID 오류 로그의 FATAL EXCEPTION/Uncaught 오류 표시는0건이며 전체 서비스/장기 무오류 검증으로 확대하지 않습니다. ADB 한 번 offline은 미반영 안내 화면 확인→devices 읽기 복귀 뒤 한 번만 재입력했습니다. 다른5556/5558/사용자 폰은 조작하지 않았습니다.
+
+**debug 검수본이며 상용 출시 완료본이 아닙니다.** 실제 폰·사운드 청취/자동 시작 체감·장시간 성능/100판 난이도·실UMP/GMA/Play구매·복원/pending/환불·스토어는 미검증입니다. 근거는 Git 밖 `2026-10-23-faf484d`의 artifact/testing47/production-restoration/Drive/LDPlayer/CI 로그와 `qa/integration-20261023`에 보존하고 안내는 채팅에 직접 제공합니다. AAB·콘솔 상품·실키/env·공개 배포·최종 믹스·새 예약은 수행하지 않았습니다.
+
+추가 관측: 같은 앱 PID 로그에 safe-area CSS 주입의 `TypeError ... null (reading 'style')` 3건과 EGL/OpenGL 오류가 있습니다. 이번 화면·입력·재실행 확인은 통과했지만 이 로그의 원인과 실폰 영향은 미확정이며 #73 후속 점검으로 보존합니다. 위 FATAL/Uncaught 표시0건을 전체 오류0건으로 해석하지 않습니다.
+
 ## 최신 입력·정원·핍 검수 후보 · 2026-10-22 저녁 · #229
 
 사용자 확인용 최신 파일은 [Pawblossom-Puzzle-v0.1.7-2026-10-22-47316a6-debug.apk](https://drive.google.com/file/d/1VxJDmZ1RvuUnYY3vnQFLRZITvDBOhtpA/view)입니다. 게임 소스 main `47316a6350a83a04cb045aa308f4611c137c9bca`, 버전0.1.7/code8, 11,155,455바이트, SHA256 `4408da7b37b67f7aacd85abba95e2b52ec53876b88527aee5cf61b764113f6bc`입니다. 기존 작업 계정의 테스트 폴더에 고유 APK와 checksum만 추가했으며 실제 재다운로드 크기·해시가 일치합니다. 비공개 공유 범위와 기존 파일을 유지하고 추가 Chrome 탭만 닫았습니다. 아래340과 이전 APK는 새 입력·후반 정원·핍 안내를 포함하지 않는 전달 이력입니다.
