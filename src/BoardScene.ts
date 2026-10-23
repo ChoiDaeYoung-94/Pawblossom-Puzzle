@@ -31,7 +31,7 @@ export class BoardScene extends Phaser.Scene {
   constructor(hooks: Hooks, snapshot?:BoardSnapshot, mask?:BoardMask, crates?:readonly Position[]) {super('Board');this.hooks=hooks;this.engine=new BoardEngine(8,8,Math.random,snapshot,undefined,mask,crates);this.effects=new BoardEffects(this);}
   configureLeaves(piles:LeafPile[]){this.engine.setLeaves(piles);}
   preload() {
-    for(const name of tileNames)if(!this.textures.exists(name))this.load.svg(name,`/assets/tiles-v2/${name}.svg`,{width:100,height:100});
+    for(const name of tileNames)if(!this.textures.exists(name))this.load.image(name,`/assets/tiles-v3/${name}.webp`);
     for(const name of ['leaf-pile','leaf-single','wooden-crate'])if(!this.textures.exists(name))this.load.svg(name,`/assets/obstacles/${name}.svg`,{width:100,height:100});
   }
   create() {
