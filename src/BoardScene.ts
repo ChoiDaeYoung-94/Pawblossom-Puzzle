@@ -182,11 +182,13 @@ export class BoardScene extends Phaser.Scene {
           const across=tile.special==='row';
           // 몸체는 정사각형으로 유지하고 방향은 띠/화살표로 구분합니다.
           halo.fillStyle(0x244d60,1);halo.fillRoundedRect(-24,-24,48,48,12);
-          halo.fillStyle(across?0x2684b0:0x248665,1);halo.fillRoundedRect(-23,-24,46,46,11);
-          halo.lineStyle(2,across?0xb5f2ff:0xc1ffda,1);halo.strokeRoundedRect(-22,-22,44,44,10);
+          halo.fillStyle(across?0x298fbf:0x27976c,1);halo.fillRoundedRect(-23,-24,46,46,11);
+          halo.lineStyle(3,across?0xb5f2ff:0xc1ffda,1);halo.strokeRoundedRect(-22,-22,44,44,10);
+          halo.fillStyle(0xffffff,.22);halo.fillCircle(-13,-14,6);
         }else{
-          halo.fillStyle(tile.special==='bomb'?0x493354:0x354d68,1);halo.fillCircle(0,1,25);
-          halo.lineStyle(3,tile.special==='bomb'?0xeea864:0xffe9ad,1);halo.strokeCircle(0,0,24);
+          halo.fillStyle(tile.special==='bomb'?0x8c3a58:0x5264a3,1);halo.fillCircle(0,1,25);
+          halo.lineStyle(3,tile.special==='bomb'?0xffcb73:0xffe9ad,1);halo.strokeCircle(0,0,24);
+          halo.fillStyle(0xffffff,.28);halo.fillCircle(-12,-13,6);
           if(tile.special==='bomb'){
             halo.fillStyle(0x33283f,1);halo.fillRoundedRect(-8,-25,16,8,3);
             halo.lineStyle(3,0xffd48e,1);halo.lineBetween(5,-25,11,-27);halo.lineBetween(11,-27,16,-23);
@@ -200,11 +202,11 @@ export class BoardScene extends Phaser.Scene {
         const mark=this.add.graphics().setName(`special-mark-${tile.special}`).lineStyle(3,0xfffaf0,1);
         if(tile.special==='row') {
           for(const y of [-16,16])mark.lineBetween(-15,y,15,y);
-          for(const x of [-21,21]){const inward=x>0?-5:5;mark.lineBetween(x,0,x+inward,-5);mark.lineBetween(x,0,x+inward,5);}
+          for(const x of [-21,21]){const inward=x>0?-6:6;mark.lineStyle(5,0x174e6b);mark.lineBetween(x,0,x+inward,-6);mark.lineBetween(x,0,x+inward,6);mark.lineStyle(3,0xfffaf0);mark.lineBetween(x,0,x+inward,-6);mark.lineBetween(x,0,x+inward,6);}
         }
         if(tile.special==='column') {
           for(const x of [-16,16])mark.lineBetween(x,-15,x,15);
-          for(const y of [-21,21]){const inward=y>0?-5:5;mark.lineBetween(0,y,-5,y+inward);mark.lineBetween(0,y,5,y+inward);}
+          for(const y of [-21,21]){const inward=y>0?-6:6;mark.lineStyle(5,0x175e45);mark.lineBetween(0,y,-6,y+inward);mark.lineBetween(0,y,6,y+inward);mark.lineStyle(3,0xfffaf0);mark.lineBetween(0,y,-6,y+inward);mark.lineBetween(0,y,6,y+inward);}
         }
         if(tile.special==='bomb') {mark.lineStyle(3,0xffe3b8);mark.lineBetween(-17,-12,-13,-16);mark.fillStyle(0xffdf81);mark.fillCircle(17,-23,3);}
         if(tile.special==='rainbow') {
