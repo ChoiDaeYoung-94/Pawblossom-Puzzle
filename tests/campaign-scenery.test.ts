@@ -1,5 +1,6 @@
 import {describe,it,expect,vi} from 'vitest';
 import {createCampaignScenery,campaignScenery} from '../src/CampaignScenery';
+import {existsSync} from 'node:fs';
 
 function setup(assetPaths:string[]=[]){
   const frames=new Map<number,FrameRequestCallback>();let serial=0;
@@ -46,7 +47,11 @@ describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
   });
   it('물·축제·초원은 서로 다른 자체 부품을 표시하고 조작 요소나 외부 주소를 추가하지 않습니다',()=>{
     expect(campaignScenery(4)).toContain('map-pond-rings');expect(campaignScenery(11)).not.toContain('map-windmill-blades');expect(campaignScenery(1)).toContain('map-windmill-blades');
-    for(const id of [1,4,7,8,11]){const art=campaignScenery(id);expect(art).toContain('aria-hidden="true"');expect(art).not.toMatch(/<button|<a |https?:|<script/);expect(art).toContain('map-landmark-fallback');}
+    for(const id of [1,4,7,8,11]){const art=campaignScenery(id);expect(art).toContain('aria-hidden="true"');expect(art).not.toMatch(/<button|<a |https?:|<script/);expect(art).toContain('map-landmark-fallback');
+      for(const match of art.matchAll(/data-map-src="([^"]+)"/g))expect(existsSync(new URL('../public'+match[1],import.meta.url))).toBe(true);
+    }
+    expect(campaignScenery(1,10).match(/data-map-grove=/g)).toHaveLength(2);
+    for(const count of [0,5,7,NaN])expect(campaignScenery(4,count)).not.toContain('data-map-grove=');
   });
   it('지도 활성화 전에는 원본을 해독하지 않고 전부 준비한 현재 owner만 회화 그림을 공개합니다',async()=>{
     const h=setup(['/assets/campaign/windmill-rig-v1.png','/assets/garden-structures-v1/pond-base.webp']);
