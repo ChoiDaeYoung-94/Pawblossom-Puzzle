@@ -12,6 +12,7 @@ import {freshGardenSpaces} from '../src/gardenSpaces';
 import {t, type TextKey} from '../src/i18n';
 import {icon as renderIcon} from '../src/icons';
 import {specialTileArt,specialArtKinds,specialBodyKey,specialBodyPath} from '../src/SpecialTileArt';
+import * as paintedGardenArt from '../src/GardenPaintedArt';
 
 // 테스트에만 사용하는 Node API입니다. 별도 @types/node 설치 없이 런타임에서 읽습니다.
 const fsModule = 'node:fs', vmModule = 'node:vm';
@@ -205,9 +206,9 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const i18nExports:Record<string,unknown>={};
   vm.runInNewContext(i18nCode,{exports:i18nExports});
   Object.assign(context,i18nExports);
-  const gardenSpaceArtExports:Record<string,unknown>={};vm.runInNewContext(gardenSpaceArtCode,{exports:gardenSpaceArtExports});Object.assign(context,gardenSpaceArtExports);
+  const gardenSpaceArtExports:Record<string,unknown>={};vm.runInNewContext(gardenSpaceArtCode,{exports:gardenSpaceArtExports,require:()=>paintedGardenArt});Object.assign(context,gardenSpaceArtExports);
   const gardenSpacesUIExports:Record<string,unknown>={};vm.runInNewContext(gardenSpacesUICode,{exports:gardenSpacesUIExports,require:(name:string)=>name==='./i18n'?i18nExports:name==='./gardenSpaces'?gardenSpacesExports:gardenSpaceArtExports});Object.assign(context,gardenSpacesUIExports);
-  const gardenExports:Record<string,unknown>={};vm.runInNewContext(gardenCode,{exports:gardenExports,require:()=>gardenDesignExports});Object.assign(context,gardenExports);
+  const gardenExports:Record<string,unknown>={};vm.runInNewContext(gardenCode,{exports:gardenExports,require:(name:string)=>name==='./gardenDesign'?gardenDesignExports:paintedGardenArt});Object.assign(context,gardenExports);
   vm.runInContext(stateCode, context);
   Object.assign(context, stateExports);
   vm.runInContext(mainCode, context);
@@ -2292,8 +2293,12 @@ describe('후반 정원 공간과 확정 전 미리보기',()=>{
   const open=(h:ReturnType<typeof mainHarness>)=>{h.element('#garden-area-pond').onclick();h.element('#garden-space-restore').onclick();expect(h.run('spaceDialog.open')).toBe(true);};
   it.each(['ko','en'] as const)('%s의4탭·큰 장면·현재/바뀔 모습 비교·취소는 저장/선택/회차를 보존하고 정상 확정만12별 씁니다',language=>{
     const h=mainHarness(false,false,false,false,initial(language,50));h.run("switchView('village');globalThis.spaceRound=scene;globalThis.spaceFocus=[];document.querySelector('#garden-space-restore').focus=options=>spaceFocus.push(options?.preventScroll)");
+    expect(h.run('gardenWorkshop(false)')).toContain('data-renderer="painted-v4"');
+    expect(h.run('gardenWorkshop(false)')).toContain('href="/assets/garden-v4/backdrop-meadow.webp"');
     const disk=h.disk(),writes=h.writes(),round=h.run(roundState);open(h);
     expect(h.run('otherModal()')).toBe(true);expect(h.run('spaceDialog.innerHTML')).toContain(t(language,'spacePreviewTitle'));expect(h.run('spaceDialog.innerHTML')).toContain('data-phase="1"');expect(h.run('spaceDialog.innerHTML')).toContain('id="preview-space-sky"');
+    expect(h.run('spaceDialog.innerHTML')).toContain('data-renderer="painted-v4"');expect(h.run('spaceDialog.innerHTML')).toContain('href="/assets/garden-v4/backdrop-meadow.webp"');
+    expect(h.run('gardenWorkshop(false)')).toContain('data-renderer="painted-v4"');
     const staleConfirm=h.element('#space-preview-confirm').onclick;h.element('#space-preview-current').onclick();expect(h.run('spaceDialog.innerHTML')).toContain('data-phase="0"');h.element('#space-preview-after').onclick();
     expect(h.run('gardenWorkshop(false)')).not.toContain('data-plot=');expect(h.run('gardenWorkshop(false)')).not.toContain(' / 5</span>');expect(h.run('gardenWorkshop(false)')).toContain('data-area="pond"');
     expect(h.run('gardenWorkshop(false)').match(/class="garden-art garden-space-art"/g)).toHaveLength(1);

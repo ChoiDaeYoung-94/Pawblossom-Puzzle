@@ -9,6 +9,39 @@ import {SaveStore,SAVE_KEY,BACKUP_KEY} from '../src/state';
 const grown={growth:100,affection:100};
 const diverse=():GardenDesign=>({...freshGardenDesign(),flowers:['meadow','daisy','violet','meadow','meadow']});
 
+describe('자체 회화 정원의 표시 레이어와 기존 성장 경계',()=>{
+  it('세 배경에서도 다섯 흙밭과 열린 꽃만 겹치고 마지막 성장/배치/원본을 보존합니다',()=>{
+    const positions=[[158,153],[285,141],[413,153],[218,222],[351,222]];
+    for(const theme of ['meadow','sunset','starlight'] as const)for(let stage=0;stage<=5;stage++){
+      const design:GardenDesign={...diverse(),owned:['bench','butterflies','lantern'],placed:['bench','lantern'],lanternPlot:4,ownedThemes:['sunset','starlight'],theme};
+      Object.freeze(design.flowers);Object.freeze(design.owned);Object.freeze(design.placed);Object.freeze(design);
+      const before=JSON.stringify(design),image=gardenArt(stage,true,design,{renderer:'painted-v4'});
+      expect(image).toContain('data-renderer="painted-v4"');expect(image).toContain(`href="/assets/garden-v4/backdrop-${theme}.webp"`);
+      expect(image.match(/data-garden-layer="bed"/g)).toHaveLength(5);expect(image.match(/data-garden-layer="flowers"/g)??[]).toHaveLength(stage);
+      expect(image.match(/class="plant-cluster new-patch"/g)??[]).toHaveLength(stage?1:0);
+      for(let plot=0;plot<5;plot++){
+        const [x,y]=positions[plot],part=image.split(`data-plot="${plot}"`)[1].split('class="garden-plot"')[0];
+        expect(part).toContain(`data-planted="${plot<stage}" transform="translate(${x} ${y})"`);
+        expect(part.includes(`href="/assets/garden-v4/flowers-${design.flowers[plot]}.webp"`)).toBe(plot<stage);
+      }
+      expect(image.indexOf('data-garden-layer="backdrop"')).toBeLessThan(image.indexOf('data-decoration="bench"'));
+      expect(image).toContain('data-decoration="lantern" transform="translate(405 244)"');expect(image).not.toContain('data-decoration="butterflies"');
+      expect(image).not.toMatch(/<animate|<filter|onload=|onerror=|<image[^>]*href="https?:/);expect(JSON.stringify(design)).toBe(before);
+    }
+    expect(gardenArt(-1,true,undefined,{renderer:'painted-v4'})).toContain('data-stage="0"');
+    expect(gardenArt(99,true,undefined,{renderer:'painted-v4'})).toContain('data-stage="5"');
+  });
+  it('세 공간의 미완성/기초/완성과 선택 구조를 배경 추가만으로 유지합니다',()=>{
+    for(const space of ['pond','shelter','arch'] as const)for(const theme of ['meadow','sunset','starlight'] as const)
+      for(const state of [{phase:0,altOwned:false,style:'base'},{phase:1,altOwned:false,style:'base'},{phase:2,altOwned:false,style:'base'},{phase:2,altOwned:true,style:'alt'}] as const){
+        const before=JSON.stringify(state),legacy=gardenSpaceArt(space,state,theme,'preview-space'),painted=gardenSpaceArt(space,state,theme,'preview-space','painted-v4');
+        expect(painted).toContain(`href="/assets/garden-v4/backdrop-${theme}.webp"`);expect(painted).toContain('id="preview-space-sky"');
+        const withoutPaint=painted.replace(' data-renderer="painted-v4"','').replace(/<g data-garden-layer="backdrop">.*?<\/g>/,'');
+        expect(withoutPaint).toBe(legacy);expect(painted).not.toContain('data-plot=');expect(JSON.stringify(state)).toBe(before);
+      }
+  });
+});
+
 describe('50–100 고유 완료의 세 공간과 별/코인 분리',()=>{
   it('여섯 단계는 순서대로84별, 선택 스타일은1080코인 한 번이며 무료 전환·깊은 복제를 유지합니다',()=>{
     let stars=100,coins=1600,spaces=freshGardenSpaces();const original=JSON.stringify(spaces);

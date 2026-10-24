@@ -1,0 +1,259 @@
+{
+  "version": "garden-painted-v4",
+  "issue": 263,
+  "tool": "built-in image_gen",
+  "status": "own prototype, user commercial visual approval/native delivery pending",
+  "reference": "own meadow-journey and newly generated garden/daisy only",
+  "processing": "Mechanical crop/fit/alpha-preserving WebP conversion only. Original files retained. No semantic repaint/removal/color filter. Flowers share bottom baseline at frame y248.",
+  "assets": [
+    {
+      "name": "backdrop-meadow",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-2ca6d863-c3d4-4adb-b795-5b286ca3f6c5.png",
+      "sourceSha256": "6c9663c33be4f024ba396bfef7a7c59dd8755b5ee01b7b64785a34567f96f3f7",
+      "sourceDimensions": [
+        1642,
+        958
+      ],
+      "promptArguments": {
+        "transparent_background": false,
+        "referenced_image_paths": [
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/campaign/meadow-journey.webp"
+        ],
+        "prompt": "Use case: stylized-concept. Asset type: ORIGINAL wide garden environment background layer for Pawblossom Puzzle. Reference is our own map painting, used ONLY for brushwork, warm spring palette and rounded dimensional natural materials. Create a NEW WIDE LANDSCAPE 12:7 composition, camera gently elevated three-quarter, broad quiet grassy lawn filling the lower 70 percent. A shallow distant garden boundary and rounded leafy trees sit only along the upper edge and far side edges. Soft sunlight from upper left, lush sage/olive/fresh spring greens, warm cream sunlight, carefully painted dimensional foliage with clean readable masses, a few tiny peripheral meadow flowers at the far edges. The middle and foreground must be continuous EMPTY LAWN because the game will overlay five garden beds and different structures; leave especially the lower-left quarter quiet for a rabbit character. No garden beds, no planters, no soil patches, no paths through the lawn, no bridges, no pond, no gazebo, no arch, no bench, no fence crossing the lawn, no characters, no tools, no text, no numbers, no UI, no logos, no watermark. High-quality cozy hand-painted 2.5D mobile game background, sophisticated depth and lighting, not flat vector clipart and not photorealism. Fully opaque painted scene. Keep all necessary scenery within a centered wide12:7 safe composition."
+      },
+      "cropAlpha16Bounds": null,
+      "anchor": "center crop to 12:7",
+      "outputPath": "public/assets/garden-v4/backdrop-meadow.webp",
+      "outputDimensions": [
+        960,
+        560
+      ],
+      "quality": 88,
+      "bytes": 205894,
+      "sha256": "8b4b610097ab8be5c29b1188e80fcde3b79acad283e52c044008b5f010d6034e",
+      "alphaExtrema": [
+        255,
+        255
+      ]
+    },
+    {
+      "name": "backdrop-sunset",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-a1c70f87-c4e7-4b23-827a-39d7200597ae.png",
+      "sourceSha256": "1c8312bf641a04fc55005ba98250d83781e39098dc28cd73f55ae51db40861ba",
+      "sourceDimensions": [
+        1642,
+        958
+      ],
+      "promptArguments": {
+        "transparent_background": false,
+        "referenced_image_paths": [
+          "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-2ca6d863-c3d4-4adb-b795-5b286ca3f6c5.png"
+        ],
+        "prompt": "Edit this ORIGINAL Pawblossom garden background into its SUNSET lighting variant. Preserve the same wide12:7 camera, exact open-lawn composition, trees, rocks, foliage masses and perspective. Change only time-of-day light and sky: warm rose-peach sunset sky behind the distant boundary, soft honey-gold rim light from upper left, long gentle lavender/olive grass shadows and inviting evening colors. The EMPTY continuous central/lower lawn must remain clearly readable, especially bottom-left character space and five empty right/center overlay spaces. Tasteful premium hand-painted2.5D mobile game environment, not a flat color filter and not photorealism. No new objects, no beds, no flowers/structures placed in the lawn, no pond/bridge/bench/arch/characters/UI/text/numbers/logos/watermark. Full opaque scene, same landscape framing and layout as the reference."
+      },
+      "cropAlpha16Bounds": null,
+      "anchor": "center crop to 12:7",
+      "outputPath": "public/assets/garden-v4/backdrop-sunset.webp",
+      "outputDimensions": [
+        960,
+        560
+      ],
+      "quality": 88,
+      "bytes": 222660,
+      "sha256": "e05d45257795df08673a7a2fd397440baa3a2647ced4b3d38530dbac50969400",
+      "alphaExtrema": [
+        255,
+        255
+      ]
+    },
+    {
+      "name": "backdrop-starlight",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-60e46251-0e97-471e-8cdc-522d3528d360.png",
+      "sourceSha256": "17384f4fab3142baeb3d4db69b26aef60678ca24fb3e6ce3a2405b5823e1e3eb",
+      "sourceDimensions": [
+        1642,
+        958
+      ],
+      "promptArguments": {
+        "transparent_background": false,
+        "referenced_image_paths": [
+          "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-2ca6d863-c3d4-4adb-b795-5b286ca3f6c5.png"
+        ],
+        "prompt": "Edit this ORIGINAL Pawblossom garden background into its STARLIGHT lighting variant. Preserve the same wide12:7 camera, exact open-lawn composition, trees, rocks, foliage masses and perspective. Change only time-of-day light and sky: velvety blue-violet evening sky with a small warm ivory crescent moon and a few tiny stars visible only behind the distant upper boundary; cool blue-sage/teal moonlit grass, soft lavender shadows, warm tiny firefly lights restricted to the far side foliage. This is a cozy readable NIGHT GARDEN, not a dark horror image: the EMPTY central/lower lawn remains softly illuminated and clean enough to overlay garden beds and a cream rabbit. Keep bottom-left quiet and all central lawn empty. Premium dimensional hand-painted2.5D mobile game environment, not a flat tint filter or photorealism. No new structures, no beds, no ponds/bridges/benches/arches/characters/UI/text/numbers/logos/watermark. Full opaque scene, same landscape framing and layout as the reference."
+      },
+      "cropAlpha16Bounds": null,
+      "anchor": "center crop to 12:7",
+      "outputPath": "public/assets/garden-v4/backdrop-starlight.webp",
+      "outputDimensions": [
+        960,
+        560
+      ],
+      "quality": 88,
+      "bytes": 191552,
+      "sha256": "32f287916b0cdf240ead869051b8a0cf04d6c69dc56fc7d434d54ba5ab2d10f1",
+      "alphaExtrema": [
+        255,
+        255
+      ]
+    },
+    {
+      "name": "bed-empty",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-c011cada-422b-40d6-96d2-bee0bde2f4b9.png",
+      "sourceSha256": "687d293dda08c3a19d21d5c24f93b1047025db42ad062f382dafbafbd880eb5f",
+      "sourceDimensions": [
+        2022,
+        778
+      ],
+      "promptArguments": {
+        "transparent_background": true,
+        "prompt": "Use case: stylized-concept. Asset type: one ORIGINAL empty garden bed layer sprite for Pawblossom Puzzle. One low broad oval-to-soft-hexagonal raised planting bed viewed from a gentle elevated three-quarter angle, much wider than tall, about 2.6:1 silhouette. Thick softly rounded warm honey-wood border with a clear front face and subtle carved bevel, dark cocoa-brown fertile soil inside with three broad shallow curved furrows. An elegant simple raised planting tray resting horizontally, robust readable silhouette at100px wide. Premium warm hand-painted 2.5D casual mobile game art, dimensional wood volume, soft upper-left highlights, warm lower edge shading, tasteful subtle wood grain rather than noisy detail. Entire isolated object centered on a WIDE LANDSCAPE image with generous actual transparent padding. No plants, no flowers, no seeds, no grass tufts, no stones, no handles, no boxes, no ropes, no characters, no tools, no text, no UI, no logos or watermark. Actual transparent background, no ground plane or ground shadow and no colored halo. Original garden art, not an existing game's asset."
+      },
+      "cropAlpha16Bounds": [
+        55,
+        99,
+        1965,
+        675
+      ],
+      "anchor": {
+        "x": 8,
+        "y": 53,
+        "fit": [
+          496,
+          150
+        ]
+      },
+      "outputPath": "public/assets/garden-v4/bed-empty.webp",
+      "outputDimensions": [
+        512,
+        256
+      ],
+      "quality": 94,
+      "bytes": 30694,
+      "sha256": "0d4810184b643c49ffdb311fed01e02123a0702a36ada505bdeab714734ef682",
+      "alphaExtrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "name": "flowers-meadow",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-8316c77f-b408-41fd-bfeb-9c700109a291.png",
+      "sourceSha256": "d8610641aabed429f7d98ceb87346e751aa25273613eb7c579dc80c6b1cd9df7",
+      "sourceDimensions": [
+        1536,
+        1024
+      ],
+      "promptArguments": {
+        "transparent_background": true,
+        "prompt": "Use case: stylized-concept. Asset type: one ORIGINAL transparent flower-cluster overlay sprite for Pawblossom Puzzle. A low lush patch of exactly SIX small blooming garden plants grouped as three slightly taller plants at the back and three shorter plants at the front, viewed from a gentle elevated three-quarter angle. Each bloom has five broad rounded coral-pink or soft peach petals and a golden-yellow center. Rich fresh green broad leaves, short sturdy readable stems. The six stems end along a shallow curved common bottom baseline, ready to be composited onto a wide oval soil bed. The whole cluster should be about1.5:1 wide-to-tall, naturally full but with individually readable simple blossoms. Premium warm hand-painted 2.5D casual mobile game art, tactile dimensional petals, soft upper-left highlights and darker green lower leaves; polished confident silhouettes, not flat vector art. ONE complete isolated flower patch only, centered with transparent padding, no bed, no soil, no pot, no roots, no ground shadow, no background, no grass ground, no extra props, no characters, no text, no numbers, no logos or watermark. True alpha transparency around leaves and between stems. Do not imitate an existing game's artwork."
+      },
+      "cropAlpha16Bounds": [
+        50,
+        116,
+        1491,
+        938
+      ],
+      "anchor": {
+        "x": 8,
+        "y": 38,
+        "fit": [
+          368,
+          210
+        ]
+      },
+      "outputPath": "public/assets/garden-v4/flowers-meadow.webp",
+      "outputDimensions": [
+        384,
+        256
+      ],
+      "quality": 94,
+      "bytes": 46082,
+      "sha256": "713789ac68b329766a6a29a658c683c3f3f7857d41e594725ee2bb1a008fe351",
+      "alphaExtrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "name": "flowers-daisy",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-5aeb94be-88a6-4460-86fa-c59cbb149aee.png",
+      "sourceSha256": "1f84aa255bb3244cf207a95db3a04ff078ae3784199bfd091ff0ade59185fb18",
+      "sourceDimensions": [
+        1536,
+        1024
+      ],
+      "promptArguments": {
+        "transparent_background": true,
+        "prompt": "Use case: stylized-concept. Asset type: one ORIGINAL transparent daisy-cluster overlay sprite for Pawblossom Puzzle. A low lush patch of exactly SIX small daisy plants grouped as three slightly taller plants at the back and three shorter plants at the front, viewed from a gentle elevated three-quarter angle. Each daisy has eight to ten broad rounded ivory-white petals and a plump golden-yellow center, clearly a daisy. Rich fresh green broad leaves, short sturdy readable stems. The six stems end along a shallow curved common bottom baseline, ready to be composited onto a wide oval soil bed. Whole cluster about1.5:1 wide-to-tall, naturally full but individually readable simple blossoms. Premium warm hand-painted 2.5D casual mobile game art, tactile dimensional petals, soft upper-left highlights and darker green lower leaves; polished confident silhouettes, not flat vector art or photorealism. ONE complete isolated flower patch only, centered with transparent padding. No bed, no soil, no pot, no roots, no ground shadow, no background, no grass ground, no extra props, no characters, no text, no numbers, no logos or watermark. True alpha transparency around leaves and between stems. Do not imitate an existing game's artwork."
+      },
+      "cropAlpha16Bounds": [
+        38,
+        84,
+        1491,
+        953
+      ],
+      "anchor": {
+        "x": 8,
+        "y": 28,
+        "fit": [
+          368,
+          220
+        ]
+      },
+      "outputPath": "public/assets/garden-v4/flowers-daisy.webp",
+      "outputDimensions": [
+        384,
+        256
+      ],
+      "quality": 94,
+      "bytes": 49128,
+      "sha256": "aaaf2dba95e86235a1c5574eb8fc21eee750589277c6b56c7db4cf2aa04111ca",
+      "alphaExtrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "name": "flowers-violet",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-02b4a0da-0950-4b2e-b9ed-0c01e0c8881f.png",
+      "sourceSha256": "db16a624c8b2243491dbb07df3e5f42db74b598e81031ba94425c60999e9d356",
+      "sourceDimensions": [
+        1536,
+        1024
+      ],
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-5aeb94be-88a6-4460-86fa-c59cbb149aee.png"
+        ],
+        "prompt": "Create the VIOLET BELLFLOWER companion to our own reference daisy overlay. Preserve the same gentle elevated three-quarter camera, wide1.5:1 cluster footprint, six plants arranged three taller back/three shorter front, fresh green leaf volume and common curved stem baseline. Replace daisies with exactly SIX clearly recognizable plump purple/violet bell-shaped blossoms, with five soft rounded lobes at the opening and tiny warm cream stamens; tilt several bells toward the viewer so openings read at80px. Keep compact short stems and green broad leaves. Same premium hand-painted2.5D casual mobile game rendering, dimensional petals and upper-left soft highlights. ONE isolated transparent flower patch, matching the daisy companion as a soil-free overlay. Actual alpha transparency outside and between stems. No colored halo, no ground shadow, no soil, no bed/pot, no roots, no background/ground, no characters/props/UI/text/numbers/logos/watermarks. Entire cluster centered with transparent padding, not cropped. Original artwork."
+      },
+      "cropAlpha16Bounds": [
+        15,
+        52,
+        1522,
+        959
+      ],
+      "anchor": {
+        "x": 8,
+        "y": 27,
+        "fit": [
+          368,
+          221
+        ]
+      },
+      "outputPath": "public/assets/garden-v4/flowers-violet.webp",
+      "outputDimensions": [
+        384,
+        256
+      ],
+      "quality": 94,
+      "bytes": 49592,
+      "sha256": "568d82fd3ec076b979855ed4655f0f91ac238e88ab4f4e9ca0dc33d182e7ea1e",
+      "alphaExtrema": [
+        0,
+        255
+      ]
+    }
+  ]
+}
