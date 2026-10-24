@@ -187,7 +187,7 @@ function showSpacePreview(action:SpaceAction,opener:HTMLButtonElement){
   renderSpacePreview();scene.cancelInput();spaceDialog.showModal();syncActivity();$('#garden-space-preview-title').focus({preventScroll:true});
 }
 spaceDialog.addEventListener('cancel',event=>{event.preventDefault();closeSpacePreview();});
-spaceDialog.addEventListener('close',()=>{if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);});
+spaceDialog.addEventListener('close',()=>{if(!spaceDialog.open&&spacePreview)closeSpacePreview(false);});
 spaceDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();});
 type LookPreview={save:SaveData;generation:number;route:string;demo:typeof careDemo;round:number;scene:BoardScene;opener:HTMLButtonElement;id:GardenPresetId;showCurrent:boolean;language:SaveData['language'];scroll:number};
 let lookPreview:LookPreview|undefined;
@@ -230,7 +230,7 @@ function showLookPreview(opener:HTMLButtonElement){
   renderLookPreview();scene.cancelInput();lookDialog.showModal();syncActivity();$('#garden-look-title').focus({preventScroll:true});
 }
 lookDialog.addEventListener('cancel',event=>{event.preventDefault();closeLookPreview();});
-lookDialog.addEventListener('close',()=>{if(lookPreview)closeLookPreview(false);});
+lookDialog.addEventListener('close',()=>{if(!lookDialog.open&&lookPreview)closeLookPreview(false);});
 lookDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();});
 
 type ResourceKind='stars'|'coins';

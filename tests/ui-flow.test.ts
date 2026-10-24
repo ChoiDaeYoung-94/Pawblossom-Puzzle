@@ -287,6 +287,7 @@ describe('무료 추천 코디의 미리보기와 저장 경계',()=>{
   it('선택·비교·취소는 원래 저장/정원을 보존하고 원래 버튼으로 초점을 돌립니다',()=>{
     const h=boot(),before=h.run('JSON.stringify(save)'),disk=h.disk(),writes=h.writes();
     h.run("globalThis.lookFocus=[];document.querySelector('#garden-look-open').focus=o=>lookFocus.push(o.preventScroll)");h.element('#garden-look-open').onclick();expect(h.run('lookDialog.open')).toBe(true);
+    h.run('spaceDialog.listeners.close({preventDefault(){}});lookDialog.listeners.close({preventDefault(){}})');expect(h.run('lookDialog.open&&Boolean(lookPreview)')).toBe(true);
     h.element('#garden-look-butterfly').onclick();expect(h.run('lookDialog.innerHTML')).toContain(t('en','lookNeedButterflies'));
     h.element('#garden-look-sunny').onclick();h.element('#garden-look-current').onclick();h.element('#garden-look-after').onclick();h.element('#garden-look-cancel').onclick();
     expect(h.run('lookPreview')).toBeUndefined();expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('lookFocus')).toEqual([true]);
