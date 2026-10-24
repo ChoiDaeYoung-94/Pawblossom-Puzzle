@@ -1,7 +1,11 @@
 import {bindPracticeBoard} from '../../bindPracticeInputs';
-import {CarrierEngine,type CarrierFrame,type Grid,type Position} from './CarrierEngine';
+import {CarrierEngine,type Grid,type Position} from './CarrierEngine';
 import {carrierScenarios} from './carrierScenarios';
 import {mountCarrierParcelArt} from './CarrierParcelArt';
+import {ColumnCarrierEngine,isColumnCell,type ColumnFrame} from './ColumnCarrierEngine';
+import {columnScenario} from './columnScenario';
+import {specialTileArt} from '../../SpecialTileArt';
+import '../../SpecialTileArt.css';
 
 type Language='ko'|'en';
 const kinds=['strawberry','carrot','leaf','blueberry','acorn','flower'] as const;
@@ -29,25 +33,38 @@ const parcelArt=()=>`<svg viewBox="0 0 100 108" aria-hidden="true" focusable="fa
 const positionKey=(p:Position)=>`${p.row}:${p.col}`;
 const same=(a:Position,b:Position)=>a.row===b.row&&a.col===b.col;
 
-export function mountCarrierTrial(root:HTMLElement,initialLanguage:Language){
-  let language=initialLanguage,index=0,engine=new CarrierEngine(carrierScenarios[0].level);
+export function mountCarrierTrial(root:HTMLElement,initialLanguage:Language,mode:'classic'|'column'='classic'){
+  const columnMode=mode==='column';
+  const scenarios=columnMode?[{level:columnScenario,title:{ko:'한 줄로 여는 배달 길',en:'A clear path, one column'},
+    description:{ko:'초록 화살표의 세로 특수를 눌러보세요. 배달 뒤에도 연쇄가 이어져요.',en:'Tap the green column special. A cascade continues after delivery.'},
+    authoredPath:[]}]:carrierScenarios;
+  const makeEngine=(next:number)=>columnMode?new ColumnCarrierEngine(columnScenario):new CarrierEngine(carrierScenarios[next].level);
+  let language=initialLanguage,index=0,engine=makeEngine(0);
   let selected:Position|undefined,hinted:Position[]=[],busy=false,disposed=false,epoch=0,focused=document.hasFocus(),externalActive=true;
   let boardRows=engine.snapshot.board.length,boardCols=engine.snapshot.board[0].length;
   let binding:ReturnType<typeof bindPracticeBoard>|undefined;
   const animations=new Set<Animation>(),pieces=new Map<string,HTMLElement>(),buttons=new Map<string,HTMLButtonElement>();
   const parcelArtDisposers=new Map<HTMLElement,()=>void>();
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
-  const text=()=>copy[language];
+  const text=()=>!columnMode?copy[language]:language==='ko'?{...copy.ko,title:'특수와 연쇄',hint:'특수 힌트',goal:'배달',
+    rule:'세로 특수는 일반 블록만 없애요. 꾸러미는 깨지지 않고 출구로 내려가요.',
+    playing:engine instanceof ColumnCarrierEngine&&engine.legalActivations().length?'화살표가 있는 세로 특수를 눌러보세요.':copy.ko.playing,hintReady:'빛나는 세로 특수를 눌러보세요.',
+    choose:'처음부터 다시 연쇄를 즐겨보세요.',tabs:['한 줄 배달']}
+    :{...copy.en,title:'Specials & cascades',hint:'Special hint',goal:'Delivered',
+      rule:'The column special clears ordinary tiles. Parcels stay intact and fall to an exit.',
+      playing:engine instanceof ColumnCarrierEngine&&engine.legalActivations().length?'Tap the column special marked with arrows.':copy.en.playing,hintReady:'Tap the glowing column special.',
+      choose:'Restart to enjoy the cascade again.',tabs:['Column delivery']};
   root.className='carrier-trial';
   root.innerHTML=`<header class="trial-header"><a class="trial-back" href="/#map"></a><div class="trial-brand"><strong>Pawblossom Puzzle</strong><small class="trial-header-note"></small></div><select class="trial-language" aria-label="Language"><option value="ko">한국어</option><option value="en">English</option></select></header><section class="trial-shell"><div class="trial-heading"><span class="trial-eyebrow"></span><h1></h1><p class="trial-note"></p></div><nav class="trial-paths"></nav><section class="trial-play"><div class="trial-details"><h2 id="trial-scenario-title"></h2><p class="trial-description"></p><div class="trial-stats"><div><span class="trial-moves-label"></span><strong class="trial-moves"></strong></div><div><span class="trial-goal-label"></span><strong class="trial-goal"></strong></div></div><p class="trial-rule"></p><p class="trial-keyboard" id="trial-keyboard"></p><div class="trial-actions"><button class="trial-restart" type="button"></button><button class="trial-hint" type="button"></button></div><div class="trial-message" role="status" aria-live="polite"></div></div><div class="trial-board-wrap"><div class="trial-board" role="group" aria-describedby="trial-keyboard" aria-labelledby="trial-scenario-title"><div class="trial-cells"></div><div class="trial-pieces" aria-hidden="true"></div></div><div class="trial-result" tabindex="-1" hidden></div></div></section></section>`;
   const find=<T extends HTMLElement=HTMLElement>(selector:string)=>root.querySelector<T>(selector)!;
   const board=find('.trial-board'),cellLayer=find('.trial-cells'),pieceLayer=find('.trial-pieces');
+  const effectLayer=document.createElement('div');effectLayer.className='trial-effects';effectLayer.setAttribute('aria-hidden','true');board.append(effectLayer);
   const languageControl=find<HTMLSelectElement>('.trial-language'),restart=find<HTMLButtonElement>('.trial-restart'),hint=find<HTMLButtonElement>('.trial-hint');
   const resultTitle=document.createElement('strong'),resultNext=document.createElement('span');
   resultTitle.className='trial-result-title';resultNext.className='trial-result-next';find('.trial-result').append(resultTitle,resultNext);
   languageControl.value=language;
   const announce=(message:string)=>{find('.trial-message').textContent=message;};
-  function cancelAnimations(){epoch++;for(const animation of animations)animation.cancel();animations.clear();binding?.cancel();}
+  function cancelAnimations(){epoch++;for(const animation of animations)animation.cancel();animations.clear();effectLayer.replaceChildren();binding?.cancel();}
   function animate(element:HTMLElement,keyframes:Keyframe[],duration:number){
     if(reduced.matches||document.hidden||!focused||!element.animate)return Promise.resolve();
     const animation=element.animate(keyframes,{duration,easing:'cubic-bezier(.2,.7,.3,1)',fill:'none'});
@@ -68,6 +85,7 @@ export function mountCarrierTrial(root:HTMLElement,initialLanguage:Language){
         element=document.createElement('div');element.className=`trial-piece ${cell.type==='carrier'?'trial-parcel':''}`;
         element.dataset.pieceId=cell.id;
         if(cell.type==='carrier')element.innerHTML=parcelArt();
+        else if(isColumnCell(cell)){element.classList.add('trial-column-special');element.innerHTML=specialTileArt(kinds[cell.color],'column');}
         else{const image=document.createElement('img');image.src=`/assets/tiles-v3/${kinds[cell.color]}.webp`;image.alt='';image.draggable=false;element.append(image);}
         pieceLayer.append(element);pieces.set(cell.id,element);
         if(cell.type==='carrier'){
@@ -82,7 +100,7 @@ export function mountCarrierTrial(root:HTMLElement,initialLanguage:Language){
     }
   }
   function updateLabels(){
-    const t=text(),state=engine.snapshot,scenario=carrierScenarios[index];
+    const t=text(),state=engine.snapshot,scenario=scenarios[index];
     document.documentElement.lang=language;
     document.title=`Pawblossom Puzzle · ${t.title}`;
     find('.trial-back').textContent=`‹ ${t.back}`;find('.trial-eyebrow').textContent=t.trial;
@@ -102,7 +120,7 @@ export function mountCarrierTrial(root:HTMLElement,initialLanguage:Language){
     }
     for(const [key,button] of buttons){
       const [row,col]=key.split(':').map(Number),p={row,col},cell=state.board[row][col];
-      const name=cell?.type==='carrier'?t.carrier:cell?.type==='tile'?names[language][cell.color]:'';
+      const name=cell?.type==='carrier'?t.carrier:cell?.type==='tile'?`${names[language][cell.color]}${isColumnCell(cell)?language==='ko'?' · 세로 특수 · 눌러서 발동':' · Column special · Tap to activate':''}`:'';
       const exit=state.exits.some(e=>same(e,p));
       const coordinate=language==='ko'?`${row+1}${t.row} ${col+1}${t.col}`:`${t.row} ${row+1}, ${t.col} ${col+1}`;
       button.setAttribute('aria-label',`${coordinate}: ${name}${exit?` · ${t.exit}`:''}${selected&&same(selected,p)?` · ${t.select}`:''}`);
@@ -124,9 +142,32 @@ export function mountCarrierTrial(root:HTMLElement,initialLanguage:Language){
     for(const button of buttons.values())button.tabIndex=-1;
     const button=buttons.get(positionKey(p));if(button){button.tabIndex=0;button.focus({preventScroll:true});}
   }
-  async function playFrame(frame:CarrierFrame,active:number){
+  async function playColumnEffect(frame:ColumnFrame){
+    if(reduced.matches||document.hidden||!focused)return;
+    const nodes:HTMLElement[]=[],tasks:Promise<unknown>[]=[];
+    try{
+      for(const effect of frame.effects??[]){
+        // 고정 구멍을 가로질러 채운 것처럼 보이지 않도록 활성 구간마다 따로 빛을 냅니다.
+        for(let row=0;row<boardRows;){
+          if(!engine.snapshot.mask[row][effect.column]){row++;continue;}
+          const start=row;while(row<boardRows&&engine.snapshot.mask[row][effect.column])row++;
+          const beam=document.createElement('div');beam.className='trial-column-beam';place(beam,{row:start,col:effect.column});
+          beam.style.height=`${(row-start)/boardRows*100}%`;effectLayer.append(beam);nodes.push(beam);
+          tasks.push(animate(beam,[{opacity:0,transform:'scaleX(.2)'},{opacity:1,transform:'scaleX(1.2)',offset:.25},{opacity:0,transform:'scaleX(.7)'}],360));
+        }
+        for(const target of effect.targets){
+          const ring=document.createElement('div');ring.className='trial-column-ring';place(ring,target.at);effectLayer.append(ring);nodes.push(ring);
+          tasks.push(animate(ring,[{opacity:0,transform:'scale(.5)'},{opacity:1,transform:'scale(1)',offset:.25},{opacity:0,transform:'scale(1.65)'}],360));
+        }
+      }
+      await Promise.allSettled(tasks);
+    }finally{for(const node of nodes)node.remove();}
+  }
+  async function playFrame(frame:ColumnFrame,active:number){
     const duration=frame.cascade>4?90:frame.kind==='fall'?235:frame.kind==='exit'?260:155;
-    if(frame.kind==='clear'||frame.kind==='exit'){
+    if(frame.kind==='effect'){
+      await playColumnEffect(frame);
+    }else if(frame.kind==='clear'||frame.kind==='exit'){
       const targets=frame.kind==='clear'?frame.removed:frame.deliveries;
       await Promise.allSettled(targets.map(item=>{
         const element=pieces.get(item.id);if(!element)return Promise.resolve();
@@ -147,9 +188,10 @@ export function mountCarrierTrial(root:HTMLElement,initialLanguage:Language){
     if(frame.kind==='clear'&&frame.cascade>1&&epoch===active)announce(`${text().chain} ${frame.cascade}`);
   }
   function usable(){return !disposed&&!busy&&!document.hidden&&focused&&externalActive&&engine.snapshot.status==='playing';}
-  async function swap(a:Position,b:Position){
+  async function command(a:Position,b?:Position){
     if(!usable())return;
-    const result=engine.swap(a,b);selected=undefined;hinted=[];
+    const result=b?engine.swap(a,b):engine instanceof ColumnCarrierEngine?engine.activate(a):undefined;
+    if(!result)return;selected=undefined;hinted=[];
     if(!result.valid){updateLabels();announce(result.reason==='resolution-cap'?text().cap:text().invalid);focusCell(a);return;}
     cancelAnimations();const active=epoch;busy=true;updateLabels();
     // 모델이 확정됐더라도 배송 표시는 실제 exit 단계에 도착한 뒤 갱신합니다.
@@ -159,13 +201,14 @@ export function mountCarrierTrial(root:HTMLElement,initialLanguage:Language){
     }finally{
       if(!disposed&&epoch===active){
         busy=false;showStable();announce(result.state.status==='playing'?text().playing:text()[result.state.status]);
-        if(result.state.status==='playing')focusCell(b);else find('.trial-result').focus({preventScroll:true});
+        if(result.state.status==='playing')focusCell(b??a);else find('.trial-result').focus({preventScroll:true});
       }
     }
   }
   function tap(p:Position){
     if(!usable())return;
-    if(selected&&!same(selected,p)&&Math.abs(selected.row-p.row)+Math.abs(selected.col-p.col)===1){void swap(selected,p);return;}
+    if(selected&&!same(selected,p)&&Math.abs(selected.row-p.row)+Math.abs(selected.col-p.col)===1){void command(selected,p);return;}
+    if(engine instanceof ColumnCarrierEngine&&isColumnCell(engine.snapshot.board[p.row][p.col])){void command(p);return;}
     selected=selected&&same(selected,p)?undefined:p;hinted=[];updateLabels();focusCell(p);
   }
   function setupBoard(){
@@ -182,24 +225,27 @@ export function mountCarrierTrial(root:HTMLElement,initialLanguage:Language){
     }));
     binding=bindPracticeBoard(cellLayer,{tap,swipe(p,dx,dy){
       const to={row:p.row+(Math.abs(dy)>Math.abs(dx)?Math.sign(dy):0),col:p.col+(Math.abs(dx)>=Math.abs(dy)?Math.sign(dx):0)};
-      void swap(p,to);
+      void command(p,to);
     }});
     const first=buttons.values().next().value as HTMLButtonElement|undefined;if(first)first.tabIndex=0;
     showStable();
   }
   function startScenario(next:number,focus=true){
-    cancelAnimations();index=next;engine=new CarrierEngine(carrierScenarios[index].level);selected=undefined;hinted=[];busy=false;
+    cancelAnimations();index=next;engine=makeEngine(index);selected=undefined;hinted=[];busy=false;
     setupBoard();announce(text().playing);if(focus){const first=buttons.keys().next().value as string;const [row,col]=first.split(':').map(Number);focusCell({row,col});}
   }
-  carrierScenarios.forEach((_,i)=>{
+  scenarios.forEach((_,i)=>{
     const button=document.createElement('button');button.type='button';button.dataset.scenario=String(i);button.onclick=()=>startScenario(i);find('.trial-paths').append(button);
   });
   restart.onclick=()=>startScenario(index);
   hint.onclick=()=>{
     if(!usable())return;
-    const legal=engine.legalMoves(),authored=carrierScenarios[index].authoredPath;
+    if(engine instanceof ColumnCarrierEngine){
+      const at=engine.legalActivations()[0];if(at){hinted=[at];selected=undefined;updateLabels();announce(text().hintReady);focusCell(at);return;}
+    }
+    const legal=engine.legalMoves(),authored=scenarios[index].authoredPath;
     const move=legal.find(move=>authored.some(p=>same(move.a,p.a)&&same(move.b,p.b)||same(move.a,p.b)&&same(move.b,p.a)))??legal[0];if(!move)return;
-    hinted=[move.a,move.b];selected=undefined;updateLabels();announce(text().hintReady);focusCell(move.a);
+    hinted=[move.a,move.b];selected=undefined;updateLabels();announce(copy[language].hintReady);focusCell(move.a);
   };
   languageControl.onchange=()=>{language=languageControl.value==='en'?'en':'ko';updateLabels();const status=engine.snapshot.status;announce(status==='playing'?text().playing:text()[status]);};
   cellLayer.onkeydown=event=>{
