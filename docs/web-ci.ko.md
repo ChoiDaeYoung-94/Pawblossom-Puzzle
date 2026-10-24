@@ -1,5 +1,14 @@
 # 웹 자동 검증
 
+## 2026-10-24 · #265 보상 소비의 제한된 구간 관측
+
+#122의 mainba7e0fd/CI40042202934 Node24 소비 BEGIN501.043106ms·BUSY5는 [개별 관측](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122#issuecomment-6377156204)으로 보존합니다. 기존 이벤트8개가 생성자 재시도 뒤 apply COMMIT을 자를 수 있어, 단발 reward Worker에만 opt-in으로 최대8개의 BEGIN/COMMIT/ROLLBACK 구간 요약을 추가했습니다. 기존8이벤트/5hook·constructor close/재시도·scheduler·500ms/5초/8worker·업무 기대·제품 원장/엔진은 유지합니다.
+
+생성 단계에서 관측한 reward/round/unknown 역할과 근거, 각 호출 전/후·반환/예외, 종료 누락/잘림·scope끝 상태를 나눕니다. 이미 보존한 구간의 끝은 상한 뒤에도 갱신합니다. 부모 anchor/수신과 Worker origin/시작·끝/호출 포함관계가 모두 맞는 경우에만 clock verified이며 누락·불일치·불량 배열은 unavailable입니다. 이는 시간 기준 판정일 뿐 전체 기록 완전성·잠금 소유자/CPU·I/O 원인·업무 성공의 증명이 아닙니다. 호출 주변 샘플에는 관측 코드와 스케줄링 경계가 포함되며 순수 SQLite CPU 시간으로 해석하지 않습니다.
+
+독립 검수에서 임의 own getter 호출과 Array Proxy length 접근을 찾아 수리했습니다. 새 상태 관측은 import 때 보존한 원본 native exec의 성공으로 확인한 receiver와 캐시한 공식 accessor만 사용합니다. 최초 실패/mock/bound/미검증 receiver는 null/unknown입니다. 기존 nativeBoolean/constructor-close 경로와 새 observer 미호출 보장은 구분하며 helper에 probe DB·SQL·close·추가 hook을 넣지 않았습니다. DTO는 own data/허용 enum/유한수만 투영하고 원문 SQL·인수·오류·경로·키·owner·receiver를 출력하지 않습니다. Proxy own-descriptor trap 자체는 별도 관측 한계입니다.
+
+최종 전용52개·타입3config, root/독립 재검수와 첫 로컬 전체47파일3,052개 성공입니다. 앞선 제한136개(219개 미실행)·중간39개를 최신 전체와 합산하지 않습니다. 실제8worker 업무 시나리오는 전체 검사에 포함됐고 clock 계약은 별도 실제1Worker 회귀로 확인했습니다. 성공한8worker 전체의 DTO를 별도로 수집했다고 표현하지 않습니다. 앱/src/server/public/빌드설정이 바뀌지 않아 로컬 두 웹 빌드는 기준03f의263 로그를 재사용하고 최초 PR CI의 두 빌드는 제출 뒤 확인합니다. 정확03f/mainCI40043775381 양Node3,000/store12/타입/두빌드 성공도 #265의 새 PR/main 검증과 구분합니다. 이번 보강은 #122 원인 해결이 아닙니다.
 ## 최신 통합 근거 · 2026-10-18 · #139
 
 구현·검사 기준 main `ca57341fbd269d82cfac63d1be9f173384ad68cc`의 [CI39111374076](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39111374076)에서 Node22·24 각각35파일2,349/2,349·스토어12/12·타입·production/testing 빌드/구분 검사가 성공했습니다. PR#140 head91f74cff와 실제 squash의 전체 tree가 같고 총괄 독립 관련136개·타입·LF SHA/production 동일 확인도 보존했습니다. [최신 전체 통합·실패 구분](android-release.ko.md)을 우선하며 이번 #139는 문서5개만 변경합니다. 새 문서 PR/head와 실제 main CI는 제출 뒤 별도로 확인합니다.

@@ -15,6 +15,7 @@ import {policy,epoch,callback,keyResponse} from './helpers/ssvFixture';
 import {createTrace,step,asyncStep,elapsed,workerRow,observeWorker,receiveWorker,terminateWorker,workerFailure,safeRows,withSqliteDiagnostics,type LedgerTrace} from './helpers/ledgerDiagnostics';
 import {retryLedgerOpen} from './helpers/ledgerOpenRetry';
 import {squareRoundFixture} from './helpers/squareRoundFixture';
+import {createSpanClockAnchor} from './helpers/ledgerTransactionSpans';
 
 // d867e32의 실제 v1 코드로 한 번 생성한 DDL·서명 행입니다. CI는 Git 과거 이력에 의존하지 않습니다.
 const legacyFixture=JSON.parse(readFileSync(new URL('./helpers/ledger-v1-fixture.json',import.meta.url),'utf8'));
@@ -46,8 +47,9 @@ async function child(data:ReturnType<typeof input>){
   try{p.send(data);const result=await output;await done;return result;}finally{if(p.exitCode===null){p.kill();await done;}}
 }
 async function parallel(data:ReturnType<typeof input>[],trace?:LedgerTrace,onConstructorBusy?:()=>void){
-  const batch=data.map((d,index)=>{const row=trace?workerRow(index):undefined;if(row)trace!.workers.push(row);const worker=new Worker(url,{workerData:trace?{...d,diagnostics:true}:d,execArgv:['--experimental-transform-types']});if(row)observeWorker(worker,trace!,row);return worker;});workers.push(...batch);const outputs:Promise<any>[]=[];
-  await Promise.all(batch.map((w,index)=>new Promise<void>((r,j)=>{let receive!:(v:any)=>void;const row=trace?.workers[index];outputs.push(new Promise((yes,no)=>{receive=yes;w.on('error',error=>no(workerFailure(error,trace)));}));w.on('message',v=>{if(v==='ready'){if(row)row.readyAtMs=elapsed(trace!);r();}else if(v?.kind==='synthetic-open-busy'){onConstructorBusy?.();}else{if(row)row.resultAtMs=elapsed(trace!);receive(row?receiveWorker(v,row):v);}});w.on('error',error=>j(workerFailure(error,trace)));})));batch.forEach((w,index)=>{if(trace)trace.workers[index].goAtMs=elapsed(trace);w.postMessage('go');});return Promise.all(outputs);
+  const spanClockAnchor=trace?createSpanClockAnchor():undefined;
+  const batch=data.map((d,index)=>{const row=trace?workerRow(index):undefined;if(row)trace!.workers.push(row);const worker=new Worker(url,{workerData:trace?{...d,diagnostics:true,spanClockAnchor}:d,execArgv:['--experimental-transform-types']});if(row)observeWorker(worker,trace!,row);return worker;});workers.push(...batch);const outputs:Promise<any>[]=[];
+  await Promise.all(batch.map((w,index)=>new Promise<void>((r,j)=>{let receive!:(v:any)=>void;const row=trace?.workers[index];outputs.push(new Promise((yes,no)=>{receive=yes;w.on('error',error=>no(workerFailure(error,trace)));}));w.on('message',v=>{if(v==='ready'){if(row)row.readyAtMs=elapsed(trace!);r();}else if(v?.kind==='synthetic-open-busy'){onConstructorBusy?.();}else{if(row)row.resultAtMs=elapsed(trace!);receive(row?receiveWorker(v,row,spanClockAnchor):v);}});w.on('error',error=>j(workerFailure(error,trace)));})));batch.forEach((w,index)=>{if(trace)trace.workers[index].goAtMs=elapsed(trace);w.postMessage('go');});return Promise.all(outputs);
 }
 function dump(d:DatabaseSync){return d.prepare("SELECT name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY name").all().map(t=>({...t,rows:d.prepare('SELECT * FROM '+t.name+' ORDER BY 1').all()}));}
 function roundMac(domain:string,value:string){return createHmac('sha256',createHmac('sha256',roundKey).update('pawblossom-round-v1\0'+domain).digest()).update(value).digest('hex');}
