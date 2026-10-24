@@ -1,5 +1,16 @@
 /* 다리는 교감 물결보다 앞, 핍/실제 조작 버튼보다 뒤에 놓습니다. */
 .garden-structure-foreground{position:absolute;inset:0;z-index:0;display:block;width:100%;height:100%;pointer-events:none}
-.garden-painted-butterfly{transform-box:fill-box;transform-origin:center;animation:garden-wing 3.7s ease-in-out infinite}
-@keyframes garden-wing{0%,100%{transform:scaleX(1) translateY(0)}50%{transform:scaleX(.82) translateY(-2px)}}
-@media(prefers-reduced-motion:reduce){.garden-painted-butterfly{animation:none!important}}
+/* 원래 정지 그림은 active+ready에서만 바꾸며, 몸통·안테나와 외곽 좌표는 고정합니다. */
+.garden-nature-butterfly,.garden-nature-water{display:none;pointer-events:none}
+.garden-nature-wing{transform-box:view-box;transform-origin:0 0}
+.garden-nature-water{fill:none;stroke:#e6fff3;stroke-width:1.5;opacity:.55}
+.garden-nature-water ellipse{transform-box:view-box;transform-origin:355px 193px}
+.garden-picture[data-nature-active=true][data-nature-ready=true] .garden-nature-butterfly+[data-garden-nature-source]{visibility:hidden}
+.garden-picture[data-nature-active=true][data-nature-ready=true] .garden-nature-butterfly,
+.garden-picture[data-nature-active=true][data-nature-ready=true] .garden-nature-water{display:block}
+.garden-picture[data-nature-active=true][data-nature-ready=true] .garden-nature-wing{animation:garden-nature-flap 1.8s ease-in-out infinite;animation-delay:var(--garden-nature-delay,0s)}
+.garden-picture[data-nature-active=true][data-nature-ready=true] .garden-nature-water ellipse{animation:garden-nature-ripple 4.8s ease-out infinite}
+.garden-picture[data-nature-active=true][data-nature-ready=true] .garden-nature-water ellipse:nth-child(2){animation-delay:-2.4s}
+@keyframes garden-nature-flap{0%,24%,64%,100%{transform:scaleX(1)}34%{transform:scaleX(.34)}44%{transform:scaleX(1)}54%{transform:scaleX(.50)}}
+@keyframes garden-nature-ripple{0%{transform:scale(.65);opacity:0}20%{opacity:.55}100%{transform:scale(1.4);opacity:0}}
+@media(prefers-reduced-motion:reduce){.garden-nature-butterfly,.garden-nature-water{display:none!important}.garden-nature-wing,.garden-nature-water ellipse{animation:none!important}.garden-picture .garden-nature-butterfly+[data-garden-nature-source]{visibility:visible!important}}
