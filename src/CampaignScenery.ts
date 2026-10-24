@@ -8,8 +8,8 @@ export function campaignScenery(chapter:number){
   const arch=`<g transform="translate(43 65)"><ellipse cy="31" rx="33" ry="6" fill="#365b3820"/><path d="M-26 31V-8Q0-46 26-8V31M-21 31V-8Q0-37 21-8V31" fill="none" stroke="#bd9870" stroke-width="5"/><path d="M-29-3Q-22-40 0-32T29-3" fill="none" stroke="#78996b" stroke-width="10"/><g fill="#eebf9e"><circle cx="-22" cy="-18" r="5"/><circle cy="-34" r="5"/><circle cx="22" cy="-18" r="5"/></g></g>`;
   const landmark=water?pond:festival?arch:windmill;
   const atlas='/assets/campaign/windmill-rig-v1.png';
-  const image=(file:string,x=1,y=22,width=84,height=100)=>`<image class="map-painted-image" href="/assets/garden-structures-v1/${file}.webp" x="${x}" y="${y}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet"/>`;
-  const paintedWindmill=`<svg x="-20" y="12" width="100" height="100" viewBox="0 0 887 887" overflow="hidden"><image class="map-painted-image" href="${atlas}" width="1774" height="887"/></svg><g transform="translate(51.5 57)"><g class="map-windmill-rotor"><svg x="-39" y="-43" width="78" height="78" viewBox="887 0 887 887" overflow="hidden"><image class="map-painted-image" href="${atlas}" width="1774" height="887"/></svg></g></g>`;
+  const image=(file:string,x=1,y=22,width=84,height=100)=>`<image class="map-painted-image" data-map-src="/assets/garden-structures-v1/${file}.webp" x="${x}" y="${y}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet"/>`;
+  const paintedWindmill=`<svg x="-20" y="12" width="100" height="100" viewBox="0 0 887 887" overflow="hidden"><image class="map-painted-image" data-map-src="${atlas}" width="1774" height="887"/></svg><g transform="translate(51.5 57)"><g class="map-windmill-rotor"><svg x="-39" y="-43" width="78" height="78" viewBox="887 0 887 887" overflow="hidden"><image class="map-painted-image" data-map-src="${atlas}" width="1774" height="887"/></svg></g></g>`;
   const paintedMain=water?image('pond-base')+`<g transform="translate(40 72)"><g class="map-pond-rings" fill="none" stroke="#ecf3dd" stroke-width="1.2"><ellipse cx="9" cy="3" rx="12" ry="4"/><ellipse cx="9" cy="3" rx="19" ry="7"/></g></g>`:festival?image('arch-alt'):paintedWindmill;
   const sideFile=chapter===1?'bench':chapter===2?'shelter-base':chapter===3?'lantern':chapter===4?'lily':chapter===5?'shelter-foundation':chapter===6?'arch-base':chapter===7?'bridge':chapter===8?'lantern':chapter===9?'arch-alt':chapter===10?'shelter-alt':'lantern';
   const paintedSide=image(sideFile,2,30,82,98);
@@ -28,17 +28,23 @@ export function createCampaignScenery(scroll:HTMLElement,onChapter:(id:number)=>
   let active=false,disposed=false,frame:number|undefined;
   let prepared=false;
   const images:HTMLImageElement[]=[];
-  const sources=[...new Set(Array.from(scroll.querySelectorAll<SVGImageElement>('.map-painted-image'),node=>node.getAttribute('href')).filter((path):path is string=>Boolean(path?.startsWith('/assets/'))))];
+  const assigned=new Map<SVGImageElement,string>();
+  const slots=Array.from(scroll.querySelectorAll<SVGImageElement>('.map-painted-image'),node=>({node,src:node.getAttribute('data-map-src')})).filter((slot):slot is {node:SVGImageElement;src:string}=>Boolean(slot.src?.startsWith('/assets/')));
+  const sources=[...new Set(slots.map(slot=>slot.src))];
   const current=()=>!disposed&&owners.get(scroll)===scenery&&scroll.isConnected;
   const cancel=()=>{if(frame!==undefined)win.cancelAnimationFrame(frame);frame=undefined;};
   const clearLoads=()=>{for(const image of images)image.onload=image.onerror=null;images.length=0;};
+  const clearArt=()=>{for(const [node,src] of assigned)if(node.getAttribute('href')===src)node.removeAttribute('href');assigned.clear();delete scroll.dataset.sceneryArtReady;};
   const prepareArt=()=>{
     if(prepared||!sources.length)return;prepared=true;
     void Promise.all(sources.map(src=>new Promise<void>((resolve,reject)=>{
       const image=createImage();images.push(image);image.decoding='async';image.alt='';
       image.onload=()=>{image.onload=image.onerror=null;void Promise.resolve().then(()=>{if(!current())throw new Error('map-art-inactive-owner');return image.decode();}).then(resolve,reject);};
       image.onerror=()=>reject(new Error('map-art-image-failed'));image.src=src;
-    }))).then(()=>{clearLoads();if(current())scroll.dataset.sceneryArtReady='true';}).catch(()=>{clearLoads();if(current())delete scroll.dataset.sceneryArtReady;});
+    }))).then(()=>{
+      clearLoads();if(!current()||!slots.every(({node,src})=>node.isConnected&&scroll.contains(node)&&node.getAttribute('data-map-src')===src&&!node.hasAttribute('href')))return;
+      for(const {node,src} of slots){node.setAttribute('href',src);assigned.set(node,src);}scroll.dataset.sceneryArtReady='true';
+    }).catch(()=>{clearLoads();if(current())clearArt();});
   };
   const reset=()=>{for(const chapter of chapters){chapter.dataset.sceneryActive='false';chapter.style.setProperty('--map-drift','0px');}};
   const paint=()=>{
@@ -56,7 +62,7 @@ export function createCampaignScenery(scroll:HTMLElement,onChapter:(id:number)=>
     if(Number.isInteger(selected)&&selected>0)onChapter(selected);
   };
   const schedule=()=>{if(current()&&active&&frame===undefined)frame=win.requestAnimationFrame(paint);};
-  const scenery:Scenery={setActive(value){if(!current())return;active=value;cancel();if(active){prepareArt();schedule();}else reset();},dispose(){if(disposed)return;disposed=true;cancel();clearLoads();scroll.removeEventListener('scroll',schedule);win.removeEventListener('resize',schedule);media?.removeEventListener('change',schedule);if(owners.get(scroll)===scenery){reset();delete scroll.dataset.sceneryArtReady;owners.delete(scroll);}}};
+  const scenery:Scenery={setActive(value){if(!current())return;active=value;cancel();if(active){prepareArt();schedule();}else reset();},dispose(){if(disposed)return;disposed=true;cancel();clearLoads();scroll.removeEventListener('scroll',schedule);win.removeEventListener('resize',schedule);media?.removeEventListener('change',schedule);if(owners.get(scroll)===scenery){reset();clearArt();owners.delete(scroll);}}};
   owners.set(scroll,scenery);reset();scroll.addEventListener('scroll',schedule,{passive:true});win.addEventListener('resize',schedule);media?.addEventListener('change',schedule);
   return scenery;
 }
