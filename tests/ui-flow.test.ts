@@ -113,6 +113,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   class SceneStub {
     engine:BoardEngine;
     stopped=false;
+    sys={settings:{visible:true},setVisible(value:boolean){this.settings.visible=value;}};
     constructor(public hooks: { onMove(items: number[], points: number): void; onReady():void; onNotice(key:string):void },snapshot?:BoardSnapshot,mask?:BoardMask,crates?:Position[]) {this.engine=new BoardEngine(8,8,seededRng(42),snapshot,undefined,mask,crates);}
     configureLeaves(piles:Parameters<BoardEngine['setLeaves']>[0]) {this.engine.setLeaves(piles);}
     shuffle(){this.engine.shuffle();return true;}
@@ -2410,6 +2411,33 @@ describe('후반 정원 공간과 확정 전 미리보기',()=>{
   });
 });
 
+
+describe('퍼즐 밖 보드 그리기 수명',()=>{
+  it('현재 보드만 경로에 따라 숨기며 퍼즐 모달·회차·지갑·저장은 유지합니다',()=>{
+    const h=mainHarness(false,false,false,false,undefined,true,undefined,undefined,true);
+    const before=h.run('JSON.stringify({save,round,currentLevel,moves,score,board:scene.engine.board})'),disk=h.disk(),writes=h.writes();
+    expect(h.run('game.scene.board.sys.settings.visible')).toBe(false);
+    h.run("switchView('puzzle')");expect(h.run('game.scene.board.sys.settings.visible')).toBe(true);
+    h.run("showStagePreview(currentLevel,'restart',document.querySelector('#restart'))");
+    expect(h.run('game.paused')).toBe(true);expect(h.run('game.scene.board.sys.settings.visible')).toBe(true);
+    h.run('closeStagePreview()');expect(h.run('game.scene.board.sys.settings.visible')).toBe(true);
+    for(const route of ['village','journal','settings','map']){h.run(`switchView('${route}')`);expect(h.run('game.scene.board.sys.settings.visible')).toBe(false);}
+    h.run("switchView('puzzle')");expect(h.run('game.scene.board.sys.settings.visible')).toBe(true);
+    expect(h.run('JSON.stringify({save,round,currentLevel,moves,score,board:scene.engine.board})')).toBe(before);
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('등록 전 교체 대기를 막지 않고 새 Scene의 CREATE 뒤 현재 경로를 반영합니다',()=>{
+    const h=mainHarness(false,false,false,false,undefined,true,undefined,undefined,true);
+    const old=h.run('game.scene.board');
+    h.run('game.scene.isBooted=false;startLevel(1)');expect(h.run('boardPending')).toBe(true);
+    expect(h.run('game.scene.board')).toBe(old);expect(h.run('game.scene.board.sys.settings.visible')).toBe(false);
+    h.run('game.scene.isBooted=true;replaceBoard()');expect(h.run('boardPending')).toBe(false);
+    expect(h.run('game.scene.board')).not.toBe(old);expect(h.run('game.scene.board===scene')).toBe(true);
+    expect(h.run('game.scene.board.sys.settings.visible')).toBe(false);
+    h.run("switchView('puzzle')");expect(h.run('game.scene.board.sys.settings.visible')).toBe(true);
+    expect(h.element('#game-canvas').tabIndex).toBe(0);
+  });
+});
 
 describe('퍼즐 핍 idle 표시 수명',()=>{
   it('반응은 내부 슬롯을 쓰며 지도 재생성도 외곽header·회차·지갑·저장 쓰기를 바꾸지 않습니다',()=>{
