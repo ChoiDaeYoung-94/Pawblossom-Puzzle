@@ -239,6 +239,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
       };
       accessoryControllers.push(art);return art;
     },
+    createPipTendingPose:()=>({dispose(){}}),
     createGardenNature:(picture:ElementStub)=>{
       const nature={picture,disposed:false,disposals:0,activations:[] as boolean[],
         setActive(active:boolean){if(!nature.disposed){nature.activations.push(active);picture.dataset.natureActive=String(active);}},
