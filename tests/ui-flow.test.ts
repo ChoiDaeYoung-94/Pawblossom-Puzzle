@@ -17,6 +17,8 @@ import * as gardenStructureArt from '../src/GardenStructureArt';
 import * as boardDisplay from '../src/BoardDisplay';
 import {campaignScenery} from '../src/CampaignScenery';
 
+import {gardenGoals,goalNextStep,nextGardenGoal} from '../src/GardenGoals';
+
 // 테스트에만 사용하는 Node API입니다. 별도 @types/node 설치 없이 런타임에서 읽습니다.
 const fsModule = 'node:fs', vmModule = 'node:vm';
 const fs = await import(fsModule), vm = await import(vmModule);
@@ -212,6 +214,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     specialTileArt,
     ...boardDisplay,
+    gardenGoals,goalNextStep,nextGardenGoal,
     bindPracticeBoard,
     cloneSnapshot,prepareShuffle,
     showResultPip:()=>{resultArtCalls++;},
@@ -2299,6 +2302,26 @@ describe('경로 표시 컨테이너와 메뉴 버튼의 이벤트 경계',()=>{
     expect(h.run('spaceDialog.open')).toBe(true);expect(h.run('Boolean(spacePreview)')).toBe(true);expect(h.disk()).toEqual(before);expect(h.writes()).toBe(writes);
     h.element('#space-preview-confirm').onclick();expect(h.run('spaceDialog.open')).toBe(false);expect(h.run('save.stars')).toBe(18);expect(h.run('save.gardenDesign.spaces.pond.phase')).toBe(1);
     h.element('#nav-map').onclick();expect(h.run('route')).toBe('map');expect(h.element('#nav-map').attributes['aria-current']).toBe('page');expect(h.element('#nav-village').attributes['aria-current']).toBeUndefined();
+  });
+});
+
+describe('공동 정원 계획의 이동 전용 입력',()=>{
+  const initial=()=>({version:1,language:'ko',highestLevel:2,completed:[1],coins:100,stars:0,garden:1,music:true,sfx:true,tutorialSeen:true});
+  const snapshot='JSON.stringify({save,round,currentLevel,moves,score,board:scene.engine.board})';
+  it.each(['ko','en'] as const)('%s: 부족한 성장·별의 목적지에 이동하고 자동 소비/저장/회차 교체를 하지 않습니다',language=>{
+    const h=mainHarness(false,false,false,false,{...initial(),language});h.run("switchView('village')");
+    const before=h.run(snapshot),disk=h.disk(),writes=h.writes();
+    expect(h.run("sharedGardenPlan('village')")).toContain(t(language,'goalPlan'));expect(h.run("sharedGardenPlan('village')")).toContain('1 / 16');
+    expect(h.run("sharedGardenPlan('village')")).toContain(`aria-label="${t(language,'gardenBench')} · ${t(language,'goalCare')}"`);
+    h.element('#village-goal-bench').onclick();expect(h.run('route')).toBe('journal');
+    h.element('#journal-goal-bed-2').onclick();expect(h.run('route')).toBe('map');
+    expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('save.gardenDesign')).toBeUndefined();
+  });
+  it('완료/비활성·모달·오래된 DOM·체험 이전 버튼으로 계획을 실행하지 않습니다',()=>{
+    for(const guard of ['document.hidden=true','nativeActive=false','careProcessing=true',"document.querySelector('#tutorial-dialog').open=true", "document.querySelector('#village-goal-bench').isConnected=false"]){
+      const h=mainHarness(false,false,true,false,initial());h.run("switchView('village')");const before=h.run(snapshot);h.run(guard);h.element('#village-goal-bench').onclick();expect(h.run('route')).toBe('village');expect(h.run(snapshot)).toBe(before);
+    }
+    const h=mainHarness(false,false,true,false,initial());h.run("switchView('village')");const stale=h.element('#village-goal-bench').onclick;h.run('enterCareDemo()');stale();expect(h.run('route')).toBe('village');h.run('exitCareDemo()');expect(h.run('save.garden')).toBe(1);
   });
 });
 

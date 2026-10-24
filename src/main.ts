@@ -24,6 +24,7 @@ import { SwapPractice } from './SwapPractice';
 import { SpecialTapPractice } from './SpecialTapPractice';
 import { bindPracticeBoard } from './bindPracticeInputs';
 import { gardenArt,flowerArt } from './GardenArt';
+import {gardenGoals,goalNextStep,nextGardenGoal,type GardenGoal,type GoalNeed} from './GardenGoals';
 import {gardenSpaceArt} from './GardenSpaceArt';
 import {paintedGardenForeground} from './GardenStructureArt';
 import {gardenSpaceSpecs,gardenSpacesFor,prepareSpaceAction,previewSpaceAction,type GardenArea,type SpaceAction} from './gardenSpaces';
@@ -954,9 +955,26 @@ function gardenThemePanel(){
   }).join('')}</section>`;
 }
 function nextGardenProject(){
-  const design=gardenDesignFor(save.gardenDesign),next=gardenProjects.find(project=>!design.owned.includes(project.id));
-  const theme=next?undefined:gardenThemes.find(t=>!design.ownedThemes?.includes(t.id));
-  return `<section class="pip-project" aria-label="${text('gardenTogether')}">${nextSpaceGoal(save.language,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}<button id="pip-open-space" class="text-button">${text('spaceOpen')}</button><strong>${next?text('gardenNext')+' · '+projectName(next.id):theme?text('gardenProjectsDone'):text('gardenThemesDone')}</strong>${next?`<p>${projectConditions(next)}</p>`:theme?`<p><strong>${text('gardenNext')} · ${themeName(theme.id)}</strong><br/>${themeConditions(theme)}</p>`:''}<button id="pip-open-garden" class="text-button">${text('gardenOpenEditor')}</button></section>`;
+  return `<details class="pip-project"><summary>${text('gardenTogether')}</summary>${nextSpaceGoal(save.language,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}<button id="pip-open-space" class="text-button">${text('spaceOpen')}</button><button id="pip-open-garden" class="text-button">${text('gardenOpenEditor')}</button></details>`;
+}
+function sharedGardenPlan(view:'village'|'journal'){
+  const goals=gardenGoals({plots:save.garden,pip:save.pip??freshPip(),design:save.gardenDesign,clears:gardenCompletedCount(),stars:save.stars,coins:save.coins});
+  const next=nextGardenGoal(goals),done=goals.filter(goal=>goal.done).length;
+  const achievements=[...(goals.filter(g=>g.kind==='project').every(g=>g.done)?[text('gardenProjectsDone')]:[]),...(goals.filter(g=>g.kind==='theme').every(g=>g.done)?[text('gardenThemesDone')]:[])];
+  const name=(goal:GardenGoal)=>goal.kind==='bed'?text('goalBed').replace('{number}',goal.name):goal.kind==='project'?projectName(goal.name as GardenProject):goal.kind==='theme'?themeName(goal.name as GardenTheme):gardenAreaName(save.language,goal.area as GardenArea)+' · '+text(goal.name==='1'?'spaceFoundation':'spaceComplete');
+  const needName=(kind:GoalNeed)=>text(({plots:'goalPlots',growth:'pipGrowth',affection:'pipAffection',diversity:'goalDiversity',clears:'goalClears',stars:'stars',coins:'coins',foundation:'spaceFoundation'} as const)[kind]);
+  const detail=(goal:GardenGoal)=>{
+    const step=goalNextStep(goal);if(!step)return text('goalDone');
+    if(step.unavailableIncome)return text('goalNoIncome');
+    const missing=step.missing;
+    return !missing?text('goalReady'):missing.kind==='foundation'?text('goalFoundationFirst'):text('goalNeed').replace('{condition}',needName(missing.kind)).replace('{count}',String(missing.required-missing.current));
+  };
+  const button=(goal:GardenGoal)=>{
+    const destination=goalNextStep(goal)?.destination;
+    const label=text(destination==='map'?'goalPlay':destination==='pip'?'goalCare':destination==='flowers'?'goalEdit':'goalSpace');
+    return `<button type="button" class="text-button" id="${view}-goal-${goal.id}" aria-label="${name(goal)} · ${label}">${label}${icon('arrow',16)}</button>`;
+  };
+  return `<section class="garden-plan" aria-labelledby="${view}-plan-title"><div class="garden-plan-heading"><h3 id="${view}-plan-title">${text('goalPlan')}</h3><span>${done} / ${goals.length}</span></div>${achievements.map(message=>`<p class="garden-plan-achievement">${message}</p>`).join('')}<progress aria-label="${text('goalPlan')}" value="${done}" max="${goals.length}"></progress>${next?`<div class="garden-plan-next"><small>${text('gardenNext')}</small><strong>${name(next)}</strong><p>${detail(next)}</p>${button(next)}</div>`:`<p>${text('goalAllDone')}</p>`}<details><summary>${text('goalAllPlans')}</summary><ol>${goals.map(goal=>`<li class="${goal.done?'done':''}"><span aria-hidden="true">${goal.done?'✓':'○'}</span><div><strong>${name(goal)}</strong>${goal.done?`<small>${text('goalDone')}</small>`:`<p>${detail(goal)}</p>${goal.id===next?.id?'':button(goal)}`}</div></li>`).join('')}</ol></details><p class="garden-plan-note">${text('goalNoAutoSpend')}</p></section>`;
 }
 function gardenVisitControls(){
   const design=gardenDesignFor(save.gardenDesign),pip=save.pip??freshPip();
@@ -1019,6 +1037,20 @@ function bindCareControls(){
     };
   }
   const area=selectedGardenArea;
+  const plans=gardenGoals({plots:save.garden,pip:save.pip??freshPip(),design:save.gardenDesign,clears:gardenCompletedCount(),stars:save.stars,coins:save.coins});
+  for(const view of ['village','journal'] as const)for(const goal of plans)bind(`${view}-goal-${goal.id}`,()=>{
+    if(route!==view||!careEnvironment()||careProcessing||growing)return;
+    const step=goalNextStep(goal);if(!step)return;
+    clearCareReaction();
+    if(step.destination==='map'){switchView('map');$('#map-play').focus({preventScroll:true});return;}
+    if(step.destination==='pip'){
+      switchView('journal');const target=$<HTMLButtonElement>(step.missing?.kind==='affection'?'#pip-play':'#pip-feed');
+      const focus=target.disabled?$('#pip-care-title'):target;focus.focus({preventScroll:true});focus.scrollIntoView?.({block:'center'});return;
+    }
+    selectedGardenArea=step.destination;switchView('village');renderViews();
+    const id=step.destination!=='flowers'?'garden-space-title':step.missing?.kind==='diversity'?'garden-edit-title':goal.kind==='bed'?'garden-stage':'garden-edit-title';
+    const target=$('#'+id);target.focus({preventScroll:true});target.scrollIntoView?.({block:'start'});
+  });
   if(area!=='flowers'){
     bind('garden-space-restore',button=>showSpacePreview({kind:'restore',space:area},button));
     for(const style of ['base','alt'] as const)bind('garden-space-'+style,button=>showSpacePreview({kind:'style',space:area,style},button));
@@ -1080,7 +1112,7 @@ function gardenWorkshop(grew:boolean){
   const space=selectedGardenArea as Exclude<GardenArea,'flowers'>;
   const image=flowers?gardenArt(save.garden,grew,save.gardenDesign,{renderer:'painted-v4'}):gardenSpaceArt(space,spaces[space],save.gardenDesign?.theme??'meadow','garden-space','painted-v4',{foreground:false});
   const progress=flowers?`${icon('flower',17)} ${save.garden} / 5`:spacePhaseName(save.language,spaces[selectedGardenArea as Exclude<GardenArea,'flowers'>]);
-  return `<section class="garden-workshop">${gardenAreaTabs(save.language,selectedGardenArea)}<div id="garden-area-panel" role="tabpanel" aria-labelledby="garden-area-${selectedGardenArea}"><div id="garden-nature" class="garden-picture garden-preview"><div class="garden-illustration" role="img" aria-label="${gardenDescription()}">${image}</div>${gardenVisitor()}${gardenActivitySpots()}${flowers?'':paintedGardenForeground(space,spaces[space])}<span class="garden-pill">${progress}</span></div>${flowers?`<div class="garden-card garden-growth"><h3>${text('garden')}</h3><p class="garden-stage" id="garden-stage" role="status" tabindex="-1">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div>${save.garden===5?`<section class="pip-project garden-next-space">${nextSpaceGoal(save.language,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}<button id="garden-open-space" class="text-button">${text('spaceOpen')}</button></section>`:''}${gardenEditor()}`:`${gardenVisitControls()}${gardenSpacePanel(save.language,selectedGardenArea as Exclude<GardenArea,'flowers'>,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}`}</div></section>`;
+  return `<section class="garden-workshop">${gardenAreaTabs(save.language,selectedGardenArea)}<div id="garden-area-panel" role="tabpanel" aria-labelledby="garden-area-${selectedGardenArea}"><div id="garden-nature" class="garden-picture garden-preview"><div class="garden-illustration" role="img" aria-label="${gardenDescription()}">${image}</div>${gardenVisitor()}${gardenActivitySpots()}${flowers?'':paintedGardenForeground(space,spaces[space])}<span class="garden-pill">${progress}</span></div>${sharedGardenPlan('village')}${flowers?`<div class="garden-card garden-growth"><h3>${text('garden')}</h3><p class="garden-stage" id="garden-stage" role="status" tabindex="-1">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div>${save.garden===5?`<section class="pip-project garden-next-space">${nextSpaceGoal(save.language,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}<button id="garden-open-space" class="text-button">${text('spaceOpen')}</button></section>`:''}${gardenEditor()}`:`${gardenVisitControls()}${gardenSpacePanel(save.language,selectedGardenArea as Exclude<GardenArea,'flowers'>,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}`}</div></section>`;
 }
 function mapCurrentLevel(){return !testingLevel&&!roundEnded?currentLevel:save.highestLevel;}
 function revealMapStage(){
@@ -1132,7 +1164,7 @@ function renderViews(grew=false){
   if(careDemo)$('#village-view').innerHTML=$('#village-view').innerHTML.split('<div class="level-picker">')[0];
   $('#village-view').innerHTML=careDemoPanel('village')+$('#village-view').innerHTML;
   document.querySelector<HTMLButtonElement>('#grow')?.toggleAttribute('disabled',growing||careStorageBlocked()||save.stars<2||save.garden>=5);
-  $('#journal-view').innerHTML=`${careDemoPanel('journal')}<div class="subview-heading pip-view-heading"><div class="eyebrow">${text('friendsHeading')}</div><h2>${text('friendsTitle')}</h2></div>${pipCareCard()}${!careDemo?`<button id="pip-tutorial-help" class="text-button guide-help">${text('tutorial')}</button>`:''}`;
+  $('#journal-view').innerHTML=`${careDemoPanel('journal')}<div class="subview-heading pip-view-heading"><div class="eyebrow">${text('friendsHeading')}</div><h2>${text('friendsTitle')}</h2></div>${pipCareCard()}${sharedGardenPlan('journal')}${!careDemo?`<button id="pip-tutorial-help" class="text-button guide-help">${text('tutorial')}</button>`:''}`;
   if(!careDemo)$('#pip-tutorial-help').onclick=()=>showTutorial('help',$<HTMLButtonElement>('#pip-tutorial-help'));
   $('#settings-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><div class="storage-card" id="storage-card"><p id="save-status"></p><button id="save-retry" class="text-button" hidden></button><button id="save-reload" class="text-button" hidden></button></div><section class="support-note" aria-labelledby="support-title"><h3 id="support-title">${text('support')}</h3><p id="support-email">doeud1410@gmail.com</p></section><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v${APP_VERSION}</p>`;
   updateSaveStatus(focusedId);
