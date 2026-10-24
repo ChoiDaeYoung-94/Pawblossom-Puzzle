@@ -1,0 +1,15 @@
+/* 320 그림 좌표의 유한한 물 주기입니다. 몸체·버튼·통계는 움직이지 않습니다. */
+.pip-tending-stage{position:absolute;inset:0;pointer-events:none}.pip-tending-scene{position:absolute;inset:0;display:none;pointer-events:none}.pip-tending-scene svg{display:block;width:100%;height:100%}
+@supports (width:1cqw) and (height:1cqh){
+.pip-portrait.pip-reaction-tend{container-type:size}
+.pip-tending-stage{inset:auto;left:50%;top:50%;width:min(100cqw,100cqh);height:min(100cqw,100cqh);transform:translate(-50%,-50%)}
+.pip-tending-scene{display:block}
+.pip-tending-stage .pip-tending-can{bottom:3.5%;transform-origin:5% 35%;animation:pip-tending-pour 1.9s ease-in-out both;animation-delay:calc(-1 * var(--tend-elapsed,0ms));animation-play-state:paused}
+.pip-tending-drop{opacity:0;animation:pip-tending-drop 1s ease-in both;animation-delay:calc(var(--drop-delay) - var(--tend-elapsed,0ms));animation-play-state:paused}
+.pip-tending-flower{transform-box:view-box;transform-origin:156px 262px;animation:pip-tending-bloom 1.1s ease-in-out both;animation-delay:calc(.75s - var(--tend-elapsed,0ms));animation-play-state:paused}
+.pip-portrait[data-tend-active="true"] .pip-tending-can,.pip-portrait[data-tend-active="true"] .pip-tending-drop,.pip-portrait[data-tend-active="true"] .pip-tending-flower{animation-play-state:running}
+}
+@keyframes pip-tending-pour{0%,100%{transform:rotate(0)}24%,69%{transform:rotate(-16deg)}}
+@keyframes pip-tending-drop{0%{opacity:0;transform:translate(0,0)}12%{opacity:1}85%{opacity:.9;transform:translate(-42px,25px)}100%{opacity:0;transform:translate(-44px,28px)}}
+@keyframes pip-tending-bloom{0%,100%{transform:scale(1)}45%{transform:scale(1.14) rotate(-5deg)}75%{transform:scale(1.04) rotate(2deg)}}
+@media(prefers-reduced-motion:reduce){.pip-tending-can,.pip-tending-drop,.pip-tending-flower{animation:none!important;transform:none!important}.pip-tending-drop{display:none}}
