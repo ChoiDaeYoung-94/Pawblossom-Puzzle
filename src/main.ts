@@ -585,6 +585,9 @@ function renderTestPicker(){
   if(!TEST_TOOLS_ENABLED)return;
   const dialog=$<HTMLDialogElement>('#test-level-dialog');
   dialog.innerHTML=`<div class="test-picker"><h2 id="test-level-title">${text('testPickTitle')}</h2><p>${text('testPickDesc')}</p>${chapterTabs(selectedTestChapter,true)}<div class="test-level-grid" id="test-chapter-levels" role="tabpanel" aria-labelledby="test-chapter-${selectedTestChapter}">${levels.filter(level=>chapterForLevel(level.id).id===selectedTestChapter).map(level=>`<button id="test-stage-${level.id}" data-test-level="${level.id}" class="test-stage"><strong>${text('level')} ${level.id}</strong><small>${text(level.crates?'testCrates':level.mask?'testMasked':!level.leaves?'testBasic':level.leaves.some(p=>p.layers===2)?'testDouble':'testSingle')}</small></button>`).join('')}</div><a id="carrier-trial-entry" class="primary" href="/carrier-trial.html?lang=${save.language}">${text('carrierTrial')}</a><p>${text('carrierTrialNote')}</p><button id="test-normal" class="primary">${text('testNormal')}</button><button id="test-close" class="text-button">${text('testClose')}</button></div>`;
+  const columnTrial=document.createElement('a');columnTrial.id='column-carrier-trial-entry';columnTrial.className='primary';
+  columnTrial.href=`/carrier-trial.html?mode=column&lang=${save.language}`;columnTrial.textContent=text('columnCarrierTrial');
+  dialog.querySelector('#carrier-trial-entry')!.before(columnTrial);
   document.querySelectorAll<HTMLButtonElement>('[data-test-level]').forEach(button=>button.onclick=()=>{
     if(!scene.canLeave()||resultTimer)return;
     pickerReturnToResult=false;dialog.close();startLevel(Number(button.dataset.testLevel),true);switchView('puzzle');

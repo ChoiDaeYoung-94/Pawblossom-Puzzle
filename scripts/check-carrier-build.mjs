@@ -32,10 +32,12 @@ if(mode==='production'){
   assert.equal(existsSync(page),false,'운영 빌드에 운반 시험 HTML이 있습니다.');
   assert(!files.some(path=>/carrier[-_]?trial/i.test(relative(root,path))),'운영 빌드에 운반 시험 entry/chunk가 있습니다.');
   assert(!text.includes('experimental-carrier-v1'),'운영 빌드에 시험 규칙이 포함됐습니다.');
+  assert(!text.includes('experimental-carrier-v2'),'운영 빌드에 세로 특수 시험 규칙이 포함됐습니다.');
   assert(!text.includes('carrier-trial.html'),'운영 빌드에 시험 진입 경로가 포함됐습니다.');
 }else{
   assert(existsSync(page),'시험 HTML을 찾을 수 없습니다.');
   assert(text.includes('experimental-carrier-v1'),'시험 엔진을 찾을 수 없습니다.');
+  assert(text.includes('experimental-carrier-v2'),'세로 특수 시험 엔진을 찾을 수 없습니다.');
   const html=readFileSync(page,'utf8');
   const scripts=[...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map(match=>match[1]);
   assert(scripts.length>0,'시험 entry script가 없습니다.');
