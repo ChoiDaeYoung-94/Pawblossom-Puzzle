@@ -1,6 +1,7 @@
 import {bindPracticeBoard} from '../../bindPracticeInputs';
 import {CarrierEngine,type CarrierFrame,type Grid,type Position} from './CarrierEngine';
 import {carrierScenarios} from './carrierScenarios';
+import {mountCarrierParcelArt} from './CarrierParcelArt';
 
 type Language='ko'|'en';
 const kinds=['strawberry','carrot','leaf','blueberry','acorn','flower'] as const;
@@ -34,6 +35,7 @@ export function mountCarrierTrial(root:HTMLElement,initialLanguage:Language){
   let boardRows=engine.snapshot.board.length,boardCols=engine.snapshot.board[0].length;
   let binding:ReturnType<typeof bindPracticeBoard>|undefined;
   const animations=new Set<Animation>(),pieces=new Map<string,HTMLElement>(),buttons=new Map<string,HTMLButtonElement>();
+  const parcelArtDisposers=new Map<HTMLElement,()=>void>();
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
   const text=()=>copy[language];
   root.className='carrier-trial';
@@ -41,6 +43,8 @@ export function mountCarrierTrial(root:HTMLElement,initialLanguage:Language){
   const find=<T extends HTMLElement=HTMLElement>(selector:string)=>root.querySelector<T>(selector)!;
   const board=find('.trial-board'),cellLayer=find('.trial-cells'),pieceLayer=find('.trial-pieces');
   const languageControl=find<HTMLSelectElement>('.trial-language'),restart=find<HTMLButtonElement>('.trial-restart'),hint=find<HTMLButtonElement>('.trial-hint');
+  const resultTitle=document.createElement('strong'),resultNext=document.createElement('span');
+  resultTitle.className='trial-result-title';resultNext.className='trial-result-next';find('.trial-result').append(resultTitle,resultNext);
   languageControl.value=language;
   const announce=(message:string)=>{find('.trial-message').textContent=message;};
   function cancelAnimations(){epoch++;for(const animation of animations)animation.cancel();animations.clear();binding?.cancel();}
@@ -66,10 +70,16 @@ export function mountCarrierTrial(root:HTMLElement,initialLanguage:Language){
         if(cell.type==='carrier')element.innerHTML=parcelArt();
         else{const image=document.createElement('img');image.src=`/assets/tiles-v3/${kinds[cell.color]}.webp`;image.alt='';image.draggable=false;element.append(image);}
         pieceLayer.append(element);pieces.set(cell.id,element);
+        if(cell.type==='carrier'){
+          const owner=element;
+          parcelArtDisposers.set(owner,mountCarrierParcelArt(owner,()=>!disposed&&pieces.get(cell.id)===owner&&owner.parentElement===pieceLayer));
+        }
       }
       place(element,{row:r,col:c});
     }));
-    for(const [id,element] of pieces)if(!present.has(id)){element.remove();pieces.delete(id);}
+    for(const [id,element] of pieces)if(!present.has(id)){
+      parcelArtDisposers.get(element)?.();parcelArtDisposers.delete(element);element.remove();pieces.delete(id);
+    }
   }
   function updateLabels(){
     const t=text(),state=engine.snapshot,scenario=carrierScenarios[index];
@@ -86,7 +96,10 @@ export function mountCarrierTrial(root:HTMLElement,initialLanguage:Language){
     restart.textContent=t.restart;hint.textContent=t.hint;hint.disabled=busy||state.status!=='playing';
     languageControl.disabled=busy;root.classList.toggle('is-busy',busy);board.setAttribute('aria-busy',String(busy));
     const result=find('.trial-result');result.hidden=state.status==='playing'||busy;
-    if(!result.hidden)result.textContent=`${t[state.status as 'won'|'lost'|'blocked']} ${state.status==='won'?t.choose:t.again}`;
+    if(!result.hidden){
+      resultTitle.textContent=t[state.status as 'won'|'lost'|'blocked'];resultNext.textContent=state.status==='won'?t.choose:t.again;
+      result.setAttribute('aria-label',`${resultTitle.textContent} ${resultNext.textContent}`);
+    }
     for(const [key,button] of buttons){
       const [row,col]=key.split(':').map(Number),p={row,col},cell=state.board[row][col];
       const name=cell?.type==='carrier'?t.carrier:cell?.type==='tile'?names[language][cell.color]:'';
@@ -156,6 +169,7 @@ export function mountCarrierTrial(root:HTMLElement,initialLanguage:Language){
     selected=selected&&same(selected,p)?undefined:p;hinted=[];updateLabels();focusCell(p);
   }
   function setupBoard(){
+    for(const dispose of parcelArtDisposers.values())dispose();parcelArtDisposers.clear();
     binding?.dispose();buttons.clear();pieces.clear();cellLayer.replaceChildren();pieceLayer.replaceChildren();
     const state=engine.snapshot,rows=state.board.length,cols=state.board[0].length;
     boardRows=rows;boardCols=cols;
@@ -207,6 +221,7 @@ export function mountCarrierTrial(root:HTMLElement,initialLanguage:Language){
   const observer=new ResizeObserver(()=>{
     const available=find('.trial-board-wrap'),size=Math.max(0,Math.min(570,available.clientWidth,available.clientHeight));
     if(!size)return;
+    available.style.setProperty('--trial-board-size',`${size}px`);
     if(board.style.width!==`${size}px`){if(busy)finishVisuals();board.style.width=`${size}px`;board.style.height=`${size}px`;}
   });
   document.addEventListener('visibilitychange',visibility);window.addEventListener('blur',blur);window.addEventListener('focus',focus);
@@ -214,6 +229,7 @@ export function mountCarrierTrial(root:HTMLElement,initialLanguage:Language){
   setupBoard();announce(text().playing);visibility();observer.observe(find('.trial-board-wrap'));
   return {setActive(active:boolean){if(disposed)return;externalActive=active;visibility();},dispose(){
     if(disposed)return;disposed=true;cancelAnimations();binding?.dispose();
+    for(const dispose of parcelArtDisposers.values())dispose();parcelArtDisposers.clear();
     root.setAttribute('data-suspended','');for(const button of buttons.values())button.classList.remove('is-hinted');
     document.removeEventListener('visibilitychange',visibility);window.removeEventListener('blur',blur);window.removeEventListener('focus',focus);
     window.removeEventListener('resize',resize);reduced.removeEventListener('change',resize);cellLayer.onkeydown=null;
