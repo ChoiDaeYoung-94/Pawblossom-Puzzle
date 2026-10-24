@@ -26,6 +26,6 @@ function execute(data,diagnostic){
   }catch(error){if(diagnostic)recordError(diagnostic,error);return resultAt(diagnostic,{kind:'worker-error'});}
   finally{step(diagnostic,'close',()=>{try{reward?.close();}catch(error){if(diagnostic)recordError(diagnostic,error);}try{round?.close();}catch(error){if(diagnostic)recordError(diagnostic,error);}});}
 }
-function run(data){const diagnostic=data.diagnostics===true?createTrace('reward-worker'):null;const result=withSqliteDiagnostics(diagnostic,()=>execute(data,diagnostic));return diagnostic?{kind:'synthetic-worker-report',result,diagnostic}:result;}
+function run(data){const diagnostic=data.diagnostics===true?createTrace('reward-worker'):null;const result=withSqliteDiagnostics(diagnostic,()=>execute(data,diagnostic),parentPort&&diagnostic?{transactionSpans:true,spanClockAnchor:data.spanClockAnchor}:undefined);return diagnostic?{kind:'synthetic-worker-report',result,diagnostic}:result;}
 if(parentPort){parentPort.postMessage('ready');parentPort.once('message',()=>parentPort.postMessage(run(workerData)));}
 else process.once('message',data=>{process.send?.(run(data));process.disconnect?.();});

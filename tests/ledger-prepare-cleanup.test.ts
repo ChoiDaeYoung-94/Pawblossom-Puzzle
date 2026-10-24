@@ -23,7 +23,7 @@ afterEach(()=>{
 });
 
 describe('prepare 실패 연결의 검사 전용 close 대응',()=>{
-  it('실제 BEGIN BUSY5 뒤 실제 prepare BUSY5도 닫힘을 관측하되 생성2회·대기1회로 종료합니다',()=>{
+  it.each([false,true])('실제 BEGIN/prepare BUSY5 닫힘·생성2회·대기1회를 구간 opt-in=%s에도 유지합니다',transactionSpans=>{
     // 서버 schema/worker 없이 SQLite의 실제 잠금 두 개를 순서대로 만듭니다. 오류 주입이 아닙니다.
     const path=location(),owner=database(path),nativeExec=DatabaseSync.prototype.exec;
     owner.exec('CREATE TABLE qa_prepare_probe(value INTEGER)');owner.exec('BEGIN IMMEDIATE');
@@ -45,7 +45,8 @@ describe('prepare 실패 연결의 검사 전용 close 대응',()=>{
       Reflect.apply(nativeExec,owner,['ROLLBACK']);Reflect.apply(nativeExec,owner,['BEGIN EXCLUSIVE']);
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,ms);
     });
-    try{withSqliteDiagnostics(trace,()=>retryLedgerOpen(trace,'reward-open',true,create,wait));}catch(error){finalError=error;}
+    try{withSqliteDiagnostics(trace,()=>retryLedgerOpen(trace,'reward-open',true,create,wait),{transactionSpans});}catch(error){finalError=error;}
+    expect(Object.hasOwn(trace,'transactionSpans')).toBe(transactionSpans);
     expect(prepareReached).toBe(1);expect(receivers).toHaveLength(2);
     expect(nativeErrors.map(error=>[own(error,'code'),own(error,'errcode')])).toEqual([['ERR_SQLITE_ERROR',5],['ERR_SQLITE_ERROR',5]]);
     expect(finalError).toBe(nativeErrors[1]);expect(create).toHaveBeenCalledTimes(2);expect(wait.mock.calls).toEqual([[25]]);

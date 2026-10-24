@@ -1,5 +1,11 @@
 # 웹 자동 검증
 
+## 2026-10-25 · #265 보상 worker 구간 관측의 현행 helper 통합
+
+기존 Draft269의 보상 worker opt-in 구간/역할/부모-Worker 시간 기준을 현재 helper에 통합했습니다. #284 trusted prepare 실패/연결 닫힘, #287 Async 활성·소유 hook 조건부 복원, #317 고정8단계/family를 보존하고 구간 finish는 반환한 Sync cleanup에만 연결합니다. SQL/인수/오류 원문·receiver는 DTO에 추가하지 않습니다. 제품/src/server/public/Android·업무 기대·8이벤트/5hook·재시도·500ms/5초/8worker는 유지합니다.
+
+원래00d6ef9 최초CI40045510648 Node22 3051성공1실패/Node24 3052성공과 round-worker command BEGIN BUSY5/conflict6기대7은 그대로 보존합니다. 새 span 옵션을 사용하지 않는 경로이며 원인/owner 미확정입니다. 실제1Worker clock 회귀는 원래 양Node span52개에 포함돼 실행됐고 성공8worker 전체DTO 별도수집과 구분합니다. 현재 통합은 source2ba55bd에서 관련4파일177개·타입3종·최초동결62파일3,331개와 독립 읽기 검수를 통과했습니다. 실제 BEGIN→prepare BUSY5 회귀를 opt-in 끔/켬에 확장해 생성2회·대기25ms1회·동일 native 오류/close/5hook·비노출 기대를 유지했습니다. 이후 문서만 정리했으며 제품/src/server/public/Android/package/scripts/config는 mainc1/제품06과 같아 로컬 두웹빌드는06 근거를 재사용합니다. 새 head의 최초필수CI/정확main은 별도 확인하고 성공8worker 전체DTO 별도수집·원인/owner는 미확정입니다. 녹색을 원인 해결로 주장하지 않습니다.
+
 ## 2026-10-24 · #296 Native 여백 설정과 도구 버전
 
 웹 규칙/그림/저장/경제와 vendor를 바꾸지 않고 SystemBars `native` 설정 및 공식 CLI8.5.3 pin/lock을 적용했습니다. 구 CLI8.4.3 타입의 최초TS2322와 수정 후 타입3설정 성공을 구분합니다. Native 후보e285f97은 검증된300의86웹을 재사용했고 비웹은 설정JSON1개만 다릅니다. Native16개는 같은 Java의 UP-TO-DATE/기능15개 재사용이며 새 검사로 합산하지 않습니다. 기존78 production bundle을 검증/보존·복원해 세 flag false와 전수SHA를 확인했으며 웹 재빌드를 추가하지 않았습니다. 독립 소스 읽기의 차단사항은 없었고 API34/WebView124의 실제 화면/입력/표적 SDK 로그 관측은 Android 기록에 분리했습니다. 로컬 전체JS 검사는 설정만 바뀐 이 후보에서 반복하지 않았으며 필수 PR의 양Node 전체·타입/두 빌드와 정확main CI는 제출 뒤 확인합니다. 원장 #122와 별도 Chromium 캐시 원인을 해결로 합산하지 않습니다.

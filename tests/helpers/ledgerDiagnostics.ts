@@ -4,6 +4,9 @@ import type {Worker} from 'node:worker_threads';
 import {DatabaseSync,StatementSync} from 'node:sqlite';
 import {projectSchedulerSummary,projectScheduling,schedulerField,unavailableScheduling,type SchedulerProbe,type SchedulerSummary,type Scheduling} from './ledgerSchedulerProbe.ts';
 
+import {createSpanRecorder,projectTransactionSpans,type SpanRecorder,type TransactionSpans} from './ledgerTransactionSpans.ts';
+type DiagnosticsOptions={schedulerProbe?:SchedulerProbe;transactionSpans?:boolean;spanClockAnchor?:unknown};
+
 const phases=['unknown','fixture','service-open','adapter-create','adapter-call','prepare','workers','reward-open','redeem','round-open','apply','start','command','get','close','open','seed','retry','invalid-limits','child-create','child-send','child-result','child-exit','reconcile','verify','reprofile','eligibility','insert-rejected','inbox-lock-receive','inbox-lock-process','inbox-unlock-receive','reward-lock-retry','reward-unlock-advance','recovery-completed'] as const;
 type Phase=typeof phases[number];
 const kinds=['voucher-redeemed','reward-result','round-started','round-snapshot','command-result','rejected','service-error','worker-error','other'] as const;
@@ -34,6 +37,7 @@ export interface PhaseTrace {
   sqliteHook:SqliteHookState;
   constructorAttempts:ConstructorAttempt[];
   schedulerProbe?:SchedulerSummary;
+  transactionSpans?:TransactionSpans;
 }
 export interface WorkerRow extends ReturnType<typeof safeResult> {
   index:number;readyAtMs:number|null;goAtMs:number|null;resultAtMs:number|null;exitAtMs:number|null;exitCode:number|null;
@@ -113,7 +117,11 @@ function finishTransactionObservation(trace:PhaseTrace,row:SqliteTransactionRow|
 }
 // 단발 worker의 동기/선택 비동기 scope가 공유하는 hook 설치·수집입니다.
 // SQL은 고정 literal과의 완전 일치만 분류하며 원문·인자·errstr·원문 오류는 저장/출력하지 않습니다.
-function installSqliteDiagnostics(trace:PhaseTrace,options?:{schedulerProbe?:SchedulerProbe},asyncLifetime=false):()=>void {
+function installSqliteDiagnostics(trace:PhaseTrace,options?:DiagnosticsOptions,asyncLifetime=false):()=>void {
+  let spans:SpanRecorder|undefined;
+  const observeSpans=<R>(observe:()=>R):R|undefined=>{try{return observe();}catch{transactionObservationFailed(trace);try{if(spans)spans.report.observationFailed=true;}catch{}return;}};
+  // 보상 worker의 Sync opt-in만 받으며 Async의 활성/소유권 계약은 유지합니다.
+  if(!asyncLifetime&&schedulerField(options,'transactionSpans')===true)observeSpans(()=>{spans=createSpanRecorder(schedulerField(options,'spanClockAnchor'));trace.transactionSpans=spans.report;});
   const scheduler=schedulerField(options,'schedulerProbe') as SchedulerProbe|undefined;let schedulingCount=0;
   if(scheduler)try{const summary=projectSchedulerSummary(schedulerField(scheduler,'summary'));if(summary)trace.schedulerProbe=summary;}catch{}
   const finishScheduling=(row:SqliteTransactionRow|null,attempted:boolean,sampled:boolean,sample:unknown)=>{
@@ -155,10 +163,12 @@ function installSqliteDiagnostics(trace:PhaseTrace,options?:{schedulerProbe?:Sch
       let schedulingAttempted=false,sampled=false,sample:unknown;
       try{if(scheduler?.active===true&&operation==='database-exec'&&(trace.phase==='round-open'||trace.phase==='command')&&(args[0]==='BEGIN IMMEDIATE'||args[0]==='COMMIT')&&trace.sqliteTransactions.length<8&&schedulingCount<8){schedulingAttempted=true;schedulingCount++;sample=scheduler.before();sampled=true;}}catch{}
       const transaction=operation==='database-exec'?beginTransactionObservation(trace,args[0],this):null;
-      try{const result=Reflect.apply(descriptor.value,this,args);finishTransactionObservation(trace,transaction,'returned');finishScheduling(transaction,schedulingAttempted,sampled,sample);return result;}
+      const span=operation==='database-exec'&&spans?observeSpans(()=>spans!.before(args[0],this,trace.phase))??null:null;
+      try{const result=Reflect.apply(descriptor.value,this,args);finishTransactionObservation(trace,transaction,'returned');finishScheduling(transaction,schedulingAttempted,sampled,sample);if(spans)observeSpans(()=>spans!.after(span,'returned',descriptor.value));return result;}
       catch(error){
         finishTransactionObservation(trace,transaction,'threw');
         finishScheduling(transaction,schedulingAttempted,sampled,sample);
+        if(spans)observeSpans(()=>spans!.after(span,'threw',descriptor.value));
         // 수집 실패도 원래 예외의 종류/참조를 바꾸지 않습니다.
         try{if(trace.sqliteErrors.length<8){const errorCode=safeError(error).errorCode;const row:SqliteErrorRow={operation,site:sqliteSite(operation,args[0]),phase:trace.phase,errorCode,...sqliteCode(errorCode==='ERR_SQLITE_ERROR'?field(error,'errcode'):undefined),transactionActive:operation==='database-exec'?nativeBoolean(this as object,'isTransaction'):null,connectionClosed:null};if(operation==='database-exec'&&this!==null&&typeof this==='object')nativeDatabases.set(row,this);else if(operation==='database-prepare'&&this!==null&&typeof this==='object'&&trustedPrepareFailure(descriptor.value,error))nativeDatabases.set(row,this);trace.sqliteErrors.push(row);}else trace.sqliteErrorsTruncated=true;}catch{if(asyncLifetime)transactionObservationFailed(trace);}
         throw error;
@@ -166,9 +176,9 @@ function installSqliteDiagnostics(trace:PhaseTrace,options?:{schedulerProbe?:Sch
     }};entry.installed=owned;Object.defineProperty(prototype,key,owned);installedCount++;if(asyncLifetime)updateHook({installedMethods:installedCount});else state.installedMethods++;}
     updateHook({installation:'installed'});installed=true;
   }catch{if(asyncLifetime)transactionObservationFailed(trace);updateHook({installation:'failed'});if(attempted)restore();}
-  return installed?restore:()=>{};
+  return ()=>{try{if(spans)observeSpans(()=>spans!.finish());}finally{if(installed)restore();}};
 }
-export function withSqliteDiagnostics<T>(trace:PhaseTrace|null,work:()=>T,options?:{schedulerProbe?:SchedulerProbe}):T {
+export function withSqliteDiagnostics<T>(trace:PhaseTrace|null,work:()=>T,options?:DiagnosticsOptions):T {
   if(!trace)return work();
   const restore=installSqliteDiagnostics(trace,options);
   // 준비/설치 실패도 실제 동작은 원래대로 한 번 실행합니다. 진단은 성공으로 표시하지 않습니다.
@@ -182,9 +192,10 @@ export async function withSqliteDiagnosticsAsync<T>(trace:PhaseTrace|null,work:(
   try{return await work();}finally{try{restore();}catch{transactionObservationFailed(trace);}}
 }
 function methodCount(value:unknown):number {return typeof value==='number'&&Number.isInteger(value)&&value>=0&&value<=5?value:0;}
-export function projectTrace(value:unknown):PhaseTrace {
+export function projectTrace(value:unknown,spanClockAnchor?:unknown):PhaseTrace {
   const steps=field(value,'steps'),sqliteErrors=field(value,'sqliteErrors'),transactions=field(value,'sqliteTransactions'),hook=field(value,'sqliteHook'),attempts=field(value,'constructorAttempts');
   const schedulerProbe=projectSchedulerSummary(schedulerField(value,'schedulerProbe'));
+  const transactionSpans=projectTransactionSpans(schedulerField(value,'transactionSpans'),spanClockAnchor);
   return {phase:allowed(field(value,'phase'),phases,'unknown'),elapsedMs:number(field(value,'elapsedMs'))??0,
     resultPhase:field(value,'resultPhase')===null?null:allowed(field(value,'resultPhase'),phases,'unknown'),errorPhase:field(value,'errorPhase')===null?null:allowed(field(value,'errorPhase'),phases,'unknown'),
     errorName:field(value,'errorName')===null?null:allowed(field(value,'errorName'),names,'other'),errorCode:field(value,'errorCode')===null?null:allowed(field(value,'errorCode'),errorCodes,'other'),
@@ -193,16 +204,16 @@ export function projectTrace(value:unknown):PhaseTrace {
     sqliteTransactions:Array.isArray(transactions)?transactions.slice(0,8).map(row=>{const connection=field(row,'connectionIndex'),startedAtProcessMs=number(field(row,'startedAtProcessMs')),finished=number(field(row,'finishedAtProcessMs')),scheduling=projectScheduling(schedulerField(row,'scheduling'),{startedAtProcessMs,finishedAtProcessMs:finished});return {connectionIndex:typeof connection==='number'&&Number.isInteger(connection)&&connection>=1&&connection<=8?connection:null,phase:allowed(field(row,'phase'),phases,'unknown'),site:allowed(field(row,'site'),transactionSites,'unknown'),startedAtProcessMs,finishedAtProcessMs:startedAtProcessMs!==null&&finished!==null&&finished>=startedAtProcessMs?finished:null,outcome:allowed(field(row,'outcome'),transactionOutcomes,'unknown'),...(scheduling?{scheduling}:{})};}):[],
     sqliteTransactionsTruncated:field(value,'sqliteTransactionsTruncated')===true||(Array.isArray(transactions)&&transactions.length>8),sqliteTransactionObservationFailed:field(value,'sqliteTransactionObservationFailed')===true,
     sqliteHook:{installation:allowed(field(hook,'installation'),hookInstallStates,'unknown'),restoration:allowed(field(hook,'restoration'),hookRestoreStates,'unknown'),installedMethods:methodCount(field(hook,'installedMethods')),restoreFailures:methodCount(field(hook,'restoreFailures'))},
-    constructorAttempts:Array.isArray(attempts)?attempts.slice(0,3).map(row=>({attempt:boundedCount(field(row,'attempt'),3),opened:field(row,'opened')===true,nativeCount:boundedCount(field(row,'nativeCount'),8),closeObserved:field(row,'closeObserved')===true,closeSucceeded:field(row,'closeSucceeded')===true,closeFailed:field(row,'closeFailed')===true,closeHookInstalled:field(row,'closeHookInstalled')===true,closeHookRestored:field(row,'closeHookRestored')===true,retryScheduled:field(row,'retryScheduled')===true,waitMs:field(row,'waitMs')===25?25:0})):[],...(schedulerProbe?{schedulerProbe}:{})};
+    constructorAttempts:Array.isArray(attempts)?attempts.slice(0,3).map(row=>({attempt:boundedCount(field(row,'attempt'),3),opened:field(row,'opened')===true,nativeCount:boundedCount(field(row,'nativeCount'),8),closeObserved:field(row,'closeObserved')===true,closeSucceeded:field(row,'closeSucceeded')===true,closeFailed:field(row,'closeFailed')===true,closeHookInstalled:field(row,'closeHookInstalled')===true,closeHookRestored:field(row,'closeHookRestored')===true,retryScheduled:field(row,'retryScheduled')===true,waitMs:field(row,'waitMs')===25?25:0})):[],...(schedulerProbe?{schedulerProbe}:{}),...(transactionSpans?{transactionSpans}:{})};
 }
 function booleanOrNull(value:unknown):boolean|null {return typeof value==='boolean'?value:null;}
 function boundedCount(value:unknown,max:number):number {return typeof value==='number'&&Number.isInteger(value)&&value>=0&&value<=max?value:0;}
 export function workerRow(index:number):WorkerRow {return {index,readyAtMs:null,goAtMs:null,resultAtMs:null,exitAtMs:null,exitCode:null,terminationRequested:false,terminationRequestedAtMs:null,kind:'other',code:null,diagnostic:null,errorName:null,errorCode:null};}
 export function childRow(index:number):ChildRow {return {index,createdAtMs:null,sentAtMs:null,resultAtMs:null,exitAtMs:null,exitCode:null,terminationRequested:false,errorName:null,errorCode:null};}
 // envelope 전체를 문자열화하지 않고 기존 결과와 안전한 진단을 분리합니다.
-export function receiveWorker(value:any,row:WorkerRow):any {
+export function receiveWorker(value:any,row:WorkerRow,spanClockAnchor?:unknown):any {
   const wrapped=field(value,'kind')==='synthetic-worker-report';const result=wrapped?field(value,'result'):value;
-  Object.assign(row,safeResult(result));if(wrapped)row.diagnostic=projectTrace(field(value,'diagnostic'));return result;
+  Object.assign(row,safeResult(result));if(wrapped)row.diagnostic=projectTrace(field(value,'diagnostic'),spanClockAnchor);return result;
 }
 export function safeRows(trace:LedgerTrace):string {return JSON.stringify(trace.workers);}
 const observations=new WeakMap<Worker,{trace:LedgerTrace;row:WorkerRow}>();
