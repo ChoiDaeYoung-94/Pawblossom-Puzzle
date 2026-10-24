@@ -1,5 +1,13 @@
 # 웹 자동 검증
 
+## 2026-10-24 · #279 퍼즐 밖 객체 그리기
+
+게임 소스814e599는 등록된 Board의 public Systems.setVisible을 현재 route에 맞춥니다. 퍼즐 모달 뒤는 표시하고 나머지 경로만 객체 그리기를 끄며 루프·기존 pause/resume·CREATE·POST_RENDER 교체·타이머·좌표·규칙은 유지합니다. 관련 UI412개·타입3종·첫 로컬 전체46파일3,027개·testing/production 두 웹 빌드/플래그·독립 읽기 검수가 성공했습니다. 실제 지도→퍼즐의344정사각/즉시 키보드·포인터3행3열 선택, 새 테스트100의34회0점/비정형·3목표·입력과 정상2번19회270점/1별40코인 복귀,640가로241정사각/넘침 없음을 확인했습니다.
+
+별도 실제 BoardScene 관측에서 pause는42 Scene render/1,036.5ms, CSS 숨김+pause도37/1,015.7ms였습니다. sys.visible false의 대안 관측은0 Scene render와144 POST_RENDER/1,000.8ms, 재표시는39/1,047ms였습니다. 이는 독립 시제품의 호출 수이며 실제 기기 FPS/배터리 개선률·OS 배경 성능 보장이 아닙니다. 임시 HTML은 해시 보존 후 저장소에서 제거하고 탭/5188 서버를 정리했습니다. 루프를 sleep하지 않아 교체용 프레임은 유지합니다.
+
+기준 main8648468의 정확최초CI40054328452는 Node24 reward-ledger:102:222의 동일callback8worker에서 중복0/기대7로3,024성공1실패/후속단계 skipped, Node22검증은 성공입니다. 응답 index3 신규true/나머지7 storage-unavailable·모두close반환이며 native는 not-observed입니다. DB행수 assert·BUSY/실제 SQL·owner/원인은 미관측입니다. 첫 PR head3390/CI40054034171의 성공·동일tree 및 마지막 녹색 main9a0a8f0/CI40053819175와 구분하며 #122comment6378800050에 보존합니다. 이번 UI 로컬 녹색으로 해결 처리하거나 같은head 재실행·제한 완화를 하지 않습니다.
+
 ## 2026-10-24 · #277 서로 다른 claim 3worker의 반환 관측
 
 PR275 head88803d69의 첫CI40053027243은 Node22 reward-ledger:106:166에서 실패했습니다. 서로 다른 claim/transaction·동일 round의3worker 중 신규1개 확인은 통과했지만 round-closed 수는 기대2/실제0이며, 다른2종류·BUSY·DB행수·잠금 owner/원인은 미관측입니다. Node22 전체3,024성공1실패/후속store·type·build skipped와 Node24 성공을 구분하며 원문과 Draft275를 #122comment6378622242에 보존합니다. 현재 main25aad48의 정확CI40051625911 양Node3,016개·store12·타입/두빌드 성공은 이 새 실패의 해결 근거가 아닙니다.

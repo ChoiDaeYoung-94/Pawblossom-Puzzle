@@ -274,6 +274,8 @@ function syncActivity(){
   // 앱은 첫 활성화에서 배경음을 준비합니다. 제한된 WebView는 기존 입력 경로로 재시도합니다.
   if(active&&Capacitor.isNativePlatform()&&!nativeAudioAttempted){nativeAudioAttempted=true;if(save.music)void audio.unlock().catch(()=>{});}
   if(!game)return;
+  // pause만 한 Scene도 그려지므로 CSS로 숨긴 경로에서는 객체 그리기만 끕니다.
+  game.scene.getScene('Board')?.sys.setVisible(route==='puzzle');
   const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
   const playing=active&&!careDemo&&route==='puzzle'&&!modal&&!previewDialog.open&&!resourceDialog.open&&!spaceDialog.open;
   syncPipActivity();
