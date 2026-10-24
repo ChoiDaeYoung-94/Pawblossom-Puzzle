@@ -2,6 +2,7 @@
 import {createHash,createHmac,randomBytes,timingSafeEqual} from 'node:crypto';
 import {isAbsolute} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
+import {beginRoundCommand} from './commandBegin.ts';
 import {readRedeemedGrant} from '../ads/rewardLedger.ts';
 import {advanceState,commandSnapshot,CONTENT_HASH,ENGINE_PROFILE,ENGINE_SOURCE_SHA256,exactRecord,freezeCopy,isLevelId,publicState,startState,validateState,
   type Command,type CommandOutcome,type PublicRoundState,type RoundState} from './roundState.ts';
@@ -151,14 +152,14 @@ export class RoundLedger {
   }
   #mac(domain:string,value:string):string{return createHmac('sha256',this.#keys[domain]).update(value).digest('hex');}
   #wipe(){Object.values(this.#keys).forEach(key=>key.fill(0));this.#keys={};}
-  #transaction<T>(work:()=>T):T {
-    this.#db.exec('BEGIN IMMEDIATE');
+  #transaction<T>(work:()=>T,retryCommandBegin=false):T {
+    if(retryCommandBegin)beginRoundCommand(this.#db);else this.#db.exec('BEGIN IMMEDIATE');
     try{const r=work();this.#db.exec('COMMIT');return r;}
     catch(error){try{this.#db.exec('ROLLBACK');}catch{throw new RoundRollbackError();}throw error;}
   }
-  #run<T extends StartRoundResult|RoundCommandResult|GetRoundResult|RewardEligibilityResult|ApplyRewardResult>(work:()=>T):T|Failure {
+  #run<T extends StartRoundResult|RoundCommandResult|GetRoundResult|RewardEligibilityResult|ApplyRewardResult>(work:()=>T,retryCommandBegin=false):T|Failure {
     if(this.#closed)return unavailable();
-    try{return this.#transaction(()=>{this.#schema();this.#capacity(0);return work();});}
+    try{return this.#transaction(()=>{this.#schema();this.#capacity(0);return work();},retryCommandBegin);}
     catch(error){if(error instanceof RoundIntegrityError||error instanceof RoundRollbackError){try{this.close();}catch{}}return unavailable();}
   }
   #schema():void {
@@ -327,7 +328,7 @@ export class RoundLedger {
       this.#db.prepare('UPDATE round_rounds SET revision=?,state_json=?,state_mac=? WHERE round_id=?').run(row.revision,row.state_json,row.state_mac,id);
       this.#db.prepare('INSERT INTO round_ops VALUES(?,?,?,?,?,?)').run(id,opHash,digest,row.revision,next.outcome,op.receipt_mac);
       return {kind:'command-result',applied:true,outcome:next.outcome,snapshot:this.#snapshot(row,next.state)};
-    }) as RoundCommandResult;
+    },true) as RoundCommandResult;
   }
   close():void {
     if(this.#closed)return;

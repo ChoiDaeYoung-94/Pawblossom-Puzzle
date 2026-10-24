@@ -1,9 +1,12 @@
 import { gardenDesignFor,type GardenDesign,type FlowerStyle } from './gardenDesign';
 import {paintedGardenBackdrop,paintedGardenBed,paintedGardenFlowers,type GardenArtRenderer} from './GardenPaintedArt';
+import {paintedGardenBench,paintedGardenLantern,paintedGardenButterfly} from './GardenStructureArt';
 const blossom=(style:FlowerStyle,meadowColor='#e9a9b1')=>style==='violet'?'<path d="M-9-5Q-8-17 0-15Q8-17 9-5L12 1Q6 7 0 2Q-6 7-12 1Z" fill="#a18ac9" stroke="#76629d" stroke-width="1.3"/><path d="M-4 1v5m8-5v5" stroke="#edc76d" stroke-width="2"/>':`${Array.from({length:style==='daisy'?10:5},(_,i)=>`<ellipse cx="0" cy="-6" rx="${style==='daisy'?2.6:4.4}" ry="${style==='daisy'?7:5.6}" fill="${style==='daisy'?'#fffdf2':meadowColor}" stroke="${style==='daisy'?'#cbbf93':'#ca8795'}" stroke-width=".6" transform="rotate(${i*(style==='daisy'?36:72)})"/>`).join('')}<circle r="3.5" fill="#efc75e"/>`;
 export const flowerArt=(style:FlowerStyle)=>`<svg viewBox="-17 -18 34 36" aria-hidden="true">${blossom(style)}</svg>`;
 /** 꽃 선택과 소유 장식만 그리며 저장 객체를 변경하지 않습니다. */
-export function gardenArt(value:number,celebrate=false,selection?:GardenDesign,options:{renderer?:GardenArtRenderer}={}):string {
+export function gardenArt(value:number,celebrate=false,selection?:GardenDesign,options:{renderer?:GardenArtRenderer;idPrefix?:string}={}):string {
+  if(options.idPrefix!==undefined&&!/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(options.idPrefix))throw new RangeError('invalid-garden-art-prefix');
+  const scoped=(image:string)=>options.idPrefix?image.replaceAll('id="garden-',`id="${options.idPrefix}-garden-`).replaceAll('url(#garden-',`url(#${options.idPrefix}-garden-`):image;
   const stage=Number.isFinite(value)?Math.max(0,Math.min(5,Math.floor(value))):0;
   const design=gardenDesignFor(selection);
   const painted=options.renderer==='painted-v4';
@@ -34,12 +37,12 @@ export function gardenArt(value:number,celebrate=false,selection?:GardenDesign,o
     <path d="M215 96Q271 127 246 165T267 280H236Q220 221 229 179T204 96Z" fill="#e8d8b2" opacity=".8"/>
     <g stroke="#b1a481" stroke-width="4" stroke-linecap="round"><path d="M115 95H357M115 106H357"/>${[124,166,208,250,292,334].map(x=>`<path d="M${x} 87V114"/>`).join('')}</g>
     <g fill="#8eac7c" opacity=".6">${[[25,185],[444,215],[52,256],[400,261]].map(([x,y])=>`<path d="M${x} ${y}q-7-12-11-5q3 8 11 5q6-13 11-7q-2 7-11 7"/>`).join('')}</g>
-    ${painted?paintedGardenBackdrop(design.theme??'meadow'):''}${design.placed.includes('bench')?'<g data-decoration="bench" transform="translate(124 91)" stroke="#775d43" stroke-width="3" stroke-linecap="round"><path d="M-29-13H29V0H-29Z" fill="#d5ac76"/><path d="M-32 4H32V11H-32Z" fill="#d5ac76"/><path d="M-25 11v10m50-10v10M-25 0v4m50-4v4"/></g>':''}
+    ${painted?paintedGardenBackdrop(design.theme??'meadow'):''}${design.placed.includes('bench')?(painted?`<g data-decoration="bench" transform="translate(124 91)">${paintedGardenBench()}</g>`:'<g data-decoration="bench" transform="translate(124 91)" stroke="#775d43" stroke-width="3" stroke-linecap="round"><path d="M-29-13H29V0H-29Z" fill="#d5ac76"/><path d="M-32 4H32V11H-32Z" fill="#d5ac76"/><path d="M-25 11v10m50-10v10M-25 0v4m50-4v4"/></g>'):''}
     ${beds}
-    ${design.placed.includes('butterflies')?`<g data-decoration="butterflies">${[[189,107],[282,191],[351,101]].map(([x,y],i)=>`<g transform="translate(${x} ${y}) rotate(${i*20-15})"><path d="M0 0Q-19-18-18-1Q-19 12 0 3Q19 12 18-1Q19-18 0 0" fill="#edbf76" stroke="#b88961" stroke-width="1.4"/><path d="M0-4V7" stroke="#6e5d59" stroke-width="2.5"/></g>`).join('')}</g>`:''}
-    ${design.placed.includes('lantern')?`<g data-decoration="lantern" transform="translate(${lanternX} ${lanternY})"><circle cy="-18" r="25" fill="#fff1b5" opacity=".45"/><path d="M-2-39V16M-10 16H10M-10-35H10" stroke="#736851" stroke-width="4" stroke-linecap="round"/><rect x="-12" y="-32" width="24" height="25" rx="5" fill="#f3d68a" stroke="#8f7650" stroke-width="2"/><path d="M0-27v15" stroke="#fff6d2" stroke-width="5" stroke-linecap="round"/></g>`:''}
+    ${design.placed.includes('butterflies')?`<g data-decoration="butterflies">${[[189,107],[282,191],[351,101]].map(([x,y],i)=>`<g transform="translate(${x} ${y}) rotate(${i*20-15})">${painted?paintedGardenButterfly():`<path d="M0 0Q-19-18-18-1Q-19 12 0 3Q19 12 18-1Q19-18 0 0" fill="#edbf76" stroke="#b88961" stroke-width="1.4"/><path d="M0-4V7" stroke="#6e5d59" stroke-width="2.5"/>`}</g>`).join('')}</g>`:''}
+    ${design.placed.includes('lantern')?`<g data-decoration="lantern" transform="translate(${lanternX} ${lanternY})"><circle cy="-18" r="25" fill="#fff1b5" opacity=".45"/>${painted?paintedGardenLantern():`<path d="M-2-39V16M-10 16H10M-10-35H10" stroke="#736851" stroke-width="4" stroke-linecap="round"/><rect x="-12" y="-32" width="24" height="25" rx="5" fill="#f3d68a" stroke="#8f7650" stroke-width="2"/><path d="M0-27v15" stroke="#fff6d2" stroke-width="5" stroke-linecap="round"/>`}</g>`:''}
   </svg>`;
-  const theme=design.theme??'meadow';if(theme==='meadow'||painted)return image;
+  const theme=design.theme??'meadow';if(theme==='meadow'||painted)return scoped(image);
   // 기본 SVG 바이트를 보존하고 배경 팔레트만 바꿉니다. 꽃·핍·장식에는 필터를 씌우지 않습니다.
   const sky=theme==='sunset'?'<g data-sky="sunset"><circle cx="380" cy="49" r="30" fill="#ffe7a6"/><path d="M293 40h43m65 27h40" stroke="#fff2d0" stroke-width="5" stroke-linecap="round" opacity=".7"/></g>':`<g data-sky="starlight"><path d="M395 18a25 25 0 1 0 16 40 24 24 0 0 1-16-40" fill="#f4e4b9"/>${[[144,29],[218,54],[296,23],[420,76],[347,66]].map(([x,y])=>`<path d="M${x} ${y-4}l2 3 3 1-3 2-2 3-1-3-3-2 3-1Z" fill="#fff1cd"/>`).join('')}</g>`;
   image=image.replace('<circle cx="380" cy="43" r="24" fill="#fff8dd" opacity=".8"/>',sky);
@@ -48,5 +51,5 @@ export function gardenArt(value:number,celebrate=false,selection?:GardenDesign,o
     :['#282b50','#656083','#716f87','#b2a9ae','#767390','#897b7d','#788584','#9aa28b','#69726c','#d9cfc7','#a59aa0','#818d84'];
   const original=['#faf2d9','#e4ecd6','#bdd1a4','#e2e7bd','#d0dfb9','#ad9170','#9dbf8c','#b1ca97','#85a774','#e8d8b2','#b1a481','#8eac7c'];
   for(let i=0;i<original.length;i++)image=image.replaceAll(original[i],backdrop[i]);
-  return image;
+  return scoped(image);
 }

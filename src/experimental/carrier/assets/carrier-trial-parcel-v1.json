@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "tool": "built-in image_gen",
+  "source": {
+    "name": "exec-a7cecc66-0a4a-4b9d-ba25-b77411900d73.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1124854,
+    "sha256": "6ae58c0e57e41fc4cc9bd5f3f6ba6911993d50994e190db9c065b0d06ad89f90",
+    "retained": "Pawblossom-builds/qa/integration-20261024/293-generated-seed-parcel.png"
+  },
+  "prompt": "Create an ORIGINAL premium casual garden puzzle game sprite component sheet, square canvas, transparent background. This is our own botanical game art, no existing game, brand, character, text or UI imitation. Polished tactile 2.5D hand-painted game icon quality matching luminous strawberry, blueberry, carrot, acorn and flower puzzle pieces: rounded sculpted volumes, warm soft key light from upper left, crisp readable edges, subtle rich gradients, gentle specular highlights, no photorealism. Exactly THREE separate isolated components on a 2x2 evenly spaced atlas: TOP LEFT quadrant a plump golden-sand linen seed pouch BODY ONLY, front view with slight top view, rounded base, rolled gathered mouth, small natural cord knot and a simple sculpted mint-green leaf emblem on the belly; NO leaves or stems sprouting from the mouth in this component. Body visually large and centered in its quadrant, generous transparent padding. TOP RIGHT quadrant one individual lush green LEFT sprout leaf with a short tapered stem at the lower right, leaf tip pointing upper left; whole leaf and stem isolated, bright midrib and softly curled edge. BOTTOM LEFT quadrant one individual lush green RIGHT sprout leaf, short tapered stem at lower left, tip pointing upper right; different natural curvature, matching light and material. BOTTOM RIGHT quadrant entirely empty transparent. No extra objects, particles, writing, borders, grid, outlines around quadrants or painted background. Keep each complete component wholly inside its own quadrant with generous clear space between them, never connected or overlapping another component. These pieces will be cropped and assembled into one pouch with two independently animated leaves; make the pouch feel delightful, valuable, highly legible at 40 pixels. Minimal compact contact shading only on the pouch silhouette, no wide cast ground shadow. Alpha transparent background, not a checkerboard.",
+  "processing": "Original RGBA crop, LANCZOS fit within120x120, centered on128x128 transparent canvas, lossless WebP. No recoloring/background removal/redrawing. Bounds use the main alpha component with8px padding; threshold used for bounds only, not alpha editing.",
+  "parts": {
+    "body": {
+      "path": "carrier-trial-parcel-body-v1.webp",
+      "crop": [
+        47,
+        56,
+        656,
+        654
+      ],
+      "fit": [
+        120,
+        118
+      ],
+      "pixels": [
+        128,
+        128
+      ],
+      "bytes": 21054,
+      "sha256": "9b16d8304e64b96702d90fca5ba1d341df0c5e7552768fd7e5365182c33269f8",
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    "left-leaf": {
+      "path": "carrier-trial-parcel-left-leaf-v1.webp",
+      "crop": [
+        733,
+        151,
+        1206,
+        603
+      ],
+      "fit": [
+        120,
+        115
+      ],
+      "pixels": [
+        128,
+        128
+      ],
+      "bytes": 12850,
+      "sha256": "2f626412d4c662fcd03f8f3460e74ea35ff866d478b353d9d0aa9e9793b70328",
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    "right-leaf": {
+      "path": "carrier-trial-parcel-right-leaf-v1.webp",
+      "crop": [
+        109,
+        725,
+        576,
+        1184
+      ],
+      "fit": [
+        120,
+        118
+      ],
+      "pixels": [
+        128,
+        128
+      ],
+      "bytes": 14296,
+      "sha256": "5949df483231c675ae7f4928367670766f669198a54cc5165a8d15336dcbb1e5",
+      "alpha": [
+        0,
+        255
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+/* 외곽 슬롯 크기는 기존 레이아웃이 소유합니다. 반응 얼굴과 관절은 형제로 유지합니다. */
+.pip-face{position:relative;display:block;width:100%;height:100%;border-radius:inherit;pointer-events:none;transform-origin:center bottom}
+.pip-face>img{display:block;width:100%;height:100%;object-fit:contain}
+.pip-face[data-mood="happy"]{background:radial-gradient(ellipse at 50% 72%,#fff0b7,transparent 72%)}
+.pip-idle-rig{position:absolute;inset:0;display:none;width:100%;height:100%;opacity:0;pointer-events:none;transform-origin:center bottom}
+.pip-idle-rig svg{display:block;width:100%;height:100%}
+.pip-rig-ear-left,.pip-rig-ear-back{transform-box:view-box}
+.pip-rig-ear-left{transform-origin:139px 108px}
+.pip-rig-ear-back{transform-origin:176px 95px}
+.pip-rig-eyelids{opacity:0}
+[data-idle-active="true"][data-idle-ready="true"]>.pip-face:not([data-mood]){opacity:0}
+[data-idle-active="true"][data-idle-ready="true"]>.pip-idle-rig{display:block;opacity:1;animation:pip-rig-breathe 3.8s ease-in-out infinite}
+[data-idle-active="true"][data-idle-ready="true"]>.pip-idle-rig .pip-rig-ear-left{animation:pip-rig-ear-left 8.3s ease-in-out infinite}
+[data-idle-active="true"][data-idle-ready="true"]>.pip-idle-rig .pip-rig-ear-back{animation:pip-rig-ear-back 11.7s ease-in-out infinite}
+[data-idle-active="true"][data-idle-ready="true"]>.pip-idle-rig .pip-rig-eyelids{animation:pip-rig-blink 6.4s step-end infinite}
+/* 반응 슬롯의 mood가 대기 관절보다 우선하며 외곽 슬롯은 움직이지 않습니다. */
+[data-idle-active="true"][data-idle-ready="true"]>.pip-face[data-mood]~.pip-idle-rig,
+[data-idle-active="true"][data-idle-ready="true"]>.pip-face[data-mood]~.pip-idle-rig *{animation:none}
+[data-idle-active="true"][data-idle-ready="true"]>.pip-face[data-mood]~.pip-idle-rig{display:none;opacity:0}
+@keyframes pip-rig-ear-left{0%,54%,66%,100%{transform:rotate(0)}57%{transform:rotate(-7deg)}60%{transform:rotate(3deg)}63%{transform:rotate(-1.5deg)}}
+@keyframes pip-rig-ear-back{0%,27%,39%,100%{transform:rotate(0)}30%{transform:rotate(5deg)}33%{transform:rotate(-2deg)}36%{transform:rotate(1deg)}}
+@keyframes pip-rig-blink{0%,91%,95%,100%{opacity:0}92%,94%{opacity:1}}
+@keyframes pip-rig-breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-1px) scale(1.012)}}
+@media(prefers-reduced-motion:reduce){.pip-idle-rig,.pip-idle-rig *{animation:none!important}.pip-idle-rig{display:none!important;opacity:0!important;transform:none!important}[data-idle-active="true"][data-idle-ready="true"]>.pip-face{opacity:1!important}}

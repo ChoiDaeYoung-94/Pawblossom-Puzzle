@@ -166,6 +166,10 @@ describe('Round 검사 전용 scheduler probe 합성 경계',()=>{
     const row=workerRow(0),trace=createTrace('round-parallel');trace.workers.push(row);receiveWorker({kind:'synthetic-worker-report',result:{kind:'command-result'},diagnostic:{schedulerProbe:{mode:privateValue,platform:privateValue,schedSysctl:privateValue,key:privateValue},sqliteTransactions:Array.from({length:9},(_,i)=>({connectionIndex:1,phase:'command',site:'transaction-commit',startedAtProcessMs:1,finishedAtProcessMs:9,outcome:'returned',scheduling:i?invalid:good,path:privateValue}))}},row);
     expect(row.diagnostic?.sqliteTransactions).toHaveLength(8);expect(row.diagnostic?.sqliteTransactionsTruncated).toBe(true);expect(row.diagnostic?.sqliteTransactions[0].scheduling).toEqual(good);expect(row.diagnostic?.sqliteTransactions[1].scheduling).toMatchObject({cpuStatus:'invalid',schedStatus:'invalid',windowStatus:'invalid',runqueueMs:null,envelopeMs:null});expect(row.diagnostic?.schedulerProbe).toEqual({mode:'linux-thread-v1',platform:'unsupported',schedSysctl:'unavailable'});expect(getter).not.toHaveBeenCalled();expect(safeRows(trace)).not.toContain(privateValue);
     expect(projectScheduling({...good,runqueueMs:11})).toMatchObject({schedStatus:'invalid',runqueueMs:null});
+    const recovery=['fixture','insert-rejected','inbox-lock-receive','inbox-lock-process','inbox-unlock-receive','reward-lock-retry','reward-unlock-advance','recovery-completed'];
+    const steps=[...recovery,privateValue].map((phase,index)=>({phase,startedAtMs:index,durationMs:1,raw:privateValue,path:privateValue}));
+    const projected=projectTrace({...trace,steps,raw:privateValue});expect(projected.steps.map(row=>row.phase)).toEqual(recovery);expect(JSON.stringify(projected)).not.toContain(privateValue);
+    expect(projectTrace({...trace,steps:[steps[8]]}).steps[0].phase).toBe('unknown');
   });
 });
 

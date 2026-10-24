@@ -1,14 +1,87 @@
 # 웹 자동 검증
 
-## 2026-10-24 · #265 보상 소비의 제한된 구간 관측
+## 2026-10-25 · #265 보상 worker 구간 관측의 현행 helper 통합 · 검증 전
 
-#122의 mainba7e0fd/CI40042202934 Node24 소비 BEGIN501.043106ms·BUSY5는 [개별 관측](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122#issuecomment-6377156204)으로 보존합니다. 기존 이벤트8개가 생성자 재시도 뒤 apply COMMIT을 자를 수 있어, 단발 reward Worker에만 opt-in으로 최대8개의 BEGIN/COMMIT/ROLLBACK 구간 요약을 추가했습니다. 기존8이벤트/5hook·constructor close/재시도·scheduler·500ms/5초/8worker·업무 기대·제품 원장/엔진은 유지합니다.
+기존 Draft269의 보상 worker opt-in 구간/역할/부모-Worker 시간 기준을 현재 helper에 통합 중입니다. #284 trusted prepare 실패/연결 닫힘, #287 Async 활성·소유 hook 조건부 복원, #317 고정8단계/family를 보존하고 구간 finish는 반환한 Sync cleanup에만 연결합니다. SQL/인수/오류 원문·receiver는 DTO에 추가하지 않습니다. 제품/src/server/public/Android·업무 기대·8이벤트/5hook·재시도·500ms/5초/8worker는 유지합니다.
 
-생성 단계에서 관측한 reward/round/unknown 역할과 근거, 각 호출 전/후·반환/예외, 종료 누락/잘림·scope끝 상태를 나눕니다. 이미 보존한 구간의 끝은 상한 뒤에도 갱신합니다. 부모 anchor/수신과 Worker origin/시작·끝/호출 포함관계가 모두 맞는 경우에만 clock verified이며 누락·불일치·불량 배열은 unavailable입니다. 이는 시간 기준 판정일 뿐 전체 기록 완전성·잠금 소유자/CPU·I/O 원인·업무 성공의 증명이 아닙니다. 호출 주변 샘플에는 관측 코드와 스케줄링 경계가 포함되며 순수 SQLite CPU 시간으로 해석하지 않습니다.
+원래00d6ef9 최초CI40045510648 Node22 3051성공1실패/Node24 3052성공과 round-worker command BEGIN BUSY5/conflict6기대7은 그대로 보존합니다. 새 span 옵션을 사용하지 않는 경로이며 원인/owner 미확정입니다. 실제1Worker clock 회귀는 원래 양Node span52개에 포함돼 실행됐고 성공8worker 전체DTO 별도수집과 구분합니다. 현재 통합의 검사/최초CI는 아직 미실행이며 녹색으로 원인 해결을 주장하지 않습니다.
 
-독립 검수에서 임의 own getter 호출과 Array Proxy length 접근을 찾아 수리했습니다. 새 상태 관측은 import 때 보존한 원본 native exec의 성공으로 확인한 receiver와 캐시한 공식 accessor만 사용합니다. 최초 실패/mock/bound/미검증 receiver는 null/unknown입니다. 기존 nativeBoolean/constructor-close 경로와 새 observer 미호출 보장은 구분하며 helper에 probe DB·SQL·close·추가 hook을 넣지 않았습니다. DTO는 own data/허용 enum/유한수만 투영하고 원문 SQL·인수·오류·경로·키·owner·receiver를 출력하지 않습니다. Proxy own-descriptor trap 자체는 별도 관측 한계입니다.
+## 2026-10-24 · #296 Native 여백 설정과 도구 버전
 
-최종 전용52개·타입3config, root/독립 재검수와 첫 로컬 전체47파일3,052개 성공입니다. 앞선 제한136개(219개 미실행)·중간39개를 최신 전체와 합산하지 않습니다. 실제8worker 업무 시나리오는 전체 검사에 포함됐고 clock 계약은 별도 실제1Worker 회귀로 확인했습니다. 성공한8worker 전체의 DTO를 별도로 수집했다고 표현하지 않습니다. 앱/src/server/public/빌드설정이 바뀌지 않아 로컬 두 웹 빌드는 기준03f의263 로그를 재사용하고 최초 PR CI의 두 빌드는 제출 뒤 확인합니다. 정확03f/mainCI40043775381 양Node3,000/store12/타입/두빌드 성공도 #265의 새 PR/main 검증과 구분합니다. 이번 보강은 #122 원인 해결이 아닙니다.
+웹 규칙/그림/저장/경제와 vendor를 바꾸지 않고 SystemBars `native` 설정 및 공식 CLI8.5.3 pin/lock을 적용했습니다. 구 CLI8.4.3 타입의 최초TS2322와 수정 후 타입3설정 성공을 구분합니다. Native 후보e285f97은 검증된300의86웹을 재사용했고 비웹은 설정JSON1개만 다릅니다. Native16개는 같은 Java의 UP-TO-DATE/기능15개 재사용이며 새 검사로 합산하지 않습니다. 기존78 production bundle을 검증/보존·복원해 세 flag false와 전수SHA를 확인했으며 웹 재빌드를 추가하지 않았습니다. 독립 소스 읽기의 차단사항은 없었고 API34/WebView124의 실제 화면/입력/표적 SDK 로그 관측은 Android 기록에 분리했습니다. 로컬 전체JS 검사는 설정만 바뀐 이 후보에서 반복하지 않았으며 필수 PR의 양Node 전체·타입/두 빌드와 정확main CI는 제출 뒤 확인합니다. 원장 #122와 별도 Chromium 캐시 원인을 해결로 합산하지 않습니다.
+
+## 2026-10-24 · #293 아트 준비·해제와 빌드 동일성
+
+현재 owner의 세 부품 해독·일부 실패·늦은 완료·반복 해제·같은 owner 교체·다른 부모로 이동한 이미지 정리·실제 크기0을8개로 검사했습니다. 초기 관련3파일52개는 성공했으나 직접 WebP import의 ambient 타입 누락(TS2307)이 있었고, 정적 `new URL(...,import.meta.url)`로 고친 뒤 최종8개/타입3설정과 최초 전체53파일3,210개가 성공했습니다. 이후 결과를 실패한 타입 검사와 합산하지 않습니다. 원장 #122의 이전 원인/잠금 소유자는 여전히 미확정입니다.
+
+최종 생산/시험 두 빌드와 checker가 성공했습니다. 생산78파일의 이름·크기·SHA는 #291 생산 결과와 모두 같고 시험86파일의 자체 WebP3개는 각 하나만 존재하며 metadata의 크기/SHA와 일치합니다. CI의 기존 생산 제외/시험 포함 검사에서 같은 경계를 확인합니다. 독립 읽기 검수의 추가 차단사항은 없었으며 PR/정확main CI·새 APK는 후속입니다. 기준 #291 PR292 최초CI40070083567과 정확main de330e4/CI40070388452는 양Node 각52파일3,202개·store12·타입/두 빌드 성공으로 보존합니다.
+
+## 2026-10-24 · #291 운반 목표의 격리와 원자적 회귀
+
+별도 `experimental-carrier-v1` 엔진38개와 페이지 수명6개를 포함한 최초 전체 검사는 Node24에서52파일3,202개 모두 성공했습니다. 기존 `BoardEngine.ts`·`levels.ts`·`state.ts`의 기준 SHA와100판/golden/RNG 기대를 유지합니다. 잘못된 입력·무효 교환·연쇄 한도 초과의 전체 rollback, 안정 carrier ID·일반 타일과 공동 중력·구멍별 연속 구간·출구 배송·보충·같은 시드 재시작과 조회의 RNG 무소비를 검사합니다. 성공→이동 소진→막힘의 종료 우선순위와 교환 후 막힘도 포함합니다.
+
+페이지 수명은 BFCache 재진입의 새 세대·이전 비동기 Native handle 폐기·새 상태 우선·등록 실패 중 비활성 보존을 검사합니다. 실제 persisted BFCache/Native HOME 관측으로 표현하지 않습니다. 최종 생산/시험 빌드와 각 타입3설정, store12개가 성공했습니다. 생산78파일에는 시험 HTML/entry/chunk/규칙/링크가 없고 시험83파일에는 별도 HTML과 내부 script가 있습니다. 동일 확인을 CI의 기존 세 flag 검사와 함께 수행합니다. 검사 시간·worker·기대는 완화하지 않았으며 원장 #122의 이전 간헐 실패는 미해결로 보존합니다. Node22·PR/정확main CI와 새 APK는 후속 확인입니다.
+
+## 2026-10-24 · #285 callback await·close의 관측 수명
+
+검사 소스a49dbc8은 기존 Sync의 즉시·무조건 복원/Promise 참조를 유지하고 별도 Async scope에서 생성→서명 await→adapter-call→close 완료까지5개 hook을 유지합니다. Async만 설치 descriptor 전체 속성이 같은 항목을 복원하며 foreign 변경·삭제를 보존/실패 표시하고, scope 뒤 남은 wrapper는 원래 호출만 실행합니다. 설치·clock·기록·복원 실패가 업무 반환/오류 참조를 덮지 않습니다. #282 trusted prepare 대응과 기존 exec/Statement·retry 함수는 보존합니다.
+
+동일callback8worker의 diagnostics+sqliteDiagnostics+action undefined에만 연결하고, own-data/배열 length·index/최대8행/허용목록·유한 수치의 선택 DTO로 missing·invalid·유효 empty를 구분합니다. 원래 nativeObservation literal·3worker/default/action/child 출력과 신규1/중복7/DB행수 기대는 유지합니다. 원문 SQL/인수/claim/경로/stack/receiver/rawError는 출력하지 않습니다. 실제 worker의 await 뒤 adapter transaction과 close 후 복원을 확인했습니다.
+
+관련 첫4파일118개·기존 Sync 좁은58성공263skip·타입3설정·최종 최초 전체49파일3,117개가 성공했고 독립 읽기 검수에서 차단사항은 없었습니다. 최종 생산 빌드/타입3설정 성공과78웹파일 전수SHA가 기존 게임4dbd754와 같음을 확인했습니다. testing은 같은 제품 소스의4db 근거 재사용이며 Node22/신규 PR·정확main CI는 제출 뒤 별도 확인합니다. 검사 전용 폴더는 절대 부모와 전용 prefix 확인 뒤 정리합니다.
+
+기준main3139e41 정확최초CI40060368749는 양Node48파일3,083개·store12·타입/두빌드 성공입니다. 옛b316의3callback/4constructor 오류와maina2 round BUSY·864 callback·과거redeem/timeout은 각각 원인 미확정으로 보존합니다. 이번 전체 녹색은 해결 근거가 아니며 관측 hook/clock/복제 비용도 경합 타이밍에 영향을 줄 수 있습니다. 새 실패를 만들기 위한 반복·동일head full/CI 재실행·500ms/5초/8worker/기대·seed 완화·추가DB/SQL/RPC/scheduler는 하지 않았습니다.
+
+## 2026-10-24 · #282 prepare 실패 연결의 닫힘 관측
+
+게임 코드를 바꾸지 않은 검사 소스d7a6bb2/최신main977b48a 정상 병합b316fcc는 같은 tree입니다. 모듈 초기 Node prepare 함수 참조와 오류의 own-data SQL code를 확인한 경우만 receiver를 대응합니다. Node24의 isOpen은 own getter/prototype 없음이라는 별도 관측을 반영해 임의 getter를 브랜드 근거로 쓰지 않습니다. foreign/mock·잘못된 this·위조 prototype/Proxy는 미관측을 유지하며 기존 exec/Statement·DTO·worker·재시도 함수는 바꾸지 않습니다. 이는 receiver 식별이며 options getter 등이 던진 SQL 코드 오류까지 엔진 발생 증명으로 취급하지 않습니다. 악성 preload 이전까지 보증하는 계약은 아닙니다.
+
+실제 임시 DB reserved→exclusive 잠금 계획의 BEGIN/prepare BUSY5 두 개·닫힘2개/isOpen false·생성2회/대기25ms1회/두 번째 비재시도·오류 참조/descriptor 복원을 확인했습니다. 수정 전 표적9개 중2개 예상 실패와 수정 후9개 성공을 분리 보존합니다. 기존 좁은 관련54성공267skip·타입3설정도 성공했습니다. 최종 소스의 생산 빌드/타입3설정은 성공했고,78개 전체 웹 파일 SHA는4dbd754 생산 빌드와 같습니다. testing은 같은 제품 소스의4db 근거를 재사용하며 신규 PR CI는 별도 확인합니다. 검사 임시 폴더는 해석한 절대 경로의 부모·전용 prefix를 확인한 뒤 정리합니다.
+
+첫 전체는48파일3,082성공1실패입니다. reward-ledger:102:222 동일callback8worker의 신규1개는 통과/중복 기대7·실제0으로 실패했습니다. index4 신규true,2·5·6 callback storage-unavailable,0·1·3·7 constructor worker-error이며8개 보고 수신/잘림·관측실패 없음입니다. 뒤 DB행수 assertion은 미실행이고 native SQL·실제 연결 close·owner/원인은 미관측입니다. wrapper의 not-opened/returned는 native 연결 상태와 구분합니다. 원문282-full-first.log/안전요약을 #122에 보존하며 main864·276로컬redeem/정확maina2 round 실패와 같은 원인으로 합치지 않습니다. callback await 이후 native scope는 아직 미구현입니다. 같은head 재실행·500ms/5초/8worker/기대 완화는 하지 않았습니다.
+
+기준 main977b48a 정확최초CI40059657083은 양Node47파일3,074개·store12·타입/두빌드가 성공했습니다. 이 성공과 prepare 관측 성공을 이번 callback 실패의 해결로 표현하지 않습니다. 신규 PR/main 최초 검증은 제출 뒤 따로 확인합니다.
+
+## 2026-10-24 · #272 장애물 재질·상자 사분면 파손
+
+최종 게임 소스4dbd754는 자체256픽셀 WebP3개67,516바이트를 보드·목표·미리보기·제거 피드백에 연결하고 기존 SVG·texture key·상자51/낙엽31·24/숫자·규칙/RNG를 유지합니다. 상자가 실제로 타격된 칸만 동일 중심·51픽셀·회전0의128² 사분면4개로 갈라집니다. 정상 texture·5개 예산·전부 생성/등록 성공 때만 원본을 숨기며 모션 감소·예산 부족·텍스처 불량·부분 실패에는 원본을 유지합니다. 기존120객체 상한·250–295ms·해소 대기·종료 정리를 유지하고, 투명도만 SineIn으로 늦게 줄입니다. 출처/프롬프트/해시는 art/obstacles-v4.json에 보존합니다.
+
+최종 소스의 최초 관련2파일275개·타입3설정·최초 전체47파일3,074개·testing/production 두 빌드/플래그·독립 읽기 검수가 성공했습니다. 중간7324와720의 전체3,057개·빌드는 별도 근거이며 최종 성공 수에 합산하지 않습니다. store12개는 동일 store 입력의7324 검사이며 신규 PR/main CI는 제출 뒤 별도로 확인합니다.
+
+실제 일반 게임과 분리된 고정 Phaser판에서 최종 소스의3상자/12사분면과 원본 중복 없는 파손을 확인했고, 사진 검수용 루프 정지 뒤 재생해1회90점/상자0 정산을 확인했습니다. 모션 감소는 파편0/원본3개 alpha1 뒤 동일 정산입니다. 정상 모드의 특정 샘플 alpha0.5776–0.6900은 해당 해소 단계의 관측일 뿐 이전 샘플과 같은 경과시간/FPS 비교가 아닙니다. 임시 HTML은 해시 보존 뒤 제거하고 탭11·12를 닫았습니다. 중간7324의 실제100번에서 인접 클릭33회30점/상자4→3와7행6열 낙엽1겹,EN320의232정사각/넘침 없음/같은 진행을 확인했습니다. 최종4db에서도 KO390·정상2번19회270점/1별40코인 복귀를 확인했습니다. 초기 좌표 시도·옛 화면/숨겨진 점수 선택기의 대기 실패는 입력 결함으로 확정하지 않습니다. 최종 Android·사용자 감각 검수는 아직입니다.
+
+기준 maina2e1cb3의 정확최초CI40057347323은 Node24 round-ledger:505:179의8worker command에서 적용1회 통과/충돌 기대7·실제6,worker5 BEGIN BUSY5/501.567980ms로3,044성공1실패·후속단계 skipped,Node22검증은 성공입니다. 506행 최종 DB revision은 미검증이며 owner/원인은 미확정입니다. 원문·안전요약과 #122comment6379297368을 보존합니다. PR281 headf63 최초 양Node3,045개 성공 및 이번3,074개 성공을 해결로 표현하지 않으며 같은head 재실행·500ms/5초/8worker/기대 완화는 하지 않습니다. 마지막 정확 녹색main156000e/CI40055884414와 구분합니다.
+
+## 2026-10-24 · #276 정원·돌봄 핍과 자체 소품
+
+게임 소스3d7184c와 최신 main156000e를 정상 병합한07b801b는 같은 tree입니다. 활성 정원 또는 핍 화면의 한 개체에만 기존 분리된 귀·호흡·눈깜박임을 연결하고, 먹이·놀이·인사·돌봄·꽃 교감·성장은 기존 반응이 먼저 표시됩니다. 정원만 하단 정렬하며 header/map의 중앙 정렬과 반응2400ms·성장450ms·가격·소유·저장을 유지합니다. 자체 리본/물뿌리개 WebP35,756바이트의 프롬프트·원본/결과 해시·기계적 가공은 art/pip-accessories-v1.json에 보존했습니다. 해독 성공 뒤 SVG를 대체하고 실패·교체·dispose의 소유권을 보호합니다.
+
+관련5파일462개·타입3종·store12개·testing/production 두 웹 빌드와 flags가 성공했습니다. 실제 공식 체험에서 먹이6회/60성장24친밀·소품 구매/재착용·돌봄 후 리본 복귀·별100→98 심기·무료 꽃 교감·모달·KO390/EN320·640/모션 감소를 확인했습니다. 놀이 별도 체험의10코인/4성장10친밀도 기존대로이며, 체험 종료 뒤 정상1별40코인/핍0·0/2번19회270점과 header 중앙정렬이 복원됐습니다. 언어 전환은 pip-play 초점과 내부 스크롤304→302를 유지했으며 픽셀 동일로 표현하지 않습니다. 이 변경의 Android·사용자 감각 검수는 아직입니다.
+
+첫 로컬 전체는47파일3,044성공1실패입니다. reward-redemption:146:429의8worker 영구소비 첫 voucher 종류 검증에서 worker0만 redeemed/나머지7은 reward-open worker-error이며, 첫 BEGIN의BUSY5·실패연결 close 뒤25ms 재시도·두 번째 prepare의BUSY5(site unknown)가 관측됐습니다. 성공 worker의 redeem COMMIT 호출1,205.022ms는 반환 관측이며 실제 잠금 소유자·지연 원인이 아닙니다. 해당 테스트의 후속 소비1회·같은grant·런타임 권한 검증은 실행되지 않았고 직접 DB행수 검사는 없습니다. 원문276-full-first.log와 별도 안전 요약을 #122에 보존하며 옛main864 callback8worker 실패와 합치지 않습니다. 재실행·500ms/5초/8worker/기대 완화는 하지 않았습니다. 기준main156000e의 정확최초CI40055884414는 양Node46파일3,027개·store12·타입/두빌드 성공이며 이번 로컬 실패의 해결 근거가 아닙니다. 신규 PR/main 검증은 제출 뒤 별도 확인합니다.
+
+## 2026-10-24 · #279 퍼즐 밖 객체 그리기
+
+게임 소스814e599는 등록된 Board의 public Systems.setVisible을 현재 route에 맞춥니다. 퍼즐 모달 뒤는 표시하고 나머지 경로만 객체 그리기를 끄며 루프·기존 pause/resume·CREATE·POST_RENDER 교체·타이머·좌표·규칙은 유지합니다. 관련 UI412개·타입3종·첫 로컬 전체46파일3,027개·testing/production 두 웹 빌드/플래그·독립 읽기 검수가 성공했습니다. 실제 지도→퍼즐의344정사각/즉시 키보드·포인터3행3열 선택, 새 테스트100의34회0점/비정형·3목표·입력과 정상2번19회270점/1별40코인 복귀,640가로241정사각/넘침 없음을 확인했습니다.
+
+별도 실제 BoardScene 관측에서 pause는42 Scene render/1,036.5ms, CSS 숨김+pause도37/1,015.7ms였습니다. sys.visible false의 대안 관측은0 Scene render와144 POST_RENDER/1,000.8ms, 재표시는39/1,047ms였습니다. 이는 독립 시제품의 호출 수이며 실제 기기 FPS/배터리 개선률·OS 배경 성능 보장이 아닙니다. 임시 HTML은 해시 보존 후 저장소에서 제거하고 탭/5188 서버를 정리했습니다. 루프를 sleep하지 않아 교체용 프레임은 유지합니다.
+
+기준 main8648468의 정확최초CI40054328452는 Node24 reward-ledger:102:222의 동일callback8worker에서 중복0/기대7로3,024성공1실패/후속단계 skipped, Node22검증은 성공입니다. 응답 index3 신규true/나머지7 storage-unavailable·모두close반환이며 native는 not-observed입니다. DB행수 assert·BUSY/실제 SQL·owner/원인은 미관측입니다. 첫 PR head3390/CI40054034171의 성공·동일tree 및 마지막 녹색 main9a0a8f0/CI40053819175와 구분하며 #122comment6378800050에 보존합니다. 이번 UI 로컬 녹색으로 해결 처리하거나 같은head 재실행·제한 완화를 하지 않습니다.
+
+## 2026-10-24 · #277 서로 다른 claim 3worker의 반환 관측
+
+PR275 head88803d69의 첫CI40053027243은 Node22 reward-ledger:106:166에서 실패했습니다. 서로 다른 claim/transaction·동일 round의3worker 중 신규1개 확인은 통과했지만 round-closed 수는 기대2/실제0이며, 다른2종류·BUSY·DB행수·잠금 owner/원인은 미관측입니다. Node22 전체3,024성공1실패/후속store·type·build skipped와 Node24 성공을 구분하며 원문과 Draft275를 #122comment6378622242에 보존합니다. 현재 main25aad48의 정확CI40051625911 양Node3,016개·store12·타입/두빌드 성공은 이 새 실패의 해결 근거가 아닙니다.
+
+해당3worker 사례에 기존 trace3/task.meta/diagnostics/context만 연결했습니다. helper·제품 코드·입력·worker3개·기대1+2·500ms·5초·RNG·추가 DB 연결은 바꾸지 않았습니다. 신규 head의 관련2파일75개·타입3종과 독립 읽기 검수가 성공했으며 필수CI는 별도 확인합니다. 얻는 것은 반환 종류/코드·결과 또는 오류 단계·close 결과이며 nativeObservation은 not-observed입니다. SQL/BUSY·DB행수·owner·timeout 중단 위치를 추가로 관측하지 않습니다. envelope 복제·trace 투영 비용이 경쟁 타이밍을 바꿀 수 있어 녹색을 원인 해결로 취급하지 않으며 같은head 검사 재실행도 하지 않습니다.
+
+## 2026-10-24 · #267 고밀도 표시 검증과 로컬 timeout 분리
+
+제품 코드06b500a는480월드/56칸/16여백을 유지하고960버퍼·zoom2·중심240·CREATE 전 preRender와 down/up 월드 역변환을 사용합니다. SVG는200픽셀로 읽고 두 Text는 최초 생성 style의resolution2로 설정합니다. 실제 별도 Phaser WebGL/Canvas에서 첫 렌더0프레임의44/436/밖488좌표·합성 첫 선택6,6, 실클릭3,3·여백 드래그·새Scene·320리사이즈·비정형 키보드, 숫자14×23→28×46/체크29×34→58×68과style/source해상도2/2를 확인했습니다. 대역과 실제 렌더를 구분하며 일반 게임 저장/RNG를 주입하지 않았습니다.
+
+관련654개·타입3설정·testing/production 빌드/플래그는 성공했지만 최초 로컬 전체는46파일3,015성공1실패입니다. callback-inbox:80의8worker테스트가5초timeout(표시5,400ms)이며 receive/process 단계·assert실행·worker종료/DB행수·원인/소유자는 로그상 미확인입니다. #122comment6377987115와 Git밖267-full-first.log/독립 읽기 분석에 보존했습니다. 같은head 전체/CI 재실행·기대/시간/8worker 완화 없이 최초 PR 필수검사로 진행하며 이번 표시 성공을 원장 해결로 표현하지 않습니다. 기준main8fd9b69의 정확최초CI40047466775 양Node3,003개·store12·타입/두빌드 성공과도 구분합니다.
+
+동일 소스의 내부APK는 LD5554에서 기존23회140점/목표9·6을 업데이트 복원했고, 실제 보드 밖 아래/오른쪽 종료·회전·정상완료1별40코인·다음판키보드·시험100의비정형/상자4→3/낙엽2→1·일반2복귀/백그라운드·cold재시작을 확인했습니다. Native16개(기능15+scaffold1)는 새 실행/오류0, appLint오류0·기존경고15입니다. 예비 IAB 루프값과 Android HWUI/SurfaceFlinger는 실제 폰/JS·GPU FPS 보장이 아니며 상세 범위는 Android 기록과 Git밖QA에 보존합니다.
+
 ## 최신 통합 근거 · 2026-10-18 · #139
 
 구현·검사 기준 main `ca57341fbd269d82cfac63d1be9f173384ad68cc`의 [CI39111374076](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39111374076)에서 Node22·24 각각35파일2,349/2,349·스토어12/12·타입·production/testing 빌드/구분 검사가 성공했습니다. PR#140 head91f74cff와 실제 squash의 전체 tree가 같고 총괄 독립 관련136개·타입·LF SHA/production 동일 확인도 보존했습니다. [최신 전체 통합·실패 구분](android-release.ko.md)을 우선하며 이번 #139는 문서5개만 변경합니다. 새 문서 PR/head와 실제 main CI는 제출 뒤 별도로 확인합니다.

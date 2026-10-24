@@ -1,0 +1,71 @@
+{
+  "id": "map-windmill-rig-v1",
+  "generator": "built-in image_gen",
+  "date": "2026-10-24",
+  "prompt": "Use case: stylized-concept. Asset type: a production game sprite atlas for ONE original garden windmill landmark with detachable rotor. Create an original warm hand-painted dimensional miniature windmill with a squat cream plaster body, chestnut timber doorway, curved muted terracotta roof, mossy grassy stone footing, attractive rounded silhouette and restrained fine shading. Soft sunlight from upper left. Match a cozy painterly garden mobile puzzle, appealing for adult casual players, rich material separation and crisp silhouette at 80px. This is an original asset, no existing game branding or copied designs. Square transparent RGBA canvas arranged as TWO separate well-spaced components on the SAME atlas: LEFT HALF is the entire windmill tower including roof and footing, no blades at all, leave a visible central wooden spindle on the front of tower near upper-middle; RIGHT HALF is a separate symmetrical front-facing four-blade rotor centered in its own space, cream sail panels with chestnut wooden braces and circular center hub, exactly four arms at right angles with balanced radii. Rotor is approximately half the height of the tower, rendered straight-on without perspective distortion so it can rotate around the central hub. Tower three-quarter front view, little perspective, rotor front-facing. No extra trees flowers clouds labels frame UI ground plane scenery. Actual transparent background, generous transparent padding, no cast shadow outside the small footing. No text, no characters, no checkerboard. Keep the two components disjoint so each can be cropped separately and layered in code.",
+  "reference": "No copied game assets; original prompt only",
+  "original": "exec-0c7d35b8-e907-4ab9-bed8-8d0de9dbe511.png",
+  "processing": "Copy PNG unchanged; SVG viewBox atlas cells, no pixel repaint/crop/resize",
+  "quality": "prototype; final taste approval pending",
+  "source": "Built-in original exec-0c7d35b8-e907-4ab9-bed8-8d0de9dbe511.png",
+  "width": 1774,
+  "height": 887,
+  "mode": "RGBA",
+  "bytes": 1298077,
+  "sha256": "4159022b36e1f7991208ce9f240c0edb2b96867f299f6fb90f0f7700b121b785",
+  "alphaExtrema": [
+    0,
+    255
+  ],
+  "fullAlphaBounds": [
+    0,
+    0,
+    1758,
+    887
+  ],
+  "leftAlphaBounds": [
+    0,
+    0,
+    883,
+    887
+  ],
+  "rightAlphaBoundsRelative": [
+    1,
+    35,
+    871,
+    887
+  ],
+  "packaging": "No image pixels edited; original atlas to be copied unchanged. SVG viewBox/clip uses disjoint cells.",
+  "asset": "public/assets/campaign/windmill-rig-v1.png",
+  "sourceAtlasUnchanged": true,
+  "cells": {
+    "body": {
+      "viewBox": [
+        0,
+        0,
+        887,
+        887
+      ],
+      "x": -20,
+      "y": 12,
+      "width": 100,
+      "height": 100
+    },
+    "rotor": {
+      "viewBox": [
+        887,
+        0,
+        887,
+        887
+      ],
+      "localX": -39,
+      "localY": -43,
+      "width": 78,
+      "height": 78,
+      "pivot": [
+        51.5,
+        57
+      ]
+    }
+  }
+}

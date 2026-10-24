@@ -13,6 +13,14 @@ import {t, type TextKey} from '../src/i18n';
 import {icon as renderIcon} from '../src/icons';
 import {specialTileArt,specialArtKinds,specialBodyKey,specialBodyPath} from '../src/SpecialTileArt';
 import * as paintedGardenArt from '../src/GardenPaintedArt';
+import * as gardenStructureArt from '../src/GardenStructureArt';
+import * as boardDisplay from '../src/BoardDisplay';
+import {campaignScenery} from '../src/CampaignScenery';
+
+import {gardenGoals,goalNextStep,nextGardenGoal} from '../src/GardenGoals';
+import {previewGardenPreset} from '../src/GardenPresets';
+import {gardenPresetPreview} from '../src/GardenPresetsUI';
+import {pipTendingArt} from '../src/PipTending';
 
 // 테스트에만 사용하는 Node API입니다. 별도 @types/node 설치 없이 런타임에서 읽습니다.
 const fsModule = 'node:fs', vmModule = 'node:vm';
@@ -53,6 +61,7 @@ class ElementStub {
   classList = { add() {}, remove() {}, toggle() {} };
   constructor(selector: string) { this.id = selector.slice(1); this.hidden = selector !== '#puzzle-view'; }
   setAttribute(name:string,value:string) {this.attributes[name]=value;}
+  getAttribute(name:string) {return this.attributes[name]??null;}
   removeAttribute(name:string) {delete this.attributes[name];}
   append(_child:ElementStub) {}
   before() {}
@@ -67,6 +76,7 @@ class ElementStub {
   querySelectorAll(_selector:string):ElementStub[]{return [];}
   toggleAttribute(name:string,force?:boolean) {if(name==='disabled')this.disabled=force??!this.disabled;}
   addEventListener(name: string, callback: (event: { preventDefault(): void }) => void) { this.listeners[name] = callback; }
+  removeEventListener(name:string,callback:unknown){if(this.listeners[name]===callback)delete this.listeners[name];}
   showModal() { this.open = true; }
   close() { this.open = false; }
 }
@@ -80,6 +90,11 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const documentEvents:Record<string,()=>void>={};
   const windowEvents:Record<string,()=>void>={};
   const nativeEvents:Record<string,(state:{isActive:boolean})=>void>={};
+  const pipControllers:{pip:ElementStub;disposed:boolean;disposals:number;alignment:'center'|'bottom'}[]=[];
+  const accessoryControllers:{slot:ElementStub;kind:'ribbon'|'wateringCan';disposed:boolean}[]=[];
+  const natureControllers:{picture:ElementStub;disposed:boolean;disposals:number;activations:boolean[]}[]=[];
+  const pipLifecycle:string[]=[];
+  const sceneryControllers:{disposed:boolean;active:boolean}[]=[];
   let resolveNativeState!:(state:{isActive:boolean})=>void;
   const nativeState=new Promise<{isActive:boolean}>(resolve=>{resolveNativeState=resolve;});
   let stored = JSON.stringify({ version: 1, language: 'en', highestLevel: 2, completed: [1], stars: 1, coins: 40, garden: 0, music: true, sfx: true });
@@ -90,6 +105,25 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     if (!elements.has(selector)) {
       elements.set(selector, new ElementStub(selector));
       if(selector==='#stars-help'||selector==='#coins-help')elements.get(selector)!.hidden=false;
+      if(['#map-view','#village-view','#journal-view'].includes(selector)){
+        const view=selector.slice(1,-5),owned=view==='map'?['map-current-pip']:[`${view}-pip-actor`,`${view}-pip-image`,`${view}-pip-accessory`,...(view==='village'?['garden-nature']:[])];
+        let markup='';
+        Object.defineProperty(elements.get(selector)!,'innerHTML',{get:()=>markup,set:(value:string)=>{
+          pipLifecycle.push(`${view}-replace`);
+          for(const id of owned){const previous=elements.get('#'+id);if(previous)previous.isConnected=false;elements.delete('#'+id);}
+          markup=value;
+        }});
+      }
+      for(const view of ['village','journal']){
+        if(selector===`#${view}-pip-accessory`){
+          const kind=elements.get(`#${view}-view`)?.innerHTML.match(new RegExp(`id="${view}-pip-accessory"[^>]*data-pip-accessory="([^"]+)"`))?.[1];
+          if(kind)elements.get(selector)!.dataset.pipAccessory=kind;
+        }
+        if(selector===`#${view}-pip-image`){
+          const src=elements.get(`#${view}-view`)?.innerHTML.match(new RegExp(`id="${view}-pip-image"[^>]*src="([^"]+)"`))?.[1];
+          if(src)elements.get(selector)!.attributes.src=src;
+        }
+      }
       if(selector==='#result-dialog')elements.get(selector)!.querySelector=child=>elements.get(selector)!.innerHTML.includes(`id="${child.slice(1)}"`)?element(child):null;
       // 동적으로 만든 설정 도움말도 실제 onclick과 opener 참조로 검사합니다.
       if(selector==='#settings-view')elements.get(selector)!.append=child=>{elements.set('#'+child.id,child);};
@@ -101,6 +135,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   class SceneStub {
     engine:BoardEngine;
     stopped=false;
+    sys={settings:{visible:true},setVisible(value:boolean){this.settings.visible=value;}};
     constructor(public hooks: { onMove(items: number[], points: number): void; onReady():void; onNotice(key:string):void },snapshot?:BoardSnapshot,mask?:BoardMask,crates?:Position[]) {this.engine=new BoardEngine(8,8,seededRng(42),snapshot,undefined,mask,crates);}
     configureLeaves(piles:Parameters<BoardEngine['setLeaves']>[0]) {this.engine.setLeaves(piles);}
     shuffle(){this.engine.shuffle();return true;}
@@ -115,7 +150,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     focusKeyboard() {} cancelInput() {} keyboardKey() {} hideKeyboardCursor() {}
   }
   class GameStub {
-    constructor(){games++;}
+    constructor(public config:Record<string,unknown>){games++;}
     events = { on:(_name:string,callback:()=>void)=>{frame=callback;} };
     paused=false;pauses=0;resumes=0;
     scene = {
@@ -144,6 +179,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     resume() {this.suspended=false;this.resumes++;}
   }
   class FeedbackStub {
+    constructor(public options:{pip:ElementStub}){}
     calls:{kind:string;payload?:unknown}[]=[];
     beginMove(payload:unknown){this.calls.push({kind:'begin',payload});}
     show(payload:unknown){this.calls.push({kind:'show',payload});}
@@ -181,11 +217,36 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     Phaser: { Game: GameStub, AUTO: 0, Scale: { FIT: 0, CENTER_BOTH: 0 }, Core:{Events:{POST_RENDER:'postrender'}} },
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     specialTileArt,
+    ...boardDisplay,
+    gardenGoals,goalNextStep,nextGardenGoal,previewGardenPreset,gardenPresetPreview,pipTendingArt,
     bindPracticeBoard,
     cloneSnapshot,prepareShuffle,
     showResultPip:()=>{resultArtCalls++;},
     RoundFeedback:FeedbackStub,
-    createPipIdle:(pip:ElementStub)=>({setActive:(active:boolean)=>{pip.dataset.idleActive=String(active);}}),
+    campaignScenery,
+    createCampaignScenery:()=>{const controller={disposed:false,active:false,setActive(value:boolean){if(!this.disposed)this.active=value;},dispose(){this.disposed=true;this.active=false;}};sceneryControllers.push(controller);return controller;},
+    createPipIdle:(pip:ElementStub,_createImage?:()=>HTMLImageElement,alignment:'center'|'bottom'='center')=>{
+      const idle={pip,alignment,disposed:false,disposals:0,
+        setActive(active:boolean){if(!idle.disposed)pip.dataset.idleActive=String(active);},
+        dispose(){if(idle.disposed)return;idle.disposed=true;idle.disposals++;pipLifecycle.push(`dispose:${pip.id}:${pip.isConnected}`);delete pip.dataset.idleActive;delete pip.dataset.idleReady;},
+      };
+      pipControllers.push(idle);return idle;
+    },
+    createPipAccessoryArt:(slot:ElementStub,kind:'ribbon'|'wateringCan')=>{
+      const art={slot,kind,disposed:false,
+        setActive(active:boolean){if(!art.disposed)slot.dataset.artActive=String(active);},
+        dispose(){if(art.disposed)return;art.disposed=true;pipLifecycle.push(`accessory-dispose:${slot.id}:${slot.isConnected}`);delete slot.dataset.artActive;delete slot.dataset.artReady;},
+      };
+      accessoryControllers.push(art);return art;
+    },
+    createPipTendingPose:()=>({dispose(){}}),
+    createGardenNature:(picture:ElementStub)=>{
+      const nature={picture,disposed:false,disposals:0,activations:[] as boolean[],
+        setActive(active:boolean){if(!nature.disposed){nature.activations.push(active);picture.dataset.natureActive=String(active);}},
+        dispose(){if(nature.disposed)return;nature.disposed=true;nature.disposals++;pipLifecycle.push(`nature-dispose:${picture.id}:${picture.isConnected}`);delete picture.dataset.natureActive;delete picture.dataset.natureReady;},
+      };
+      natureControllers.push(nature);return nature;
+    },
     AudioManager: AudioStub, t: (_language: string, key: string) => key, icon: () => '',
     Capacitor: { isNativePlatform: () => native,getPlatform:()=>native?'android':'web',isPluginAvailable:(name:string)=>Boolean(name==='PawblossomTestBilling'?billingBridge:adsBridge) },
     App:{addListener:(name:string,callback:(state:{isActive:boolean})=>void)=>{nativeEvents[name]=callback;return Promise.resolve({remove(){}});},getState:()=>nativeState,minimizeApp:()=>Promise.resolve()}, confirm: () => true,
@@ -206,9 +267,9 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const i18nExports:Record<string,unknown>={};
   vm.runInNewContext(i18nCode,{exports:i18nExports});
   Object.assign(context,i18nExports);
-  const gardenSpaceArtExports:Record<string,unknown>={};vm.runInNewContext(gardenSpaceArtCode,{exports:gardenSpaceArtExports,require:()=>paintedGardenArt});Object.assign(context,gardenSpaceArtExports);
+  const gardenSpaceArtExports:Record<string,unknown>={};vm.runInNewContext(gardenSpaceArtCode,{exports:gardenSpaceArtExports,require:(name:string)=>name==='./GardenPaintedArt'?paintedGardenArt:gardenStructureArt});Object.assign(context,gardenSpaceArtExports,gardenStructureArt);
   const gardenSpacesUIExports:Record<string,unknown>={};vm.runInNewContext(gardenSpacesUICode,{exports:gardenSpacesUIExports,require:(name:string)=>name==='./i18n'?i18nExports:name==='./gardenSpaces'?gardenSpacesExports:gardenSpaceArtExports});Object.assign(context,gardenSpacesUIExports);
-  const gardenExports:Record<string,unknown>={};vm.runInNewContext(gardenCode,{exports:gardenExports,require:(name:string)=>name==='./gardenDesign'?gardenDesignExports:paintedGardenArt});Object.assign(context,gardenExports);
+  const gardenExports:Record<string,unknown>={};vm.runInNewContext(gardenCode,{exports:gardenExports,require:(name:string)=>name==='./gardenDesign'?gardenDesignExports:name==='./GardenPaintedArt'?paintedGardenArt:gardenStructureArt});Object.assign(context,gardenExports);
   vm.runInContext(stateCode, context);
   Object.assign(context, stateExports);
   vm.runInContext(mainCode, context);
@@ -218,7 +279,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   return {
     setStorageFails:(value:boolean)=>{storageFails=value;},disk:()=>[...storageValues],
     resultArtCalls:()=>resultArtCalls,frame:()=>frame(),games:()=>games,destroys:()=>destroys,
-    documentEvents,windowEvents,nativeEvents,resolveNativeState,
+    documentEvents,windowEvents,nativeEvents,resolveNativeState,pipControllers,pipLifecycle,accessoryControllers,natureControllers,sceneryControllers,
     element, run: (code: string) => {const result=vm.runInContext(code, context);if(autoFrame)frame();return result;},
     resultTimers: () => [...timers.values()].filter(timer => timer.ms === 300),
     flushResults: () => [...timers].filter(([,timer]) => timer.ms === 300).forEach(([id,timer]) => {timers.delete(id);timer.callback();}),
@@ -229,6 +290,65 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   };
 }
 
+describe('무료 추천 코디의 미리보기와 저장 경계',()=>{
+  const boot=()=>{const h=mainHarness();h.run("save.garden=2;switchView('village')");return h;};
+  it('선택·비교·취소는 원래 저장/정원을 보존하고 원래 버튼으로 초점을 돌립니다',()=>{
+    const h=boot(),before=h.run('JSON.stringify(save)'),disk=h.disk(),writes=h.writes();
+    h.run("globalThis.lookFocus=[];document.querySelector('#garden-look-open').focus=o=>lookFocus.push(o.preventScroll)");h.element('#garden-look-open').onclick();expect(h.run('lookDialog.open')).toBe(true);
+    h.run('spaceDialog.listeners.close({preventDefault(){}});lookDialog.listeners.close({preventDefault(){}})');expect(h.run('lookDialog.open&&Boolean(lookPreview)')).toBe(true);
+    h.element('#garden-look-butterfly').onclick();expect(h.run('lookDialog.innerHTML')).toContain(t('en','lookNeedButterflies'));
+    h.element('#garden-look-sunny').onclick();h.element('#garden-look-current').onclick();h.element('#garden-look-after').onclick();h.element('#garden-look-cancel').onclick();
+    expect(h.run('lookPreview')).toBeUndefined();expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('lookFocus')).toEqual([true]);
+  });
+  it('적용은 재화/핍/공간/보드를 보존한 한 payload이며 낡은 확인·같은 코디는 다시 쓰지 않습니다',()=>{
+    const h=boot(),before=h.run('JSON.stringify({coins:save.coins,stars:save.stars,pip:save.pip,spaces:save.gardenDesign?.spaces,board:scene.engine.board})'),writes=h.writes();
+    h.element('#garden-look-open').onclick();const old=h.element('#garden-look-confirm').onclick;old();
+    // SaveStore는 기존 본문과 복구용 백업을 각각 한 번 기록합니다.
+    expect(h.run('save.gardenDesign.flowers')).toEqual(['daisy','meadow','meadow','meadow','meadow']);expect(h.writes()).toBe(writes+2);expect(h.stored().gardenDesign.flowers[0]).toBe('daisy');
+    expect(h.run('JSON.stringify({coins:save.coins,stars:save.stars,pip:save.pip,spaces:save.gardenDesign?.spaces,board:scene.engine.board})')).toBe(before);
+    old();h.element('#garden-look-open').onclick();expect(h.run('lookDialog.innerHTML')).toContain(t('en','lookSame'));h.element('#garden-look-confirm').onclick();expect(h.writes()).toBe(writes+2);
+  });
+  it('저장 실패나 배경 전환·DOM 교체 후 낡은 확인은 수동 디자인을 덮어쓰지 않습니다',()=>{
+    for(const action of ['fail','hidden','replace','language','route']){
+      const h=boot(),before=h.run('JSON.stringify(save.gardenDesign)');h.element('#garden-look-open').onclick();const old=h.element('#garden-look-confirm').onclick;
+      if(action==='fail')h.setStorageFails(true);
+      if(action==='hidden')h.run('document.hidden=true;syncActivity()');
+      if(action==='replace')h.run('renderViews()');
+      if(action==='language')h.run("changeLanguage('ko')");
+      if(action==='route')h.run("switchView('journal')");
+      old();expect(h.run('JSON.stringify(save.gardenDesign)'),action).toBe(before);
+    }
+  });
+  it('체험 코디는 정상 지갑/정원/판을 저장하지 않고 체험 종료 시 버립니다',()=>{
+    const h=mainHarness(false,false,true),before=h.run('JSON.stringify(save)'),disk=h.disk();h.run("switchView('village')");expect(h.run('enterCareDemo()')).toBe(true);h.run("save.garden=2;renderViews()");
+    h.element('#garden-look-open').onclick();h.element('#garden-look-confirm').onclick();expect(h.run('save.gardenDesign.flowers[0]')).toBe('daisy');
+    h.run('exitCareDemo()');expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.disk()).toEqual(disk);
+  });
+});
+
+describe('핍 꽃 돌보기의 실제 화면 수명',()=>{
+  it('무료 Lv3 행동의 물뿌리개는 하나이며 저장/수치/판을 바꾸지 않고 숨김·모달·종료를 따릅니다',()=>{
+    const h=mainHarness();h.run("save.pip={growth:60,affection:40,owned:['ribbon'],equipped:'ribbon'};switchView('journal')");
+    const before=h.run('JSON.stringify(save)'),disk=h.disk(),writes=h.writes();h.element('#pip-tend').onclick();
+    const html=h.element('#journal-view').innerHTML;expect(html.match(/data-pip-accessory="wateringCan"/g)).toHaveLength(1);expect(html).toContain('pip-tending-scene');expect(h.element('#journal-pip-portrait').dataset.tendActive).toBe('true');
+    h.run('document.hidden=true;syncActivity()');expect(h.element('#journal-pip-portrait').dataset.tendActive).toBe('false');h.run('document.hidden=false;syncActivity()');
+    h.run('resourceDialog.open=true;syncActivity()');expect(h.element('#journal-pip-portrait').dataset.tendActive).toBe('false');h.run('resourceDialog.open=false;syncActivity()');
+    h.flushCareReaction();expect(h.element('#journal-view').innerHTML).not.toContain('pip-tending-scene');expect(h.element('#journal-view').innerHTML).toContain('data-pip-accessory="ribbon"');expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('정원 동작에는 핍 화면의 받침꽃을 덧붙이지 않고 재렌더/교체는 이전 반응을 되살리지 않습니다',()=>{
+    const h=mainHarness();h.run("save.pip={growth:60,affection:40,owned:[],equipped:'none'};switchView('village')");h.element('#garden-tend').onclick();expect(h.element('#village-view').innerHTML).not.toContain('pip-tending-scene');
+    // 이 VM의 표시 시각만 고정합니다. CPU/렌더가100ms 이내라는 가정을 두지 않습니다.
+    h.run("switchView('journal');const fixedTendNow=Date.now();Date.now=()=>fixedTendNow;careReactionStarted=fixedTendNow-900;renderViews()");expect(h.element('#journal-view').innerHTML).toContain('--tend-elapsed:900ms');
+    h.element('#pip-feed').onclick();expect(h.element('#journal-view').innerHTML).not.toContain('pip-tending-scene');expect(h.run('pipReaction')).toBe('feed');
+  });
+});
+
+describe('보드 고밀도 표시와 월드 분리',()=>{
+  it('Game 버퍼만960으로 만들고8x8 엔진과 화면 규칙은 유지합니다',()=>{
+    const h=mainHarness();expect(h.run('game.config.width')).toBe(960);expect(h.run('game.config.height')).toBe(960);
+    expect(h.run('scene.engine.rows')).toBe(8);expect(h.run('scene.engine.cols')).toBe(8);
+  });
+});
 describe('독립 스테이지 지도',()=>{
   const boot=()=>mainHarness(false,false,false,false,undefined,true,undefined,undefined,true);
   it('지도에서 부팅하고 보드는 같은 Scene으로 일시중단하며100단계 잠금/완료/현재 상태를 표시합니다',()=>{
@@ -262,6 +382,11 @@ describe('독립 스테이지 지도',()=>{
     h.element('#map-play').onclick();expect(h.run('previewDialog.innerHTML')).toContain('id="preview-remaining"');expect(h.run('previewDialog.innerHTML')).toContain('Moves remaining: 23.');
     h.run("confirmStagePreview(stagePreview,'continue')");expect(h.run('route')).toBe('puzzle');expect(h.run('JSON.stringify({round,moves,score,collected,save,board:scene.engine.board})')).toBe(state);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
   });
+  it('정원에서 숨은 지도 DOM의 scrollTop이0으로 줄어도 탐색 위치는 메모리에 보존합니다',()=>{
+    const h=boot();h.element('#campaign-scroll').scrollTop=613;const before=h.run('JSON.stringify(save)'),disk=h.disk(),writes=h.writes();
+    h.run("switchView('village')");h.element('#campaign-scroll').scrollTop=0;h.run('renderViews()');h.element('#campaign-scroll').scrollTop=0;
+    h.run("switchView('map')");expect(h.element('#campaign-scroll').scrollTop).toBe(613);expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
 });
 
 describe('보드 피드백 연결과 정산 경계',()=>{
@@ -270,7 +395,7 @@ describe('보드 피드백 연결과 정산 경계',()=>{
     const before=h.run('JSON.stringify({moves,score,collected,clearedLeaves,board:scene.engine.board,save})');
     h.run('boardFeedback.calls=[];scene.hooks.onStart();scene.hooks.onResolveVisual({cascade:1,removed:[{kind:0,x:44,y:44}],clearedLeaves:[],specialCreated:false,specialActivated:false})');
     expect(h.run('boardFeedback.calls.map(c=>c.kind)')).toEqual(['begin','show']);
-    expect(h.run('boardFeedback.calls[0].payload')).toEqual(h.run("levels[currentLevel-1].goals.map(g=>({key:String(g.kind),remaining:g.count-collected[g.kind],src:'/assets/tiles-v3/'+tileNames[g.kind]+'.webp'})).concat([{key:'leaves',remaining:0,src:'/assets/obstacles/leaf-pile.svg'}])"));
+    expect(h.run('boardFeedback.calls[0].payload')).toEqual(h.run("levels[currentLevel-1].goals.map(g=>({key:String(g.kind),remaining:g.count-collected[g.kind],src:'/assets/tiles-v3/'+tileNames[g.kind]+'.webp'})).concat([{key:'leaves',remaining:0,src:'/assets/obstacles-v4/leaf-pile.webp'}])"));
     expect(h.run('JSON.stringify({moves,score,collected,clearedLeaves,board:scene.engine.board,save})')).toBe(before);
     expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
     expect(h.element('#goals').innerHTML).toContain(`data-feedback-goal="${h.run('levels[currentLevel-1].goals[0].kind')}"`);
@@ -597,7 +722,7 @@ describe('스테이지 미리보기와 명시적 회차 교체',()=>{
   });
   it.each([22,30])('%s의 세 목표 또는 두 겹 낙엽은 원래 수량과 초기 이동을 표시합니다',id=>{
     const h=mainHarness();h.run('save.highestLevel=30');open(h,id);const html=h.run('previewDialog.innerHTML');expect(html.match(/class="preview-goal"/g)).toHaveLength(3);
-    if(id===30){expect(html).toContain('leaf-pile.svg');expect(html).toContain('two layers');}
+    if(id===30){expect(html).toContain('leaf-pile.webp');expect(html).toContain('two layers');}
     expect(html).toContain('preview-initial');expect(html).not.toContain('preview-remaining');
   });
 });
@@ -967,7 +1092,7 @@ function boardHarness() {
   const graphics: object = new Proxy({}, { get: () => () => graphics });
   class PhaserSceneStub {
     sys={isActive:()=>true};
-    cameras = { main: { setBackgroundColor() {} } };
+    cameras = { main: { setBackgroundColor() {},setViewport(){return this;},setZoom(){return this;},centerOn(){return this;},preRender(){},getWorldPoint(x:number,y:number){return {x,y};} } };
     add = { graphics: () => graphics };
     // 간단한 좌표 시나리오도 실제 Phaser의 정상 touch 필드를 갖추어 전달합니다.
     input = { on: (name: string, callback: (pointer: Pointer) => void,context?:unknown) => { handlers[name] = p=>callback.call(context??this,{wasTouch:true,wasCanceled:false,button:0,downTime:1,event:{touches:[{}]},...p} as Pointer); },off:(name:string)=>{delete handlers[name];} };
@@ -980,14 +1105,14 @@ function boardHarness() {
   }
   const engineExports: Record<string, unknown> = {}, boardExports: Record<string, unknown> = {};
   const motionExports={reducedMotion:()=>false};
-  const effectsExports:Record<string,unknown>={};vm.runInNewContext(effectsCode,{exports:effectsExports,require:()=>motionExports});
+  const effectsExports:Record<string,unknown>={};vm.runInNewContext(effectsCode,{exports:effectsExports,require:(name:string)=>name==='./BoardDisplay'?boardDisplay:motionExports});
   vm.runInNewContext(engineCode, { exports: engineExports });
   vm.runInNewContext(boardCode, {
     exports: boardExports,
     require: (name: string) => name === 'phaser' ? { default: {
       Scene: PhaserSceneStub,
       Scenes: { Events: { PAUSE: 'pause', RESUME: 'resume', SLEEP: 'sleep', WAKE:'wake', SHUTDOWN: 'shutdown', DESTROY:'destroy', CREATE:'create' } },Scale:{Events:{RESIZE:'resize'}},
-    } } : name==='./BoardEffects'?effectsExports:name==='./reducedMotion'?motionExports:name==='./SpecialTileArt'?{specialArtKinds,specialBodyKey,specialBodyPath}:engineExports,
+    } } : name==='./BoardDisplay'?boardDisplay:name==='./BoardEffects'?effectsExports:name==='./reducedMotion'?motionExports:name==='./SpecialTileArt'?{specialArtKinds,specialBodyKey,specialBodyPath}:engineExports,
   });
   const Constructor = boardExports.BoardScene as new (hooks: object) => {
     create(): void; paint: () => void; resetHint: () => void; pieces:unknown[][];
@@ -1003,15 +1128,25 @@ function boardHarness() {
   return { handlers, lifecycle, attempts, taps, scene };
 }
 
-describe('게임 블록 bitmap과 장애물 SVG 로더',()=>{
-  it('일반 여섯 소재는 image로 읽고 캐시된 그림은 재요청하지 않으며 장애물 SVG는 유지합니다',()=>{
+describe('게임 블록과 장애물 bitmap 로더',()=>{
+  it('100번 혼합 목표의 HUD·미리보기·제거 피드백은 같은 장애물 원본을 사용합니다',()=>{
+    const h=mainHarness(false,false,true);h.run('startLevel(100,true);scene.hooks.onStart()');
+    for(const name of ['leaf-pile','wooden-crate'])expect(h.element('#goals').innerHTML).toContain(`/assets/obstacles-v4/${name}.webp`);
+    const goals=h.run('boardFeedback.calls.find(call=>call.kind==="begin").payload') as {key:string;src:string}[];
+    expect(goals.find(goal=>goal.key==='leaves')?.src).toBe('/assets/obstacles-v4/leaf-pile.webp');
+    expect(goals.find(goal=>goal.key==='crates')?.src).toBe('/assets/obstacles-v4/wooden-crate.webp');
+    h.run("showStagePreview(currentLevel,'restart',document.querySelector('#restart'))");
+    for(const name of ['leaf-pile','wooden-crate'])expect(h.run('previewDialog.innerHTML')).toContain(`/assets/obstacles-v4/${name}.webp`);
+  });
+  it('소재와 장애물의 기존 key를 image로 읽고 캐시된 종류는 재요청하지 않습니다',()=>{
     const h=boardHarness(),images:string[][]=[],vectors:string[][]=[];
     const scene=h.scene as unknown as {preload():void;textures:{exists(name:string):boolean};load:{image(name:string,url:string):void;svg(name:string,url:string):void}};
-    scene.textures={exists:name=>name==='carrot'||name==='special-art-column'};
+    scene.textures={exists:name=>name==='carrot'||name==='special-art-column'||name==='leaf-single'};
     scene.load={image:(name,url)=>{images.push([name,url]);},svg:(name,url)=>{vectors.push([name,url]);}};
     scene.preload();
-    expect(images).toEqual([...['strawberry','blueberry','acorn','leaf','flower'].map(name=>[name,`/assets/tiles-v3/${name}.webp`]),...['row','bomb','rainbow'].map(kind=>[`special-art-${kind}`,`/assets/specials-v4/${kind}.webp`])]);
-    expect(vectors).toEqual(['leaf-pile','leaf-single','wooden-crate'].map(name=>[name,`/assets/obstacles/${name}.svg`]));
+    expect(images).toEqual([...['strawberry','blueberry','acorn','leaf','flower'].map(name=>[name,`/assets/tiles-v3/${name}.webp`]),...['row','bomb','rainbow'].map(kind=>[`special-art-${kind}`,`/assets/specials-v4/${kind}.webp`]),...['leaf-pile','wooden-crate'].map(name=>[name,`/assets/obstacles-v4/${name}.webp`])]);
+    expect(vectors).toEqual([]);
+    images.length=0;scene.textures.exists=()=>true;scene.preload();expect(images).toEqual([]);
   });
 });
 
@@ -1147,7 +1282,7 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     const h=mainHarness();h.run("save.highestLevel=6;startLevel(4)");
     h.run('scene.hooks.onMove([0,0,0,14,12,0],260,1,3)');
     expect(h.resultTimers()).toHaveLength(0);expect(h.run('clearedLeaves')).toBe(3);
-    expect(h.element('#goals').innerHTML).toContain('leaf-pile.svg');
+    expect(h.element('#goals').innerHTML).toContain('leaf-pile.webp');
     h.run('scene.hooks.onMove([0,0,0,0,0,0],20,1,1)');h.flushResults();
     expect(h.stored()).toMatchObject({completed:[1,4],stars:2,coins:80});
     h.run('startLevel(4);scene.hooks.onMove([0,0,0,14,12,0],260,1,4)');h.flushResults();
@@ -2027,7 +2162,7 @@ describe('나무상자 챕터와 별도 목표·저장 연결',()=>{
     expect(app.stored().inProgress.clearedCrates).toBeGreaterThanOrEqual(2);expect(app.stored().inProgress.crates[2][2]).toBe(0);expect(app.stored().inProgress.board[2][2]).not.toBeNull();
     const old=app.stored(),resumed=mainHarness(false,false,false,false,old);expect(resumed.stored().inProgress).toEqual(old.inProgress);
     resumed.run("switchView('village');showStagePreview(36,'map',document.querySelector('#settings-button'))");
-    expect(resumed.run('previewDialog.innerHTML')).toContain(t(language,'crateHint'));expect(resumed.run('previewDialog.innerHTML')).toContain('/assets/obstacles/wooden-crate.svg');
+    expect(resumed.run('previewDialog.innerHTML')).toContain(t(language,'crateHint'));expect(resumed.run('previewDialog.innerHTML')).toContain('/assets/obstacles-v4/wooden-crate.webp');
   });
   it('시험 챕터 36–40은 일반 기록과 보상을 보존합니다',()=>{
     const app=mainHarness(false,false,true),before=app.disk();app.run('showTestPicker()');app.element('#test-chapter-5').onclick();
@@ -2233,6 +2368,26 @@ describe('경로 표시 컨테이너와 메뉴 버튼의 이벤트 경계',()=>{
   });
 });
 
+describe('공동 정원 계획의 이동 전용 입력',()=>{
+  const initial=()=>({version:1,language:'ko',highestLevel:2,completed:[1],coins:100,stars:0,garden:1,music:true,sfx:true,tutorialSeen:true});
+  const snapshot='JSON.stringify({save,round,currentLevel,moves,score,board:scene.engine.board})';
+  it.each(['ko','en'] as const)('%s: 부족한 성장·별의 목적지에 이동하고 자동 소비/저장/회차 교체를 하지 않습니다',language=>{
+    const h=mainHarness(false,false,false,false,{...initial(),language});h.run("switchView('village')");
+    const before=h.run(snapshot),disk=h.disk(),writes=h.writes();
+    expect(h.run("sharedGardenPlan('village')")).toContain(t(language,'goalPlan'));expect(h.run("sharedGardenPlan('village')")).toContain('1 / 16');
+    expect(h.run("sharedGardenPlan('village')")).toContain(`aria-label="${t(language,'gardenBench')} · ${t(language,'goalCare')}"`);
+    h.element('#village-goal-bench').onclick();expect(h.run('route')).toBe('journal');
+    h.element('#journal-goal-bed-2').onclick();expect(h.run('route')).toBe('map');
+    expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('save.gardenDesign')).toBeUndefined();
+  });
+  it('완료/비활성·모달·오래된 DOM·체험 이전 버튼으로 계획을 실행하지 않습니다',()=>{
+    for(const guard of ['document.hidden=true','nativeActive=false','careProcessing=true',"document.querySelector('#tutorial-dialog').open=true", "document.querySelector('#village-goal-bench').isConnected=false"]){
+      const h=mainHarness(false,false,true,false,initial());h.run("switchView('village')");const before=h.run(snapshot);h.run(guard);h.element('#village-goal-bench').onclick();expect(h.run('route')).toBe('village');expect(h.run(snapshot)).toBe(before);
+    }
+    const h=mainHarness(false,false,true,false,initial());h.run("switchView('village')");const stale=h.element('#village-goal-bench').onclick;h.run('enterCareDemo()');stale();expect(h.run('route')).toBe('village');h.run('exitCareDemo()');expect(h.run('save.garden')).toBe(1);
+  });
+});
+
 describe('무료 정원 공간 교감',()=>{
   const initial=(language:'ko'|'en'='ko',garden=1,phase:0|1|2=2,style:'base'|'alt'='base')=>({version:1,language,highestLevel:61,completed:Array.from({length:60},(_,i)=>i+1),coins:180,stars:6,garden,music:true,sfx:true,tutorialSeen:true,pip:{growth:0,affection:0,owned:[],equipped:'none'},gardenDesign:{schema:1,flowers:Array.from({length:5},(_,i)=>i<garden?i===0?'daisy':i===1?'violet':'meadow':'meadow'),owned:[],placed:[],spaces:{...freshGardenSpaces(),pond:{phase,altOwned:style==='alt',style}}}});
   const roundState='JSON.stringify({round,currentLevel,moves,score,collected,board:scene.engine.board,inProgress:save.inProgress})';
@@ -2288,9 +2443,44 @@ describe('무료 정원 공간 교감',()=>{
 });
 
 describe('후반 정원 공간과 확정 전 미리보기',()=>{
+  it.each(['ko','en'] as const)('%s: 완성 쉼터/꽃아치는 별도 무료 활동·핍 위치/눈/꽃잎을 표시하고 회차와 저장을 보존합니다',language=>{
+    const spaces=freshGardenSpaces();spaces.shelter.phase=2;spaces.arch.phase=2;
+    const data={version:1,language,highestLevel:100,completed:Array.from({length:100},(_,i)=>i+1),coins:0,stars:0,garden:0,music:true,sfx:true,tutorialSeen:true,gardenDesign:{schema:1,flowers:Array(5).fill('meadow'),owned:[],placed:[],spaces}};
+    const h=mainHarness(false,false,false,false,data);h.run("switchView('village')");const before=h.run('JSON.stringify({save,round,moves,score,board:scene.engine.board})'),disk=h.disk(),writes=h.writes();
+    h.element('#garden-area-shelter').onclick();h.element('#garden-activity-rest').onclick();
+    expect(h.run('gardenActivity.kind')).toBe('rest');expect(h.run('careIdlePose()')).toBe(true);expect(h.run('gardenVisitor()')).toContain('pip-idle-blink-v2.webp');expect(h.run('gardenVisitControls()')).toContain(t(language,'gardenRestMoment'));
+    const same=h.run('gardenActivity');h.element('#garden-activity-rest').onclick();expect(h.run('gardenActivity')).toBe(same);const rest=h.run('gardenVisitor()');
+    h.run('document.hidden=true');h.documentEvents.visibilitychange();expect(h.element('#garden-nature').dataset.momentActive).toBe('false');h.run('document.hidden=false');h.documentEvents.visibilitychange();expect(h.element('#garden-nature').dataset.momentActive).toBe('true');
+    h.element('#garden-area-arch').onclick();expect(h.run('gardenActivity')).toBeUndefined();h.element('#garden-activity-arch').onclick();expect(h.run('gardenVisitor()')).not.toBe(rest);expect(h.run('gardenActivitySpots()')).toContain('garden-arch-petals');expect(h.run('gardenVisitControls()')).toContain(t(language,'gardenArchMoment'));
+    expect(h.run('JSON.stringify({save,round,moves,score,board:scene.engine.board})')).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    h.run("switchView('journal')");expect(h.run('gardenActivity')).toBeUndefined();expect(h.element('#garden-nature').dataset.momentActive).toBe('false');
+  });
+  it('기초/미복원 쉼터·꽃아치는 활동을 숨기고 체험 이전·모달·다른 구역 입력도 막습니다',()=>{
+    for(const area of ['shelter','arch'] as const)for(const phase of [0,1,2] as const){
+      const spaces=freshGardenSpaces();spaces[area].phase=phase;
+      const data={version:1,language:'ko',highestLevel:100,completed:Array.from({length:100},(_,i)=>i+1),coins:0,stars:0,garden:0,music:true,sfx:true,tutorialSeen:true,gardenDesign:{schema:1,flowers:Array(5).fill('meadow'),owned:[],placed:[],spaces}};
+      const h=mainHarness(false,false,true,false,data);h.run("switchView('village')");h.element('#garden-area-'+area).onclick();const kind=area==='shelter'?'rest':'arch',button=h.element('#garden-activity-'+kind),stale=button.onclick;
+      if(phase<2){expect(h.run('gardenActivitySpots()')).toBe('');button.onclick();expect(h.run('gardenActivity')).toBeUndefined();continue;}
+      h.run("document.querySelector('#tutorial-dialog').open=true");button.onclick();expect(h.run('gardenActivity')).toBeUndefined();h.run("document.querySelector('#tutorial-dialog').open=false");
+      h.run('enterCareDemo()');stale();expect(h.run('gardenActivity')).toBeUndefined();h.run('exitCareDemo()');h.element('#garden-area-flowers').onclick();stale();expect(h.run('gardenActivity')).toBeUndefined();
+    }
+  });
   const initial=(language:'en'|'ko'='en',clears=100)=>({version:1,language,highestLevel:Math.min(100,clears+1),completed:Array.from({length:clears},(_,i)=>i+1),coins:2000,stars:100,garden:5,music:true,sfx:true,tutorialSeen:true,pip:{growth:100,affection:100,owned:[],equipped:'none'}});
   const roundState='JSON.stringify({round,currentLevel,moves,score,collected,board:scene.engine.board,inProgress:save.inProgress})';
   const open=(h:ReturnType<typeof mainHarness>)=>{h.element('#garden-area-pond').onclick();h.element('#garden-space-restore').onclick();expect(h.run('spaceDialog.open')).toBe(true);};
+  it.each(['ko','en'] as const)('%s 다리 앞그림은 물결 뒤그림과 분리되고 미리보기·취소·무료 교감은 회차와 재화를 보존합니다',language=>{
+    const spaces=freshGardenSpaces();spaces.pond={phase:2,altOwned:true,style:'alt'};
+    const h=mainHarness(false,false,false,false,{...initial(language),gardenDesign:{schema:1,flowers:Array(5).fill('meadow'),owned:[],placed:[],spaces}});
+    h.run("switchView('village')");h.element('#garden-area-pond').onclick();
+    const disk=h.disk(),writes=h.writes(),round=h.run(roundState);h.element('#garden-activity-ripples').onclick();
+    const html=h.run('gardenWorkshop(false)');expect(html.match(/data-garden-structure-image="bridge"/g)).toHaveLength(1);
+    expect(html.indexOf('garden-activity-art')).toBeLessThan(html.indexOf('garden-structure-foreground'));
+    expect(html).toContain('cx="355" cy="193"');expect(html).toContain('rx="48" ry="13"');
+    h.element('#garden-space-base').onclick();expect(h.run('spaceDialog.innerHTML')).not.toContain('data-garden-structure-image="bridge"');
+    h.element('#space-preview-current').onclick();const preview=h.run('spaceDialog.innerHTML');
+    expect(preview.match(/data-garden-structure-image="bridge"/g)).toHaveLength(1);expect(preview).not.toContain('class="garden-structure-foreground"');
+    h.element('#space-preview-cancel').onclick();expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run(roundState)).toBe(round);
+  });
   it.each(['ko','en'] as const)('%s의4탭·큰 장면·현재/바뀔 모습 비교·취소는 저장/선택/회차를 보존하고 정상 확정만12별 씁니다',language=>{
     const h=mainHarness(false,false,false,false,initial(language,50));h.run("switchView('village');globalThis.spaceRound=scene;globalThis.spaceFocus=[];document.querySelector('#garden-space-restore').focus=options=>spaceFocus.push(options?.preventScroll)");
     expect(h.run('gardenWorkshop(false)')).toContain('data-renderer="painted-v4"');
@@ -2298,6 +2488,8 @@ describe('후반 정원 공간과 확정 전 미리보기',()=>{
     const disk=h.disk(),writes=h.writes(),round=h.run(roundState);open(h);
     expect(h.run('otherModal()')).toBe(true);expect(h.run('spaceDialog.innerHTML')).toContain(t(language,'spacePreviewTitle'));expect(h.run('spaceDialog.innerHTML')).toContain('data-phase="1"');expect(h.run('spaceDialog.innerHTML')).toContain('id="preview-space-sky"');
     expect(h.run('spaceDialog.innerHTML')).toContain('data-renderer="painted-v4"');expect(h.run('spaceDialog.innerHTML')).toContain('href="/assets/garden-v4/backdrop-meadow.webp"');
+    const previewControls=[...(h.run('spaceDialog.innerHTML') as string).matchAll(/<button id="(space-preview-[^"]+)"/g)].map(match=>match[1]);
+    expect(previewControls).toEqual(['space-preview-current','space-preview-after','space-preview-confirm','space-preview-cancel']);
     expect(h.run('gardenWorkshop(false)')).toContain('data-renderer="painted-v4"');
     const staleConfirm=h.element('#space-preview-confirm').onclick;h.element('#space-preview-current').onclick();expect(h.run('spaceDialog.innerHTML')).toContain('data-phase="0"');h.element('#space-preview-after').onclick();
     expect(h.run('gardenWorkshop(false)')).not.toContain('data-plot=');expect(h.run('gardenWorkshop(false)')).not.toContain(' / 5</span>');expect(h.run('gardenWorkshop(false)')).toContain('data-area="pond"');
@@ -2370,7 +2562,80 @@ describe('후반 정원 공간과 확정 전 미리보기',()=>{
 });
 
 
+describe('퍼즐 밖 보드 그리기 수명',()=>{
+  it('현재 보드만 경로에 따라 숨기며 퍼즐 모달·회차·지갑·저장은 유지합니다',()=>{
+    const h=mainHarness(false,false,false,false,undefined,true,undefined,undefined,true);
+    const before=h.run('JSON.stringify({save,round,currentLevel,moves,score,board:scene.engine.board})'),disk=h.disk(),writes=h.writes();
+    expect(h.run('game.scene.board.sys.settings.visible')).toBe(false);
+    h.run("switchView('puzzle')");expect(h.run('game.scene.board.sys.settings.visible')).toBe(true);
+    h.run("showStagePreview(currentLevel,'restart',document.querySelector('#restart'))");
+    expect(h.run('game.paused')).toBe(true);expect(h.run('game.scene.board.sys.settings.visible')).toBe(true);
+    h.run('closeStagePreview()');expect(h.run('game.scene.board.sys.settings.visible')).toBe(true);
+    for(const route of ['village','journal','settings','map']){h.run(`switchView('${route}')`);expect(h.run('game.scene.board.sys.settings.visible')).toBe(false);}
+    h.run("switchView('puzzle')");expect(h.run('game.scene.board.sys.settings.visible')).toBe(true);
+    expect(h.run('JSON.stringify({save,round,currentLevel,moves,score,board:scene.engine.board})')).toBe(before);
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('등록 전 교체 대기를 막지 않고 새 Scene의 CREATE 뒤 현재 경로를 반영합니다',()=>{
+    const h=mainHarness(false,false,false,false,undefined,true,undefined,undefined,true);
+    const old=h.run('game.scene.board');
+    h.run('game.scene.isBooted=false;startLevel(1)');expect(h.run('boardPending')).toBe(true);
+    expect(h.run('game.scene.board')).toBe(old);expect(h.run('game.scene.board.sys.settings.visible')).toBe(false);
+    h.run('game.scene.isBooted=true;replaceBoard()');expect(h.run('boardPending')).toBe(false);
+    expect(h.run('game.scene.board')).not.toBe(old);expect(h.run('game.scene.board===scene')).toBe(true);
+    expect(h.run('game.scene.board.sys.settings.visible')).toBe(false);
+    h.run("switchView('puzzle')");expect(h.run('game.scene.board.sys.settings.visible')).toBe(true);
+    expect(h.element('#game-canvas').tabIndex).toBe(0);
+  });
+});
+
 describe('퍼즐 핍 idle 표시 수명',()=>{
+  it('반응은 내부 슬롯을 쓰며 지도 재생성도 외곽header·회차·지갑·저장 쓰기를 바꾸지 않습니다',()=>{
+    const h=mainHarness(false,false,false,false,undefined,true,undefined,undefined,true);
+    const header=h.element('#header-pip'),face=h.element('#header-pip-face');
+    expect(h.run('boardFeedback.options.pip===document.querySelector("#header-pip-face")')).toBe(true);
+    expect(h.run('boardFeedback.options.pip===document.querySelector("#header-pip")')).toBe(false);
+    const before=h.run('JSON.stringify({save,round,currentLevel,moves,score,board:scene.engine.board})'),disk=h.disk(),writes=h.writes();
+    const map=h.element('#map-view').innerHTML;
+    expect(map.match(/id="map-current-pip"/g)).toHaveLength(1);expect(map.match(/class="campaign-leaf"/g)).toHaveLength(4);
+    expect(map.match(/class="campaign-node /g)).toHaveLength(LEVEL_COUNT);
+    h.run("renderViews();switchView('puzzle');renderViews();switchView('map')");
+    expect(h.element('#header-pip')).toBe(header);expect(h.element('#header-pip-face')).toBe(face);
+    expect(h.pipControllers.filter(controller=>controller.pip===header)).toHaveLength(1);
+    expect(h.pipControllers.find(controller=>controller.pip===header)!.disposed).toBe(false);
+    expect(h.run('JSON.stringify({save,round,currentLevel,moves,score,board:scene.engine.board})')).toBe(before);
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('지도DOM 교체 전에 이전 controller를 dispose하고 새 호스트에만 현재 활동을 반영합니다',()=>{
+    const h=mainHarness(false,false,false,false,undefined,true,undefined,undefined,true);
+    const liveMap=()=>h.pipControllers.filter(controller=>controller.pip.id==='map-current-pip'&&!controller.disposed);
+    expect(liveMap()).toHaveLength(1);const previous=liveMap()[0];h.pipLifecycle.length=0;
+    h.run('renderViews()');
+    expect(h.pipLifecycle.slice(0,2)).toEqual(['dispose:map-current-pip:true','map-replace']);
+    expect(previous.disposals).toBe(1);expect(previous.pip.isConnected).toBe(false);expect(liveMap()).toHaveLength(1);
+    expect(liveMap()[0].pip).not.toBe(previous.pip);expect(liveMap()[0].pip.dataset.idleActive).toBe('true');
+    h.run("switchView('puzzle');renderViews()");expect(liveMap()).toHaveLength(0);
+    h.run("switchView('map')");expect(liveMap()).toHaveLength(1);
+    const map=liveMap()[0];h.windowEvents.pagehide();expect(map.disposed).toBe(false);
+  });
+  it('지도 motion은 모달·숨김·nativeInactive·다른경로에서 정지하고 종료 뒤 지도에서도 복귀합니다',()=>{
+    const h=mainHarness(false,false,true,true,undefined,true,undefined,undefined,true);
+    const active=()=>{const value=h.element('#map-view').dataset.motionActive;expect(h.sceneryControllers.filter(c=>!c.disposed)).toHaveLength(1);expect(h.sceneryControllers.find(c=>!c.disposed)!.active).toBe(value==='true');return value;};
+    expect(active()).toBe('false');h.nativeEvents.appStateChange({isActive:true});expect(active()).toBe('true');
+    h.element('#map-play').onclick();expect(active()).toBe('false');h.element('#preview-cancel').onclick();expect(active()).toBe('true');
+    for(const dialog of ['tutorial-dialog','result-dialog','test-level-dialog']){
+      h.run(`document.querySelector('#${dialog}').open=true;syncActivity()`);expect(active()).toBe('false');
+      h.run(`document.querySelector('#${dialog}').open=false;syncActivity()`);expect(active()).toBe('true');
+    }
+    h.run('document.hidden=true');h.documentEvents.visibilitychange();expect(active()).toBe('false');
+    h.run('document.hidden=false');h.documentEvents.visibilitychange();expect(active()).toBe('true');
+    h.nativeEvents.appStateChange({isActive:false});expect(active()).toBe('false');
+    h.nativeEvents.appStateChange({isActive:true});expect(active()).toBe('true');
+    expect(h.run("boardPending=true;syncActivity();document.querySelector('#map-view').dataset.motionActive")).toBe('false');
+    h.run("boardPending=false;roundEnded=true;syncActivity()");expect(active()).toBe('true');
+    h.run("switchView('settings')");expect(active()).toBe('false');h.run("switchView('map')");expect(active()).toBe('true');
+    expect(h.element('#header-pip').dataset.idleActive).toBe('false');
+  });
   it.each([true,false])('승패 %s 정산부터 결과창 전300ms에도 idle을 즉시 멈춥니다',won=>{
     const h=mainHarness();h.run('startLevel(1)');expect(h.element('#header-pip').dataset.idleActive).toBe('true');
     h.run(won?'scene.hooks.onMove([12,10,0,0,0,0],220)':'moves=1;scene.hooks.onMove([0,0,0,0,0,0],0)');
@@ -2388,5 +2653,148 @@ describe('퍼즐 핍 idle 표시 수명',()=>{
     h.run('closeStagePreview()');expect(active()).toBe('true');
     expect(h.run("boardPending=true;syncActivity();document.querySelector('#header-pip').dataset.idleActive")).toBe('false');
     h.run('boardPending=false;roundEnded=true;syncActivity()');expect(active()).toBe('false');
+  });
+});
+
+describe('정원·돌봄의 표시 전용 관절과 착용 슬롯',()=>{
+  const initial=()=>({version:1,language:'ko',highestLevel:2,completed:[1],stars:10,coins:200,garden:2,music:true,sfx:true,tutorialSeen:true,
+    pip:{growth:60,affection:60,owned:['ribbon'],equipped:'ribbon'}});
+  const boot=(native=false,tools=false)=>mainHarness(false,false,tools,native,initial(),true,undefined,undefined,true);
+  const liveCare=(h:ReturnType<typeof boot>)=>h.pipControllers.filter(controller=>/^(village|journal)-pip-actor$/.test(controller.pip.id)&&!controller.disposed);
+  const liveArt=(h:ReturnType<typeof boot>)=>h.accessoryControllers.filter(controller=>!controller.disposed);
+  const snapshot='JSON.stringify({save,round,currentLevel,moves,score,board:scene.engine.board})';
+
+  it('재렌더 없는 journal 진입과 actor 왕복에 한 controller·소품만 연결하고 회차·저장·스크롤을 보존합니다',()=>{
+    const h=boot(),before=h.run(snapshot),disk=h.disk(),writes=h.writes();
+    const journal=h.element('#journal-view').innerHTML;h.element('#journal-view').scrollTop=211;h.element('#village-view').scrollTop=173;
+    h.run("switchView('journal')");expect(h.element('#journal-view').innerHTML).toBe(journal);
+    expect(liveCare(h)).toHaveLength(1);expect(liveCare(h)[0]).toMatchObject({alignment:'center',pip:{id:'journal-pip-actor'}});
+    expect(liveArt(h)).toHaveLength(1);expect(liveArt(h)[0]).toMatchObject({kind:'ribbon',slot:{id:'journal-pip-accessory'}});
+    expect(h.element('#journal-pip-image').getAttribute('src')).toBe('/assets/pip-idle-open-v2.webp');
+    h.run("switchView('village')");expect(liveCare(h)).toHaveLength(1);expect(liveCare(h)[0]).toMatchObject({alignment:'bottom',pip:{id:'village-pip-actor'}});
+    const previous=liveCare(h)[0];h.pipLifecycle.length=0;h.run('renderViews()');
+    expect(previous.disposed).toBe(true);expect(previous.pip.isConnected).toBe(false);
+    expect(h.pipLifecycle.indexOf('dispose:village-pip-actor:true')).toBeLessThan(h.pipLifecycle.indexOf('village-replace'));
+    expect(h.pipLifecycle.indexOf('accessory-dispose:village-pip-accessory:true')).toBeLessThan(h.pipLifecycle.indexOf('village-replace'));
+    const renderedJournal=h.element('#journal-view').innerHTML;h.run("switchView('journal')");expect(h.element('#journal-view').innerHTML).toBe(renderedJournal);
+    expect(liveCare(h)).toHaveLength(1);expect(liveArt(h)).toHaveLength(1);
+    expect(h.element('#journal-view').scrollTop).toBe(211);expect(h.element('#village-view').scrollTop).toBe(173);
+    expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it.each(['feed','play','greet','tend'] as const)('%s pose와 기존2400ms를 우선하고 표시 동기화는 타이머·착용·지급을 다시 만들지 않습니다',kind=>{
+    const h=boot();h.run("switchView('journal')");h.element('#pip-'+kind).onclick();
+    expect(h.run('pipReaction')).toBe(kind);const timer=h.run('careReactionTimer'),after=h.run(snapshot),disk=h.disk(),writes=h.writes();
+    expect(liveCare(h)[0].pip.dataset.idleActive).toBe('false');expect(liveArt(h)[0].slot.dataset.artActive).toBe('false');
+    expect(h.element('#journal-pip-image').getAttribute('src')).toBe(kind==='feed'?'/assets/pip-feed-v1.webp':kind==='play'?'/assets/pip-play-v1.webp':'/assets/pip.png');
+    expect(liveArt(h)[0].kind).toBe(kind==='tend'?'wateringCan':'ribbon');expect(h.run('save.pip.equipped')).toBe('ribbon');
+    h.run('syncActivity();syncPipActivity()');h.run('document.hidden=true');h.documentEvents.visibilitychange();h.run('document.hidden=false');h.documentEvents.visibilitychange();
+    expect(h.run('careReactionTimer')).toBe(timer);expect(h.run(snapshot)).toBe(after);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    h.flushCareReaction();expect(h.run('pipReaction')).toBeUndefined();expect(h.run('careReactionTimer')).toBeUndefined();
+    expect(liveCare(h)[0].pip.dataset.idleActive).toBe('true');expect(liveArt(h)[0].kind).toBe('ribbon');
+    expect(h.element('#journal-pip-image').getAttribute('src')).toBe('/assets/pip-idle-open-v2.webp');expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('무료 활동과 성장 중에는 기존 위치·pose를 보이고450ms 종료는 DOM 교체나 추가 소비 없이 표시만 재개합니다',()=>{
+    const h=boot();h.run("switchView('village')");const before=h.run(snapshot),disk=h.disk(),writes=h.writes();
+    h.element('#garden-activity-flower').onclick();expect(h.run('gardenActivity.kind')).toBe('flower');
+    expect(liveCare(h)[0].pip.dataset.idleActive).toBe('false');expect(h.element('#village-pip-image').getAttribute('src')).toBe('/assets/pip.png');
+    expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    h.element('#garden-plot-1').onclick();expect(h.run('gardenActivity')).toBeUndefined();expect(liveCare(h)[0].pip.dataset.idleActive).toBe('true');
+    h.element('#grow').onclick();expect(h.run('growing')).toBe(true);expect(liveCare(h)[0].pip.dataset.idleActive).toBe('false');
+    const actor=liveCare(h)[0],after=h.run(snapshot),grownDisk=h.disk(),grownWrites=h.writes(),replacements=h.pipLifecycle.filter(event=>event==='village-replace').length;
+    expect(h.element('#village-pip-image').getAttribute('src')).toBe('/assets/pip.png');h.flushGrowth();
+    expect(h.run('growing')).toBe(false);expect(liveCare(h)[0]).toBe(actor);expect(actor.pip.dataset.idleActive).toBe('true');
+    expect(h.element('#village-pip-image').getAttribute('src')).toBe('/assets/pip-idle-open-v2.webp');
+    expect(h.pipLifecycle.filter(event=>event==='village-replace')).toHaveLength(replacements);
+    expect(h.run(snapshot)).toBe(after);expect(h.disk()).toEqual(grownDisk);expect(h.writes()).toBe(grownWrites);
+  });
+  it('모달·숨김·nativeInactive는 일시 정지만 하고 첫 비활성 화면에 controller를 추가하지 않습니다',()=>{
+    const h=boot(true,true);h.run("switchView('village')");expect(liveCare(h)).toHaveLength(0);expect(liveArt(h)).toHaveLength(0);
+    h.nativeEvents.appStateChange({isActive:true});const actor=liveCare(h)[0],art=liveArt(h)[0],before=h.run(snapshot),disk=h.disk(),writes=h.writes();
+    const active=()=>[actor.pip.dataset.idleActive,art.slot.dataset.artActive];expect(active()).toEqual(['true','true']);
+    h.nativeEvents.appStateChange({isActive:false});expect(active()).toEqual(['false','false']);h.nativeEvents.appStateChange({isActive:true});expect(active()).toEqual(['true','true']);
+    h.run('document.hidden=true');h.documentEvents.visibilitychange();expect(active()).toEqual(['false','false']);
+    h.run('document.hidden=false');h.documentEvents.visibilitychange();expect(active()).toEqual(['true','true']);
+    h.element('#stars-help').onclick();expect(active()).toEqual(['false','false']);h.element('#resource-help-close').onclick();expect(active()).toEqual(['true','true']);
+    h.run("document.querySelector('#tutorial-dialog').open=true;syncActivity()");expect(active()).toEqual(['false','false']);
+    h.run("document.querySelector('#tutorial-dialog').open=false;syncActivity()");expect(active()).toEqual(['true','true']);
+    h.run("switchView('settings')");expect(active()).toEqual(['false','false']);expect(actor.disposed).toBe(false);expect(art.disposed).toBe(false);
+    h.run("switchView('journal')");expect(actor.disposed).toBe(true);expect(art.disposed).toBe(true);expect(liveCare(h)).toHaveLength(1);expect(liveArt(h)).toHaveLength(1);
+    expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('체험의 actor도 움직이지만 종료·언어 재생성 뒤 이전 소유자는 정상 host·착용·저장을 되살리지 못합니다',()=>{
+    const h=boot(false,true);h.run("switchView('journal');globalThis.oldCareIdle=carePipDisplay.idle;globalThis.oldCareArt=carePipDisplay.accessory");
+    const before=h.run(snapshot),disk=h.disk(),writes=h.writes(),old=liveCare(h)[0];
+    h.run('enterCareDemo()');expect(old.disposed).toBe(true);expect(liveCare(h)).toHaveLength(1);expect(liveCare(h)[0].pip.dataset.idleActive).toBe('true');expect(liveArt(h)).toHaveLength(0);
+    h.run('exitCareDemo();oldCareIdle.setActive(true);oldCareArt.setActive(true)');
+    expect(liveCare(h)).toHaveLength(1);expect(liveArt(h)).toHaveLength(1);expect(old.pip.dataset.idleActive).toBeUndefined();
+    expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    const actor=liveCare(h)[0];h.run("changeLanguage('en')");expect(actor.disposed).toBe(true);expect(liveCare(h)).toHaveLength(1);expect(liveArt(h)).toHaveLength(1);
+    expect(h.run('save.pip.equipped')).toBe('ribbon');expect(h.run('save.coins')).toBe(200);
+  });
+});
+
+describe('현재 정원 그림의 자연 모션 연결과 수명',()=>{
+  const initial=()=>({version:1,language:'ko',highestLevel:2,completed:[1],stars:10,coins:200,garden:2,music:true,sfx:true,tutorialSeen:true,
+    pip:{growth:60,affection:60,owned:['ribbon'],equipped:'ribbon'},gardenDesign:{schema:1,flowers:['daisy','violet','meadow','meadow','meadow'],owned:['butterflies'],placed:['butterflies']}});
+  const boot=(native=false,tools=false)=>mainHarness(false,false,tools,native,initial(),true,undefined,undefined,true);
+  const live=(h:ReturnType<typeof boot>)=>h.natureControllers.filter(controller=>!controller.disposed);
+  const snapshot='JSON.stringify({save,round,currentLevel,moves,score,board:scene.engine.board})';
+  it('실제 village 그림 한 곳만 소유하고 native·hidden·모달은 같은 controller를 비활성화합니다',()=>{
+    const h=boot(true);expect(live(h)).toHaveLength(0);expect(h.element('#village-view').innerHTML).toContain('id="garden-nature"');
+    h.run("switchView('village')");expect(live(h)).toHaveLength(0);h.nativeEvents.appStateChange({isActive:true});
+    const nature=live(h)[0],before=h.run(snapshot),disk=h.disk(),writes=h.writes();expect(live(h)).toHaveLength(1);expect(nature.picture).toBe(h.element('#garden-nature'));expect(nature.picture.dataset.natureActive).toBe('true');
+    h.run('syncActivity();syncCarePipActivity()');expect(live(h)).toEqual([nature]);
+    h.nativeEvents.appStateChange({isActive:false});expect(nature.picture.dataset.natureActive).toBe('false');h.nativeEvents.appStateChange({isActive:true});
+    h.run('document.hidden=true');h.documentEvents.visibilitychange();expect(nature.picture.dataset.natureActive).toBe('false');h.run('document.hidden=false');h.documentEvents.visibilitychange();
+    h.element('#stars-help').onclick();expect(nature.picture.dataset.natureActive).toBe('false');h.element('#resource-help-close').onclick();expect(nature.picture.dataset.natureActive).toBe('true');
+    expect(live(h)).toEqual([nature]);expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('경로 이탈은 nature만 폐기하고 같은 host 복귀에는 기존 Pip/착용 cache와 새 nature를 사용합니다',()=>{
+    const h=boot();h.run("switchView('village')");const old=live(h)[0],pip=h.run('carePipDisplay.idle'),art=h.run('carePipDisplay.accessory'),picture=old.picture,before=h.run(snapshot),disk=h.disk(),writes=h.writes();
+    h.run("switchView('settings')");expect(old.disposed).toBe(true);expect(old.disposals).toBe(1);expect(live(h)).toHaveLength(0);
+    expect(h.run('carePipDisplay.idle')).toBe(pip);expect(h.run('carePipDisplay.accessory')).toBe(art);expect(h.run('carePipDisplay.nature')).toBeUndefined();
+    h.run("route='village';document.querySelector('#village-view').hidden=false;syncActivity()");const fresh=live(h)[0];expect(fresh).not.toBe(old);expect(fresh.picture).toBe(picture);
+    expect(h.run('carePipDisplay.idle')).toBe(pip);expect(h.run('carePipDisplay.accessory')).toBe(art);old.activations.length=0;
+    h.run("switchView('journal')");expect(fresh.disposed).toBe(true);expect(live(h)).toHaveLength(0);expect(old.activations).toEqual([]);
+    expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('DOM 교체 전에 폐기하며 옛 자연 controller와 분리된 picture를 다시 활성화하지 않습니다',()=>{
+    const h=boot();h.run("switchView('village')");const old=live(h)[0];h.pipLifecycle.length=0;h.run('renderViews()');
+    expect(old.disposed).toBe(true);expect(old.picture.isConnected).toBe(false);expect(h.pipLifecycle.indexOf('nature-dispose:garden-nature:true')).toBeLessThan(h.pipLifecycle.indexOf('village-replace'));
+    const current=live(h)[0];expect(live(h)).toHaveLength(1);expect(current.picture).not.toBe(old.picture);
+    current.picture.isConnected=false;const actor=h.run('carePipDisplay.idle');h.run('syncCarePipActivity()');expect(current.disposed).toBe(true);expect(live(h)).toHaveLength(0);expect(h.run('carePipDisplay.idle')).toBe(actor);
+  });
+  it.each(['careProcessing','growing','boardPending','busy-scene'] as const)('%s는 추가 생성·저장 없이 현재 모션만 끕니다',guard=>{
+    const h=mainHarness(false,false,false,false,initial(),false,undefined,undefined,true);h.frame();h.run("switchView('village')");const nature=live(h)[0],count=h.natureControllers.length,before=h.run(snapshot),disk=h.disk(),writes=h.writes();
+    h.run(guard==='busy-scene'?'scene.canLeave=()=>false;syncCarePipActivity()':`${guard}=true;syncCarePipActivity()`);expect(nature.picture.dataset.natureActive).toBe('false');
+    h.run(guard==='busy-scene'?'scene.canLeave=()=>true;syncCarePipActivity()':`${guard}=false;syncCarePipActivity()`);expect(nature.picture.dataset.natureActive).toBe('true');
+    expect(h.natureControllers).toHaveLength(count);expect(live(h)).toEqual([nature]);expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('핍2400ms 반응·무료 활동과450ms 성장이 우선하고 종료는 기존 표시 소유자만 재개합니다',()=>{
+    const h=boot();h.run("switchView('village')");const disk=h.disk(),writes=h.writes(),before=h.run(snapshot);
+    h.element('#garden-activity-flower').onclick();expect(live(h)[0].picture.dataset.natureActive).toBe('false');expect(h.run('gardenActivity.kind')).toBe('flower');
+    expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);h.element('#garden-plot-1').onclick();expect(live(h)[0].picture.dataset.natureActive).toBe('true');
+    h.element('#garden-visit').onclick();const reaction=h.run('careReactionTimer');expect(live(h)[0].picture.dataset.natureActive).toBe('false');h.run('syncActivity();syncCarePipActivity()');expect(h.run('careReactionTimer')).toBe(reaction);
+    h.flushCareReaction();expect(live(h)[0].picture.dataset.natureActive).toBe('true');h.element('#grow').onclick();const nature=live(h)[0],after=h.run(snapshot),grown=h.disk(),grownWrites=h.writes();
+    expect(nature.picture.dataset.natureActive).toBe('false');h.flushGrowth();expect(live(h)).toEqual([nature]);expect(nature.picture.dataset.natureActive).toBe('true');
+    expect(h.run(snapshot)).toBe(after);expect(h.disk()).toEqual(grown);expect(h.writes()).toBe(grownWrites);
+  });
+  it('수련·물결 선택이 모션보다 우선하며 미리보기 동안 정지하고 취소 뒤 재개합니다',()=>{
+    const spaces=freshGardenSpaces();spaces.pond={phase:2,altOwned:true,style:'alt'};
+    const h=mainHarness(false,false,false,false,{...initial(),highestLevel:61,completed:Array.from({length:60},(_,i)=>i+1),garden:5,gardenDesign:{...initial().gardenDesign,spaces}},true,undefined,undefined,true);
+    h.run("switchView('village')");h.element('#garden-area-pond').onclick();const before=h.run(snapshot),disk=h.disk(),writes=h.writes();
+    h.element('#garden-activity-lily').onclick();expect(live(h)[0].picture.dataset.natureActive).toBe('false');expect(h.run('gardenActivity.kind')).toBe('lily');
+    h.element('#garden-activity-ripples').onclick();expect(live(h)[0].picture.dataset.natureActive).toBe('false');expect(h.run('gardenActivity.kind')).toBe('ripples');
+    expect(h.run('gardenActivitySpots()')).toContain('cx="355" cy="193"');expect(h.run('gardenWorkshop(false)').match(/data-garden-structure-image="bridge"/g)).toHaveLength(1);
+    h.element('#garden-space-base').onclick();const current=live(h)[0];expect(current.picture.dataset.natureActive).toBe('false');expect(h.run('spaceDialog.innerHTML')).not.toContain('id="garden-nature"');
+    h.element('#space-preview-cancel').onclick();expect(live(h)).toEqual([current]);expect(current.picture.dataset.natureActive).toBe('true');
+    expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('체험·언어 재생성은 이전 표시를 폐기하며 재화·성장/소유는 추가 변경하지 않습니다',()=>{
+    const h=boot(false,true);h.run("switchView('village')");const old=live(h)[0],disk=h.disk(),writes=h.writes(),before=h.run(snapshot);
+    h.run('enterCareDemo()');expect(old.disposed).toBe(true);expect(live(h)).toHaveLength(1);h.run('exitCareDemo()');expect(live(h)).toHaveLength(1);
+    expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    const previous=live(h)[0];h.run("changeLanguage('en')");expect(previous.disposed).toBe(true);expect(live(h)).toHaveLength(1);expect(live(h)[0].picture.dataset.natureActive).toBe('true');
+    expect(h.run('save.coins')).toBe(200);expect(h.run('save.stars')).toBe(10);expect(h.run('save.pip.growth')).toBe(60);expect(h.run('save.gardenDesign.owned')).toEqual(['butterflies']);
   });
 });

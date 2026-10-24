@@ -1,0 +1,92 @@
+{
+  "issue": 276,
+  "tool": "built-in image_gen",
+  "status": "자체 제작 시제품을 정원·핍 소품 슬롯에 통합했습니다. 웹 실제 화면에서 구매·착용·돌봄 반응·KO/EN·작은 화면·모션 감소·체험 종료 복원을 확인했습니다. 이 변경의 Android·사용자 감각 검수는 아직입니다.",
+  "processing": "alpha16 bounding crop, uniform Lanczos resize and centered transparent padding, WebP94/method6/exact; no semantic image editing",
+  "items": [
+    {
+      "name": "ribbon",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-c3625977-7d3f-4b82-a2c3-8e3410d67371.png",
+      "sourceDimensions": [
+        1858,
+        846
+      ],
+      "sourceSha256": "0be30c091af840b6cc7ad9f07d145e406142adc042bd044fa9d031c9673d2f60",
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/pip.png"
+        ],
+        "prompt": "Use case: game accessory sprite. Create ONLY ONE ORIGINAL small pink fabric bow/ribbon cutout for Pawblossom Puzzle, matching the soft premium hand-painted2.5D natural rounded material/light of our own rabbit reference. Do NOT include the rabbit or any character. A wide symmetrical blush/coral-pink satin-and-cotton bow with two rounded plump loops and a compact central knot, small restrained folds and warm cream highlight, slightly darker rose edge for clear small-scale readability. Front view, gently dimensional, left-to-right overall ratio about2.2:1, compact no long hanging ribbon tails, centered fully inside frame with generous transparent padding. Designed for an80x36 game equipment slot. Broad elegant shapes, not photorealistic, not flat vector or an outlined emoji. Only the bow; NO characters/hands/hair, no other props, no floor or cast ground shadow, no text/logo/watermark, true transparent background. Original own game art; do not imitate or use any other game's assets."
+      },
+      "alpha16Crop": [
+        155,
+        82,
+        1708,
+        770
+      ],
+      "uniformScale": 0.18604651162790697,
+      "fittedDimensions": [
+        289,
+        128
+      ],
+      "offset": [
+        15,
+        8
+      ],
+      "outputPath": "public/assets/pip-accessories-v1/ribbon.webp",
+      "outputDimensions": [
+        320,
+        144
+      ],
+      "bytes": 16542,
+      "sha256": "741fc827b0e4d24e49d323d8e1f624fa9c4dc01d20e83642e13335b8e5a527e1",
+      "alphaExtrema": [
+        0,
+        255
+      ]
+    },
+    {
+      "name": "watering-can",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-4b7785b0-c1d8-48ce-ab8a-3faaacc1e585.png",
+      "sourceDimensions": [
+        1305,
+        1206
+      ],
+      "sourceSha256": "36c5b9b7e48719b1a9f246142c86925803b06c73ef84020dce8f186900404e7f",
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/pip.png"
+        ],
+        "prompt": "Use case: game accessory sprite. Create ONLY ONE ORIGINAL small garden watering can cutout for Pawblossom Puzzle, matching the soft premium hand-painted2.5D warm natural materials/light of our own rabbit reference. Do NOT include the rabbit or any character. A charming compact rounded moss/seafoam-green enamel watering can, broad cylindrical squat body, sturdy arched handle at upper right and short thick spout pointing upper left with a clearly visible round sprinkler rose. Front three-quarter view, slight top surface visible, consistent gentle top-left light, subtle cream highlights/darker desaturated teal edge, small simple pale-gold flower emblem centered on body (no letters). Shape must read instantly at76x70 pixels, few broad confident details, no tiny decoration/no noisy texture, lovely dimensional casual game polish, not photorealistic and not flat vector. Overall object nearly square, entire handle/spout/body inside frame with generous transparent margin. Only one watering can; NO character/hands/water droplets/floor/cast ground shadow, NO labels/text/logo/watermark, true transparent background. Original own game art, do not imitate any existing game."
+      },
+      "alpha16Crop": [
+        83,
+        231,
+        1236,
+        1070
+      ],
+      "uniformScale": 0.22896790980052037,
+      "fittedDimensions": [
+        264,
+        192
+      ],
+      "offset": [
+        8,
+        32
+      ],
+      "outputPath": "public/assets/pip-accessories-v1/watering-can.webp",
+      "outputDimensions": [
+        280,
+        256
+      ],
+      "bytes": 19214,
+      "sha256": "f06ef9e49478c15f9d93e297db7607a66d3b25cca6dc8a5e262f8919479343c3",
+      "alphaExtrema": [
+        0,
+        255
+      ]
+    }
+  ]
+}

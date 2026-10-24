@@ -5,6 +5,7 @@ import { BoardEffects } from './BoardEffects';
 import { reducedMotion } from './reducedMotion';
 import type { ResolveVisual } from './RoundFeedback';
 import {specialArtKinds,specialBodyKey,specialBodyPath} from './SpecialTileArt';
+import {BOARD_RENDER_SCALE,configureBoardCamera} from './BoardDisplay';
 
 export const tileNames = ['strawberry','carrot','blueberry','acorn','leaf','flower'];
 type Notice='matched'|'chain'|'specialCreated'|'noMoves'|'rowClear'|'columnClear'|'bombClear'|'colorClear'|'comboClear'|'leafThinned'|'leavesCleared'|'cratesCleared';
@@ -34,10 +35,11 @@ export class BoardScene extends Phaser.Scene {
   preload() {
     for(const name of tileNames)if(!this.textures.exists(name))this.load.image(name,`/assets/tiles-v3/${name}.webp`);
     for(const kind of specialArtKinds)if(!this.textures.exists(specialBodyKey(kind)))this.load.image(specialBodyKey(kind),specialBodyPath(kind));
-    for(const name of ['leaf-pile','leaf-single','wooden-crate'])if(!this.textures.exists(name))this.load.svg(name,`/assets/obstacles/${name}.svg`,{width:100,height:100});
+    for(const name of ['leaf-pile','leaf-single','wooden-crate'])if(!this.textures.exists(name))this.load.image(name,`/assets/obstacles-v4/${name}.webp`);
   }
   create() {
     this.ready=false;this.finished=false;this.busy=false;this.motionReduced=reducedMotion();
+    configureBoardCamera(this.cameras.main);
     this.effects.clear();this.effects=new BoardEffects(this);
     this.cameras.main.setBackgroundColor('#284c42');
     const g=this.add.graphics();
@@ -97,7 +99,8 @@ export class BoardScene extends Phaser.Scene {
     this.syncMotion();
     // TouchEvent에는 isPrimary가 없습니다. 이미 다른 손가락이 내려간 뒤의 새 제스처는 받지 않습니다.
     if(p.wasTouch&&(p.event as TouchEvent).touches.length!==1)return;
-    const pos=this.position(p.x,p.y);if(pos)this.down={pos,x:p.x,y:p.y,pointerId:p.id,downTime:p.downTime,wasTouch:p.wasTouch,identifier:p.identifier,element:p.downElement};
+    const world=this.pointerWorld(p);if(!world)return;
+    const pos=this.position(world.x,world.y);if(pos)this.down={pos,x:world.x,y:world.y,pointerId:p.id,downTime:p.downTime,wasTouch:p.wasTouch,identifier:p.identifier,element:p.downElement};
   }
   private pointerOutside(p:Phaser.Input.Pointer){
     if(this.down?.pointerId===p.id&&(p.wasTouch||p.button===0))this.cancelInput();
@@ -107,13 +110,19 @@ export class BoardScene extends Phaser.Scene {
     const d=this.down;this.down=undefined;
     // Phaser 3.90은 touchcancel도 pointerup으로 전달합니다. 비활성/취소 종료도 down부터 비웁니다.
     if(p.wasCanceled||p.downTime!==d.downTime||!this.canInteract()||!Number.isFinite(p.x)||!Number.isFinite(p.y))return;
-    const dx=p.x-d.x,dy=p.y-d.y;
+    const world=this.pointerWorld(p);if(!world)return;
+    const dx=world.x-d.x,dy=world.y-d.y;
     if(Math.hypot(dx,dy)>16){
       // 종료점이 여백/비정형 빈칸이어도 시작 칸의 바로 이웃만 교환합니다.
       // 외부 target 종료/취소는 별도 경계에서 무효화하며 정상 한 손가락 touchmove만 경계 밖까지 추적합니다.
       const to={row:d.pos.row+(Math.abs(dy)>Math.abs(dx)?Math.sign(dy):0),col:d.pos.col+(Math.abs(dx)>=Math.abs(dy)?Math.sign(dx):0)};
       if(to.row>=0&&to.row<8&&to.col>=0&&to.col<8)void this.attempt(d.pos,to);
-    }else if(this.position(p.x,p.y))this.tap(d.pos);
+    }else if(this.position(world.x,world.y))this.tap(d.pos);
+  }
+  private pointerWorld(p:Phaser.Input.Pointer):{x:number,y:number}|undefined {
+    if(!Number.isFinite(p.x)||!Number.isFinite(p.y))return;
+    const {x,y}=this.cameras.main.getWorldPoint(p.x,p.y);
+    return Number.isFinite(x)&&Number.isFinite(y)?{x,y}:undefined;
   }
   private canInteract(){return !this.busy&&!this.finished&&this.pieces.length===this.engine.rows&&this.sys.isActive();}
   /** 조회는 엔진 판정/난수/이동을 소비하지 않습니다. */
@@ -248,7 +257,7 @@ export class BoardScene extends Phaser.Scene {
       ground.lineStyle(2,layers===2?0x9f653b:0xc8955b,.95);ground.strokeRoundedRect(x-26,y-26,52,52,11);
       if(layers===2){ground.lineStyle(2,0xf2d09c,.9);ground.lineBetween(x-20,y-21,x+20,y-21);}
       const size=layers===2?31:24,badge=this.add.image(x+12,y+12,layers===2?'leaf-pile':'leaf-single').setDisplaySize(size,size).setDepth(3);
-      const count=this.add.text(x+19,y+20,String(layers),{fontFamily:'Arial, sans-serif',fontSize:'17px',fontStyle:'bold',color:'#fffaf0',stroke:'#744521',strokeThickness:4}).setOrigin(.5).setDepth(4);
+      const count=this.add.text(x+19,y+20,String(layers),{fontFamily:'Arial, sans-serif',fontSize:'17px',fontStyle:'bold',color:'#fffaf0',stroke:'#744521',strokeThickness:4,resolution:BOARD_RENDER_SCALE}).setOrigin(.5).setDepth(4);
       this.leafObjects.push(ground,badge,count);
     }
   }
@@ -350,7 +359,13 @@ export class BoardScene extends Phaser.Scene {
         // 대량 파편보다 실제 제거범위 표시를 먼저 확보합니다.
         if(step.effects?.length)this.showEffect(step);
         this.showLeafHits(step);
-        if(step.crates)this.paintCrates(step.crates.before);
+        if(step.crates){
+          this.paintCrates(step.crates.before);
+          for(const hit of step.crates.hits)if(this.effects.crateHit(hit)){
+            const original=this.crateObjects.find(item=>item.name===`crate-${hit.row}-${hit.col}`);
+            if(original)original.alpha=0;
+          }
+        }
         this.effects?.match(step,i+1);
         if(step.effects?.length){
           this.effects?.special(step);
