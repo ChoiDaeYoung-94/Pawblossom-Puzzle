@@ -1,6 +1,18 @@
-## 최종 통합 APK 전달 · 2026-10-24 · #295
+## 최신 로컬 APK와 전달 미완료 · 2026-10-25 · #73
 
-최신 검수 파일은 **`Pawblossom-Puzzle-v0.1.7-2026-10-24-7c32d1f-debug.apk`**이며 [기존 비공개 테스트 폴더](https://drive.google.com/drive/u/1/folders/1dUUwNPZXmSpX8z0t1GsLjbnHuYI-MSHm)에 APK와121바이트 checksum을 추가했습니다. 게임 소스 `7c32d1fde39bb7f5ceca0609c1311459009bce0f`/PR299의 최초 정확main [CI40076278401](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40076278401)은 양Node55파일3,224개·store12·타입3설정·두 빌드 성공입니다. fcc/300/e285는 앞선 전달 또는 내부 후보 이력으로 보존하며 이 파일과 혼동하지 않습니다.
+최신 로컬 후보는 **`Pawblossom-Puzzle-v0.1.7-2026-10-25-06e14a9-debug.apk`**입니다. 저장소 밖 `Pawblossom-builds/2026-10-25-06e14a9`에 APK·같은 이름의 `.sha256`·검증 기록을 보존했습니다. **Drive 업로드·재다운로드는 미완료**이며 아래7c32d1f가 최근 Drive 전달본입니다. 연결 계정이 승인된 작업 계정과 다르고 기존 테스트 폴더가404여서 다른 계정/폴더에 올리거나 공유 범위를 바꾸지 않았습니다. Work 로컬 브라우저 비활성도 우회하지 않았습니다.
+
+제품 소스 `06e14a9995fc790ae84f88399152b182488fbeba`/PR322의 정확한 최초 main [CI40110266996](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40110266996)은 Node22/24 성공입니다. 지도 풍경·중간 군락/나비, 정원/핍 공동 목표16개·무료 교감·소유 기반 추천 코디, 손잡이 물뿌리개 포즈를 포함합니다. source06의 최초 로컬 전체61파일3,278개·타입3종·두웹빌드/분리·독립 읽기 검수도 성공했습니다. 문서 후속은 이 APK의 제품 변경을 뜻하지 않습니다.
+
+APK는0.1.7/code8, **16,117,566바이트**, SHA256 **`b4bc8275cb7c926da52d7169d0aae784724e2e5ec6a872b35544e0ae09f956d8`**입니다. testing 웹88개+정확한 빈 cordova2개=public90개, META 포함 비웹536개가7c32와 동일함을 확인했습니다. ZIP 중복0·v2/전체 signer 수 정확1·기존 서명 일치·min24/target36·package를 검증하고 production dist80/Android public82를 각각 전수 SHA로 복원했습니다. 새 native JUnit/lint 실행은 없습니다.
+
+첫 wrapper는 assemble 성공 뒤 잘못된 aapt 필드 기대 `sdkVersion`에서 멈췄습니다. 실제 필드 `minSdkVersion`으로 검사만 바로잡고24 요구는 유지했습니다. 원래 실패 보고를 보존하고 기존 APK의 좁은 검증/복사만 했으며 새 빌드·sync는 없습니다. 직접 SHA 동일성의 범위는 재개 시작→복사본입니다. 최초 실패 보고에 전체 APK SHA는 없으므로 그 이전 구간까지 직접 해시 증명한 것으로 확대하지 않습니다.
+
+실제 LD b296305에서 지도4–8번 탭 복귀·풍차/경계, 임시 먹이6회/Lv3 무료 돌보기, 공동 목표→꽃밭 편집·미보유 나비 코디 차단·무료 데이지 적용/무소비를 확인했습니다. 체험 종료 뒤 실제 별2/코인80으로 돌아왔습니다. **새06 군락/손잡이 포즈·세로/영문 Native는 미검증**입니다. 대상0 설치 명령은 종료0이나 다른 앱 보안창이 가려 설치 완료/최신 기동을 실제 확인하지 못했습니다. 그 보안창·다른 LD/폰은 조작하지 않았으며 b296 조작을 새06 검수로 합산하지 않습니다. 실서비스/스토어·AAB도 미완료입니다.
+
+## 이전 Drive 통합 APK 전달 · 2026-10-24 · #295
+
+최근 Drive 전달 파일은 **`Pawblossom-Puzzle-v0.1.7-2026-10-24-7c32d1f-debug.apk`**이며 [기존 비공개 테스트 폴더](https://drive.google.com/drive/u/1/folders/1dUUwNPZXmSpX8z0t1GsLjbnHuYI-MSHm)에 APK와121바이트 checksum을 추가했습니다. 게임 소스 `7c32d1fde39bb7f5ceca0609c1311459009bce0f`/PR299의 최초 정확main [CI40076278401](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40076278401)은 양Node55파일3,224개·store12·타입3설정·두 빌드 성공입니다. fcc/300/e285는 앞선 전달 또는 내부 후보 이력으로 보존하며 이 파일과 혼동하지 않습니다.
 
 파일은13,717,113바이트, SHA256 `91caa75819c3dea0f53983a30f97429a4277a5ec55b0f9f5517817b6670a1507`입니다. 실제 Drive에서 재다운로드한 동일 이름 파일의 크기/SHA가 원본과 일치합니다. 새 APK의 Share 대화상자는 제한됨/소유자1인 작업 계정이며 공개 범위는 바꾸지 않았습니다. [확인한 파일 페이지](https://drive.google.com/file/d/1ZGmYN0aNh1A2V19_UJpxVUkJgzCrB4UG/view)는 제목/ID는 맞지만 직접 미리보기가 빈 화면이므로 폴더의 다운로드 경로를 우선 안내합니다. 첫 download 이벤트 대기는 Drive의 파일 형식 확인 전이라 끝나지 않았고, 해당 사이트 확인 뒤 실제 이벤트/로컬 파일/해시를 확인했습니다. 브라우저 보안 경고를 우회하지 않았습니다. #256의 옛825 재다운로드 미완료와 별도입니다.
 
