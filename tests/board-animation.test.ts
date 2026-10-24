@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import type Phaser from 'phaser';
 import { BoardEngine, seededRng, type Cell, type Tile, type Position, type ResolveStep } from '../src/core';
 import {prepareShuffle} from '../src/puzzleHelp';
+import type {BoardEffects} from '../src/BoardEffects';
 
 class Piece {
   destroyed=false;alpha=1;scale=1;
@@ -640,6 +641,41 @@ describe('모션 설정 경계와 정적 표시',()=>{
   });
 });
 describe('비정형 보드의 실제 표시·입력·엔진 낙하 재생',()=>{
+  it.each([0,1,3])('상자%s개의 실제 hit만 같은 단계의 before 그림 위에 표시하며 엔진 결과와 RNG를 보존합니다',async count=>{
+    const crates=[2,4,6].slice(0,count).map(col=>({row:3,col}));
+    const make=()=>{
+      const rng=vi.fn(seededRng(42)),engine=new BoardEngine(8,8,rng,undefined,2,undefined,crates);
+      engine.board=engine.mask.map((line,r)=>line.map((_,c)=>engine.isPlayable({row:r,col:c})?{kind:(r*2+c)%5}:null));
+      engine.board[3][0]!.special='row';return {engine,rng};
+    };
+    const expected=make(),actual=make(),result=expected.engine.activate({row:3,col:0});expect(result.valid).toBe(true);
+    const {scene,onMove}=harness();scene.engine=actual.engine;scene.create();
+    const effects=(scene as unknown as {effects:BoardEffects}).effects,original=effects.crateHit.bind(effects);
+    const hit=vi.spyOn(effects,'crateHit').mockImplementation(position=>{
+      expect((scene as unknown as {crateObjects:Piece[]}).crateObjects.some(piece=>piece.name===`crate-${position.row}-${position.col}`)).toBe(true);
+      original(position);
+    });
+    await scene.attempt({row:3,col:0});
+    expect(hit.mock.calls.map(([position])=>position)).toEqual(result.steps.flatMap(step=>step.crates?.hits??[]));
+    expect(hit.mock.calls.length).toBe(count);expect(scene.snapshot()).toEqual({board:expected.engine.board,leaves:expected.engine.leaves,ruleVersion:expected.engine.ruleVersion,...(count?{crates:expected.engine.crates}:{})});
+    expect(actual.rng.mock.calls.length).toBe(expected.rng.mock.calls.length);
+    expect(onMove).toHaveBeenCalledOnce();expect(onMove.mock.calls[0].slice(0,3)).toEqual([result.collected,result.score,result.steps.length]);
+    scene.stopPlaying();expect(effects.activeCount).toBe(0);
+  });
+  it('상자 타격 직후 중간 종료는 파편 tween을 정리하고 늦은 해소를 정산하지 않습니다',async()=>{
+    const {scene,onMove}=harness();scene.engine=new BoardEngine(8,8,seededRng(42),undefined,2,undefined,[{row:3,col:3}]);
+    scene.engine.board=scene.engine.mask.map((line,r)=>line.map((_,c)=>scene.engine.isPlayable({row:r,col:c})?{kind:(r*2+c)%5}:null));
+    scene.engine.board[3][0]!.special='row';scene.create();
+    const effects=(scene as unknown as {effects:BoardEffects}).effects,pending:Record<string,unknown>[]=[],add=scene.tweens.add.bind(scene.tweens);
+    scene.tweens.add=config=>{const target=config.targets as Piece|Graphic;if(target.name.startsWith('crate-'))pending.push(config);else add(config);};
+    let release!:()=>void,reached!:()=>void;const stoppedAtRemoval=new Promise<void>(resolve=>{reached=resolve;});
+    vi.spyOn(scene,'wait').mockImplementation(ms=>ms===200?new Promise<void>(resolve=>{release=resolve;reached();}):Promise.resolve());
+    const resolving=scene.attempt({row:3,col:0});await stoppedAtRemoval;
+    expect(effects.activeCount).toBe(reduced?1:5);scene.stopPlaying();expect(effects.activeCount).toBe(0);
+    expect(pending.every(config=>(config.targets as Piece|Graphic).destroyed)).toBe(true);
+    for(const config of pending)(config.onComplete as ()=>void)();release();await resolving;
+    expect(effects.activeCount).toBe(0);expect(onMove).not.toHaveBeenCalled();
+  });
   it('상자는 별도 객체이며 키보드로 읽고 입력을 거절하며 실제 단계 파괴·보충을 함께 재생합니다',async()=>{
     const {scene,onMove,onResolveVisual}=harness();
     scene.engine=new BoardEngine(8,8,seededRng(42),undefined,2,undefined,[{row:3,col:3},{row:5,col:5}]);

@@ -4,11 +4,11 @@ import type {ResolveStep} from '../src/core';
 
 class ObjectStub {
   destroyed=false;name='';x=0;y=0;
-  rectangles:number[][]=[];lines:number[][]=[];
+  rectangles:number[][]=[];lines:number[][]=[];strokes:number[][]=[];
   constructor(public kind:string,public value=''){}
   setDepth(){return this;}setName(name:string){this.name=name;return this;}setOrigin(){return this;}
   setPosition(x:number,y:number){this.x=x;this.y=y;return this;}setDisplaySize(){return this;}setAngle(){return this;}
-  lineStyle(){return this;}fillStyle(){return this;}strokeRoundedRect(){return this;}fillRoundedRect(...values:number[]){this.rectangles.push(values);return this;}
+  lineStyle(){return this;}fillStyle(){return this;}strokeRoundedRect(...values:number[]){this.strokes.push(values);return this;}fillRoundedRect(...values:number[]){this.rectangles.push(values);return this;}
   lineBetween(...values:number[]){this.lines.push(values);return this;}strokeCircle(){return this;}destroy(){this.destroyed=true;}
 }
 function harness(){
@@ -24,6 +24,34 @@ const step:ResolveStep={before:[],after:[],removed:Array.from({length:64},(_,i)=
 const colorStep=():ResolveStep=>({...step,before:Array.from({length:8},(_,row)=>Array.from({length:8},(_,col)=>({kind:(row+col)%6}))),effects:[{row:0,col:0,special:'rainbow'},{row:1,col:1,special:'rainbow'}]});
 afterEach(()=>vi.unstubAllGlobals());
 describe('낙엽과 퍼즐 임시 연출',()=>{
+  it('실제 상자 칸의 짧은 선·목재 조각은 원본 좌표와 난수를 바꾸지 않고 완료 정리합니다',()=>{
+    const h=harness(),hit=Object.freeze({row:3,col:6}),before=JSON.stringify(hit),random=vi.spyOn(Math,'random');
+    try{
+      h.effects.crateHit(hit);
+      const pulse=h.objects.find(obj=>obj.name==='crate-hit-pulse')!;
+      expect([pulse.x,pulse.y]).toEqual([380,212]);expect(pulse.strokes).toEqual([[-25,-25,50,50,10]]);
+      const chips=h.objects.filter(obj=>obj.name==='crate-wood-chip');expect(chips).toHaveLength(4);
+      expect(chips.every(obj=>obj.rectangles[0][2]>obj.rectangles[0][3])).toBe(true);
+      expect(h.tweens.every(config=>(config.duration as number)<=300)).toBe(true);
+      expect(h.effects.activeCount).toBe(5);expect(random).not.toHaveBeenCalled();expect(JSON.stringify(hit)).toBe(before);
+    }finally{random.mockRestore();}
+    h.finish();expect(h.effects.activeCount).toBe(0);expect(h.objects.every(obj=>obj.destroyed)).toBe(true);
+  });
+  it('다중 상자·다른 연출은120개 상한을 공유하고 중간 취소·늦은 완료도 객체를 되살리지 않습니다',()=>{
+    const h=harness();for(let i=0;i<40;i++)h.effects.crateHit({row:Math.floor(i/8),col:i%8});
+    h.effects.match(step,2);h.effects.special(step);h.effects.leafHit({row:0,col:0,before:1,after:0});
+    expect(h.effects.activeCount).toBe(120);expect(h.objects.filter(obj=>!obj.destroyed)).toHaveLength(120);
+    h.effects.clear();expect(h.killed).toHaveLength(120);expect(h.objects.every(obj=>obj.destroyed)).toBe(true);
+    h.finish();h.effects.clear();expect(h.effects.activeCount).toBe(0);
+  });
+  it('모션 감소의 상자 타격은 이동·회전·크기 변화 없는 짧은 정적 선만 남깁니다',()=>{
+    vi.stubGlobal('window',{matchMedia:()=>({matches:true})});
+    const h=harness();h.effects.crateHit({row:1,col:2});
+    expect(h.objects.map(obj=>obj.name)).toEqual(['crate-hit-pulse']);expect(h.tweens).toHaveLength(1);
+    expect(h.tweens[0]).toMatchObject({alpha:0,duration:180});
+    for(const key of ['x','y','angle','scaleX','scaleY'])expect(h.tweens[0]).not.toHaveProperty(key);
+    h.finish();expect(h.effects.activeCount).toBe(0);
+  });
   it('한 겹 감소는 추가 숫자 팝업 없이 날림만, 완전 제거는 체크를 표시합니다',()=>{
     const h=harness();h.effects.leafHit({row:2,col:2,before:2,after:1});
     expect(h.objects.filter(obj=>obj.kind==='text')).toEqual([]);

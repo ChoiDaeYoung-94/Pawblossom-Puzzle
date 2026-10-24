@@ -35,7 +35,7 @@ export class BoardScene extends Phaser.Scene {
   preload() {
     for(const name of tileNames)if(!this.textures.exists(name))this.load.image(name,`/assets/tiles-v3/${name}.webp`);
     for(const kind of specialArtKinds)if(!this.textures.exists(specialBodyKey(kind)))this.load.image(specialBodyKey(kind),specialBodyPath(kind));
-    for(const name of ['leaf-pile','leaf-single','wooden-crate'])if(!this.textures.exists(name))this.load.svg(name,`/assets/obstacles/${name}.svg`,{width:100*BOARD_RENDER_SCALE,height:100*BOARD_RENDER_SCALE});
+    for(const name of ['leaf-pile','leaf-single','wooden-crate'])if(!this.textures.exists(name))this.load.image(name,`/assets/obstacles-v4/${name}.webp`);
   }
   create() {
     this.ready=false;this.finished=false;this.busy=false;this.motionReduced=reducedMotion();
@@ -359,7 +359,10 @@ export class BoardScene extends Phaser.Scene {
         // 대량 파편보다 실제 제거범위 표시를 먼저 확보합니다.
         if(step.effects?.length)this.showEffect(step);
         this.showLeafHits(step);
-        if(step.crates)this.paintCrates(step.crates.before);
+        if(step.crates){
+          this.paintCrates(step.crates.before);
+          for(const hit of step.crates.hits)this.effects.crateHit(hit);
+        }
         this.effects?.match(step,i+1);
         if(step.effects?.length){
           this.effects?.special(step);
