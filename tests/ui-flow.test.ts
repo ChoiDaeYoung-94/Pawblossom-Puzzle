@@ -336,7 +336,8 @@ describe('핍 꽃 돌보기의 실제 화면 수명',()=>{
   });
   it('정원 동작에는 핍 화면의 받침꽃을 덧붙이지 않고 재렌더/교체는 이전 반응을 되살리지 않습니다',()=>{
     const h=mainHarness();h.run("save.pip={growth:60,affection:40,owned:[],equipped:'none'};switchView('village')");h.element('#garden-tend').onclick();expect(h.element('#village-view').innerHTML).not.toContain('pip-tending-scene');
-    h.run("switchView('journal');careReactionStarted=Date.now()-900;renderViews()");expect(h.element('#journal-view').innerHTML).toMatch(/--tend-elapsed:9\d\dms/);
+    // 이 VM의 표시 시각만 고정합니다. CPU/렌더가100ms 이내라는 가정을 두지 않습니다.
+    h.run("switchView('journal');const fixedTendNow=Date.now();Date.now=()=>fixedTendNow;careReactionStarted=fixedTendNow-900;renderViews()");expect(h.element('#journal-view').innerHTML).toContain('--tend-elapsed:900ms');
     h.element('#pip-feed').onclick();expect(h.element('#journal-view').innerHTML).not.toContain('pip-tending-scene');expect(h.run('pipReaction')).toBe('feed');
   });
 });
