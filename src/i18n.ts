@@ -1,6 +1,7 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    carrierTrial:'Seed delivery trial',carrierTrialNote:'A new goal trial · Progress and currency stay unchanged',
     map:'Journey',mapJourney:'A little further, together',mapLocate:'Current stage',mapStages:'Stage journey',mapAvailable:'Ready to play',mapResume:'Continue',mapPlay:'Play',
     spaceOpen:'View garden spaces',gardenAreaFlowers:'Flower garden',gardenAreaPond:'Pond',gardenAreaShelter:'Shelter',gardenAreaArch:'Flower arch',gardenAreas:'Garden areas',
     spaceEmpty:'Open ground',spaceFoundation:'Foundation restored',spaceComplete:'Restored',spaceBase:'Original style',spaceAlt:'Special style',spaceBasePond:'Lily pond',spaceAltPond:'Little bridge pond',spaceBaseShelter:'Gabled resting shelter',spaceAltShelter:'Round thatched shelter',spaceBaseArch:'Blossom arch',spaceAltArch:'Flower pergola',
@@ -108,6 +109,7 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    carrierTrial:'씨앗 배달 체험',carrierTrialNote:'새 목표 체험 · 진행과 재화는 그대로예요',
     map:'모험',mapJourney:'핍과 함께 한 걸음',mapLocate:'현재 위치',mapStages:'스테이지 여행',mapAvailable:'도전 가능',mapResume:'이어서 하기',mapPlay:'플레이',
     spaceOpen:'정원 공간 보기',gardenAreaFlowers:'꽃밭',gardenAreaPond:'연못',gardenAreaShelter:'쉼터',gardenAreaArch:'꽃아치',gardenAreas:'정원 구역',
     spaceEmpty:'아직 빈터예요',spaceFoundation:'기초를 복원했어요',spaceComplete:'복원 완료',spaceBase:'기본 꾸미기',spaceAlt:'선택 꾸미기',spaceBasePond:'수련 연못',spaceAltPond:'작은 다리 연못',spaceBaseShelter:'박공지붕 쉼터',spaceAltShelter:'둥근 초가지붕 쉼터',spaceBaseArch:'꽃 아치',spaceAltArch:'꽃 덩굴 그늘막',

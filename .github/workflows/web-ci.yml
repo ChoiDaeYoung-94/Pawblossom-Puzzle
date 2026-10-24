@@ -41,8 +41,12 @@ jobs:
       - name: 타입 검사와 웹 빌드
         run: npm run build
       - name: 출시 빌드의 테스트 도구 제외 확인
-        run: node -e "const b=require('./dist/build-info.json');if(b.testTools !== false || b.androidTestAds !== false || b.androidTestBilling !== false) process.exit(1)"
+        run: |
+          node -e "const b=require('./dist/build-info.json');if(b.testTools !== false || b.androidTestAds !== false || b.androidTestBilling !== false) process.exit(1)"
+          node scripts/check-carrier-build.mjs production
       - name: 테스트 도구 포함 빌드
         run: npm run build:test
       - name: 테스트 빌드 구분 확인
-        run: node -e "const b=require('./dist/build-info.json');if(b.testTools !== true || b.androidTestAds !== true || b.androidTestBilling !== true) process.exit(1)"
+        run: |
+          node -e "const b=require('./dist/build-info.json');if(b.testTools !== true || b.androidTestAds !== true || b.androidTestBilling !== true) process.exit(1)"
+          node scripts/check-carrier-build.mjs testing

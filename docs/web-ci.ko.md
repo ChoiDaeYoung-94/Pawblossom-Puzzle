@@ -1,5 +1,11 @@
 # 웹 자동 검증
 
+## 2026-10-24 · #291 운반 목표의 격리와 원자적 회귀
+
+별도 `experimental-carrier-v1` 엔진38개와 페이지 수명6개를 포함한 최초 전체 검사는 Node24에서52파일3,202개 모두 성공했습니다. 기존 `BoardEngine.ts`·`levels.ts`·`state.ts`의 기준 SHA와100판/golden/RNG 기대를 유지합니다. 잘못된 입력·무효 교환·연쇄 한도 초과의 전체 rollback, 안정 carrier ID·일반 타일과 공동 중력·구멍별 연속 구간·출구 배송·보충·같은 시드 재시작과 조회의 RNG 무소비를 검사합니다. 성공→이동 소진→막힘의 종료 우선순위와 교환 후 막힘도 포함합니다.
+
+페이지 수명은 BFCache 재진입의 새 세대·이전 비동기 Native handle 폐기·새 상태 우선·등록 실패 중 비활성 보존을 검사합니다. 실제 persisted BFCache/Native HOME 관측으로 표현하지 않습니다. 최종 생산/시험 빌드와 각 타입3설정, store12개가 성공했습니다. 생산78파일에는 시험 HTML/entry/chunk/규칙/링크가 없고 시험83파일에는 별도 HTML과 내부 script가 있습니다. 동일 확인을 CI의 기존 세 flag 검사와 함께 수행합니다. 검사 시간·worker·기대는 완화하지 않았으며 원장 #122의 이전 간헐 실패는 미해결로 보존합니다. Node22·PR/정확main CI와 새 APK는 후속 확인입니다.
+
 ## 2026-10-24 · #285 callback await·close의 관측 수명
 
 검사 소스a49dbc8은 기존 Sync의 즉시·무조건 복원/Promise 참조를 유지하고 별도 Async scope에서 생성→서명 await→adapter-call→close 완료까지5개 hook을 유지합니다. Async만 설치 descriptor 전체 속성이 같은 항목을 복원하며 foreign 변경·삭제를 보존/실패 표시하고, scope 뒤 남은 wrapper는 원래 호출만 실행합니다. 설치·clock·기록·복원 실패가 업무 반환/오류 참조를 덮지 않습니다. #282 trusted prepare 대응과 기존 exec/Statement·retry 함수는 보존합니다.
