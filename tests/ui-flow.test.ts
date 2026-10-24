@@ -14,6 +14,7 @@ import {icon as renderIcon} from '../src/icons';
 import {specialTileArt,specialArtKinds,specialBodyKey,specialBodyPath} from '../src/SpecialTileArt';
 import * as paintedGardenArt from '../src/GardenPaintedArt';
 import * as gardenStructureArt from '../src/GardenStructureArt';
+import * as boardDisplay from '../src/BoardDisplay';
 
 // 테스트에만 사용하는 Node API입니다. 별도 @types/node 설치 없이 런타임에서 읽습니다.
 const fsModule = 'node:fs', vmModule = 'node:vm';
@@ -116,7 +117,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     focusKeyboard() {} cancelInput() {} keyboardKey() {} hideKeyboardCursor() {}
   }
   class GameStub {
-    constructor(){games++;}
+    constructor(public config:Record<string,unknown>){games++;}
     events = { on:(_name:string,callback:()=>void)=>{frame=callback;} };
     paused=false;pauses=0;resumes=0;
     scene = {
@@ -182,6 +183,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     Phaser: { Game: GameStub, AUTO: 0, Scale: { FIT: 0, CENTER_BOTH: 0 }, Core:{Events:{POST_RENDER:'postrender'}} },
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     specialTileArt,
+    ...boardDisplay,
     bindPracticeBoard,
     cloneSnapshot,prepareShuffle,
     showResultPip:()=>{resultArtCalls++;},
@@ -230,6 +232,12 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   };
 }
 
+describe('보드 고밀도 표시와 월드 분리',()=>{
+  it('Game 버퍼만960으로 만들고8x8 엔진과 화면 규칙은 유지합니다',()=>{
+    const h=mainHarness();expect(h.run('game.config.width')).toBe(960);expect(h.run('game.config.height')).toBe(960);
+    expect(h.run('scene.engine.rows')).toBe(8);expect(h.run('scene.engine.cols')).toBe(8);
+  });
+});
 describe('독립 스테이지 지도',()=>{
   const boot=()=>mainHarness(false,false,false,false,undefined,true,undefined,undefined,true);
   it('지도에서 부팅하고 보드는 같은 Scene으로 일시중단하며100단계 잠금/완료/현재 상태를 표시합니다',()=>{
@@ -968,7 +976,7 @@ function boardHarness() {
   const graphics: object = new Proxy({}, { get: () => () => graphics });
   class PhaserSceneStub {
     sys={isActive:()=>true};
-    cameras = { main: { setBackgroundColor() {} } };
+    cameras = { main: { setBackgroundColor() {},setViewport(){return this;},setZoom(){return this;},centerOn(){return this;},preRender(){},getWorldPoint(x:number,y:number){return {x,y};} } };
     add = { graphics: () => graphics };
     // 간단한 좌표 시나리오도 실제 Phaser의 정상 touch 필드를 갖추어 전달합니다.
     input = { on: (name: string, callback: (pointer: Pointer) => void,context?:unknown) => { handlers[name] = p=>callback.call(context??this,{wasTouch:true,wasCanceled:false,button:0,downTime:1,event:{touches:[{}]},...p} as Pointer); },off:(name:string)=>{delete handlers[name];} };
@@ -981,14 +989,14 @@ function boardHarness() {
   }
   const engineExports: Record<string, unknown> = {}, boardExports: Record<string, unknown> = {};
   const motionExports={reducedMotion:()=>false};
-  const effectsExports:Record<string,unknown>={};vm.runInNewContext(effectsCode,{exports:effectsExports,require:()=>motionExports});
+  const effectsExports:Record<string,unknown>={};vm.runInNewContext(effectsCode,{exports:effectsExports,require:(name:string)=>name==='./BoardDisplay'?boardDisplay:motionExports});
   vm.runInNewContext(engineCode, { exports: engineExports });
   vm.runInNewContext(boardCode, {
     exports: boardExports,
     require: (name: string) => name === 'phaser' ? { default: {
       Scene: PhaserSceneStub,
       Scenes: { Events: { PAUSE: 'pause', RESUME: 'resume', SLEEP: 'sleep', WAKE:'wake', SHUTDOWN: 'shutdown', DESTROY:'destroy', CREATE:'create' } },Scale:{Events:{RESIZE:'resize'}},
-    } } : name==='./BoardEffects'?effectsExports:name==='./reducedMotion'?motionExports:name==='./SpecialTileArt'?{specialArtKinds,specialBodyKey,specialBodyPath}:engineExports,
+    } } : name==='./BoardDisplay'?boardDisplay:name==='./BoardEffects'?effectsExports:name==='./reducedMotion'?motionExports:name==='./SpecialTileArt'?{specialArtKinds,specialBodyKey,specialBodyPath}:engineExports,
   });
   const Constructor = boardExports.BoardScene as new (hooks: object) => {
     create(): void; paint: () => void; resetHint: () => void; pieces:unknown[][];
