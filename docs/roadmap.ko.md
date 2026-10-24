@@ -1,10 +1,10 @@
 # 출시까지의 개발 순서
 
-## 2026-10-25 · #265 보상 worker 구간 관측의 현행 helper 통합 · 검증 전
+## 2026-10-25 · #265 보상 worker 구간 관측의 현행 helper 통합
 
-기존 Draft269의 보상 worker opt-in 구간/역할/부모-Worker 시간 기준을 현재 helper에 통합 중입니다. #284 trusted prepare 실패/연결 닫힘, #287 Async 활성·소유 hook 조건부 복원, #317 고정8단계/family를 보존하고 구간 finish는 반환한 Sync cleanup에만 연결합니다. SQL/인수/오류 원문·receiver는 DTO에 추가하지 않습니다. 제품/src/server/public/Android·업무 기대·8이벤트/5hook·재시도·500ms/5초/8worker는 유지합니다.
+기존 Draft269의 보상 worker opt-in 구간/역할/부모-Worker 시간 기준을 현재 helper에 통합했습니다. #284 trusted prepare 실패/연결 닫힘, #287 Async 활성·소유 hook 조건부 복원, #317 고정8단계/family를 보존하고 구간 finish는 반환한 Sync cleanup에만 연결합니다. SQL/인수/오류 원문·receiver는 DTO에 추가하지 않습니다. 제품/src/server/public/Android·업무 기대·8이벤트/5hook·재시도·500ms/5초/8worker는 유지합니다.
 
-원래00d6ef9 최초CI40045510648 Node22 3051성공1실패/Node24 3052성공과 round-worker command BEGIN BUSY5/conflict6기대7은 그대로 보존합니다. 새 span 옵션을 사용하지 않는 경로이며 원인/owner 미확정입니다. 실제1Worker clock 회귀는 원래 양Node span52개에 포함돼 실행됐고 성공8worker 전체DTO 별도수집과 구분합니다. 현재 통합의 검사/최초CI는 아직 미실행이며 녹색으로 원인 해결을 주장하지 않습니다.
+원래00d6ef9 최초CI40045510648 Node22 3051성공1실패/Node24 3052성공과 round-worker command BEGIN BUSY5/conflict6기대7은 그대로 보존합니다. 새 span 옵션을 사용하지 않는 경로이며 원인/owner 미확정입니다. 실제1Worker clock 회귀는 원래 양Node span52개에 포함돼 실행됐고 성공8worker 전체DTO 별도수집과 구분합니다. 현재 통합은 source2ba55bd에서 관련4파일177개·타입3종·최초동결62파일3,331개와 독립 읽기 검수를 통과했습니다. 실제 BEGIN→prepare BUSY5 회귀를 opt-in 끔/켬에 확장해 생성2회·대기25ms1회·동일 native 오류/close/5hook·비노출 기대를 유지했습니다. 이후 문서만 정리했으며 제품/src/server/public/Android/package/scripts/config는 mainc1/제품06과 같아 로컬 두웹빌드는06 근거를 재사용합니다. 새 head의 최초필수CI/정확main은 별도 확인하고 성공8worker 전체DTO 별도수집·원인/owner는 미확정입니다. 녹색을 원인 해결로 주장하지 않습니다.
 
 ## 2026-10-25 · #321 지도 중간의 가장자리 군락
 
