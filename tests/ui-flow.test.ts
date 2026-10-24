@@ -2320,6 +2320,8 @@ describe('후반 정원 공간과 확정 전 미리보기',()=>{
     const disk=h.disk(),writes=h.writes(),round=h.run(roundState);open(h);
     expect(h.run('otherModal()')).toBe(true);expect(h.run('spaceDialog.innerHTML')).toContain(t(language,'spacePreviewTitle'));expect(h.run('spaceDialog.innerHTML')).toContain('data-phase="1"');expect(h.run('spaceDialog.innerHTML')).toContain('id="preview-space-sky"');
     expect(h.run('spaceDialog.innerHTML')).toContain('data-renderer="painted-v4"');expect(h.run('spaceDialog.innerHTML')).toContain('href="/assets/garden-v4/backdrop-meadow.webp"');
+    const previewControls=[...(h.run('spaceDialog.innerHTML') as string).matchAll(/<button id="(space-preview-[^"]+)"/g)].map(match=>match[1]);
+    expect(previewControls).toEqual(['space-preview-current','space-preview-after','space-preview-confirm','space-preview-cancel']);
     expect(h.run('gardenWorkshop(false)')).toContain('data-renderer="painted-v4"');
     const staleConfirm=h.element('#space-preview-confirm').onclick;h.element('#space-preview-current').onclick();expect(h.run('spaceDialog.innerHTML')).toContain('data-phase="0"');h.element('#space-preview-after').onclick();
     expect(h.run('gardenWorkshop(false)')).not.toContain('data-plot=');expect(h.run('gardenWorkshop(false)')).not.toContain(' / 5</span>');expect(h.run('gardenWorkshop(false)')).toContain('data-area="pond"');
