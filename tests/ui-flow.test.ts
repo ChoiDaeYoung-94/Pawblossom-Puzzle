@@ -73,6 +73,7 @@ class ElementStub {
   querySelectorAll(_selector:string):ElementStub[]{return [];}
   toggleAttribute(name:string,force?:boolean) {if(name==='disabled')this.disabled=force??!this.disabled;}
   addEventListener(name: string, callback: (event: { preventDefault(): void }) => void) { this.listeners[name] = callback; }
+  removeEventListener(name:string,callback:unknown){if(this.listeners[name]===callback)delete this.listeners[name];}
   showModal() { this.open = true; }
   close() { this.open = false; }
 }
@@ -323,6 +324,11 @@ describe('독립 스테이지 지도',()=>{
     const state=h.run('JSON.stringify({round,moves,score,collected,save,board:scene.engine.board})'),disk=h.disk(),writes=h.writes();
     h.element('#map-play').onclick();expect(h.run('previewDialog.innerHTML')).toContain('id="preview-remaining"');expect(h.run('previewDialog.innerHTML')).toContain('Moves remaining: 23.');
     h.run("confirmStagePreview(stagePreview,'continue')");expect(h.run('route')).toBe('puzzle');expect(h.run('JSON.stringify({round,moves,score,collected,save,board:scene.engine.board})')).toBe(state);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('정원에서 숨은 지도 DOM의 scrollTop이0으로 줄어도 탐색 위치는 메모리에 보존합니다',()=>{
+    const h=boot();h.element('#campaign-scroll').scrollTop=613;const before=h.run('JSON.stringify(save)'),disk=h.disk(),writes=h.writes();
+    h.run("switchView('village')");h.element('#campaign-scroll').scrollTop=0;h.run('renderViews()');h.element('#campaign-scroll').scrollTop=0;
+    h.run("switchView('map')");expect(h.element('#campaign-scroll').scrollTop).toBe(613);expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
   });
 });
 

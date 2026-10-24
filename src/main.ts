@@ -49,6 +49,8 @@ let save=loadSave(), currentLevel=save.highestLevel, moves=0, score=0, collected
 let scene:BoardScene, game:Phaser.Game, route='map', toastTimer:ReturnType<typeof setTimeout>;
 let settingsReturnRoute='map';
 let mapPositioned:number|undefined;
+let mapScrollOffset=0;
+let detachMapScroll:(()=>void)|undefined;
 let resultTimer:ReturnType<typeof setTimeout>|undefined;
 let resumeNoticeTimer:ReturnType<typeof setTimeout>|undefined;
 let round=0;
@@ -1126,6 +1128,7 @@ function revealMapStage(){
   $<HTMLSelectElement>('#map-chapter-select').value=String(selectedChapter);
   const target=document.querySelector<HTMLElement>(`#map-stage-${mapCurrentLevel()}`);
   target?.scrollIntoView?.({block:'center',behavior:'auto'});
+  mapScrollOffset=$('#campaign-scroll').scrollTop;
 }
 function renderCampaignMap(){
   const current=mapCurrentLevel(),active=hasRoundProgress();
@@ -1146,14 +1149,19 @@ function renderViews(grew=false){
   if(spacePreview)closeSpacePreview(false);
   const focused=document.activeElement as HTMLElement|null,focusedId=focused?.id;
   const scroll=Array.from(document.querySelectorAll<HTMLElement>('.view'),view=>({view,top:view.scrollTop,left:view.scrollLeft}));
-  const mapScroll=document.querySelector<HTMLElement>('#campaign-scroll')?.scrollTop??0;
+  if(route==='map'&&$('#map-view').dataset.motionActive==='true')mapScrollOffset=document.querySelector<HTMLElement>('#campaign-scroll')?.scrollTop??mapScrollOffset;
   disposeCarePipDisplay();
   mapPipIdle?.dispose();mapPipIdle=undefined;
   mapScenery?.dispose();mapScenery=undefined;
+  detachMapScroll?.();detachMapScroll=undefined;
   $('#map-view').innerHTML=renderCampaignMap();
   mapScenery=createCampaignScenery($('#campaign-scroll'),id=>{
     if(route!=='map')return;selectedChapter=id;$<HTMLSelectElement>('#map-chapter-select').value=String(id);
   });
+  const campaignScroll=$('#campaign-scroll');
+  const rememberMapScroll=()=>{if(campaignScroll.isConnected&&route==='map'&&!$('#map-view').hidden)mapScrollOffset=campaignScroll.scrollTop;};
+  campaignScroll.addEventListener('scroll',rememberMapScroll,{passive:true});
+  detachMapScroll=()=>campaignScroll.removeEventListener('scroll',rememberMapScroll);
   if(route==='map'){
     const mapPip=document.querySelector<HTMLElement>('#map-current-pip');
     if(mapPip)mapPipIdle=createPipIdle(mapPip);
@@ -1164,8 +1172,9 @@ function renderViews(grew=false){
     if(route!=='map'||stagePreview||otherModal())return;
     const id=Number((event.target as HTMLSelectElement).value);if(!chapters.some(chapter=>chapter.id===id))return;
     selectedChapter=id;document.querySelector(`#map-chapter-${id}`)?.scrollIntoView?.({block:'start',behavior:'auto'});
+    mapScrollOffset=campaignScroll.scrollTop;
   };
-  $('#campaign-scroll').scrollTop=mapScroll;
+  campaignScroll.scrollTop=mapScrollOffset;
   $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('chapterMeadow')}</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div>${gardenWorkshop(grew)}`;
   if(careDemo)$('#village-view').innerHTML=$('#village-view').innerHTML.split('<div class="level-picker">')[0];
   $('#village-view').innerHTML=careDemoPanel('village')+$('#village-view').innerHTML;
@@ -1235,6 +1244,7 @@ function switchView(name:string){
   if(returnToResult&&(!nativeActive||document.hidden||testAds?.pausesGame||testBilling?.pausesGame||boardPending||resultTimer!==undefined||previewDialog.open||otherModal()||game.scene.getScene('Board')!==scene))return;
   if(name!=='puzzle')abandonRewardContinue();
   if(!scene.canLeave())return;
+  if(route==='map')mapScrollOffset=$('#campaign-scroll').scrollTop;
   if(name!=='puzzle'){clearResumeNotice();clearBoardNotice();}
   if(name!=='village'&&gardenActivity)clearCareReaction();
   route=name;$('#app').dataset.route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);

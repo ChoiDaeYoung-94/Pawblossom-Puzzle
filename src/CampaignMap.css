@@ -10,6 +10,9 @@
 .campaign-chapter{position:relative;isolation:isolate}.campaign-chapter h3{position:relative;z-index:1}
 .campaign-scenery{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1;border-radius:70px;contain:paint}
 .map-distant{position:absolute;width:100%;height:100%;inset:0;transform:translateY(calc(var(--map-drift,0px) * -.3));pointer-events:none}
+.map-distant{background:radial-gradient(ellipse at 20% 30%,#fff6c338,transparent 65%),radial-gradient(ellipse at 85% 75%,#8fb3a32b,transparent 60%);mask-image:radial-gradient(ellipse at center,#000 30%,transparent 75%)}
+[data-map-theme="water"] .map-distant{background:radial-gradient(ellipse at 35% 65%,#9ac4ba45,transparent 68%)}
+[data-map-theme="festival"] .map-distant{background:radial-gradient(ellipse at 60% 40%,#e8b5ba38,transparent 68%)}
 .map-landmark{position:absolute;width:clamp(65px,20%,100px);height:auto;overflow:visible;filter:drop-shadow(0 3px 1px #3e593515);transform:translateY(var(--map-drift,0px));pointer-events:none}
 .map-landmark-one{left:0;top:150px}.map-landmark-two{right:-2px;bottom:100px}
 .map-tree-crown{transform-origin:0 18px}.map-windmill-blades{transform-origin:0 0}.map-flower-head{transform-origin:0 8px}.map-pond-rings{transform-origin:9px 3px}
