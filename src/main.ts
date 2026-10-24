@@ -24,6 +24,8 @@ import { SwapPractice } from './SwapPractice';
 import { SpecialTapPractice } from './SpecialTapPractice';
 import { bindPracticeBoard } from './bindPracticeInputs';
 import { gardenArt,flowerArt } from './GardenArt';
+import {previewGardenPreset,type GardenPresetId} from './GardenPresets';
+import {gardenPresetPreview} from './GardenPresetsUI';
 import {gardenGoals,goalNextStep,nextGardenGoal,type GardenGoal,type GoalNeed} from './GardenGoals';
 import {gardenSpaceArt} from './GardenSpaceArt';
 import {paintedGardenForeground} from './GardenStructureArt';
@@ -146,6 +148,7 @@ if(androidBillingEntry){
 function billingModal(){return Boolean(androidBillingEntry&&$<HTMLDialogElement>('#test-billing-dialog').open);}
 const previewDialog=document.createElement('dialog');previewDialog.id='stage-preview-dialog';previewDialog.setAttribute('aria-labelledby','stage-preview-title');previewDialog.setAttribute('aria-describedby','stage-preview-description');document.body.append(previewDialog);
 const resourceDialog=document.createElement('dialog');resourceDialog.id='resource-help-dialog';resourceDialog.setAttribute('aria-labelledby','resource-help-title');resourceDialog.setAttribute('aria-describedby','resource-help-description');document.body.append(resourceDialog);
+const lookDialog=document.createElement('dialog');lookDialog.id='garden-look-dialog';lookDialog.setAttribute('aria-labelledby','garden-look-title');lookDialog.setAttribute('aria-describedby','garden-look-description');document.body.append(lookDialog);
 const spaceDialog=document.createElement('dialog');spaceDialog.id='garden-space-dialog';spaceDialog.setAttribute('aria-labelledby','garden-space-preview-title');spaceDialog.setAttribute('aria-describedby','garden-space-preview-description');document.body.append(spaceDialog);
 type SpacePreview={action:SpaceAction;save:SaveData;generation:number;route:string;demo:typeof careDemo;round:number;scene:BoardScene;opener:HTMLButtonElement;area:GardenArea;showCurrent:boolean;scroll:number};
 let spacePreview:SpacePreview|undefined;
@@ -184,8 +187,52 @@ function showSpacePreview(action:SpaceAction,opener:HTMLButtonElement){
   renderSpacePreview();scene.cancelInput();spaceDialog.showModal();syncActivity();$('#garden-space-preview-title').focus({preventScroll:true});
 }
 spaceDialog.addEventListener('cancel',event=>{event.preventDefault();closeSpacePreview();});
-spaceDialog.addEventListener('close',()=>{if(spacePreview)closeSpacePreview(false);});
+spaceDialog.addEventListener('close',()=>{if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);});
 spaceDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();});
+type LookPreview={save:SaveData;generation:number;route:string;demo:typeof careDemo;round:number;scene:BoardScene;opener:HTMLButtonElement;id:GardenPresetId;showCurrent:boolean;language:SaveData['language'];scroll:number};
+let lookPreview:LookPreview|undefined;
+function lookPreviewEnvironment(){return route==='village'&&selectedGardenArea==='flowers'&&nativeActive&&!document.hidden&&!boardPending&&!resultTimer&&!puzzleProcessing&&!careProcessing&&!growing&&!stagePreview&&!previewDialog.open&&!otherModal(true,false)&&!testAds?.busy&&!testBilling?.busy&&!testAds?.pausesGame&&!testBilling?.pausesGame&&Boolean(scene?.canLeave())&&game.scene.getScene('Board')===scene;}
+function validLookPreview(context:LookPreview){return lookPreview===context&&lookDialog.open&&context.save===save&&context.language===save.language&&context.generation===careGeneration&&context.route===route&&context.demo===careDemo&&context.round===round&&context.scene===scene&&currentControl(context.opener,context.save,context.generation)&&lookPreviewEnvironment();}
+function closeLookPreview(restore=true){
+  const context=lookPreview;lookPreview=undefined;lookDialog.close();syncActivity();
+  if(!restore||!context||!nativeActive||document.hidden||context.route!==route||context.save!==save||context.demo!==careDemo||otherModal()||previewDialog.open)return;
+  if(currentControl(context.opener,context.save,context.generation))context.opener.focus({preventScroll:true});
+  $('#village-view').scrollTop=context.scroll;
+}
+function renderLookPreview(){
+  const context=lookPreview;if(!context)return;
+  lookDialog.innerHTML=gardenPresetPreview(save.language,save.gardenDesign,save.garden,save.pip??freshPip(),gardenCompletedCount(),context.id,context.showCurrent,careStorageBlocked(),Boolean(careDemo));
+  for(const id of ['sunny','butterfly','starlight'] as const){
+    const button=$<HTMLButtonElement>('#garden-look-'+id);
+    button.onclick=()=>{if(!validLookPreview(context)||$('#'+button.id)!==button)return;context.id=id;context.showCurrent=false;renderLookPreview();$('#'+button.id).focus({preventScroll:true});};
+  }
+  for(const current of [true,false]){
+    const button=$<HTMLButtonElement>(current?'#garden-look-current':'#garden-look-after');
+    button.onclick=()=>{if(!validLookPreview(context)||button.disabled||$('#'+button.id)!==button)return;context.showCurrent=current;renderLookPreview();$('#'+button.id).focus({preventScroll:true});};
+  }
+  const confirm=$<HTMLButtonElement>('#garden-look-confirm');
+  confirm.onclick=()=>{
+    if(!validLookPreview(context)||confirm.disabled||$('#'+confirm.id)!==confirm)return;
+    closeLookPreview(false);
+    if(commitCare(confirm,context.save,context.generation,next=>{
+      const plan=previewGardenPreset(context.id,next.gardenDesign,next.garden,next.pip??freshPip(),gardenCompletedCount(next));
+      if(!plan?.design||!plan.changed)return false;
+      next.gardenDesign=plan.design;return true;
+    })){renderViews();notice('lookApplied');$('#garden-edit-title').focus({preventScroll:true});}
+    else if(currentControl(context.opener,context.save,context.generation))context.opener.focus({preventScroll:true});
+  };
+  $('#garden-look-cancel').onclick=()=>{if(lookPreview===context)closeLookPreview();};
+}
+function showLookPreview(opener:HTMLButtonElement){
+  if(lookPreview||lookDialog.open||!lookPreviewEnvironment()||!currentControl(opener,save,careGeneration))return;
+  if(pipReaction||gardenActivity){clearCareReaction();renderViews();opener=$<HTMLButtonElement>('#garden-look-open');}
+  lookPreview={save,generation:careGeneration,route,demo:careDemo,round,scene,opener,id:'sunny',showCurrent:false,language:save.language,scroll:$('#village-view').scrollTop};
+  renderLookPreview();scene.cancelInput();lookDialog.showModal();syncActivity();$('#garden-look-title').focus({preventScroll:true});
+}
+lookDialog.addEventListener('cancel',event=>{event.preventDefault();closeLookPreview();});
+lookDialog.addEventListener('close',()=>{if(lookPreview)closeLookPreview(false);});
+lookDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();});
+
 type ResourceKind='stars'|'coins';
 let resourceHelp:{kind:ResourceKind;opener:HTMLElement;save:SaveData;round:number;scene:BoardScene;route:string;demo:typeof careDemo;scroll:{view:HTMLElement;top:number;left:number}[]}|undefined;
 function renderResourceHelp(){
@@ -217,7 +264,7 @@ const boardFeedback=new RoundFeedback({layer:$('#round-feedback-layer'),pip:$('#
   canvas:()=>document.querySelector('#game-canvas canvas'),goal:key=>document.querySelector(`[data-feedback-goal="${key}"] img`),
   active:()=>nativeActive&&!document.hidden&&!careDemo&&route==='puzzle'&&!boardPending&&!roundEnded&&!previewDialog.open&&!otherModal()&&!testAds?.pausesGame&&!testBilling?.pausesGame,
 });
-function otherModal(includeSpace=true){return includeSpace&&spaceDialog.open||resourceDialog.open||$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open)||billingModal();}
+function otherModal(includeSpace=true,includeLook=true){return includeLook&&lookDialog.open||includeSpace&&spaceDialog.open||resourceDialog.open||$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open)||billingModal();}
 function disposeCarePipDisplay(){carePipDisplay?.nature?.dispose();carePipDisplay?.idle.dispose();carePipDisplay?.accessory?.dispose();carePipDisplay=undefined;}
 function syncCarePipActivity(){
   const view=route==='village'||route==='journal'?route:undefined;
@@ -299,6 +346,7 @@ previewDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='
 
 // 문서와 Android 상태 중 하나라도 비활성이면 오디오와 진행을 멈춥니다.
 function syncActivity(){
+  if(lookPreview&&!validLookPreview(lookPreview))closeLookPreview(false);
   if(spacePreview&&!validSpacePreview(spacePreview))closeSpacePreview(false);
   renderBuyerContinue();
   renderRewardContinue();
@@ -418,7 +466,7 @@ function replaceBoard(){
 }
 function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{focusBoard?:boolean}={}){
   if(careDemo)return;
-  if(spacePreview)closeSpacePreview(false);
+  if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);
   if(resourceHelp)closeResourceHelp(false);
   boardFeedback.cancel();
   if(stagePreview)closeStagePreview(false);
@@ -988,7 +1036,7 @@ function gardenVisitControls(){
 function gardenEditor(){
   const design=gardenDesignFor(save.gardenDesign),pip=save.pip??freshPip(),blocked=careStorageBlocked();
   selectedGardenPlot=Math.max(0,Math.min(selectedGardenPlot,Math.max(0,save.garden-1)));
-  return `${gardenVisitControls()}<section class="garden-editor" aria-labelledby="garden-edit-title"><h3 id="garden-edit-title" tabindex="-1">${text('gardenEdit')}</h3><div class="garden-plots" role="group" aria-label="${text('gardenChoosePlot')}">${Array.from({length:5},(_,i)=>`<button id="garden-plot-${i}" type="button" aria-pressed="${i===selectedGardenPlot&&i<save.garden}" aria-label="${text('gardenPlot').replace('{number}',String(i+1))} · ${i<save.garden?flowerName(design.flowers[i]):text('levelLocked')}" ${i>=save.garden?'disabled':''}>${i<save.garden?flowerArt(design.flowers[i]):icon('lock',18)}<span>${i+1}</span></button>`).join('')}</div><p class="garden-selection" role="status">${save.garden?text('gardenPlot').replace('{number}',String(selectedGardenPlot+1))+' · '+flowerName(design.flowers[selectedGardenPlot])+' · '+text('gardenFreeChange'):text('gardenFirstPlot')}</p><div class="garden-flowers" role="group" aria-label="${text('gardenChooseFlower')}">${flowerStyles.map(style=>`<button id="garden-flower-${style}" type="button" aria-pressed="${save.garden>0&&design.flowers[selectedGardenPlot]===style}" ${blocked||save.garden===0?'disabled':''}>${flowerArt(style)}<span>${flowerName(style)}</span></button>`).join('')}</div>${lanternPlacement()}<h4>${text('gardenTogether')}</h4><div class="garden-projects">${gardenProjects.map(project=>{
+  return `${gardenVisitControls()}<section class="garden-editor" aria-labelledby="garden-edit-title"><h3 id="garden-edit-title" tabindex="-1">${text('gardenEdit')}</h3><div class="garden-plots" role="group" aria-label="${text('gardenChoosePlot')}">${Array.from({length:5},(_,i)=>`<button id="garden-plot-${i}" type="button" aria-pressed="${i===selectedGardenPlot&&i<save.garden}" aria-label="${text('gardenPlot').replace('{number}',String(i+1))} · ${i<save.garden?flowerName(design.flowers[i]):text('levelLocked')}" ${i>=save.garden?'disabled':''}>${i<save.garden?flowerArt(design.flowers[i]):icon('lock',18)}<span>${i+1}</span></button>`).join('')}</div><p class="garden-selection" role="status">${save.garden?text('gardenPlot').replace('{number}',String(selectedGardenPlot+1))+' · '+flowerName(design.flowers[selectedGardenPlot])+' · '+text('gardenFreeChange'):text('gardenFirstPlot')}</p><div class="garden-flowers" role="group" aria-label="${text('gardenChooseFlower')}">${flowerStyles.map(style=>`<button id="garden-flower-${style}" type="button" aria-pressed="${save.garden>0&&design.flowers[selectedGardenPlot]===style}" ${blocked||save.garden===0?'disabled':''}>${flowerArt(style)}<span>${flowerName(style)}</span></button>`).join('')}</div><button id="garden-look-open" class="text-button" type="button">${text('lookOpen')}</button>${lanternPlacement()}<h4>${text('gardenTogether')}</h4><div class="garden-projects">${gardenProjects.map(project=>{
     const owned=design.owned.includes(project.id),placed=design.placed.includes(project.id),ready=projectReady(project,save.garden,pip,design);
     return `<article class="garden-project"><div><strong>${projectName(project.id)}</strong><p>${owned?text('gardenOwned'):projectConditions(project)}</p></div><button id="garden-project-${project.id}" type="button" ${owned?`aria-pressed="${placed}"`:''} ${blocked||!owned&&(!ready||save.coins<project.cost)?'disabled':''}>${owned?text(placed?'gardenHide':'gardenPlace'):project.cost?text('gardenBuy').replace('{cost}',String(project.cost)):text('gardenClaim')}</button></article>`;
   }).join('')}</div>${gardenThemePanel()}${blocked?`<p class="pip-save-note" role="status">${text('careSaveBlocked')}</p>`:''}</section>`;
@@ -1025,6 +1073,7 @@ function revealPipCare(){
 function bindCareControls(){
   const expectedSave=save,generation=careGeneration;
   const bind=(id:string,handler:(button:HTMLButtonElement)=>void)=>{const button=document.querySelector<HTMLButtonElement>('#'+id);if(button)button.onclick=()=>{if(currentControl(button,expectedSave,generation))handler(button);};};
+  bind('garden-look-open',button=>showLookPreview(button));
   const selectArea=(area:GardenArea)=>{
     if(route!=='village'||!careEnvironment()||careProcessing||growing)return;
     selectedGardenArea=area;clearCareReaction();renderViews();$('#garden-area-'+area).focus({preventScroll:true});
@@ -1140,7 +1189,7 @@ function renderCampaignMap(){
   }).join('')}</div><div class="campaign-play"><div><span>${text(chapterForLevel(current).title)}</span><strong>${text('level')} ${current}</strong></div><button id="map-play" class="primary">${text(active?'mapResume':'mapPlay')}${icon('arrow',20)}</button></div>`;
 }
 function renderViews(grew=false){
-  if(spacePreview)closeSpacePreview(false);
+  if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);
   const focused=document.activeElement as HTMLElement|null,focusedId=focused?.id;
   const scroll=Array.from(document.querySelectorAll<HTMLElement>('.view'),view=>({view,top:view.scrollTop,left:view.scrollLeft}));
   const mapScroll=document.querySelector<HTMLElement>('#campaign-scroll')?.scrollTop??0;
@@ -1207,7 +1256,7 @@ function localize(){
   if(boardNoticeKey)$('#board-notice').textContent=text(boardNoticeKey);
 }
 function changeLanguage(language:'en'|'ko'){
-  if(spacePreview)closeSpacePreview(false);
+  if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);
   boardFeedback.cancel();
   const focused=document.activeElement as HTMLElement|null,focusedId=focused?.id;
   save.language=language;persist();localize();updateWallet();renderViews();updateGoals();updateBoardAccess();updateResultCopy();
@@ -1219,7 +1268,7 @@ function changeLanguage(language:'en'|'ko'){
   if(focusedId&&!focused?.isConnected)document.querySelector<HTMLElement>('#'+focusedId)?.focus();
 }
 function switchView(name:string){
-  if(spacePreview)closeSpacePreview(false);
+  if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);
   if(resourceDialog.open)return;
   if(careDemo&&!['village','journal'].includes(name)&&!exitCareDemo(false))return;
   if(stagePreview)return;
@@ -1275,11 +1324,11 @@ boardFocus.addEventListener('keydown',event=>{
   clearResumeNotice();
   boardFocus.dataset.keyboard='true';void audio.unlock().catch(()=>{});scene.focusKeyboard();scene.keyboardKey(event.key,event.repeat,event.shiftKey&&event.key==='Enter');
 });
-window.addEventListener('blur',()=>{if(spacePreview)closeSpacePreview(false);boardFocus.dataset.keyboard='false';scene?.cancelInput();practiceInputs?.cancel();boardFeedback.cancel();});
+window.addEventListener('blur',()=>{if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);boardFocus.dataset.keyboard='false';scene?.cancelInput();practiceInputs?.cancel();boardFeedback.cancel();});
 window.addEventListener('resize',()=>{practiceInputs?.cancel();boardFeedback.cancel();});
 window.addEventListener('scroll',()=>boardFeedback.cancel(),{capture:true,passive:true});
 document.addEventListener('visibilitychange',()=>{syncActivity();if(testAds){renderAdDialog();if(!document.hidden)void testAds.refresh();}if(testBilling){renderBillingDialog();if(!document.hidden)void testBilling.refresh();}});
-window.addEventListener('pagehide',()=>{if(spacePreview)closeSpacePreview(false);boardFeedback.cancel();void testAds?.dispose();void testBilling?.dispose();});
+window.addEventListener('pagehide',()=>{if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);boardFeedback.cancel();void testAds?.dispose();void testBilling?.dispose();});
 if(Capacitor.isNativePlatform()){
   void App.addListener('appStateChange',({isActive})=>{nativeRevision++;nativeActive=isActive;syncActivity();if(testAds){renderAdDialog();if(isActive)void testAds.refresh();}if(testBilling){renderBillingDialog();if(isActive)void testBilling.refresh();}}).then(async()=>{
     const revision=nativeRevision;
@@ -1287,7 +1336,7 @@ if(Capacitor.isNativePlatform()){
     // 늦게 반환된 초기 상태가 이후의 복귀 이벤트를 덮어쓰지 않도록 합니다.
     if(revision===nativeRevision){nativeActive=state.isActive;syncActivity();}
   }).catch(()=>{ /* 네이티브 상태를 확인할 수 없으면 비활성 상태를 유지합니다. */ });
-  void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if(billingModal())closeBillingDialog();else if(testBilling?.pausesGame)return;else if(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open){void closeAdDialog();}else if(testAds?.pausesGame)return;else if(spacePreview)closeSpacePreview();else if(resourceHelp)closeResourceHelp();else if(stagePreview)closeStagePreview();else if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('map');}else if(route==='settings')switchView(settingsReturnRoute);else if(route!=='map')switchView('map');else void App.minimizeApp();});
+  void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if(billingModal())closeBillingDialog();else if(testBilling?.pausesGame)return;else if(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open){void closeAdDialog();}else if(testAds?.pausesGame)return;else if(lookPreview)closeLookPreview();else if(spacePreview)closeSpacePreview();else if(resourceHelp)closeResourceHelp();else if(stagePreview)closeStagePreview();else if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('map');}else if(route==='settings')switchView(settingsReturnRoute);else if(route!=='map')switchView('map');else void App.minimizeApp();});
 }
 if(androidAdEntry)$<HTMLDialogElement>('#test-ad-dialog').addEventListener('cancel',event=>{event.preventDefault();void closeAdDialog();});
 if(androidBillingEntry)$<HTMLDialogElement>('#test-billing-dialog').addEventListener('cancel',event=>{event.preventDefault();closeBillingDialog();});

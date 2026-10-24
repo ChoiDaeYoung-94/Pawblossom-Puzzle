@@ -16,6 +16,8 @@ import * as paintedGardenArt from '../src/GardenPaintedArt';
 import * as gardenStructureArt from '../src/GardenStructureArt';
 import * as boardDisplay from '../src/BoardDisplay';
 import {gardenGoals,goalNextStep,nextGardenGoal} from '../src/GardenGoals';
+import {previewGardenPreset} from '../src/GardenPresets';
+import {gardenPresetPreview} from '../src/GardenPresetsUI';
 
 // 테스트에만 사용하는 Node API입니다. 별도 @types/node 설치 없이 런타임에서 읽습니다.
 const fsModule = 'node:fs', vmModule = 'node:vm';
@@ -211,7 +213,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     specialTileArt,
     ...boardDisplay,
-    gardenGoals,goalNextStep,nextGardenGoal,
+    gardenGoals,goalNextStep,nextGardenGoal,previewGardenPreset,gardenPresetPreview,
     bindPracticeBoard,
     cloneSnapshot,prepareShuffle,
     showResultPip:()=>{resultArtCalls++;},
@@ -279,6 +281,41 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     writes: () => writes, stored: () => JSON.parse(storageValues.get('pawblossom.save.v1')??'null'),
   };
 }
+
+describe('무료 추천 코디의 미리보기와 저장 경계',()=>{
+  const boot=()=>{const h=mainHarness();h.run("save.garden=2;switchView('village')");return h;};
+  it('선택·비교·취소는 원래 저장/정원을 보존하고 원래 버튼으로 초점을 돌립니다',()=>{
+    const h=boot(),before=h.run('JSON.stringify(save)'),disk=h.disk(),writes=h.writes();
+    h.run("globalThis.lookFocus=[];document.querySelector('#garden-look-open').focus=o=>lookFocus.push(o.preventScroll)");h.element('#garden-look-open').onclick();expect(h.run('lookDialog.open')).toBe(true);
+    h.element('#garden-look-butterfly').onclick();expect(h.run('lookDialog.innerHTML')).toContain(t('en','lookNeedButterflies'));
+    h.element('#garden-look-sunny').onclick();h.element('#garden-look-current').onclick();h.element('#garden-look-after').onclick();h.element('#garden-look-cancel').onclick();
+    expect(h.run('lookPreview')).toBeUndefined();expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('lookFocus')).toEqual([true]);
+  });
+  it('적용은 재화/핍/공간/보드를 보존한 한 payload이며 낡은 확인·같은 코디는 다시 쓰지 않습니다',()=>{
+    const h=boot(),before=h.run('JSON.stringify({coins:save.coins,stars:save.stars,pip:save.pip,spaces:save.gardenDesign?.spaces,board:scene.engine.board})'),writes=h.writes();
+    h.element('#garden-look-open').onclick();const old=h.element('#garden-look-confirm').onclick;old();
+    // SaveStore는 기존 본문과 복구용 백업을 각각 한 번 기록합니다.
+    expect(h.run('save.gardenDesign.flowers')).toEqual(['daisy','meadow','meadow','meadow','meadow']);expect(h.writes()).toBe(writes+2);expect(h.stored().gardenDesign.flowers[0]).toBe('daisy');
+    expect(h.run('JSON.stringify({coins:save.coins,stars:save.stars,pip:save.pip,spaces:save.gardenDesign?.spaces,board:scene.engine.board})')).toBe(before);
+    old();h.element('#garden-look-open').onclick();expect(h.run('lookDialog.innerHTML')).toContain(t('en','lookSame'));h.element('#garden-look-confirm').onclick();expect(h.writes()).toBe(writes+2);
+  });
+  it('저장 실패나 배경 전환·DOM 교체 후 낡은 확인은 수동 디자인을 덮어쓰지 않습니다',()=>{
+    for(const action of ['fail','hidden','replace','language','route']){
+      const h=boot(),before=h.run('JSON.stringify(save.gardenDesign)');h.element('#garden-look-open').onclick();const old=h.element('#garden-look-confirm').onclick;
+      if(action==='fail')h.setStorageFails(true);
+      if(action==='hidden')h.run('document.hidden=true;syncActivity()');
+      if(action==='replace')h.run('renderViews()');
+      if(action==='language')h.run("changeLanguage('ko')");
+      if(action==='route')h.run("switchView('journal')");
+      old();expect(h.run('JSON.stringify(save.gardenDesign)'),action).toBe(before);
+    }
+  });
+  it('체험 코디는 정상 지갑/정원/판을 저장하지 않고 체험 종료 시 버립니다',()=>{
+    const h=mainHarness(false,false,true),before=h.run('JSON.stringify(save)'),disk=h.disk();h.run("switchView('village')");expect(h.run('enterCareDemo()')).toBe(true);h.run("save.garden=2;renderViews()");
+    h.element('#garden-look-open').onclick();h.element('#garden-look-confirm').onclick();expect(h.run('save.gardenDesign.flowers[0]')).toBe('daisy');
+    h.run('exitCareDemo()');expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.disk()).toEqual(disk);
+  });
+});
 
 describe('보드 고밀도 표시와 월드 분리',()=>{
   it('Game 버퍼만960으로 만들고8x8 엔진과 화면 규칙은 유지합니다',()=>{
