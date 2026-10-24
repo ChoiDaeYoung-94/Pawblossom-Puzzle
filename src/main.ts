@@ -10,6 +10,7 @@ import './style.css';
 import './CampaignMap.css';
 import './PuzzlePresentation.css';
 import './SpecialTileArt.css';
+import './GardenStructureArt.css';
 import { BoardScene,tileNames } from './BoardScene';
 import {specialTileArt} from './SpecialTileArt';
 import { AudioManager } from './audio/AudioManager';
@@ -22,6 +23,7 @@ import { SpecialTapPractice } from './SpecialTapPractice';
 import { bindPracticeBoard } from './bindPracticeInputs';
 import { gardenArt,flowerArt } from './GardenArt';
 import {gardenSpaceArt} from './GardenSpaceArt';
+import {paintedGardenForeground} from './GardenStructureArt';
 import {gardenSpaceSpecs,gardenSpacesFor,prepareSpaceAction,previewSpaceAction,type GardenArea,type SpaceAction} from './gardenSpaces';
 import {gardenAreas,gardenAreaName,gardenAreaTabs,gardenSpacePanel,gardenSpacePreview,nextSpaceGoal,spacePhaseName,spaceStyleName} from './GardenSpacesUI';
 import { flowerStyles,gardenProjects,gardenThemes,gardenDesignFor,freshGardenDesign,flowerDiversity,projectReady,themeReady,prepareGardenAction,type GardenTheme,type GardenProject,type GardenAction } from './gardenDesign';
@@ -875,8 +877,8 @@ function gardenActivitySpots(){
     const label=text(kind==='flower'?'gardenLookFlower':kind==='lily'?'gardenLookLily':'gardenLookRipples').replace('{number}',String(plot+1));
     return `<button type="button" id="garden-activity-${kind}" class="garden-activity-spot" style="left:${x/4.8}%;top:${y/2.8}%" aria-label="${label}" aria-pressed="${gardenActivity?.kind===kind}">${kind==='ripples'?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8q3-4 6 0t6 0t6 0M3 16q3-4 6 0t6 0t6 0" fill="none" stroke="currentColor" stroke-width="2"/></svg>':icon('flower',20)}</button>`;
   }).join('');
-  const active=gardenActivity,point=active?.kind==='flower'?[gardenPlotPoints[active.plot][0],gardenPlotPoints[active.plot][1]-20]:active?.kind==='lily'?[235,185]:[355,205];
-  const mark=!active?'':`<svg class="garden-activity-art" viewBox="0 0 480 280" aria-hidden="true"><g class="garden-activity-sheen" style="transform-origin:${point[0]}px ${point[1]}px" fill="none" stroke="${active.kind==='ripples'?'#effffc':'#fff2a7'}" stroke-width="4"><ellipse cx="${point[0]}" cy="${point[1]}" rx="${active.kind==='flower'?57:30}" ry="${active.kind==='flower'?26:13}"/>${active.kind==='ripples'?`<ellipse cx="${point[0]}" cy="${point[1]}" rx="48" ry="23"/>`:`<path d="m${point[0]-28} ${point[1]-32} 0-12m-6 6h12m42 10v-12m-6 6h12"/>`}</g></svg>`;
+  const active=gardenActivity,point=active?.kind==='flower'?[gardenPlotPoints[active.plot][0],gardenPlotPoints[active.plot][1]-20]:active?.kind==='lily'?[235,185]:[355,193];
+  const mark=!active?'':`<svg class="garden-activity-art" viewBox="0 0 480 280" aria-hidden="true"><g class="garden-activity-sheen" style="transform-origin:${point[0]}px ${point[1]}px" fill="none" stroke="${active.kind==='ripples'?'#effffc':'#fff2a7'}" stroke-width="4"><ellipse cx="${point[0]}" cy="${point[1]}" rx="${active.kind==='flower'?57:30}" ry="${active.kind==='flower'?26:active.kind==='ripples'?8:13}"/>${active.kind==='ripples'?`<ellipse cx="${point[0]}" cy="${point[1]}" rx="48" ry="13"/>`:`<path d="m${point[0]-28} ${point[1]-32} 0-12m-6 6h12m42 10v-12m-6 6h12"/>`}</g></svg>`;
   return `${mark}<div class="garden-activity-spots" role="group" aria-label="${text('gardenActivities')}">${buttons}</div>`;
 }
 const lanternLocation=(plot:number|undefined)=>plot===undefined?text('gardenLanternDefault'):text('gardenLanternAt').replace('{number}',String(plot+1));
@@ -1026,9 +1028,10 @@ function bindCareControls(){
 }
 function gardenWorkshop(grew:boolean){
   const flowers=selectedGardenArea==='flowers',spaces=gardenSpacesFor(save.gardenDesign?.spaces);
-  const image=flowers?gardenArt(save.garden,grew,save.gardenDesign,{renderer:'painted-v4'}):gardenSpaceArt(selectedGardenArea as Exclude<GardenArea,'flowers'>,spaces[selectedGardenArea as Exclude<GardenArea,'flowers'>],save.gardenDesign?.theme??'meadow','garden-space','painted-v4');
+  const space=selectedGardenArea as Exclude<GardenArea,'flowers'>;
+  const image=flowers?gardenArt(save.garden,grew,save.gardenDesign,{renderer:'painted-v4'}):gardenSpaceArt(space,spaces[space],save.gardenDesign?.theme??'meadow','garden-space','painted-v4',{foreground:false});
   const progress=flowers?`${icon('flower',17)} ${save.garden} / 5`:spacePhaseName(save.language,spaces[selectedGardenArea as Exclude<GardenArea,'flowers'>]);
-  return `<section class="garden-workshop">${gardenAreaTabs(save.language,selectedGardenArea)}<div id="garden-area-panel" role="tabpanel" aria-labelledby="garden-area-${selectedGardenArea}"><div class="garden-picture garden-preview"><div class="garden-illustration" role="img" aria-label="${gardenDescription()}">${image}</div>${gardenVisitor()}${gardenActivitySpots()}<span class="garden-pill">${progress}</span></div>${flowers?`<div class="garden-card garden-growth"><h3>${text('garden')}</h3><p class="garden-stage" id="garden-stage" role="status" tabindex="-1">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div>${save.garden===5?`<section class="pip-project garden-next-space">${nextSpaceGoal(save.language,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}<button id="garden-open-space" class="text-button">${text('spaceOpen')}</button></section>`:''}${gardenEditor()}`:`${gardenVisitControls()}${gardenSpacePanel(save.language,selectedGardenArea as Exclude<GardenArea,'flowers'>,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}`}</div></section>`;
+  return `<section class="garden-workshop">${gardenAreaTabs(save.language,selectedGardenArea)}<div id="garden-area-panel" role="tabpanel" aria-labelledby="garden-area-${selectedGardenArea}"><div class="garden-picture garden-preview"><div class="garden-illustration" role="img" aria-label="${gardenDescription()}">${image}</div>${gardenVisitor()}${gardenActivitySpots()}${flowers?'':paintedGardenForeground(space,spaces[space])}<span class="garden-pill">${progress}</span></div>${flowers?`<div class="garden-card garden-growth"><h3>${text('garden')}</h3><p class="garden-stage" id="garden-stage" role="status" tabindex="-1">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div>${save.garden===5?`<section class="pip-project garden-next-space">${nextSpaceGoal(save.language,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}<button id="garden-open-space" class="text-button">${text('spaceOpen')}</button></section>`:''}${gardenEditor()}`:`${gardenVisitControls()}${gardenSpacePanel(save.language,selectedGardenArea as Exclude<GardenArea,'flowers'>,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}`}</div></section>`;
 }
 function mapCurrentLevel(){return !testingLevel&&!roundEnded?currentLevel:save.highestLevel;}
 function revealMapStage(){

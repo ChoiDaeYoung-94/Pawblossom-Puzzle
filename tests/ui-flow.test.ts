@@ -13,6 +13,7 @@ import {t, type TextKey} from '../src/i18n';
 import {icon as renderIcon} from '../src/icons';
 import {specialTileArt,specialArtKinds,specialBodyKey,specialBodyPath} from '../src/SpecialTileArt';
 import * as paintedGardenArt from '../src/GardenPaintedArt';
+import * as gardenStructureArt from '../src/GardenStructureArt';
 
 // 테스트에만 사용하는 Node API입니다. 별도 @types/node 설치 없이 런타임에서 읽습니다.
 const fsModule = 'node:fs', vmModule = 'node:vm';
@@ -206,9 +207,9 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const i18nExports:Record<string,unknown>={};
   vm.runInNewContext(i18nCode,{exports:i18nExports});
   Object.assign(context,i18nExports);
-  const gardenSpaceArtExports:Record<string,unknown>={};vm.runInNewContext(gardenSpaceArtCode,{exports:gardenSpaceArtExports,require:()=>paintedGardenArt});Object.assign(context,gardenSpaceArtExports);
+  const gardenSpaceArtExports:Record<string,unknown>={};vm.runInNewContext(gardenSpaceArtCode,{exports:gardenSpaceArtExports,require:(name:string)=>name==='./GardenPaintedArt'?paintedGardenArt:gardenStructureArt});Object.assign(context,gardenSpaceArtExports,gardenStructureArt);
   const gardenSpacesUIExports:Record<string,unknown>={};vm.runInNewContext(gardenSpacesUICode,{exports:gardenSpacesUIExports,require:(name:string)=>name==='./i18n'?i18nExports:name==='./gardenSpaces'?gardenSpacesExports:gardenSpaceArtExports});Object.assign(context,gardenSpacesUIExports);
-  const gardenExports:Record<string,unknown>={};vm.runInNewContext(gardenCode,{exports:gardenExports,require:(name:string)=>name==='./gardenDesign'?gardenDesignExports:paintedGardenArt});Object.assign(context,gardenExports);
+  const gardenExports:Record<string,unknown>={};vm.runInNewContext(gardenCode,{exports:gardenExports,require:(name:string)=>name==='./gardenDesign'?gardenDesignExports:name==='./GardenPaintedArt'?paintedGardenArt:gardenStructureArt});Object.assign(context,gardenExports);
   vm.runInContext(stateCode, context);
   Object.assign(context, stateExports);
   vm.runInContext(mainCode, context);
@@ -2291,6 +2292,19 @@ describe('후반 정원 공간과 확정 전 미리보기',()=>{
   const initial=(language:'en'|'ko'='en',clears=100)=>({version:1,language,highestLevel:Math.min(100,clears+1),completed:Array.from({length:clears},(_,i)=>i+1),coins:2000,stars:100,garden:5,music:true,sfx:true,tutorialSeen:true,pip:{growth:100,affection:100,owned:[],equipped:'none'}});
   const roundState='JSON.stringify({round,currentLevel,moves,score,collected,board:scene.engine.board,inProgress:save.inProgress})';
   const open=(h:ReturnType<typeof mainHarness>)=>{h.element('#garden-area-pond').onclick();h.element('#garden-space-restore').onclick();expect(h.run('spaceDialog.open')).toBe(true);};
+  it.each(['ko','en'] as const)('%s 다리 앞그림은 물결 뒤그림과 분리되고 미리보기·취소·무료 교감은 회차와 재화를 보존합니다',language=>{
+    const spaces=freshGardenSpaces();spaces.pond={phase:2,altOwned:true,style:'alt'};
+    const h=mainHarness(false,false,false,false,{...initial(language),gardenDesign:{schema:1,flowers:Array(5).fill('meadow'),owned:[],placed:[],spaces}});
+    h.run("switchView('village')");h.element('#garden-area-pond').onclick();
+    const disk=h.disk(),writes=h.writes(),round=h.run(roundState);h.element('#garden-activity-ripples').onclick();
+    const html=h.run('gardenWorkshop(false)');expect(html.match(/data-garden-structure-image="bridge"/g)).toHaveLength(1);
+    expect(html.indexOf('garden-activity-art')).toBeLessThan(html.indexOf('garden-structure-foreground'));
+    expect(html).toContain('cx="355" cy="193"');expect(html).toContain('rx="48" ry="13"');
+    h.element('#garden-space-base').onclick();expect(h.run('spaceDialog.innerHTML')).not.toContain('data-garden-structure-image="bridge"');
+    h.element('#space-preview-current').onclick();const preview=h.run('spaceDialog.innerHTML');
+    expect(preview.match(/data-garden-structure-image="bridge"/g)).toHaveLength(1);expect(preview).not.toContain('class="garden-structure-foreground"');
+    h.element('#space-preview-cancel').onclick();expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run(roundState)).toBe(round);
+  });
   it.each(['ko','en'] as const)('%s의4탭·큰 장면·현재/바뀔 모습 비교·취소는 저장/선택/회차를 보존하고 정상 확정만12별 씁니다',language=>{
     const h=mainHarness(false,false,false,false,initial(language,50));h.run("switchView('village');globalThis.spaceRound=scene;globalThis.spaceFocus=[];document.querySelector('#garden-space-restore').focus=options=>spaceFocus.push(options?.preventScroll)");
     expect(h.run('gardenWorkshop(false)')).toContain('data-renderer="painted-v4"');

@@ -1,0 +1,5 @@
+/* 다리는 교감 물결보다 앞, 핍/실제 조작 버튼보다 뒤에 놓습니다. */
+.garden-structure-foreground{position:absolute;inset:0;z-index:0;display:block;width:100%;height:100%;pointer-events:none}
+.garden-painted-butterfly{transform-box:fill-box;transform-origin:center;animation:garden-wing 3.7s ease-in-out infinite}
+@keyframes garden-wing{0%,100%{transform:scaleX(1) translateY(0)}50%{transform:scaleX(.82) translateY(-2px)}}
+@media(prefers-reduced-motion:reduce){.garden-painted-butterfly{animation:none!important}}
