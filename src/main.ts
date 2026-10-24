@@ -32,6 +32,7 @@ import { flowerStyles,gardenProjects,gardenThemes,gardenDesignFor,freshGardenDes
 import { showResultPip } from './ResultPip';
 import { RoundFeedback } from './RoundFeedback';
 import { createPipIdle } from './PipIdle';
+import {campaignScenery,createCampaignScenery} from './CampaignScenery';
 import { createPipAccessoryArt } from './PipAccessoryArt';
 import { createGardenNature } from './GardenNature';
 import { cloneSnapshot,prepareShuffle } from './puzzleHelp';
@@ -211,6 +212,7 @@ resourceDialog.addEventListener('cancel',event=>{event.preventDefault();closeRes
 resourceDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();});
 const pipIdle=createPipIdle($('#header-pip'));
 let mapPipIdle:ReturnType<typeof createPipIdle>|undefined;
+let mapScenery:ReturnType<typeof createCampaignScenery>|undefined;
 let carePipDisplay:{host:HTMLElement;generation:number;idle:ReturnType<typeof createPipIdle>;accessory?:ReturnType<typeof createPipAccessoryArt>;nature?:ReturnType<typeof createGardenNature>;naturePicture?:HTMLElement}|undefined;
 const boardFeedback=new RoundFeedback({layer:$('#round-feedback-layer'),pip:$('#header-pip-face'),
   canvas:()=>document.querySelector('#game-canvas canvas'),goal:key=>document.querySelector(`[data-feedback-goal="${key}"] img`),
@@ -248,6 +250,7 @@ function syncPipActivity(){
   pipIdle.setActive(active&&route==='puzzle'&&!roundEnded);
   const mapActive=active&&route==='map';
   mapPipIdle?.setActive(mapActive);$('#map-view').dataset.motionActive=String(mapActive);
+  mapScenery?.setActive(mapActive);
   syncCarePipActivity();
 }
 function previewEnvironment(){return !careDemo&&nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!otherModal()&&!boardPending&&Boolean(scene?.canLeave())&&!resultTimer;}
@@ -1094,7 +1097,7 @@ function renderCampaignMap(){
     const stages=levels.filter(level=>level.id>=chapter.first&&level.id<=chapter.last),height=stages.length*90;
     const points=stages.map((_,index)=>[positions[index%positions.length],45+index*90]);
     const path=points.map(([x,y],index)=>index?`Q ${points[index-1][0]} ${y} ${x} ${y}`:`M ${x} ${y}`).join(' ');
-    return `<section class="campaign-chapter" id="map-chapter-${chapter.id}" aria-labelledby="map-chapter-title-${chapter.id}"><h3 id="map-chapter-title-${chapter.id}"><span>${chapter.first}–${chapter.last}</span>${text(chapter.title)}</h3><div class="campaign-path" style="height:${height}px"><svg class="campaign-trail" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true"><path d="${path}"/></svg>${stages.map((level,index)=>{
+    return `<section class="campaign-chapter" data-chapter="${chapter.id}" id="map-chapter-${chapter.id}" aria-labelledby="map-chapter-title-${chapter.id}">${campaignScenery(chapter.id)}<h3 id="map-chapter-title-${chapter.id}"><span>${chapter.first}–${chapter.last}</span>${text(chapter.title)}</h3><div class="campaign-path" style="height:${height}px"><svg class="campaign-trail" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true"><path d="${path}"/></svg>${stages.map((level,index)=>{
       const completed=save.completed.includes(level.id),locked=level.id>save.highestLevel,here=level.id===current;
       const name=`${text('level')} ${level.id} · ${text(status(level.id))}${here?' · '+text('previewCurrent'):''}`;
       return `<div class="campaign-stop" style="left:${positions[index%positions.length]}%;top:${index*90}px"><button id="map-stage-${level.id}" data-level="${level.id}" ${locked?'disabled':''} class="campaign-node ${completed?'completed':''} ${here?'current':''}" ${here?'aria-current="step"':''} aria-label="${name}"><span>${level.id}</span>${locked?icon('lock',16):completed?`<i>${icon('star',15)}</i>`:''}</button>${here?`<span id="map-current-pip" class="campaign-pip" aria-hidden="true"><span class="pip-face"><img src="/assets/pip-idle-open-v2.webp" alt=""/></span></span><span class="campaign-breeze" aria-hidden="true">${[0,1,2,3].map(()=>`<span class="campaign-leaf">${icon('leaf',12)}</span>`).join('')}</span>`:''}</div>`;
@@ -1108,7 +1111,11 @@ function renderViews(grew=false){
   const mapScroll=document.querySelector<HTMLElement>('#campaign-scroll')?.scrollTop??0;
   disposeCarePipDisplay();
   mapPipIdle?.dispose();mapPipIdle=undefined;
+  mapScenery?.dispose();mapScenery=undefined;
   $('#map-view').innerHTML=renderCampaignMap();
+  mapScenery=createCampaignScenery($('#campaign-scroll'),id=>{
+    if(route!=='map')return;selectedChapter=id;$<HTMLSelectElement>('#map-chapter-select').value=String(id);
+  });
   if(route==='map'){
     const mapPip=document.querySelector<HTMLElement>('#map-current-pip');
     if(mapPip)mapPipIdle=createPipIdle(mapPip);
