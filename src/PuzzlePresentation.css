@@ -24,13 +24,6 @@
 #app[data-route="puzzle"] .bottom-nav button.active{background:linear-gradient(#e7f1d7,#d2e4bb);box-shadow:inset 0 1px 0 #faffed,inset 0 -2px 0 #9ab27c66;color:#315a39}
 /* Phaser가 부모에 쓰는 inline 100%보다 정사각 크기를 우선합니다. */
 #game-canvas{width:min(100cqw,100cqh)!important;height:min(100cqw,100cqh)!important}
-.header-pip::after{content:'';position:absolute;inset:0;background:url('/assets/pip-idle-blink-v2.webp') center/contain no-repeat;opacity:0;pointer-events:none}
-.header-pip[data-idle-active="true"]:not([data-mood]){animation:pip-breathe 3.8s ease-in-out infinite}
-.header-pip[data-idle-active="true"][data-idle-ready="true"]:not([data-mood])>.header-pip-image{animation:pip-eyes-open 6.4s step-end infinite}
-.header-pip[data-idle-active="true"][data-idle-ready="true"]:not([data-mood])::after{animation:pip-eyes-blink 6.4s step-end infinite}
-@keyframes pip-breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-1px) scale(1.015)}}
-@keyframes pip-eyes-open{0%,91%,95%,100%{opacity:1}92%{opacity:0}}
-@keyframes pip-eyes-blink{0%,91%,95%,100%{opacity:0}92%{opacity:1}}
 @media(max-width:359px){#puzzle-view .mission-bar{padding:6px;gap:8px}#puzzle-view .moves-box{min-width:54px}#puzzle-view .goal-item{gap:4px}#puzzle-view .goal-item img{width:28px;height:28px}#puzzle-view .goal-item strong{font-size:18px}}
 @media(orientation:portrait) and (max-height:650px){
   #app[data-route="puzzle"] .topbar{height:44px;border-bottom:0}
@@ -48,4 +41,3 @@
   #app[data-route="puzzle"] .bottom-nav button{min-height:44px;flex-direction:row;gap:5px}
 }
 @media(orientation:landscape) and (max-height:600px){#puzzle-view .mission-bar{padding:6px;gap:7px;border-radius:14px}#puzzle-view .moves-box{min-width:46px}#puzzle-view .moves-box strong{font-size:26px}#puzzle-view #goals{gap:6px}#puzzle-view .goal-item{gap:3px}#puzzle-view .goal-item img{width:24px;height:24px}#puzzle-view .goal-item strong{font-size:16px}#puzzle-view .goal-heading{font-size:9px}}
-@media(prefers-reduced-motion:reduce){.header-pip,.header-pip>.header-pip-image,.header-pip::after{animation:none!important}.header-pip>.header-pip-image{opacity:1!important}.header-pip::after{opacity:0!important}}

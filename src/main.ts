@@ -9,6 +9,7 @@ import '@fontsource/fraunces/latin-600.css';
 import './style.css';
 import './CampaignMap.css';
 import './PuzzlePresentation.css';
+import './PipIdle.css';
 import './SpecialTileArt.css';
 import './GardenStructureArt.css';
 import { BoardScene,tileNames } from './BoardScene';
@@ -117,7 +118,7 @@ $('#app').innerHTML=`
     <section class="game-panel">
       <div id="map-view" class="view"></div>
       <div id="puzzle-view" class="view" hidden>
-        <div class="level-top"><div class="level-heading"><span id="header-pip" class="header-pip" aria-hidden="true"><img class="header-pip-image" src="/assets/pip-idle-open-v2.webp" alt=""/></span><div class="level-copy"><div class="eyebrow"><span id="chapter-name"></span></div><h2><span data-t="level">${text('level')}</span> <span id="level-number">1</span></h2></div></div><div class="level-actions">${TEST_TOOLS_ENABLED?`<button id="test-level-button" class="test-level-button">${label('testPick')}</button>`:''}<button id="restart" class="icon-button" aria-label="${text('restart')}">${icon('restart',20)}</button></div></div>
+        <div class="level-top"><div class="level-heading"><span id="header-pip" class="header-pip" aria-hidden="true"><span id="header-pip-face" class="pip-face"><img class="header-pip-image" src="/assets/pip-idle-open-v2.webp" alt=""/></span></span><div class="level-copy"><div class="eyebrow"><span id="chapter-name"></span></div><h2><span data-t="level">${text('level')}</span> <span id="level-number">1</span></h2></div></div><div class="level-actions">${TEST_TOOLS_ENABLED?`<button id="test-level-button" class="test-level-button">${label('testPick')}</button>`:''}<button id="restart" class="icon-button" aria-label="${text('restart')}">${icon('restart',20)}</button></div></div>
         <div class="mission-bar"><div class="moves-box"><strong id="moves">22</strong>${label('moves')}</div><div class="goal-box"><div class="goal-heading">${label('goal')}<span class="score-label">${label('score')} <span id="score">0</span></span></div><div id="goals"></div></div></div>
         <div class="board-wrap"><div id="game-canvas" tabindex="-1" aria-label="${text('boardLabel')}" aria-describedby="board-keyboard-help board-keyboard-status" role="application"></div><div id="board-notice" aria-live="polite"></div></div>
         <p class="board-hint">${icon('leaf',15)} <span id="board-hint-text">${text('hint')}</span><span id="board-keyboard-help">${text('boardKeyboardHelp')}</span><span id="round-resumed-notice" role="status" aria-live="polite" aria-atomic="true" hidden></span></p>
@@ -207,11 +208,18 @@ function showResourceHelp(kind:ResourceKind,opener:HTMLElement){
 resourceDialog.addEventListener('cancel',event=>{event.preventDefault();closeResourceHelp();});
 resourceDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();});
 const pipIdle=createPipIdle($('#header-pip'));
-const boardFeedback=new RoundFeedback({layer:$('#round-feedback-layer'),pip:$('#header-pip'),
+let mapPipIdle:ReturnType<typeof createPipIdle>|undefined;
+const boardFeedback=new RoundFeedback({layer:$('#round-feedback-layer'),pip:$('#header-pip-face'),
   canvas:()=>document.querySelector('#game-canvas canvas'),goal:key=>document.querySelector(`[data-feedback-goal="${key}"] img`),
   active:()=>nativeActive&&!document.hidden&&!careDemo&&route==='puzzle'&&!boardPending&&!roundEnded&&!previewDialog.open&&!otherModal()&&!testAds?.pausesGame&&!testBilling?.pausesGame,
 });
 function otherModal(includeSpace=true){return includeSpace&&spaceDialog.open||resourceDialog.open||$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open)||billingModal();}
+function syncPipActivity(){
+  const active=nativeActive&&!document.hidden&&!careDemo&&!boardPending&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!previewDialog.open&&!otherModal();
+  pipIdle.setActive(active&&route==='puzzle'&&!roundEnded);
+  const mapActive=active&&route==='map';
+  mapPipIdle?.setActive(mapActive);$('#map-view').dataset.motionActive=String(mapActive);
+}
 function previewEnvironment(){return !careDemo&&nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!otherModal()&&!boardPending&&Boolean(scene?.canLeave())&&!resultTimer;}
 function validPreview(context:StagePreview){return stagePreview===context&&context.round===round&&context.scene===scene&&context.testing===testingLevel&&context.route===route&&previewDialog.open&&previewEnvironment()&&Number.isInteger(context.id)&&context.id>=1&&context.id<=LEVEL_COUNT&&(context.intent==='restart'||context.id<=save.highestLevel);}
 function hasRoundProgress(){return !testingLevel&&!roundEnded&&(moves<levels[currentLevel-1].moves||shuffles<1||continueUsed||paidShuffleUsed);}
@@ -268,7 +276,7 @@ function syncActivity(){
   if(!game)return;
   const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
   const playing=active&&!careDemo&&route==='puzzle'&&!modal&&!previewDialog.open&&!resourceDialog.open&&!spaceDialog.open;
-  pipIdle.setActive(playing&&!boardPending&&!roundEnded);
+  syncPipActivity();
   if(!playing)boardFeedback.cancel();
   if(playing){if(game.scene.isPaused('Board'))game.scene.resume('Board');}
   else if(game.scene.isActive('Board'))game.scene.pause('Board');
@@ -1052,7 +1060,7 @@ function renderCampaignMap(){
     return `<section class="campaign-chapter" id="map-chapter-${chapter.id}" aria-labelledby="map-chapter-title-${chapter.id}"><h3 id="map-chapter-title-${chapter.id}"><span>${chapter.first}–${chapter.last}</span>${text(chapter.title)}</h3><div class="campaign-path" style="height:${height}px"><svg class="campaign-trail" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true"><path d="${path}"/></svg>${stages.map((level,index)=>{
       const completed=save.completed.includes(level.id),locked=level.id>save.highestLevel,here=level.id===current;
       const name=`${text('level')} ${level.id} · ${text(status(level.id))}${here?' · '+text('previewCurrent'):''}`;
-      return `<div class="campaign-stop" style="left:${positions[index%positions.length]}%;top:${index*90}px"><button id="map-stage-${level.id}" data-level="${level.id}" ${locked?'disabled':''} class="campaign-node ${completed?'completed':''} ${here?'current':''}" ${here?'aria-current="step"':''} aria-label="${name}"><span>${level.id}</span>${locked?icon('lock',16):completed?`<i>${icon('star',15)}</i>`:''}</button>${here?`<span class="campaign-pip" aria-hidden="true"><img src="/assets/pip.png" alt=""/></span>`:''}</div>`;
+      return `<div class="campaign-stop" style="left:${positions[index%positions.length]}%;top:${index*90}px"><button id="map-stage-${level.id}" data-level="${level.id}" ${locked?'disabled':''} class="campaign-node ${completed?'completed':''} ${here?'current':''}" ${here?'aria-current="step"':''} aria-label="${name}"><span>${level.id}</span>${locked?icon('lock',16):completed?`<i>${icon('star',15)}</i>`:''}</button>${here?`<span id="map-current-pip" class="campaign-pip" aria-hidden="true"><span class="pip-face"><img src="/assets/pip-idle-open-v2.webp" alt=""/></span></span><span class="campaign-breeze" aria-hidden="true">${[0,1,2,3].map(()=>`<span class="campaign-leaf">${icon('leaf',12)}</span>`).join('')}</span>`:''}</div>`;
     }).join('')}</div></section>`;
   }).join('')}</div><div class="campaign-play"><div><span>${text(chapterForLevel(current).title)}</span><strong>${text('level')} ${current}</strong></div><button id="map-play" class="primary">${text(active?'mapResume':'mapPlay')}${icon('arrow',20)}</button></div>`;
 }
@@ -1061,7 +1069,12 @@ function renderViews(grew=false){
   const focused=document.activeElement as HTMLElement|null,focusedId=focused?.id;
   const scroll=Array.from(document.querySelectorAll<HTMLElement>('.view'),view=>({view,top:view.scrollTop,left:view.scrollLeft}));
   const mapScroll=document.querySelector<HTMLElement>('#campaign-scroll')?.scrollTop??0;
+  mapPipIdle?.dispose();mapPipIdle=undefined;
   $('#map-view').innerHTML=renderCampaignMap();
+  if(route==='map'){
+    const mapPip=document.querySelector<HTMLElement>('#map-current-pip');
+    if(mapPip)mapPipIdle=createPipIdle(mapPip);
+  }
   $('#map-play').onclick=()=>showStagePreview(mapCurrentLevel(),'map',$('#map-play'));
   $('#map-locate').onclick=()=>revealMapStage();
   $<HTMLSelectElement>('#map-chapter-select').onchange=event=>{
@@ -1105,6 +1118,7 @@ function renderViews(grew=false){
   }
   for(const {view,top,left} of scroll){view.scrollTop=top;view.scrollLeft=left;}
   fallbackFocus?.scrollIntoView?.({block:'start'});
+  syncPipActivity();
 }
 function localize(){
   document.documentElement.lang=save.language;
