@@ -7,6 +7,29 @@
 .campaign-chapters{min-width:0;flex:none;padding:0 4px 8px}.campaign-chapters select{width:100%;height:44px;border:1px solid #c4d2ac;border-radius:14px;background:#fffdf0ed;color:#36533d;font-size:13px;padding:0 12px}
 .campaign-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scroll-padding-block:16px;scrollbar-width:thin;border-radius:18px 18px 0 0}
 .campaign-chapter{padding:14px 0 10px}.campaign-chapter h3{display:table;margin:0 auto 10px;padding:9px 18px;border-radius:22px;background:#fffdf3f5;color:#34503a;font-size:14px;box-shadow:0 3px 8px #365c2a16;text-align:center}.campaign-chapter h3>span{display:block;font-size:10px;letter-spacing:1.2px;margin-bottom:2px;color:#66794b}
+.campaign-chapter{position:relative;isolation:isolate}.campaign-chapter h3{position:relative;z-index:1}
+.campaign-scenery{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1;border-radius:70px;contain:paint}
+.map-distant{position:absolute;width:100%;height:100%;inset:0;transform:translateY(calc(var(--map-drift,0px) * -.3));pointer-events:none}
+.map-distant{background:radial-gradient(ellipse at 20% 30%,#fff6c338,transparent 65%),radial-gradient(ellipse at 85% 75%,#8fb3a32b,transparent 60%);mask-image:radial-gradient(ellipse at center,#000 30%,transparent 75%)}
+[data-map-theme="water"] .map-distant{background:radial-gradient(ellipse at 35% 65%,#9ac4ba45,transparent 68%)}
+[data-map-theme="festival"] .map-distant{background:radial-gradient(ellipse at 60% 40%,#e8b5ba38,transparent 68%)}
+.map-landmark{position:absolute;width:clamp(65px,20%,100px);height:auto;overflow:visible;filter:drop-shadow(0 3px 1px #3e593515);transform:translateY(var(--map-drift,0px));pointer-events:none}
+.map-landmark-one{left:0;top:150px}.map-landmark-two{right:-2px;bottom:100px}
+.map-tree-crown{transform-origin:0 18px}.map-windmill-blades{transform-origin:0 0}.map-flower-head{transform-origin:0 8px}.map-pond-rings{transform-origin:9px 3px}
+.map-landmark-painted{display:none}.campaign-scroll[data-scenery-art-ready="true"] .map-landmark-painted{display:inline}.campaign-scroll[data-scenery-art-ready="true"] .map-landmark-fallback{display:none}.map-windmill-rotor{transform-origin:0 0}
+[data-scenery-active="true"] .map-windmill-rotor{animation:map-windmill-turn 22s linear infinite}
+.map-cloud{position:absolute;display:flex;align-items:flex-end;width:100px;height:36px;opacity:.55;filter:blur(.2px);transform:translateX(calc(var(--map-drift,0px) * .75))}
+.map-cloud i{display:block;border-radius:50%;background:#fffdf1;width:45px;height:25px;margin-left:-10px;box-shadow:0 4px 0 #d0dcc440}.map-cloud i:nth-child(2){height:36px;width:54px}.map-cloud-one{right:3%;top:75px}.map-cloud-two{left:1%;bottom:50px;opacity:.38;scale:.8}
+.map-fireflies{position:absolute;inset:0}.map-fireflies i{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff4c7;box-shadow:0 0 8px 2px #e0d9a2;opacity:.55}.map-fireflies i:nth-child(1){top:27%;right:6%}.map-fireflies i:nth-child(2){top:54%;left:8%;animation-delay:-1.7s}.map-fireflies i:nth-child(3){bottom:19%;right:14%;animation-delay:-3.1s}
+[data-scenery-active="true"] .map-windmill-blades{animation:map-windmill-turn 18s linear infinite}
+[data-scenery-active="true"] .map-tree-crown,[data-scenery-active="true"] .map-flower-head{animation:map-foliage-sway 6s ease-in-out infinite}
+[data-scenery-active="true"] .map-pond-rings{animation:map-pond-breathe 4.8s ease-out infinite}
+[data-scenery-active="true"] .map-fireflies i{animation-name:map-firefly-drift;animation-duration:5.6s;animation-iteration-count:infinite;animation-timing-function:ease-in-out}
+@keyframes map-windmill-turn{to{transform:rotate(360deg)}}
+@keyframes map-foliage-sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(3deg)}}
+@keyframes map-pond-breathe{0%,100%{transform:scale(.8);opacity:.3}50%{transform:scale(1.13);opacity:.9}}
+@keyframes map-firefly-drift{0%,100%{transform:translate(0,3px);opacity:.2}50%{transform:translate(-5px,-6px);opacity:.85}}
+@media(prefers-reduced-motion:reduce){.campaign-scenery *{animation:none!important}.map-distant,.map-landmark,.map-cloud,.map-tree-crown,.map-windmill-blades,.map-windmill-rotor,.map-flower-head,.map-pond-rings,.map-fireflies i{transform:none!important}}
 .campaign-path{position:relative;width:min(100%,480px);margin:auto;isolation:isolate}.campaign-trail{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}.campaign-trail path{fill:none;stroke:#fff1b9;stroke-width:23;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;filter:drop-shadow(0 3px 1px #5b6f3b38)}
 .campaign-stop{position:absolute;transform:translateX(-50%);height:90px;width:64px;display:grid;place-items:center}
 .campaign-node{position:relative;display:grid;place-items:center;flex:none;width:60px;height:60px;min-width:60px;min-height:60px;aspect-ratio:1;border:3px solid #fff9da;border-radius:50%;background:linear-gradient(#96bf77,#52804f);box-shadow:0 5px 0 #456545,0 7px 7px #345b2933;color:#fffdf3;font-size:23px;font-weight:800;text-shadow:0 1px 2px #324f3b80}

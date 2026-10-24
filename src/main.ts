@@ -35,6 +35,7 @@ import { flowerStyles,gardenProjects,gardenThemes,gardenDesignFor,freshGardenDes
 import { showResultPip } from './ResultPip';
 import { RoundFeedback } from './RoundFeedback';
 import { createPipIdle } from './PipIdle';
+import {campaignScenery,createCampaignScenery} from './CampaignScenery';
 import { createPipAccessoryArt } from './PipAccessoryArt';
 import { createGardenNature } from './GardenNature';
 import { cloneSnapshot,prepareShuffle } from './puzzleHelp';
@@ -50,6 +51,8 @@ let save=loadSave(), currentLevel=save.highestLevel, moves=0, score=0, collected
 let scene:BoardScene, game:Phaser.Game, route='map', toastTimer:ReturnType<typeof setTimeout>;
 let settingsReturnRoute='map';
 let mapPositioned:number|undefined;
+let mapScrollOffset=0;
+let detachMapScroll:(()=>void)|undefined;
 let resultTimer:ReturnType<typeof setTimeout>|undefined;
 let resumeNoticeTimer:ReturnType<typeof setTimeout>|undefined;
 let round=0;
@@ -259,6 +262,7 @@ resourceDialog.addEventListener('cancel',event=>{event.preventDefault();closeRes
 resourceDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();});
 const pipIdle=createPipIdle($('#header-pip'));
 let mapPipIdle:ReturnType<typeof createPipIdle>|undefined;
+let mapScenery:ReturnType<typeof createCampaignScenery>|undefined;
 let carePipDisplay:{host:HTMLElement;generation:number;idle:ReturnType<typeof createPipIdle>;accessory?:ReturnType<typeof createPipAccessoryArt>;nature?:ReturnType<typeof createGardenNature>;naturePicture?:HTMLElement}|undefined;
 const boardFeedback=new RoundFeedback({layer:$('#round-feedback-layer'),pip:$('#header-pip-face'),
   canvas:()=>document.querySelector('#game-canvas canvas'),goal:key=>document.querySelector(`[data-feedback-goal="${key}"] img`),
@@ -299,6 +303,7 @@ function syncPipActivity(){
   pipIdle.setActive(active&&route==='puzzle'&&!roundEnded);
   const mapActive=active&&route==='map';
   mapPipIdle?.setActive(mapActive);$('#map-view').dataset.motionActive=String(mapActive);
+  mapScenery?.setActive(mapActive);
   syncCarePipActivity();
 }
 function previewEnvironment(){return !careDemo&&nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!otherModal()&&!boardPending&&Boolean(scene?.canLeave())&&!resultTimer;}
@@ -1172,6 +1177,7 @@ function revealMapStage(){
   $<HTMLSelectElement>('#map-chapter-select').value=String(selectedChapter);
   const target=document.querySelector<HTMLElement>(`#map-stage-${mapCurrentLevel()}`);
   target?.scrollIntoView?.({block:'center',behavior:'auto'});
+  mapScrollOffset=$('#campaign-scroll').scrollTop;
 }
 function renderCampaignMap(){
   const current=mapCurrentLevel(),active=hasRoundProgress();
@@ -1181,7 +1187,7 @@ function renderCampaignMap(){
     const stages=levels.filter(level=>level.id>=chapter.first&&level.id<=chapter.last),height=stages.length*90;
     const points=stages.map((_,index)=>[positions[index%positions.length],45+index*90]);
     const path=points.map(([x,y],index)=>index?`Q ${points[index-1][0]} ${y} ${x} ${y}`:`M ${x} ${y}`).join(' ');
-    return `<section class="campaign-chapter" id="map-chapter-${chapter.id}" aria-labelledby="map-chapter-title-${chapter.id}"><h3 id="map-chapter-title-${chapter.id}"><span>${chapter.first}–${chapter.last}</span>${text(chapter.title)}</h3><div class="campaign-path" style="height:${height}px"><svg class="campaign-trail" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true"><path d="${path}"/></svg>${stages.map((level,index)=>{
+    return `<section class="campaign-chapter" data-chapter="${chapter.id}" id="map-chapter-${chapter.id}" aria-labelledby="map-chapter-title-${chapter.id}">${campaignScenery(chapter.id)}<h3 id="map-chapter-title-${chapter.id}"><span>${chapter.first}–${chapter.last}</span>${text(chapter.title)}</h3><div class="campaign-path" style="height:${height}px"><svg class="campaign-trail" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true"><path d="${path}"/></svg>${stages.map((level,index)=>{
       const completed=save.completed.includes(level.id),locked=level.id>save.highestLevel,here=level.id===current;
       const name=`${text('level')} ${level.id} · ${text(status(level.id))}${here?' · '+text('previewCurrent'):''}`;
       return `<div class="campaign-stop" style="left:${positions[index%positions.length]}%;top:${index*90}px"><button id="map-stage-${level.id}" data-level="${level.id}" ${locked?'disabled':''} class="campaign-node ${completed?'completed':''} ${here?'current':''}" ${here?'aria-current="step"':''} aria-label="${name}"><span>${level.id}</span>${locked?icon('lock',16):completed?`<i>${icon('star',15)}</i>`:''}</button>${here?`<span id="map-current-pip" class="campaign-pip" aria-hidden="true"><span class="pip-face"><img src="/assets/pip-idle-open-v2.webp" alt=""/></span></span><span class="campaign-breeze" aria-hidden="true">${[0,1,2,3].map(()=>`<span class="campaign-leaf">${icon('leaf',12)}</span>`).join('')}</span>`:''}</div>`;
@@ -1192,10 +1198,19 @@ function renderViews(grew=false){
   if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);
   const focused=document.activeElement as HTMLElement|null,focusedId=focused?.id;
   const scroll=Array.from(document.querySelectorAll<HTMLElement>('.view'),view=>({view,top:view.scrollTop,left:view.scrollLeft}));
-  const mapScroll=document.querySelector<HTMLElement>('#campaign-scroll')?.scrollTop??0;
+  if(route==='map'&&$('#map-view').dataset.motionActive==='true')mapScrollOffset=document.querySelector<HTMLElement>('#campaign-scroll')?.scrollTop??mapScrollOffset;
   disposeCarePipDisplay();
   mapPipIdle?.dispose();mapPipIdle=undefined;
+  mapScenery?.dispose();mapScenery=undefined;
+  detachMapScroll?.();detachMapScroll=undefined;
   $('#map-view').innerHTML=renderCampaignMap();
+  mapScenery=createCampaignScenery($('#campaign-scroll'),id=>{
+    if(route!=='map')return;selectedChapter=id;$<HTMLSelectElement>('#map-chapter-select').value=String(id);
+  });
+  const campaignScroll=$('#campaign-scroll');
+  const rememberMapScroll=()=>{if(campaignScroll.isConnected&&route==='map'&&!$('#map-view').hidden)mapScrollOffset=campaignScroll.scrollTop;};
+  campaignScroll.addEventListener('scroll',rememberMapScroll,{passive:true});
+  detachMapScroll=()=>campaignScroll.removeEventListener('scroll',rememberMapScroll);
   if(route==='map'){
     const mapPip=document.querySelector<HTMLElement>('#map-current-pip');
     if(mapPip)mapPipIdle=createPipIdle(mapPip);
@@ -1206,8 +1221,9 @@ function renderViews(grew=false){
     if(route!=='map'||stagePreview||otherModal())return;
     const id=Number((event.target as HTMLSelectElement).value);if(!chapters.some(chapter=>chapter.id===id))return;
     selectedChapter=id;document.querySelector(`#map-chapter-${id}`)?.scrollIntoView?.({block:'start',behavior:'auto'});
+    mapScrollOffset=campaignScroll.scrollTop;
   };
-  $('#campaign-scroll').scrollTop=mapScroll;
+  campaignScroll.scrollTop=mapScrollOffset;
   $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('chapterMeadow')}</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div>${gardenWorkshop(grew)}`;
   if(careDemo)$('#village-view').innerHTML=$('#village-view').innerHTML.split('<div class="level-picker">')[0];
   $('#village-view').innerHTML=careDemoPanel('village')+$('#village-view').innerHTML;
@@ -1277,6 +1293,7 @@ function switchView(name:string){
   if(returnToResult&&(!nativeActive||document.hidden||testAds?.pausesGame||testBilling?.pausesGame||boardPending||resultTimer!==undefined||previewDialog.open||otherModal()||game.scene.getScene('Board')!==scene))return;
   if(name!=='puzzle')abandonRewardContinue();
   if(!scene.canLeave())return;
+  if(route==='map')mapScrollOffset=$('#campaign-scroll').scrollTop;
   if(name!=='puzzle'){clearResumeNotice();clearBoardNotice();}
   if(name!=='village'&&gardenActivity)clearCareReaction();
   route=name;$('#app').dataset.route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);

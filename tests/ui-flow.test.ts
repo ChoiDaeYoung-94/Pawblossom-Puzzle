@@ -15,6 +15,8 @@ import {specialTileArt,specialArtKinds,specialBodyKey,specialBodyPath} from '../
 import * as paintedGardenArt from '../src/GardenPaintedArt';
 import * as gardenStructureArt from '../src/GardenStructureArt';
 import * as boardDisplay from '../src/BoardDisplay';
+import {campaignScenery} from '../src/CampaignScenery';
+
 import {gardenGoals,goalNextStep,nextGardenGoal} from '../src/GardenGoals';
 import {previewGardenPreset} from '../src/GardenPresets';
 import {gardenPresetPreview} from '../src/GardenPresetsUI';
@@ -73,6 +75,7 @@ class ElementStub {
   querySelectorAll(_selector:string):ElementStub[]{return [];}
   toggleAttribute(name:string,force?:boolean) {if(name==='disabled')this.disabled=force??!this.disabled;}
   addEventListener(name: string, callback: (event: { preventDefault(): void }) => void) { this.listeners[name] = callback; }
+  removeEventListener(name:string,callback:unknown){if(this.listeners[name]===callback)delete this.listeners[name];}
   showModal() { this.open = true; }
   close() { this.open = false; }
 }
@@ -90,6 +93,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const accessoryControllers:{slot:ElementStub;kind:'ribbon'|'wateringCan';disposed:boolean}[]=[];
   const natureControllers:{picture:ElementStub;disposed:boolean;disposals:number;activations:boolean[]}[]=[];
   const pipLifecycle:string[]=[];
+  const sceneryControllers:{disposed:boolean;active:boolean}[]=[];
   let resolveNativeState!:(state:{isActive:boolean})=>void;
   const nativeState=new Promise<{isActive:boolean}>(resolve=>{resolveNativeState=resolve;});
   let stored = JSON.stringify({ version: 1, language: 'en', highestLevel: 2, completed: [1], stars: 1, coins: 40, garden: 0, music: true, sfx: true });
@@ -218,6 +222,8 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     cloneSnapshot,prepareShuffle,
     showResultPip:()=>{resultArtCalls++;},
     RoundFeedback:FeedbackStub,
+    campaignScenery,
+    createCampaignScenery:()=>{const controller={disposed:false,active:false,setActive(value:boolean){if(!this.disposed)this.active=value;},dispose(){this.disposed=true;this.active=false;}};sceneryControllers.push(controller);return controller;},
     createPipIdle:(pip:ElementStub,_createImage?:()=>HTMLImageElement,alignment:'center'|'bottom'='center')=>{
       const idle={pip,alignment,disposed:false,disposals:0,
         setActive(active:boolean){if(!idle.disposed)pip.dataset.idleActive=String(active);},
@@ -271,7 +277,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   return {
     setStorageFails:(value:boolean)=>{storageFails=value;},disk:()=>[...storageValues],
     resultArtCalls:()=>resultArtCalls,frame:()=>frame(),games:()=>games,destroys:()=>destroys,
-    documentEvents,windowEvents,nativeEvents,resolveNativeState,pipControllers,pipLifecycle,accessoryControllers,natureControllers,
+    documentEvents,windowEvents,nativeEvents,resolveNativeState,pipControllers,pipLifecycle,accessoryControllers,natureControllers,sceneryControllers,
     element, run: (code: string) => {const result=vm.runInContext(code, context);if(autoFrame)frame();return result;},
     resultTimers: () => [...timers.values()].filter(timer => timer.ms === 300),
     flushResults: () => [...timers].filter(([,timer]) => timer.ms === 300).forEach(([id,timer]) => {timers.delete(id);timer.callback();}),
@@ -356,6 +362,11 @@ describe('독립 스테이지 지도',()=>{
     const state=h.run('JSON.stringify({round,moves,score,collected,save,board:scene.engine.board})'),disk=h.disk(),writes=h.writes();
     h.element('#map-play').onclick();expect(h.run('previewDialog.innerHTML')).toContain('id="preview-remaining"');expect(h.run('previewDialog.innerHTML')).toContain('Moves remaining: 23.');
     h.run("confirmStagePreview(stagePreview,'continue')");expect(h.run('route')).toBe('puzzle');expect(h.run('JSON.stringify({round,moves,score,collected,save,board:scene.engine.board})')).toBe(state);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('정원에서 숨은 지도 DOM의 scrollTop이0으로 줄어도 탐색 위치는 메모리에 보존합니다',()=>{
+    const h=boot();h.element('#campaign-scroll').scrollTop=613;const before=h.run('JSON.stringify(save)'),disk=h.disk(),writes=h.writes();
+    h.run("switchView('village')");h.element('#campaign-scroll').scrollTop=0;h.run('renderViews()');h.element('#campaign-scroll').scrollTop=0;
+    h.run("switchView('map')");expect(h.element('#campaign-scroll').scrollTop).toBe(613);expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
   });
 });
 
@@ -2590,7 +2601,7 @@ describe('퍼즐 핍 idle 표시 수명',()=>{
   });
   it('지도 motion은 모달·숨김·nativeInactive·다른경로에서 정지하고 종료 뒤 지도에서도 복귀합니다',()=>{
     const h=mainHarness(false,false,true,true,undefined,true,undefined,undefined,true);
-    const active=()=>h.element('#map-view').dataset.motionActive;
+    const active=()=>{const value=h.element('#map-view').dataset.motionActive;expect(h.sceneryControllers.filter(c=>!c.disposed)).toHaveLength(1);expect(h.sceneryControllers.find(c=>!c.disposed)!.active).toBe(value==='true');return value;};
     expect(active()).toBe('false');h.nativeEvents.appStateChange({isActive:true});expect(active()).toBe('true');
     h.element('#map-play').onclick();expect(active()).toBe('false');h.element('#preview-cancel').onclick();expect(active()).toBe('true');
     for(const dialog of ['tutorial-dialog','result-dialog','test-level-dialog']){
