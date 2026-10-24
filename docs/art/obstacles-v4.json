@@ -1,7 +1,8 @@
 {
   "issue": 272,
   "tool": "built-in image_gen",
-  "status": "own prototype candidates; not yet integrated or native/user reviewed",
+  "status": "자체 장애물3개를 보드·목표·미리보기·제거 피드백에 통합했습니다. 실제100번과KO/EN 작은 화면 및 최종 별도Phaser 사분면·모션 감소 검수를 확인했습니다. Android·사용자 감각 승인은 아직입니다.",
+  "runtimePresentation": "최종4dbd754는256픽셀 상자를128픽셀 사분면4개로 렌더합니다. 동일 중심·표시51·회전0에서 시작해 줄어들며 흩어집니다. 원본 비트맵은 바꾸지 않고 120객체 예산·실패 대체·모션 감소를 보호합니다.",
   "processing": "Mechanical alpha16 bounds crop/uniform fit240 with8px minimum padding in256 square/Lanczos/alpha-preserving WebP94 method6 exact; no semantic edits",
   "assets": [
     {
