@@ -13,6 +13,7 @@ import {createCallbackHttpAdapter,CALLBACK_PATH} from '../server/ads/callbackHtt
 import {callback,epoch,keyEntry,keyResponse,policy,malleate} from './helpers/ssvFixture';
 import {createCallbackChildScope,finishCallbackTest} from './helpers/callbackChild';
 import {createCallbackParallelScope} from './helpers/callbackParallel';
+import {createTrace,beginPhase,elapsed,projectTrace,recordError} from './helpers/ledgerDiagnostics';
 const key=randomBytes(32),rewardKey=randomBytes(32),owner={ownerId:'synthetic-private-owner',roundId:'synthetic-private-round'};
 const dirs:string[]=[],inboxes:CallbackInbox[]=[],ledgers:RewardLedger[]=[],dbs:DatabaseSync[]=[];
 const childJobs=createCallbackChildScope(),lockReleases:(()=>void)[]=[];
@@ -183,10 +184,28 @@ describe('lease·제한 backoff·시간·장애',()=>{
   it.each([NaN,-1,1.1,Number.MAX_SAFE_INTEGER,999999999999])('잘못된 시계 %s',async n=>{const f=fixture(),b=f.open({now:()=>n});expect(b.receive(f.raw)).toEqual(clock);expect(await b.processNext()).toEqual(clock);});
   it('시계 getter/실행예외는 고정 오류',async()=>{const f=fixture(),b=f.open({now:()=>{throw new Error('private-clock');}});expect(b.receive(f.raw)).toEqual(storage);expect(await b.processNext()).toEqual(storage);});
   it('용량은 terminal 포함·기존digest는 가득차도 같은receipt',async()=>{const f=fixture(),b=f.open({maxRows:1}),r=b.receive(f.raw);expect(await b.processNext()).toEqual({kind:'completed'});expect(b.receive(callback())).toEqual({kind:'unavailable',code:'capacity'});expect(b.receive(f.raw)).toEqual(r);expect(f.conn().prepare('SELECT count(*) AS n FROM callback_inbox').get()?.n).toBe(1);});
-  it('수신INSERT/COMMIT실패와 lock은 성공금지·원장storage실패는 재시도',async()=>{
-    const f=fixture(),b=f.open(),d=f.conn();d.exec("CREATE TRIGGER fail_insert BEFORE INSERT ON callback_inbox BEGIN SELECT RAISE(ABORT,'private-error'); END");expect(b.receive(f.raw)).toEqual(storage);expect(d.prepare('SELECT count(*) AS n FROM callback_inbox').get()?.n).toBe(0);d.exec('DROP TRIGGER fail_insert');
-    d.exec('BEGIN IMMEDIATE');expect(b.receive(f.raw)).toEqual(storage);expect(await b.processNext()).toEqual(storage);d.exec('ROLLBACK');b.receive(f.raw);
-    const reward=f.conn(f.rewardPath);reward.exec('BEGIN IMMEDIATE');expect(await b.processNext()).toEqual({kind:'retry'});reward.exec('ROLLBACK');f.setTime(epoch+10);expect(await b.processNext()).toEqual({kind:'completed'});
+  it('수신INSERT/COMMIT실패와 lock은 성공금지·원장storage실패는 재시도',async({task,onTestFailed})=>{
+    let trace:ReturnType<typeof createTrace>|undefined,done:(()=>void)|undefined,observationFailed=false,printed=false;
+    try{trace=task.meta.ledgerDiagnostic=createTrace('callback-recovery');}catch{observationFailed=true;}
+    const phase=(name:Parameters<typeof beginPhase>[1])=>{try{done?.();done=trace?beginPhase(trace,name):undefined;}catch{done=undefined;observationFailed=true;if(trace)trace.phase='unknown';}};
+    onTestFailed(()=>{
+      if(printed)return;printed=true;
+      let diagnostic:{observationFailed:boolean;trace:ReturnType<typeof projectTrace>|null}={observationFailed:true,trace:null};
+      try{if(trace)trace.elapsedMs=elapsed(trace);diagnostic={observationFailed,trace:trace?projectTrace(trace):null};}catch{}
+      try{console.error('[pawblossom:inbox-recovery]',JSON.stringify(diagnostic));}catch{}
+    });
+    // 완료 시간은 assertion 성공을 뜻하지 않습니다. timeout은 이 함수 밖에서 발생할 수 있습니다.
+    try{
+      phase('fixture');const f=fixture(),b=f.open(),d=f.conn();
+      phase('insert-rejected');d.exec("CREATE TRIGGER fail_insert BEFORE INSERT ON callback_inbox BEGIN SELECT RAISE(ABORT,'private-error'); END");expect(b.receive(f.raw)).toEqual(storage);expect(d.prepare('SELECT count(*) AS n FROM callback_inbox').get()?.n).toBe(0);d.exec('DROP TRIGGER fail_insert');
+      phase('inbox-lock-receive');d.exec('BEGIN IMMEDIATE');expect(b.receive(f.raw)).toEqual(storage);
+      phase('inbox-lock-process');expect(await b.processNext()).toEqual(storage);
+      phase('inbox-unlock-receive');d.exec('ROLLBACK');b.receive(f.raw);
+      phase('reward-lock-retry');const reward=f.conn(f.rewardPath);reward.exec('BEGIN IMMEDIATE');expect(await b.processNext()).toEqual({kind:'retry'});
+      phase('reward-unlock-advance');reward.exec('ROLLBACK');f.setTime(epoch+10);
+      phase('recovery-completed');expect(await b.processNext()).toEqual({kind:'completed'});
+    }catch(error){try{if(trace)recordError(trace,error);}catch{observationFailed=true;}throw error;}
+    finally{try{done?.();}catch{observationFailed=true;if(trace)trace.phase='unknown';}}
   });
   it('실제 COMMIT 제약실패는 rollback 뒤 HTTP503, durable성공 전200 금지',()=>{
     const f=fixture(),b=f.open(),d=f.conn(),h=createCallbackHttpAdapter(b),request={method:'GET',target:CALLBACK_PATH+'?'+f.raw,bodyBytes:0};
