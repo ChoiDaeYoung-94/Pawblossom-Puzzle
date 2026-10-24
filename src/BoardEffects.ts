@@ -62,7 +62,8 @@ export class BoardEffects {
       const chip=this.scene.add.graphics().setPosition(x+sx,y+sy).setDepth(12).setAngle(angle/2).setName('crate-wood-chip');
       chip.fillStyle(i%2?0xc58d4c:0xe3b16b);chip.fillRoundedRect(-6,-2,12,4,1.5);
       chip.lineStyle(1,0xffe2a5,.9);chip.lineBetween(-4,-1,4,-1);
-      this.animate(chip,{x:x+dx,y:y+dy,angle,alpha:0,scaleX:.45,scaleY:.65,duration:250+i*15,ease:'Cubic.easeOut'});
+      // 이동은 빠르게 펼치되 마지막까지 읽히도록 투명도만 늦게 줄입니다.
+      this.animate(chip,{x:x+dx,y:y+dy,angle,alpha:{value:0,ease:'Sine.easeIn'},scaleX:.45,scaleY:.65,duration:250+i*15,ease:'Cubic.easeOut'});
     }
   }
   leafHit(hit:LeafHit){
