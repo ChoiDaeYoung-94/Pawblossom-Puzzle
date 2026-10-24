@@ -1,6 +1,7 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    gardenRest:'Rest at the shelter with Pip · Free',gardenArchWalk:'Watch the flower path with Pip · Free',gardenRestMoment:'“The shade is cool. Let’s rest here a little.” · Free moment, no stat changes.',gardenArchMoment:'“A few petals have fallen on our path.” · Free moment, no stat changes.',
     goalPlay:'Go to puzzles',goalCare:'Care for Pip',goalEdit:'Open flower garden',goalSpace:'Visit this space',
     goalNoIncome:'All first-clear rewards have been earned. Replays give no more currency. Enjoy free flower changes and your owned decorations.',
     goalPlan:'Our garden plans',goalBed:'Flower bed {number}',goalPlots:'Flower beds',goalDiversity:'Flower varieties',goalClears:'Different first clears',goalNeed:'{condition}: {count} more',goalReady:'Ready to make · Choose and confirm in the editor',goalFoundationFirst:'Restore the foundation first',goalGo:'Take the next step',goalDone:'Made together',goalAllPlans:'See all garden plans',goalAllDone:'Every garden plan is complete. Visit your spaces and change your owned styles whenever you like.',goalNoAutoSpend:'These shortcuts only take you there. Coins and stars are used when you choose a purchase or confirm a restoration.',
@@ -112,6 +113,7 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    gardenRest:'핍과 쉼터에서 함께 쉬기 · 무료',gardenArchWalk:'핍과 꽃길 바라보기 · 무료',gardenRestMoment:'“그늘이 시원하네요. 여기서 잠깐 쉬어요.” · 무료 교감, 수치는 바뀌지 않아요.',gardenArchMoment:'“꽃잎이 길 위에 내려앉았어요. 같이 바라볼까요?” · 무료 교감, 수치는 바뀌지 않아요.',
     goalPlay:'퍼즐로 가기',goalCare:'핍 돌보기',goalEdit:'꽃밭 꾸미기 열기',goalSpace:'이 공간 살펴보기',
     goalNoIncome:'첫 완료 보상을 모두 받았어요. 다시 플레이해도 재화는 늘지 않아요. 무료 꽃 바꾸기와 소유한 꾸미기를 즐겨 보세요.',
     goalPlan:'함께 만드는 정원',goalBed:'꽃밭 {number}',goalPlots:'꽃밭',goalDiversity:'서로 다른 꽃',goalClears:'서로 다른 스테이지 첫 완료',goalNeed:'{condition} {count} 더 모으기',goalReady:'만들 준비가 됐어요 · 편집에서 선택하고 확정해 주세요',goalFoundationFirst:'먼저 기초를 복원해 주세요',goalGo:'다음 행동으로',goalDone:'함께 만들었어요',goalAllPlans:'정원 계획 모두 보기',goalAllDone:'정원 계획을 모두 완성했어요. 완성한 공간을 둘러보고 소유한 꾸미기를 자유롭게 바꿔 보세요.',goalNoAutoSpend:'바로 가기는 이동만 해요. 구매를 선택하거나 복원을 확정할 때 코인·별을 사용해요.',
