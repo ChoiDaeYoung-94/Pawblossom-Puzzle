@@ -28,12 +28,12 @@ class ImageStub extends PipNode {
   constructor(document=makeDocument()){super(document,'img');ImageStub.created.push(this);}
 }
 const dom=(node:PipNode)=>node as unknown as HTMLElement;
-function setup(){
+function setup(alignment:'center'|'bottom'='center'){
   const document=makeDocument(),pip=new PipNode(document),face=new PipNode(document),base=new PipNode(document,'img');
   pip.connected=true;base.src='/existing-fallback.webp';pip.append(face);face.append(base);
   const images:ImageStub[]=[];
   const createImage=()=>{const image=new ImageStub(document);images.push(image);return image as unknown as HTMLImageElement;};
-  const idle=createPipIdle(dom(pip),createImage);
+  const idle=createPipIdle(dom(pip),createImage,alignment);
   return {pip,face,base,images,idle,createImage};
 }
 async function settle(){for(let i=0;i<10;i++)await Promise.resolve();}
@@ -42,6 +42,11 @@ const rigs=(pip:PipNode)=>pip.children.filter(node=>node.className==='pip-idle-r
 afterEach(()=>{vi.restoreAllMocks();vi.unstubAllGlobals();ImageStub.created=[];});
 
 describe('핍 관절의 실제 controller 소유권',()=>{
+  it('기존 중앙 정렬과 care 방문객의 바닥 정렬을 각각 유지합니다',async()=>{
+    const center=setup(),bottom=setup('bottom');await load(center.images);await load(bottom.images);
+    expect(rigs(center.pip)[0].innerHTML).toContain('preserveAspectRatio="xMidYMid meet"');
+    expect(rigs(bottom.pip)[0].innerHTML).toContain('preserveAspectRatio="xMidYMax meet"');
+  });
   it('두 원본 모두 decode한 뒤 한 rig만 붙이고 늦은 성공은 비활성 상태를 바꾸지 않습니다',async()=>{
     const h=setup();let complete!:()=>void;
     h.images[1].decode.mockImplementation(()=>new Promise(resolve=>{complete=resolve;}));
