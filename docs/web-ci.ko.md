@@ -1,5 +1,11 @@
 # 웹 자동 검증
 
+## 2026-10-24 · #277 서로 다른 claim 3worker의 반환 관측
+
+PR275 head88803d69의 첫CI40053027243은 Node22 reward-ledger:106:166에서 실패했습니다. 서로 다른 claim/transaction·동일 round의3worker 중 신규1개 확인은 통과했지만 round-closed 수는 기대2/실제0이며, 다른2종류·BUSY·DB행수·잠금 owner/원인은 미관측입니다. Node22 전체3,024성공1실패/후속store·type·build skipped와 Node24 성공을 구분하며 원문과 Draft275를 #122comment6378622242에 보존합니다. 현재 main25aad48의 정확CI40051625911 양Node3,016개·store12·타입/두빌드 성공은 이 새 실패의 해결 근거가 아닙니다.
+
+해당3worker 사례에 기존 trace3/task.meta/diagnostics/context만 연결했습니다. helper·제품 코드·입력·worker3개·기대1+2·500ms·5초·RNG·추가 DB 연결은 바꾸지 않았습니다. 신규 head의 관련2파일75개·타입3종과 독립 읽기 검수가 성공했으며 필수CI는 별도 확인합니다. 얻는 것은 반환 종류/코드·결과 또는 오류 단계·close 결과이며 nativeObservation은 not-observed입니다. SQL/BUSY·DB행수·owner·timeout 중단 위치를 추가로 관측하지 않습니다. envelope 복제·trace 투영 비용이 경쟁 타이밍을 바꿀 수 있어 녹색을 원인 해결로 취급하지 않으며 같은head 검사 재실행도 하지 않습니다.
+
 ## 2026-10-24 · #267 고밀도 표시 검증과 로컬 timeout 분리
 
 제품 코드06b500a는480월드/56칸/16여백을 유지하고960버퍼·zoom2·중심240·CREATE 전 preRender와 down/up 월드 역변환을 사용합니다. SVG는200픽셀로 읽고 두 Text는 최초 생성 style의resolution2로 설정합니다. 실제 별도 Phaser WebGL/Canvas에서 첫 렌더0프레임의44/436/밖488좌표·합성 첫 선택6,6, 실클릭3,3·여백 드래그·새Scene·320리사이즈·비정형 키보드, 숫자14×23→28×46/체크29×34→58×68과style/source해상도2/2를 확인했습니다. 대역과 실제 렌더를 구분하며 일반 게임 저장/RNG를 주입하지 않았습니다.
