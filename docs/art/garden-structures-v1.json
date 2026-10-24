@@ -1,0 +1,601 @@
+{
+  "issue": 266,
+  "status": "own prototype art/display integration and browser review complete; native/user/release approval pending",
+  "tool": "built-in image_gen",
+  "processing": "Mechanical alpha-preserving WebP conversion. Structure families retain original FULL reference canvas framing, with equal fit/offset. Props alpha16 bounds crop only; no semantic image edits in this script. Bridge extraction itself was performed by image_gen. Generated foundation/arch canvases differed by1-2transparent edge pixels; recorded normalizedFrameBounds centers only that rounding, not alpha fitting each structure independently.",
+  "assets": [
+    {
+      "name": "pond-base",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-e1232c38-85b5-44c0-9a95-1367ded1ae38.png",
+      "sourceSha256": "b1df6068a1a20a4fde2a9505b2ae6cbe404a5907f66c75b0f19a19d048e0281f",
+      "sourceDimensions": [
+        1942,
+        809
+      ],
+      "normalizedFrameBounds": null,
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/garden-v4/backdrop-meadow.webp",
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/garden-v4/bed-empty.webp"
+        ],
+        "prompt": "Use case: stylized-concept. Asset type: ORIGINAL isolated garden POND structure sprite for Pawblossom Puzzle. Use our own garden painting/wood sprite only for warm hand-painted2.5D materials, upper-left light and rounded volume. One small shallow broad oval garden pond, gentle elevated three-quarter view from the front. Clean pale warm sandstone coping stones form a low continuous oval rim with readable rounded volumes; opaque turquoise-blue water contained entirely inside the pond, soft broad reflections and a few subtle water curves, darker blue depth near the far edge. Three short cattail reed stems in one sparse clump at the FAR RIGHT BACK edge. Complete silhouette about2.4:1 wide-to-tall, substantial readable rim at250px wide. Pond has NO bridge, NO lilies, NO flowers, NO lily pads because these are separate interactive overlays. No surrounding ground/grass/background or ground shadow, no characters/props/UI/text/numbers/logos/watermark. Center the whole isolated object with generous true transparent padding. Water remains painted opaque inside its boundary. Premium friendly mobile puzzle garden artwork, not flat vector and not photorealism; do not imitate any existing game's asset."
+      },
+      "family": "pond",
+      "cropAlpha16Bounds": null,
+      "outputDimensions": [
+        512,
+        256
+      ],
+      "fit": [
+        496,
+        207
+      ],
+      "offset": [
+        8,
+        24
+      ],
+      "bytes": 35636,
+      "sha256": "33e6d35c710d8a97648414d14acea4788a01412a19b119ac3cc189eab7807783",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/garden-structures-v1/pond-base.webp"
+    },
+    {
+      "name": "pond-foundation",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-38e2d0c7-180e-47b3-9103-c7f9c6feb4a4.png",
+      "sourceSha256": "cdc3ea73820480a6d5bb00d35a211ef9bebeaff0eb308561cd5b8086e14af165",
+      "sourceDimensions": [
+        1944,
+        809
+      ],
+      "normalizedFrameBounds": [
+        1,
+        0,
+        1943,
+        809
+      ],
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-e1232c38-85b5-44c0-9a95-1367ded1ae38.png"
+        ],
+        "prompt": "Edit our ORIGINAL pond sprite into its FOUNDATION stage. Preserve exact camera, canvas framing, dimensions, oval rim stone positions and size, reeds and light. Replace ONLY all turquoise WATER inside the rim with a DRY shallow cocoa/tan packed-earth basin containing two or three broad gently curved shallow excavation/furrow marks. No water, no lilies, no bridge, no new plants, no tools/signs/props. The stone foundation is built but the pond is not filled yet. Keep the same warm premium dimensional hand-painted2.5D materials and upper-left light. Preserve genuine alpha transparency outside the complete object; do not add ground or ground shadow or any background. No text/UI/numbers/logos/watermark. Keep every rim landmark aligned to the reference so foundation and completed stages can share the same game anchor."
+      },
+      "family": "pond",
+      "cropAlpha16Bounds": null,
+      "outputDimensions": [
+        512,
+        256
+      ],
+      "fit": [
+        496,
+        207
+      ],
+      "offset": [
+        8,
+        24
+      ],
+      "bytes": 35434,
+      "sha256": "fc82cf411e93761a9571cd03d709fd2708548a9d3b2ba5258a6f12057104eec7",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/garden-structures-v1/pond-foundation.webp"
+    },
+    {
+      "name": "bridge",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-4077d216-28a4-46bd-97e8-e0cdb78189db.png",
+      "sourceSha256": "20777fc1046fe4b325dc340cad300069d5b53d3e61f760d2a67a34c405cb3477",
+      "sourceDimensions": [
+        1942,
+        809
+      ],
+      "normalizedFrameBounds": null,
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-c7f8ecb1-1b1a-4c87-8974-987f07f8407b.png"
+        ],
+        "prompt": "Edit our ORIGINAL pond-with-bridge image into a separate FOREGROUND BRIDGE LAYER for the same game scene. Keep ONLY the complete honey-wood arched footbridge including planks, both railings, posts, small warm shadows ON the wood itself. Remove ALL pond water, every rim stone, reeds, reflections and all other surroundings to TRUE ALPHA TRANSPARENCY. Very important: preserve the exact bridge shape, scale, perspective, upper-left light and its POSITION on the SAME original WIDE1942x809 canvas; do not zoom, recenter, enlarge or crop the bridge after removing the pond. Leave the large removed areas genuinely transparent. This is a foreground overlay to align over the original pond, so keep the four bridge end landmarks exactly where they were. Premium dimensional hand-painted2.5D wooden object, no new props, no background/ground/ground shadow/halo, no text/UI/numbers/logos/watermark. The openings between rail posts must also be transparent."
+      },
+      "family": "pond",
+      "cropAlpha16Bounds": null,
+      "outputDimensions": [
+        512,
+        256
+      ],
+      "fit": [
+        496,
+        207
+      ],
+      "offset": [
+        8,
+        24
+      ],
+      "bytes": 14542,
+      "sha256": "284722eb5d86dde211755fa03e894b19d42d6eaaddeca65170d6b953c70f82e3",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/garden-structures-v1/bridge.webp"
+    },
+    {
+      "name": "shelter-base",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-d8efdffc-c3c8-4837-a410-983dd7dfdf55.png",
+      "sourceSha256": "65e7ddda714371532711c1e9ff8ca94bb320ce5746c1a2e2bbf92f1cc36cc0ce",
+      "sourceDimensions": [
+        1312,
+        1199
+      ],
+      "normalizedFrameBounds": null,
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/garden-v4/backdrop-meadow.webp",
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/garden-v4/bed-empty.webp"
+        ],
+        "prompt": "Use case: stylized-concept. Asset type: ORIGINAL isolated garden SHELTER sprite for Pawblossom Puzzle. Use our own garden painting and wood tray only as material/light reference. A small cozy open wooden gazebo: four sturdy honey-wood posts, a low raised square wooden deck seen in gentle elevated front three-quarter view, an elegant low TEAL GREEN hipped roof with softly curved bevelled eaves and a warm gold/wood edge, and one simple wooden garden bench sheltered at the center. Clear open spaces between posts; compact cozy proportions, no walls or doors, no flowers hiding the silhouette. Premium warm hand-painted2.5D mobile game rendering with convincing rounded volume, soft upper-left light, refined wood grain, soft highlights and darker inner roof/deck shadows. Entire isolated gazebo only, with generous true transparent padding around roof, posts and deck and through open sides. No surrounding ground/grass/landscape, no cast ground shadow, no characters, no picnic food, no extra tools, no UI/text/numbers/logos/watermark. Original design, not another game's artwork. Keep it legible as a garden restoration reward at200px."
+      },
+      "family": "shelter",
+      "cropAlpha16Bounds": null,
+      "outputDimensions": [
+        512,
+        448
+      ],
+      "fit": [
+        473,
+        432
+      ],
+      "offset": [
+        19,
+        8
+      ],
+      "bytes": 83560,
+      "sha256": "2d0b59ef73a135db6c9031cc601c33a33b69b7c99cb342ca3483e5c42da56548",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/garden-structures-v1/shelter-base.webp"
+    },
+    {
+      "name": "shelter-foundation",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-2b4b0f3e-c49b-4308-856f-90ae5c1998c4.png",
+      "sourceSha256": "e2234641ed0b839ea68562b9ef7e3d3b4b8ea6973882a88b80dee855a7a255f8",
+      "sourceDimensions": [
+        1312,
+        1199
+      ],
+      "normalizedFrameBounds": null,
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-d8efdffc-c3c8-4837-a410-983dd7dfdf55.png"
+        ],
+        "prompt": "Edit our ORIGINAL garden gazebo into its FOUNDATION stage, keeping exact canvas/camera, same deck footprint and post positions, scale, material and upper-left light. Remove the entire teal roof, roof cap and decorative roof trim, remove the bench, and leave the wooden raised deck with four upright honey-wood posts and just a few simple plain top crossbeams that show a sturdy unfinished structural frame. This is the partially restored shelter, not a completed gazebo. Do NOT enlarge the remaining frame/deck to fill the removed roof area: preserve the original image coordinates and transparent empty space above it. Keep true transparent openings between posts and true alpha outside the object. No construction tools/signs/machinery/loose materials, no ground/grass/landscape/shadow, no characters/flowers/UI/text/numbers/logos/watermark. Same polished warm hand-painted2.5D game asset style."
+      },
+      "family": "shelter",
+      "cropAlpha16Bounds": null,
+      "outputDimensions": [
+        512,
+        448
+      ],
+      "fit": [
+        473,
+        432
+      ],
+      "offset": [
+        19,
+        8
+      ],
+      "bytes": 41094,
+      "sha256": "1ea47e2080968d54755eb4f453f00352a43ba12abace844758d92650686c5eef",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/garden-structures-v1/shelter-foundation.webp"
+    },
+    {
+      "name": "shelter-alt",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-a1d676e9-4991-4f07-9d4a-e635d8169e71.png",
+      "sourceSha256": "5e3cc57307c2a7d6d8d7efa7a1612a250b29bd403f3c3b7c3053b02bd9c0171b",
+      "sourceDimensions": [
+        1312,
+        1199
+      ],
+      "normalizedFrameBounds": null,
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-d8efdffc-c3c8-4837-a410-983dd7dfdf55.png"
+        ],
+        "prompt": "Edit our ORIGINAL garden gazebo into its alternate FLOWER CANOPY style. Preserve the exact camera, canvas dimensions/framing, deck footprint, four honey-wood post positions and center wooden bench, scale and upper-left light. Replace the solid teal hipped roof with an elegant CREAM CANVAS CANOPY: soft warm ivory fabric rises to one low central peak then drapes in gentle scallops at the eaves, with subtle honey-gold trim. Add just TWO small hanging flower baskets with coral-pink blossoms beneath the far-left and far-right eaves, within the existing silhouette. The canopy must clearly have a soft tented fabric silhouette rather than merely recoloring the tiled roof. Keep entire structure within original framing and genuine transparent openings between posts. Same premium warm hand-painted2.5D mobile garden art. No extra ropes beyond the deck, no ground/grass/landscape/cast ground shadow/background/characters/UI/text/numbers/logos/watermark. Original own alternate asset."
+      },
+      "family": "shelter",
+      "cropAlpha16Bounds": null,
+      "outputDimensions": [
+        512,
+        448
+      ],
+      "fit": [
+        473,
+        432
+      ],
+      "offset": [
+        19,
+        8
+      ],
+      "bytes": 68774,
+      "sha256": "2887e1a8f55a60ff2b84d802218fb387b2f75dc7662c381acc012ce2a3bacee5",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/garden-structures-v1/shelter-alt.webp"
+    },
+    {
+      "name": "arch-base",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-442c5078-bf9c-419e-9678-398e23337abc.png",
+      "sourceSha256": "7fd84cd91ae7f3713b5c564ae5912b3cbe4ce8ed1f6a53e7107bd21b642ba536",
+      "sourceDimensions": [
+        1372,
+        1146
+      ],
+      "normalizedFrameBounds": null,
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/garden-v4/backdrop-meadow.webp",
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/garden-v4/bed-empty.webp"
+        ],
+        "prompt": "Use case: stylized-concept. Asset type: ORIGINAL isolated FLOWER ARCH garden structure sprite for Pawblossom Puzzle. One broad rounded honey-wood garden entrance arch with two solid wooden uprights, gently bevelled carved wooden curved upper beam and small square sandstone feet. Fresh green vines curl around the two posts and rounded top, with tasteful clusters of plump coral-pink and pale cream five-petal flowers, golden centers, and readable broad green leaves. A large open center so scenery remains visible through the arch. View gently elevated front three-quarter, compact slightly wider than tall, keep entire silhouette inside the image. Match our own garden reference's warm dimensional hand-painted2.5D style, upper-left soft light, tactile wood/leaves/petals; polished readable silhouette at200px. True transparent background and true transparent open center. No path, no ground/grass, no cast ground shadow, no surrounding landscape, no characters, no tools, no ribbon banners, no text/numbers/UI/logos/watermark. Original art, not a copy of any game."
+      },
+      "family": "arch",
+      "cropAlpha16Bounds": null,
+      "outputDimensions": [
+        512,
+        448
+      ],
+      "fit": [
+        496,
+        414
+      ],
+      "offset": [
+        8,
+        17
+      ],
+      "bytes": 67056,
+      "sha256": "2c6ca04596b7bcaaa00940fb9b8f428c51659840a72643dc7fb4b13e1018867e",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/garden-structures-v1/arch-base.webp"
+    },
+    {
+      "name": "arch-foundation",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-4d925aca-e1c3-44c2-8c1f-77e6c6ae177c.png",
+      "sourceSha256": "24add722c38a256d5cff0793c624df019bef3cf4355a8009b2e0783fdef774d9",
+      "sourceDimensions": [
+        1372,
+        1147
+      ],
+      "normalizedFrameBounds": [
+        0,
+        0,
+        1372,
+        1146
+      ],
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-442c5078-bf9c-419e-9678-398e23337abc.png"
+        ],
+        "prompt": "Edit our ORIGINAL flower arch into its FOUNDATION/unfinished frame stage. Preserve exact canvas dimensions/framing, camera, two sandstone feet and the two honey-wood upright post positions, dimensions and upper-left light. Remove ALL flowers, vines and leaves. Remove the central upper part of the curved arch beam, leaving only two short partially built curved wooden stubs rising inward from the two post tops with a very CLEAR LARGE GAP across the top-center. Two small plain diagonal support braces may attach within each post top. This is an unmistakably unfinished arch foundation, no complete top connection. Do not enlarge/recenter the remaining structure after removing the crown: keep foot positions exactly aligned with the reference and leave removed areas truly transparent. Same polished rounded warm dimensional hand-painted2.5D mobile game wood/stone materials. No background, no ground/path/grass or cast ground shadow, no tools/material piles/signs/machinery/characters/UI/text/numbers/logos/watermark. True alpha transparency outside and through the open center."
+      },
+      "family": "arch",
+      "cropAlpha16Bounds": null,
+      "outputDimensions": [
+        512,
+        448
+      ],
+      "fit": [
+        496,
+        414
+      ],
+      "offset": [
+        8,
+        17
+      ],
+      "bytes": 29400,
+      "sha256": "97c625690c4be941c354a3b5ff926d6539504ce92d913208d77b573c2b2cdbe5",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/garden-structures-v1/arch-foundation.webp"
+    },
+    {
+      "name": "arch-alt",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-d4f54064-9448-46c3-8cc6-14ff306427e2.png",
+      "sourceSha256": "e3b93d0d61e6b8cd76b90cbde59c73d75e9f815c88330bda347408a33f4c8ed1",
+      "sourceDimensions": [
+        1372,
+        1147
+      ],
+      "normalizedFrameBounds": [
+        0,
+        0,
+        1372,
+        1146
+      ],
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-442c5078-bf9c-419e-9678-398e23337abc.png"
+        ],
+        "prompt": "Edit our ORIGINAL round flower arch into its alternate RECTANGULAR VINE TRELLIS style. Preserve the camera, canvas dimensions/framing, two sandstone feet and upright honey-wood post positions, scale and warm upper-left light. Replace the curved top beam with a broad STRAIGHT horizontal trellis lintel and three short rounded wooden cross-slats rising across its top, forming a clearly rectangular/pergola-like silhouette. Fresh green vines and plump coral-pink/cream flowers wrap posts and straight top naturally, keeping the same own plant materials/palette and a large truly transparent open center. Keep every slat/leaf inside the existing canvas with generous alpha padding; do not crop the beam ends and do not move the stone feet. Premium dimensional hand-painted2.5D cozy mobile game asset, not flat vector. No path/ground/grass/cast ground shadow/background/characters/extra props/UI/text/numbers/logos/watermark. Original own alternate artwork."
+      },
+      "family": "arch",
+      "cropAlpha16Bounds": null,
+      "outputDimensions": [
+        512,
+        448
+      ],
+      "fit": [
+        496,
+        414
+      ],
+      "offset": [
+        8,
+        17
+      ],
+      "bytes": 69744,
+      "sha256": "c82feb07737302730a9a244c42db6b2a6c9e6db0b32a8a49f32273eabaf68276",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/garden-structures-v1/arch-alt.webp"
+    },
+    {
+      "name": "bench",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-a609cce8-741f-4e70-8c72-2432af31a04a.png",
+      "sourceSha256": "51052eefd4f28139dd86a8f388276f02b1493fff1ed704750409f900d85d85a6",
+      "sourceDimensions": [
+        1860,
+        845
+      ],
+      "normalizedFrameBounds": null,
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-2ca6d863-c3d4-4adb-b795-5b286ca3f6c5.png",
+          "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-c011cada-422b-40d6-96d2-bee0bde2f4b9.png"
+        ],
+        "prompt": "Use case: stylized-concept. Asset type: one ORIGINAL isolated miniature garden BENCH prop for Pawblossom Puzzle. A charming sturdy honey-wood garden bench with three broad rounded horizontal backrest slats, a thick bevelled slatted seat, two short solid legs and tiny side armrests. Gentle elevated front three-quarter view, broad low silhouette about2.2:1 wide-to-tall. Same warm hand-painted2.5D dimensional wood material as our own reference tray, confident rounded edges and soft upper-left highlights, tasteful grain, darker seat-underbody shadows. Render clean enough for a65px-wide placement. One complete centered isolated bench with generous true transparent padding, no garden scene, no ground/grass, no cast ground shadow, no flowers/props/characters, no text/numbers/UI/logos/watermark. Original casual mobile garden artwork, not another game's asset."
+      },
+      "family": null,
+      "cropAlpha16Bounds": [
+        74,
+        80,
+        1789,
+        766
+      ],
+      "outputDimensions": [
+        256,
+        128
+      ],
+      "fit": [
+        240,
+        96
+      ],
+      "offset": [
+        8,
+        16
+      ],
+      "bytes": 11368,
+      "sha256": "ce80e5834f3be3dd387fa0cdf4f45f1dc133c66d775a2d824dd26296cfd855d9",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/garden-structures-v1/bench.webp"
+    },
+    {
+      "name": "lantern",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-a3f7311f-8c31-4ddc-839b-aac13a082efc.png",
+      "sourceSha256": "ea8283dc6a063cc61063cd2bd7e7e6b8662714b26d8eb555a59ac1a0a5655bfa",
+      "sourceDimensions": [
+        1024,
+        1536
+      ],
+      "normalizedFrameBounds": null,
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/garden-v4/bed-empty.webp",
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/garden-v4/flowers-daisy.webp"
+        ],
+        "prompt": "Use case: stylized-concept. ORIGINAL isolated small garden LANTERN on a short slim stake for Pawblossom Puzzle. Match the rounded warm hand-painted2.5D wood/petal volume of our own references, soft upper-left light. A honey-wood and dark bronze miniature lantern housing with four clean bevelled corners, a small peaked cap and loop, softly glowing warm amber/cream glass, attached to a short slender support stake and tiny stable foot. Entire object tall and slender about1:2 overall. Clear clean silhouette readable at55px tall. The yellow light is contained in the glass, NO wide external glow halo because game draws that separately. One complete centered object with transparent padding. True transparent background, no ground/grass/scene, no ground shadow, no flowers/characters, no labels/text/UI/numbers/logos/watermark. Original own mobile garden prop, not another game's asset."
+      },
+      "family": null,
+      "cropAlpha16Bounds": [
+        246,
+        111,
+        779,
+        1395
+      ],
+      "outputDimensions": [
+        128,
+        256
+      ],
+      "fit": [
+        100,
+        240
+      ],
+      "offset": [
+        14,
+        8
+      ],
+      "bytes": 9844,
+      "sha256": "ddf6a9250d75d551e7c45b0b06d97c4e470f5e685386feeaf411458ab505e459",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/garden-structures-v1/lantern.webp"
+    },
+    {
+      "name": "butterfly",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-41d929f1-1c1e-4be2-bc3f-fe967b413c39.png",
+      "sourceSha256": "6d29c7644e65c98f5369018b0b640b911d2eea4f1dbd5edcceff49f8acdb93a1",
+      "sourceDimensions": [
+        1428,
+        1102
+      ],
+      "normalizedFrameBounds": null,
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/garden-v4/flowers-meadow.webp"
+        ],
+        "prompt": "Use case: stylized-concept. ORIGINAL isolated small golden BUTTERFLY garden prop for Pawblossom Puzzle. One friendly symmetrical butterfly with four soft broad rounded wing lobes, warm golden-orange top wings with a few simple cream edge markings, slightly deeper amber lower wings, tiny dark warm-brown body and two curved antennae. Gently angled three-quarter pose but both wings readable, width about1.3times height. Premium warm dimensional hand-painted2.5D mobile game rendering, soft upper-left highlights, tactile smooth volume, confident simple silhouette at32px. One complete centered butterfly only with actual transparent padding around wings and antennae. No flower, no ground/grass/background/scene, no flying trail or halo, no ground shadow, no characters/text/UI/numbers/logos/watermark. Original artwork matching our own garden flowers, not any existing game's butterfly."
+      },
+      "family": null,
+      "cropAlpha16Bounds": [
+        205,
+        91,
+        1304,
+        995
+      ],
+      "outputDimensions": [
+        128,
+        128
+      ],
+      "fit": [
+        112,
+        92
+      ],
+      "offset": [
+        8,
+        18
+      ],
+      "bytes": 7366,
+      "sha256": "f93434ced6be8ce0d440a202348297472d51fca1e2fa3aa6ff81cf4745f3bfbb",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/garden-structures-v1/butterfly.webp"
+    },
+    {
+      "name": "lily",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-92b96abb-3de7-4af3-b0a6-afe26fcf239c.png",
+      "sourceSha256": "ce0afafd53b40d449bdde56341f2240d8724b436149b6f58029b609c0257b113",
+      "sourceDimensions": [
+        1536,
+        1024
+      ],
+      "normalizedFrameBounds": null,
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/garden-v4/flowers-daisy.webp",
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/garden-v4/backdrop-meadow.webp"
+        ],
+        "prompt": "Use case: stylized-concept. ORIGINAL isolated interactive WATER LILY sprite for Pawblossom Puzzle. ONE small pale cream and warm blush-pink lotus-like water-lily blossom with layered plump pointed-oval petals cupping a golden center, resting on ONE broad smooth sage-green lily pad with a tiny V notch. Gentle elevated front three-quarter view, pad a wide shallow ellipse, bloom rises from the back-middle of pad. Whole object about1.5:1 wide-to-tall; readable flower silhouette at45px. Match our own references' premium warm hand-painted2.5D dimensional leaves/petals and upper-left soft light, not flat vector or photorealism. No pond water or surrounding surface, no ripple, no other flowers/leaves, no stems below pad, no ground/scene/background/shadow/halo, no props/characters/UI/text/numbers/logos/watermark. One complete centered isolated lily and its single pad with genuine transparent padding. Original art, not another game's asset."
+      },
+      "family": null,
+      "cropAlpha16Bounds": [
+        203,
+        164,
+        1355,
+        896
+      ],
+      "outputDimensions": [
+        256,
+        192
+      ],
+      "fit": [
+        240,
+        153
+      ],
+      "offset": [
+        8,
+        19
+      ],
+      "bytes": 16938,
+      "sha256": "e3cf70a20f285fd2fc30a9e538639bfca5d7f24d2d7b9c123b7c51ff23492c0f",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/garden-structures-v1/lily.webp"
+    },
+    {
+      "name": "site-empty",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-10a81338-b9a0-41a8-8f86-a9fa8dda0632.png",
+      "sourceSha256": "6d72f98effaa014ea3ac73fc4d03e5cb7b8e2af1e49273a475ccc5ee5da3b245",
+      "sourceDimensions": [
+        2172,
+        724
+      ],
+      "normalizedFrameBounds": null,
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/garden-v4/backdrop-meadow.webp",
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/garden-v4/bed-empty.webp"
+        ],
+        "prompt": "Use case: stylized-concept. ORIGINAL isolated EMPTY GARDEN RESTORATION SITE ground-layer sprite for Pawblossom Puzzle. A very low broad oval patch of slightly overgrown olive/sage meadow grass, with a quiet central open pale-brown dirt clearing, exactly four small rounded pale sandstone boundary stones and two short plain wooden survey stakes at the far left and far right rear edges. This is an inviting untouched small garden project site, not a finished garden feature. Gentle elevated front three-quarter view, low silhouette about3:1 wide-to-tall, tiny grass tufts only around its perimeter; clean readable masses at260px. Match our own warm dimensional hand-painted2.5D garden references and upper-left soft light. The dirt/grass patch is part of the isolated sprite, but outside the soft irregular oval boundary must be genuine alpha transparency. No pond/water, no flower bed, no flowers, no architecture/roof/arch/bench, no signs or construction machinery, no tools, no characters, no ground outside the patch, no cast shadow, no UI/text/numbers/logos/watermark. One complete centered site with transparent padding. Original artwork."
+      },
+      "family": null,
+      "cropAlpha16Bounds": [
+        68,
+        168,
+        2109,
+        636
+      ],
+      "outputDimensions": [
+        512,
+        192
+      ],
+      "fit": [
+        496,
+        114
+      ],
+      "offset": [
+        8,
+        39
+      ],
+      "bytes": 40886,
+      "sha256": "adfbdc078c12ab446e1aec8c3134aaf5ff163255db6e4b9e238f730e23d9f254",
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/garden-structures-v1/site-empty.webp"
+    }
+  ],
+  "sourceOnly": {
+    "pond-alt": {
+      "sourcePath": "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-c7f8ecb1-1b1a-4c87-8974-987f07f8407b.png",
+      "reason": "Combined bridge/pond cannot put interactive water ripples behind bridge. Retained as image_gen extraction reference; not shipped as combined asset.",
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-e1232c38-85b5-44c0-9a95-1367ded1ae38.png"
+        ],
+        "prompt": "Edit our ORIGINAL pond sprite into the alternate SMALL WOODEN BRIDGE style. Preserve exact camera, canvas framing/dimensions, entire oval sandstone pond rim/water/reeds positions and sizes and upper-left lighting. Add ONE short gently arched honey-wood footbridge across the MIDDLE of the pond, running diagonally in perspective from the near-left-middle rim toward the back-middle-right rim. Rounded wooden planks and low simple railings, warm bevelled material matching the own honey-wood garden style. Keep the LEFT THIRD and RIGHT THIRD of the water open and clearly visible for separate interactive lily overlays; no lily pads/flowers baked into the image. Keep bridge entirely within the reference canvas with transparent padding, and retain the original pond footprint. Premium hand-painted2.5D casual mobile game structure, true transparency outside the object, no ground plane/ground shadow/background/characters/UI/text/numbers/logos/watermark. Original own asset, not another game."
+      }
+    }
+  },
+  "generationNote": "Initial bench generation could not read its repository reference. Regenerated with stable original own PNG references outside Git; exact recovered arguments are in bench asset."
+}

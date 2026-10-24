@@ -5,6 +5,7 @@ import {freshGardenDesign,gardenDesignFor,gardenProjects,gardenThemes,projectRea
 import {gardenArt,flowerArt} from '../src/GardenArt';
 import {freshGardenSpaces,gardenSpacesFor,gardenSpaceSpecs,prepareSpaceAction,previewSpaceAction,validateGardenSpaces} from '../src/gardenSpaces';
 import {gardenSpaceArt} from '../src/GardenSpaceArt';
+import {paintedGardenForeground} from '../src/GardenStructureArt';
 import {SaveStore,SAVE_KEY,BACKUP_KEY} from '../src/state';
 const grown={growth:100,affection:100};
 const diverse=():GardenDesign=>({...freshGardenDesign(),flowers:['meadow','daisy','violet','meadow','meadow']});
@@ -31,14 +32,28 @@ describe('자체 회화 정원의 표시 레이어와 기존 성장 경계',()=>
     expect(gardenArt(-1,true,undefined,{renderer:'painted-v4'})).toContain('data-stage="0"');
     expect(gardenArt(99,true,undefined,{renderer:'painted-v4'})).toContain('data-stage="5"');
   });
-  it('세 공간의 미완성/기초/완성과 선택 구조를 배경 추가만으로 유지합니다',()=>{
+  it('세 공간의 빈터/기초/완성과 선택 구조를 실제 상태에 맞게 구분합니다',()=>{
     for(const space of ['pond','shelter','arch'] as const)for(const theme of ['meadow','sunset','starlight'] as const)
       for(const state of [{phase:0,altOwned:false,style:'base'},{phase:1,altOwned:false,style:'base'},{phase:2,altOwned:false,style:'base'},{phase:2,altOwned:true,style:'alt'}] as const){
         const before=JSON.stringify(state),legacy=gardenSpaceArt(space,state,theme,'preview-space'),painted=gardenSpaceArt(space,state,theme,'preview-space','painted-v4');
         expect(painted).toContain(`href="/assets/garden-v4/backdrop-${theme}.webp"`);expect(painted).toContain('id="preview-space-sky"');
-        const withoutPaint=painted.replace(' data-renderer="painted-v4"','').replace(/<g data-garden-layer="backdrop">.*?<\/g>/,'');
-        expect(withoutPaint).toBe(legacy);expect(painted).not.toContain('data-plot=');expect(JSON.stringify(state)).toBe(before);
+        const expected=state.phase===0?'site-empty':space==='pond'?state.phase===1?'pond-foundation':'pond-base':`${space}-${state.phase===1?'foundation':state.style}`;
+        expect(painted).toContain(`data-garden-structure-image="${expected}"`);expect(legacy).not.toContain('<image');
+        const images=painted.match(/data-garden-structure-image=/g)??[];
+        expect(images).toHaveLength(space==='pond'&&state.phase===2?state.style==='alt'?4:3:1);
+        expect(painted.includes('data-garden-structure-image="bridge"')).toBe(space==='pond'&&state.phase===2&&state.style==='alt');
+        expect(painted).not.toContain('data-plot=');expect(JSON.stringify(state)).toBe(before);
       }
+  });
+  it('본 정원의 분리 다리와 미리보기는 같은 위치를 쓰고 기초/다른 구역에는 앞그림이 없습니다',()=>{
+    for(const space of ['pond','shelter','arch'] as const)for(const phase of [0,1,2] as const)for(const style of ['base','alt'] as const){
+      const state={phase,style,altOwned:style==='alt'},front=paintedGardenForeground(space,state);
+      if(space==='pond'&&phase===2&&style==='alt'){
+        const all=gardenSpaceArt(space,state,'meadow','preview-space','painted-v4'),back=gardenSpaceArt(space,state,'meadow','garden-space','painted-v4',{foreground:false});
+        const image=front.match(/<image[^>]*\/>/)![0];expect(all).toContain(image);expect(back).not.toContain('data-garden-structure-image="bridge"');
+        expect(front).toContain('viewBox="0 0 480 280"');expect(front).toContain('aria-hidden="true"');
+      }else expect(front).toBe('');
+    }
   });
 });
 
