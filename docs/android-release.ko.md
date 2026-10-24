@@ -1,3 +1,13 @@
+## 로컬 운반 체험·Native 여백 후보 · 2026-10-24 · #295/#296
+
+최신 **전달 완료** 파일은 아래 fcc3ac5이며 새 후보는 아직 Drive에 올리지 않았습니다. #291/#293의 게임 소스300168d(최초 정확CI40071758075 양Node53파일3,210개·store12·타입/두 빌드 성공)에는 메모리 전용 운반3판/자체 꾸러미3부품과 한영 결과 표시가 있습니다. 내부300 APK13,717,373bytes/SHA `01e3f679287545508db1f9b7f13017866a86c21bd720784ca837c85bf9fdbb79`를 LD5554에서 실제3판·보드밖 스와이프·HOME·한영/세로가로·정상3의23이동30점/별2코인80 warm/cold 복원까지 확인했습니다. 업데이트 전의 실제 사용자 진행은 이미3단계/별2코인80으로, 앞선2단계 기록보다 우선합니다. 원본·state/Scene/RNG 주입이나 앱데이터 초기화는 하지 않았습니다.
+
+그 시작/콜드 PID마다 잡힌 SystemBars root-null3회는 #296에서 [공식 권장 `native` 처리](https://capacitorjs.com/docs/apis/system-bars)로 추가 CSS 변수 주입 경로를 제외했습니다. Native 여백/앱의 `env(safe-area-inset-*)`는 유지하며 vendor·런타임 SDK는 수정하지 않았습니다. CLI8.4.3 타입의 native 누락으로 최초TS2322가 있었고 공식 registry SHA512/타입을 확인한 CLI8.5.3으로 Android/core와 맞춰 타입3설정을 통과했습니다. 기존 다른 의존 버전은 바꾸지 않았고 xcode 등6개 개발 전이 의존만 추가됐습니다.
+
+Native 설정 소스e285f97 후보 `Pawblossom-Puzzle-v0.1.7-2026-10-24-e285f97-debug.apk`는 동일13,717,373bytes/SHA `330a13f23e5d224375df22a14b6a5a62b79735dc47239f37f685e2671e8644ea`입니다. 검증된300의86웹을 재사용/전수SHA 비교했고 비웹536 중 변경은 `assets/capacitor.config.json`의 SystemBars 한 설정뿐입니다. package/min24/target36/0.1.7/code8/단일v2 동일 서명과 빈Cordova2/중복0을 확인했습니다. JVM16개(유의미15+scaffold1)는 Java 불변의 UP-TO-DATE 재사용, lint 분석 실행/리포트 재사용/app 오류0·경고15입니다.
+
+API34/WebView124의 업데이트·HOME/복귀·세로/원래가로·설정/미리보기·배달 입력/정상23회30점 cold 복원에서 해당 caught 예외·FATAL/Uncaught는 관측0입니다. 이전과414²보드/66²설정/하단 메뉴 좌표가 같으며 원래1600×900/density240/회전0·자동회전0과 임시 원격 파일 정리를 확인했습니다. 초기 Native AX의 셀/헤더 누락은 실제 제스처 뒤36셀 재등장/화면·입력 성공과 구분하며 전체 TalkBack 통과가 아닙니다. 콜드의 별도 Chromium 캐시/실험 설정 로그는 미확정이고 삭제/해결했다고 표현하지 않습니다. 실제 cutout·IME·다른 Android/WebView·실폰/실서비스는 후속입니다. 보존한78 production 웹과 Android를 세 flag false로 복구했고 시험 APK는 별도 보존했습니다. 새 PR/정확main CI·최종 Drive 전달은 후속입니다.
+
 ## 최신 모션·아트 통합 전달 · 2026-10-24 · #286
 
 최신 사용자 검수 파일은 [Pawblossom-Puzzle-v0.1.7-2026-10-24-fcc3ac5-debug.apk](https://drive.google.com/file/d/1ycBZudn9oJVcfirLvZTdHni9WC8roNL4/view)입니다. 게임 소스는 `fcc3ac51073c022242e59e0f58b5ee1e0d17d5b0`, 버전0.1.7/code8,13,245,189바이트, SHA256 `c7b3fd0855554e1d1742269bd89ec84b6c6f71617860012ee13ecc76abef5012`입니다. 기존 작업 계정의 같은 테스트 폴더에 고유 APK와121바이트 checksum을 추가했고 Chrome의 실제 재다운로드 파일도 크기·SHA256이 일치했습니다. 공유 창은 소유자1명/일반 액세스 제한됨이며 권한·기존 파일을 바꾸지 않았습니다. Drive 페이지의 파일 형식 안내를 확인했으며 브라우저 보안 경고를 해제하거나 우회하지 않았습니다.
