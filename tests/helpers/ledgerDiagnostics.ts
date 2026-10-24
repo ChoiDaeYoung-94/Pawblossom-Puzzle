@@ -66,6 +66,15 @@ function sqliteCode(value:unknown):{extendedCode:number|null;baseCode:number|nul
 }
 // 실제 native receiver는 이 WeakMap 밖으로 반환/직렬화하지 않습니다.
 const nativeDatabases=new WeakMap<SqliteErrorRow,object>();
+// 모듈 초기의 원래 Node prepare를 신뢰합니다. 악성 preload까지 검증하는 계약은 아닙니다.
+const trustedPrepare=Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'prepare')?.value;
+function trustedPrepareFailure(executed:unknown,error:unknown):boolean {
+  if(typeof trustedPrepare!=='function'||executed!==trustedPrepare||error===null||(typeof error!=='object'&&typeof error!=='function'))return false;
+  try{const code=Object.getOwnPropertyDescriptor(error,'code');return Boolean(code&&'value' in code&&code.value==='ERR_SQLITE_ERROR');}catch{return false;}
+}
+// 원래 native prepare는 receiver 확인 뒤 처리합니다. 이는 DB 대응 근거이며,
+// options getter 등이 던진 SQL 코드 오류까지 SQLite 엔진이 만들었다고 증명하지 않습니다.
+// foreign/mock prepare와 임의 own isOpen getter는 이 판단에 사용하지 않습니다.
 function nativeBoolean(database:object,key:'isOpen'|'isTransaction'):boolean|null {
   try{const getter=Object.getOwnPropertyDescriptor(database,key)?.get??Object.getOwnPropertyDescriptor(DatabaseSync.prototype,key)?.get;if(!getter)return null;const value=Reflect.apply(getter,database,[]);return typeof value==='boolean'?value:null;}catch{return null;}
 }
@@ -137,7 +146,7 @@ export function withSqliteDiagnostics<T>(trace:PhaseTrace|null,work:()=>T,option
         finishTransactionObservation(trace,transaction,'threw');
         finishScheduling(transaction,schedulingAttempted,sampled,sample);
         // 수집 실패도 원래 예외의 종류/참조를 바꾸지 않습니다.
-        try{if(trace.sqliteErrors.length<8){const errorCode=safeError(error).errorCode;const row:SqliteErrorRow={operation,site:sqliteSite(operation,args[0]),phase:trace.phase,errorCode,...sqliteCode(errorCode==='ERR_SQLITE_ERROR'?field(error,'errcode'):undefined),transactionActive:operation==='database-exec'?nativeBoolean(this as object,'isTransaction'):null,connectionClosed:null};if(operation==='database-exec'&&this!==null&&typeof this==='object')nativeDatabases.set(row,this);trace.sqliteErrors.push(row);}else trace.sqliteErrorsTruncated=true;}catch{}
+        try{if(trace.sqliteErrors.length<8){const errorCode=safeError(error).errorCode;const row:SqliteErrorRow={operation,site:sqliteSite(operation,args[0]),phase:trace.phase,errorCode,...sqliteCode(errorCode==='ERR_SQLITE_ERROR'?field(error,'errcode'):undefined),transactionActive:operation==='database-exec'?nativeBoolean(this as object,'isTransaction'):null,connectionClosed:null};if(operation==='database-exec'&&this!==null&&typeof this==='object')nativeDatabases.set(row,this);else if(operation==='database-prepare'&&this!==null&&typeof this==='object'&&trustedPrepareFailure(descriptor.value,error))nativeDatabases.set(row,this);trace.sqliteErrors.push(row);}else trace.sqliteErrorsTruncated=true;}catch{}
         throw error;
       }
     }});state.installedMethods++;}
