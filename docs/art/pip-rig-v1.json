@@ -1,0 +1,22 @@
+{
+  "issue": 273,
+  "type": "code-native SVG clip/mask and CSS over existing own raster assets",
+  "status": "integrated web prototype; actual browser responsive/reaction/reduced-motion checks passed; new native and user final art approval pending",
+  "renderer": "src/PipRig.ts",
+  "motion": "src/PipIdle.css and src/CampaignMap.css",
+  "rasterProcessing": "none; original files unchanged; localized blink overlay and independently rotated ears",
+  "existingGenerationProvenance": "docs/assets.ko.md 2026-10-23 #238 own Pip idle generation",
+  "sources": [
+    {
+      "path": "public/assets/pip-idle-open-v2.webp",
+      "bytes": 20400,
+      "sha256": "68a2a1eceb9320aca746932b09480e1752166bf32684410f4d4fe1a15c7920b8"
+    },
+    {
+      "path": "public/assets/pip-idle-blink-v2.webp",
+      "bytes": 19980,
+      "sha256": "b965fda7074573a2ab4ffdf1cb3baa4c1edd3487a56f4473667c8020e12dc0e5"
+    }
+  ],
+  "gameSource": "8b487e6696bd8e5e44ea413eacd35043cec02515"
+}

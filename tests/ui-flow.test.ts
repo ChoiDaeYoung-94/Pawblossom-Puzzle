@@ -82,6 +82,8 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const documentEvents:Record<string,()=>void>={};
   const windowEvents:Record<string,()=>void>={};
   const nativeEvents:Record<string,(state:{isActive:boolean})=>void>={};
+  const pipControllers:{pip:ElementStub;disposed:boolean;disposals:number}[]=[];
+  const pipLifecycle:string[]=[];
   let resolveNativeState!:(state:{isActive:boolean})=>void;
   const nativeState=new Promise<{isActive:boolean}>(resolve=>{resolveNativeState=resolve;});
   let stored = JSON.stringify({ version: 1, language: 'en', highestLevel: 2, completed: [1], stars: 1, coins: 40, garden: 0, music: true, sfx: true });
@@ -92,6 +94,14 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     if (!elements.has(selector)) {
       elements.set(selector, new ElementStub(selector));
       if(selector==='#stars-help'||selector==='#coins-help')elements.get(selector)!.hidden=false;
+      if(selector==='#map-view'){
+        let markup='';
+        Object.defineProperty(elements.get(selector)!,'innerHTML',{get:()=>markup,set:(value:string)=>{
+          pipLifecycle.push('map-replace');
+          const previous=elements.get('#map-current-pip');if(previous)previous.isConnected=false;
+          elements.delete('#map-current-pip');markup=value;
+        }});
+      }
       if(selector==='#result-dialog')elements.get(selector)!.querySelector=child=>elements.get(selector)!.innerHTML.includes(`id="${child.slice(1)}"`)?element(child):null;
       // 동적으로 만든 설정 도움말도 실제 onclick과 opener 참조로 검사합니다.
       if(selector==='#settings-view')elements.get(selector)!.append=child=>{elements.set('#'+child.id,child);};
@@ -146,6 +156,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     resume() {this.suspended=false;this.resumes++;}
   }
   class FeedbackStub {
+    constructor(public options:{pip:ElementStub}){}
     calls:{kind:string;payload?:unknown}[]=[];
     beginMove(payload:unknown){this.calls.push({kind:'begin',payload});}
     show(payload:unknown){this.calls.push({kind:'show',payload});}
@@ -188,7 +199,13 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     cloneSnapshot,prepareShuffle,
     showResultPip:()=>{resultArtCalls++;},
     RoundFeedback:FeedbackStub,
-    createPipIdle:(pip:ElementStub)=>({setActive:(active:boolean)=>{pip.dataset.idleActive=String(active);}}),
+    createPipIdle:(pip:ElementStub)=>{
+      const idle={pip,disposed:false,disposals:0,
+        setActive(active:boolean){if(!idle.disposed)pip.dataset.idleActive=String(active);},
+        dispose(){if(idle.disposed)return;idle.disposed=true;idle.disposals++;pipLifecycle.push(`dispose:${pip.id}:${pip.isConnected}`);delete pip.dataset.idleActive;delete pip.dataset.idleReady;},
+      };
+      pipControllers.push(idle);return idle;
+    },
     AudioManager: AudioStub, t: (_language: string, key: string) => key, icon: () => '',
     Capacitor: { isNativePlatform: () => native,getPlatform:()=>native?'android':'web',isPluginAvailable:(name:string)=>Boolean(name==='PawblossomTestBilling'?billingBridge:adsBridge) },
     App:{addListener:(name:string,callback:(state:{isActive:boolean})=>void)=>{nativeEvents[name]=callback;return Promise.resolve({remove(){}});},getState:()=>nativeState,minimizeApp:()=>Promise.resolve()}, confirm: () => true,
@@ -221,7 +238,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   return {
     setStorageFails:(value:boolean)=>{storageFails=value;},disk:()=>[...storageValues],
     resultArtCalls:()=>resultArtCalls,frame:()=>frame(),games:()=>games,destroys:()=>destroys,
-    documentEvents,windowEvents,nativeEvents,resolveNativeState,
+    documentEvents,windowEvents,nativeEvents,resolveNativeState,pipControllers,pipLifecycle,
     element, run: (code: string) => {const result=vm.runInContext(code, context);if(autoFrame)frame();return result;},
     resultTimers: () => [...timers.values()].filter(timer => timer.ms === 300),
     flushResults: () => [...timers].filter(([,timer]) => timer.ms === 300).forEach(([id,timer]) => {timers.delete(id);timer.callback();}),
@@ -2395,6 +2412,52 @@ describe('후반 정원 공간과 확정 전 미리보기',()=>{
 
 
 describe('퍼즐 핍 idle 표시 수명',()=>{
+  it('반응은 내부 슬롯을 쓰며 지도 재생성도 외곽header·회차·지갑·저장 쓰기를 바꾸지 않습니다',()=>{
+    const h=mainHarness(false,false,false,false,undefined,true,undefined,undefined,true);
+    const header=h.element('#header-pip'),face=h.element('#header-pip-face');
+    expect(h.run('boardFeedback.options.pip===document.querySelector("#header-pip-face")')).toBe(true);
+    expect(h.run('boardFeedback.options.pip===document.querySelector("#header-pip")')).toBe(false);
+    const before=h.run('JSON.stringify({save,round,currentLevel,moves,score,board:scene.engine.board})'),disk=h.disk(),writes=h.writes();
+    const map=h.element('#map-view').innerHTML;
+    expect(map.match(/id="map-current-pip"/g)).toHaveLength(1);expect(map.match(/class="campaign-leaf"/g)).toHaveLength(4);
+    expect(map.match(/class="campaign-node /g)).toHaveLength(LEVEL_COUNT);
+    h.run("renderViews();switchView('puzzle');renderViews();switchView('map')");
+    expect(h.element('#header-pip')).toBe(header);expect(h.element('#header-pip-face')).toBe(face);
+    expect(h.pipControllers.filter(controller=>controller.pip===header)).toHaveLength(1);
+    expect(h.pipControllers.find(controller=>controller.pip===header)!.disposed).toBe(false);
+    expect(h.run('JSON.stringify({save,round,currentLevel,moves,score,board:scene.engine.board})')).toBe(before);
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('지도DOM 교체 전에 이전 controller를 dispose하고 새 호스트에만 현재 활동을 반영합니다',()=>{
+    const h=mainHarness(false,false,false,false,undefined,true,undefined,undefined,true);
+    const liveMap=()=>h.pipControllers.filter(controller=>controller.pip.id==='map-current-pip'&&!controller.disposed);
+    expect(liveMap()).toHaveLength(1);const previous=liveMap()[0];h.pipLifecycle.length=0;
+    h.run('renderViews()');
+    expect(h.pipLifecycle.slice(0,2)).toEqual(['dispose:map-current-pip:true','map-replace']);
+    expect(previous.disposals).toBe(1);expect(previous.pip.isConnected).toBe(false);expect(liveMap()).toHaveLength(1);
+    expect(liveMap()[0].pip).not.toBe(previous.pip);expect(liveMap()[0].pip.dataset.idleActive).toBe('true');
+    h.run("switchView('puzzle');renderViews()");expect(liveMap()).toHaveLength(0);
+    h.run("switchView('map')");expect(liveMap()).toHaveLength(1);
+    const map=liveMap()[0];h.windowEvents.pagehide();expect(map.disposed).toBe(false);
+  });
+  it('지도 motion은 모달·숨김·nativeInactive·다른경로에서 정지하고 종료 뒤 지도에서도 복귀합니다',()=>{
+    const h=mainHarness(false,false,true,true,undefined,true,undefined,undefined,true);
+    const active=()=>h.element('#map-view').dataset.motionActive;
+    expect(active()).toBe('false');h.nativeEvents.appStateChange({isActive:true});expect(active()).toBe('true');
+    h.element('#map-play').onclick();expect(active()).toBe('false');h.element('#preview-cancel').onclick();expect(active()).toBe('true');
+    for(const dialog of ['tutorial-dialog','result-dialog','test-level-dialog']){
+      h.run(`document.querySelector('#${dialog}').open=true;syncActivity()`);expect(active()).toBe('false');
+      h.run(`document.querySelector('#${dialog}').open=false;syncActivity()`);expect(active()).toBe('true');
+    }
+    h.run('document.hidden=true');h.documentEvents.visibilitychange();expect(active()).toBe('false');
+    h.run('document.hidden=false');h.documentEvents.visibilitychange();expect(active()).toBe('true');
+    h.nativeEvents.appStateChange({isActive:false});expect(active()).toBe('false');
+    h.nativeEvents.appStateChange({isActive:true});expect(active()).toBe('true');
+    expect(h.run("boardPending=true;syncActivity();document.querySelector('#map-view').dataset.motionActive")).toBe('false');
+    h.run("boardPending=false;roundEnded=true;syncActivity()");expect(active()).toBe('true');
+    h.run("switchView('settings')");expect(active()).toBe('false');h.run("switchView('map')");expect(active()).toBe('true');
+    expect(h.element('#header-pip').dataset.idleActive).toBe('false');
+  });
   it.each([true,false])('승패 %s 정산부터 결과창 전300ms에도 idle을 즉시 멈춥니다',won=>{
     const h=mainHarness();h.run('startLevel(1)');expect(h.element('#header-pip').dataset.idleActive).toBe('true');
     h.run(won?'scene.hooks.onMove([12,10,0,0,0,0],220)':'moves=1;scene.hooks.onMove([0,0,0,0,0,0],0)');
