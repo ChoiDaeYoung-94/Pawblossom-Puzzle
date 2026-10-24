@@ -3,9 +3,12 @@
 #app[data-route="puzzle"] .topbar .language-button{display:none}
 #app[data-route="puzzle"] .brand{font-size:18px}
 #app[data-route="puzzle"] .brand small{display:none}
-#app[data-route="puzzle"] .game-panel{background:linear-gradient(#fffdf7,#f4f5e9)}
-#puzzle-view .mission-bar{padding:8px;border:1px solid #d9e3ca;border-radius:20px;background:#f4f7e9;gap:12px}
-#puzzle-view .moves-box{border:0;border-radius:14px;background:#537b51;color:#fffdf0;min-width:64px}
+#app[data-route="puzzle"]{background:linear-gradient(#fffdf51a,#fffdf536),url('/assets/puzzle-backdrop-v1.webp') center/cover no-repeat}
+#app[data-route="puzzle"] .topbar{background:linear-gradient(#fffdf5d9,#fffdf5a6);border-bottom-color:#c4d1ad}
+#app[data-route="puzzle"] .brand-mark{background:linear-gradient(#f8f8e8,#dce9c6);box-shadow:inset 0 1px 0 #ffffffd9,0 2px 4px #395b3420;color:#52764b}
+#app[data-route="puzzle"] .game-panel{background:linear-gradient(#fffef6ed,#f7f8e6c9);box-shadow:inset 0 1px 0 #fffef5,0 8px 24px #3855351f}
+#puzzle-view .mission-bar{padding:8px;border:1px solid #c4d2ac;border-radius:20px;background:linear-gradient(#fffff1,#eaf1d7);box-shadow:inset 0 1px 0 #fff,0 3px 6px #43613916;gap:12px}
+#puzzle-view .moves-box{border:0;border-radius:14px;background:linear-gradient(#658c59,#426d43);box-shadow:inset 0 1px 0 #9bb77c,inset 0 -2px 0 #31583940,0 2px 4px #3d59392b;color:#fffdf0;min-width:64px}
 #puzzle-view .moves-box strong{color:#fffdf0;font-size:32px}
 #puzzle-view .moves-box>span{color:#fffdf0}
 #puzzle-view .goal-box{padding-block:2px;align-self:center}
@@ -14,6 +17,11 @@
 #puzzle-view .goal-item{gap:7px}
 #puzzle-view .goal-item img{width:34px;height:34px;filter:drop-shadow(0 2px 1px #425b3120)}
 #puzzle-view .goal-item strong{font-size:21px;color:#3f5d3e}
+#app[data-route="puzzle"] .icon-button:not(:disabled),
+#puzzle-view .shuffle-button:not(:disabled){background:linear-gradient(#fffff4,#e6edcf);color:#365b3d;box-shadow:inset 0 1px 0 #fff,inset 0 -2px 0 #b2c39366,0 2px 4px #405d3420}
+#app[data-route="puzzle"] .bottom-nav{background:linear-gradient(#fffef0c9,#f1f3deed);border-top-color:#c8d4b0}
+#app[data-route="puzzle"] .bottom-nav button:not(:disabled){border-radius:12px;background:linear-gradient(#fffef4,#edf2dc);box-shadow:inset 0 1px 0 #ffffffb3,inset 0 -1px 0 #c7d5b080;color:#506747}
+#app[data-route="puzzle"] .bottom-nav button.active{background:linear-gradient(#e7f1d7,#d2e4bb);box-shadow:inset 0 1px 0 #faffed,inset 0 -2px 0 #9ab27c66;color:#315a39}
 /* Phaser가 부모에 쓰는 inline 100%보다 정사각 크기를 우선합니다. */
 #game-canvas{width:min(100cqw,100cqh)!important;height:min(100cqw,100cqh)!important}
 .header-pip::after{content:'';position:absolute;inset:0;background:url('/assets/pip-idle-blink-v2.webp') center/contain no-repeat;opacity:0;pointer-events:none}
@@ -25,7 +33,7 @@
 @keyframes pip-eyes-blink{0%,91%,95%,100%{opacity:0}92%{opacity:1}}
 @media(max-width:359px){#puzzle-view .mission-bar{padding:6px;gap:8px}#puzzle-view .moves-box{min-width:54px}#puzzle-view .goal-item{gap:4px}#puzzle-view .goal-item img{width:28px;height:28px}#puzzle-view .goal-item strong{font-size:18px}}
 @media(orientation:portrait) and (max-height:650px){
-  #app[data-route="puzzle"] .topbar{height:44px}
+  #app[data-route="puzzle"] .topbar{height:44px;border-bottom:0}
   #app[data-route="puzzle"] .workspace{padding:5px 8px}
   #app[data-route="puzzle"] .game-panel{padding:7px 10px 0}
   #puzzle-view{gap:5px}

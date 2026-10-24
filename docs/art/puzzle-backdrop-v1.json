@@ -1,0 +1,26 @@
+{
+  "issue": 268,
+  "tool": "built-in image_gen",
+  "status": "own prototype integrated; actual browser responsive and preview text-zoom checks passed; native and user final art approval pending",
+  "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-6eca0004-e558-42bc-b88b-9e5e32ff3a67.png",
+  "sourceSha256": "842bbe97e05fb26429ee000c174a03ffd974b8249b1d5ebbbe260f5274158aff",
+  "sourceDimensions": [
+    1024,
+    1536
+  ],
+  "promptArguments": {
+    "transparent_background": false,
+    "referenced_image_paths": [
+      "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-2ca6d863-c3d4-4adb-b795-5b286ca3f6c5.png"
+    ],
+    "prompt": "Use case: stylized-concept. ORIGINAL PORTRAIT PUZZLE SCREEN BACKDROP for Pawblossom Puzzle, ratio2:3 vertical. Use our own garden scene only as hand-painted2.5D natural-material and warm-light reference; create a NEW much SOFTER, QUIETER composition for a game screen. An inviting open spring glade, pale warm mint and cream light in the broad central area, very soft distant rounded trees/sky at the top, a few large beautifully shaded fresh green leaves and tiny coral/ivory flowers framing ONLY the far top corners and far lower corners, subtle soft grass at the bottom rim. Keep the entire central75percent of the canvas spacious, uncluttered and nearly smooth pale sage/cream color so a square puzzle board, character and numerical HUD can be overlaid clearly. Broad confident gentle color masses, minimal grass speckling/noisy detail, soft atmospheric depth, lovely premium rounded dimensional foliage at edges, cozy polished casual mobile game look, not a website photo or flat vector. NO characters, NO garden structures/pond/bridge/bed/bench/fence/path in the middle, NO board or tiles, NO panels/cards/buttons/icons/UI, NO text/numbers/logos/watermark. Full opaque painting; original own game art, not any existing game's layout or asset."
+  },
+  "processing": "Mechanical uniform full-frame RGB resize1024x1536 to768x1152 and WebP92/method6; no crop or semantic edits",
+  "outputPath": "public/assets/puzzle-backdrop-v1.webp",
+  "outputDimensions": [
+    768,
+    1152
+  ],
+  "bytes": 136634,
+  "sha256": "7c1249339fbbc971f46f01af9b54d21324a64244eeed7bea8ebfa47eb5b077f8"
+}
