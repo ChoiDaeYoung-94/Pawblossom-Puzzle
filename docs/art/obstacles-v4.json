@@ -1,0 +1,132 @@
+{
+  "issue": 272,
+  "tool": "built-in image_gen",
+  "status": "자체 장애물3개를 보드·목표·미리보기·제거 피드백에 통합했습니다. 실제100번과KO/EN 작은 화면 및 최종 별도Phaser 사분면·모션 감소 검수를 확인했습니다. Android·사용자 감각 승인은 아직입니다.",
+  "runtimePresentation": "최종4dbd754는256픽셀 상자를128픽셀 사분면4개로 렌더합니다. 동일 중심·표시51·회전0에서 시작해 줄어들며 흩어집니다. 원본 비트맵은 바꾸지 않고 120객체 예산·실패 대체·모션 감소를 보호합니다.",
+  "processing": "Mechanical alpha16 bounds crop/uniform fit240 with8px minimum padding in256 square/Lanczos/alpha-preserving WebP94 method6 exact; no semantic edits",
+  "assets": [
+    {
+      "name": "wooden-crate",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-98d97c66-3567-453a-a100-eecbf2970b4e.png",
+      "sourceDimensions": [
+        1274,
+        1235
+      ],
+      "sourceSha256": "a7d8c63b4594cd5e993ccc5da8d7d419fc5c8bc8fe79dcfc74a98cf6a9b2988d",
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-a609cce8-741f-4e70-8c72-2432af31a04a.png"
+        ],
+        "prompt": "Use case: stylized-concept. ORIGINAL mobile puzzle WOODEN CRATE obstacle sprite for Pawblossom Puzzle. Use our own bench reference ONLY for warm honey wood, gentle hand-painted2.5D volume and upper-left illumination. Exactly ONE compact square wooden crate, near-frontal view with only a very slight top/right bevel for depth, readable centered square silhouette. Substantial rounded honey-golden timber frame, three broad horizontal front boards, two clearly separated diagonal wooden braces crossing in an X, small rounded bronze peg details. Strong clean large shapes readable at45pixels. Warm ochre faces, restrained toasted-brown side shadows, cream light on upper-left edges, smooth polished rounded wooden volumes and subtle sparse grain. Friendly premium casual puzzle prop, dimensional painted artwork, not a flat outlined SVG and not photorealism. Entire isolated object centered at80percent canvas width/height with generous truly transparent padding. NO foliage, fruit, faces, other objects, background, floor or cast ground shadow, text, letters, numbers, logos, badges, watermark or UI. Do not imitate any existing game's asset; original own forest garden obstacle."
+      },
+      "cropAlpha16Bounds": [
+        79,
+        81,
+        1206,
+        1155
+      ],
+      "fit": [
+        240,
+        229
+      ],
+      "offset": [
+        8,
+        13
+      ],
+      "outputDimensions": [
+        256,
+        256
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/obstacles-v4/wooden-crate.webp",
+      "bytes": 21322,
+      "sha256": "97f293beb9c122737cfab06241418aafd2e69da62647df3df06c538c4012091c"
+    },
+    {
+      "name": "leaf-single",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-f2c47bd2-bf45-4dc4-be06-f622a4f7509e.png",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "edd29b79bf2693438ad4bb4bbf680c6615c23e27d9114c2267cfeb1c118dea89",
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/Documents/ChatGPT/match3/public/assets/tiles-v3/leaf.webp"
+        ],
+        "prompt": "Use case: stylized-concept. ORIGINAL AUTUMN FALLEN LEAF obstacle badge sprite for Pawblossom Puzzle. Use our own green leaf reference ONLY for clean shaded painted material, soft rounded volume, vein readability and upper-left light. Create exactly ONE golden amber fallen maple-like leaf with five broad rounded lobes, a gently curled tip, warm ochre center, copper-orange/toasted-brown rim and a clearly readable softly raised central vein with few broad side veins. Diagonal composition: short gracefully curved stem toward bottom-left, leaf tip toward upper-right. It must be unmistakeably BROWN/AMBER, never green, so it is distinct from our normal green matching tile. Thick toy-like friendly painted2.5D volume with subtle cream highlight, restrained shadows on the object itself, broad confident shapes readable as a tiny24pixel badge. No extra leaves, acorns, dirt, grass, sparkles or other objects. Isolated full silhouette centered at80percent square canvas with generous true transparent padding. No floor/ground/cast shadow, no border box, text/numbers/counter/badge/logo/watermark/UI. Original own game asset, not an existing game's art."
+      },
+      "cropAlpha16Bounds": [
+        113,
+        48,
+        1207,
+        1171
+      ],
+      "fit": [
+        234,
+        240
+      ],
+      "offset": [
+        11,
+        8
+      ],
+      "outputDimensions": [
+        256,
+        256
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/obstacles-v4/leaf-single.webp",
+      "bytes": 22160,
+      "sha256": "6cf66ff7cacd586a921ec0f07a1528ef0c1adec5b0d5b0e486bd5497072de1d8"
+    },
+    {
+      "name": "leaf-pile",
+      "sourcePath": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-5d196b79-7153-4ec0-8651-b9c7e521c977.png",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceSha256": "2b2140c30c14f9f876116f949eb5e8a628f08f6ab7e3220ee0a3945122244cb0",
+      "promptArguments": {
+        "transparent_background": true,
+        "referenced_image_paths": [
+          "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-f2c47bd2-bf45-4dc4-be06-f622a4f7509e.png"
+        ],
+        "prompt": "Use case: stylized-concept. Edit our OWN golden autumn leaf into a DOUBLE FALLEN LEAF PILE obstacle badge for Pawblossom Puzzle. Exactly TWO recognizable leaves, both clearly based on the reference's same broad rounded maple-like silhouette, raised veins, copper-orange edge/ochre-gold center, soft painted2.5D volume and upper-left light. One dominant front leaf angled stem bottom-left to tip upper-right. A second matching leaf sits BEHIND, rotated a little counterclockwise and offset slightly up-left, with several visible lobes and its own short stem so two layers are apparent. Natural soft contact shadow between these two leaves ONLY. Compact centered square composition readable at31pixel badge size; retain thick warm toy-like painted material and broad highlights, restrained fine detail. Exactly TWO, no third leaf or grass/dirt/sparkles/box/other objects. Generous true transparent padding around the complete pair, no ground/floor/cast ground shadow. NO numbers or counter baked in, no text/border/badge/logo/watermark/UI. Original own artwork, not another game's asset."
+      },
+      "cropAlpha16Bounds": [
+        82,
+        55,
+        1212,
+        1208
+      ],
+      "fit": [
+        235,
+        240
+      ],
+      "offset": [
+        10,
+        8
+      ],
+      "outputDimensions": [
+        256,
+        256
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "outputPath": "public/assets/obstacles-v4/leaf-pile.webp",
+      "bytes": 24034,
+      "sha256": "6c87d6ce9eadd8ef86590970c657b9a9758440b5702bf8bbc036cc8f38df4060"
+    }
+  ]
+}

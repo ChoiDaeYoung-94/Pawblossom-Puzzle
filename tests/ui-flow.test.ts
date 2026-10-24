@@ -317,7 +317,7 @@ describe('보드 피드백 연결과 정산 경계',()=>{
     const before=h.run('JSON.stringify({moves,score,collected,clearedLeaves,board:scene.engine.board,save})');
     h.run('boardFeedback.calls=[];scene.hooks.onStart();scene.hooks.onResolveVisual({cascade:1,removed:[{kind:0,x:44,y:44}],clearedLeaves:[],specialCreated:false,specialActivated:false})');
     expect(h.run('boardFeedback.calls.map(c=>c.kind)')).toEqual(['begin','show']);
-    expect(h.run('boardFeedback.calls[0].payload')).toEqual(h.run("levels[currentLevel-1].goals.map(g=>({key:String(g.kind),remaining:g.count-collected[g.kind],src:'/assets/tiles-v3/'+tileNames[g.kind]+'.webp'})).concat([{key:'leaves',remaining:0,src:'/assets/obstacles/leaf-pile.svg'}])"));
+    expect(h.run('boardFeedback.calls[0].payload')).toEqual(h.run("levels[currentLevel-1].goals.map(g=>({key:String(g.kind),remaining:g.count-collected[g.kind],src:'/assets/tiles-v3/'+tileNames[g.kind]+'.webp'})).concat([{key:'leaves',remaining:0,src:'/assets/obstacles-v4/leaf-pile.webp'}])"));
     expect(h.run('JSON.stringify({moves,score,collected,clearedLeaves,board:scene.engine.board,save})')).toBe(before);
     expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
     expect(h.element('#goals').innerHTML).toContain(`data-feedback-goal="${h.run('levels[currentLevel-1].goals[0].kind')}"`);
@@ -644,7 +644,7 @@ describe('스테이지 미리보기와 명시적 회차 교체',()=>{
   });
   it.each([22,30])('%s의 세 목표 또는 두 겹 낙엽은 원래 수량과 초기 이동을 표시합니다',id=>{
     const h=mainHarness();h.run('save.highestLevel=30');open(h,id);const html=h.run('previewDialog.innerHTML');expect(html.match(/class="preview-goal"/g)).toHaveLength(3);
-    if(id===30){expect(html).toContain('leaf-pile.svg');expect(html).toContain('two layers');}
+    if(id===30){expect(html).toContain('leaf-pile.webp');expect(html).toContain('two layers');}
     expect(html).toContain('preview-initial');expect(html).not.toContain('preview-remaining');
   });
 });
@@ -1050,15 +1050,25 @@ function boardHarness() {
   return { handlers, lifecycle, attempts, taps, scene };
 }
 
-describe('게임 블록 bitmap과 장애물 SVG 로더',()=>{
-  it('일반 여섯 소재는 image로 읽고 캐시된 그림은 재요청하지 않으며 장애물 SVG는 유지합니다',()=>{
+describe('게임 블록과 장애물 bitmap 로더',()=>{
+  it('100번 혼합 목표의 HUD·미리보기·제거 피드백은 같은 장애물 원본을 사용합니다',()=>{
+    const h=mainHarness(false,false,true);h.run('startLevel(100,true);scene.hooks.onStart()');
+    for(const name of ['leaf-pile','wooden-crate'])expect(h.element('#goals').innerHTML).toContain(`/assets/obstacles-v4/${name}.webp`);
+    const goals=h.run('boardFeedback.calls.find(call=>call.kind==="begin").payload') as {key:string;src:string}[];
+    expect(goals.find(goal=>goal.key==='leaves')?.src).toBe('/assets/obstacles-v4/leaf-pile.webp');
+    expect(goals.find(goal=>goal.key==='crates')?.src).toBe('/assets/obstacles-v4/wooden-crate.webp');
+    h.run("showStagePreview(currentLevel,'restart',document.querySelector('#restart'))");
+    for(const name of ['leaf-pile','wooden-crate'])expect(h.run('previewDialog.innerHTML')).toContain(`/assets/obstacles-v4/${name}.webp`);
+  });
+  it('소재와 장애물의 기존 key를 image로 읽고 캐시된 종류는 재요청하지 않습니다',()=>{
     const h=boardHarness(),images:string[][]=[],vectors:string[][]=[];
     const scene=h.scene as unknown as {preload():void;textures:{exists(name:string):boolean};load:{image(name:string,url:string):void;svg(name:string,url:string):void}};
-    scene.textures={exists:name=>name==='carrot'||name==='special-art-column'};
+    scene.textures={exists:name=>name==='carrot'||name==='special-art-column'||name==='leaf-single'};
     scene.load={image:(name,url)=>{images.push([name,url]);},svg:(name,url)=>{vectors.push([name,url]);}};
     scene.preload();
-    expect(images).toEqual([...['strawberry','blueberry','acorn','leaf','flower'].map(name=>[name,`/assets/tiles-v3/${name}.webp`]),...['row','bomb','rainbow'].map(kind=>[`special-art-${kind}`,`/assets/specials-v4/${kind}.webp`])]);
-    expect(vectors).toEqual(['leaf-pile','leaf-single','wooden-crate'].map(name=>[name,`/assets/obstacles/${name}.svg`]));
+    expect(images).toEqual([...['strawberry','blueberry','acorn','leaf','flower'].map(name=>[name,`/assets/tiles-v3/${name}.webp`]),...['row','bomb','rainbow'].map(kind=>[`special-art-${kind}`,`/assets/specials-v4/${kind}.webp`]),...['leaf-pile','wooden-crate'].map(name=>[name,`/assets/obstacles-v4/${name}.webp`])]);
+    expect(vectors).toEqual([]);
+    images.length=0;scene.textures.exists=()=>true;scene.preload();expect(images).toEqual([]);
   });
 });
 
@@ -1194,7 +1204,7 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     const h=mainHarness();h.run("save.highestLevel=6;startLevel(4)");
     h.run('scene.hooks.onMove([0,0,0,14,12,0],260,1,3)');
     expect(h.resultTimers()).toHaveLength(0);expect(h.run('clearedLeaves')).toBe(3);
-    expect(h.element('#goals').innerHTML).toContain('leaf-pile.svg');
+    expect(h.element('#goals').innerHTML).toContain('leaf-pile.webp');
     h.run('scene.hooks.onMove([0,0,0,0,0,0],20,1,1)');h.flushResults();
     expect(h.stored()).toMatchObject({completed:[1,4],stars:2,coins:80});
     h.run('startLevel(4);scene.hooks.onMove([0,0,0,14,12,0],260,1,4)');h.flushResults();
@@ -2074,7 +2084,7 @@ describe('나무상자 챕터와 별도 목표·저장 연결',()=>{
     expect(app.stored().inProgress.clearedCrates).toBeGreaterThanOrEqual(2);expect(app.stored().inProgress.crates[2][2]).toBe(0);expect(app.stored().inProgress.board[2][2]).not.toBeNull();
     const old=app.stored(),resumed=mainHarness(false,false,false,false,old);expect(resumed.stored().inProgress).toEqual(old.inProgress);
     resumed.run("switchView('village');showStagePreview(36,'map',document.querySelector('#settings-button'))");
-    expect(resumed.run('previewDialog.innerHTML')).toContain(t(language,'crateHint'));expect(resumed.run('previewDialog.innerHTML')).toContain('/assets/obstacles/wooden-crate.svg');
+    expect(resumed.run('previewDialog.innerHTML')).toContain(t(language,'crateHint'));expect(resumed.run('previewDialog.innerHTML')).toContain('/assets/obstacles-v4/wooden-crate.webp');
   });
   it('시험 챕터 36–40은 일반 기록과 보상을 보존합니다',()=>{
     const app=mainHarness(false,false,true),before=app.disk();app.run('showTestPicker()');app.element('#test-chapter-5').onclick();
