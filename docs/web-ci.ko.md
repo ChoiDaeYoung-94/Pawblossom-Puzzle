@@ -1,5 +1,15 @@
 # 웹 자동 검증
 
+## 2026-10-24 · #285 callback await·close의 관측 수명
+
+검사 소스a49dbc8은 기존 Sync의 즉시·무조건 복원/Promise 참조를 유지하고 별도 Async scope에서 생성→서명 await→adapter-call→close 완료까지5개 hook을 유지합니다. Async만 설치 descriptor 전체 속성이 같은 항목을 복원하며 foreign 변경·삭제를 보존/실패 표시하고, scope 뒤 남은 wrapper는 원래 호출만 실행합니다. 설치·clock·기록·복원 실패가 업무 반환/오류 참조를 덮지 않습니다. #282 trusted prepare 대응과 기존 exec/Statement·retry 함수는 보존합니다.
+
+동일callback8worker의 diagnostics+sqliteDiagnostics+action undefined에만 연결하고, own-data/배열 length·index/최대8행/허용목록·유한 수치의 선택 DTO로 missing·invalid·유효 empty를 구분합니다. 원래 nativeObservation literal·3worker/default/action/child 출력과 신규1/중복7/DB행수 기대는 유지합니다. 원문 SQL/인수/claim/경로/stack/receiver/rawError는 출력하지 않습니다. 실제 worker의 await 뒤 adapter transaction과 close 후 복원을 확인했습니다.
+
+관련 첫4파일118개·기존 Sync 좁은58성공263skip·타입3설정·최종 최초 전체49파일3,117개가 성공했고 독립 읽기 검수에서 차단사항은 없었습니다. 최종 생산 빌드/타입3설정 성공과78웹파일 전수SHA가 기존 게임4dbd754와 같음을 확인했습니다. testing은 같은 제품 소스의4db 근거 재사용이며 Node22/신규 PR·정확main CI는 제출 뒤 별도 확인합니다. 검사 전용 폴더는 절대 부모와 전용 prefix 확인 뒤 정리합니다.
+
+기준main3139e41 정확최초CI40060368749는 양Node48파일3,083개·store12·타입/두빌드 성공입니다. 옛b316의3callback/4constructor 오류와maina2 round BUSY·864 callback·과거redeem/timeout은 각각 원인 미확정으로 보존합니다. 이번 전체 녹색은 해결 근거가 아니며 관측 hook/clock/복제 비용도 경합 타이밍에 영향을 줄 수 있습니다. 새 실패를 만들기 위한 반복·동일head full/CI 재실행·500ms/5초/8worker/기대·seed 완화·추가DB/SQL/RPC/scheduler는 하지 않았습니다.
+
 ## 2026-10-24 · #282 prepare 실패 연결의 닫힘 관측
 
 게임 코드를 바꾸지 않은 검사 소스d7a6bb2/최신main977b48a 정상 병합b316fcc는 같은 tree입니다. 모듈 초기 Node prepare 함수 참조와 오류의 own-data SQL code를 확인한 경우만 receiver를 대응합니다. Node24의 isOpen은 own getter/prototype 없음이라는 별도 관측을 반영해 임의 getter를 브랜드 근거로 쓰지 않습니다. foreign/mock·잘못된 this·위조 prototype/Proxy는 미관측을 유지하며 기존 exec/Statement·DTO·worker·재시도 함수는 바꾸지 않습니다. 이는 receiver 식별이며 options getter 등이 던진 SQL 코드 오류까지 엔진 발생 증명으로 취급하지 않습니다. 악성 preload 이전까지 보증하는 계약은 아닙니다.
