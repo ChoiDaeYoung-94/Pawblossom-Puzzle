@@ -1,5 +1,13 @@
 # 웹 자동 검증
 
+## 2026-10-24 · #267 고밀도 표시 검증과 로컬 timeout 분리
+
+제품 코드06b500a는480월드/56칸/16여백을 유지하고960버퍼·zoom2·중심240·CREATE 전 preRender와 down/up 월드 역변환을 사용합니다. SVG는200픽셀로 읽고 두 Text는 최초 생성 style의resolution2로 설정합니다. 실제 별도 Phaser WebGL/Canvas에서 첫 렌더0프레임의44/436/밖488좌표·합성 첫 선택6,6, 실클릭3,3·여백 드래그·새Scene·320리사이즈·비정형 키보드, 숫자14×23→28×46/체크29×34→58×68과style/source해상도2/2를 확인했습니다. 대역과 실제 렌더를 구분하며 일반 게임 저장/RNG를 주입하지 않았습니다.
+
+관련654개·타입3설정·testing/production 빌드/플래그는 성공했지만 최초 로컬 전체는46파일3,015성공1실패입니다. callback-inbox:80의8worker테스트가5초timeout(표시5,400ms)이며 receive/process 단계·assert실행·worker종료/DB행수·원인/소유자는 로그상 미확인입니다. #122comment6377987115와 Git밖267-full-first.log/독립 읽기 분석에 보존했습니다. 같은head 전체/CI 재실행·기대/시간/8worker 완화 없이 최초 PR 필수검사로 진행하며 이번 표시 성공을 원장 해결로 표현하지 않습니다. 기준main8fd9b69의 정확최초CI40047466775 양Node3,003개·store12·타입/두빌드 성공과도 구분합니다.
+
+동일 소스의 내부APK는 LD5554에서 기존23회140점/목표9·6을 업데이트 복원했고, 실제 보드 밖 아래/오른쪽 종료·회전·정상완료1별40코인·다음판키보드·시험100의비정형/상자4→3/낙엽2→1·일반2복귀/백그라운드·cold재시작을 확인했습니다. Native16개(기능15+scaffold1)는 새 실행/오류0, appLint오류0·기존경고15입니다. 예비 IAB 루프값과 Android HWUI/SurfaceFlinger는 실제 폰/JS·GPU FPS 보장이 아니며 상세 범위는 Android 기록과 Git밖QA에 보존합니다.
+
 ## 최신 통합 근거 · 2026-10-18 · #139
 
 구현·검사 기준 main `ca57341fbd269d82cfac63d1be9f173384ad68cc`의 [CI39111374076](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39111374076)에서 Node22·24 각각35파일2,349/2,349·스토어12/12·타입·production/testing 빌드/구분 검사가 성공했습니다. PR#140 head91f74cff와 실제 squash의 전체 tree가 같고 총괄 독립 관련136개·타입·LF SHA/production 동일 확인도 보존했습니다. [최신 전체 통합·실패 구분](android-release.ko.md)을 우선하며 이번 #139는 문서5개만 변경합니다. 새 문서 PR/head와 실제 main CI는 제출 뒤 별도로 확인합니다.
