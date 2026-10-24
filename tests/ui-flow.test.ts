@@ -20,6 +20,7 @@ import {campaignScenery} from '../src/CampaignScenery';
 import {gardenGoals,goalNextStep,nextGardenGoal} from '../src/GardenGoals';
 import {previewGardenPreset} from '../src/GardenPresets';
 import {gardenPresetPreview} from '../src/GardenPresetsUI';
+import {pipTendingArt} from '../src/PipTending';
 
 // 테스트에만 사용하는 Node API입니다. 별도 @types/node 설치 없이 런타임에서 읽습니다.
 const fsModule = 'node:fs', vmModule = 'node:vm';
@@ -217,7 +218,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     specialTileArt,
     ...boardDisplay,
-    gardenGoals,goalNextStep,nextGardenGoal,previewGardenPreset,gardenPresetPreview,
+    gardenGoals,goalNextStep,nextGardenGoal,previewGardenPreset,gardenPresetPreview,pipTendingArt,
     bindPracticeBoard,
     cloneSnapshot,prepareShuffle,
     showResultPip:()=>{resultArtCalls++;},
@@ -321,6 +322,22 @@ describe('무료 추천 코디의 미리보기와 저장 경계',()=>{
     const h=mainHarness(false,false,true),before=h.run('JSON.stringify(save)'),disk=h.disk();h.run("switchView('village')");expect(h.run('enterCareDemo()')).toBe(true);h.run("save.garden=2;renderViews()");
     h.element('#garden-look-open').onclick();h.element('#garden-look-confirm').onclick();expect(h.run('save.gardenDesign.flowers[0]')).toBe('daisy');
     h.run('exitCareDemo()');expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.disk()).toEqual(disk);
+  });
+});
+
+describe('핍 꽃 돌보기의 실제 화면 수명',()=>{
+  it('무료 Lv3 행동의 물뿌리개는 하나이며 저장/수치/판을 바꾸지 않고 숨김·모달·종료를 따릅니다',()=>{
+    const h=mainHarness();h.run("save.pip={growth:60,affection:40,owned:['ribbon'],equipped:'ribbon'};switchView('journal')");
+    const before=h.run('JSON.stringify(save)'),disk=h.disk(),writes=h.writes();h.element('#pip-tend').onclick();
+    const html=h.element('#journal-view').innerHTML;expect(html.match(/data-pip-accessory="wateringCan"/g)).toHaveLength(1);expect(html).toContain('pip-tending-scene');expect(h.element('#journal-pip-portrait').dataset.tendActive).toBe('true');
+    h.run('document.hidden=true;syncActivity()');expect(h.element('#journal-pip-portrait').dataset.tendActive).toBe('false');h.run('document.hidden=false;syncActivity()');
+    h.run('resourceDialog.open=true;syncActivity()');expect(h.element('#journal-pip-portrait').dataset.tendActive).toBe('false');h.run('resourceDialog.open=false;syncActivity()');
+    h.flushCareReaction();expect(h.element('#journal-view').innerHTML).not.toContain('pip-tending-scene');expect(h.element('#journal-view').innerHTML).toContain('data-pip-accessory="ribbon"');expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('정원 동작에는 핍 화면의 받침꽃을 덧붙이지 않고 재렌더/교체는 이전 반응을 되살리지 않습니다',()=>{
+    const h=mainHarness();h.run("save.pip={growth:60,affection:40,owned:[],equipped:'none'};switchView('village')");h.element('#garden-tend').onclick();expect(h.element('#village-view').innerHTML).not.toContain('pip-tending-scene');
+    h.run("switchView('journal');careReactionStarted=Date.now()-900;renderViews()");expect(h.element('#journal-view').innerHTML).toMatch(/--tend-elapsed:9\d\dms/);
+    h.element('#pip-feed').onclick();expect(h.element('#journal-view').innerHTML).not.toContain('pip-tending-scene');expect(h.run('pipReaction')).toBe('feed');
   });
 });
 
