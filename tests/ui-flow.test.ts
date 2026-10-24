@@ -2380,6 +2380,28 @@ describe('무료 정원 공간 교감',()=>{
 });
 
 describe('후반 정원 공간과 확정 전 미리보기',()=>{
+  it.each(['ko','en'] as const)('%s: 완성 쉼터/꽃아치는 별도 무료 활동·핍 위치/눈/꽃잎을 표시하고 회차와 저장을 보존합니다',language=>{
+    const spaces=freshGardenSpaces();spaces.shelter.phase=2;spaces.arch.phase=2;
+    const data={version:1,language,highestLevel:100,completed:Array.from({length:100},(_,i)=>i+1),coins:0,stars:0,garden:0,music:true,sfx:true,tutorialSeen:true,gardenDesign:{schema:1,flowers:Array(5).fill('meadow'),owned:[],placed:[],spaces}};
+    const h=mainHarness(false,false,false,false,data);h.run("switchView('village')");const before=h.run('JSON.stringify({save,round,moves,score,board:scene.engine.board})'),disk=h.disk(),writes=h.writes();
+    h.element('#garden-area-shelter').onclick();h.element('#garden-activity-rest').onclick();
+    expect(h.run('gardenActivity.kind')).toBe('rest');expect(h.run('careIdlePose()')).toBe(true);expect(h.run('gardenVisitor()')).toContain('pip-idle-blink-v2.webp');expect(h.run('gardenVisitControls()')).toContain(t(language,'gardenRestMoment'));
+    const same=h.run('gardenActivity');h.element('#garden-activity-rest').onclick();expect(h.run('gardenActivity')).toBe(same);const rest=h.run('gardenVisitor()');
+    h.run('document.hidden=true');h.documentEvents.visibilitychange();expect(h.element('#garden-nature').dataset.momentActive).toBe('false');h.run('document.hidden=false');h.documentEvents.visibilitychange();expect(h.element('#garden-nature').dataset.momentActive).toBe('true');
+    h.element('#garden-area-arch').onclick();expect(h.run('gardenActivity')).toBeUndefined();h.element('#garden-activity-arch').onclick();expect(h.run('gardenVisitor()')).not.toBe(rest);expect(h.run('gardenActivitySpots()')).toContain('garden-arch-petals');expect(h.run('gardenVisitControls()')).toContain(t(language,'gardenArchMoment'));
+    expect(h.run('JSON.stringify({save,round,moves,score,board:scene.engine.board})')).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    h.run("switchView('journal')");expect(h.run('gardenActivity')).toBeUndefined();expect(h.element('#garden-nature').dataset.momentActive).toBe('false');
+  });
+  it('기초/미복원 쉼터·꽃아치는 활동을 숨기고 체험 이전·모달·다른 구역 입력도 막습니다',()=>{
+    for(const area of ['shelter','arch'] as const)for(const phase of [0,1,2] as const){
+      const spaces=freshGardenSpaces();spaces[area].phase=phase;
+      const data={version:1,language:'ko',highestLevel:100,completed:Array.from({length:100},(_,i)=>i+1),coins:0,stars:0,garden:0,music:true,sfx:true,tutorialSeen:true,gardenDesign:{schema:1,flowers:Array(5).fill('meadow'),owned:[],placed:[],spaces}};
+      const h=mainHarness(false,false,true,false,data);h.run("switchView('village')");h.element('#garden-area-'+area).onclick();const kind=area==='shelter'?'rest':'arch',button=h.element('#garden-activity-'+kind),stale=button.onclick;
+      if(phase<2){expect(h.run('gardenActivitySpots()')).toBe('');button.onclick();expect(h.run('gardenActivity')).toBeUndefined();continue;}
+      h.run("document.querySelector('#tutorial-dialog').open=true");button.onclick();expect(h.run('gardenActivity')).toBeUndefined();h.run("document.querySelector('#tutorial-dialog').open=false");
+      h.run('enterCareDemo()');stale();expect(h.run('gardenActivity')).toBeUndefined();h.run('exitCareDemo()');h.element('#garden-area-flowers').onclick();stale();expect(h.run('gardenActivity')).toBeUndefined();
+    }
+  });
   const initial=(language:'en'|'ko'='en',clears=100)=>({version:1,language,highestLevel:Math.min(100,clears+1),completed:Array.from({length:clears},(_,i)=>i+1),coins:2000,stars:100,garden:5,music:true,sfx:true,tutorialSeen:true,pip:{growth:100,affection:100,owned:[],equipped:'none'}});
   const roundState='JSON.stringify({round,currentLevel,moves,score,collected,board:scene.engine.board,inProgress:save.inProgress})';
   const open=(h:ReturnType<typeof mainHarness>)=>{h.element('#garden-area-pond').onclick();h.element('#garden-space-restore').onclick();expect(h.run('spaceDialog.open')).toBe(true);};
