@@ -1,6 +1,7 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    gardenLookShort:'Look',gardenLilyShort:'Lilies',gardenRippleShort:'Ripples',gardenRestShort:'Rest',gardenArchShort:'Petal path',gardenMomentFree:'Free',
     gardenRest:'Rest at the shelter with Pip · Free',gardenArchWalk:'Watch the flower path with Pip · Free',gardenRestMoment:'“The shade is cool. Let’s rest here a little.” · Free moment, no stat changes.',gardenArchMoment:'“A few petals have fallen on our path.” · Free moment, no stat changes.',
     goalPlay:'Go to puzzles',goalCare:'Care for Pip',goalEdit:'Open flower garden',goalSpace:'Visit this space',
     goalNoIncome:'All first-clear rewards have been earned. Replays give no more currency. Enjoy free flower changes and your owned decorations.',
@@ -40,7 +41,7 @@ const strings = {
     pipDecorate:'Pip’s little favourites',pipShopHint:'Unlock a decoration by growing Pip, then buy it with coins. It equips immediately; switching owned decorations is free.',
     pipRibbon:'Blossom ribbon',pipWateringCan:'Little watering can',pipOwned:'Owned',pipUnlockAt:'Shop unlocks at Lv. {level}',pipEquipped:'Equipped',pipEquipFree:'Equip free',pipUnequip:'Remove decoration · Free',
     careSaveBlocked:'This action was not applied. Check saving in Settings before spending coins or stars.',
-    careDemoEnter:'Try garden & Pip',careDemoInvite:'Testing demo · Saved progress stays safe.',careDemoActive:'Garden & Pip demo',careDemoHint:'Temporary 1,800 coins / 100 stars · 100-clear conditions preview · Discarded on exit.',careDemoExit:'Leave demo',
+    careDemoEnter:'Try garden & Pip',careDemoInvite:'Testing demo · Saved progress stays safe.',careDemoActive:'Garden & Pip demo',careDemoHint:'Temporary 1,800 coins · 100 stars · 100-clear preview. Leaving restores your saved game.',careDemoExit:'Leave demo',
     previewStart:'Check the goals before you start.',previewResume:'Your current puzzle is ready to continue.',previewRestart:'Start this stage again?',
     previewInitial:'New puzzle',previewRemaining:'Current puzzle',previewContinue:'Continue puzzle',previewStartAction:'Start stage',previewRestartAction:'Start from beginning',previewCancel:'Cancel',previewDouble:'Includes leaf piles with two layers.',
     previewRestartWarning:'Starting from the beginning replaces this puzzle.',previewReplaceWarning:'Starting replaces your current puzzle.',previewKept:'Completed stages, stars, coins and your garden are kept.',previewCurrent:'Current',
@@ -113,10 +114,11 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    gardenLookShort:'살펴보기',gardenLilyShort:'연꽃 보기',gardenRippleShort:'물결 보기',gardenRestShort:'함께 쉬기',gardenArchShort:'꽃길 보기',gardenMomentFree:'무료',
     gardenRest:'핍과 쉼터에서 함께 쉬기 · 무료',gardenArchWalk:'핍과 꽃길 바라보기 · 무료',gardenRestMoment:'“그늘이 시원하네요. 여기서 잠깐 쉬어요.” · 무료 교감, 수치는 바뀌지 않아요.',gardenArchMoment:'“꽃잎이 길 위에 내려앉았어요. 같이 바라볼까요?” · 무료 교감, 수치는 바뀌지 않아요.',
     goalPlay:'퍼즐로 가기',goalCare:'핍 돌보기',goalEdit:'꽃밭 꾸미기 열기',goalSpace:'이 공간 살펴보기',
     goalNoIncome:'첫 완료 보상을 모두 받았어요. 다시 플레이해도 재화는 늘지 않아요. 무료 꽃 바꾸기와 소유한 꾸미기를 즐겨 보세요.',
-    goalPlan:'함께 만드는 정원',goalBed:'꽃밭 {number}',goalPlots:'꽃밭',goalDiversity:'서로 다른 꽃',goalClears:'서로 다른 스테이지 첫 완료',goalNeed:'{condition} {count} 더 모으기',goalReady:'만들 준비가 됐어요 · 편집에서 선택하고 확정해 주세요',goalFoundationFirst:'먼저 기초를 복원해 주세요',goalGo:'다음 행동으로',goalDone:'함께 만들었어요',goalAllPlans:'정원 계획 모두 보기',goalAllDone:'정원 계획을 모두 완성했어요. 완성한 공간을 둘러보고 소유한 꾸미기를 자유롭게 바꿔 보세요.',goalNoAutoSpend:'바로 가기는 이동만 해요. 구매를 선택하거나 복원을 확정할 때 코인·별을 사용해요.',
+    goalPlan:'함께 만드는 정원',goalBed:'꽃밭 {number}',goalPlots:'꽃밭',goalDiversity:'서로 다른 꽃',goalClears:'서로 다른 스테이지 첫 완료',goalNeed:'{condition} · {count} 더 필요해요',goalReady:'만들 준비가 됐어요 · 편집에서 선택하고 확정해 주세요',goalFoundationFirst:'먼저 기초를 복원해 주세요',goalGo:'다음 행동으로',goalDone:'함께 만들었어요',goalAllPlans:'정원 계획 모두 보기',goalAllDone:'정원 계획을 모두 완성했어요. 완성한 공간을 둘러보고 소유한 꾸미기를 자유롭게 바꿔 보세요.',goalNoAutoSpend:'바로 가기는 이동만 해요. 구매를 선택하거나 복원을 확정할 때 코인·별을 사용해요.',
     carrierTrial:'씨앗 배달 체험',carrierTrialNote:'새 목표 체험 · 진행과 재화는 그대로예요',columnCarrierTrial:'세로 특수·연쇄 체험',
     map:'모험',mapJourney:'핍과 함께 한 걸음',mapLocate:'현재 위치',mapStages:'스테이지 여행',mapAvailable:'도전 가능',mapResume:'이어서 하기',mapPlay:'플레이',
     spaceOpen:'정원 공간 보기',gardenAreaFlowers:'꽃밭',gardenAreaPond:'연못',gardenAreaShelter:'쉼터',gardenAreaArch:'꽃아치',gardenAreas:'정원 구역',
@@ -152,7 +154,7 @@ const strings = {
     pipDecorate:'핍의 작은 소품',pipShopHint:'핍이 자라면 소품 상점이 열려요. 코인으로 구매하면 바로 장착되며, 산 소품은 무료로 바꿔 쓸 수 있어요.',
     pipRibbon:'꽃송이 리본',pipWateringCan:'작은 물뿌리개',pipOwned:'보유 중',pipUnlockAt:'Lv. {level}에 구매 가능',pipEquipped:'장착 중',pipEquipFree:'무료 장착',pipUnequip:'소품 벗기 · 무료',
     careSaveBlocked:'변경을 적용하지 않았어요. 코인이나 별을 사용하기 전에 설정에서 저장 상태를 확인해 주세요.',
-    careDemoEnter:'정원·핍 체험하기',careDemoInvite:'테스트 체험 · 일반 기록은 그대로예요.',careDemoActive:'정원·핍 체험 중',careDemoHint:'임시 코인1,800개 / 별100개 · 100개 완료 조건 미리보기 · 나가면 사라져요.',careDemoExit:'체험 끝내기',
+    careDemoEnter:'정원·핍 체험하기',careDemoInvite:'테스트 체험 · 일반 기록은 그대로예요.',careDemoActive:'정원·핍 체험 중',careDemoHint:'임시 코인 1,800 · 별 100 · 100판 조건. 끝내면 원래 기록으로 돌아가요.',careDemoExit:'체험 끝내기',
     previewStart:'목표를 확인하고 시작해요.',previewResume:'진행 중인 퍼즐을 그대로 이어갈 수 있어요.',previewRestart:'이 스테이지를 처음부터 시작할까요?',
     previewInitial:'새 퍼즐',previewRemaining:'진행 중인 퍼즐',previewContinue:'퍼즐 이어하기',previewStartAction:'스테이지 시작',previewRestartAction:'처음부터 시작',previewCancel:'취소',previewDouble:'두 겹 낙엽이 포함돼요.',
     previewRestartWarning:'처음부터 시작하면 현재 퍼즐이 교체돼요.',previewReplaceWarning:'시작하면 진행 중인 퍼즐이 교체돼요.',previewKept:'완료 기록·별·코인·꽃밭은 유지돼요.',previewCurrent:'현재',
