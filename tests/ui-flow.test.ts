@@ -85,6 +85,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const nativeEvents:Record<string,(state:{isActive:boolean})=>void>={};
   const pipControllers:{pip:ElementStub;disposed:boolean;disposals:number;alignment:'center'|'bottom'}[]=[];
   const accessoryControllers:{slot:ElementStub;kind:'ribbon'|'wateringCan';disposed:boolean}[]=[];
+  const natureControllers:{picture:ElementStub;disposed:boolean;disposals:number;activations:boolean[]}[]=[];
   const pipLifecycle:string[]=[];
   let resolveNativeState!:(state:{isActive:boolean})=>void;
   const nativeState=new Promise<{isActive:boolean}>(resolve=>{resolveNativeState=resolve;});
@@ -97,7 +98,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
       elements.set(selector, new ElementStub(selector));
       if(selector==='#stars-help'||selector==='#coins-help')elements.get(selector)!.hidden=false;
       if(['#map-view','#village-view','#journal-view'].includes(selector)){
-        const view=selector.slice(1,-5),owned=view==='map'?['map-current-pip']:[`${view}-pip-actor`,`${view}-pip-image`,`${view}-pip-accessory`];
+        const view=selector.slice(1,-5),owned=view==='map'?['map-current-pip']:[`${view}-pip-actor`,`${view}-pip-image`,`${view}-pip-accessory`,...(view==='village'?['garden-nature']:[])];
         let markup='';
         Object.defineProperty(elements.get(selector)!,'innerHTML',{get:()=>markup,set:(value:string)=>{
           pipLifecycle.push(`${view}-replace`);
@@ -227,6 +228,13 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
       };
       accessoryControllers.push(art);return art;
     },
+    createGardenNature:(picture:ElementStub)=>{
+      const nature={picture,disposed:false,disposals:0,activations:[] as boolean[],
+        setActive(active:boolean){if(!nature.disposed){nature.activations.push(active);picture.dataset.natureActive=String(active);}},
+        dispose(){if(nature.disposed)return;nature.disposed=true;nature.disposals++;pipLifecycle.push(`nature-dispose:${picture.id}:${picture.isConnected}`);delete picture.dataset.natureActive;delete picture.dataset.natureReady;},
+      };
+      natureControllers.push(nature);return nature;
+    },
     AudioManager: AudioStub, t: (_language: string, key: string) => key, icon: () => '',
     Capacitor: { isNativePlatform: () => native,getPlatform:()=>native?'android':'web',isPluginAvailable:(name:string)=>Boolean(name==='PawblossomTestBilling'?billingBridge:adsBridge) },
     App:{addListener:(name:string,callback:(state:{isActive:boolean})=>void)=>{nativeEvents[name]=callback;return Promise.resolve({remove(){}});},getState:()=>nativeState,minimizeApp:()=>Promise.resolve()}, confirm: () => true,
@@ -259,7 +267,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   return {
     setStorageFails:(value:boolean)=>{storageFails=value;},disk:()=>[...storageValues],
     resultArtCalls:()=>resultArtCalls,frame:()=>frame(),games:()=>games,destroys:()=>destroys,
-    documentEvents,windowEvents,nativeEvents,resolveNativeState,pipControllers,pipLifecycle,accessoryControllers,
+    documentEvents,windowEvents,nativeEvents,resolveNativeState,pipControllers,pipLifecycle,accessoryControllers,natureControllers,
     element, run: (code: string) => {const result=vm.runInContext(code, context);if(autoFrame)frame();return result;},
     resultTimers: () => [...timers.values()].filter(timer => timer.ms === 300),
     flushResults: () => [...timers].filter(([,timer]) => timer.ms === 300).forEach(([id,timer]) => {timers.delete(id);timer.callback();}),
@@ -2610,5 +2618,71 @@ describe('정원·돌봄의 표시 전용 관절과 착용 슬롯',()=>{
     expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
     const actor=liveCare(h)[0];h.run("changeLanguage('en')");expect(actor.disposed).toBe(true);expect(liveCare(h)).toHaveLength(1);expect(liveArt(h)).toHaveLength(1);
     expect(h.run('save.pip.equipped')).toBe('ribbon');expect(h.run('save.coins')).toBe(200);
+  });
+});
+
+describe('현재 정원 그림의 자연 모션 연결과 수명',()=>{
+  const initial=()=>({version:1,language:'ko',highestLevel:2,completed:[1],stars:10,coins:200,garden:2,music:true,sfx:true,tutorialSeen:true,
+    pip:{growth:60,affection:60,owned:['ribbon'],equipped:'ribbon'},gardenDesign:{schema:1,flowers:['daisy','violet','meadow','meadow','meadow'],owned:['butterflies'],placed:['butterflies']}});
+  const boot=(native=false,tools=false)=>mainHarness(false,false,tools,native,initial(),true,undefined,undefined,true);
+  const live=(h:ReturnType<typeof boot>)=>h.natureControllers.filter(controller=>!controller.disposed);
+  const snapshot='JSON.stringify({save,round,currentLevel,moves,score,board:scene.engine.board})';
+  it('실제 village 그림 한 곳만 소유하고 native·hidden·모달은 같은 controller를 비활성화합니다',()=>{
+    const h=boot(true);expect(live(h)).toHaveLength(0);expect(h.element('#village-view').innerHTML).toContain('id="garden-nature"');
+    h.run("switchView('village')");expect(live(h)).toHaveLength(0);h.nativeEvents.appStateChange({isActive:true});
+    const nature=live(h)[0],before=h.run(snapshot),disk=h.disk(),writes=h.writes();expect(live(h)).toHaveLength(1);expect(nature.picture).toBe(h.element('#garden-nature'));expect(nature.picture.dataset.natureActive).toBe('true');
+    h.run('syncActivity();syncCarePipActivity()');expect(live(h)).toEqual([nature]);
+    h.nativeEvents.appStateChange({isActive:false});expect(nature.picture.dataset.natureActive).toBe('false');h.nativeEvents.appStateChange({isActive:true});
+    h.run('document.hidden=true');h.documentEvents.visibilitychange();expect(nature.picture.dataset.natureActive).toBe('false');h.run('document.hidden=false');h.documentEvents.visibilitychange();
+    h.element('#stars-help').onclick();expect(nature.picture.dataset.natureActive).toBe('false');h.element('#resource-help-close').onclick();expect(nature.picture.dataset.natureActive).toBe('true');
+    expect(live(h)).toEqual([nature]);expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('경로 이탈은 nature만 폐기하고 같은 host 복귀에는 기존 Pip/착용 cache와 새 nature를 사용합니다',()=>{
+    const h=boot();h.run("switchView('village')");const old=live(h)[0],pip=h.run('carePipDisplay.idle'),art=h.run('carePipDisplay.accessory'),picture=old.picture,before=h.run(snapshot),disk=h.disk(),writes=h.writes();
+    h.run("switchView('settings')");expect(old.disposed).toBe(true);expect(old.disposals).toBe(1);expect(live(h)).toHaveLength(0);
+    expect(h.run('carePipDisplay.idle')).toBe(pip);expect(h.run('carePipDisplay.accessory')).toBe(art);expect(h.run('carePipDisplay.nature')).toBeUndefined();
+    h.run("route='village';document.querySelector('#village-view').hidden=false;syncActivity()");const fresh=live(h)[0];expect(fresh).not.toBe(old);expect(fresh.picture).toBe(picture);
+    expect(h.run('carePipDisplay.idle')).toBe(pip);expect(h.run('carePipDisplay.accessory')).toBe(art);old.activations.length=0;
+    h.run("switchView('journal')");expect(fresh.disposed).toBe(true);expect(live(h)).toHaveLength(0);expect(old.activations).toEqual([]);
+    expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('DOM 교체 전에 폐기하며 옛 자연 controller와 분리된 picture를 다시 활성화하지 않습니다',()=>{
+    const h=boot();h.run("switchView('village')");const old=live(h)[0];h.pipLifecycle.length=0;h.run('renderViews()');
+    expect(old.disposed).toBe(true);expect(old.picture.isConnected).toBe(false);expect(h.pipLifecycle.indexOf('nature-dispose:garden-nature:true')).toBeLessThan(h.pipLifecycle.indexOf('village-replace'));
+    const current=live(h)[0];expect(live(h)).toHaveLength(1);expect(current.picture).not.toBe(old.picture);
+    current.picture.isConnected=false;const actor=h.run('carePipDisplay.idle');h.run('syncCarePipActivity()');expect(current.disposed).toBe(true);expect(live(h)).toHaveLength(0);expect(h.run('carePipDisplay.idle')).toBe(actor);
+  });
+  it.each(['careProcessing','growing','boardPending','busy-scene'] as const)('%s는 추가 생성·저장 없이 현재 모션만 끕니다',guard=>{
+    const h=mainHarness(false,false,false,false,initial(),false,undefined,undefined,true);h.frame();h.run("switchView('village')");const nature=live(h)[0],count=h.natureControllers.length,before=h.run(snapshot),disk=h.disk(),writes=h.writes();
+    h.run(guard==='busy-scene'?'scene.canLeave=()=>false;syncCarePipActivity()':`${guard}=true;syncCarePipActivity()`);expect(nature.picture.dataset.natureActive).toBe('false');
+    h.run(guard==='busy-scene'?'scene.canLeave=()=>true;syncCarePipActivity()':`${guard}=false;syncCarePipActivity()`);expect(nature.picture.dataset.natureActive).toBe('true');
+    expect(h.natureControllers).toHaveLength(count);expect(live(h)).toEqual([nature]);expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('핍2400ms 반응·무료 활동과450ms 성장이 우선하고 종료는 기존 표시 소유자만 재개합니다',()=>{
+    const h=boot();h.run("switchView('village')");const disk=h.disk(),writes=h.writes(),before=h.run(snapshot);
+    h.element('#garden-activity-flower').onclick();expect(live(h)[0].picture.dataset.natureActive).toBe('false');expect(h.run('gardenActivity.kind')).toBe('flower');
+    expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);h.element('#garden-plot-1').onclick();expect(live(h)[0].picture.dataset.natureActive).toBe('true');
+    h.element('#garden-visit').onclick();const reaction=h.run('careReactionTimer');expect(live(h)[0].picture.dataset.natureActive).toBe('false');h.run('syncActivity();syncCarePipActivity()');expect(h.run('careReactionTimer')).toBe(reaction);
+    h.flushCareReaction();expect(live(h)[0].picture.dataset.natureActive).toBe('true');h.element('#grow').onclick();const nature=live(h)[0],after=h.run(snapshot),grown=h.disk(),grownWrites=h.writes();
+    expect(nature.picture.dataset.natureActive).toBe('false');h.flushGrowth();expect(live(h)).toEqual([nature]);expect(nature.picture.dataset.natureActive).toBe('true');
+    expect(h.run(snapshot)).toBe(after);expect(h.disk()).toEqual(grown);expect(h.writes()).toBe(grownWrites);
+  });
+  it('수련·물결 선택이 모션보다 우선하며 미리보기 동안 정지하고 취소 뒤 재개합니다',()=>{
+    const spaces=freshGardenSpaces();spaces.pond={phase:2,altOwned:true,style:'alt'};
+    const h=mainHarness(false,false,false,false,{...initial(),highestLevel:61,completed:Array.from({length:60},(_,i)=>i+1),garden:5,gardenDesign:{...initial().gardenDesign,spaces}},true,undefined,undefined,true);
+    h.run("switchView('village')");h.element('#garden-area-pond').onclick();const before=h.run(snapshot),disk=h.disk(),writes=h.writes();
+    h.element('#garden-activity-lily').onclick();expect(live(h)[0].picture.dataset.natureActive).toBe('false');expect(h.run('gardenActivity.kind')).toBe('lily');
+    h.element('#garden-activity-ripples').onclick();expect(live(h)[0].picture.dataset.natureActive).toBe('false');expect(h.run('gardenActivity.kind')).toBe('ripples');
+    expect(h.run('gardenActivitySpots()')).toContain('cx="355" cy="193"');expect(h.run('gardenWorkshop(false)').match(/data-garden-structure-image="bridge"/g)).toHaveLength(1);
+    h.element('#garden-space-base').onclick();const current=live(h)[0];expect(current.picture.dataset.natureActive).toBe('false');expect(h.run('spaceDialog.innerHTML')).not.toContain('id="garden-nature"');
+    h.element('#space-preview-cancel').onclick();expect(live(h)).toEqual([current]);expect(current.picture.dataset.natureActive).toBe('true');
+    expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('체험·언어 재생성은 이전 표시를 폐기하며 재화·성장/소유는 추가 변경하지 않습니다',()=>{
+    const h=boot(false,true);h.run("switchView('village')");const old=live(h)[0],disk=h.disk(),writes=h.writes(),before=h.run(snapshot);
+    h.run('enterCareDemo()');expect(old.disposed).toBe(true);expect(live(h)).toHaveLength(1);h.run('exitCareDemo()');expect(live(h)).toHaveLength(1);
+    expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    const previous=live(h)[0];h.run("changeLanguage('en')");expect(previous.disposed).toBe(true);expect(live(h)).toHaveLength(1);expect(live(h)[0].picture.dataset.natureActive).toBe('true');
+    expect(h.run('save.coins')).toBe(200);expect(h.run('save.stars')).toBe(10);expect(h.run('save.pip.growth')).toBe(60);expect(h.run('save.gardenDesign.owned')).toEqual(['butterflies']);
   });
 });
