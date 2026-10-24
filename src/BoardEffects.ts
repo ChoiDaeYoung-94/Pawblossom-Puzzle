@@ -23,9 +23,10 @@ export class BoardEffects {
   get activeCount(){return this.objects.size;}
   private finish(item:EffectObject){if(this.objects.delete(item))item.destroy();}
   private animate(item:EffectObject,config:Omit<Phaser.Types.Tweens.TweenBuilderConfig,'targets'|'onComplete'>){
-    if(this.objects.size>=120){item.destroy();return;}
+    if(this.objects.size>=120){item.destroy();return false;}
     this.objects.add(item);
     this.scene.tweens.add({...config,targets:item,onComplete:()=>this.finish(item)});
+    return true;
   }
   clear(){for(const item of this.objects){this.scene.tweens.killTweensOf(item);item.destroy();}this.objects.clear();}
   /** 실제 제거 범위의 표시도 파편과 같은 상한·종료 정리 안에서 관리합니다. */
@@ -48,22 +49,37 @@ export class BoardEffects {
     this.animate(chip,{x:x+dx*distance,y:y+dy*distance,angle:index*31+110,alpha:0,scaleX:.35,scaleY:.35,duration:270+index%3*25,ease:'Cubic.easeOut'});
   }
   /** 실제 상자 타격 칸에만 표시하며 낙하·보상·해소 대기를 추가하지 않습니다. */
-  crateHit(hit:Position){
-    if(this.objects.size>=120)return;
-    const {x,y}=point(hit),reduced=reducedMotion();
+  crateHit(hit:Position):boolean {
+    if(this.objects.size>=120)return false;
+    const splitBudget=this.objects.size<=115,{x,y}=point(hit),reduced=reducedMotion();
     const pulse=this.scene.add.graphics().setPosition(x,y).setDepth(11).setName('crate-hit-pulse');
     pulse.lineStyle(3,0xffe5aa,.95);pulse.strokeRoundedRect(-25,-25,50,50,10);
     pulse.lineStyle(2,0xfff8de,.85);pulse.lineBetween(-17,-17,17,17);pulse.lineBetween(17,-17,-17,17);
-    this.animate(pulse,{alpha:0,duration:reduced?180:230});
-    if(reduced)return;
-    const paths=[[-14,-10,-31,-26,-55],[14,-10,31,-24,55],[-12,12,-27,29,-35],[14,12,31,28,45]];
-    for(let i=0;i<paths.length&&this.objects.size<120;i++){
-      const [sx,sy,dx,dy,angle]=paths[i];
-      const chip=this.scene.add.graphics().setPosition(x+sx,y+sy).setDepth(12).setAngle(angle/2).setName('crate-wood-chip');
-      chip.fillStyle(i%2?0xc58d4c:0xe3b16b);chip.fillRoundedRect(-6,-2,12,4,1.5);
-      chip.lineStyle(1,0xffe2a5,.9);chip.lineBetween(-4,-1,4,-1);
-      // 이동은 빠르게 펼치되 마지막까지 읽히도록 투명도만 늦게 줄입니다.
-      this.animate(chip,{x:x+dx,y:y+dy,angle,alpha:{value:0,ease:'Sine.easeIn'},scaleX:.45,scaleY:.65,duration:250+i*15,ease:'Cubic.easeOut'});
+    if(!this.animate(pulse,{alpha:0,duration:reduced?180:230})||reduced||!splitBudget)return false;
+    const pieces:Phaser.GameObjects.Image[]=[];
+    try{
+      if(!this.scene.textures?.exists('wooden-crate'))return false;
+      const frame=this.scene.textures.getFrame('wooden-crate');
+      if(!frame||frame.width!==256||frame.height!==256)return false;
+      const paths=[[0,0,-31,-26,-55],[128,0,31,-24,55],[0,128,-27,29,-35],[128,128,31,28,45]];
+      // crop는 크기를 바꾸지 않습니다. 같은 중심·51px·회전0에서 네 사분면을 먼저 조립합니다.
+      for(const [cx,cy] of paths){
+        const chip=this.scene.add.image(x,y,'wooden-crate');pieces.push(chip);
+        chip.setOrigin(.5).setDisplaySize(51,51).setAngle(0).setCrop(cx,cy,128,128).setDepth(12).setName('crate-wood-chip');
+      }
+      for(let i=0;i<pieces.length;i++){
+        const [,,dx,dy,angle]=paths[i];
+        // Image의 원래 scale에 절대값을 덮지 않고 표시 크기를 줄입니다.
+        if(!this.animate(pieces[i],{x:x+dx,y:y+dy,angle,alpha:{value:0,ease:'Sine.easeIn'},displayWidth:51*.45,displayHeight:51*.65,duration:250+i*15,ease:'Cubic.easeOut'}))throw new Error('crate-split-budget');
+      }
+      return true;
+    }catch{
+      // 일부 생성/등록 실패에도 원본을 숨기지 않으며 이미 붙인 조각만 모두 회수합니다.
+      for(const chip of pieces){
+        try{this.scene.tweens.killTweensOf(chip);}catch{}
+        this.objects.delete(chip);try{chip.destroy();}catch{}
+      }
+      return false;
     }
   }
   leafHit(hit:LeafHit){

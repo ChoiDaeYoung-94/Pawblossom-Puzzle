@@ -361,7 +361,10 @@ export class BoardScene extends Phaser.Scene {
         this.showLeafHits(step);
         if(step.crates){
           this.paintCrates(step.crates.before);
-          for(const hit of step.crates.hits)this.effects.crateHit(hit);
+          for(const hit of step.crates.hits)if(this.effects.crateHit(hit)){
+            const original=this.crateObjects.find(item=>item.name===`crate-${hit.row}-${hit.col}`);
+            if(original)original.alpha=0;
+          }
         }
         this.effects?.match(step,i+1);
         if(step.effects?.length){
