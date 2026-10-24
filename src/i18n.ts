@@ -1,6 +1,7 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    lookTitle:'Recommended looks',lookIntro:'Try a combination of the flowers and decorations you already own. Nothing is saved until you apply it.',lookSunny:'Sunny beds',lookButterfly:'Butterfly path',lookStarlight:'Starlight beds',lookSunnyNote:'Alternate daisies and meadow flowers in your open beds, under a daytime sky.',lookButterflyNote:'Alternate daisies and violets, with your owned butterflies placed in the garden.',lookStarlightNote:'Alternate violets and daisies under your owned starlight sky. Place your lantern beside the last open bed.',lookNeedPlot:'Plant your first flower bed first',lookNeedButterflies:'Owned butterflies needed',lookNeedStarlight:'Owned starlight sky needed',lookNeedLantern:'Owned lantern needed',lookReady:'Ready · Free, no coins or stars used',lookSame:'This is already your current look',lookPreserve:'Other decorations, restored spaces and Pip stay as they are. You can still edit each flower afterwards.',lookSharedTheme:'The selected sky also applies to your pond, shelter and arch.',lookApply:'Apply look · Free',lookApplied:'Your new garden look is ready.',lookOpen:'Try recommended looks',
     gardenLookShort:'Look',gardenLilyShort:'Lilies',gardenRippleShort:'Ripples',gardenRestShort:'Rest',gardenArchShort:'Petal path',gardenMomentFree:'Free',
     gardenRest:'Rest at the shelter with Pip · Free',gardenArchWalk:'Watch the flower path with Pip · Free',gardenRestMoment:'“The shade is cool. Let’s rest here a little.” · Free moment, no stat changes.',gardenArchMoment:'“A few petals have fallen on our path.” · Free moment, no stat changes.',
     goalPlay:'Go to puzzles',goalCare:'Care for Pip',goalEdit:'Open flower garden',goalSpace:'Visit this space',
@@ -114,6 +115,7 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    lookTitle:'추천 코디',lookIntro:'가지고 있는 꽃과 장식을 조합해 보세요. 적용하기 전에는 저장되지 않아요.',lookSunny:'햇살 꽃밭',lookButterfly:'나비 꽃길',lookStarlight:'별빛 꽃밭',lookSunnyNote:'열린 꽃밭에 데이지와 초원꽃을 번갈아 심고 낮 풍경으로 바꿔요.',lookButterflyNote:'데이지와 보라꽃을 번갈아 심고, 소유한 나비를 정원에 놓아요.',lookStarlightNote:'소유한 별빛 풍경에 보라꽃과 데이지를 번갈아 심어요. 등불은 마지막으로 열린 꽃밭 옆에 놓아요.',lookNeedPlot:'먼저 첫 꽃밭을 심어 주세요',lookNeedButterflies:'나비를 소유하면 이용할 수 있어요',lookNeedStarlight:'별빛 풍경을 소유하면 이용할 수 있어요',lookNeedLantern:'등불을 소유하면 이용할 수 있어요',lookReady:'적용할 수 있어요 · 무료, 코인과 별을 쓰지 않아요',lookSame:'이미 지금과 같은 코디예요',lookPreserve:'다른 장식과 복원한 공간, 핍은 그대로예요. 적용 후 꽃을 하나씩 다시 바꿀 수도 있어요.',lookSharedTheme:'선택한 풍경은 연못·쉼터·꽃아치에도 함께 적용돼요.',lookApply:'이 코디 적용 · 무료',lookApplied:'새 코디로 정원을 꾸몄어요.',lookOpen:'추천 코디 살펴보기',
     gardenLookShort:'살펴보기',gardenLilyShort:'연꽃 보기',gardenRippleShort:'물결 보기',gardenRestShort:'함께 쉬기',gardenArchShort:'꽃길 보기',gardenMomentFree:'무료',
     gardenRest:'핍과 쉼터에서 함께 쉬기 · 무료',gardenArchWalk:'핍과 꽃길 바라보기 · 무료',gardenRestMoment:'“그늘이 시원하네요. 여기서 잠깐 쉬어요.” · 무료 교감, 수치는 바뀌지 않아요.',gardenArchMoment:'“꽃잎이 길 위에 내려앉았어요. 같이 바라볼까요?” · 무료 교감, 수치는 바뀌지 않아요.',
     goalPlay:'퍼즐로 가기',goalCare:'핍 돌보기',goalEdit:'꽃밭 꾸미기 열기',goalSpace:'이 공간 살펴보기',
