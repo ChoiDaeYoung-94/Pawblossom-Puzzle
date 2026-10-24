@@ -97,9 +97,10 @@ describe('회차 취소·시간 정책·재시작',()=>{
 });
 describe('원자 저장·동시 worker·오류 비노출',()=>{
   it('동시 8 worker 동일 callback 신규 보상권 정확히1회',async({task})=>{
-    const trace=task.meta.callbackOutcomeDiagnostic=createCallbackOutcomeTrace(8);
-    const {ledger,path}=open(),c=claim(ledger),raw=query(c);close(ledger);const results=await concurrent(Array.from({length:8},()=>input(path,raw,{diagnostics:true})),trace);
+    const trace=task.meta.callbackOutcomeDiagnostic=createCallbackOutcomeTrace(8,{sqliteDiagnostics:true});
+    const {ledger,path}=open(),c=claim(ledger),raw=query(c);close(ledger);const results=await concurrent(Array.from({length:8},()=>input(path,raw,{diagnostics:true,sqliteDiagnostics:true})),trace);
     expect(results.filter(r=>r.kind==='voucher-recorded'&&r.newGrant).length,callbackOutcomeContext(trace)).toBe(1);expect(results.filter(r=>r.kind==='voucher-recorded'&&!r.newGrant).length,callbackOutcomeContext(trace)).toBe(7);expect(db(path).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n,callbackOutcomeContext(trace)).toBe(1);
+    expect(trace.workers.every(row=>row.sqlite?.report==='received'&&row.sqlite.diagnostic?.sqliteHook.installation==='installed'&&row.sqlite.diagnostic.sqliteHook.restoration==='restored'&&row.sqlite.diagnostic.sqliteTransactions.some(tx=>tx.phase==='adapter-call'&&tx.site==='transaction-commit'&&tx.outcome==='returned')),callbackOutcomeContext(trace)).toBe(true);
   });
   it('동시 다른claim/transaction 같은round 신규1회',async({task})=>{
     const trace=task.meta.callbackOutcomeDiagnostic=createCallbackOutcomeTrace(3);

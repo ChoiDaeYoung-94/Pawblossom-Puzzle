@@ -111,10 +111,9 @@ function finishTransactionObservation(trace:PhaseTrace,row:SqliteTransactionRow|
     if(row.finishedAtProcessMs===null)transactionObservationFailed(trace);
   }catch{transactionObservationFailed(trace);}
 }
-// 단발 worker의 동기 execute 범위에서만 사용합니다.
+// 단발 worker의 동기/선택 비동기 scope가 공유하는 hook 설치·수집입니다.
 // SQL은 고정 literal과의 완전 일치만 분류하며 원문·인자·errstr·원문 오류는 저장/출력하지 않습니다.
-export function withSqliteDiagnostics<T>(trace:PhaseTrace|null,work:()=>T,options?:{schedulerProbe?:SchedulerProbe}):T {
-  if(!trace)return work();
+function installSqliteDiagnostics(trace:PhaseTrace,options?:{schedulerProbe?:SchedulerProbe},asyncLifetime=false):()=>void {
   const scheduler=schedulerField(options,'schedulerProbe') as SchedulerProbe|undefined;let schedulingCount=0;
   if(scheduler)try{const summary=projectSchedulerSummary(schedulerField(scheduler,'summary'));if(summary)trace.schedulerProbe=summary;}catch{}
   const finishScheduling=(row:SqliteTransactionRow|null,attempted:boolean,sampled:boolean,sample:unknown)=>{
@@ -126,18 +125,33 @@ export function withSqliteDiagnostics<T>(trace:PhaseTrace|null,work:()=>T,option
     }catch{transactionObservationFailed(trace);}
   };
   const targets:[object,string,SqliteErrorRow['operation']][]=[[DatabaseSync.prototype,'exec','database-exec'],[DatabaseSync.prototype,'prepare','database-prepare'],[StatementSync.prototype,'run','statement-run'],[StatementSync.prototype,'get','statement-get'],[StatementSync.prototype,'all','statement-all']];
-  const state=trace.sqliteHook,saved:{prototype:object;key:string;operation:SqliteErrorRow['operation'];descriptor:PropertyDescriptor}[]=[];
-  let attempted=false,installed=false;state.installation='pending';state.restoration='not-needed';state.installedMethods=0;state.restoreFailures=0;
+  const state=trace.sqliteHook,saved:{prototype:object;key:string;operation:SqliteErrorRow['operation'];descriptor:PropertyDescriptor;installed?:PropertyDescriptor}[]=[];
+  let attempted=false,installed=false,active=true,installedCount=0;
+  const updateHook=(patch:Partial<SqliteHookState>)=>{if(!asyncLifetime){Object.assign(state,patch);return;}try{Object.assign(state,patch);}catch{transactionObservationFailed(trace);}};
+  updateHook({installation:'pending',restoration:'not-needed',installedMethods:0,restoreFailures:0});
+  const sameDescriptor=(a:PropertyDescriptor|undefined,b:PropertyDescriptor)=>Boolean(a&&['value','get','set','writable','enumerable','configurable'].every(key=>Reflect.get(a,key)===Reflect.get(b,key)));
   const restore=()=>{
-    state.restoration='pending';let failures=0;
+    if(asyncLifetime)active=false;
+    updateHook({restoration:'pending'});let failures=0;
     // 한 항목이 실패해도 나머지를 모두 복원하고 원래 work의 return/throw를 덮지 않습니다.
-    for(const {prototype,key,descriptor} of [...saved].reverse())try{Object.defineProperty(prototype,key,descriptor);}catch{failures++;}
-    state.restoreFailures=failures;state.restoration=failures?'failed':'restored';
+    for(const {prototype,key,descriptor,installed:owned} of [...saved].reverse())try{
+      if(asyncLifetime){
+        if(!owned)continue;
+        const current=Object.getOwnPropertyDescriptor(prototype,key);
+        if(sameDescriptor(current,descriptor))continue;
+        if(!sameDescriptor(current,owned)){failures++;continue;}
+      }
+      Object.defineProperty(prototype,key,descriptor);
+    }catch{failures++;}
+    if(asyncLifetime&&failures)transactionObservationFailed(trace);
+    updateHook({restoreFailures:failures,restoration:failures?'failed':'restored'});
   };
   try{
     for(const [prototype,key,operation] of targets){const descriptor=Object.getOwnPropertyDescriptor(prototype,key);if(!descriptor||typeof descriptor.value!=='function'||!descriptor.configurable)throw new Error('검사 SQLite 관측 준비 실패');saved.push({prototype,key,operation,descriptor});}
     attempted=true;
-    for(const {prototype,key,operation,descriptor} of saved){Object.defineProperty(prototype,key,{...descriptor,value:function(this:unknown,...args:unknown[]){
+    for(const entry of saved){const {prototype,key,operation,descriptor}=entry;const owned={...descriptor,value:function(this:unknown,...args:unknown[]){
+      // Async의 foreign 함수가 보관한 wrapper도 scope 뒤에는 수집 없이 원래 호출만 실행합니다.
+      if(asyncLifetime&&!active)return Reflect.apply(descriptor.value,this,args);
       let schedulingAttempted=false,sampled=false,sample:unknown;
       try{if(scheduler?.active===true&&operation==='database-exec'&&(trace.phase==='round-open'||trace.phase==='command')&&(args[0]==='BEGIN IMMEDIATE'||args[0]==='COMMIT')&&trace.sqliteTransactions.length<8&&schedulingCount<8){schedulingAttempted=true;schedulingCount++;sample=scheduler.before();sampled=true;}}catch{}
       const transaction=operation==='database-exec'?beginTransactionObservation(trace,args[0],this):null;
@@ -146,14 +160,26 @@ export function withSqliteDiagnostics<T>(trace:PhaseTrace|null,work:()=>T,option
         finishTransactionObservation(trace,transaction,'threw');
         finishScheduling(transaction,schedulingAttempted,sampled,sample);
         // 수집 실패도 원래 예외의 종류/참조를 바꾸지 않습니다.
-        try{if(trace.sqliteErrors.length<8){const errorCode=safeError(error).errorCode;const row:SqliteErrorRow={operation,site:sqliteSite(operation,args[0]),phase:trace.phase,errorCode,...sqliteCode(errorCode==='ERR_SQLITE_ERROR'?field(error,'errcode'):undefined),transactionActive:operation==='database-exec'?nativeBoolean(this as object,'isTransaction'):null,connectionClosed:null};if(operation==='database-exec'&&this!==null&&typeof this==='object')nativeDatabases.set(row,this);else if(operation==='database-prepare'&&this!==null&&typeof this==='object'&&trustedPrepareFailure(descriptor.value,error))nativeDatabases.set(row,this);trace.sqliteErrors.push(row);}else trace.sqliteErrorsTruncated=true;}catch{}
+        try{if(trace.sqliteErrors.length<8){const errorCode=safeError(error).errorCode;const row:SqliteErrorRow={operation,site:sqliteSite(operation,args[0]),phase:trace.phase,errorCode,...sqliteCode(errorCode==='ERR_SQLITE_ERROR'?field(error,'errcode'):undefined),transactionActive:operation==='database-exec'?nativeBoolean(this as object,'isTransaction'):null,connectionClosed:null};if(operation==='database-exec'&&this!==null&&typeof this==='object')nativeDatabases.set(row,this);else if(operation==='database-prepare'&&this!==null&&typeof this==='object'&&trustedPrepareFailure(descriptor.value,error))nativeDatabases.set(row,this);trace.sqliteErrors.push(row);}else trace.sqliteErrorsTruncated=true;}catch{if(asyncLifetime)transactionObservationFailed(trace);}
         throw error;
       }
-    }});state.installedMethods++;}
-    state.installation='installed';installed=true;
-  }catch{state.installation='failed';if(attempted)restore();}
+    }};entry.installed=owned;Object.defineProperty(prototype,key,owned);installedCount++;if(asyncLifetime)updateHook({installedMethods:installedCount});else state.installedMethods++;}
+    updateHook({installation:'installed'});installed=true;
+  }catch{if(asyncLifetime)transactionObservationFailed(trace);updateHook({installation:'failed'});if(attempted)restore();}
+  return installed?restore:()=>{};
+}
+export function withSqliteDiagnostics<T>(trace:PhaseTrace|null,work:()=>T,options?:{schedulerProbe?:SchedulerProbe}):T {
+  if(!trace)return work();
+  const restore=installSqliteDiagnostics(trace,options);
   // 준비/설치 실패도 실제 동작은 원래대로 한 번 실행합니다. 진단은 성공으로 표시하지 않습니다.
-  try{return work();}finally{if(installed)restore();}
+  try{return work();}finally{restore();}
+}
+/** 선택한 단발 callback worker에서만 사용합니다. Sync의 Promise/즉시 복원 계약과 분리합니다. */
+export async function withSqliteDiagnosticsAsync<T>(trace:PhaseTrace|null,work:()=>T|PromiseLike<T>):Promise<T> {
+  if(!trace)return await work();
+  let restore=()=>{};
+  try{restore=installSqliteDiagnostics(trace,undefined,true);}catch{transactionObservationFailed(trace);}
+  try{return await work();}finally{try{restore();}catch{transactionObservationFailed(trace);}}
 }
 function methodCount(value:unknown):number {return typeof value==='number'&&Number.isInteger(value)&&value>=0&&value<=5?value:0;}
 export function projectTrace(value:unknown):PhaseTrace {
