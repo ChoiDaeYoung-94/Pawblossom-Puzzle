@@ -1,5 +1,15 @@
 # 웹 자동 검증
 
+## 2026-10-24 · #282 prepare 실패 연결의 닫힘 관측
+
+게임 코드를 바꾸지 않은 검사 소스d7a6bb2/최신main977b48a 정상 병합b316fcc는 같은 tree입니다. 모듈 초기 Node prepare 함수 참조와 오류의 own-data SQL code를 확인한 경우만 receiver를 대응합니다. Node24의 isOpen은 own getter/prototype 없음이라는 별도 관측을 반영해 임의 getter를 브랜드 근거로 쓰지 않습니다. foreign/mock·잘못된 this·위조 prototype/Proxy는 미관측을 유지하며 기존 exec/Statement·DTO·worker·재시도 함수는 바꾸지 않습니다. 이는 receiver 식별이며 options getter 등이 던진 SQL 코드 오류까지 엔진 발생 증명으로 취급하지 않습니다. 악성 preload 이전까지 보증하는 계약은 아닙니다.
+
+실제 임시 DB reserved→exclusive 잠금 계획의 BEGIN/prepare BUSY5 두 개·닫힘2개/isOpen false·생성2회/대기25ms1회/두 번째 비재시도·오류 참조/descriptor 복원을 확인했습니다. 수정 전 표적9개 중2개 예상 실패와 수정 후9개 성공을 분리 보존합니다. 기존 좁은 관련54성공267skip·타입3설정도 성공했습니다. 최종 소스의 생산 빌드/타입3설정은 성공했고,78개 전체 웹 파일 SHA는4dbd754 생산 빌드와 같습니다. testing은 같은 제품 소스의4db 근거를 재사용하며 신규 PR CI는 별도 확인합니다. 검사 임시 폴더는 해석한 절대 경로의 부모·전용 prefix를 확인한 뒤 정리합니다.
+
+첫 전체는48파일3,082성공1실패입니다. reward-ledger:102:222 동일callback8worker의 신규1개는 통과/중복 기대7·실제0으로 실패했습니다. index4 신규true,2·5·6 callback storage-unavailable,0·1·3·7 constructor worker-error이며8개 보고 수신/잘림·관측실패 없음입니다. 뒤 DB행수 assertion은 미실행이고 native SQL·실제 연결 close·owner/원인은 미관측입니다. wrapper의 not-opened/returned는 native 연결 상태와 구분합니다. 원문282-full-first.log/안전요약을 #122에 보존하며 main864·276로컬redeem/정확maina2 round 실패와 같은 원인으로 합치지 않습니다. callback await 이후 native scope는 아직 미구현입니다. 같은head 재실행·500ms/5초/8worker/기대 완화는 하지 않았습니다.
+
+기준 main977b48a 정확최초CI40059657083은 양Node47파일3,074개·store12·타입/두빌드가 성공했습니다. 이 성공과 prepare 관측 성공을 이번 callback 실패의 해결로 표현하지 않습니다. 신규 PR/main 최초 검증은 제출 뒤 따로 확인합니다.
+
 ## 2026-10-24 · #272 장애물 재질·상자 사분면 파손
 
 최종 게임 소스4dbd754는 자체256픽셀 WebP3개67,516바이트를 보드·목표·미리보기·제거 피드백에 연결하고 기존 SVG·texture key·상자51/낙엽31·24/숫자·규칙/RNG를 유지합니다. 상자가 실제로 타격된 칸만 동일 중심·51픽셀·회전0의128² 사분면4개로 갈라집니다. 정상 texture·5개 예산·전부 생성/등록 성공 때만 원본을 숨기며 모션 감소·예산 부족·텍스처 불량·부분 실패에는 원본을 유지합니다. 기존120객체 상한·250–295ms·해소 대기·종료 정리를 유지하고, 투명도만 SineIn으로 늦게 줄입니다. 출처/프롬프트/해시는 art/obstacles-v4.json에 보존합니다.
