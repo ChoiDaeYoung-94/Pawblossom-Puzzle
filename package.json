@@ -28,7 +28,7 @@
     "phaser": "3.90.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "8.4.3",
+    "@capacitor/cli": "8.5.3",
     "@types/node": "24.10.1",
     "typescript": "~5.9.3",
     "vite": "8.3.3",
