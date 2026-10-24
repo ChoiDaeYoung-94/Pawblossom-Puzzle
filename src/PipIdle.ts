@@ -4,7 +4,7 @@ interface PipIdle {setActive(active:boolean):void;dispose():void}
 const owners=new WeakMap<HTMLElement,PipIdle>();
 
 /** 표시만 소유하며 반응 슬롯·게임 상태·타이머는 건드리지 않습니다. */
-export function createPipIdle(pip:HTMLElement,createImage:()=>HTMLImageElement=()=>new Image()):PipIdle{
+export function createPipIdle(pip:HTMLElement,createImage:()=>HTMLImageElement=()=>new Image(),alignment:'center'|'bottom'='center'):PipIdle{
   owners.get(pip)?.dispose();
   let disposed=false,rig:HTMLElement|undefined;
   const images:HTMLImageElement[]=[];
@@ -34,7 +34,7 @@ export function createPipIdle(pip:HTMLElement,createImage:()=>HTMLImageElement=(
   void Promise.all(pipIdleImages.map(load)).then(()=>{
     clearLoads();
     if(!current()||!pip.isConnected)return;
-    rig=createPipRig(pip.ownerDocument);pip.append(rig);pip.dataset.idleReady='true';
+    rig=createPipRig(pip.ownerDocument,alignment);pip.append(rig);pip.dataset.idleReady='true';
   }).catch(()=>{
     clearLoads();rig?.remove();rig=undefined;
     if(current())delete pip.dataset.idleReady;
