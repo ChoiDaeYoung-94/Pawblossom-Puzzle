@@ -1,0 +1,52 @@
+{
+  "mode": "RGBA",
+  "use_case": "stylized-concept",
+  "transparent_background": true,
+  "references": [
+    {
+      "path": "public/assets/pip-idle-open-v2.webp",
+      "role": "our original Pip identity, fur, clothes, eyes and painterly material reference"
+    },
+    {
+      "path": "public/assets/pip-accessories-v1/watering-can.webp",
+      "role": "our original watering can shape/color/flower decoration reference"
+    }
+  ],
+  "prompt": "Create one polished transparent-background square game character sprite for Pawblossom Puzzle, a new watering pose of our original rabbit Pip. Image1 is our own character identity/style reference; Image2 is our own prop reference. Preserve Pip's creamy fluffy fur, pink inner ears and cheeks, expressive brown eyes, sage-green gardener overalls, brass buttons and leaf pocket, with the same warm hand-painted dimensional finish. Full body, intact ears and feet, approximately the same proportions and facing as Image1, comfortably centered with small clear margins. Replace the carrot-holding pose with a believable gardening action: Pip's paws visibly grip the handle/body of the single watering can from Image2. The can is close against the lower right side of the body and already tipped slightly to pour toward a tiny flower that the game will draw in front of Pip. No floating prop and no carrot. Both hands must connect naturally to the can; gentle focused smile, eyes looking toward the watering destination. Composition for a 320x320 game frame: feet near y300, top of ears near y15, torso centered around x160; can mainly in the x205-290,y185-255 area, its spout tip near x185,y240 and pointing down-left toward x156,y265. These are composition guides, not drawn labels. Keep the pose compact and readable at 136px. Render only the rabbit and ONE can. Do not include water drops, water stream, flowers, pot, floor, scenery, UI, lettering, numbers, watermark, extra props or extra characters; those are added by code. Genuine clean alpha transparency, soft attractive shading, no opaque background or checkerboard painted into the image. Do not imitate any other game's characters.",
+  "asset": "public/assets/pip-tend-held-v1.png",
+  "source": "exec-604e4379-f81b-4d1f-ab36-c75d2ed962a3.png",
+  "generatedAt": "2026-10-25 KST",
+  "bytes": 1091633,
+  "sha256": "df0f9739cc68aecbcf086d2a5d85f107ac5dd352aec31fe634abb83dcc6a7da8",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "alphaRange": [
+    0,
+    255
+  ],
+  "alphaBounds": [
+    33,
+    23,
+    1210,
+    1222
+  ],
+  "processing": "Unmodified pixels; copied generated PNG, original retained. Code scales only.",
+  "status": "own prototype; native smallscreen/taste not yet approved",
+  "alignment": {
+    "frame": [
+      320,
+      320
+    ],
+    "spoutApprox": [
+      177,
+      240
+    ],
+    "flower": [
+      156,
+      262
+    ]
+  },
+  "runtimeMemoryBoundary": "RGBA width*height*4 arithmetic only; GPU/low-end performance not measured"
+}

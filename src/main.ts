@@ -12,6 +12,7 @@ import './PuzzlePresentation.css';
 import './PipIdle.css';
 import './PipTending.css';
 import {pipTendingArt} from './PipTending';
+import {createPipTendingPose} from './PipTendingPose';
 import './SpecialTileArt.css';
 import './GardenStructureArt.css';
 import { BoardScene,tileNames } from './BoardScene';
@@ -266,13 +267,13 @@ resourceDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key===
 const pipIdle=createPipIdle($('#header-pip'));
 let mapPipIdle:ReturnType<typeof createPipIdle>|undefined;
 let mapScenery:ReturnType<typeof createCampaignScenery>|undefined;
-let carePipDisplay:{host:HTMLElement;generation:number;idle:ReturnType<typeof createPipIdle>;accessory?:ReturnType<typeof createPipAccessoryArt>;nature?:ReturnType<typeof createGardenNature>;naturePicture?:HTMLElement}|undefined;
+let carePipDisplay:{host:HTMLElement;generation:number;idle:ReturnType<typeof createPipIdle>;accessory?:ReturnType<typeof createPipAccessoryArt>;nature?:ReturnType<typeof createGardenNature>;naturePicture?:HTMLElement;pose?:ReturnType<typeof createPipTendingPose>}|undefined;
 const boardFeedback=new RoundFeedback({layer:$('#round-feedback-layer'),pip:$('#header-pip-face'),
   canvas:()=>document.querySelector('#game-canvas canvas'),goal:key=>document.querySelector(`[data-feedback-goal="${key}"] img`),
   active:()=>nativeActive&&!document.hidden&&!careDemo&&route==='puzzle'&&!boardPending&&!roundEnded&&!previewDialog.open&&!otherModal()&&!testAds?.pausesGame&&!testBilling?.pausesGame,
 });
 function otherModal(includeSpace=true,includeLook=true){return includeLook&&lookDialog.open||includeSpace&&spaceDialog.open||resourceDialog.open||$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open)||billingModal();}
-function disposeCarePipDisplay(){carePipDisplay?.nature?.dispose();carePipDisplay?.idle.dispose();carePipDisplay?.accessory?.dispose();carePipDisplay=undefined;}
+function disposeCarePipDisplay(){carePipDisplay?.pose?.dispose();carePipDisplay?.nature?.dispose();carePipDisplay?.idle.dispose();carePipDisplay?.accessory?.dispose();carePipDisplay=undefined;}
 function syncCarePipActivity(){
   const view=route==='village'||route==='journal'?route:undefined;
   const tending=document.querySelector<HTMLElement>('#journal-pip-portrait');
@@ -293,6 +294,10 @@ function syncCarePipActivity(){
   }
   if(visible&&view==='village'&&picture?.isConnected&&carePipDisplay&&!carePipDisplay.nature){
     carePipDisplay.nature=createGardenNature(picture);carePipDisplay.naturePicture=picture;
+  }
+  if(visible&&view==='journal'&&pipReaction==='tend'&&tending?.isConnected&&carePipDisplay&&!carePipDisplay.pose){
+    const stage=document.querySelector<HTMLElement>('#journal-pip-tend-stage'),started=careReactionStarted,generation=careGeneration;
+    if(stage?.isConnected)carePipDisplay.pose=createPipTendingPose(tending,stage,()=>pipReaction==='tend'&&careReactionStarted===started&&careGeneration===generation&&route==='journal'&&Date.now()-started>=0&&Date.now()-started<2400);
   }
   const idle=visible&&careIdlePose();
   if(idle&&view){
@@ -966,7 +971,7 @@ function pipDecoration(view:'village'|'journal'){
 function journalPipDecoration(){
   if(pipReaction!=='tend')return pipDecoration('journal');
   const elapsed=Math.max(0,Math.min(2400,Date.now()-careReactionStarted));
-  return `<span class="pip-tending-stage" style="--tend-elapsed:${elapsed}ms">${pipDecoration('journal')}${pipTendingArt(elapsed)}</span>`;
+  return `<span id="journal-pip-tend-stage" class="pip-tending-stage" style="--tend-elapsed:${elapsed}ms">${pipDecoration('journal')}${pipTendingArt(elapsed)}</span>`;
 }
 const projectName=(id:GardenProject)=>text(({bench:'gardenBench',butterflies:'gardenButterflies',lantern:'gardenLantern'} as const)[id]);
 const themeName=(id:GardenTheme)=>text(({meadow:'gardenThemeMeadow',sunset:'gardenThemeSunset',starlight:'gardenThemeStarlight'} as const)[id]);
