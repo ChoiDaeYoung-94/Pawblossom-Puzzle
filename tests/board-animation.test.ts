@@ -29,7 +29,7 @@ class Graphic {
 vi.mock('phaser',async()=>{
   const {default:Events}=await import('eventemitter3');
   return {default:{Scenes:{Events:{PAUSE:'pause',RESUME:'resume',SLEEP:'sleep',WAKE:'wake',SHUTDOWN:'shutdown',DESTROY:'destroy',CREATE:'create'}},Scale:{Events:{RESIZE:'resize'}},Scene:class {
-    input=new Events();events=new Events();scale=new Events();cameras={main:{setBackgroundColor(){}}};
+    input=new Events();events=new Events();scale=new Events();cameras={main:{setBackgroundColor(){},setViewport(){return this;},setZoom(){return this;},centerOn(){return this;},preRender(){},getWorldPoint(x:number,y:number){return {x,y};}}};
     sys={isActive:()=>true,isPaused:()=>false};
     add={container:(x:number,y:number)=>new Piece(x,y),graphics:()=>new Graphic(),image:(x:number,y:number,texture:string)=>{const image=new Piece(x,y);image.texture=texture;return image;},text:(x:number,y:number,text:string)=>{const label=new Piece(x,y);label.text=text;return label;},circle:(x:number,y:number)=>new Piece(x,y)};
     tweens={killTweensOf(){},add(config:Record<string,unknown>){
@@ -46,6 +46,7 @@ import {levels} from '../src/levels';
 // 렌더링은 대역을 유지하되 예약/만료/제거는 설치된 Phaser 3.90 Clock 원본을 사용합니다.
 const Clock=createRequire(import.meta.url)('phaser/src/time/Clock.js') as new(scene:unknown)=>Phaser.Time.Clock&{start():void};
 interface RenderScene {
+  cameras:{main:{getWorldPoint(x:number,y:number):{x:number,y:number}}};
   sys:{isActive():boolean;isPaused():boolean};shuffle():boolean;resumeAfterFailure():boolean;
   snapshot:BoardScene['snapshot'];applyPreparedShuffle:BoardScene['applyPreparedShuffle'];canResumeAfterFailure:BoardScene['canResumeAfterFailure'];
   pieces:Piece[][];engine:BoardEngine;
@@ -68,6 +69,27 @@ afterEach(()=>vi.unstubAllGlobals());
 describe('보드 포인터 종료 (Phaser 입력 대역)',()=>{
   const pointer=(overrides:Record<string,unknown>={})=>({id:1,x:44,y:44,downTime:1,wasTouch:true,wasCanceled:false,event:{touches:[{}]},...overrides});
   const create=()=>{const h=harness();h.scene.create();return h;};
+  it('2배 렌더 좌표를 월드로 변환하고 재사용 벡터를 down 참조로 남기지 않습니다',async()=>{
+    const {scene}=create(),scratch={x:0,y:0},attempt=vi.spyOn(scene,'attempt').mockResolvedValue(undefined);
+    scene.cameras.main.getWorldPoint=(x,y)=>{scratch.x=x/2;scratch.y=y/2;return scratch;};
+    scene.input.emit('pointerdown',pointer({x:88,y:88}));scene.input.emit('pointerup',pointer({x:119.9,y:88}));
+    expect(attempt).not.toHaveBeenCalled();expect(scene.keyboardState().selected).toEqual({row:0,col:0});scene.cancelInput();
+    scene.input.emit('pointerdown',pointer({x:88,y:88,downTime:2}));scene.input.emit('pointerup',pointer({x:120.2,y:88,downTime:2}));
+    expect(attempt).toHaveBeenCalledExactlyOnceWith({row:0,col:0},{row:0,col:1});
+  });
+  it.each([[3,6,1000,424,3,7],[3,1,-40,424,3,0],[6,3,424,1000,7,3],[1,3,424,-40,0,3]])('2배 렌더의 바깥 종료도 %s/%s에서 인접 끝칸만 선택합니다',(row,col,x,y,toRow,toCol)=>{
+    const {scene}=create(),attempt=vi.spyOn(scene,'attempt').mockResolvedValue(undefined);
+    scene.cameras.main.getWorldPoint=(px,py)=>({x:px/2,y:py/2});
+    scene.input.emit('pointerdown',pointer({x:(44+col*56)*2,y:(44+row*56)*2}));scene.input.emit('pointerup',pointer({x,y}));
+    expect(attempt).toHaveBeenCalledExactlyOnceWith({row,col},{row:toRow,col:toCol});expect(scene.down).toBeUndefined();
+  });
+  it('카메라 변환의 비유한 결과는 시작과 종료 모두 거절하고 제스처를 비웁니다',()=>{
+    const {scene}=create(),attempt=vi.spyOn(scene,'attempt');
+    scene.cameras.main.getWorldPoint=()=>({x:NaN,y:44});scene.input.emit('pointerdown',pointer());expect(scene.down).toBeUndefined();
+    scene.cameras.main.getWorldPoint=(x,y)=>({x,y});scene.input.emit('pointerdown',pointer());expect(scene.down).toBeDefined();
+    scene.cameras.main.getWorldPoint=()=>({x:44,y:Infinity});scene.input.emit('pointerup',pointer());
+    expect(scene.down).toBeUndefined();expect(scene.keyboardState().selected).toBeUndefined();expect(attempt).not.toHaveBeenCalled();
+  });
   it.each([false,true])('취소된 일반/특수 탭은 보드·선택·결과를 바꾸지 않고 다음 입력은 회복합니다 (%s)',async special=>{
     const {scene,onMove}=create();if(special)scene.engine.board[0][0]!.special='row';
     const before=snapshot(scene.engine);scene.input.emit('pointerdown',pointer());scene.input.emit('pointerup',pointer({wasCanceled:true}));

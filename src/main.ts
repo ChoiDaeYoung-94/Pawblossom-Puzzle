@@ -12,6 +12,7 @@ import './PuzzlePresentation.css';
 import './SpecialTileArt.css';
 import './GardenStructureArt.css';
 import { BoardScene,tileNames } from './BoardScene';
+import {BOARD_RENDER_SIZE} from './BoardDisplay';
 import {specialTileArt} from './SpecialTileArt';
 import { AudioManager } from './audio/AudioManager';
 import { loadSave,saveData,retrySave,saveStatus,clearSave,levels,LEVEL_COUNT,chapters,chapterForLevel,levelSignature,type RoundCheckpoint,type SaveData } from './state';
@@ -426,7 +427,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   const stored=checkpoint();
   boardPending=true;
   if(!game){
-    game=new Phaser.Game({type:Phaser.AUTO,width:480,height:480,parent:'game-canvas',backgroundColor:'#284c42',scene:[],transparent:false,
+    game=new Phaser.Game({type:Phaser.AUTO,width:BOARD_RENDER_SIZE,height:BOARD_RENDER_SIZE,parent:'game-canvas',backgroundColor:'#284c42',scene:[],transparent:false,
       scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true,roundPixels:false},audio:{noAudio:true},input:{activePointers:2}});
     game.events.on(Phaser.Core.Events.POST_RENDER,replaceBoard);
   }

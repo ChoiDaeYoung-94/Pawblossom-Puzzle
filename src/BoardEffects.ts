@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import type { LeafHit, Position, ResolveStep, Special } from './core';
 import { reducedMotion } from './reducedMotion';
+import {BOARD_RENDER_SCALE} from './BoardDisplay';
 
 type EffectObject=Phaser.GameObjects.Graphics|Phaser.GameObjects.Image|Phaser.GameObjects.Text;
 const point=(p:Position)=>({x:44+p.col*56,y:44+p.row*56});
@@ -54,7 +55,7 @@ export class BoardEffects {
     if(cleared){
     const label=this.scene.add.text(x,y-12,'✓',{
       fontFamily:'Arial, sans-serif',fontSize:'26px',fontStyle:'bold',color:'#426c37',
-      backgroundColor:'#fff8e5',padding:{x:4,y:2},stroke:'#fff8e5',strokeThickness:2,
+      backgroundColor:'#fff8e5',padding:{x:4,y:2},stroke:'#fff8e5',strokeThickness:2,resolution:BOARD_RENDER_SCALE,
     }).setOrigin(.5).setDepth(14).setName('leaf-hit-label');
     this.animate(label,{...(reduced?{}:{y:y-28}),alpha:0,delay:reduced?240:300,duration:reduced?160:300,ease:'Sine.easeOut'});
     }
