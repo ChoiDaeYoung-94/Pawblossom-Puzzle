@@ -356,6 +356,12 @@ main.workspace>.game-panel{flex:1}
 .garden-activity-spot svg{width:20px;height:20px}.garden-activity-spot[aria-pressed=true]{border-color:#527957;background:#dceacb;box-shadow:0 0 0 3px #fff8d6bd}
 .garden-visitor.garden-activity-visitor{width:22%;height:50%;max-width:110px;max-height:140px}
 .garden-activity-sheen{animation:garden-moment 850ms ease-out 1}
+.garden-visitor[data-activity="rest"] [data-idle-active="true"][data-idle-ready="true"] .pip-rig-eyelids{animation:none;opacity:1}
+.garden-rest-note{position:absolute;left:56%;top:44%;font-size:19px;color:#f4e5af;text-shadow:0 1px 3px #536441;pointer-events:none}
+.garden-arch-petals{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}.garden-arch-petals path{transform-origin:center;animation:garden-petal-settle 1.8s ease-out 1 both;animation-play-state:paused}.garden-arch-petals path:nth-child(2){animation-delay:-.3s}.garden-arch-petals path:nth-child(3){animation-delay:-.7s}
+.garden-activity-sheen{animation-play-state:paused}[data-moment-active="true"] .garden-arch-petals path,[data-moment-active="true"] .garden-activity-sheen{animation-play-state:running}
+@keyframes garden-petal-settle{from{transform:translate(0,-12px) rotate(-4deg);opacity:.25}to{transform:translate(6px,85px) rotate(7deg);opacity:1}}
+@media(prefers-reduced-motion:reduce){.garden-arch-petals path{animation:none}}
 @keyframes garden-moment{from{opacity:.4;transform:scale(.85)}50%{opacity:1;transform:scale(1.12)}to{opacity:1;transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.garden-activity-sheen{animation:none}}
 @media(orientation:landscape) and (max-height:600px){.garden-workshop .garden-preview{display:block;aspect-ratio:12/7;overflow:hidden;width:100%;max-width:clamp(240px,calc((100dvh - 150px)*12/7),480px);margin-inline:auto}.garden-workshop .garden-illustration{height:100%;aspect-ratio:auto}.garden-workshop .garden-pill{position:absolute;margin:0}}
