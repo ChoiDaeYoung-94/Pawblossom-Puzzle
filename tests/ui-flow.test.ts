@@ -360,8 +360,8 @@ describe('독립 스테이지 지도',()=>{
     h.run("switchView('puzzle')");expect(h.run('audio.theme')).toBe('meadow');expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.writes()).toBe(writes);
   });
   it('숨은지도는재생성하지않고복귀시최신진행·언어로만들며오래된알림은거절합니다',()=>{
-    const h=boot(),initial=h.sceneryControllers.length,observer=h.sceneryControllers.find(c=>!c.disposed)!;
-    h.run("switchView('journal');renderViews();renderViews();changeLanguage('ko')");expect(h.sceneryControllers).toHaveLength(initial);expect(observer.disposed).toBe(false);expect(observer.active).toBe(false);
+    const h=boot(),initial=h.sceneryControllers.length,observer=h.sceneryControllers.find(c=>!c.disposed)!,play=h.element('#map-play').onclick,locate=h.element('#map-locate').onclick;
+    h.run("switchView('journal');renderViews();renderViews();changeLanguage('ko')");expect(h.sceneryControllers).toHaveLength(initial);expect(observer.disposed).toBe(false);expect(observer.active).toBe(false);const hiddenChapter=h.run('selectedChapter');play();locate();expect(h.run('stagePreview')).toBeUndefined();expect(h.run('selectedChapter')).toBe(hiddenChapter);
     h.run("switchView('puzzle');startLevel(1);finish(true)");expect(h.sceneryControllers).toHaveLength(initial);expect(h.stored().highestLevel).toBe(2);
     h.run("switchView('map')");expect(h.sceneryControllers).toHaveLength(initial+1);expect(observer.disposed).toBe(true);expect(h.element('#map-view').innerHTML).toContain('aria-current="step"');expect(h.element('#map-view').innerHTML).toContain('스테이지 2');
     const chapter=h.run('selectedChapter'),label=h.element('#map-world-name').textContent;observer.notify(10);expect(h.run('selectedChapter')).toBe(chapter);expect(h.element('#map-world-name').textContent).toBe(label);

@@ -1230,7 +1230,7 @@ function renderCampaignMapView(){
   });
   mapScenery=observer;
   const campaignScroll=$('#campaign-scroll');
-  const ownsMap=()=>mapScenery===observer&&document.querySelector('#campaign-scroll')===campaignScroll;
+  const ownsMap=()=>route==='map'&&mapScenery===observer&&document.querySelector('#campaign-scroll')===campaignScroll;
   const rememberMapScroll=()=>{if(campaignScroll.isConnected&&route==='map'&&!$('#map-view').hidden)mapScrollOffset=campaignScroll.scrollTop;};
   campaignScroll.addEventListener('scroll',rememberMapScroll,{passive:true});
   detachMapScroll=()=>campaignScroll.removeEventListener('scroll',rememberMapScroll);
