@@ -1,5 +1,5 @@
 import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest';
-import {AudioManager,AUDIO_LEVELS} from '../src/audio/AudioManager';
+import {AudioManager,AUDIO_LEVELS,MUSIC_THEMES,musicScore,type MusicTheme} from '../src/audio/AudioManager';
 
 function deferred() {
   let resolve!:()=>void, reject!:(reason?:unknown)=>void;
@@ -36,6 +36,7 @@ class Context {
 // Observe owned resources without adding test hooks to production code.
 const owned=(audio:AudioManager)=>audio as unknown as {
   context?:Context;timer?:unknown;voices:Set<{bus:string;sources:Node[];nodes:Node[];end:number}>;outputNodes:Node[];
+  requestedTheme:MusicTheme;playingTheme:MusicTheme;step:number;nextNote:number;scheduleMusic:()=>void;
   note:(bus:string,midi:number,time:number,duration:number,amplitude:number)=>void;
 };
 const flush=async()=>{for(let i=0;i<8;i++)await Promise.resolve();};
@@ -163,5 +164,42 @@ describe('예약 음과 노드 정리',()=>{
     ctx.currentTime=.03;voices.filter(v=>v.bus==='sfx').forEach(v=>v.sources[0]!.onended!());
     expect([...owned(a).voices].every(v=>v.bus==='music')).toBe(true);a.setSfxEnabled(true);expect(owned(a).voices.size).toBe(2);
     a.setMusicEnabled(false);expect(vi.getTimerCount()).toBe(0);expect(a.sfxEnabled).toBe(true);
+  });
+});
+
+describe('자체 구간 음악과 미예약 마디 전환',()=>{
+  it('서로 다른 일곱 곡이16마디·128박자 칸과 대응 베이스를 가지며 원래 초원 도입부를 보존합니다',()=>{
+    expect(MUSIC_THEMES).toHaveLength(7);expect(new Set(MUSIC_THEMES.map(k=>JSON.stringify(musicScore(k).melody))).size).toBe(7);
+    for(const theme of MUSIC_THEMES){const score=musicScore(theme);expect(score.melody).toHaveLength(16);expect(score.bass).toHaveLength(16);expect(score.fifths).toHaveLength(16);for(const bar of score.melody){expect(bar).toHaveLength(8);expect(bar.every(n=>n===null||Number.isInteger(n)&&n>=48&&n<=96)).toBe(true);}}
+    expect(musicScore('meadow').melody[0]).toEqual([72,null,76,79,null,76,74,null]);expect(musicScore('meadow').bass.slice(0,8)).toEqual([48,45,55,48,48,45,55,48]);
+  });
+  it('잠금 상태의 요청과 잘못된 외부 키는 context나 타이머를 만들지 않습니다',async()=>{
+    const a=make();a.setMusicTheme('brook');a.setMusicTheme('toString' as MusicTheme);a.setMusicTheme('invalid' as MusicTheme);
+    expect(Context.instances).toHaveLength(0);expect(vi.getTimerCount()).toBe(0);expect(owned(a).requestedTheme).toBe('brook');await a.unlock();expect(owned(a).playingTheme).toBe('brook');expect(vi.getTimerCount()).toBe(1);
+  });
+  it('현재곡→다른곡→현재곡 요청은 아직 예약하지 않은 변경을 취소합니다',async()=>{
+    const a=make();await a.unlock();const ctx=owned(a).context!;a.setMusicTheme('brook');a.setMusicTheme('meadow');ctx.currentTime=3.25;vi.advanceTimersByTime(25);
+    expect(owned(a).playingTheme).toBe('meadow');expect(owned(a).requestedTheme).toBe('meadow');expect(vi.getTimerCount()).toBe(1);expect(Context.instances).toHaveLength(1);
+  });
+  it('연속 구간 요청은 기존 음을 끊지 않고 다음 미예약 마디에 최종 곡 하나로 반영합니다',async()=>{
+    const a=make();await a.unlock();const ctx=owned(a).context!,first=[...owned(a).voices];a.setMusicTheme('brook');a.setMusicTheme('orchard');
+    expect(owned(a).playingTheme).toBe('meadow');expect([...owned(a).voices]).toEqual(first);first.forEach(v=>expect(v.sources[0]!.stop).toHaveBeenCalledTimes(1));
+    ctx.currentTime=3.25;vi.advanceTimersByTime(25);expect(owned(a).playingTheme).toBe('orchard');expect(owned(a).step).toBe(1);expect(vi.getTimerCount()).toBe(1);expect([...owned(a).voices].filter(v=>v.bus==='music').length).toBeLessThanOrEqual(6);
+  });
+  it('OFF/숨김 동안 최종 곡만 보존하고 재개·context 교체는 그 곡으로 한 번 시작합니다',async()=>{
+    const a=make();await a.unlock();a.setMusicEnabled(false);a.setMusicTheme('woodland');expect(vi.getTimerCount()).toBe(0);a.setMusicEnabled(true);expect(owned(a).playingTheme).toBe('woodland');
+    hide(true);a.setMusicTheme('garden');expect(vi.getTimerCount()).toBe(0);hide(false);await flush();expect(owned(a).playingTheme).toBe('garden');expect(vi.getTimerCount()).toBe(1);
+    const old=owned(a).context!,stale=old.onstatechange!;old.change('closed');a.setMusicTheme('pip');await a.unlock();stale();expect(owned(a).playingTheme).toBe('pip');expect(vi.getTimerCount()).toBe(1);
+    a.destroy();a.setMusicTheme('lantern');expect(owned(a).requestedTheme).toBe('pip');expect(vi.getTimerCount()).toBe(0);
+  });
+  it('긴 프레임 지연은 놓친 음을 건너뛰고 다음 미예약 마디에서 요청을 반영합니다',async()=>{
+    const a=make();await a.unlock();const ctx=owned(a).context!,spy=vi.spyOn(owned(a),'note');a.setMusicTheme('lantern');ctx.currentTime=1000;vi.advanceTimersByTime(25);
+    expect(spy.mock.calls.length).toBeLessThanOrEqual(3);expect(spy.mock.calls.every(c=>c[2]>=1000)).toBe(true);
+    for(let i=1;i<=40;i++){ctx.currentTime=1000+i*.1;vi.advanceTimersByTime(25);}expect(owned(a).playingTheme).toBe('lantern');expect(vi.getTimerCount()).toBe(1);
+  });
+  it.each(MUSIC_THEMES)('%s의16마디를 예약해도 음악 음성 상한과 단일 타이머를 유지합니다',async theme=>{
+    const a=make();a.setMusicTheme(theme);await a.unlock();const ctx=owned(a).context!;
+    for(let i=1;i<=535;i++){ctx.currentTime=i*.1;vi.advanceTimersByTime(25);expect([...owned(a).voices].filter(v=>v.bus==='music').length).toBeLessThanOrEqual(6);}
+    expect(owned(a).nextNote).toBeGreaterThan(53.5);expect(vi.getTimerCount()).toBe(1);expect(owned(a).playingTheme).toBe(theme);
   });
 });

@@ -94,7 +94,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const accessoryControllers:{slot:ElementStub;kind:'ribbon'|'wateringCan';disposed:boolean}[]=[];
   const natureControllers:{picture:ElementStub;disposed:boolean;disposals:number;activations:boolean[]}[]=[];
   const pipLifecycle:string[]=[];
-  const sceneryControllers:{disposed:boolean;active:boolean}[]=[];
+  const sceneryControllers:{disposed:boolean;active:boolean;notify:(id:number)=>void}[]=[];
   let resolveNativeState!:(state:{isActive:boolean})=>void;
   const nativeState=new Promise<{isActive:boolean}>(resolve=>{resolveNativeState=resolve;});
   let stored = JSON.stringify({ version: 1, language: 'en', highestLevel: 2, completed: [1], stars: 1, coins: 40, garden: 0, music: true, sfx: true });
@@ -171,6 +171,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   class AudioStub {
     plays:string[]=[];
     suspended=false;suspends=0;resumes=0;unlocks=0;music=true;sfx=true;
+    theme='meadow';setMusicTheme(theme:string){this.theme=theme;}
     setMusicEnabled(enabled:boolean) {this.music=enabled;}
     setSfxEnabled(enabled:boolean) {this.sfx=enabled;}
     unlock() { this.unlocks++;return Promise.resolve(); }
@@ -224,7 +225,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     showResultPip:()=>{resultArtCalls++;},
     RoundFeedback:FeedbackStub,
     campaignScenery,campaignWorld,campaignWorldName,
-    createCampaignScenery:()=>{const controller={disposed:false,active:false,setActive(value:boolean){if(!this.disposed)this.active=value;},dispose(){this.disposed=true;this.active=false;}};sceneryControllers.push(controller);return controller;},
+    createCampaignScenery:(_scroll:unknown,notify:(id:number)=>void)=>{const controller={notify,disposed:false,active:false,setActive(value:boolean){if(!this.disposed)this.active=value;},dispose(){this.disposed=true;this.active=false;}};sceneryControllers.push(controller);return controller;},
     createPipIdle:(pip:ElementStub,_createImage?:()=>HTMLImageElement,alignment:'center'|'bottom'='center')=>{
       const idle={pip,alignment,disposed:false,disposals:0,
         setActive(active:boolean){if(!idle.disposed)pip.dataset.idleActive=String(active);},
@@ -351,6 +352,13 @@ describe('보드 고밀도 표시와 월드 분리',()=>{
 });
 describe('독립 스테이지 지도',()=>{
   const boot=()=>mainHarness(false,false,false,false,undefined,true,undefined,undefined,true);
+  it('지도 관측·정원·핍·퍼즐의 곡을 연결하고 설정/오래된 지도 알림은 다른 화면의 곡을 바꾸지 않습니다',()=>{
+    const h=boot(),before=h.run('JSON.stringify(save)'),writes=h.writes();expect(h.run('audio.theme')).toBe('meadow');
+    const observer=h.sceneryControllers.find(c=>!c.disposed)!;observer.notify(3);expect(h.run('audio.theme')).toBe('brook');expect(h.element('#map-world-name').textContent).toBe('Sunlit Brook · 21–40');
+    h.run("switchView('village')");expect(h.run('audio.theme')).toBe('garden');observer.notify(10);expect(h.run('audio.theme')).toBe('garden');
+    h.run("switchView('journal')");expect(h.run('audio.theme')).toBe('pip');h.run("switchView('settings')");expect(h.run('audio.theme')).toBe('pip');
+    h.run("switchView('puzzle')");expect(h.run('audio.theme')).toBe('meadow');expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.writes()).toBe(writes);
+  });
   it('지도에서 부팅하고 보드는 같은 Scene으로 일시중단하며100단계 잠금/완료/현재 상태를 표시합니다',()=>{
     const h=boot();expect(h.run('route')).toBe('map');expect(h.run('game.paused')).toBe(true);expect(h.element('#game-canvas').tabIndex).toBe(-1);
     const html=h.element('#map-view').innerHTML;expect(html.match(/data-level="/g)).toHaveLength(100);

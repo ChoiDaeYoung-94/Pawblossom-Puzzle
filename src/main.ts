@@ -359,8 +359,14 @@ function showStagePreview(id:number,intent:'map'|'restart',opener:HTMLElement){
 previewDialog.addEventListener('cancel',event=>{event.preventDefault();closeStagePreview();});
 previewDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();});
 
+function syncMusicTheme(){
+  if(route==='settings')return;
+  audio.setMusicTheme(route==='journal'?'pip':route==='village'?'garden':campaignWorld(route==='map'?selectedChapter:chapterForLevel(currentLevel).id));
+}
+
 // 문서와 Android 상태 중 하나라도 비활성이면 오디오와 진행을 멈춥니다.
 function syncActivity(){
+  syncMusicTheme();
   if(lookPreview&&!validLookPreview(lookPreview))closeLookPreview(false);
   if(spacePreview&&!validSpacePreview(spacePreview))closeSpacePreview(false);
   renderBuyerContinue();
@@ -1223,7 +1229,7 @@ function renderViews(grew=false){
   $('#map-view').innerHTML=renderCampaignMap();
   mapScenery=createCampaignScenery($('#campaign-scroll'),id=>{
     if(route!=='map')return;selectedChapter=id;$<HTMLSelectElement>('#map-chapter-select').value=String(id);
-    $('#map-world-name').textContent=campaignWorldName(id,save.language);
+    $('#map-world-name').textContent=campaignWorldName(id,save.language);syncMusicTheme();
   });
   const campaignScroll=$('#campaign-scroll');
   const rememberMapScroll=()=>{if(campaignScroll.isConnected&&route==='map'&&!$('#map-view').hidden)mapScrollOffset=campaignScroll.scrollTop;};
