@@ -15,6 +15,10 @@ import {pipTendingArt} from './PipTending';
 import {createPipTendingPose} from './PipTendingPose';
 import './SpecialTileArt.css';
 import './GardenStructureArt.css';
+import './JourneyGarden.css';
+import {journeyProjectSpecs,journeyProjectFor,nextJourneyProject,previewJourneyAction,prepareJourneyAction,type JourneyProject,type JourneyAction} from './journeyGarden';
+import {journeyGardenPanel,journeyGardenPreview,journeyNextCard,journeyName,journeyPhase} from './JourneyGardenUI';
+import {createJourneyGardenArt} from './JourneyGardenArt';
 import './UiTheme.css';
 import { BoardScene,tileNames } from './BoardScene';
 import {BOARD_RENDER_SIZE} from './BoardDisplay';
@@ -76,7 +80,11 @@ let growthTimer:ReturnType<typeof setTimeout>|undefined;
 let careProcessing=false,careGeneration=0;
 let selectedGardenPlot=0;
 let selectedGardenArea:GardenArea='flowers';
-let careDemo:{normalSave:SaveData;returnRoute:'village'|'journal';chapter:number;plot:number;area:GardenArea}|undefined;
+let selectedJourneyProject:JourneyProject='conservatory';
+let journeyMoment=false;
+let journeyArt:ReturnType<typeof createJourneyGardenArt>|undefined,journeyArtHost:HTMLElement|undefined;
+let journeyPreviewArt:ReturnType<typeof createJourneyGardenArt>|undefined;
+let careDemo:{normalSave:SaveData;returnRoute:'village'|'journal';chapter:number;plot:number;area:GardenArea;project:JourneyProject;preset:100|500}|undefined;
 let pipReaction:'feed'|'play'|'greet'|'tend'|undefined;
 let careReactionStarted=0;
 let gardenActivity:{kind:'flower'|'lily'|'ripples'|'rest'|'arch';plot:number}|undefined;
@@ -158,19 +166,22 @@ const previewDialog=document.createElement('dialog');previewDialog.id='stage-pre
 const resourceDialog=document.createElement('dialog');resourceDialog.id='resource-help-dialog';resourceDialog.setAttribute('aria-labelledby','resource-help-title');resourceDialog.setAttribute('aria-describedby','resource-help-description');document.body.append(resourceDialog);
 const lookDialog=document.createElement('dialog');lookDialog.id='garden-look-dialog';lookDialog.setAttribute('aria-labelledby','garden-look-title');lookDialog.setAttribute('aria-describedby','garden-look-description');document.body.append(lookDialog);
 const spaceDialog=document.createElement('dialog');spaceDialog.id='garden-space-dialog';spaceDialog.setAttribute('aria-labelledby','garden-space-preview-title');spaceDialog.setAttribute('aria-describedby','garden-space-preview-description');document.body.append(spaceDialog);
-type SpacePreview={action:SpaceAction;save:SaveData;generation:number;route:string;demo:typeof careDemo;round:number;scene:BoardScene;opener:HTMLButtonElement;area:GardenArea;showCurrent:boolean;scroll:number};
+type SpacePreview={action:SpaceAction|JourneyAction;project:JourneyProject;save:SaveData;generation:number;route:string;demo:typeof careDemo;round:number;scene:BoardScene;opener:HTMLButtonElement;area:GardenArea;showCurrent:boolean;scroll:number};
 let spacePreview:SpacePreview|undefined;
 function spacePreviewEnvironment(){return route==='village'&&nativeActive&&!document.hidden&&!boardPending&&!resultTimer&&!puzzleProcessing&&!careProcessing&&!growing&&!stagePreview&&!previewDialog.open&&!otherModal(false)&&!testAds?.busy&&!testBilling?.busy&&!testAds?.pausesGame&&!testBilling?.pausesGame&&Boolean(scene?.canLeave())&&game.scene.getScene('Board')===scene;}
-function validSpacePreview(context:SpacePreview){return spacePreview===context&&spaceDialog.open&&context.save===save&&context.generation===careGeneration&&context.route===route&&context.demo===careDemo&&context.round===round&&context.scene===scene&&context.area===selectedGardenArea&&currentControl(context.opener,context.save,context.generation)&&spacePreviewEnvironment();}
+function validSpacePreview(context:SpacePreview){return spacePreview===context&&spaceDialog.open&&context.save===save&&context.generation===careGeneration&&context.route===route&&context.demo===careDemo&&context.round===round&&context.scene===scene&&context.area===selectedGardenArea&&context.project===selectedJourneyProject&&currentControl(context.opener,context.save,context.generation)&&spacePreviewEnvironment();}
 function closeSpacePreview(restore=true){
-  const context=spacePreview;spacePreview=undefined;spaceDialog.close();syncActivity();
+  const context=spacePreview;spacePreview=undefined;journeyPreviewArt?.dispose();journeyPreviewArt=undefined;spaceDialog.close();syncActivity();
   if(!restore||!context||!nativeActive||document.hidden||context.route!==route||context.save!==save||context.demo!==careDemo||otherModal()||previewDialog.open)return;
   if(currentControl(context.opener,context.save,context.generation))context.opener.focus({preventScroll:true});
   $('#village-view').scrollTop=context.scroll;
 }
 function renderSpacePreview(){
   const context=spacePreview;if(!context)return;
-  spaceDialog.innerHTML=gardenSpacePreview(save.language,save.gardenDesign?.spaces,context.action,gardenCompletedCount(),save.stars,save.coins,save.gardenDesign?.theme??'meadow',context.showCurrent,careStorageBlocked(),Boolean(careDemo));
+  journeyPreviewArt?.dispose();journeyPreviewArt=undefined;
+  spaceDialog.innerHTML='project' in context.action?journeyGardenPreview(save.language,save.gardenDesign?.journeyProjects,context.action,gardenCompletedCount(),save.stars,save.coins,context.showCurrent,careStorageBlocked(),Boolean(careDemo)):gardenSpacePreview(save.language,save.gardenDesign?.spaces,context.action,gardenCompletedCount(),save.stars,save.coins,save.gardenDesign?.theme??'meadow',context.showCurrent,careStorageBlocked(),Boolean(careDemo));
+  const picture=document.querySelector<HTMLElement>('#journey-preview-picture');if(picture)journeyPreviewArt=createJourneyGardenArt(picture);
+  journeyPreviewArt?.setActive(spaceDialog.open&&nativeActive&&!document.hidden);
   for(const current of [true,false]){
     const button=$<HTMLButtonElement>(current?'#space-preview-current':'#space-preview-after');
     button.onclick=()=>{if(!validSpacePreview(context)||$('#'+button.id)!==button)return;context.showCurrent=current;renderSpacePreview();$('#'+button.id).focus({preventScroll:true});};
@@ -181,18 +192,22 @@ function renderSpacePreview(){
     // 자기 모달만 닫은 뒤 기존 거래 가드와 현재 자원을 다시 검증합니다.
     closeSpacePreview(false);
     if(commitCare(confirm,context.save,context.generation,next=>{
+      if('project' in context.action){
+        const result=prepareJourneyAction(next.stars,next.coins,next.gardenDesign?.journeyProjects,context.action,gardenCompletedCount(next));if(!result)return false;
+        next.stars=result.stars;next.coins=result.coins;next.gardenDesign=gardenDesignFor(next.gardenDesign);next.gardenDesign.journeyProjects=result.projects;return true;
+      }
       const result=prepareSpaceAction(next.stars,next.coins,next.gardenDesign?.spaces,context.action,gardenCompletedCount(next));if(!result)return false;
       next.stars=result.stars;next.coins=result.coins;next.gardenDesign=gardenDesignFor(next.gardenDesign);next.gardenDesign.spaces=result.spaces;return true;
-    })){selectedGardenArea=context.action.space;reactPip('greet');audio.play('reward');renderViews();$('#garden-space-title').focus({preventScroll:true});}
+    })){selectedGardenArea='project' in context.action?'journey':context.action.space;reactPip('greet');audio.play('reward');renderViews();$('#garden-space-title').focus({preventScroll:true});}
     else context.opener.focus({preventScroll:true});
   };
   $('#space-preview-cancel').onclick=()=>{if(spacePreview===context)closeSpacePreview();};
 }
-function showSpacePreview(action:SpaceAction,opener:HTMLButtonElement){
-  if(spacePreview||spaceDialog.open||!spacePreviewEnvironment()||!currentControl(opener,save,careGeneration)||selectedGardenArea!==action.space||!previewSpaceAction(save.gardenDesign?.spaces,action,gardenCompletedCount()))return;
+function showSpacePreview(action:SpaceAction|JourneyAction,opener:HTMLButtonElement){
+  if(spacePreview||spaceDialog.open||!spacePreviewEnvironment()||!currentControl(opener,save,careGeneration)||('project' in action?selectedGardenArea!=='journey'||selectedJourneyProject!==action.project||!previewJourneyAction(save.gardenDesign?.journeyProjects,action,gardenCompletedCount()):selectedGardenArea!==action.space||!previewSpaceAction(save.gardenDesign?.spaces,action,gardenCompletedCount())))return;
   if(pipReaction||gardenActivity){const id=opener.id;clearCareReaction();renderViews();opener=$<HTMLButtonElement>('#'+id);}
-  clearCareReaction();spacePreview={action:{...action},save,generation:careGeneration,route,demo:careDemo,round,scene,opener,area:selectedGardenArea,showCurrent:false,scroll:$('#village-view').scrollTop};
-  renderSpacePreview();scene.cancelInput();spaceDialog.showModal();syncActivity();$('#garden-space-preview-title').focus({preventScroll:true});
+  clearCareReaction();spacePreview={action:{...action},project:selectedJourneyProject,save,generation:careGeneration,route,demo:careDemo,round,scene,opener,area:selectedGardenArea,showCurrent:false,scroll:$('#village-view').scrollTop};
+  renderSpacePreview();scene.cancelInput();spaceDialog.showModal();journeyPreviewArt?.setActive(nativeActive&&!document.hidden);syncActivity();$('#garden-space-preview-title').focus({preventScroll:true});
 }
 spaceDialog.addEventListener('cancel',event=>{event.preventDefault();closeSpacePreview();});
 spaceDialog.addEventListener('close',()=>{if(!spaceDialog.open&&spacePreview)closeSpacePreview(false);});
@@ -274,8 +289,13 @@ const boardFeedback=new RoundFeedback({layer:$('#round-feedback-layer'),pip:$('#
   active:()=>nativeActive&&!document.hidden&&!careDemo&&route==='puzzle'&&!boardPending&&!roundEnded&&!previewDialog.open&&!otherModal()&&!testAds?.pausesGame&&!testBilling?.pausesGame,
 });
 function otherModal(includeSpace=true,includeLook=true){return includeLook&&lookDialog.open||includeSpace&&spaceDialog.open||resourceDialog.open||$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open)||billingModal();}
-function disposeCarePipDisplay(){carePipDisplay?.pose?.dispose();carePipDisplay?.nature?.dispose();carePipDisplay?.idle.dispose();carePipDisplay?.accessory?.dispose();carePipDisplay=undefined;}
+function disposeCarePipDisplay(){journeyArt?.dispose();journeyArt=undefined;journeyArtHost=undefined;carePipDisplay?.pose?.dispose();carePipDisplay?.nature?.dispose();carePipDisplay?.idle.dispose();carePipDisplay?.accessory?.dispose();carePipDisplay=undefined;}
 function syncCarePipActivity(){
+  const work=document.querySelector<HTMLElement>('#journey-work-picture');
+  if(journeyArtHost!==work){journeyArt?.dispose();journeyArt=undefined;journeyArtHost=work??undefined;}
+  if(work&&route==='village'&&selectedGardenArea==='journey'&&!journeyArt)journeyArt=createJourneyGardenArt(work);
+  journeyArt?.setActive(route==='village'&&selectedGardenArea==='journey'&&careEnvironment()&&!careProcessing);
+  journeyPreviewArt?.setActive(spaceDialog.open&&Boolean(spacePreview)&&nativeActive&&!document.hidden);
   const view=route==='village'||route==='journal'?route:undefined;
   const tending=document.querySelector<HTMLElement>('#journal-pip-portrait');
   if(tending)tending.dataset.tendActive=String(view==='journal'&&careEnvironment()&&!careProcessing&&pipReaction==='tend'&&Date.now()-careReactionStarted>=0&&Date.now()-careReactionStarted<2400);
@@ -930,18 +950,18 @@ function commitCare(button:HTMLButtonElement,expectedSave:SaveData,generation:nu
     save=next;updateWallet();updateSaveStatus();return true;
   }finally{careProcessing=false;}
 }
-function clearCareReaction(){clearTimeout(careReactionTimer);careReactionTimer=undefined;pipReaction=undefined;careReactionStarted=0;gardenActivity=undefined;}
+function clearCareReaction(){clearTimeout(careReactionTimer);careReactionTimer=undefined;pipReaction=undefined;careReactionStarted=0;gardenActivity=undefined;journeyMoment=false;}
 function reactPip(kind:NonNullable<typeof pipReaction>){
   clearCareReaction();pipReaction=kind;careReactionStarted=Date.now();
   const generation=careGeneration;
-  const timer=setTimeout(()=>{if(generation!==careGeneration||careReactionTimer!==timer)return;careReactionTimer=undefined;pipReaction=undefined;careReactionStarted=0;renderViews();},2400);
+  const timer=setTimeout(()=>{if(generation!==careGeneration||careReactionTimer!==timer)return;careReactionTimer=undefined;pipReaction=undefined;careReactionStarted=0;journeyMoment=false;renderViews();},2400);
   careReactionTimer=timer;
 }
 function enterCareDemo():boolean {
   if(!TEST_TOOLS_ENABLED||careDemo||careProcessing||growing||!careEnvironment())return false;
   const returnRoute=route as 'village'|'journal';
   const demo:SaveData=JSON.parse(JSON.stringify(save));
-  careDemo={normalSave:save,returnRoute,chapter:selectedChapter,plot:selectedGardenPlot,area:selectedGardenArea};careGeneration++;
+  careDemo={normalSave:save,returnRoute,chapter:selectedChapter,plot:selectedGardenPlot,area:selectedGardenArea,project:selectedJourneyProject,preset:100};careGeneration++;
   demo.coins=1800;demo.stars=100;demo.garden=0;demo.pip=freshPip();demo.gardenDesign=freshGardenDesign();save=demo;selectedGardenPlot=0;selectedGardenArea='flowers';
   clearCareReaction();scene.cancelInput();renderViews();localize();updateWallet();syncActivity();
   document.querySelector<HTMLButtonElement>('#care-demo-exit-'+returnRoute)?.focus({preventScroll:true});
@@ -951,7 +971,7 @@ function exitCareDemo(navigate=true):boolean {
   if(!careDemo||careProcessing||otherModal()||previewDialog.open)return false;
   const context=careDemo;careDemo=undefined;careGeneration++;
   clearTimeout(growthTimer);growthTimer=undefined;growing=false;clearCareReaction();
-  save=context.normalSave;selectedChapter=context.chapter;selectedGardenPlot=context.plot;selectedGardenArea=context.area;
+  save=context.normalSave;selectedChapter=context.chapter;selectedGardenPlot=context.plot;selectedGardenArea=context.area;selectedJourneyProject=context.project;
   // 저장이나 회차 재생성 없이 원래 언어·오디오 설정만 복원합니다.
   audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);
   renderViews();localize();updateWallet();updateGoals();updateResultCopy();syncActivity();
@@ -963,9 +983,16 @@ function exitCareDemo(navigate=true):boolean {
   }
   return true;
 }
+function setCareDemoPreset(preset:100|500){
+  if(!careDemo||!careEnvironment()||careProcessing||growing||careDemo.preset===preset)return;
+  careGeneration++;clearCareReaction();careDemo.preset=preset;
+  save={...save,coins:preset===500?8000:1800,stars:preset,garden:0,pip:freshPip(),gardenDesign:freshGardenDesign()};
+  selectedGardenArea=preset===500?'journey':'flowers';selectedJourneyProject='conservatory';selectedGardenPlot=0;
+  renderViews();updateWallet();syncActivity();$('#care-demo-preset-'+preset+'-'+route).focus({preventScroll:true});
+}
 function careDemoPanel(view:'village'|'journal'){
   if(!TEST_TOOLS_ENABLED)return '';
-  return careDemo?`<aside class="care-demo-banner care-demo-controls"><strong>${text('careDemoActive')}</strong><p>${text('careDemoHint')}</p><button id="care-demo-exit-${view}" class="text-button">${text('careDemoExit')}</button></aside>`
+  return careDemo?`<aside class="care-demo-banner care-demo-controls"><strong>${text('careDemoActive')}</strong><p>${text('journeyDemoHint').replace('{count}',String(careDemo.preset)).replace('{stars}',String(careDemo.preset)).replace('{coins}',String(careDemo.preset===500?8000:1800))}</p><div class="care-demo-presets">${([100,500] as const).map(preset=>`<button id="care-demo-preset-${preset}-${view}" class="text-button" aria-pressed="${careDemo!.preset===preset}" ${careDemo!.preset===preset?'disabled':''}>${text(preset===100?'journeyDemoEarly':'journeyDemoLate')}</button>`).join('')}</div><button id="care-demo-exit-${view}" class="text-button">${text('careDemoExit')}</button></aside>`
     :`<aside class="care-demo-entry"><p>${text('careDemoInvite')}</p><button id="care-demo-enter-${view}" class="text-button">${text('careDemoEnter')}</button></aside>`;
 }
 function careIdlePose(){return !pipReaction&&!growing&&(!gardenActivity||gardenActivity.kind==='rest'||gardenActivity.kind==='arch');}
@@ -983,7 +1010,7 @@ function journalPipDecoration(){
 const projectName=(id:GardenProject)=>text(({bench:'gardenBench',butterflies:'gardenButterflies',lantern:'gardenLantern'} as const)[id]);
 const themeName=(id:GardenTheme)=>text(({meadow:'gardenThemeMeadow',sunset:'gardenThemeSunset',starlight:'gardenThemeStarlight'} as const)[id]);
 // 체험은 해금 조건만 미리 봅니다. 실제 완료 목록과 회차는 변경하지 않습니다.
-function gardenCompletedCount(data:SaveData=save){return careDemo?100:new Set(data.completed.filter(id=>Number.isInteger(id)&&id>=1&&id<=LEVEL_COUNT)).size;}
+function gardenCompletedCount(data:SaveData=save){return careDemo?careDemo.preset:new Set(data.completed.filter(id=>Number.isInteger(id)&&id>=1&&id<=LEVEL_COUNT)).size;}
 const flowerName=(id:typeof flowerStyles[number])=>text(({meadow:'gardenMeadow',daisy:'gardenDaisy',violet:'gardenViolet'} as const)[id]);
 const gardenPlotPoints=[[158,153],[285,141],[413,153],[218,222],[351,222]];
 function gardenVisitor(){
@@ -1009,7 +1036,7 @@ function gardenActivitySpots(mode:'art'|'controls'|'both'='both'){
   return `${mode==='controls'?'':mark+moment}${mode==='art'?'':`<div class="garden-activity-spots" role="group" aria-label="${text('gardenActivities')}">${buttons}</div>`}`;
 }
 const lanternLocation=(plot:number|undefined)=>plot===undefined?text('gardenLanternDefault'):text('gardenLanternAt').replace('{number}',String(plot+1));
-function gardenDescription(){const design=gardenDesignFor(save.gardenDesign);if(selectedGardenArea!=='flowers'){const state=gardenSpacesFor(design.spaces)[selectedGardenArea];return [gardenAreaName(save.language,selectedGardenArea),spacePhaseName(save.language,state),...(state.phase===2?[spaceStyleName(save.language,selectedGardenArea,state)]:[]),themeName(design.theme??'meadow')].join(' · ');}return [text('gardenImage').replace('{count}',String(save.garden)),themeName(design.theme??'meadow'),...design.flowers.slice(0,save.garden).map((flower,i)=>text('gardenPlot').replace('{number}',String(i+1))+' '+flowerName(flower)),...design.placed.map(project=>projectName(project)+(project==='lantern'?' · '+lanternLocation(design.lanternPlot):''))].join(' · ');}
+function gardenDescription(){const design=gardenDesignFor(save.gardenDesign);if(selectedGardenArea==='journey')return journeyName(save.language,selectedJourneyProject)+' · '+journeyPhase(save.language,journeyProjectFor(design.journeyProjects,selectedJourneyProject));if(selectedGardenArea!=='flowers'){const state=gardenSpacesFor(design.spaces)[selectedGardenArea];return [gardenAreaName(save.language,selectedGardenArea),spacePhaseName(save.language,state),...(state.phase===2?[spaceStyleName(save.language,selectedGardenArea,state)]:[]),themeName(design.theme??'meadow')].join(' · ');}return [text('gardenImage').replace('{count}',String(save.garden)),themeName(design.theme??'meadow'),...design.flowers.slice(0,save.garden).map((flower,i)=>text('gardenPlot').replace('{number}',String(i+1))+' '+flowerName(flower)),...design.placed.map(project=>projectName(project)+(project==='lantern'?' · '+lanternLocation(design.lanternPlot):''))].join(' · ');}
 function lanternPlacement(){
   const design=gardenDesignFor(save.gardenDesign);if(!design.owned.includes('lantern'))return '';
   const shown=design.placed.includes('lantern');
@@ -1032,7 +1059,7 @@ function gardenThemePanel(){
   }).join('')}</section>`;
 }
 function nextGardenProject(){
-  return `<details class="pip-project"><summary>${text('gardenTogether')}</summary>${nextSpaceGoal(save.language,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}<button id="pip-open-space" class="text-button">${text('spaceOpen')}</button><button id="pip-open-garden" class="text-button">${text('gardenOpenEditor')}</button></details>`;
+  return `${journeyNextCard(save.language,save.gardenDesign?.journeyProjects,gardenCompletedCount(),'journal')}<details class="pip-project"><summary>${text('gardenTogether')}</summary>${nextSpaceGoal(save.language,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}<button id="pip-open-space" class="text-button">${text('spaceOpen')}</button><button id="pip-open-garden" class="text-button">${text('gardenOpenEditor')}</button></details>`;
 }
 function sharedGardenPlan(view:'village'|'journal'){
   const goals=gardenGoals({plots:save.garden,pip:save.pip??freshPip(),design:save.gardenDesign,clears:gardenCompletedCount(),stars:save.stars,coins:save.coins});
@@ -1054,6 +1081,7 @@ function sharedGardenPlan(view:'village'|'journal'){
   return `<section class="garden-plan" aria-labelledby="${view}-plan-title"><div class="garden-plan-heading"><h3 id="${view}-plan-title">${text('goalPlan')}</h3><span>${done} / ${goals.length}</span></div>${achievements.map(message=>`<p class="garden-plan-achievement">${message}</p>`).join('')}<progress aria-label="${text('goalPlan')}" value="${done}" max="${goals.length}"></progress>${next?`<div class="garden-plan-next"><small>${text('gardenNext')}</small><strong>${name(next)}</strong><p>${detail(next)}</p>${button(next)}</div>`:`<p>${text('goalAllDone')}</p>`}<details><summary>${text('goalAllPlans')}</summary><ol>${goals.map(goal=>`<li class="${goal.done?'done':''}"><span aria-hidden="true">${goal.done?'✓':'○'}</span><div><strong>${name(goal)}</strong>${goal.done?`<small>${text('goalDone')}</small>`:`<p>${detail(goal)}</p>${goal.id===next?.id?'':button(goal)}`}</div></li>`).join('')}</ol></details><p class="garden-plan-note">${text('goalNoAutoSpend')}</p></section>`;
 }
 function gardenVisitControls(){
+  if(selectedGardenArea==='journey')return '';
   const design=gardenDesignFor(save.gardenDesign),pip=save.pip??freshPip();
   const phase=selectedGardenArea==='flowers'?undefined:gardenSpacesFor(design.spaces)[selectedGardenArea].phase;
   const reaction:TextKey=pipReaction==='tend'?'pipTendReaction':selectedGardenArea!=='flowers'?(phase===0?'spaceVisitEmpty':phase===1?'spaceVisitBuilding':({pond:'spaceVisitPond',shelter:'spaceVisitShelter',arch:'spaceVisitArch'} as const)[selectedGardenArea]):pipReaction==='greet'?design.placed.includes('lantern')?'gardenVisitLantern':design.placed.includes('butterflies')?'gardenVisitButterflies':design.placed.includes('bench')?'gardenVisitBench':'pipGreetReaction':'gardenVisitInvite';
@@ -1110,7 +1138,7 @@ function bindCareControls(){
     const tab=document.querySelector<HTMLButtonElement>('#garden-area-'+area);if(!tab)continue;
     tab.onkeydown=event=>{
       if(!currentControl(tab,expectedSave,generation)||!careEnvironment()||event.altKey||event.ctrlKey||event.metaKey)return;
-      const next=event.key==='Home'?0:event.key==='End'?3:event.key==='ArrowRight'?(index+1)%4:event.key==='ArrowLeft'?(index+3)%4:undefined;
+      const next=event.key==='Home'?0:event.key==='End'?gardenAreas.length-1:event.key==='ArrowRight'?(index+1)%gardenAreas.length:event.key==='ArrowLeft'?(index+gardenAreas.length-1)%gardenAreas.length:undefined;
       if(next===undefined)return;event.preventDefault();selectArea(gardenAreas[next]);
     };
   }
@@ -1129,12 +1157,19 @@ function bindCareControls(){
     const id=step.destination!=='flowers'?'garden-space-title':step.missing?.kind==='diversity'?'garden-edit-title':goal.kind==='bed'?'garden-stage':'garden-edit-title';
     const target=$('#'+id);target.focus({preventScroll:true});target.scrollIntoView?.({block:'start'});
   });
-  if(area!=='flowers'){
+  if(area==='journey'){
+    const select=document.querySelector<HTMLSelectElement>('#journey-project-select');
+    if(select)select.onchange=()=>{if(!currentControl(select,expectedSave,generation)||!careEnvironment()||route!=='village'||selectedGardenArea!=='journey'||careProcessing||growing)return;const project=journeyProjectSpecs.find(spec=>spec.id===select.value)?.id;if(!project)return;selectedJourneyProject=project;clearCareReaction();renderViews();$('#journey-project-select').focus({preventScroll:true});};
+    const project=selectedJourneyProject;
+    bind('journey-restore',button=>showSpacePreview({kind:'restore',project},button));
+    for(const style of ['base','alt'] as const)bind('journey-style-'+style,button=>showSpacePreview({kind:'style',project,style},button));
+    bind('journey-visit',()=>{if(route!=='village'||selectedGardenArea!=='journey'||selectedJourneyProject!==project||!careEnvironment()||careProcessing||journeyProjectFor(save.gardenDesign?.journeyProjects,project).phase!==2)return;reactPip('greet');journeyMoment=true;renderViews();});
+  }else if(area!=='flowers'){
     bind('garden-space-restore',button=>showSpacePreview({kind:'restore',space:area},button));
     for(const style of ['base','alt'] as const)bind('garden-space-'+style,button=>showSpacePreview({kind:'style',space:area,style},button));
   }
   for(const view of ['village','journal'] as const){
-    if(TEST_TOOLS_ENABLED){bind('care-demo-enter-'+view,()=>{if(route===view)enterCareDemo();});bind('care-demo-exit-'+view,()=>{if(route===view)exitCareDemo();});}
+    if(TEST_TOOLS_ENABLED){for(const preset of [100,500] as const)bind('care-demo-preset-'+preset+'-'+view,()=>{if(route===view)setCareDemoPreset(preset);});bind('care-demo-enter-'+view,()=>{if(route===view)enterCareDemo();});bind('care-demo-exit-'+view,()=>{if(route===view)exitCareDemo();});}
   }
   const actions:[string,PipAction][]=[['feed','feed'],['play','play'],['buy-ribbon','buyRibbon'],['buy-wateringCan','buyWateringCan'],['equip-ribbon','equipRibbon'],['equip-wateringCan','equipWateringCan'],['equip-none','equipNone']];
   for(const [id,action] of actions)bind('pip-'+id,button=>{
@@ -1145,6 +1180,7 @@ function bindCareControls(){
     }
   });
   for(const kind of ['greet','tend'] as const)bind('pip-'+kind,()=>{if(route==='journal'&&careEnvironment()&&pipLevel(save.pip??freshPip())>=(kind==='greet'?2:3)){reactPip(kind);renderViews();revealPipCare();}});
+  for(const view of ['village','journal'] as const)bind(view+'-open-journey',()=>{if(route!==view||!careEnvironment()||careProcessing||growing)return;clearCareReaction();selectedGardenArea='journey';selectedJourneyProject=nextJourneyProject(save.gardenDesign?.journeyProjects)?.id??selectedJourneyProject;switchView('village');renderViews();$('#garden-space-title').focus({preventScroll:true});$('#garden-space-title').scrollIntoView?.({block:'start'});});
   bind('pip-open-garden',()=>{if(route!=='journal'||!careEnvironment()||careProcessing)return;selectedGardenArea='flowers';switchView('village');const title=$('#garden-edit-title');title.focus({preventScroll:true});title.scrollIntoView?.({block:'start'});});
   bind('pip-open-space',()=>{
     if(route!=='journal'||!careEnvironment()||careProcessing)return;
@@ -1187,11 +1223,12 @@ function bindCareControls(){
   });
 }
 function gardenWorkshop(grew:boolean){
+  if(selectedGardenArea==='journey')return `<section class="garden-workshop">${gardenAreaTabs(save.language,'journey')}<div id="garden-area-panel" role="tabpanel" aria-labelledby="garden-area-journey">${journeyGardenPanel(save.language,selectedJourneyProject,save.gardenDesign?.journeyProjects,gardenCompletedCount(),save.stars,journeyMoment)}</div></section>`;
   const flowers=selectedGardenArea==='flowers',spaces=gardenSpacesFor(save.gardenDesign?.spaces);
-  const space=selectedGardenArea as Exclude<GardenArea,'flowers'>;
+  const space=selectedGardenArea as Exclude<GardenArea,'flowers'|'journey'>;
   const image=flowers?gardenArt(save.garden,grew,save.gardenDesign,{renderer:'painted-v4'}):gardenSpaceArt(space,spaces[space],save.gardenDesign?.theme??'meadow','garden-space','painted-v4',{foreground:false});
-  const progress=flowers?`${icon('flower',17)} ${save.garden} / 5`:spacePhaseName(save.language,spaces[selectedGardenArea as Exclude<GardenArea,'flowers'>]);
-  return `<section class="garden-workshop">${gardenAreaTabs(save.language,selectedGardenArea)}<div id="garden-area-panel" role="tabpanel" aria-labelledby="garden-area-${selectedGardenArea}"><div id="garden-nature" class="garden-picture garden-preview"><div class="garden-illustration" role="img" aria-label="${gardenDescription()}">${image}</div>${gardenVisitor()}${gardenActivitySpots('art')}${flowers?'':paintedGardenForeground(space,spaces[space])}<span class="garden-pill">${progress}</span></div>${gardenActivitySpots('controls')}${sharedGardenPlan('village')}${flowers?`<div class="garden-card garden-growth"><h3>${text('garden')}</h3><p class="garden-stage" id="garden-stage" role="status" tabindex="-1">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div>${save.garden===5?`<section class="pip-project garden-next-space">${nextSpaceGoal(save.language,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}<button id="garden-open-space" class="text-button">${text('spaceOpen')}</button></section>`:''}${gardenEditor()}`:`${gardenVisitControls()}${gardenSpacePanel(save.language,selectedGardenArea as Exclude<GardenArea,'flowers'>,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}`}</div></section>`;
+  const progress=flowers?`${icon('flower',17)} ${save.garden} / 5`:spacePhaseName(save.language,spaces[selectedGardenArea as Exclude<GardenArea,'flowers'|'journey'>]);
+  return `<section class="garden-workshop">${gardenAreaTabs(save.language,selectedGardenArea)}<div id="garden-area-panel" role="tabpanel" aria-labelledby="garden-area-${selectedGardenArea}"><div id="garden-nature" class="garden-picture garden-preview"><div class="garden-illustration" role="img" aria-label="${gardenDescription()}">${image}</div>${gardenVisitor()}${gardenActivitySpots('art')}${flowers?'':paintedGardenForeground(space,spaces[space])}<span class="garden-pill">${progress}</span></div>${gardenActivitySpots('controls')}${journeyNextCard(save.language,save.gardenDesign?.journeyProjects,gardenCompletedCount(),'village')}${sharedGardenPlan('village')}${flowers?`<div class="garden-card garden-growth"><h3>${text('garden')}</h3><p class="garden-stage" id="garden-stage" role="status" tabindex="-1">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div>${save.garden===5?`<section class="pip-project garden-next-space">${nextSpaceGoal(save.language,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}<button id="garden-open-space" class="text-button">${text('spaceOpen')}</button></section>`:''}${gardenEditor()}`:`${gardenVisitControls()}${gardenSpacePanel(save.language,selectedGardenArea as Exclude<GardenArea,'flowers'|'journey'>,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}`}</div></section>`;
 }
 function mapCurrentLevel(){return !testingLevel&&!roundEnded?currentLevel:save.highestLevel;}
 function revealMapStage(){
@@ -1326,7 +1363,7 @@ function switchView(name:string){
   if(!scene.canLeave())return;
   if(route==='map')mapScrollOffset=$('#campaign-scroll').scrollTop;
   if(name!=='puzzle'){clearResumeNotice();clearBoardNotice();}
-  if(name!=='village'&&gardenActivity)clearCareReaction();
+  if(name!=='village'&&(gardenActivity||journeyMoment))clearCareReaction();
   route=name;$('#app').dataset.route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
   if(name==='village'||name==='map')renderViews();
   if(name==='map'&&mapPositioned!==mapCurrentLevel()){revealMapStage();mapPositioned=mapCurrentLevel();}

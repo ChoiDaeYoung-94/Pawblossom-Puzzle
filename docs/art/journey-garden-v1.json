@@ -1,0 +1,70 @@
+{
+  "issue": 341,
+  "mode": "구현/브라우저 검수 완료, 사용자 감각·Native·출시 검증 전",
+  "prompts": {
+    "gardenJourneyA": "Use case: stylized-concept. Asset ONE square transparent PNG sprite atlas for original cozy garden mobile puzzle game, four exact equal quadrants 2x2, no gutter. One isolated architectural miniature on its own little oval grass/ivory stone foundation in EACH quadrant, generous transparent padding around all four silhouettes; absolutely transparent outside structures, no scenery backdrop, no text, labels, numerals, UI, characters, paths between assets, watermark or copied game assets. Consistent premium hand-painted dimensional 3D garden miniature, thirty-degree overhead camera with front visible, cream/coral/lavender/sky-blue soft bright materials, detailed but legible at200px. Four objects share camera and scale, complete silhouettes not cut at edges. Request2048square. Top-left: a lavender conservatory with graceful cream frame and pale lavender glass roof, lavender beds and a little honey lantern; original style. Top-right: alternative of the same sized lavender conservatory with round blush glass dome and sunflower/honey accents; deluxe style. Bottom-left: a lotus waterside tea pavilion with jade tiled roof, ivory stone round base and tiny lotus pool; original style. Bottom-right: alternative of the same tea pavilion as an airy pearl-shell canopy with coral-pink roof, shallow turquoise pool and pearl lanterns; deluxe style.",
+    "gardenJourneyB": "Use case: stylized-concept. Asset ONE square transparent PNG sprite atlas for original cozy garden mobile puzzle game, four exact equal quadrants 2x2, no gutter. One isolated architectural miniature on its own little oval grass/ivory stone foundation in EACH quadrant, generous transparent padding around all four silhouettes; absolutely transparent outside structures, no scenery backdrop, no text, labels, numerals, UI, characters, paths between assets, watermark or copied game assets. Consistent premium hand-painted dimensional 3D garden miniature, thirty-degree overhead camera with front visible, cream/coral/lavender/sky-blue soft bright materials, detailed but legible at200px. Four objects share camera and scale, complete silhouettes not cut at edges. Request2048square. Top-left: an autumn reading nook, warm timber open shelter with amber maple leaves, cream bench and little book shelf; original style. Top-right: alternative of the same reading nook as a snow-plum white-roof shelter with pink plum branch, little warm lantern and ivory reading bench; deluxe style. Bottom-left: moonlit bamboo bridge, small pale jade bamboo footbridge over an oval tiny stream, warm hanging moon lantern; original style. Bottom-right: alternative of the bridge with crystal ice railings, aurora-violet glass lanterns, pale turquoise tiny stream; deluxe style.",
+    "gardenJourneyC": "Use case: stylized-concept. Asset ONE square transparent PNG sprite atlas for original cozy garden mobile puzzle game, four equal cells 2x2. Exactly ONE isolated architectural miniature per quadrant. IMPORTANT each object completely inside its cell, with at least8percent TRANSPARENT padding on EVERY side of EACH quadrant, including around the center cross: silhouettes and shadows must never cross the central horizontal or vertical lines. Absolutely transparent outside objects, no backdrop, no text/labels/numerals/UI/characters/watermarks/copying game assets. Consistent premium hand-painted dimensional3D garden miniature,30degree overhead with front visible; bright cream/coral/lavender/skyblue tactile materials, detailed yet legible200px. Same camera/scale. Request2048square. Top-left: woodland tea nook, a tiny cream tea stall beneath a curved emerald tea-leaf canopy, two cups, round pale stone base with green tea bushes; original style. Top-right: alternative tea nook under a pink mushroom canopy with warm ivory wood, tiny lilac stools and bell flowers; deluxe style. Bottom-left: coral fountain, a small ivory scalloped two-tier garden fountain over an oval turquoise basin with coral flowers and shell stones; original style. Bottom-right: alternative fountain with warm sandstone/moon-blue mosaic tiers, a small palm and peach desert flowers; deluxe style.",
+    "gardenJourneyD": "Use case: stylized-concept. Asset ONE square transparent PNG sprite atlas for original cozy garden mobile puzzle game, four equal cells 2x2. Exactly ONE isolated architectural miniature per quadrant. IMPORTANT each object completely inside its cell, with at least8percent TRANSPARENT padding on EVERY side of EACH quadrant, including around the center cross: silhouettes and shadows must never cross the central horizontal or vertical lines. Absolutely transparent outside objects, no backdrop, no text/labels/numerals/UI/characters/watermarks/copying game assets. Consistent premium hand-painted dimensional3D garden miniature,30degree overhead with front visible; bright cream/coral/lavender/skyblue tactile materials, detailed yet legible200px. Same camera/scale. Request2048square. Top-left: crystal flower terrace, pale lilac crystal blossoms on an ivory raised flower dais, translucent faceted petals and a tiny arch; original style. Top-right: alternative of the flower dais floating on soft cream sculpted clouds, pale sky-blue glass flower bell and blush flowers; deluxe style. Bottom-left: firefly flower walk, a short ivory curved footpath with lilac wisteria trellis, two warm lanterns and a tiny pool at its edge; original style. Bottom-right: alternative flower walk with a rosy cream pergola, pink roses, pearl lanterns and pale peach stone; deluxe style.",
+    "gardenJourneyE": "Use case: stylized-concept. ONE square transparent PNG sprite atlas, four equal cells2x2, one isolated complete miniature per quadrant with at least8percent transparent padding on every side of each cell, central cross clear; no background, no words/numerals/UI/characters/logos/watermarks. Original cozy mobile garden game, premium hand-painted dimensional3D miniature,30degree overhead/front visible, bright cream/coral/lavender/skyblue polished tactile materials, same scale/camera, legible200px. Top-left: little cream clock garden tower with tiny brass flower gears and a turquoise waterwheel on an oval stone/grass base, clock face with plain tick marks and NO numerals, original style. Top-right: alternative waterwheel tower with a jade glass roof, brass petal turbine and tiny rainbow waterfall, same size deluxe style. Bottom-left: starlight blossom stage, a small round ivory performance gazebo with a lilac domed glass canopy, hanging star-shaped lanterns and blue crystal flowers on its base, empty stage, original style. Bottom-right: alternative blossom stage as an open peach rose canopy with flower garlands, a cream dais and warm gold fairy lanterns, empty stage, celebratory deluxe style. Each silhouette and shadow must fit ENTIRELY in its own quadrant. Request2048square."
+  },
+  "sources": [
+    "exec-7eb59080-f295-46f4-b7dd-f02067c3b80f.png",
+    "exec-137c7e36-69e9-4327-9864-5d719d5eb688.png",
+    "exec-11073024-31d0-42d0-ae37-8139d620f31e.png",
+    "exec-1994acaa-ed2c-4de7-b7ce-6c2dbdaa99ed.png",
+    "exec-a5fd481e-d21a-450b-bb19-7efee386c06f.png"
+  ],
+  "nativeRawRoot": "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2",
+  "cropNote": "원본 무변형. SVG viewBox crop: x=0/627; y경계A590/B610/C632/D600/E622. 각 경계는 실제 alpha 빈 행 안이며 작품 사이 인접 그림 번짐을 피한다. 투명 원본을 코드에서 크롭하고 재인코딩하지 않았다.",
+  "budget": "10 projects, stage gates120/140 then+40 up480/500. 15+25stars each,400new+94old=494/500 leaves6. Core can finish with0coins; no Pip paidstats prereq. Optional permanent style coins only. sparseoptionalGardenDesign.journeyProjects, legacy3spaces strict; oldactions preserveownership; preview/commitCare stale/writefailure; CareDemo normal100 +separate500preset no real completed mutations.",
+  "ready": true,
+  "assets": [
+    {
+      "file": "public/assets/journey-garden/works-a-v1.png",
+      "sha256": "00b318786b46a5e0dc2c5913de24b5562cbad26f8617c8b875ce81b509eba569",
+      "size": 2549396,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "rowBoundary": 590
+    },
+    {
+      "file": "public/assets/journey-garden/works-b-v1.png",
+      "sha256": "c5a6317905134357d854bf938b329742f05a495cc811ad5768c115c37b9f45bb",
+      "size": 2526373,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "rowBoundary": 610
+    },
+    {
+      "file": "public/assets/journey-garden/works-c-v1.png",
+      "sha256": "d38e4acce9fdda6d041d44f7cd5160967d9ca9beff2ece40bb4692ff1ad67af8",
+      "size": 2459307,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "rowBoundary": 632
+    },
+    {
+      "file": "public/assets/journey-garden/works-d-v1.png",
+      "sha256": "7c27d750ea0b720aebeb02f4ba893edf2aa5a7f92e46b998984b466ef6176a5c",
+      "size": 2378236,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "rowBoundary": 600
+    },
+    {
+      "file": "public/assets/journey-garden/works-e-v1.png",
+      "sha256": "bfff1e51e4fe99cca11bb921e041a6affcc7b89d8e314316b7749f1f4ab655a6",
+      "size": 2426560,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "rowBoundary": 622
+    }
+  ],
+  "verification": "실제390x844 한국어20스타일 viewport 캡처 root 시각확인; 320x568 EN/844x390가로/모션감소 별도. 초기clip좌표오류 사진 제외. 원본 PNG 무변형; 최종믹스/현금상품/실서비스 변경 없음."
+}
