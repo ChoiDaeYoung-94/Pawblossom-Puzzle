@@ -32,5 +32,5 @@
     "ONE original cozy garden match-three round grass-covered stepping island, 30-degree overhead, empty limestone inset medallion, layered ochre soil/stone ledges, two daisies, premium hand-painted 3D mobile-game material, transparent background. No numbers/text/logos/characters/UI/other assets.",
     "Original square game environment atlas, four exact equal quadrants: top-left turquoise pond garden, top-right peach blossom orchard, bottom-left jade mosswood, bottom-right violet lantern festival. Self-contained top-down square maps with clear centers and detailed side edges. No path/nodes/characters/text/UI/borders. Consistent premium painterly material. Requested2048 square, actual1254 square."
   ],
-  "integration": "Atlas CSS200% four quadrants; old meadow retained. Runtime numbers/locked/completed controls separate. Actual final acceptance and low-end GPU cost not approved by image generation."
+  "integration": "Atlas SVG exact627x627 viewBox quadrants/xMidYMid slice/no distortion + existing owned decode gate; old meadow retained. Runtime numbers/locked/completed controls separate. Actual final acceptance and low-end GPU cost not approved by image generation."
 }
