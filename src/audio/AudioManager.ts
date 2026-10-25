@@ -22,7 +22,59 @@ const MELODY: readonly (readonly (number | null)[])[] = [
   [76, null, 74, null, 72, null, null, null],
 ];
 const BASS = [48, 45, 55, 48, 48, 45, 55, 48] as const;
-const FIFTHS = [55, 52, 62, 55, 55, 52, 62, 55] as const;
+
+export type MusicTheme='meadow'|'brook'|'orchard'|'woodland'|'lantern'|'garden'|'pip';
+type MusicTimbre='bell'|'soft'|'wood';
+interface MusicScore {readonly melody:readonly (readonly (number|null)[])[];readonly bass:readonly number[];readonly fifths:readonly number[];readonly timbre:MusicTimbre}
+// 자체 악보: 모두72BPM/4박자여서 구간 변화는 다음 마디에서 자연스럽게 이어집니다.
+// 원래 초원8마디는 그대로 두고, 각 곡은 질문8마디+응답8마디로 약53초입니다.
+const ANSWER_ORDER=[4,5,0,1,2,6,3,7] as const;
+const score=(melody:readonly (readonly (number|null)[])[],bass:readonly number[],timbre:MusicTimbre):MusicScore=>({
+  melody:[...melody,...ANSWER_ORDER.map((index,bar)=>bar===7?[76,null,74,null,72,null,null,null]:melody[index]!.map(pitch=>pitch===null?null:bar<2&&pitch<=76?pitch+12:pitch))],
+  bass:[...bass,...ANSWER_ORDER.map((index,bar)=>bar===7?48:bass[index]!)],fifths:[...bass,...ANSWER_ORDER.map((index,bar)=>bar===7?48:bass[index]!)].map(pitch=>pitch+7),timbre,
+});
+const MUSIC_SCORES:Readonly<Record<MusicTheme,MusicScore>>={
+  meadow:score(MELODY,BASS,'bell'),
+  brook:score([
+    [76,null,79,null,81,79,76,null],[74,null,76,79,null,76,74,null],
+    [72,null,74,76,79,null,76,null],[74,72,null,null,67,null,72,null],
+    [81,null,79,76,null,79,81,null],[79,null,76,74,72,null,74,null],
+    [74,null,79,76,null,74,72,null],[76,null,74,null,72,null,null,null],
+  ],[48,53,45,55,48,53,55,48],'soft'),
+  orchard:score([
+    [72,76,null,79,null,76,72,null],[74,77,null,81,null,77,74,null],
+    [76,79,null,84,null,79,76,null],[79,null,76,null,74,72,null,null],
+    [77,81,null,84,null,81,77,null],[76,79,null,81,null,79,76,null],
+    [74,79,null,81,79,null,74,null],[76,null,74,null,72,null,null,null],
+  ],[48,53,48,55,53,45,55,48],'wood'),
+  woodland:score([
+    [69,null,null,72,null,76,72,null],[67,null,71,null,74,null,null,null],
+    [65,null,null,69,null,72,69,null],[67,null,72,null,76,null,null,null],
+    [72,null,76,null,null,79,76,null],[69,null,72,null,76,null,72,null],
+    [67,null,74,null,71,null,67,null],[72,null,null,null,72,null,null,null],
+  ],[45,43,41,48,48,45,43,48],'soft'),
+  lantern:score([
+    [79,null,84,83,null,79,76,null],[77,null,81,79,null,77,74,null],
+    [76,null,79,84,null,83,81,null],[79,null,76,null,74,null,72,null],
+    [81,null,84,86,null,84,81,null],[79,null,83,84,null,79,76,null],
+    [77,null,81,79,77,null,74,null],[76,null,74,null,72,null,null,null],
+  ],[48,53,45,55,53,48,55,48],'bell'),
+  garden:score([
+    [65,null,69,null,72,null,69,null],[64,null,67,72,null,67,64,null],
+    [62,null,65,null,69,null,65,null],[67,null,71,null,74,null,null,null],
+    [69,null,72,null,77,null,72,null],[67,null,72,76,null,72,67,null],
+    [65,null,69,null,67,65,62,null],[64,null,67,null,72,null,null,null],
+  ],[41,48,50,43,53,48,55,48],'wood'),
+  pip:score([
+    [72,null,79,null,76,72,null,null],[74,null,81,null,77,74,null,null],
+    [76,null,84,null,79,76,74,null],[72,null,76,null,79,null,null,null],
+    [81,null,79,null,76,74,72,null],[77,null,76,null,74,72,69,null],
+    [74,null,79,null,81,79,76,null],[74,null,76,null,72,null,null,null],
+  ],[48,53,48,48,45,53,55,48],'wood'),
+};
+export function musicScore(theme:MusicTheme):MusicScore{return MUSIC_SCORES[theme];}
+export const MUSIC_THEMES=Object.freeze(Object.keys(MUSIC_SCORES) as MusicTheme[]);
+
 const EIGHTH = 60 / 72 / 2;
 const PENTATONIC = [0, 2, 4, 7, 9] as const;
 export const AUDIO_LEVELS={music:4,sfx:3.4,master:1,makeup:1.12} as const;
@@ -48,6 +100,8 @@ export class AudioManager {
   private nextNote = 0;
   private step = 0;
   private music = true;
+  private requestedTheme:MusicTheme='meadow';
+  private playingTheme:MusicTheme='meadow';
   private sfx = true;
   private unlocked = false;
   private paused = false;
@@ -128,6 +182,13 @@ export class AudioManager {
     this.setBus(this.musicBus, enabled ? AUDIO_LEVELS.music : 0);
     if (!enabled) this.stopMusic(true);
     else this.startMusic();
+  }
+
+  /** 마지막 요청만 다음 미예약 마디에 반영합니다. 음량·context·타이머는 만들지 않습니다. */
+  setMusicTheme(theme:MusicTheme):void {
+    if(this.destroyed||!MUSIC_THEMES.includes(theme)||this.requestedTheme===theme)return;
+    this.requestedTheme=theme;
+    if(this.timer===undefined)this.playingTheme=theme;
   }
 
   setSfxEnabled(enabled: boolean): void {
@@ -284,6 +345,7 @@ export class AudioManager {
   private startMusic(): void {
     const ctx = this.context;
     if (!ctx || !this.music || !this.canPlay() || ctx.state !== 'running' || this.suspending === ctx || this.timer !== undefined) return;
+    this.playingTheme=this.requestedTheme;
     this.step = 0;
     this.nextNote = ctx.currentTime + 0.05;
     this.scheduleMusic();
@@ -297,19 +359,21 @@ export class AudioManager {
     if (this.nextNote < now) {
       // Skip missed notes after a busy frame, instead of emitting them together.
       const skipped = Math.ceil((now + 0.02 - this.nextNote) / EIGHTH);
-      this.step = (this.step + skipped) % 64;
+      this.step = (this.step + skipped) % 128;
       this.nextNote += skipped * EIGHTH;
     }
     while (this.nextNote < now + 0.18) {
+      if(this.step%8===0&&this.playingTheme!==this.requestedTheme){this.playingTheme=this.requestedTheme;this.step=0;}
+      const score=MUSIC_SCORES[this.playingTheme];
       const bar = Math.floor(this.step / 8);
       const beat = this.step % 8;
-      const pitch = MELODY[bar]![beat];
+      const pitch = score.melody[bar]![beat];
       if (pitch != null) this.note('music', pitch, this.nextNote, 0.52, 0.065);
       if (beat === 0 || beat === 4) {
-        this.note('music', beat === 0 ? BASS[bar]! : FIFTHS[bar]!, this.nextNote, 0.85, 0.055);
+        this.note('music', beat === 0 ? score.bass[bar]! : score.fifths[bar]!, this.nextNote, 0.85, 0.055);
       }
       this.nextNote += EIGHTH;
-      this.step = (this.step + 1) % 64;
+      this.step = (this.step + 1) % 128;
     }
   }
 
@@ -336,8 +400,9 @@ export class AudioManager {
     fundamental.type = 'sine';
     overtone.type = 'sine';
     fundamental.frequency.value = hz;
-    overtone.frequency.value = hz * 2;
-    partial.gain.value = 0.18;
+    const timbre=bus==='music'?MUSIC_SCORES[this.playingTheme].timbre:'bell';
+    overtone.frequency.value = hz * (timbre==='wood'?3:2);
+    partial.gain.value = timbre==='soft'?.10:timbre==='wood'?.14:.18;
     fundamental.connect(envelope);
     overtone.connect(partial);
     partial.connect(envelope);
