@@ -38,7 +38,7 @@ import { flowerStyles,gardenProjects,gardenThemes,gardenDesignFor,freshGardenDes
 import { showResultPip } from './ResultPip';
 import { RoundFeedback } from './RoundFeedback';
 import { createPipIdle } from './PipIdle';
-import {campaignScenery,createCampaignScenery} from './CampaignScenery';
+import {campaignScenery,createCampaignScenery,campaignWorld,campaignWorldName} from './CampaignScenery';
 import { createPipAccessoryArt } from './PipAccessoryArt';
 import { createGardenNature } from './GardenNature';
 import { cloneSnapshot,prepareShuffle } from './puzzleHelp';
@@ -1198,11 +1198,12 @@ function renderCampaignMap(){
   const current=mapCurrentLevel(),active=hasRoundProgress();
   const positions=[50,69,62,38,29,46,68,60,36,50];
   const status=(id:number)=>id>save.highestLevel?'levelLocked':save.completed.includes(id)?'levelCompleted':'mapAvailable';
-  return `<div class="campaign-heading"><div><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('mapJourney')}</h2></div><button id="map-locate" class="map-locate" aria-label="${text('mapLocate')}">${icon('paw',20)}<span>${text('mapLocate')}</span></button></div><div class="campaign-chapters"><select id="map-chapter-select" aria-label="${text('chapterSelect')}">${chapters.map(chapter=>`<option value="${chapter.id}" ${chapter.id===selectedChapter?'selected':''}>${chapter.first}–${chapter.last} · ${text(chapter.title)}</option>`).join('')}</select></div><div id="campaign-scroll" class="campaign-scroll" aria-label="${text('mapStages')}">${chapters.map(chapter=>{
+  return `<div class="campaign-heading"><div><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('mapJourney')}</h2><p id="map-world-name" class="campaign-world-name">${campaignWorldName(selectedChapter,save.language)}</p></div><button id="map-locate" class="map-locate" aria-label="${text('mapLocate')}">${icon('paw',20)}<span>${text('mapLocate')}</span></button></div><div class="campaign-chapters"><select id="map-chapter-select" aria-label="${text('chapterSelect')}">${chapters.map(chapter=>`<option value="${chapter.id}" ${chapter.id===selectedChapter?'selected':''}>${chapter.first}–${chapter.last} · ${text(chapter.title)}</option>`).join('')}</select></div><div id="campaign-scroll" class="campaign-scroll" aria-label="${text('mapStages')}">${chapters.map(chapter=>{
     const stages=levels.filter(level=>level.id>=chapter.first&&level.id<=chapter.last),height=stages.length*90;
     const points=stages.map((_,index)=>[positions[index%positions.length],45+index*90]);
     const path=points.map(([x,y],index)=>index?`Q ${points[index-1][0]} ${y} ${x} ${y}`:`M ${x} ${y}`).join(' ');
-    return `<section class="campaign-chapter" data-chapter="${chapter.id}" id="map-chapter-${chapter.id}" aria-labelledby="map-chapter-title-${chapter.id}">${campaignScenery(chapter.id,stages.length)}<h3 id="map-chapter-title-${chapter.id}"><span>${chapter.first}–${chapter.last}</span>${text(chapter.title)}</h3><div class="campaign-path" style="height:${height}px"><svg class="campaign-trail" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true"><path d="${path}"/></svg>${stages.map((level,index)=>{
+    const world=campaignWorld(chapter.id),worldStart=chapter.id===1||campaignWorld(chapter.id-1)!==world;
+    return `<section class="campaign-chapter" data-world="${world}" data-world-start="${worldStart}" data-chapter="${chapter.id}" id="map-chapter-${chapter.id}" aria-labelledby="map-chapter-title-${chapter.id}">${campaignScenery(chapter.id,stages.length)}<div class="map-world-ground" aria-hidden="true"></div><div class="map-arrival-petals" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>${worldStart?`<div class="map-world-gateway" aria-hidden="true"><span></span><span></span><b>${campaignWorldName(chapter.id,save.language)}</b></div>`:''}<h3 id="map-chapter-title-${chapter.id}"><span>${chapter.first}–${chapter.last}</span>${text(chapter.title)}</h3><div class="campaign-path" style="height:${height}px"><svg class="campaign-trail" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true"><path class="trail-earth" d="${path}"/><path class="trail-edge" d="${path}"/><path class="trail-surface" d="${path}"/><path class="trail-gravel" d="${path}"/></svg>${stages.map((level,index)=>{
       const completed=save.completed.includes(level.id),locked=level.id>save.highestLevel,here=level.id===current;
       const name=`${text('level')} ${level.id} · ${text(status(level.id))}${here?' · '+text('previewCurrent'):''}`;
       return `<div class="campaign-stop" style="left:${positions[index%positions.length]}%;top:${index*90}px"><button id="map-stage-${level.id}" data-level="${level.id}" ${locked?'disabled':''} class="campaign-node ${completed?'completed':''} ${here?'current':''}" ${here?'aria-current="step"':''} aria-label="${name}"><span>${level.id}</span>${locked?icon('lock',16):completed?`<i>${icon('star',15)}</i>`:''}</button>${here?`<span id="map-current-pip" class="campaign-pip" aria-hidden="true"><span class="pip-face"><img src="/assets/pip-idle-open-v2.webp" alt=""/></span></span><span class="campaign-breeze" aria-hidden="true">${[0,1,2,3].map(()=>`<span class="campaign-leaf">${icon('leaf',12)}</span>`).join('')}</span>`:''}</div>`;
@@ -1221,6 +1222,7 @@ function renderViews(grew=false){
   $('#map-view').innerHTML=renderCampaignMap();
   mapScenery=createCampaignScenery($('#campaign-scroll'),id=>{
     if(route!=='map')return;selectedChapter=id;$<HTMLSelectElement>('#map-chapter-select').value=String(id);
+    $('#map-world-name').textContent=campaignWorldName(id,save.language);
   });
   const campaignScroll=$('#campaign-scroll');
   const rememberMapScroll=()=>{if(campaignScroll.isConnected&&route==='map'&&!$('#map-view').hidden)mapScrollOffset=campaignScroll.scrollTop;};

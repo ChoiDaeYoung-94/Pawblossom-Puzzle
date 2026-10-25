@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-25",
+  "tool": "built-in image_gen",
+  "authoring": "Pawblossom Puzzle 자체 생성. 다른 게임 그림 참조/복제 없음. 원본 PNG 그대로 복사, 자르기/재인코딩 없음.",
+  "assets": [
+    {
+      "file": "public/assets/campaign/level-island-v1.png",
+      "source": "exec-b351d214-02cc-43b8-a654-a9c7a2d28105.png",
+      "bytes": 1494668,
+      "sha256": "4017b3f9d85629d175dc86e96071119a132d392b12584d93f599f8d11e6a71c6",
+      "size": [
+        1506,
+        1044
+      ],
+      "mode": "RGBA",
+      "rawCopy": true
+    },
+    {
+      "file": "public/assets/campaign/worlds-atlas-v1.png",
+      "source": "exec-c6528271-4bb0-479a-83a4-4902c4051422.png",
+      "bytes": 3977631,
+      "sha256": "861261a14b16993fdb332714ff9382d7eb95b2f766960f8ef26da066e1e54ac1",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGB",
+      "rawCopy": true
+    }
+  ],
+  "prompts": [
+    "ONE original cozy garden match-three round grass-covered stepping island, 30-degree overhead, empty limestone inset medallion, layered ochre soil/stone ledges, two daisies, premium hand-painted 3D mobile-game material, transparent background. No numbers/text/logos/characters/UI/other assets.",
+    "Original square game environment atlas, four exact equal quadrants: top-left turquoise pond garden, top-right peach blossom orchard, bottom-left jade mosswood, bottom-right violet lantern festival. Self-contained top-down square maps with clear centers and detailed side edges. No path/nodes/characters/text/UI/borders. Consistent premium painterly material. Requested2048 square, actual1254 square."
+  ],
+  "integration": "Atlas CSS200% four quadrants; old meadow retained. Runtime numbers/locked/completed controls separate. Actual final acceptance and low-end GPU cost not approved by image generation."
+}

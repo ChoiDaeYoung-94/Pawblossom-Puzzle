@@ -1,5 +1,6 @@
 import {describe,it,expect,vi} from 'vitest';
-import {createCampaignScenery,campaignScenery} from '../src/CampaignScenery';
+import {createCampaignScenery,campaignScenery,campaignWorld,campaignWorldName} from '../src/CampaignScenery';
+import {levels,chapters} from '../src/levels';
 import {existsSync} from 'node:fs';
 
 function setup(assetPaths:string[]=[]){
@@ -19,6 +20,30 @@ function setup(assetPaths:string[]=[]){
   return {controller,scroll,chapters,positions,frames,media,listeners,windowListeners,mediaListeners,selected,flush,event,images,createImage,sources};
 }
 describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
+  it('기존100레벨·11장ID를 보존하면서 큰 풍경은 정확히20레벨마다 바뀝니다',()=>{
+    const counts=new Map<string,number>();
+    for(const level of levels){const chapter=chapters.find(c=>c.first<=level.id&&c.last>=level.id)!;const world=campaignWorld(chapter.id);counts.set(world,(counts.get(world)??0)+1);}
+    expect([...counts.values()]).toEqual([20,20,20,20,20]);expect(campaignWorld(3)).toBe(campaignWorld(5));
+    expect(campaignWorldName(11,'ko')).toBe('등불 언덕 · 81–100');expect(campaignWorldName(1,'en')).toBe('Blossom Meadow · 1–20');
+  });
+  it('같은 풍경 내부에서는 재입장하지 않고 큰 풍경 경계에만 일회 반응하며 숨김·모션 감소는 지웁니다',()=>{
+    const h=setup();h.controller.setActive(true);h.flush();expect(h.chapters.every(c=>!c.dataset.arrival)).toBe(true);
+    Object.assign(h.positions[0],{top:-950,bottom:0});Object.assign(h.positions[1],{top:0,bottom:950});h.event(h.listeners,'scroll');h.flush();expect(h.scroll.dataset.world).toBe('meadow');expect(h.chapters[1].dataset.arrival).toBeUndefined();
+    Object.assign(h.positions[1],{top:-950,bottom:0});Object.assign(h.positions[2],{top:0,bottom:950});h.event(h.listeners,'scroll');h.flush();expect(h.scroll.dataset.world).toBe('brook');expect(h.chapters[2].dataset.arrival).toBe('a');
+    h.event(h.listeners,'scroll');h.flush();expect(h.chapters[2].dataset.arrival).toBe('a');h.media.matches=true;h.event(h.mediaListeners,'change');h.flush();expect(h.chapters[2].dataset.arrival).toBeUndefined();
+    h.controller.setActive(false);expect(h.frames.size).toBe(0);h.controller.dispose();expect(h.scroll.dataset.world).toBeUndefined();
+  });
+  it('화면 절반 경계의 작은 왕복으로 구간 선택이 흔들리지 않습니다',()=>{
+    const h=setup();h.controller.setActive(true);h.flush();Object.assign(h.positions[0],{top:-660,bottom:290});Object.assign(h.positions[1],{top:290,bottom:1240});h.event(h.listeners,'scroll');h.flush();expect(h.selected).toHaveBeenLastCalledWith(1);
+    Object.assign(h.positions[0],{top:-750,bottom:200});Object.assign(h.positions[1],{top:200,bottom:1150});h.event(h.listeners,'scroll');h.flush();expect(h.selected).toHaveBeenLastCalledWith(2);
+  });
+  it('진입한 장을 완전히 벗어났다가 같은 물가의 이전 장으로 돌아와도 입장을 재생하지 않습니다',()=>{
+    const h=setup();h.chapters.forEach((c,i)=>c.dataset.chapter=String(i+2));h.controller.setActive(true);h.flush();
+    Object.assign(h.positions[0],{top:-950,bottom:0});Object.assign(h.positions[1],{top:0,bottom:950});h.event(h.listeners,'scroll');h.flush();expect(h.chapters[1].dataset.arrival).toBe('a');
+    Object.assign(h.positions[1],{top:-950,bottom:0});Object.assign(h.positions[2],{top:0,bottom:950});h.event(h.listeners,'scroll');h.flush();expect(h.chapters[1].dataset.arrival).toBeUndefined();
+    Object.assign(h.positions[1],{top:0,bottom:950});Object.assign(h.positions[2],{top:950,bottom:1900});h.event(h.listeners,'scroll');h.flush();expect(h.chapters[1].dataset.arrival).toBeUndefined();expect(h.scroll.dataset.arrival).toBe('a');
+    h.controller.setActive(false);expect(h.scroll.dataset.arrival).toBeUndefined();
+  });
   it('이벤트를 한 프레임으로 모으고 실제 보이는 장만 움직이며 가까운 장을 알립니다',()=>{
     const h=setup();h.controller.setActive(true);h.event(h.listeners,'scroll');h.event(h.listeners,'scroll');expect(h.frames.size).toBe(1);h.flush();
     expect(h.chapters.map(c=>c.dataset.sceneryActive)).toEqual(['true','false','false']);expect(h.selected).toHaveBeenLastCalledWith(1);

@@ -15,7 +15,7 @@ import {specialTileArt,specialArtKinds,specialBodyKey,specialBodyPath} from '../
 import * as paintedGardenArt from '../src/GardenPaintedArt';
 import * as gardenStructureArt from '../src/GardenStructureArt';
 import * as boardDisplay from '../src/BoardDisplay';
-import {campaignScenery} from '../src/CampaignScenery';
+import {campaignScenery,campaignWorld,campaignWorldName} from '../src/CampaignScenery';
 
 import {gardenGoals,goalNextStep,nextGardenGoal} from '../src/GardenGoals';
 import {previewGardenPreset} from '../src/GardenPresets';
@@ -223,7 +223,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     cloneSnapshot,prepareShuffle,
     showResultPip:()=>{resultArtCalls++;},
     RoundFeedback:FeedbackStub,
-    campaignScenery,
+    campaignScenery,campaignWorld,campaignWorldName,
     createCampaignScenery:()=>{const controller={disposed:false,active:false,setActive(value:boolean){if(!this.disposed)this.active=value;},dispose(){this.disposed=true;this.active=false;}};sceneryControllers.push(controller);return controller;},
     createPipIdle:(pip:ElementStub,_createImage?:()=>HTMLImageElement,alignment:'center'|'bottom'='center')=>{
       const idle={pip,alignment,disposed:false,disposals:0,
