@@ -41,20 +41,20 @@ export class BoardScene extends Phaser.Scene {
     this.ready=false;this.finished=false;this.busy=false;this.motionReduced=reducedMotion();
     configureBoardCamera(this.cameras.main);
     this.effects.clear();this.effects=new BoardEffects(this);
-    this.cameras.main.setBackgroundColor('#284c42');
+    this.cameras.main.setBackgroundColor('#e5d5ef');
     const g=this.add.graphics();
-    g.fillStyle(0x172f2a,1);g.fillRoundedRect(4,7,472,470,25);
-    g.fillStyle(0xa98a50,1);g.fillRoundedRect(4,3,472,471,25);
-    g.fillStyle(0x527b66,1);g.fillRoundedRect(9,8,462,461,21);
-    g.lineStyle(2,0xf5e5b8,.9);g.strokeRoundedRect(6,5,468,467,23);
+    g.fillStyle(0x493958,1);g.fillRoundedRect(4,7,472,470,25);
+    g.fillStyle(0xc8909f,1);g.fillRoundedRect(4,3,472,471,25);
+    g.fillStyle(0x8c79aa,1);g.fillRoundedRect(9,8,462,461,21);
+    g.lineStyle(2,0xffedf3,.9);g.strokeRoundedRect(6,5,468,467,23);
     for(let r=0;r<8;r++)for(let c=0;c<8;c++){
       if(!this.engine.isActive({row:r,col:c}))continue;
       const x=PAD+c*CELL,y=PAD+r*CELL;
-      g.fillStyle(0x203f34,.5);g.fillRoundedRect(x+2,y+4,52,51,11);
-      g.fillStyle((r+c)%2?0xc6d8be:0xdce5cc,1);g.fillRoundedRect(x+2,y+2,52,49,11);
-      g.fillStyle(0xfffbea,.35);g.fillRoundedRect(x+5,y+4,46,13,8);
-      g.lineStyle(1,0xf9ffe9,.55);g.strokeRoundedRect(x+2,y+2,52,49,11);
-      g.fillStyle(0x365542,.13);g.fillRoundedRect(x+12,y+36,32,8,4);
+      g.fillStyle(0x604473,.5);g.fillRoundedRect(x+2,y+4,52,51,11);
+      g.fillStyle((r+c)%2?0xf0e5f8:0xfff5e6,1);g.fillRoundedRect(x+2,y+2,52,49,11);
+      g.fillStyle(0xffffff,.35);g.fillRoundedRect(x+5,y+4,46,13,8);
+      g.lineStyle(1,0xffffff,.55);g.strokeRoundedRect(x+2,y+2,52,49,11);
+      g.fillStyle(0x654b72,.13);g.fillRoundedRect(x+12,y+36,32,8,4);
     }
     this.paint(this.engine.board);
     this.paintLeaves(this.engine.leaves);
@@ -159,7 +159,7 @@ export class BoardScene extends Phaser.Scene {
     this.cursorMark??=this.add.graphics().setDepth(20);
     // 선택의 안쪽 체크 테두리와 구분되는 바깥 이중 테두리와 네 모서리입니다.
     const g=this.cursorMark.clear();g.lineStyle(5,0xfffdf5);g.strokeRoundedRect(x-26,y-26,52,52,9);
-    g.lineStyle(2,0x294f40);g.strokeRoundedRect(x-26,y-26,52,52,9);
+    g.lineStyle(2,0x69458b);g.strokeRoundedRect(x-26,y-26,52,52,9);
     for(const dx of [-1,1])for(const dy of [-1,1]){g.lineBetween(x+dx*19,y+dy*23,x+dx*23,y+dy*23);g.lineBetween(x+dx*23,y+dy*23,x+dx*23,y+dy*19);}
   }
   private position(x:number,y:number): Position|undefined {
@@ -185,8 +185,8 @@ export class BoardScene extends Phaser.Scene {
     const {x,y}=this.point(this.selected);
     const g=(this.selectionMark??=this.add.graphics().setDepth(21).setName('board-selection')).clear();
     g.lineStyle(5,0xfffdf5);g.strokeRoundedRect(x-21,y-21,42,42,7);
-    g.lineStyle(2,0x294f40);g.strokeRoundedRect(x-21,y-21,42,42,7);
-    g.lineStyle(4,0x294f40);g.lineBetween(x+7,y-15,x+11,y-11);g.lineBetween(x+11,y-11,x+18,y-18);
+    g.lineStyle(2,0x69458b);g.strokeRoundedRect(x-21,y-21,42,42,7);
+    g.lineStyle(4,0x69458b);g.lineBetween(x+7,y-15,x+11,y-11);g.lineBetween(x+11,y-11,x+18,y-18);
   }
   private clearHint(){
     this.hintMark?.clear();
@@ -428,7 +428,7 @@ export class BoardScene extends Phaser.Scene {
     if(move){const {a,b}=move,reduced=this.syncMotion();this.resetHint();
       if(reduced){
         const g=(this.hintMark??=this.add.graphics().setDepth(19).setName('board-hint')).clear();
-        g.lineStyle(3,0x294f40);
+        g.lineStyle(3,0x69458b);
         for(const p of [a,b]){const {x,y}=this.point(p);g.strokeRoundedRect(x-23,y-23,46,46,8);g.lineBetween(x-5,y+18,x+5,y+18);}
         const start=this.point(a),end=this.point(b);g.lineBetween(start.x,start.y,end.x,end.y);
       }else {this.hintPieces=[this.pieces[a.row][a.col]!,this.pieces[b.row][b.col]!];this.tweens.add({targets:this.hintPieces,scale:1.1,duration:450,yoyo:true,repeat:1,ease:'Sine.easeInOut'});}
