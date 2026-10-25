@@ -9,6 +9,15 @@ export function campaignWorldName(chapter:number,language:'ko'|'en'){
   const names=language==='ko'?['꽃바람 초원','햇살 물가','꽃잎 과수원','이끼 숲길','등불 언덕']:['Blossom Meadow','Sunlit Brook','Petal Orchard','Mosswood Trail','Lantern Hills'];
   return `${names[index]} · ${index*20+1}–${index*20+20}`;
 }
+/** 번호/상태를 그림에 굽지 않습니다. 원본비율 유지·기존 owner 해독 게이트를 공유합니다. */
+export function campaignIsland(chapter:number){
+  const index=CAMPAIGN_WORLDS.indexOf(campaignWorld(chapter))-1;
+  const box=index<0?'0 0 1506 1044':`${index%2*627} ${Math.floor(index/2)*627} 627 627`;
+  return `<svg class="campaign-island" viewBox="0 0 136 100" aria-hidden="true"><svg x="${index<0?0:18}" width="${index<0?136:100}" height="100" viewBox="${box}" preserveAspectRatio="xMidYMid meet" overflow="hidden"><image class="map-painted-image" data-map-src="/assets/campaign/${index<0?'level-island-v1.png':'level-worlds-atlas-v1.png'}" width="${index<0?1506:1254}" height="${index<0?1044:1254}"/></svg></svg>`;
+}
+export function campaignGatewayBranches(){
+  return [0,1].map(side=>`<svg class="map-gateway-branch map-gateway-branch-${side?'right':'left'}" viewBox="${side*887} 0 887 887" preserveAspectRatio="xMidYMid meet"><image class="map-painted-image" data-map-src="/assets/campaign/gateway-branches-v1.png" width="1774" height="887"/></svg>`).join('');
+}
 /** 자체 제작한 작은 풍경입니다. 진행·난수·저장에 관여하지 않는 장식 레이어입니다. */
 export function campaignScenery(chapter:number,stageCount=10){
   const world=campaignWorld(chapter),water=world==='brook',festival=world==='lantern',hills=world==='woodland';
