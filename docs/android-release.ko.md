@@ -1,4 +1,20 @@
-## 최신 로컬 APK와 전달 미완료 · 2026-10-25 · #73
+## 최신 통합 APK · 지도5풍경/발판/7곡 · 2026-10-25 · #73
+
+현재 파일은 **`Pawblossom-Puzzle-v0.1.7-2026-10-25-e00ccf6-debug.apk`**입니다. 게임 소스 `e00ccf64808ee31a4b9ef6a584b5145e26f991c8`/PR326·328·330·332를 포함하며 정확한 최초 main [CI40163011024](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40163011024)의 Node22/24가 모두 성공했습니다.20레벨5풍경·구간 입장/내부 스크롤·자체4개 그림/풍경별 발판·7곡/마디 전환·짧은 세로 첫 발판을 포함합니다. 기존100레벨/저장/경제/출력 믹스·효과음은 유지합니다.
+
+APK0.1.7/code8·**25,397,797바이트**, SHA256 **`46daf0c296588a6f7ef9d77b5adf2ba0ad01c0d67b8650dfe3aa798d7961da0b`**입니다. testing 웹92개+정확한 빈 cordova2개=public94개를 전수 SHA로 확인했고, META 포함 비웹536개는7c32와 동일합니다. ZIP 중복0·v2/전체 signer 정확1·기존 서명 일치·min24/target36/package를 검증했습니다. production dist84/Android public86을 각각 전수 SHA로 복원했으며 Git clean입니다. 새 native JUnit/lint 실행은 없고 native 바이트 불변 검증과 구분합니다. 파일·고유 checksum·검증 원문은 저장소 밖 `Pawblossom-builds/2026-10-25-e00ccf6`에 보존합니다.
+
+**Drive 업로드 완료 / 재다운로드 해시 미검증**입니다. 기존 Chrome 작업 계정 `doeud1410@gmail.com`과 [기존 테스트 폴더](https://drive.google.com/drive/u/1/folders/1dUUwNPZXmSpX8z0t1GsLjbnHuYI-MSHm)를 확인한 뒤 위 APK와121바이트 checksum을 추가했습니다. 실제 `항목2개업로드완료`·진행100/파일 행24.2MB·121바이트/소유자 나를 확인했고, APK 행의 실제 `data-id`는 `1tTs2OE0ozyDl2oxnu8DLHOCBgmY-ZvYY`입니다. 이전7c32 두 파일·공유 설정은 변경하지 않았습니다. 새 Share 대화상자의 제한됨 상태는 이번에 별도 확인하지 않았습니다.
+
+파일 메뉴의 재다운로드 시도에서 브라우저30초 timeout/세션 초기화 뒤 동일 탭은 `Debugger unattached`를 반환했습니다. 문서화된 동일 브라우저 재연결 뒤에도 남았고, 다운로드 대상 파일은 실제로 없습니다. 연결 앱의 다른 계정으로 확인한 해당 파일 메타데이터도404여서 우회하지 않았습니다. 재다운로드 SHA 일치·새 Drive 스크린샷을 완료로 표시하지 않으며 실제 AX 업로드 완료 관측과 원문은 저장소 밖 `integration-20261025/drive-delivery.json`에 보존합니다.
+
+개발 브라우저의390×844 KO/EN,320×568 영어·모션 감소,844×390 가로·입구/발판·초점/취소/지도 복귀·무오류를 검수했습니다. 이후 최종 복원 production 웹을 별도 localhost5193에서 열어390×844 한국어/모션 감소로5풍경의 새 재질·그림 준비/구간 이름·100개 버튼·경고/오류0을 확인했습니다(`integration-20261025/final-production-browser.json`, `prod-*-ko-reduced.png`). 이 정적5풍경 행렬을 모션/Native 검수로 합산하지 않으며 임시 탭/서버·모션/뷰포트를 복구했습니다. 새 곡의 실제 OfflineAudioContext 범위는 기존 오디오 기록에 있습니다.
+
+**최신 APK의 LD/실폰 입력·저장 복귀·실청취/성능은 미검증**입니다. LD0 홈은 읽었으나 ADB는 offline이고, 기존 앱 실행 명령 종료0 뒤 캡처가 다른 창을 반환해 한 번 재선택 후 중단했습니다. 최신 APK 설치를 수행하거나 그 명령을 최신 설치/기동 증거로 합산하지 않았습니다. 다른 앱/인스턴스·보안 설정은 건드리지 않았습니다. #122 원인·실광고/구매/스토어는 미완료입니다.
+
+## 이전 로컬06 후보와 당시 전달 미완료 이력 · 2026-10-25 · #73
+
+아래는06 후보 당시 기록이며 현재 e00 업로드 상태와 구분합니다.
 
 최신 로컬 후보는 **`Pawblossom-Puzzle-v0.1.7-2026-10-25-06e14a9-debug.apk`**입니다. 저장소 밖 `Pawblossom-builds/2026-10-25-06e14a9`에 APK·같은 이름의 `.sha256`·검증 기록을 보존했습니다. **Drive 업로드·재다운로드는 미완료**이며 아래7c32d1f가 최근 Drive 전달본입니다. 연결 계정이 승인된 작업 계정과 다르고 기존 테스트 폴더가404여서 다른 계정/폴더에 올리거나 공유 범위를 바꾸지 않았습니다. Work 로컬 브라우저 비활성도 우회하지 않았습니다.
 
