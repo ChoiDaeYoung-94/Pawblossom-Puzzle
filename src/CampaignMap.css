@@ -141,3 +141,13 @@
 @keyframes gateway-open-left-b{from{transform:rotate(12deg)}to{transform:rotate(0)}}
 @keyframes gateway-open-right-b{from{transform:rotate(-12deg)}to{transform:rotate(0)}}
 @media(prefers-reduced-motion:reduce){.map-gateway-branch{animation:none!important;transform:none!important}}
+
+/* 구간 안 그림과 바깥 액자가 서로 다른 시간대처럼 보이지 않도록 같은 팔레트를 잇습니다. */
+#map-view::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:0;background-color:#dce9ba;background-image:radial-gradient(ellipse at 20% 0%,#fffdf470,transparent 65%);transition:background-color .7s ease-out,opacity .7s ease-out}
+#map-view:has(.campaign-scroll[data-world="brook"])::after{opacity:1;background-color:#bedbd5}
+#map-view:has(.campaign-scroll[data-world="orchard"])::after{opacity:1;background-color:#e8cfbf}
+#map-view:has(.campaign-scroll[data-world="woodland"])::after{opacity:1;background-color:#abc5ae}
+#map-view:has(.campaign-scroll[data-world="lantern"])::after{opacity:1;background-color:#c5b9d5}
+@media(prefers-reduced-motion:reduce){#map-view::after{transition:none}}
+/* 짧은 세로 화면에서는 같은 구간명이 상단에 있으므로 큰 입구 대신 첫 발판을 바로 보여줍니다. */
+@media(orientation:portrait) and (max-height:640px){.campaign-chapter[data-world-start="true"]{padding-top:14px}.map-world-gateway{display:none}}
