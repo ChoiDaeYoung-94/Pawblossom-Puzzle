@@ -8,6 +8,9 @@ import '@fontsource/nunito/latin-800.css';
 import '@fontsource/fraunces/latin-600.css';
 import './style.css';
 import './CampaignMap.css';
+import './CampaignMilestone.css';
+import {campaignClearCount,campaignProgress,campaignMilestone} from './CampaignProgress';
+import {campaignMilestoneCard,milestoneCopy} from './CampaignMilestone';
 import './PuzzlePresentation.css';
 import './PipIdle.css';
 import './PipTending.css';
@@ -67,6 +70,8 @@ let round=0;
 let boardPending=false;
 let roundEnded=false, resultShown=false, firstReward=false;
 let resultWon:boolean|undefined;
+let resultWorld:ReturnType<typeof campaignMilestone>;
+let resultWorldScenery:ReturnType<typeof createCampaignScenery>|undefined;
 let noticeKey:TextKey|undefined, boardNoticeKey:TextKey|undefined;
 let tutorialPage=0;
 let tutorialIntent:'onboarding'|'help'='onboarding';
@@ -335,6 +340,10 @@ function syncPipActivity(){
   const mapActive=active&&route==='map';
   mapPipIdle?.setActive(mapActive);$('#map-view').dataset.motionActive=String(mapActive);
   mapScenery?.setActive(mapActive);
+  const resultDialog=$<HTMLDialogElement>('#result-dialog');
+  const worldActive=nativeActive&&!document.hidden&&!careDemo&&!boardPending&&!testAds?.pausesGame&&!testBilling?.pausesGame&&resultDialog.open&&Boolean(resultWorld)&&roundEnded&&resultShown&&!previewDialog.open&&!resourceDialog.open&&!spaceDialog.open&&!lookDialog.open;
+  if(worldActive&&!resultWorldScenery){const picture=resultDialog.querySelector<HTMLElement>('#result-world-picture');if(picture)resultWorldScenery=createCampaignScenery(picture,()=>{});}
+  resultDialog.dataset.worldActive=String(worldActive);resultWorldScenery?.setActive(worldActive);
   syncCarePipActivity();
 }
 function previewEnvironment(){return !careDemo&&nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!otherModal()&&!boardPending&&Boolean(scene?.canLeave())&&!resultTimer;}
@@ -514,6 +523,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   if(stagePreview)closeStagePreview(false);
   abandonRewardContinue();
   if(!Number.isInteger(id)||id<1||id>levels.length)return;
+  resultWorldScenery?.dispose();resultWorldScenery=undefined;resultWorld=undefined;
   clearResumeNotice();
   clearTimeout(resultTimer);resultTimer=undefined;round++;
   roundEnded=false;resultShown=false;firstReward=false;resultWon=undefined;clearBoardNotice();continueUsed=false;paidShuffleUsed=false;
@@ -723,15 +733,23 @@ function finish(won:boolean){
   settleRound(won);resultShown=true;resultWon=won;
   const first=firstReward;
   audio.play(won?'win':'lose');
-  const done=won&&!testingLevel&&currentLevel===LEVEL_COUNT;
+  const done=won&&!testingLevel&&campaignClearCount(save.completed)===LEVEL_COUNT&&(firstReward||currentLevel===LEVEL_COUNT);
   const testContinue=TEST_TOOLS_ENABLED&&testingLevel&&!won&&!continueUsed&&moves===0;
   const dialog=$<HTMLDialogElement>('#result-dialog');
-  dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}${testContinue?' result-with-continue':''}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><span class="result-character"><img class="result-pip" src="/assets/pip.png" decoding="async" alt=""/></span><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line" id="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow" id="result-level">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p>${first?`<div class="result-rewards"><span>${icon('star',20)}<span class="sr-only" data-t="stars">${text('stars')}</span> +1</span><span>${icon('coin',20)}<span class="sr-only" data-t="coins">${text('coins')}</span> +40</span></div>`:''}<button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${androidBillingEntry&&!won&&!continueUsed&&moves===0?`<button class="result-test-button" id="result-buyer-continue" hidden>${text('buyerContinueTest')}</button>`:''}${testContinue?`<button class="result-test-button" id="result-continue" aria-describedby="result-continue-note">${text('testContinue')}</button><p id="result-continue-note">${text('testContinueNote')}</p>`:''}${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
+  resultWorldScenery?.dispose();resultWorldScenery=undefined;resultWorld=campaignMilestone(save.completed,currentLevel,first,testingLevel,won);
+  dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}${testContinue?' result-with-continue':''}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><span class="result-character"><img class="result-pip" src="/assets/pip.png" decoding="async" alt=""/></span><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line" id="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow" id="result-level">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p>${first?`<div class="result-rewards"><span>${icon('star',20)}<span class="sr-only" data-t="stars">${text('stars')}</span> +1</span><span>${icon('coin',20)}<span class="sr-only" data-t="coins">${text('coins')}</span> +40</span></div>`:''}${campaignMilestoneCard(save.language,resultWorld,round)}<button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${androidBillingEntry&&!won&&!continueUsed&&moves===0?`<button class="result-test-button" id="result-buyer-continue" hidden>${text('buyerContinueTest')}</button>`:''}${testContinue?`<button class="result-test-button" id="result-continue" aria-describedby="result-continue-note">${text('testContinue')}</button><p id="result-continue-note">${text('testContinueNote')}</p>`:''}${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
   dialog.showModal();syncActivity();
   $('#result-next').focus();
-  $('#result-next').onclick=()=>{dialog.close();startLevel(won?Math.min(LEVEL_COUNT,currentLevel+1):currentLevel,testingLevel,undefined,{focusBoard:true});switchView('puzzle');};
-  $('#result-home').onclick=()=>{dialog.close();switchView('map');};
-  if(testingLevel)$('#result-test').onclick=()=>{dialog.close();showTestPicker(true);};
+  const resultRound=round,resultScene=scene,resultLevel=currentLevel,resultTesting=testingLevel;
+  const canNavigate=(button:HTMLButtonElement)=>!careDemo&&!puzzleProcessing&&nativeActive&&!document.hidden&&!boardPending&&resultTimer===undefined
+    &&roundEnded&&resultShown&&resultWon===won&&round===resultRound&&scene===resultScene&&currentLevel===resultLevel&&testingLevel===resultTesting
+    &&game.scene.getScene('Board')===resultScene&&dialog.open&&button.isConnected&&!button.disabled&&$('#'+button.id)===button
+    &&!previewDialog.open&&!resourceDialog.open&&!spaceDialog.open&&!lookDialog.open&&!$<HTMLDialogElement>('#tutorial-dialog').open
+    &&!(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)&&!billingModal()&&!testAds?.busy&&!testAds?.pausesGame&&!testBilling?.busy&&!testBilling?.pausesGame&&!rewardedContinue?.preparing;
+  const next=$<HTMLButtonElement>('#result-next'),home=$<HTMLButtonElement>('#result-home');
+  next.onclick=()=>{if(!canNavigate(next))return;dialog.close();startLevel(won&&!done?Math.min(LEVEL_COUNT,currentLevel+1):currentLevel,testingLevel,undefined,{focusBoard:true});switchView('puzzle');};
+  home.onclick=()=>{if(!canNavigate(home))return;dialog.close();switchView('map');};
+  if(testingLevel){const picker=$<HTMLButtonElement>('#result-test');picker.onclick=()=>{if(!canNavigate(picker))return;dialog.close();showTestPicker(true);};}
   const continueButton=dialog.querySelector<HTMLButtonElement>('#result-continue');
   if(continueButton){const activeRound=round,activeScene=scene;continueButton.onclick=()=>{if(!testAds?.busy&&!rewardedContinue?.preparing)continueTestRound(activeRound,activeScene,continueButton);};}
   const buyerButton=dialog.querySelector<HTMLButtonElement>('#result-buyer-continue');
@@ -835,13 +853,14 @@ function renderRewardContinue(){
 // 문구만 갱신하여 결과 보상·타이머·아트 요청·버튼·초점을 유지합니다.
 function updateResultCopy(){
   if(resultWon===undefined)return;
-  const won=resultWon,done=won&&!testingLevel&&currentLevel===LEVEL_COUNT;
+  const won=resultWon,done=won&&!testingLevel&&campaignClearCount(save.completed)===LEVEL_COUNT&&(firstReward||currentLevel===LEVEL_COUNT);
   $('#result-pip-line').textContent=text(won?'pipWin':'pipRetry');
   $('#result-level').textContent=`${text('level')} ${currentLevel}${testingLevel?' · '+text('testPick'):''}`;
   $('#result-title').textContent=text(done?'complete':won?'win':'lose');
   $('#result-description').textContent=text(testingLevel?'testResultDesc':done?'completeDesc':won?(firstReward?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT));
   $('#result-next').innerHTML=text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')+icon('arrow',19);
   $('#result-home').textContent=text('home');
+  if(resultWorld){const copy=milestoneCopy(save.language,resultWorld);for(const [id,value] of [['title',copy.title],['name',copy.name],['note',copy.note]]){const node=document.querySelector<HTMLElement>('#result-world-'+id);if(node)node.textContent=value;}}
   if(testingLevel)$('#result-test').textContent=text('testOther');
   const continueButton=$<HTMLDialogElement>('#result-dialog').querySelector<HTMLButtonElement>('#result-continue');
   if(continueButton){continueButton.textContent=text('testContinue');$('#result-continue-note').textContent=text('testContinueNote');}
@@ -1238,11 +1257,21 @@ function revealMapStage(){
   target?.scrollIntoView?.({block:'center',behavior:'auto'});
   mapScrollOffset=$('#campaign-scroll').scrollTop;
 }
+function worldProgressText(chapterId:number){
+  const chapter=chapters.find(chapter=>chapter.id===chapterId);if(!chapter)return '';
+  const progress=campaignProgress(save.completed,chapter.first)!;
+  return text('worldProgress').replace('{done}',String(progress.done)).replace('{total}',String(progress.total));
+}
+function updateMapWorldProgress(chapterId:number){
+  const node=document.querySelector<HTMLElement>('#map-world-progress'),chapter=chapters.find(chapter=>chapter.id===chapterId);if(!node||!chapter)return;
+  const value=worldProgressText(chapterId);if(node.textContent!==value)node.textContent=value;
+  const progress=campaignProgress(save.completed,chapter.first)!;node.classList.toggle('complete',progress.done===progress.total);
+}
 function renderCampaignMap(){
   const current=mapCurrentLevel(),active=hasRoundProgress();
   const positions=[50,69,62,38,29,46,68,60,36,50];
   const status=(id:number)=>id>save.highestLevel?'levelLocked':save.completed.includes(id)?'levelCompleted':'mapAvailable';
-  return `<div class="campaign-heading"><div><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('mapJourney')}</h2><p id="map-world-name" class="campaign-world-name">${campaignWorldName(selectedChapter,save.language)}</p></div><button id="map-locate" class="map-locate" aria-label="${text('mapLocate')}">${icon('paw',20)}<span>${text('mapLocate')}</span></button></div><div class="campaign-chapters"><select id="map-chapter-select" aria-label="${text('chapterSelect')}">${chapters.map(chapter=>`<option value="${chapter.id}" ${chapter.id===selectedChapter?'selected':''}>${chapter.first}–${chapter.last} · ${text(chapter.title)}</option>`).join('')}</select></div><div id="campaign-scroll" class="campaign-scroll" aria-label="${text('mapStages')}">${chapters.map(chapter=>{
+  return `<div class="campaign-heading"><div><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('mapJourney')}</h2><div class="campaign-world-line"><p id="map-world-name" class="campaign-world-name">${campaignWorldName(selectedChapter,save.language)}</p><span id="map-world-progress" class="campaign-world-progress">${worldProgressText(selectedChapter)}</span></div></div><button id="map-locate" class="map-locate" aria-label="${text('mapLocate')}">${icon('paw',20)}<span>${text('mapLocate')}</span></button></div><div class="campaign-chapters"><select id="map-chapter-select" aria-label="${text('chapterSelect')}">${chapters.map(chapter=>`<option value="${chapter.id}" ${chapter.id===selectedChapter?'selected':''}>${chapter.first}–${chapter.last} · ${text(chapter.title)}</option>`).join('')}</select></div><div id="campaign-scroll" class="campaign-scroll" aria-label="${text('mapStages')}">${chapters.map(chapter=>{
     const stages=levels.filter(level=>level.id>=chapter.first&&level.id<=chapter.last),height=stages.length*90;
     const points=stages.map((_,index)=>[positions[index%positions.length],45+index*90]);
     const path=points.map(([x,y],index)=>index?`Q ${points[index-1][0]} ${y} ${x} ${y}`:`M ${x} ${y}`).join(' ');
@@ -1263,7 +1292,7 @@ function renderCampaignMapView(){
   $('#map-view').innerHTML=renderCampaignMap();
   const observer=createCampaignScenery($('#campaign-scroll'),id=>{
     if(mapScenery!==observer||route!=='map')return;selectedChapter=id;$<HTMLSelectElement>('#map-chapter-select').value=String(id);
-    $('#map-world-name').textContent=campaignWorldName(id,save.language);syncMusicTheme();
+    $('#map-world-name').textContent=campaignWorldName(id,save.language);updateMapWorldProgress(id);syncMusicTheme();
   });
   mapScenery=observer;
   const campaignScroll=$('#campaign-scroll');
@@ -1413,7 +1442,8 @@ window.addEventListener('blur',()=>{if(lookPreview)closeLookPreview(false);if(sp
 window.addEventListener('resize',()=>{practiceInputs?.cancel();boardFeedback.cancel();});
 window.addEventListener('scroll',()=>boardFeedback.cancel(),{capture:true,passive:true});
 document.addEventListener('visibilitychange',()=>{syncActivity();if(testAds){renderAdDialog();if(!document.hidden)void testAds.refresh();}if(testBilling){renderBillingDialog();if(!document.hidden)void testBilling.refresh();}});
-window.addEventListener('pagehide',()=>{if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);boardFeedback.cancel();void testAds?.dispose();void testBilling?.dispose();});
+window.addEventListener('pageshow',()=>syncActivity());
+window.addEventListener('pagehide',()=>{resultWorldScenery?.dispose();resultWorldScenery=undefined;$('#result-dialog').dataset.worldActive='false';if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);boardFeedback.cancel();void testAds?.dispose();void testBilling?.dispose();});
 if(Capacitor.isNativePlatform()){
   void App.addListener('appStateChange',({isActive})=>{nativeRevision++;nativeActive=isActive;syncActivity();if(testAds){renderAdDialog();if(isActive)void testAds.refresh();}if(testBilling){renderBillingDialog();if(isActive)void testBilling.refresh();}}).then(async()=>{
     const revision=nativeRevision;
