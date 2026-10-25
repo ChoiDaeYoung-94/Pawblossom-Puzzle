@@ -91,8 +91,8 @@
 [data-scenery-active="true"][data-arrival="a"]>h3,[data-scenery-active="true"][data-arrival="a"]>.map-world-gateway{animation:world-welcome-a .7s ease-out}
 [data-scenery-active="true"][data-arrival="b"]>h3,[data-scenery-active="true"][data-arrival="b"]>.map-world-gateway{animation:world-welcome-b .7s ease-out}
 /* 손으로 경계를 넘겨 장의 처음이 화면 밖이어도 고정 제목에서 도착을 알립니다. */
-#map-view:has(.campaign-scroll[data-arrival="a"]) .campaign-world-name{animation:world-welcome-a .7s ease-out}
-#map-view:has(.campaign-scroll[data-arrival="b"]) .campaign-world-name{animation:world-welcome-b .7s ease-out}
+#map-view:has(.campaign-scroll[data-arrival="a"]) .campaign-world-name{animation:world-label-a .7s ease-out}
+#map-view:has(.campaign-scroll[data-arrival="b"]) .campaign-world-name{animation:world-label-b .7s ease-out}
 @keyframes world-petal-a{0%{translate:0 -10px;rotate:-30deg;opacity:0}18%{opacity:.9}100%{translate:22px 240px;rotate:155deg;opacity:0}}
 @keyframes world-petal-b{0%{translate:0 -10px;rotate:-30deg;opacity:0}18%{opacity:.9}100%{translate:22px 240px;rotate:155deg;opacity:0}}
 @keyframes world-welcome-a{0%{opacity:.4;translate:0 12px}100%{opacity:1;translate:0 0}}
@@ -225,3 +225,7 @@
 .campaign-chapter[data-scenery-art-ready="true"] .map-memory-painted{display:inline}
 .campaign-chapter[data-scenery-art-ready="true"] .map-memory-fallback{display:none}
 @media(prefers-reduced-motion:reduce){.map-memory{translate:none}}
+
+/* 줄바꿈된 완료 수와 겹치지 않도록 이름은 제자리에서 나타납니다. */
+@keyframes world-label-a{from{opacity:.35}to{opacity:1}}
+@keyframes world-label-b{from{opacity:.35}to{opacity:1}}
