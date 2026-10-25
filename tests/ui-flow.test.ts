@@ -1,3 +1,5 @@
+import * as campaignProgressModel from '../src/CampaignProgress';
+import * as campaignMilestoneUi from '../src/CampaignMilestone';
 import {LEVEL_COUNT,chapters as currentChapters} from '../src/levels';
 import { describe, expect, it } from 'vitest';
 import ts from 'typescript';
@@ -220,6 +222,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     Phaser: { Game: GameStub, AUTO: 0, Scale: { FIT: 0, CENTER_BOTH: 0 }, Core:{Events:{POST_RENDER:'postrender'}} },
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     specialTileArt,
+    ...campaignProgressModel,...campaignMilestoneUi,
     ...boardDisplay,
     gardenGoals,goalNextStep,nextGardenGoal,previewGardenPreset,gardenPresetPreview,pipTendingArt,...journeyModel,...journeyUI,
     createJourneyGardenArt:()=>({setActive(){},dispose(){}}),
@@ -1089,10 +1092,14 @@ describe('보상형 시험 이어하기 요청 문맥',()=>{
     expect(h.run('moves')).toBe(0);expect(h.run('game.paused')).toBe(true);h.nativeEvents.appStateChange({isActive:true});
     expect(h.run('moves')).toBe(5);expect(h.run('game.paused')).toBe(false);
   });
+  it('광고busy의비활성home은이탈하지않고동일문맥의정상보상을한번만받습니다',async()=>{
+    const x=await setup(),{h}=x,disk=h.disk();await x.start();const context=h.run('rewardedContinue');expect(h.element('#result-home').disabled).toBe(true);h.element('#result-home').onclick();expect(h.run('route')).toBe('puzzle');expect(h.element('#result-dialog').open).toBe(true);expect(h.run('rewardedContinue')).toBe(context);expect(h.run('moves')).toBe(0);expect(h.disk()).toEqual(disk);x.earned();const receipt=x.closed();expect(h.run('moves')).toBe(5);x.emit(receipt);expect(h.run('moves')).toBe(5);expect(h.disk()).toEqual(disk);
+  });
   it('결과 재방문의 새 문맥은 이전 earned/closed와 오래된 show를 지급하지 않습니다',async()=>{
     const x=await setup(),{h}=x,disk=h.disk();await x.start();x.earned();
     const oldContext=h.run('rewardedContinue'),oldShow=h.element('#result-ad-show').onclick;
-    h.element('#result-home').onclick();const oldReceipt=x.closed();expect(h.run('moves')).toBe(0);
+    // 광고 overlay의disabled home을누르는대신외부이탈을명시합니다. 늦은보상0기대는그대로입니다.
+    h.run("document.querySelector('#result-dialog').close();switchView('map')");expect(h.run('route')).toBe('map');expect(h.element('#result-dialog').open).toBe(false);expect(h.run('rewardedContinue')).toBeUndefined();const oldReceipt=x.closed();expect(h.run('moves')).toBe(0);
     h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(h.run('rewardedContinue')).not.toBe(oldContext);expect(h.run('rewardedContinue.requestId')).toBeUndefined();
     x.emit(oldReceipt);oldShow();expect(h.run('moves')).toBe(0);expect(h.run('continueUsed')).toBe(false);
     await x.start();x.earned();x.closed();expect(h.run('moves')).toBe(5);expect(h.run('continueUsed')).toBe(true);expect(h.disk()).toEqual(disk);
@@ -1633,7 +1640,7 @@ describe('100스테이지 진행과 선택 묶음',()=>{
   it('100번은101로이어지고500번만마지막이며구100재완료보상은없습니다',()=>{
     const app=mainHarness();app.run('startLevel(100);finish(true)');expect(app.stored().highestLevel).toBe(101);expect(app.element('#result-dialog').innerHTML).toContain('Next level');
     const first=app.stored();app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(101);app.run('startLevel(100);finish(true)');expect(app.stored().coins).toBe(first.coins);expect(app.stored().stars).toBe(first.stars);
-    app.run('startLevel(500);finish(true)');expect(app.stored().highestLevel).toBe(500);expect(app.element('#result-dialog').innerHTML).toContain('All 500 prototype levels');app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(500);
+    app.run('startLevel(500);finish(true)');expect(app.stored().highestLevel).toBe(500);expect(app.element('#result-dialog').innerHTML).not.toContain('You have cleared all 500 stages');expect(app.element('#result-dialog').innerHTML).toContain(t('en','winDesc'));app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(500);
     const before=app.stored();app.run('finish(true)');expect(app.stored()).toEqual({...before,inProgress:undefined});
   });
   it('일반 선택 묶음은 잠금을 유지하고 테스트 30번은 진행 기록을 바꾸지 않습니다',()=>{
@@ -1957,11 +1964,13 @@ describe('열린 화면의 언어 변경은 진행·결과 처리를 보존합�
     {id:2,won:true,test:false,replay:false,title:'win',description:'winDesc'},
     {id:1,won:true,test:false,replay:true,title:'win',description:'replayDesc'},
     {id:2,won:false,test:false,replay:false,title:'lose',description:'loseDesc'},
-    {id:500,won:true,test:false,replay:false,title:'complete',description:'completeDesc'},
+    {id:500,won:true,test:false,replay:false,title:'complete',description:'completeDesc',allPrior:true},
+    {id:500,won:true,test:false,replay:false,title:'win',description:'winDesc',allPrior:false},
     {id:30,won:true,test:true,replay:false,title:'win',description:'testResultDesc'},
     {id:30,won:false,test:true,replay:false,title:'lose',description:'testResultDesc'},
-  ])('$id번 성공=$won 시험=$test 재완료=$replay 결과 문구만 바꿉니다',({id,won,test,title,description})=>{
-    const app=mainHarness(false,false,true);app.run(`startLevel(${id},${test});finish(${won})`);
+  ])('$id번 성공=$won 시험=$test 재완료=$replay 결과 문구만 바꿉니다',({id,won,test,title,description,allPrior})=>{
+    const prior=allPrior?{version:1,language:'en',highestLevel:500,completed:Array.from({length:499},(_,i)=>i+1),stars:499,coins:19960,garden:0,music:true,sfx:true,tutorialSeen:true}:undefined;
+    const app=mainHarness(false,false,true,false,prior);app.run(`startLevel(${id},${test});finish(${won})`);
     const saved=app.stored(),memory=app.run('JSON.stringify({currentLevel,moves,score,collected,shuffles,firstReward,roundEnded,resultShown})');
     const scene=app.run('scene'),dialog=app.element('#result-dialog'),html=dialog.innerHTML,next=app.element('#result-next').onclick,home=app.element('#result-home').onclick;
     const sounds=app.run('audio.plays.slice()'),art=app.resultArtCalls();
@@ -2868,5 +2877,44 @@ describe('500판 여행 정원과 별·소유 확정 경계',()=>{
   });
   it('체험프리셋교체는모달/비활성에서차단하고낡은확정을정상저장으로넘기지않습니다',()=>{
     const h=mainHarness(false,false,true,false,initial());open(h);h.run('enterCareDemo();setCareDemoPreset(500)');h.element('#journey-restore').onclick();const stale=h.element('#space-preview-confirm').onclick;h.run('setCareDemoPreset(100)');expect(h.run('careDemo.preset')).toBe(500);h.element('#space-preview-cancel').onclick();h.run('setCareDemoPreset(100)');expect(h.run('careDemo.preset')).toBe(100);const stars=h.run('save.stars'),disk=h.disk();stale();expect(h.run('save.stars')).toBe(stars);h.run('document.hidden=true;setCareDemoPreset(500)');expect(h.run('careDemo.preset')).toBe(100);expect(h.disk()).toEqual(disk);
+  });
+});
+
+
+describe('풍경 완주와 결과 입력 소유권',()=>{
+  const prior=(n:number)=>({version:1,language:'en',highestLevel:Math.min(500,n+1),completed:Array.from({length:n},(_,i)=>i+1),stars:n,coins:n*40,garden:0,music:true,sfx:true,tutorialSeen:true});
+  it('실제기록의19→20완주는1별40코인외새보상없이한번표시하고재완료/시험/실패는표시하지않습니다',()=>{
+    const h=mainHarness(false,false,true,false,prior(19));h.run('startLevel(20);finish(true)');expect(h.stored().completed).toHaveLength(20);expect(h.stored().stars).toBe(20);expect(h.stored().coins).toBe(800);expect(h.element('#result-dialog').innerHTML).toContain('id="result-world-picture"');expect(h.run('resultWorld')).toEqual({index:0,first:1,last:20,done:20,total:20,journeyComplete:false});expect(h.run('worldProgressText(2)')).toBe('Cleared 20/20');
+    const before=h.stored();h.run('startLevel(20);finish(true)');expect(h.stored()).toEqual(before);expect(h.run('resultWorld')).toBeUndefined();expect(h.element('#result-dialog').innerHTML).not.toContain('result-world-picture');
+    for(const [test,won] of [[true,true],[false,false]]){const probe=mainHarness(false,false,true,false,prior(19));probe.run(`startLevel(20,${test});finish(${won})`);expect(probe.run('resultWorld')).toBeUndefined();expect(probe.stored().stars).toBe(19);expect(probe.stored().coins).toBe(760);}
+  });
+  it('500고유완주만최종문구/25번째엽서를표시하고언어갱신은같은owner·회차·소리를보존합니다',()=>{
+    const h=mainHarness(false,false,true,false,prior(499));h.run('startLevel(500);finish(true)');expect(h.stored().completed).toHaveLength(500);expect(h.stored().stars).toBe(500);expect(h.stored().coins).toBe(20000);expect(h.run('resultWorld.journeyComplete')).toBe(true);expect(h.element('#result-dialog').innerHTML).toContain(t('en','complete'));const controller=h.run('resultWorldScenery'),count=h.sceneryControllers.length,sounds=h.run('audio.plays.slice()'),round=h.run('round'),scene=h.run('scene');
+    h.run("changeLanguage('ko')");expect(h.element('#result-title').textContent).toBe(t('ko','complete'));expect(h.element('#result-world-title').textContent).toBe(t('ko','worldComplete'));expect(h.element('#result-world-name').textContent).toContain('481–500');expect(h.run('resultWorldScenery')).toBe(controller);expect(h.sceneryControllers).toHaveLength(count);expect(h.run('round')).toBe(round);expect(h.run('scene')).toBe(scene);expect(h.run('audio.plays')).toEqual(sounds);expect(h.stored().coins).toBe(20000);
+  });
+  it('완주엽서는비활성/닫힘에멈추고정원구매뒤동일결과복귀는다음입력을허용하며새판에서폐기합니다',()=>{
+    const h=mainHarness(false,false,true,false,prior(19));h.run('startLevel(20);finish(true)');const art=h.run('resultWorldScenery') as {active:boolean;disposed:boolean};expect(art.active).toBe(true);h.run('document.hidden=true');h.documentEvents.visibilitychange();expect(art.active).toBe(false);h.run('document.hidden=false');h.documentEvents.visibilitychange();expect(art.active).toBe(true);
+    h.run("document.querySelector('#result-dialog').close();switchView('village')");expect(art.active).toBe(false);const next=h.element('#result-next').onclick;h.element('#grow').onclick();h.flushGrowth();expect(h.stored().garden).toBe(1);h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(h.run('resultWorldScenery')).toBe(art);expect(art.active).toBe(true);next();expect(h.run('currentLevel')).toBe(21);expect(art.disposed).toBe(true);expect(h.run('resultWorld')).toBeUndefined();expect(h.stored().coins).toBe(800);
+  });
+  it.each(['hidden','inactive','closed','oldDOM','otherModal','disabled','round','scene'] as const)('%s 결과문맥에서는현재다음콜백도이동/저장을바꾸지않습니다',kind=>{
+    const h=mainHarness();h.run('finish(true)');const button=h.element('#result-next'),next=button.onclick;
+    if(kind==='hidden')h.run('document.hidden=true');else if(kind==='inactive')h.run('nativeActive=false');else if(kind==='closed')h.element('#result-dialog').close();else if(kind==='oldDOM')button.isConnected=false;else if(kind==='otherModal')h.run('resourceDialog.showModal()');else if(kind==='disabled')button.disabled=true;else if(kind==='round')h.run('round++');else h.run('scene={...scene}');
+    const before=h.run('JSON.stringify({level:currentLevel,round,moves,route,save})'),disk=h.disk();next();expect(h.run('JSON.stringify({level:currentLevel,round,moves,route,save})')).toBe(before);expect(h.disk()).toEqual(disk);
+  });
+
+  it('pagehide폐기뒤pageshow복원은같은엽서DOM/판/보상/소리로그림owner만재생성합니다',()=>{
+    const h=mainHarness(false,false,true,false,prior(19));h.run('startLevel(20);finish(true)');const owner=h.run('resultWorldScenery') as {active:boolean;disposed:boolean},count=h.sceneryControllers.length,html=h.element('#result-dialog').innerHTML,disk=h.disk(),sound=h.run('audio.plays.slice()'),state=h.run('JSON.stringify({round,currentLevel,moves,score,firstReward,resultWorld,save})');h.windowEvents.pagehide();expect(owner.disposed).toBe(true);expect(h.run('resultWorldScenery')).toBeUndefined();h.windowEvents.pageshow();const next=h.run('resultWorldScenery') as {active:boolean;disposed:boolean};expect(next).not.toBe(owner);expect(next.active).toBe(true);expect(h.sceneryControllers).toHaveLength(count+1);expect(h.element('#result-dialog').innerHTML).toBe(html);expect(h.run('JSON.stringify({round,currentLevel,moves,score,firstReward,resultWorld,save})')).toBe(state);expect(h.run('audio.plays')).toEqual(sound);expect(h.disk()).toEqual(disk);h.windowEvents.pageshow();expect(h.run('resultWorldScenery')).toBe(next);expect(h.sceneryControllers).toHaveLength(count+1);
+  });
+  it('비연속진행의마지막누락1번에서도고유500전체완주를표시하고다시즐기기는같은판입니다',()=>{
+    const data={...prior(499),completed:Array.from({length:499},(_,i)=>i+2)},h=mainHarness(false,false,true,false,data);h.run('startLevel(1);finish(true)');expect(h.stored().completed).toHaveLength(500);expect(h.run('resultWorld.journeyComplete')).toBe(true);expect(h.element('#result-dialog').innerHTML).toContain(t('en','completeDesc').replace('{count}','500'));expect(h.element('#result-dialog').innerHTML).toContain(t('en','worldLastMemory'));h.run("changeLanguage('ko')");expect(h.element('#result-title').textContent).toBe(t('ko','complete'));expect(h.element('#result-world-note').textContent).toBe(t('ko','worldLastMemory'));h.element('#result-next').onclick();expect(h.run('currentLevel')).toBe(1);expect(h.stored().coins).toBe(20000);
+  });
+  it('이전 결과의다음콜백을두번호출해도새판을건너뛰지않습니다',()=>{
+    const h=mainHarness();h.run('finish(true)');const next=h.element('#result-next').onclick;next();h.run('replaceBoard()');const expected=h.run('JSON.stringify({level:currentLevel,round,moves,board:scene.engine.board})');expect(h.run('currentLevel')).toBe(3);next();expect(h.run('JSON.stringify({level:currentLevel,round,moves,board:scene.engine.board})')).toBe(expected);
+  });
+  it('이전 결과의홈콜백이새퍼즐의경로를바꾸지않습니다',()=>{
+    const h=mainHarness();h.run('finish(true)');const home=h.element('#result-home').onclick;h.element('#result-next').onclick();h.run('replaceBoard()');home();expect(h.run('route')).toBe('puzzle');expect(h.run('currentLevel')).toBe(3);
+  });
+  it('이전 결과의시험선택콜백은새회차에서옛결과로돌아오는선택창을열지않습니다',()=>{
+    const h=mainHarness(false,false,true);h.run('startLevel(20,true);finish(true)');const picker=h.element('#result-test').onclick;h.element('#result-next').onclick();h.run('replaceBoard()');picker();expect(h.element('#test-level-dialog').open).toBe(false);expect(h.run('currentLevel')).toBe(21);
   });
 });
