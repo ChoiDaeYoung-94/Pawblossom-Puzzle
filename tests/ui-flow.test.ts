@@ -15,7 +15,7 @@ import {specialTileArt,specialArtKinds,specialBodyKey,specialBodyPath} from '../
 import * as paintedGardenArt from '../src/GardenPaintedArt';
 import * as gardenStructureArt from '../src/GardenStructureArt';
 import * as boardDisplay from '../src/BoardDisplay';
-import {campaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches} from '../src/CampaignScenery';
+import {campaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches,campaignWorldPaint,campaignMusicTheme} from '../src/CampaignScenery';
 
 import {gardenGoals,goalNextStep,nextGardenGoal} from '../src/GardenGoals';
 import {previewGardenPreset} from '../src/GardenPresets';
@@ -224,7 +224,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     cloneSnapshot,prepareShuffle,
     showResultPip:()=>{resultArtCalls++;},
     RoundFeedback:FeedbackStub,
-    campaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches,
+    campaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches,campaignWorldPaint,campaignMusicTheme,
     createCampaignScenery:(_scroll:unknown,notify:(id:number)=>void)=>{const controller={notify,disposed:false,active:false,setActive(value:boolean){if(!this.disposed)this.active=value;},dispose(){this.disposed=true;this.active=false;}};sceneryControllers.push(controller);return controller;},
     createPipIdle:(pip:ElementStub,_createImage?:()=>HTMLImageElement,alignment:'center'|'bottom'='center')=>{
       const idle={pip,alignment,disposed:false,disposals:0,
@@ -368,11 +368,11 @@ describe('독립 스테이지 지도',()=>{
   });
   it('지도에서 부팅하고 보드는 같은 Scene으로 일시중단하며100단계 잠금/완료/현재 상태를 표시합니다',()=>{
     const h=boot();expect(h.run('route')).toBe('map');expect(h.run('game.paused')).toBe(true);expect(h.element('#game-canvas').tabIndex).toBe(-1);
-    const html=h.element('#map-view').innerHTML;expect(html.match(/data-level="/g)).toHaveLength(100);
-    expect(html.match(/data-world-start="true"/g)).toHaveLength(5);
-    expect(html.match(/class="campaign-island"/g)).toHaveLength(100);
-    expect(html.match(/class="map-gateway-branch map-/g)).toHaveLength(10);
-    expect(html.match(/preserveAspectRatio="xMidYMid slice"/g)).toHaveLength(9);
+    const html=h.element('#map-view').innerHTML;expect(html.match(/data-level="/g)).toHaveLength(500);
+    expect(html.match(/data-world-start="true"/g)).toHaveLength(25);
+    expect(html.match(/class="campaign-island"/g)).toHaveLength(500);
+    expect(html.match(/class="map-gateway-branch map-/g)).toHaveLength(50);
+    expect(html.match(/preserveAspectRatio="xMidYMid slice"/g)).toHaveLength(69);
     expect(html).toContain('viewBox="627 627 627 627"');expect(html).toContain('data-map-src="/assets/campaign/worlds-atlas-v1.png"');
     expect(html).toMatch(/id="map-stage-2"[^>]+aria-current="step"/);
     expect(html).toMatch(/data-level="3" disabled/);expect(html).toContain(t('en','levelCompleted'));
@@ -1294,7 +1294,7 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     h.run('showTestPicker();startLevel(2,true)');expect(h.element('#test-level-dialog').open).toBe(false);expect(h.run('testingLevel')).toBe(false);
     const test=mainHarness(false,false,true);test.run('startLevel(10,true)');expect(test.stored()).not.toHaveProperty('testingLevel');
     expect(test.run('loadSave().highestLevel')).toBe(2);
-    test.run('startLevel(101,true)');expect(test.run('currentLevel')).toBe(10);
+    test.run('startLevel(501,true)');expect(test.run('currentLevel')).toBe(10);
     test.run("showTestPicker();changeLanguage('ko')");expect(test.element('#test-level-dialog').innerHTML).toContain('낙엽 두 겹');
     test.element('#test-level-dialog').listeners.cancel({preventDefault(){}});expect(test.run('game.paused')).toBe(false);
   });
@@ -1627,11 +1627,10 @@ describe('100스테이지 진행과 선택 묶음',()=>{
     app.run('startLevel(40);finish(true)');expect(app.stored().highestLevel).toBe(41);expect(app.element('#result-dialog').innerHTML).toContain('Next level');expect(app.element('#result-dialog').innerHTML).not.toContain('All 100 prototype levels');
     const earned=app.stored();app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(41);app.run('startLevel(40);finish(true)');expect(app.stored().coins).toBe(earned.coins);expect(app.stored().stars).toBe(earned.stars);expect(app.stored().completed).toEqual(earned.completed);
   });
-  it('100번 완료는 범위를 넘지 않으며 재플레이 보상을 중복 지급하지 않습니다',()=>{
-    const app=mainHarness();app.run('startLevel(100);finish(true)');
-    expect(app.stored().highestLevel).toBe(100);
-    expect(app.element('#result-dialog').innerHTML).toContain('All 100 prototype levels');
-    app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(100);
+  it('100번은101로이어지고500번만마지막이며구100재완료보상은없습니다',()=>{
+    const app=mainHarness();app.run('startLevel(100);finish(true)');expect(app.stored().highestLevel).toBe(101);expect(app.element('#result-dialog').innerHTML).toContain('Next level');
+    const first=app.stored();app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(101);app.run('startLevel(100);finish(true)');expect(app.stored().coins).toBe(first.coins);expect(app.stored().stars).toBe(first.stars);
+    app.run('startLevel(500);finish(true)');expect(app.stored().highestLevel).toBe(500);expect(app.element('#result-dialog').innerHTML).toContain('All 500 prototype levels');app.element('#result-next').onclick();expect(app.run('currentLevel')).toBe(500);
     const before=app.stored();app.run('finish(true)');expect(app.stored()).toEqual({...before,inProgress:undefined});
   });
   it('일반 선택 묶음은 잠금을 유지하고 테스트 30번은 진행 기록을 바꾸지 않습니다',()=>{
@@ -1643,7 +1642,7 @@ describe('100스테이지 진행과 선택 묶음',()=>{
     expect(app.element('#test-level-dialog').innerHTML).toContain('data-test-level="30"');
     expect(app.element('#test-level-dialog').innerHTML).not.toContain('data-test-level="1"');
     app.element('#test-stage-30').onclick();app.run('finish(true)');expect(app.stored()).toEqual(before);
-    app.run("showTestPicker();document.querySelector('#test-chapter-3').onkeydown({key:'End',preventDefault(){}})");expect(app.element('#test-level-dialog').innerHTML).toContain('data-test-level="100"');
+    app.run("showTestPicker();document.querySelector('#test-chapter-3').onkeydown({key:'End',preventDefault(){}})");expect(app.element('#test-level-dialog').innerHTML).toContain('data-test-level="500"');
     app.run("globalThis.tabStrip={scrollLeft:0,getBoundingClientRect:()=>({left:0,right:96,width:96})};const lastTab=document.querySelector('#test-chapter-11');lastTab.parentElement=tabStrip;lastTab.getBoundingClientRect=()=>({left:960,right:1056});document.querySelector('#village-view').scrollTop=77;revealChapterTab(lastTab)");expect(app.run('tabStrip.scrollLeft')).toBe(960);expect(app.run("document.querySelector('#village-view').scrollTop")).toBe(77);
     app.run("document.querySelector('#test-level-dialog').close();startLevel(100,true);tabStrip.scrollLeft=0;tabStrip.getBoundingClientRect=()=>document.querySelector('#test-level-dialog').open?({left:0,right:96,width:96}):({left:0,right:0,width:0});showTestPicker()");expect(app.run('tabStrip.scrollLeft')).toBe(960);
   });
@@ -1955,7 +1954,7 @@ describe('열린 화면의 언어 변경은 진행·결과 처리를 보존합�
     {id:2,won:true,test:false,replay:false,title:'win',description:'winDesc'},
     {id:1,won:true,test:false,replay:true,title:'win',description:'replayDesc'},
     {id:2,won:false,test:false,replay:false,title:'lose',description:'loseDesc'},
-    {id:100,won:true,test:false,replay:false,title:'complete',description:'completeDesc'},
+    {id:500,won:true,test:false,replay:false,title:'complete',description:'completeDesc'},
     {id:30,won:true,test:true,replay:false,title:'win',description:'testResultDesc'},
     {id:30,won:false,test:true,replay:false,title:'lose',description:'testResultDesc'},
   ])('$id번 성공=$won 시험=$test 재완료=$replay 결과 문구만 바꿉니다',({id,won,test,title,description})=>{

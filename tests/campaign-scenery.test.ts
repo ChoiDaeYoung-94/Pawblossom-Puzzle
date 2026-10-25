@@ -1,16 +1,16 @@
 import {describe,it,expect,vi} from 'vitest';
-import {createCampaignScenery,campaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches} from '../src/CampaignScenery';
+import {createCampaignScenery,campaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches,campaignWorldPaint,campaignMusicTheme} from '../src/CampaignScenery';
 import {levels,chapters} from '../src/levels';
 import {existsSync,readFileSync} from 'node:fs';
 
-function setup(assetPaths:string[]=[]){
+function setup(assetPaths:string[]=[],sourceChapters:number[]=[]){
   const frames=new Map<number,FrameRequestCallback>();let serial=0;
   const listeners=new Map<string,EventListener>(),windowListeners=new Map<string,EventListener>(),mediaListeners=new Map<string,EventListener>();
   const media={matches:false,addEventListener:(k:string,f:EventListener)=>mediaListeners.set(k,f),removeEventListener:(k:string)=>mediaListeners.delete(k)};
   const win={requestAnimationFrame:(f:FrameRequestCallback)=>{frames.set(++serial,f);return serial;},cancelAnimationFrame:(id:number)=>frames.delete(id),matchMedia:()=>media,addEventListener:(k:string,f:EventListener)=>windowListeners.set(k,f),removeEventListener:(k:string)=>windowListeners.delete(k)};
   const positions=[{top:0,bottom:950},{top:950,bottom:1900},{top:1900,bottom:2850}];
   const chapters=positions.map((rect,i)=>({dataset:{chapter:String(i+1)} as Record<string,string>,style:{setProperty:vi.fn()},getBoundingClientRect:()=>rect}));
-  const sources=assetPaths.map(path=>({isConnected:true,attrs:{'data-map-src':path} as Record<string,string>,getAttribute(k:string){return this.attrs[k]??null;},hasAttribute(k:string){return k in this.attrs;},setAttribute(k:string,v:string){this.attrs[k]=v;},removeAttribute(k:string){delete this.attrs[k];}}));
+  const sources=assetPaths.map((path,index)=>({closest:()=>chapters[sourceChapters[index]??0],isConnected:true,attrs:{'data-map-src':path} as Record<string,string>,getAttribute(k:string){return this.attrs[k]??null;},hasAttribute(k:string){return k in this.attrs;},setAttribute(k:string,v:string){this.attrs[k]=v;},removeAttribute(k:string){delete this.attrs[k];}}));
   const scroll={dataset:{} as Record<string,string>,isConnected:true,ownerDocument:{defaultView:win},getBoundingClientRect:()=>({top:0,bottom:600,height:600}),querySelectorAll:(selector:string)=>selector==='.campaign-chapter'?chapters:sources,contains:(node:unknown)=>sources.includes(node as typeof sources[number]),addEventListener:(k:string,f:EventListener)=>listeners.set(k,f),removeEventListener:(k:string)=>listeners.delete(k)};
   const images:{src:string;alt:string;decoding:string;onload:(()=>void)|null;onerror:(()=>void)|null;decode:ReturnType<typeof vi.fn>}[]=[];
   const createImage=()=>{const image={src:'',alt:'',decoding:'',onload:null as (()=>void)|null,onerror:null as (()=>void)|null,decode:vi.fn(()=>Promise.resolve())};images.push(image);return image as unknown as HTMLImageElement;};
@@ -28,8 +28,11 @@ describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
   });
   it('기존100레벨·11장ID를 보존하면서 큰 풍경은 정확히20레벨마다 바뀝니다',()=>{
     const counts=new Map<string,number>();
-    for(const level of levels){const chapter=chapters.find(c=>c.first<=level.id&&c.last>=level.id)!;const world=campaignWorld(chapter.id);counts.set(world,(counts.get(world)??0)+1);}
-    expect([...counts.values()]).toEqual([20,20,20,20,20]);expect(campaignWorld(3)).toBe(campaignWorld(5));
+    for(const level of levels.slice(0,100)){const chapter=chapters.find(c=>c.first<=level.id&&c.last>=level.id)!;const world=campaignWorld(chapter.id);counts.set(world,(counts.get(world)??0)+1);}
+    expect([...counts.values()]).toEqual([20,20,20,20,20]);
+    const all=new Map<string,number>();for(const c of chapters)all.set(campaignWorld(c.id),(all.get(campaignWorld(c.id))??0)+c.last-c.first+1);expect(all.size).toBe(25);expect([...all.values()]).toEqual(Array(25).fill(20));
+    expect(campaignWorldName(12,'ko')).toBe('라벤더 테라스 · 101–120');expect(campaignWorldName(31,'en')).toBe('Grand Blossom Fair · 481–500');
+    for(const c of chapters){expect(campaignMusicTheme(c.id)).toMatch(/^(meadow|brook|orchard|woodland|lantern)$/);for(const m of campaignWorldPaint(c.id).matchAll(/data-map-src="([^"]+)"/g))expect(existsSync(new URL('../public'+m[1],import.meta.url))).toBe(true);}expect(campaignWorld(3)).toBe(campaignWorld(5));
     expect(campaignWorldName(11,'ko')).toBe('등불 언덕 · 81–100');expect(campaignWorldName(1,'en')).toBe('Blossom Meadow · 1–20');
   });
   it('같은 풍경 내부에서는 재입장하지 않고 큰 풍경 경계에만 일회 반응하며 숨김·모션 감소는 지웁니다',()=>{
@@ -86,20 +89,32 @@ describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
   });
   it('지도 활성화 전에는 원본을 해독하지 않고 전부 준비한 현재 owner만 회화 그림을 공개합니다',async()=>{
     const h=setup(['/assets/campaign/windmill-rig-v1.png','/assets/garden-structures-v1/pond-base.webp']);
-    expect(h.images).toHaveLength(0);expect(h.sources.every(node=>!node.hasAttribute('href'))).toBe(true);h.controller.setActive(true);expect(h.images).toHaveLength(2);
+    expect(h.images).toHaveLength(0);expect(h.sources.every(node=>!node.hasAttribute('href'))).toBe(true);h.controller.setActive(true);h.flush();expect(h.images).toHaveLength(2);
     let ready!:()=>void;h.images[1].decode.mockImplementation(()=>new Promise<void>(resolve=>ready=resolve));h.images.forEach(image=>image.onload!());for(let n=0;n<10;n++)await Promise.resolve();
     expect(h.scroll.dataset.sceneryArtReady).toBeUndefined();h.controller.setActive(false);ready();for(let n=0;n<10;n++)await Promise.resolve();
-    expect(h.scroll.dataset.sceneryArtReady).toBe('true');expect(h.sources[0].getAttribute('href')).toBe('/assets/campaign/windmill-rig-v1.png');expect(h.chapters.every(c=>c.dataset.sceneryActive==='false')).toBe(true);h.controller.setActive(true);expect(h.images).toHaveLength(2);
+    expect(h.scroll.dataset.sceneryArtReady).toBeUndefined();expect(h.sources[0].getAttribute('href')).toBeNull();expect(h.chapters.every(c=>c.dataset.sceneryActive==='false')).toBe(true);h.controller.setActive(true);h.flush();expect(h.images).toHaveLength(4);h.images.slice(2).forEach(image=>image.onload!());for(let n=0;n<10;n++)await Promise.resolve();expect(h.chapters[0].dataset.sceneryArtReady).toBe('true');
     h.controller.dispose();expect(h.scroll.dataset.sceneryArtReady).toBeUndefined();expect(h.images.every(image=>image.onload===null&&image.onerror===null)).toBe(true);
   });
   it('실패·폐기·owner 교체 뒤 늦은 decode는 회화 그림을 되살리거나 재요청하지 않습니다',async()=>{
-    const h=setup(['/assets/campaign/windmill-rig-v1.png']);h.controller.setActive(true);let ready!:()=>void;
+    const h=setup(['/assets/campaign/windmill-rig-v1.png']);h.controller.setActive(true);h.flush();let ready!:()=>void;
     h.images[0].decode.mockImplementation(()=>new Promise<void>(resolve=>ready=resolve));h.images[0].onload!();await Promise.resolve();
-    const next=createCampaignScenery(h.scroll as unknown as HTMLElement,h.selected,h.createImage);next.setActive(true);h.controller.dispose();ready();for(let n=0;n<10;n++)await Promise.resolve();expect(h.scroll.dataset.sceneryArtReady).toBeUndefined();
+    const next=createCampaignScenery(h.scroll as unknown as HTMLElement,h.selected,h.createImage);next.setActive(true);h.flush();h.controller.dispose();ready();for(let n=0;n<10;n++)await Promise.resolve();expect(h.scroll.dataset.sceneryArtReady).toBeUndefined();
     h.images[1].onerror!();for(let n=0;n<10;n++)await Promise.resolve();next.setActive(false);next.setActive(true);expect(h.images).toHaveLength(2);expect(h.scroll.dataset.sceneryArtReady).toBeUndefined();next.dispose();
   });
+  it('신규20풍경은입력없는부분연출을가지며전역타이머나외부그림을추가하지않습니다',()=>{
+    for(let chapter=12;chapter<=31;chapter++){const art=campaignScenery(chapter,20);expect(art).toContain('data-world-weather=');expect(art.match(/class="map-world-motif /g)).toHaveLength(3);expect(art).not.toMatch(/<button|<a |https?:|<script|setInterval/);}
+    expect(campaignScenery(13)).toContain('motif-wings');expect(campaignScenery(17)).toContain('data-world-weather="snow"');expect(campaignScenery(28)).toContain('motif-gear');
+  });
+  it('500판카탈로그에서도보이는장의원본만해독하고떠난장의소유href를해제합니다',async()=>{
+    const h=setup(['/assets/campaign/worlds-expansion-a-v1.png','/assets/campaign/worlds-expansion-b-v1.png'],[0,1]);
+    h.controller.setActive(true);h.flush();expect(h.images.map(i=>i.src)).toEqual(['/assets/campaign/worlds-expansion-a-v1.png']);
+    h.images[0].onload!();for(let n=0;n<10;n++)await Promise.resolve();expect(h.chapters[0].dataset.sceneryArtReady).toBe('true');expect(h.chapters[1].dataset.sceneryArtReady).toBeUndefined();
+    Object.assign(h.positions[0],{top:-950,bottom:0});Object.assign(h.positions[1],{top:0,bottom:950});h.event(h.listeners,'scroll');h.flush();
+    expect(h.sources[0].getAttribute('href')).toBeNull();expect(h.chapters[0].dataset.sceneryArtReady).toBeUndefined();expect(h.images.map(i=>i.src)).toEqual(['/assets/campaign/worlds-expansion-a-v1.png','/assets/campaign/worlds-expansion-b-v1.png']);
+    h.images[1].onload!();for(let n=0;n<10;n++)await Promise.resolve();expect(h.chapters[1].dataset.sceneryArtReady).toBe('true');h.controller.setActive(false);expect(h.sources.every(node=>!node.hasAttribute('href'))).toBe(true);expect(h.chapters.every(c=>!c.dataset.sceneryArtReady)).toBe(true);
+  });
   it('준비 중 다른 코드가 같은 주소를 넣었더라도 미소유 href는 공개/폐기에서 제거하지 않습니다',async()=>{
-    const path='/assets/campaign/windmill-rig-v1.png',h=setup([path]);h.controller.setActive(true);h.sources[0].setAttribute('href',path);h.images[0].onload!();for(let n=0;n<10;n++)await Promise.resolve();
+    const path='/assets/campaign/windmill-rig-v1.png',h=setup([path]);h.controller.setActive(true);h.flush();h.sources[0].setAttribute('href',path);h.images[0].onload!();for(let n=0;n<10;n++)await Promise.resolve();
     expect(h.scroll.dataset.sceneryArtReady).toBeUndefined();h.controller.dispose();expect(h.sources[0].getAttribute('href')).toBe(path);
   });
 });

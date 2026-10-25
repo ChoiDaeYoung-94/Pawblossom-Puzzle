@@ -1,0 +1,9710 @@
+[
+  {
+    "id": 1,
+    "moves": 26,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 12
+      },
+      {
+        "kind": 1,
+        "count": 10
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "moves": 24,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 12
+      },
+      {
+        "kind": 2,
+        "count": 10
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "moves": 24,
+    "goals": [
+      {
+        "kind": 2,
+        "count": 14
+      },
+      {
+        "kind": 3,
+        "count": 10
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "moves": 26,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 14
+      },
+      {
+        "kind": 4,
+        "count": 12
+      }
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "moves": 26,
+    "goals": [
+      {
+        "kind": 4,
+        "count": 16
+      },
+      {
+        "kind": 5,
+        "count": 12
+      }
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 3,
+        "layers": 1
+      },
+      {
+        "row": 4,
+        "col": 4,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "moves": 28,
+    "goals": [
+      {
+        "kind": 5,
+        "count": 16
+      },
+      {
+        "kind": 0,
+        "count": 12
+      }
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "moves": 28,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 18
+      },
+      {
+        "kind": 1,
+        "count": 14
+      }
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 4,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "moves": 28,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 18
+      },
+      {
+        "kind": 2,
+        "count": 14
+      }
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 3,
+        "layers": 1
+      },
+      {
+        "row": 4,
+        "col": 4,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 4,
+        "layers": 1
+      },
+      {
+        "row": 6,
+        "col": 3,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 2,
+        "count": 20
+      },
+      {
+        "kind": 3,
+        "count": 14
+      }
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 4,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 4,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 3,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 20
+      },
+      {
+        "kind": 4,
+        "count": 16
+      }
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 4,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 4,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 3,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "moves": 28,
+    "goals": [
+      {
+        "kind": 5,
+        "count": 22
+      },
+      {
+        "kind": 2,
+        "count": 18
+      }
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 1
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 3,
+        "layers": 1
+      },
+      {
+        "row": 4,
+        "col": 4,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 6,
+        "col": 6,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "moves": 28,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 26
+      },
+      {
+        "kind": 3,
+        "count": 20
+      }
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 6,
+        "col": 4,
+        "layers": 1
+      },
+      {
+        "row": 6,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 4,
+        "col": 1,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "moves": 26,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 24
+      },
+      {
+        "kind": 4,
+        "count": 20
+      }
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 4,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 6,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "moves": 28,
+    "goals": [
+      {
+        "kind": 2,
+        "count": 28
+      },
+      {
+        "kind": 5,
+        "count": 22
+      }
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 4,
+        "layers": 1
+      },
+      {
+        "row": 6,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 1,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "moves": 28,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 22
+      },
+      {
+        "kind": 2,
+        "count": 22
+      },
+      {
+        "kind": 5,
+        "count": 22
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "moves": 28,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 28
+      },
+      {
+        "kind": 1,
+        "count": 22
+      }
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 4,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 6,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 17,
+    "moves": 28,
+    "goals": [
+      {
+        "kind": 4,
+        "count": 28
+      },
+      {
+        "kind": 0,
+        "count": 24
+      }
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 4,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 1,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 18,
+    "moves": 28,
+    "goals": [
+      {
+        "kind": 5,
+        "count": 30
+      },
+      {
+        "kind": 2,
+        "count": 24
+      }
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 4,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 1,
+        "layers": 1
+      },
+      {
+        "row": 4,
+        "col": 1,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 4,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 6,
+        "col": 3,
+        "layers": 1
+      },
+      {
+        "row": 6,
+        "col": 4,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 19,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 30
+      },
+      {
+        "kind": 1,
+        "count": 26
+      }
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 4,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 1,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 6,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 4,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 20,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 2,
+        "count": 32
+      },
+      {
+        "kind": 3,
+        "count": 26
+      }
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 4,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 4,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 21,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 4,
+        "count": 26
+      },
+      {
+        "kind": 5,
+        "count": 22
+      }
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 6,
+        "col": 4,
+        "layers": 1
+      },
+      {
+        "row": 6,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 4,
+        "col": 1,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 22,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 24
+      },
+      {
+        "kind": 1,
+        "count": 24
+      },
+      {
+        "kind": 2,
+        "count": 20
+      }
+    ]
+  },
+  {
+    "id": 23,
+    "moves": 28,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 32
+      },
+      {
+        "kind": 4,
+        "count": 24
+      }
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 4,
+        "layers": 1
+      },
+      {
+        "row": 6,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 1,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 24,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 5,
+        "count": 32
+      },
+      {
+        "kind": 0,
+        "count": 26
+      }
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 4,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 1,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 6,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 4,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 25,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 34
+      },
+      {
+        "kind": 2,
+        "count": 26
+      }
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 4,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 4,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 26,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 26
+      },
+      {
+        "kind": 4,
+        "count": 26
+      },
+      {
+        "kind": 5,
+        "count": 24
+      }
+    ]
+  },
+  {
+    "id": 27,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 34
+      },
+      {
+        "kind": 2,
+        "count": 28
+      }
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 4,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 1,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 28,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 36
+      },
+      {
+        "kind": 3,
+        "count": 28
+      }
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 4,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 1,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 6,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 4,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 29,
+    "moves": 32,
+    "goals": [
+      {
+        "kind": 4,
+        "count": 36
+      },
+      {
+        "kind": 5,
+        "count": 30
+      }
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 4,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 4,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 30,
+    "moves": 32,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 38
+      },
+      {
+        "kind": 5,
+        "count": 30
+      }
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 4,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 3,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 4,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 31,
+    "moves": 26,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 22
+      },
+      {
+        "kind": 2,
+        "count": 20
+      }
+    ],
+    "mask": [
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ]
+    ]
+  },
+  {
+    "id": 32,
+    "moves": 28,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 22
+      },
+      {
+        "kind": 5,
+        "count": 22
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ]
+  },
+  {
+    "id": 33,
+    "moves": 28,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 24
+      },
+      {
+        "kind": 4,
+        "count": 22
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ]
+  },
+  {
+    "id": 34,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 2,
+        "count": 26
+      },
+      {
+        "kind": 5,
+        "count": 22
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ]
+  },
+  {
+    "id": 35,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 28
+      },
+      {
+        "kind": 1,
+        "count": 24
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ]
+  },
+  {
+    "id": 36,
+    "moves": 28,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 24
+      },
+      {
+        "kind": 5,
+        "count": 22
+      }
+    ],
+    "crates": [
+      {
+        "row": 2,
+        "col": 2
+      },
+      {
+        "row": 2,
+        "col": 5
+      },
+      {
+        "row": 5,
+        "col": 2
+      },
+      {
+        "row": 5,
+        "col": 5
+      }
+    ]
+  },
+  {
+    "id": 37,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 2,
+        "count": 26
+      },
+      {
+        "kind": 4,
+        "count": 24
+      }
+    ],
+    "mask": [
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ]
+    ],
+    "crates": [
+      {
+        "row": 2,
+        "col": 2
+      },
+      {
+        "row": 2,
+        "col": 5
+      },
+      {
+        "row": 5,
+        "col": 2
+      },
+      {
+        "row": 5,
+        "col": 5
+      },
+      {
+        "row": 3,
+        "col": 1
+      },
+      {
+        "row": 3,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 38,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 28
+      },
+      {
+        "kind": 5,
+        "count": 24
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "crates": [
+      {
+        "row": 2,
+        "col": 2
+      },
+      {
+        "row": 2,
+        "col": 5
+      },
+      {
+        "row": 5,
+        "col": 2
+      },
+      {
+        "row": 5,
+        "col": 5
+      }
+    ]
+  },
+  {
+    "id": 39,
+    "moves": 32,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 26
+      },
+      {
+        "kind": 1,
+        "count": 24
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 2,
+        "col": 3
+      },
+      {
+        "row": 5,
+        "col": 4
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 40,
+    "moves": 34,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 28
+      },
+      {
+        "kind": 5,
+        "count": 26
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "crates": [
+      {
+        "row": 2,
+        "col": 0
+      },
+      {
+        "row": 2,
+        "col": 7
+      },
+      {
+        "row": 4,
+        "col": 0
+      },
+      {
+        "row": 4,
+        "col": 7
+      },
+      {
+        "row": 5,
+        "col": 1
+      },
+      {
+        "row": 5,
+        "col": 6
+      },
+      {
+        "row": 7,
+        "col": 2
+      },
+      {
+        "row": 7,
+        "col": 5
+      }
+    ]
+  },
+  {
+    "id": 41,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 5,
+        "count": 26
+      },
+      {
+        "kind": 2,
+        "count": 22
+      }
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 42,
+    "moves": 29,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 24
+      },
+      {
+        "kind": 3,
+        "count": 20
+      }
+    ],
+    "mask": [
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 43,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 26
+      },
+      {
+        "kind": 4,
+        "count": 20
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 44,
+    "moves": 28,
+    "goals": [
+      {
+        "kind": 2,
+        "count": 27
+      }
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 45,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 26
+      },
+      {
+        "kind": 0,
+        "count": 22
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 46,
+    "moves": 32,
+    "goals": [
+      {
+        "kind": 4,
+        "count": 26
+      },
+      {
+        "kind": 1,
+        "count": 22
+      }
+    ],
+    "mask": [
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 47,
+    "moves": 32,
+    "goals": [
+      {
+        "kind": 5,
+        "count": 27
+      },
+      {
+        "kind": 2,
+        "count": 20
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 48,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 29
+      },
+      {
+        "kind": 3,
+        "count": 22
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 49,
+    "moves": 29,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 29
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 50,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 2,
+        "count": 31
+      }
+    ],
+    "mask": [
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 51,
+    "moves": 32,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 28
+      },
+      {
+        "kind": 0,
+        "count": 24
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 52,
+    "moves": 29,
+    "goals": [
+      {
+        "kind": 4,
+        "count": 27
+      },
+      {
+        "kind": 1,
+        "count": 24
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 2
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 53,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 5,
+        "count": 29
+      },
+      {
+        "kind": 2,
+        "count": 24
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 6,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 54,
+    "moves": 29,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 31
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 55,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 31
+      },
+      {
+        "kind": 4,
+        "count": 24
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 56,
+    "moves": 32,
+    "goals": [
+      {
+        "kind": 2,
+        "count": 28
+      },
+      {
+        "kind": 5,
+        "count": 26
+      }
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 57,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 31
+      },
+      {
+        "kind": 0,
+        "count": 26
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 2
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 58,
+    "moves": 29,
+    "goals": [
+      {
+        "kind": 4,
+        "count": 32
+      },
+      {
+        "kind": 1,
+        "count": 24
+      }
+    ],
+    "mask": [
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 59,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 5,
+        "count": 32
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 60,
+    "moves": 32,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 31
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 61,
+    "moves": 32,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 28
+      },
+      {
+        "kind": 4,
+        "count": 26
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 62,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 2,
+        "count": 29
+      },
+      {
+        "kind": 5,
+        "count": 24
+      }
+    ],
+    "mask": [
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ]
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 2
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 63,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 31
+      },
+      {
+        "kind": 0,
+        "count": 24
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 64,
+    "moves": 28,
+    "goals": [
+      {
+        "kind": 4,
+        "count": 32
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 65,
+    "moves": 29,
+    "goals": [
+      {
+        "kind": 5,
+        "count": 34
+      },
+      {
+        "kind": 2,
+        "count": 26
+      }
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 6,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 66,
+    "moves": 33,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 30
+      },
+      {
+        "kind": 3,
+        "count": 26
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 67,
+    "moves": 31,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 32
+      },
+      {
+        "kind": 4,
+        "count": 24
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 5,
+        "col": 3
+      },
+      {
+        "row": 5,
+        "col": 4
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 68,
+    "moves": 32,
+    "goals": [
+      {
+        "kind": 2,
+        "count": 32
+      },
+      {
+        "kind": 5,
+        "count": 24
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 69,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 34
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 70,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 4,
+        "count": 35
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 71,
+    "moves": 34,
+    "goals": [
+      {
+        "kind": 5,
+        "count": 30
+      },
+      {
+        "kind": 2,
+        "count": 26
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 72,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 31
+      },
+      {
+        "kind": 3,
+        "count": 26
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 2
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 73,
+    "moves": 32,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 32
+      },
+      {
+        "kind": 4,
+        "count": 26
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 74,
+    "moves": 29,
+    "goals": [
+      {
+        "kind": 2,
+        "count": 34
+      }
+    ],
+    "mask": [
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 75,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 34
+      },
+      {
+        "kind": 0,
+        "count": 27
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 6,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 76,
+    "moves": 33,
+    "goals": [
+      {
+        "kind": 4,
+        "count": 32
+      },
+      {
+        "kind": 1,
+        "count": 28
+      }
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 77,
+    "moves": 33,
+    "goals": [
+      {
+        "kind": 5,
+        "count": 34
+      },
+      {
+        "kind": 2,
+        "count": 26
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 0
+      },
+      {
+        "row": 3,
+        "col": 7
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 78,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 36
+      },
+      {
+        "kind": 3,
+        "count": 26
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 79,
+    "moves": 32,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 35
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 80,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 2,
+        "count": 36
+      }
+    ],
+    "mask": [
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 81,
+    "moves": 34,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 32
+      },
+      {
+        "kind": 0,
+        "count": 28
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 82,
+    "moves": 31,
+    "goals": [
+      {
+        "kind": 4,
+        "count": 32
+      },
+      {
+        "kind": 1,
+        "count": 27
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 2
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 83,
+    "moves": 31,
+    "goals": [
+      {
+        "kind": 5,
+        "count": 36
+      },
+      {
+        "kind": 2,
+        "count": 26
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 6,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 84,
+    "moves": 29,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 35
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 85,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 37
+      },
+      {
+        "kind": 4,
+        "count": 27
+      }
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 86,
+    "moves": 34,
+    "goals": [
+      {
+        "kind": 2,
+        "count": 34
+      },
+      {
+        "kind": 5,
+        "count": 28
+      }
+    ],
+    "mask": [
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 87,
+    "moves": 31,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 36
+      },
+      {
+        "kind": 0,
+        "count": 27
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 2
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 88,
+    "moves": 33,
+    "goals": [
+      {
+        "kind": 4,
+        "count": 36
+      },
+      {
+        "kind": 1,
+        "count": 27
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 89,
+    "moves": 31,
+    "goals": [
+      {
+        "kind": 5,
+        "count": 36
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 90,
+    "moves": 30,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 34
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 91,
+    "moves": 34,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 34
+      },
+      {
+        "kind": 4,
+        "count": 30
+      }
+    ],
+    "mask": [
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 92,
+    "moves": 32,
+    "goals": [
+      {
+        "kind": 2,
+        "count": 36
+      },
+      {
+        "kind": 5,
+        "count": 27
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 2
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 93,
+    "moves": 31,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 37
+      },
+      {
+        "kind": 0,
+        "count": 27
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 6,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 94,
+    "moves": 32,
+    "goals": [
+      {
+        "kind": 4,
+        "count": 36
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 95,
+    "moves": 31,
+    "goals": [
+      {
+        "kind": 5,
+        "count": 37
+      },
+      {
+        "kind": 2,
+        "count": 29
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 96,
+    "moves": 34,
+    "goals": [
+      {
+        "kind": 0,
+        "count": 36
+      },
+      {
+        "kind": 3,
+        "count": 30
+      }
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 1
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 1
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 1
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 1
+      }
+    ]
+  },
+  {
+    "id": 97,
+    "moves": 31,
+    "goals": [
+      {
+        "kind": 1,
+        "count": 37
+      },
+      {
+        "kind": 4,
+        "count": 29
+      }
+    ],
+    "mask": [
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ]
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 2
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 98,
+    "moves": 31,
+    "goals": [
+      {
+        "kind": 2,
+        "count": 39
+      },
+      {
+        "kind": 5,
+        "count": 29
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 1,
+        "col": 1,
+        "layers": 2
+      },
+      {
+        "row": 1,
+        "col": 6,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ]
+  },
+  {
+    "id": 99,
+    "moves": 31,
+    "goals": [
+      {
+        "kind": 3,
+        "count": 38
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 2,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  },
+  {
+    "id": 100,
+    "moves": 34,
+    "goals": [
+      {
+        "kind": 4,
+        "count": 35
+      }
+    ],
+    "mask": [
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "leaves": [
+      {
+        "row": 3,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 3,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 4,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 5,
+        "col": 5,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 2,
+        "layers": 2
+      },
+      {
+        "row": 6,
+        "col": 5,
+        "layers": 2
+      }
+    ],
+    "crates": [
+      {
+        "row": 1,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 1
+      },
+      {
+        "row": 6,
+        "col": 6
+      }
+    ]
+  }
+]
