@@ -15,6 +15,7 @@ import {pipTendingArt} from './PipTending';
 import {createPipTendingPose} from './PipTendingPose';
 import './SpecialTileArt.css';
 import './GardenStructureArt.css';
+import './UiTheme.css';
 import { BoardScene,tileNames } from './BoardScene';
 import {BOARD_RENDER_SIZE} from './BoardDisplay';
 import {specialTileArt} from './SpecialTileArt';

@@ -1,0 +1,193 @@
+/* 공통 UI의 색과 표면만 정의합니다. 배치·입력 영역·풍경 그림은 각 화면이 소유합니다. */
+:root {
+  --ui-ink: #513b5c;
+  --ui-muted: #725d78;
+  --ui-paper: #fffdf9;
+  --ui-line: #ead6e2;
+  --ui-focus: #785098;
+  --ui-action-ink: #602647;
+  --ui-action-top: #ffc1d0;
+  --ui-action-bottom: #f69bb6;
+  --ui-selected: #eee3ff;
+  --ui-selected-ink: #654283;
+  --ui-info: #eaf6ff;
+  --ui-info-ink: #426383;
+  --ui-disabled: #eee7ee;
+  --ui-disabled-ink: #716077;
+  --ui-warning: #89522b;
+  --ui-danger: #a23a57;
+  --dark: var(--ui-ink);
+  --muted: var(--ui-muted);
+  --line: var(--ui-line);
+  --cream: var(--ui-paper);
+  color: var(--ui-ink);
+  background: #fff6f1;
+  color-scheme: light;
+}
+
+#app { background: linear-gradient(150deg, #fff9f3, #fff5f8 55%, #f4efff); }
+.topbar { background: #fffdf9; border-bottom-color: var(--ui-line); }
+.brand-mark { color: #946080; background: #fbe6ee; box-shadow: inset 0 1px 0 #fff; }
+.brand small, .eyebrow, .story-copy, .friend-message p,
+.garden-status span, .garden-status strong, .board-hint,
+.garden-card p, .garden-card small, .garden-card .garden-stage,
+.journal-card p, .garden-selection, .garden-lantern-placement p,
+.garden-project p, .pip-shop-item small, .pip-stats label,
+.pip-care-card .pip-purpose, .pip-care-card .pip-care-note,
+.result-content .result-pip-line, .preview-kept { color: var(--ui-muted); }
+.tool-note, .page-footer, .subview-heading p, .garden-pill,
+.level-picker h3, .friend-number, .sound-note, .save-note, .version,
+.result-content p, .result-content #result-continue-note { color: var(--ui-muted); }
+select { color: var(--ui-ink); background-color: var(--ui-paper); border-color: var(--ui-line); }
+.tiny-leaf { color: #bc7e91; }
+.game-panel, .garden-card, .journal-card, .settings-card, .garden-editor {
+  color: var(--ui-ink); background: var(--ui-paper); border-color: var(--ui-line);
+  box-shadow: 0 5px 18px #7b46700d;
+}
+.journal-card { background: radial-gradient(ellipse at 50% 25%, #ffedf1, transparent 70%), var(--ui-paper); }
+
+.wallet-help { background: #fff3d3; color: #795325; box-shadow: inset 0 -1px 0 #eed49b; }
+.wallet-help:hover { background: #ffe8b6; }
+.icon-button, .level-top .icon-button, select.language-button {
+  color: var(--ui-selected-ink); background: #f1eaff;
+}
+.text-button { color: #6c4b88; }
+.text-button:hover:not(:disabled) { background: #f5edff; }
+.primary, .campaign-play .primary, .pip-care-actions .primary {
+  color: var(--ui-action-ink);
+  background: linear-gradient(var(--ui-action-top), var(--ui-action-bottom));
+  box-shadow: inset 0 2px 0 #fff0f5, inset 0 -2px 0 #e786a5, 0 3px 0 #bd6584;
+}
+.primary:hover:not(:disabled) {
+  color: var(--ui-action-ink); background: linear-gradient(#ffd1db, #ffafc5);
+}
+.shuffle-button, .test-level-button, .result-test-button {
+  color: var(--ui-selected-ink); border-color: #d7c6e9; background: #f5efff;
+}
+.shuffle-button>span:last-child { background: #e7dcfa; }
+.bottom-nav { border-top-color: var(--ui-line); background: #fffdf9; }
+.bottom-nav button { color: var(--ui-muted); }
+.bottom-nav button.active {
+  color: var(--ui-selected-ink); background: var(--ui-selected);
+  box-shadow: inset 0 -2px 0 #b99bd8;
+}
+
+/* 야외 풍경은 그대로 두고, 공통 프레임과 읽는 표면은 따뜻한 종이색으로 맞춥니다. */
+#map-view::before { background: linear-gradient(150deg, #fff8f0, #f8f0ff); }
+.campaign-heading h2, .campaign-play strong { color: var(--ui-ink); }
+.campaign-world-name, .campaign-play>div>span { color: var(--ui-muted); }
+.map-locate { color: var(--ui-info-ink); background: #f0f8ff; box-shadow: 0 2px 5px #617a9520; }
+.campaign-chapters select { color: var(--ui-ink); background: #fffdf9; border-color: #e1cedf; }
+.campaign-chapter h3 { color: var(--ui-ink); background: #fff9f7f5; box-shadow: 0 3px 8px #754b6816; }
+.campaign-chapter h3>span { color: var(--ui-muted); }
+.map-world-gateway b { color: var(--ui-ink); background: #fff6e8f5; border-color: #e7c0b5; }
+.campaign-play { background: #fffaf7f5; box-shadow: 0 -3px 12px #70496914; }
+.campaign-scroll[data-scenery-art-ready="true"] .campaign-node { color: #4e3c58; }
+.campaign-scroll[data-scenery-art-ready="true"] .campaign-node.current { color: #8b3f5d; }
+.campaign-scroll[data-scenery-art-ready="true"] .campaign-node:disabled { color: #6c5e71; }
+.campaign-scroll:not([data-scenery-art-ready="true"]) .campaign-node:not(.completed):not(:disabled) {
+  color: var(--ui-action-ink); text-shadow: none;
+  background: radial-gradient(ellipse at 33% 22%, #ffe6ec, #f7adc3 55%, #d8769d);
+}
+.campaign-scroll:not([data-scenery-art-ready="true"]) .campaign-node:disabled {
+  background: linear-gradient(#f0e9f3, #d2c5df); color: var(--ui-disabled-ink); border-color: #f7f1ff;
+}
+
+/* 퍼즐의 원본 풍경·블록은 보존하고 HUD와 바탕의 이끼색을 분리합니다. */
+#app[data-route="puzzle"] {
+  background: linear-gradient(#fff5f3b8, #f0e8ffc9), url('/assets/puzzle-backdrop-v1.webp') center/cover no-repeat;
+}
+#app[data-route="puzzle"] .topbar { background: #fffdf9ed; border-bottom-color: var(--ui-line); }
+#app[data-route="puzzle"] .brand-mark { color: #946080; background: linear-gradient(#fff0f5, #f8dbe8); }
+#app[data-route="puzzle"] .game-panel { background: linear-gradient(#fffdf9f5, #fff5faed); box-shadow: inset 0 1px 0 #fff, 0 8px 24px #75496918; }
+#puzzle-view .mission-bar { background: linear-gradient(#fffdf9, #f5edff); border-color: #dfcde7; box-shadow: inset 0 1px 0 #fff, 0 3px 6px #78507816; }
+#puzzle-view .moves-box { background: linear-gradient(#e4d4fa, #ccb3ed); color: #513568; box-shadow: inset 0 1px 0 #fff3ff, inset 0 -2px 0 #b397d240, 0 2px 4px #79549b20; }
+#puzzle-view .moves-box strong, #puzzle-view .moves-box>span { color: #513568; }
+#puzzle-view .goal-heading, #puzzle-view .score-label { color: var(--ui-muted); }
+#puzzle-view .goal-item strong { color: var(--ui-ink); }
+#puzzle-view .goal-item.done strong { color: #306b62; }
+.goal-progress { background: linear-gradient(to right, #79baa8 var(--progress), #e8e2ec var(--progress)); }
+.board-wrap { border-color: #dbc9e4; background: #e5d5ef; box-shadow: inset 0 2px 2px #ffffffb3, 0 4px 0 #c7afd969; }
+#app[data-route="puzzle"] .icon-button:not(:disabled), #puzzle-view .shuffle-button:not(:disabled) {
+  background: linear-gradient(#fffaff, #eee3fc); color: var(--ui-selected-ink);
+  box-shadow: inset 0 1px 0 #fff, inset 0 -2px 0 #c6addb66, 0 2px 4px #79549b20;
+}
+#app[data-route="puzzle"] .bottom-nav { background: #fffaf9ed; border-top-color: var(--ui-line); }
+#app[data-route="puzzle"] .bottom-nav button:not(:disabled) { background: linear-gradient(#fffdf9, #f8f0fc); color: var(--ui-muted); box-shadow: inset 0 1px 0 #fff, inset 0 -1px 0 #e3d3ec80; }
+#app[data-route="puzzle"] .bottom-nav button.active { background: linear-gradient(#f1e7ff, #e5d4fa); color: var(--ui-selected-ink); box-shadow: inset 0 1px 0 #fff5ff, inset 0 -2px 0 #b99bd8; }
+
+/* 정보·선택·성취는 서로 다른 색 역할을 갖되 기존 텍스트/아이콘 표시는 유지합니다. */
+.stage-preview section, .resource-help-content .resource-help-balance,
+.pip-care-card .pip-next, .space-next, .pip-project {
+  color: var(--ui-info-ink); background: var(--ui-info); border-color: #c8ddeb;
+}
+.pip-project button { color: var(--ui-info-ink); }
+.storage-card, .care-demo-banner, .care-demo-entry { background: #fff5dc; color: var(--ui-warning); border-color: #ead6a8; }
+.care-demo-banner strong, .care-demo-banner p, .care-demo-entry p, .preview-warning { color: var(--ui-warning); }
+.resource-help-content .resource-help-note { border-color: var(--ui-line); }
+.result-reward-controls { background: #f4efff; border-color: #dfd0ee; }
+.pip-level { color: var(--ui-selected-ink); background: var(--ui-selected); }
+.pip-portrait { background: radial-gradient(ellipse at 50% 72%, #fce2efb3, transparent 70%); }
+.pip-stats progress, .garden-track { accent-color: #b08bc9; background: #ece2ef; }
+.pip-stats progress::-webkit-progress-bar { background: #ece2ef; }
+.pip-stats progress::-webkit-progress-value, .garden-track i { background: #b08bc9; }
+.pip-stats label:last-child progress::-webkit-progress-value { background: #df91ad; }
+.garden-plan { color: var(--ui-ink); background: linear-gradient(145deg, #fff7e8, #fff0f4); border-color: #ebd0cd; box-shadow: 0 3px 0 #d5b8c34d; }
+.garden-plan-next { background: #fffdf9c9; }
+.garden-plan-next>small, .garden-plan li small, .garden-plan .garden-plan-note { color: var(--ui-muted); }
+.garden-plan button, .garden-plan li>span, .garden-plan-achievement, .garden-visit-line { color: #6b4b82; }
+.garden-plan>progress { accent-color: #b08bc9; }
+.garden-plan>progress { appearance: none; border: 0; background: #ece2ef; border-radius: 6px; overflow: hidden; }
+.garden-plan>progress::-webkit-progress-bar { background: #ece2ef; border-radius: 6px; }
+.garden-plan>progress::-webkit-progress-value { background: #b08bc9; border-radius: 6px; }
+.garden-plan>progress::-moz-progress-bar { background: #b08bc9; border-radius: 6px; }
+.pip-stats progress::-moz-progress-bar { background: #b08bc9; }
+.pip-stats label:last-child progress::-moz-progress-bar { background: #df91ad; }
+.garden-look-status { color: var(--ui-info-ink); background: var(--ui-info); }
+.garden-activity-spot { color: #795337; background: #fff6e6f2; border-color: #d8b484; }
+.garden-activity-spot small { color: #795337; }
+.garden-activity-spot[aria-pressed="true"] { color: #6b3d69; background: #ffe3ef; border-color: #bd80a3; box-shadow: 0 0 0 3px #fff7edbd; }
+.coming-card { color: var(--ui-muted); border-color: #e0cee7; }
+
+/* 크기와 기존 선택 테두리 두께를 건드리지 않고 비활성/현재 선택을 함께 구분합니다. */
+.garden-area-tabs button, .garden-space-styles button, .space-compare button,
+.garden-look-choices button, .space-preview-compare button,
+.garden-plots button, .garden-flowers button, .garden-lantern-placement button,
+.garden-project button, .pip-shop-item button, .chapter-tabs button {
+  color: var(--ui-selected-ink); background: #faf4ff; border-color: #d8c4e4;
+}
+button:disabled {
+  color: var(--ui-disabled-ink); background: var(--ui-disabled); border-color: #c9b8d1; box-shadow: none;
+}
+.primary:disabled, .campaign-play .primary:disabled, .pip-care-actions .primary:disabled {
+  color: var(--ui-disabled-ink); background: var(--ui-disabled); box-shadow: none;
+}
+.garden-area-tabs button[aria-selected="true"], .garden-space-styles button[aria-pressed="true"],
+.space-compare button[aria-pressed="true"], .garden-look-preview button[aria-pressed="true"],
+.space-preview-compare button[aria-pressed="true"], .garden-plots button[aria-pressed="true"],
+.garden-flowers button[aria-pressed="true"], .garden-project button[aria-pressed="true"],
+.chapter-tabs button[aria-selected="true"] {
+  color: var(--ui-selected-ink); background: var(--ui-selected); border-color: #a27cba;
+}
+
+dialog, #tutorial-dialog, #resource-help-dialog {
+  color: var(--ui-ink); background: var(--ui-paper); border-color: var(--ui-line); box-shadow: 0 12px 42px #69446b29;
+}
+dialog::backdrop, #tutorial-dialog::backdrop, #resource-help-dialog::backdrop { background: #3e294d70; }
+.guide-swap, .guide-goals, .guide-specials { background: #f5edff; }
+.toggle::before { background: #e9e0ec; border-color: #9a83a5; }
+.toggle.on::before { background: #9464ae; border-color: #9464ae; }
+.toggle i { box-shadow: 0 1px 2px #653e7b33; }
+.reset-button { color: var(--ui-danger)!important; }
+.pip-care-card .pip-save-note { color: var(--ui-danger); }
+.save-attention::after { background: var(--ui-danger); color: #fff; }
+#toast { background: #725086; color: #fffdf9; box-shadow: 0 5px 20px #653e7b26; }
+
+button:focus-visible, a:focus-visible, select:focus-visible,
+#game-canvas:focus-visible, .campaign-node:focus-visible,
+.garden-stage:focus-visible, #pip-care-title:focus-visible, #garden-edit-title:focus-visible,
+.test-stage:focus-visible, .test-level-button:focus-visible, .result-test-button:focus-visible,
+.chapter-tabs button:focus-visible, .stage-preview button:focus-visible,
+.garden-area-tabs button:focus-visible, .garden-space-editor button:focus-visible,
+.garden-space-preview button:focus-visible, .garden-look-preview button:focus-visible { outline-color: var(--ui-focus); }
+.campaign-scroll[data-scenery-art-ready="true"] .campaign-node:focus-visible { box-shadow: 0 0 0 7px #fffaf7; }
