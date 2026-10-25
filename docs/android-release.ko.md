@@ -1,4 +1,16 @@
-## 최신 통합 APK · 지도5풍경/발판/7곡 · 2026-10-25 · #73
+## 최신 로컬 APK · 밝은 공통 UI 포함 · 2026-10-25 · #73
+
+현재 로컬 파일은 **`Pawblossom-Puzzle-v0.1.7-2026-10-25-50653c0-debug.apk`**입니다. 게임 소스 `50653c0549f55e829400167510d85c3c9b6fc926`/PR335까지 포함하며 최초 정확 [main CI40165877341](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40165877341)의 양Node가 성공했습니다. 앞선 지도5풍경/발판/7곡에 밝은 크림·코럴·라벤더 공통 UI와 새 보드 바탕/초점 색을 더했습니다. UI 관련 기존720개·type3/production·DEV/production 실화면·독립 읽기 검수의 경계는 browser-qa 기록을 따릅니다.
+
+APK0.1.7/code8·**25,397,795바이트**, SHA256 **`9ffb10f345d043470b8832b8ad437e1dca1abd52e091ae1a0aaf2fd25935f310`**입니다. testing 웹92+정확한 빈cordova2/public94 전수 SHA·META 포함 비웹536의7c32 불변·ZIP 중복0·v2/전체 signer 정확1/기존 서명·package/min24target36을 확인했습니다. APK의 실제 CSS에는 새 팔레트, JS에는 새 canvas 바탕이 포함되며 e00 APK에는 해당 표시가 없음을 별도 비교했습니다. production dist84/Android public86을 전수 SHA로 복원하고 빌드 직후 Git clean을 확인했습니다. 새 native JUnit/lint 실행·최신 LD 설치/조작은 없습니다.
+
+**새506의 Drive 업로드·재다운로드는 미실행**입니다. 기존 승인 Chrome/Drive 폴더의 제목·URL은 확인되지만 실제 문서 읽기는 여전히 `Debugger unattached`입니다. 사용자에게 브라우저 연결 복구를 요청했으며 다른 계정/폴더·공유 확대·Native/보안 우회는 하지 않았습니다. 최신 로컬 APK·checksum·검증 원문은 Git 밖 `Pawblossom-builds/2026-10-25-50653c0`, `integration-20261025/bright-ui-50653c0-build.json`/`335-apk-ui-content-proof.json`에 있습니다.
+
+현재 Drive에서 업로드 완료를 확인한 최근 파일은 아래 **e00ccf6 중간본**이며 밝은 UI를 포함하지 않습니다. 이 중간본의 업로드 성공/재다운로드 미검증과 새506의 미업로드를 구분합니다. 두 파일은 같은0.1.7/code8이므로 날짜/커밋 이름·SHA로 구별합니다. #122·실광고/Play 구매·단말/청취·상용 감각 승인·스토어는 미완료입니다.
+
+## 이전 Drive 통합본 · 지도5풍경/발판/7곡 · 2026-10-25 · #73
+
+아래는 e00 중간본 당시 기록입니다. 현재 로컬 후보/미전달 상태는 위506 절을 따릅니다.
 
 현재 파일은 **`Pawblossom-Puzzle-v0.1.7-2026-10-25-e00ccf6-debug.apk`**입니다. 게임 소스 `e00ccf64808ee31a4b9ef6a584b5145e26f991c8`/PR326·328·330·332를 포함하며 정확한 최초 main [CI40163011024](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40163011024)의 Node22/24가 모두 성공했습니다.20레벨5풍경·구간 입장/내부 스크롤·자체4개 그림/풍경별 발판·7곡/마디 전환·짧은 세로 첫 발판을 포함합니다. 기존100레벨/저장/경제/출력 믹스·효과음은 유지합니다.
 
