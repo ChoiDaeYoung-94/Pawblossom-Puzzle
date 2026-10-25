@@ -1217,21 +1217,20 @@ function renderCampaignMap(){
     }).join('')}</div></section>`;
   }).join('')}</div><div class="campaign-play"><div><span>${text(chapterForLevel(current).title)}</span><strong>${text('level')} ${current}</strong></div><button id="map-play" class="primary">${text(active?'mapResume':'mapPlay')}${icon('arrow',20)}</button></div>`;
 }
-function renderViews(grew=false){
-  if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);
-  const focused=document.activeElement as HTMLElement|null,focusedId=focused?.id;
-  const scroll=Array.from(document.querySelectorAll<HTMLElement>('.view'),view=>({view,top:view.scrollTop,left:view.scrollLeft}));
-  if(route==='map'&&$('#map-view').dataset.motionActive==='true')mapScrollOffset=document.querySelector<HTMLElement>('#campaign-scroll')?.scrollTop??mapScrollOffset;
-  disposeCarePipDisplay();
+/** 숨은 지도는 유지하고, 다음 지도 진입에서 현재 진행/언어/회차를 반영합니다. */
+function renderCampaignMapView(){
+  if(route!=='map'&&mapScenery)return;
   mapPipIdle?.dispose();mapPipIdle=undefined;
   mapScenery?.dispose();mapScenery=undefined;
   detachMapScroll?.();detachMapScroll=undefined;
   $('#map-view').innerHTML=renderCampaignMap();
-  mapScenery=createCampaignScenery($('#campaign-scroll'),id=>{
-    if(route!=='map')return;selectedChapter=id;$<HTMLSelectElement>('#map-chapter-select').value=String(id);
+  const observer=createCampaignScenery($('#campaign-scroll'),id=>{
+    if(mapScenery!==observer||route!=='map')return;selectedChapter=id;$<HTMLSelectElement>('#map-chapter-select').value=String(id);
     $('#map-world-name').textContent=campaignWorldName(id,save.language);syncMusicTheme();
   });
+  mapScenery=observer;
   const campaignScroll=$('#campaign-scroll');
+  const ownsMap=()=>route==='map'&&mapScenery===observer&&document.querySelector('#campaign-scroll')===campaignScroll;
   const rememberMapScroll=()=>{if(campaignScroll.isConnected&&route==='map'&&!$('#map-view').hidden)mapScrollOffset=campaignScroll.scrollTop;};
   campaignScroll.addEventListener('scroll',rememberMapScroll,{passive:true});
   detachMapScroll=()=>campaignScroll.removeEventListener('scroll',rememberMapScroll);
@@ -1239,15 +1238,24 @@ function renderViews(grew=false){
     const mapPip=document.querySelector<HTMLElement>('#map-current-pip');
     if(mapPip)mapPipIdle=createPipIdle(mapPip);
   }
-  $('#map-play').onclick=()=>showStagePreview(mapCurrentLevel(),'map',$('#map-play'));
-  $('#map-locate').onclick=()=>revealMapStage();
+  $('#map-play').onclick=()=>{if(ownsMap())showStagePreview(mapCurrentLevel(),'map',$('#map-play'));};
+  $('#map-locate').onclick=()=>{if(ownsMap())revealMapStage();};
   $<HTMLSelectElement>('#map-chapter-select').onchange=event=>{
-    if(route!=='map'||stagePreview||otherModal())return;
+    if(!ownsMap()||route!=='map'||stagePreview||otherModal())return;
     const id=Number((event.target as HTMLSelectElement).value);if(!chapters.some(chapter=>chapter.id===id))return;
     selectedChapter=id;document.querySelector(`#map-chapter-${id}`)?.scrollIntoView?.({block:'start',behavior:'auto'});
     mapScrollOffset=campaignScroll.scrollTop;
   };
   campaignScroll.scrollTop=mapScrollOffset;
+  document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach(button=>button.onclick=()=>{if(ownsMap())showStagePreview(Number(button.dataset.level),'map',button);});
+}
+function renderViews(grew=false){
+  if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);
+  const focused=document.activeElement as HTMLElement|null,focusedId=focused?.id;
+  const scroll=Array.from(document.querySelectorAll<HTMLElement>('.view'),view=>({view,top:view.scrollTop,left:view.scrollLeft}));
+  if(route==='map'&&$('#map-view').dataset.motionActive==='true')mapScrollOffset=document.querySelector<HTMLElement>('#campaign-scroll')?.scrollTop??mapScrollOffset;
+  disposeCarePipDisplay();
+  renderCampaignMapView();
   $('#village-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">${text('chapterMeadow')}</div><h2>${text('mapTitle')}</h2><p>${text('mapDesc')}</p></div>${gardenWorkshop(grew)}`;
   if(careDemo)$('#village-view').innerHTML=$('#village-view').innerHTML.split('<div class="level-picker">')[0];
   $('#village-view').innerHTML=careDemoPanel('village')+$('#village-view').innerHTML;
@@ -1263,7 +1271,6 @@ function renderViews(grew=false){
   $('#save-retry').onclick=()=>{if(!settingsAction('save-retry'))return;retrySave(save);updateSaveStatus();};
   $('#save-reload').onclick=()=>{if(!settingsAction('save-reload'))return;if(confirm(text('saveReloadConfirm')))window.location.reload();};
   bindCareControls();
-  document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach(button=>button.onclick=()=>showStagePreview(Number(button.dataset.level),'map',button));
   $('#music-toggle').onclick=()=>{if(!settingsAction('music-toggle'))return;save.music=!save.music;audio.setMusicEnabled(save.music);persist();$('#music-toggle').classList.toggle('on',save.music);$('#music-toggle').setAttribute('aria-checked',String(save.music));};
   const help=document.createElement('button');help.id='tutorial-help';help.className='primary guide-help';help.textContent=text('tutorial');help.onclick=()=>showTutorial('help',help);$('#settings-view').append(help);
   if(androidAdEntry){const entry=document.createElement('button');entry.id='test-ad-button';entry.className='text-button';entry.textContent=adCopy(save.language).title;entry.onclick=()=>{void showAdDialog();};$('#settings-view').append(entry);}
