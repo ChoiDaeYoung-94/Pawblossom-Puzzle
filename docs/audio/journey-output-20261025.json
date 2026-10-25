@@ -1,0 +1,194 @@
+{
+  "scope": "actual scheduleMusic deterministic clock + original note/output graph OfflineAudioContext; future-reservation Set iteration bypassed only for preload, simultaneous voices independently counted. Not actual device listening/performance approval.",
+  "rate": 48000,
+  "levels": {
+    "music": 4,
+    "sfx": 3.4,
+    "master": 1,
+    "makeup": 1.12
+  },
+  "results": [
+    {
+      "theme": "winter",
+      "next": null,
+      "seconds": 54.53333333333334,
+      "notes": 87,
+      "peak": 0.7494727969169617,
+      "rms": 0.12985313007624855,
+      "clipped": 0,
+      "simultaneous": 3,
+      "firstChange": null
+    },
+    {
+      "theme": "tide",
+      "next": null,
+      "seconds": 54.53333333333334,
+      "notes": 104,
+      "peak": 0.6730610132217407,
+      "rms": 0.14620648089034743,
+      "clipped": 0,
+      "simultaneous": 3,
+      "firstChange": null
+    },
+    {
+      "theme": "dream",
+      "next": null,
+      "seconds": 54.53333333333334,
+      "notes": 85,
+      "peak": 0.7493693828582764,
+      "rms": 0.12781106832312233,
+      "clipped": 0,
+      "simultaneous": 3,
+      "firstChange": null
+    },
+    {
+      "theme": "clockwork",
+      "next": null,
+      "seconds": 54.53333333333334,
+      "notes": 110,
+      "peak": 0.673647403717041,
+      "rms": 0.15028958182324653,
+      "clipped": 0,
+      "simultaneous": 3,
+      "firstChange": null
+    },
+    {
+      "theme": "festival",
+      "next": null,
+      "seconds": 54.53333333333334,
+      "notes": 109,
+      "peak": 0.7639749646186829,
+      "rms": 0.14653944040658212,
+      "clipped": 0,
+      "simultaneous": 3,
+      "firstChange": null
+    },
+    {
+      "theme": "winter",
+      "next": "dream",
+      "seconds": 54.53333333333334,
+      "notes": 85,
+      "peak": 0.7494727969169617,
+      "rms": 0.12812011633107637,
+      "clipped": 0,
+      "simultaneous": 3,
+      "firstChange": {
+        "theme": "dream",
+        "time": 26.716666666666686
+      }
+    },
+    {
+      "theme": "clockwork",
+      "next": "festival",
+      "seconds": 54.53333333333334,
+      "notes": 109,
+      "peak": 0.7639749050140381,
+      "rms": 0.14815811715456592,
+      "clipped": 0,
+      "simultaneous": 3,
+      "firstChange": {
+        "theme": "festival",
+        "time": 26.716666666666686
+      }
+    }
+  ],
+  "unchanged": [
+    {
+      "name": "music",
+      "maxSampleDifference": 4.76837158203125e-07,
+      "peak": 0.8519109487533569,
+      "rms": 0.1362477072235125,
+      "voicesBefore": 2,
+      "voicesAfter": 2
+    },
+    {
+      "name": "tap",
+      "maxSampleDifference": 0,
+      "peak": 0.16298246383666992,
+      "rms": 0.010894883623877815,
+      "voicesBefore": 1,
+      "voicesAfter": 1
+    },
+    {
+      "name": "swap",
+      "maxSampleDifference": 0,
+      "peak": 0.4834531545639038,
+      "rms": 0.04219896140614371,
+      "voicesBefore": 2,
+      "voicesAfter": 2
+    },
+    {
+      "name": "invalid",
+      "maxSampleDifference": 0,
+      "peak": 0.33607614040374756,
+      "rms": 0.03251482103787021,
+      "voicesBefore": 2,
+      "voicesAfter": 2
+    },
+    {
+      "name": "match",
+      "maxSampleDifference": 0,
+      "peak": 0.541836142539978,
+      "rms": 0.04997098709544126,
+      "voicesBefore": 2,
+      "voicesAfter": 2
+    },
+    {
+      "name": "special",
+      "maxSampleDifference": 2.384185791015625e-07,
+      "peak": 0.7406679391860962,
+      "rms": 0.08939094021597283,
+      "voicesBefore": 4,
+      "voicesAfter": 4
+    },
+    {
+      "name": "win",
+      "maxSampleDifference": 2.384185791015625e-07,
+      "peak": 0.6427490711212158,
+      "rms": 0.12287498208680395,
+      "voicesBefore": 5,
+      "voicesAfter": 5
+    },
+    {
+      "name": "lose",
+      "maxSampleDifference": 0,
+      "peak": 0.3320643901824951,
+      "rms": 0.05408004526208541,
+      "voicesBefore": 4,
+      "voicesAfter": 4
+    },
+    {
+      "name": "reward",
+      "maxSampleDifference": 2.384185791015625e-07,
+      "peak": 0.6395049095153809,
+      "rms": 0.08271248979318395,
+      "voicesBefore": 3,
+      "voicesAfter": 3
+    },
+    {
+      "name": "overlap",
+      "maxSampleDifference": 3.5762786865234375e-07,
+      "peak": 0.8717402219772339,
+      "rms": 0.14278727960561874,
+      "voicesBefore": 20,
+      "voicesAfter": 20
+    },
+    {
+      "name": "muted",
+      "maxSampleDifference": 0,
+      "peak": 0,
+      "rms": 0,
+      "voicesBefore": 0,
+      "voicesAfter": 0
+    }
+  ],
+  "sourceSha256": "b9bb658dee10727642d5ac83f0feec2b66246332fb3f6b80ed9563fe8670118c",
+  "sourceHashEncoding": "UTF-8, CRLF normalized to LF",
+  "baseline": "AudioManager at256471fd; old7 exactfixture; 11 intro/SFX/overlap/mute cases at48kHz2sec",
+  "preview": "local QA WAV contains only6sec intro pernewtheme,30sec total; not full5songs",
+  "boundaries": [
+    "Offline deterministic clock + scheduler trace + original note/output graph. Future Set iterator bypass only to preload all future notes; real runtime6/14 cap separately unit tested; rendered simultaneous3 independently counted.",
+    "11 prior output cases compare same frame graph before256471fd andafter. First intro case has initiallyscheduled2voices,notcomplete2seconds of automaticallyadvancingtheme.",
+    "No physical listening/mobile CPU/performance/Bluetooth/focus/commercial-audio approval; final mixer/old7scores/runtime code unchanged."
+  ]
+}

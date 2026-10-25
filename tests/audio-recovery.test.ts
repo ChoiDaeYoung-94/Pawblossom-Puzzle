@@ -1,3 +1,4 @@
+import oldSevenScores from './fixtures/music-seven-256471f.json';
 import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest';
 import {AudioManager,AUDIO_LEVELS,MUSIC_THEMES,musicScore,type MusicTheme} from '../src/audio/AudioManager';
 
@@ -168,8 +169,9 @@ describe('예약 음과 노드 정리',()=>{
 });
 
 describe('자체 구간 음악과 미예약 마디 전환',()=>{
-  it('서로 다른 일곱 곡이16마디·128박자 칸과 대응 베이스를 가지며 원래 초원 도입부를 보존합니다',()=>{
-    expect(MUSIC_THEMES).toHaveLength(7);expect(new Set(MUSIC_THEMES.map(k=>JSON.stringify(musicScore(k).melody))).size).toBe(7);
+  it('서로 다른 열두 곡이16마디·128개8분음칸과 대응 베이스를 가지며 기존일곱 악보를정확보존합니다',()=>{
+    expect(MUSIC_THEMES).toHaveLength(12);expect(new Set(MUSIC_THEMES.map(k=>JSON.stringify(musicScore(k).melody))).size).toBe(12);
+    expect(Object.fromEntries(Object.keys(oldSevenScores).map(key=>[key,musicScore(key as MusicTheme)]))).toEqual(oldSevenScores);
     for(const theme of MUSIC_THEMES){const score=musicScore(theme);expect(score.melody).toHaveLength(16);expect(score.bass).toHaveLength(16);expect(score.fifths).toHaveLength(16);for(const bar of score.melody){expect(bar).toHaveLength(8);expect(bar.every(n=>n===null||Number.isInteger(n)&&n>=48&&n<=96)).toBe(true);}}
     expect(musicScore('meadow').melody[0]).toEqual([72,null,76,79,null,76,74,null]);expect(musicScore('meadow').bass.slice(0,8)).toEqual([48,45,55,48,48,45,55,48]);
   });

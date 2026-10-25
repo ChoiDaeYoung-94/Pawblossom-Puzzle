@@ -11,7 +11,7 @@ const WORLD_EN=["Blossom Meadow", "Sunlit Brook", "Petal Orchard", "Mosswood Tra
 export function campaignWorldName(chapter:number,language:'ko'|'en'){
   const index=campaignWorldIndex(chapter);return `${(language==='ko'?WORLD_KO:WORLD_EN)[index]} · ${index*20+1}–${index*20+20}`;
 }
-const WORLD_MUSIC:readonly MusicTheme[]=['meadow','brook','orchard','woodland','lantern','orchard','meadow','brook','brook','orchard','lantern','lantern','woodland','meadow','woodland','brook','meadow','lantern','meadow','lantern','orchard','orchard','brook','lantern','lantern'];
+const WORLD_MUSIC:readonly MusicTheme[]=['meadow','brook','orchard','woodland','lantern','orchard','meadow','tide','tide','orchard','winter','dream','woodland','meadow','dream','tide','meadow','dream','dream','dream','garden','clockwork','tide','dream','festival'];
 export function campaignMusicTheme(chapter:number):MusicTheme{return WORLD_MUSIC[campaignWorldIndex(chapter)]!;}
 /** 원본정사각형을3장의그림띠로연결해20판긴장에서도가장자리풍경을지나치게확대하지않습니다. */
 export function campaignWorldPaint(chapter:number){

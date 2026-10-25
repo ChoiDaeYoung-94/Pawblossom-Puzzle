@@ -49,8 +49,12 @@ describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
     expect([...counts.values()]).toEqual([20,20,20,20,20]);
     const all=new Map<string,number>();for(const c of chapters)all.set(campaignWorld(c.id),(all.get(campaignWorld(c.id))??0)+c.last-c.first+1);expect(all.size).toBe(25);expect([...all.values()]).toEqual(Array(25).fill(20));
     expect(campaignWorldName(12,'ko')).toBe('라벤더 테라스 · 101–120');expect(campaignWorldName(31,'en')).toBe('Grand Blossom Fair · 481–500');
-    for(const c of chapters){expect(campaignMusicTheme(c.id)).toMatch(/^(meadow|brook|orchard|woodland|lantern)$/);for(const m of campaignWorldPaint(c.id).matchAll(/data-map-src="([^"]+)"/g))expect(existsSync(new URL('../public'+m[1],import.meta.url))).toBe(true);}expect(campaignWorld(3)).toBe(campaignWorld(5));
+    for(const c of chapters){expect(campaignMusicTheme(c.id)).toMatch(c.id<=11?/^(meadow|brook|orchard|woodland|lantern)$/:/^(meadow|brook|orchard|woodland|lantern|garden|winter|tide|dream|clockwork|festival)$/);for(const m of campaignWorldPaint(c.id).matchAll(/data-map-src="([^"]+)"/g))expect(existsSync(new URL('../public'+m[1],import.meta.url))).toBe(true);}expect(campaignWorld(3)).toBe(campaignWorld(5));
     expect(campaignWorldName(11,'ko')).toBe('등불 언덕 · 81–100');expect(campaignWorldName(1,'en')).toBe('Blossom Meadow · 1–20');
+  });
+  it('새세계의음악은세계분위기에연결하고기존100판5곡배정은그대로입니다',()=>{
+    expect(Array.from({length:11},(_,i)=>campaignMusicTheme(i+1))).toEqual(['meadow','meadow','brook','brook','brook','orchard','orchard','woodland','woodland','lantern','lantern']);
+    expect([17,15,18,28,31].map(campaignMusicTheme)).toEqual(['winter','tide','dream','clockwork','festival']);
   });
   it('같은 풍경 내부에서는 재입장하지 않고 큰 풍경 경계에만 일회 반응하며 숨김·모션 감소는 지웁니다',()=>{
     const h=setup();h.controller.setActive(true);h.flush();expect(h.chapters.every(c=>!c.dataset.arrival)).toBe(true);

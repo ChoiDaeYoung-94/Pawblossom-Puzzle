@@ -23,7 +23,7 @@ const MELODY: readonly (readonly (number | null)[])[] = [
 ];
 const BASS = [48, 45, 55, 48, 48, 45, 55, 48] as const;
 
-export type MusicTheme='meadow'|'brook'|'orchard'|'woodland'|'lantern'|'garden'|'pip';
+export type MusicTheme='meadow'|'brook'|'orchard'|'woodland'|'lantern'|'garden'|'pip'|'winter'|'tide'|'dream'|'clockwork'|'festival';
 type MusicTimbre='bell'|'soft'|'wood';
 interface MusicScore {readonly melody:readonly (readonly (number|null)[])[];readonly bass:readonly number[];readonly fifths:readonly number[];readonly timbre:MusicTimbre}
 // 자체 악보: 모두72BPM/4박자여서 구간 변화는 다음 마디에서 자연스럽게 이어집니다.
@@ -33,6 +33,8 @@ const score=(melody:readonly (readonly (number|null)[])[],bass:readonly number[]
   melody:[...melody,...ANSWER_ORDER.map((index,bar)=>bar===7?[76,null,74,null,72,null,null,null]:melody[index]!.map(pitch=>pitch===null?null:bar<2&&pitch<=76?pitch+12:pitch))],
   bass:[...bass,...ANSWER_ORDER.map((index,bar)=>bar===7?48:bass[index]!)],fifths:[...bass,...ANSWER_ORDER.map((index,bar)=>bar===7?48:bass[index]!)].map(pitch=>pitch+7),timbre,
 });
+// 새 여정 곡은16마디 전체를 별도로 적습니다. 기존7곡의 생성/출력 경로는 유지합니다.
+const journeyScore=(melody:readonly (readonly (number|null)[])[],bass:readonly number[],timbre:MusicTimbre):MusicScore=>({melody,bass,fifths:bass.map(pitch=>pitch+7),timbre});
 const MUSIC_SCORES:Readonly<Record<MusicTheme,MusicScore>>={
   meadow:score(MELODY,BASS,'bell'),
   brook:score([
@@ -71,6 +73,56 @@ const MUSIC_SCORES:Readonly<Record<MusicTheme,MusicScore>>={
     [81,null,79,null,76,74,72,null],[77,null,76,null,74,72,69,null],
     [74,null,79,null,81,79,76,null],[74,null,76,null,72,null,null,null],
   ],[48,53,48,48,45,53,55,48],'wood'),
+  winter:journeyScore([
+    [84,null,null,79,null,76,null,null],[81,null,79,null,76,null,74,null],
+    [79,null,null,76,null,72,null,null],[74,null,76,null,79,null,null,null],
+    [81,null,null,84,null,81,79,null],[76,null,79,null,74,null,null,null],
+    [77,null,null,76,null,74,null,null],[76,null,74,null,72,null,null,null],
+    [84,null,86,null,null,84,79,null],[81,null,null,79,null,76,null,null],
+    [79,null,81,null,76,null,72,null],[74,null,null,79,null,76,null,null],
+    [81,null,84,null,79,null,76,null],[77,null,null,76,null,72,null,null],
+    [74,null,79,null,76,null,74,null],[72,null,null,null,72,null,null,null],
+  ],[48,53,48,55,45,48,53,48,48,53,45,55,53,48,55,48],'soft'),
+  tide:journeyScore([
+    [67,null,72,null,76,null,79,null],[77,null,76,72,null,69,72,null],
+    [74,null,76,null,79,76,null,74],[72,null,67,null,72,null,null,null],
+    [69,null,72,null,77,null,81,null],[79,76,null,72,null,76,74,null],
+    [74,null,79,null,77,74,null,71],[72,null,76,null,72,null,null,null],
+    [76,null,79,84,null,79,76,null],[77,null,81,null,79,null,76,null],
+    [74,76,null,79,null,76,72,null],[74,null,67,null,71,null,74,null],
+    [77,null,76,72,null,69,72,null],[76,null,79,null,74,72,null,67],
+    [74,null,77,null,76,74,null,71],[72,null,76,null,72,null,null,null],
+  ],[48,41,45,48,53,48,43,48,48,53,45,43,53,48,55,48],'wood'),
+  dream:journeyScore([
+    [69,null,72,null,76,null,null,null],[71,null,null,74,null,79,null,null],
+    [72,null,76,null,null,79,76,null],[69,null,null,67,null,64,null,null],
+    [65,null,69,null,72,null,null,null],[67,null,null,71,null,74,null,null],
+    [72,null,71,null,69,null,67,null],[69,null,null,null,69,null,null,null],
+    [76,null,79,null,81,null,null,null],[79,null,null,76,null,74,null,null],
+    [76,null,72,null,71,null,69,null],[67,null,null,64,null,67,null,null],
+    [69,null,72,null,77,null,76,null],[74,null,null,71,null,67,null,null],
+    [72,null,71,null,69,null,68,null],[69,null,null,null,69,null,null,null],
+  ],[45,43,48,45,41,43,48,45,45,43,48,40,41,43,40,45],'soft'),
+  clockwork:journeyScore([
+    [72,79,76,null,74,null,79,null],[71,null,74,79,77,null,74,null],
+    [69,76,72,null,71,null,76,null],[72,null,76,79,null,76,72,null],
+    [77,81,79,null,77,null,72,null],[76,null,79,84,81,null,76,null],
+    [74,79,77,null,74,null,71,null],[72,null,76,null,72,null,null,null],
+    [79,84,81,null,79,null,76,null],[77,null,81,79,76,null,74,null],
+    [76,81,79,null,76,null,72,null],[74,null,79,77,null,74,71,null],
+    [77,81,84,null,81,null,77,null],[76,null,79,76,72,null,67,null],
+    [74,77,79,null,77,null,71,null],[72,null,76,null,72,null,null,null],
+  ],[48,43,45,48,53,48,55,48,48,53,45,43,53,48,55,48],'wood'),
+  festival:journeyScore([
+    [79,null,79,81,84,null,81,null],[79,null,76,72,76,null,79,null],
+    [77,null,77,79,81,null,84,null],[83,null,81,79,74,null,null,null],
+    [81,null,84,86,84,null,81,null],[79,null,84,83,79,null,76,null],
+    [77,null,81,79,77,null,74,null],[76,null,74,null,72,null,null,null],
+    [84,null,84,86,88,null,86,null],[84,null,81,79,76,null,79,null],
+    [81,null,84,81,77,null,79,null],[83,null,81,79,74,null,79,null],
+    [81,null,84,86,84,null,81,null],[79,null,76,72,76,null,79,null],
+    [77,null,74,79,76,null,74,null],[72,null,79,null,72,null,null,null],
+  ],[48,48,53,55,45,48,53,48,48,45,53,55,53,48,55,48],'bell'),
 };
 export function musicScore(theme:MusicTheme):MusicScore{return MUSIC_SCORES[theme];}
 export const MUSIC_THEMES=Object.freeze(Object.keys(MUSIC_SCORES) as MusicTheme[]);
