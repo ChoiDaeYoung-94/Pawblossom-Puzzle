@@ -1,0 +1,35 @@
+.journey-garden { padding:16px; border:1px solid #e5d6ed; border-radius:22px; background:linear-gradient(155deg,#fffaf0,#fcf4ff 65%,#edf9ff); }
+.journey-gallery-heading small { color:#765082; font-size:12px; font-weight:800; }
+.journey-gallery-heading h3 { margin:5px 0 9px; font-size:23px; }
+.journey-gallery-heading p,.journey-garden>p { line-height:1.6; font-size:13px; }
+.journey-select-label { display:block; margin:14px 0 6px; font-size:12px; font-weight:800; }
+#journey-project-select { width:100%; min-width:0; min-height:44px; background:#fffaf6; border:1px solid #bba1c6; border-radius:12px; padding:8px; color:#523d60; font:inherit; font-size:13px; }
+.journey-work-picture { position:relative; isolation:isolate; overflow:hidden; border-radius:24px; margin:14px 0 6px; background:radial-gradient(ellipse at 50% 68%,#fffdf3 10%,#f0e6fb 62%,#e7f4fc); }
+.journey-work-art { display:block; width:100%; aspect-ratio:4/3; }
+.journey-work-badge { position:absolute; top:10px; left:10px; border-radius:20px; padding:5px 10px; background:#fffaf1ed; color:#76516f; font-size:11px; font-weight:800; }
+[data-journey-ready=true] .journey-work-fallback { display:none; }
+.journey-work-lights { opacity:0; }
+[data-journey-ready=true] .journey-work-lights { opacity:1; }
+[data-journey-active=true] .journey-work-lights circle { transform-box:fill-box;transform-origin:center; animation:journey-lantern-glow 3.2s ease-in-out infinite; }
+[data-journey-active=true] .journey-work-lights circle:nth-child(2) { animation-delay:-1.4s; }
+[data-journey-active=true] .journey-work-lights circle:nth-child(3) { animation-delay:-2.3s; }
+.journey-pip { position:absolute; width:88px; height:105px; bottom:0; right:4px; transform-origin:bottom; }
+.journey-pip img { width:100%;height:100%;object-fit:contain; }
+.journey-pip-visit { animation:journey-pip-arrive 2.4s ease-in-out both; }
+.journey-work-picture[data-moment=true]::after { content:'✦'; position:absolute; right:28px; bottom:105px; color:#bb6f9b; font-size:25px; animation:journey-moment 2.4s ease-out both; }
+.journey-garden h4 { margin:10px 0 6px; font-size:18px; }.journey-milestones { color:#796b7c; font-size:12px!important; }
+.journey-style-options { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:15px; }
+.journey-style-options button { min-height:68px; padding:10px 7px; border:1px solid #d5bbdf; border-radius:14px; background:#fffaf5; color:#62446f; font-weight:800; }
+.journey-style-options button[aria-pressed=true] { border-color:#926ba6; background:#eee1f7; }.journey-style-options small { display:block; margin-top:5px;font-size:11px;font-weight:600; }
+.journey-optional { color:#7c6e80; font-size:12px!important; }.journey-next-card { padding:14px; margin:14px 0; border-radius:16px; border:1px solid #dec8e7; background:#faf0ff; }
+.journey-next-card>small,.journey-next-card>strong { display:block; }.journey-next-card>small { font-size:11px;color:#80628c; }.journey-next-card>strong { margin:5px 0; font-size:15px; }.journey-next-card p { font-size:12px;line-height:1.5; }
+.care-demo-presets { display:flex; flex-wrap:wrap; gap:8px; }.care-demo-presets button { min-height:44px; }
+.journey-preview .journey-work-picture { margin:0; }.journey-preview .space-preview-layout { align-items:start; }
+@keyframes journey-lantern-glow { 0%,100% {opacity:.25;transform:scale(.6)} 50% {opacity:1;transform:scale(1.2)} }
+@keyframes journey-pip-arrive { 0% {transform:translateX(22px) rotate(-5deg)} 25%,75% {transform:translateX(0) rotate(0)} 40%,60% {transform:translateY(-6px) rotate(3deg)} 100% {transform:translateX(0)} }
+@keyframes journey-moment { 0%,100% {opacity:0;transform:translateY(10px) scale(.7)} 30%,65% {opacity:1;transform:translateY(0) scale(1)} }
+@media (prefers-reduced-motion:reduce) { .journey-work-lights circle,.journey-pip-visit,.journey-work-picture[data-moment=true]::after { animation:none!important; } }
+
+.garden-area-tabs #garden-area-journey { grid-column:1/-1; background:#f6eafb; min-height:44px; }
+.journey-pip-visit,.journey-work-picture[data-moment=true]::after { animation-play-state:paused; }
+.journey-work-picture[data-journey-active=true] .journey-pip-visit,.journey-work-picture[data-journey-active=true][data-moment=true]::after { animation-play-state:running; }

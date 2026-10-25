@@ -6,7 +6,7 @@ export const gardenSpaceSpecs=[
   {id:'arch',clears:[90,100],stars:16,altCoins:480},
 ] as const;
 export type GardenSpace=typeof gardenSpaceSpecs[number]['id'];
-export type GardenArea='flowers'|GardenSpace;
+export type GardenArea='flowers'|'journey'|GardenSpace;
 export type SpaceStyle='base'|'alt';
 export interface GardenSpaceState {phase:0|1|2;altOwned:boolean;style:SpaceStyle;}
 export type GardenSpaces=Record<GardenSpace,GardenSpaceState>;

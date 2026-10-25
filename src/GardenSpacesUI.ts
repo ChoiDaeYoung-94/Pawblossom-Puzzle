@@ -4,8 +4,8 @@ import {gardenSpaceSpecs,gardenSpacesFor,previewSpaceAction,type GardenArea,type
 import type {GardenTheme} from './gardenDesign';
 
 const fill=(language:Language,key:TextKey,values:Record<string,string|number>)=>Object.entries(values).reduce((s,[k,v])=>s.replaceAll('{'+k+'}',String(v)),t(language,key));
-export const gardenAreas:GardenArea[]=['flowers','pond','shelter','arch'];
-export const gardenAreaName=(language:Language,area:GardenArea)=>t(language,({flowers:'gardenAreaFlowers',pond:'gardenAreaPond',shelter:'gardenAreaShelter',arch:'gardenAreaArch'} as const)[area]);
+export const gardenAreas:GardenArea[]=['flowers','pond','shelter','arch','journey'];
+export const gardenAreaName=(language:Language,area:GardenArea)=>t(language,({flowers:'gardenAreaFlowers',pond:'gardenAreaPond',shelter:'gardenAreaShelter',arch:'gardenAreaArch',journey:'journeyGarden'} as const)[area]);
 export const spacePhaseName=(language:Language,state:GardenSpaceState)=>t(language,state.phase===0?'spaceEmpty':state.phase===1?'spaceFoundation':'spaceComplete');
 export const spaceStyleName=(language:Language,space:GardenSpace,state:GardenSpaceState)=>t(language,({pond:{base:'spaceBasePond',alt:'spaceAltPond'},shelter:{base:'spaceBaseShelter',alt:'spaceAltShelter'},arch:{base:'spaceBaseArch',alt:'spaceAltArch'}} as const)[space][state.style]);
 export function gardenAreaTabs(language:Language,area:GardenArea){return `<div class="garden-area-tabs" role="tablist" aria-label="${t(language,'gardenAreas')}">${gardenAreas.map(id=>`<button id="garden-area-${id}" role="tab" type="button" aria-selected="${area===id}" aria-controls="garden-area-panel" tabindex="${area===id?0:-1}">${gardenAreaName(language,id)}</button>`).join('')}</div>`;}

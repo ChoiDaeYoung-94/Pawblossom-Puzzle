@@ -8,6 +8,8 @@ import {TestAdsController,adCopy,type TestAdsBridge,type AdSnapshot,type AdForma
 import {TestBillingController,billingCopy,type TestBillingBridge,type BillingSnapshot} from '../src/testBilling';
 import {bindPracticeBoard} from '../src/bindPracticeInputs';
 import {cloneSnapshot,prepareShuffle} from '../src/puzzleHelp';
+import * as journeyModel from '../src/journeyGarden';
+import * as journeyUI from '../src/JourneyGardenUI';
 import {freshGardenSpaces} from '../src/gardenSpaces';
 import {t, type TextKey} from '../src/i18n';
 import {icon as renderIcon} from '../src/icons';
@@ -219,7 +221,8 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     specialTileArt,
     ...boardDisplay,
-    gardenGoals,goalNextStep,nextGardenGoal,previewGardenPreset,gardenPresetPreview,pipTendingArt,
+    gardenGoals,goalNextStep,nextGardenGoal,previewGardenPreset,gardenPresetPreview,pipTendingArt,...journeyModel,...journeyUI,
+    createJourneyGardenArt:()=>({setActive(){},dispose(){}}),
     bindPracticeBoard,
     cloneSnapshot,prepareShuffle,
     showResultPip:()=>{resultArtCalls++;},
@@ -258,7 +261,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   vm.runInNewContext(levelsCode, {exports:levelExports});
   const pipCareExports:Record<string,unknown>={};vm.runInNewContext(pipCareCode,{exports:pipCareExports});Object.assign(context,pipCareExports);
   const gardenSpacesExports:Record<string,unknown>={};vm.runInNewContext(gardenSpacesCode,{exports:gardenSpacesExports,require:()=>levelExports});Object.assign(context,gardenSpacesExports);
-  const gardenDesignExports:Record<string,unknown>={};vm.runInNewContext(gardenDesignCode,{exports:gardenDesignExports,require:(name:string)=>name==='./levels'?levelExports:gardenSpacesExports});Object.assign(context,gardenDesignExports);
+  const gardenDesignExports:Record<string,unknown>={};vm.runInNewContext(gardenDesignCode,{exports:gardenDesignExports,require:(name:string)=>name==='./levels'?levelExports:name==='./journeyGarden'?journeyModel:gardenSpacesExports});Object.assign(context,gardenDesignExports);
   Object.assign(context,{require:(name:string) => {if(name==='./levels')return levelExports;if(name==='./core')return coreExports;if(name==='./pipCare')return pipCareExports;if(name==='./gardenDesign')return gardenDesignExports;throw new Error(name);}});
   const coreExports:Record<string,unknown>={}, practiceExports:Record<string,unknown>={};
   vm.runInNewContext(engineCode,{exports:coreExports});
@@ -440,7 +443,7 @@ describe('핍 육성·재화 소비와 정원 전용 체험',()=>{
   const normalState='JSON.stringify({round,currentLevel,moves,score,collected,shuffles,clearedLeaves,roundEnded,resultShown,firstReward,resultWon,testingLevel,continueUsed,board:scene.engine.board,leaves:scene.engine.leaves})';
   it.each(['feed','play'] as const)('체험의 단일 %s 25회 뒤 모든 꾸미기를 소유해도170코인6별이 남고 정상 저장을 복원합니다',kind=>{
     const language=kind==='feed'?'ko':'en',h=mainHarness(false,false,true);h.run(`changeLanguage('${language}');switchView('village');globalThis.budgetNormal=save;globalThis.budgetScene=scene`);
-    const disk=h.disk(),writes=h.writes(),normal=h.run('JSON.stringify(save)'),round=h.run(normalState);expect(h.run('enterCareDemo()')).toBe(true);expect(h.run('save.coins')).toBe(1800);expect(h.element('#village-view').innerHTML).toContain(t(language,'careDemoHint'));
+    const disk=h.disk(),writes=h.writes(),normal=h.run('JSON.stringify(save)'),round=h.run(normalState);expect(h.run('enterCareDemo()')).toBe(true);expect(h.run('save.coins')).toBe(1800);expect(h.element('#village-view').innerHTML).toContain(t(language,'journeyDemoHint').replace('{count}','100').replace('{stars}','100').replace('{coins}','1800'));
     for(let i=0;i<5;i++){h.element('#grow').onclick();h.flushGrowth();}h.run("switchView('journal')");
     for(let i=0;i<25;i++)h.element('#pip-'+kind).onclick();expect(h.run('save.pip')).toMatchObject({growth:100,affection:100});expect(h.run('save.coins')).toBe(1550);
     h.element('#pip-buy-ribbon').onclick();h.element('#pip-buy-wateringCan').onclick();h.run("switchView('village')");h.element('#garden-plot-1').onclick();h.element('#garden-flower-daisy').onclick();h.element('#garden-plot-2').onclick();h.element('#garden-flower-violet').onclick();
@@ -2361,7 +2364,7 @@ describe('후반 고유 완료 풍경과 정원 거래 context',()=>{
   });
   it('체험의40완료 context는 실제 완료목록·정상RNG/회차를 바꾸지 않고 종료시 풍경도 폐기합니다',()=>{
     const h=mainHarness(false,false,true,false,themeSave(19));h.run("switchView('village');globalThis.themeNormal=save;globalThis.themeCompleted=JSON.stringify(save.completed);globalThis.themeRound=JSON.stringify({round,moves,score,board:scene.engine.board,inProgress:save.inProgress})");const before=h.disk(),normal=h.run('JSON.stringify(save)'),writes=h.writes();const stale=h.element('#garden-theme-sunset').onclick;
-    expect(h.run('enterCareDemo()')).toBe(true);expect(h.run('gardenCompletedCount()')).toBe(100);expect(h.element('#village-view').innerHTML).toContain(t('en','careDemoHint'));expect(h.run('JSON.stringify(save.completed)===themeCompleted')).toBe(true);expect(h.run('save.gardenDesign')).not.toHaveProperty('ownedThemes');
+    expect(h.run('enterCareDemo()')).toBe(true);expect(h.run('gardenCompletedCount()')).toBe(100);expect(h.element('#village-view').innerHTML).toContain(t('en','journeyDemoHint').replace('{count}','100').replace('{stars}','100').replace('{coins}','1800'));expect(h.run('JSON.stringify(save.completed)===themeCompleted')).toBe(true);expect(h.run('save.gardenDesign')).not.toHaveProperty('ownedThemes');
     for(let i=0;i<5;i++){h.element('#grow').onclick();h.flushGrowth();}h.run("switchView('journal')");for(let i=0;i<8;i++){h.element('#pip-feed').onclick();h.element('#pip-play').onclick();}h.element('#pip-buy-ribbon').onclick();h.element('#pip-buy-wateringCan').onclick();expect(h.run('save.pip.owned')).toEqual(['ribbon','wateringCan']);h.run("switchView('village')");h.element('#garden-flower-daisy').onclick();h.element('#garden-plot-1').onclick();h.element('#garden-flower-violet').onclick();for(const id of ['bench','butterflies','lantern'])h.element('#garden-project-'+id).onclick();expect(h.run('save.gardenDesign.owned')).toEqual(['bench','butterflies','lantern']);const demoCoins=h.run('save.coins');stale();expect(h.run('save.coins')).toBe(demoCoins);h.element('#garden-theme-sunset').onclick();h.element('#garden-theme-starlight').onclick();expect(h.run('save.gardenDesign.theme')).toBe('starlight');expect(h.run('save.coins')).toBe(1350);const demoSelect=h.element('#garden-theme-meadow').onclick;
     for(const area of ['pond','shelter','arch']){
       h.element('#garden-area-'+area).onclick();for(let phase=0;phase<2;phase++){h.element('#garden-space-restore').onclick();expect(h.run('spaceDialog.open')).toBe(true);h.element('#space-preview-confirm').onclick();}
@@ -2516,7 +2519,7 @@ describe('후반 정원 공간과 확정 전 미리보기',()=>{
     h.element('#space-preview-cancel').onclick();staleConfirm();expect(h.run('spaceFocus')).toEqual([true]);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('selectedGardenArea')).toBe('pond');
     h.element('#garden-space-restore').onclick();const confirm=h.element('#space-preview-confirm').onclick;confirm();confirm();expect(h.stored().stars).toBe(88);expect(h.stored().coins).toBe(2000);expect(h.stored().gardenDesign.spaces.pond.phase).toBe(1);expect(h.run('spaceDialog.open')).toBe(false);expect(h.run(roundState)).toBe(round);expect(h.run('scene===spaceRound')).toBe(true);
     const reload=mainHarness(false,false,false,false,h.stored());reload.run("switchView('village')");reload.element('#garden-area-pond').onclick();expect(reload.run('gardenWorkshop(false)')).toContain('data-phase="1"');
-    h.run("document.querySelector('#garden-area-pond').onkeydown({key:'End',preventDefault(){}})");expect(h.run('selectedGardenArea')).toBe('arch');h.run("document.querySelector('#garden-area-arch').onkeydown({key:'ArrowLeft',preventDefault(){}})");expect(h.run('selectedGardenArea')).toBe('shelter');h.run("document.querySelector('#garden-area-shelter').onkeydown({key:'Home',preventDefault(){}})");expect(h.run('selectedGardenArea')).toBe('flowers');
+    h.run("document.querySelector('#garden-area-pond').onkeydown({key:'End',preventDefault(){}})");expect(h.run('selectedGardenArea')).toBe('journey');h.run("document.querySelector('#garden-area-journey').onkeydown({key:'ArrowLeft',preventDefault(){}})");expect(h.run('selectedGardenArea')).toBe('arch');h.run("document.querySelector('#garden-area-arch').onkeydown({key:'ArrowLeft',preventDefault(){}})");expect(h.run('selectedGardenArea')).toBe('shelter');h.run("document.querySelector('#garden-area-shelter').onkeydown({key:'Home',preventDefault(){}})");expect(h.run('selectedGardenArea')).toBe('flowers');
   });
   it.each(['ko','en'] as const)('%s: 꽃밭 완성 뒤에는 유료 풍경 구입 없이도 다음 별 복원 공간으로 이어집니다',language=>{
     const h=mainHarness(false,false,false,false,initial(language,49));h.run("switchView('village')");
@@ -2815,5 +2818,55 @@ describe('현재 정원 그림의 자연 모션 연결과 수명',()=>{
     expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
     const previous=live(h)[0];h.run("changeLanguage('en')");expect(previous.disposed).toBe(true);expect(live(h)).toHaveLength(1);expect(live(h)[0].picture.dataset.natureActive).toBe('true');
     expect(h.run('save.coins')).toBe(200);expect(h.run('save.stars')).toBe(10);expect(h.run('save.pip.growth')).toBe(60);expect(h.run('save.gardenDesign.owned')).toEqual(['butterflies']);
+  });
+});
+
+
+describe('500판 여행 정원과 별·소유 확정 경계',()=>{
+  const initial=(clears=500,stars=clears,coins=8000)=>({version:1,language:'ko',highestLevel:Math.min(500,clears+1),completed:Array.from({length:clears},(_,i)=>i+1),stars,coins,garden:0,music:true,sfx:true,tutorialSeen:true});
+  const open=(h:ReturnType<typeof mainHarness>)=>{h.run("switchView('village')");h.element('#garden-area-journey').onclick();};
+  const select=(h:ReturnType<typeof mainHarness>,id:string)=>h.run(`document.querySelector('#journey-project-select').value='${id}';document.querySelector('#journey-project-select').onchange()`);
+  const confirm=(h:ReturnType<typeof mainHarness>)=>{h.element('#journey-restore').onclick();expect(h.run('spaceDialog.open')).toBe(true);h.element('#space-preview-confirm').onclick();};
+  const board="JSON.stringify({round,moves,score,board:scene.engine.board,inProgress:save.inProgress,completed:save.completed,pip:save.pip,garden:save.garden})";
+  it.each(['ko','en'] as const)('%s: 10작품의두단계와선택스타일은기존판/성장없이한payload씩저장됩니다',language=>{
+    const h=mainHarness(false,false,false,false,{...initial(),language});open(h);const before=h.run(board);let stars=500,coins=8000;
+    for(const spec of journeyModel.journeyProjectSpecs){select(h,spec.id);for(const cost of [15,25]){confirm(h);stars-=cost;expect(h.stored().stars).toBe(stars);expect(h.stored().coins).toBe(coins);}
+      h.element('#journey-style-alt').onclick();h.element('#space-preview-confirm').onclick();coins-=spec.altCoins;expect(h.stored().coins).toBe(coins);expect(h.stored().gardenDesign.journeyProjects[spec.id]).toEqual({phase:2,altOwned:true,style:'alt'});
+      for(const style of ['base','alt']){h.element('#journey-style-'+style).onclick();h.element('#space-preview-confirm').onclick();expect(h.stored().coins).toBe(coins);}
+    }
+    expect(stars).toBe(100);expect(coins).toBe(3400);expect(h.run(board)).toBe(before);expect(h.run('save.pip?.growth??0')).toBe(0);expect(h.run('journeyNextCard(save.language,save.gardenDesign.journeyProjects,gardenCompletedCount(),"village")')).toContain(t(language,'journeyAllDone'));
+    const reload=mainHarness(false,false,false,false,h.stored());open(reload);select(reload,'starstage');expect(reload.run('gardenWorkshop(false)')).toContain('data-phase="2"');expect(reload.run('save.gardenDesign.journeyProjects.starstage.altOwned')).toBe(true);
+  });
+  it('미리보기/전후비교/취소는저장하지않고확정두번과낡은버튼은중복소비하지않습니다',()=>{
+    const h=mainHarness(false,false,false,false,initial());open(h);const disk=h.disk(),before=h.run('JSON.stringify(save)'),writes=h.writes();h.element('#journey-restore').onclick();const stale=h.element('#space-preview-confirm').onclick;
+    h.element('#space-preview-current').onclick();expect(h.run('spaceDialog.innerHTML')).toContain('data-phase="0"');h.element('#space-preview-after').onclick();expect(h.run('spaceDialog.innerHTML')).toContain('data-phase="1"');h.element('#space-preview-cancel').onclick();stale();expect(h.disk()).toEqual(disk);expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.writes()).toBe(writes);
+    h.element('#journey-restore').onclick();const once=h.element('#space-preview-confirm').onclick;once();once();expect(h.stored().stars).toBe(485);expect(h.stored().gardenDesign.journeyProjects.conservatory.phase).toBe(1);
+  });
+  it.each(['clears','stars','coins'] as const)('%s 부족은미리볼수있지만현재잔액으로다시차단됩니다',kind=>{
+    const data=initial(kind==='clears'?119:500,kind==='stars'?14:100,kind==='coins'?279:8000),h=mainHarness(false,false,false,false,data);open(h);
+    if(kind==='coins'){confirm(h);confirm(h);h.element('#journey-style-alt').onclick();}else h.element('#journey-restore').onclick();
+    const before=h.run('JSON.stringify(save)'),disk=h.disk();expect(h.run('spaceDialog.innerHTML')).toMatch(/id="space-preview-confirm"[^>]*disabled/);h.element('#space-preview-confirm').onclick();expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.disk()).toEqual(disk);
+  });
+  it.each(['primary','backup','conflict'] as const)('%s 저장실패시별과복원소유를둘다적용하지않고원문을보존합니다',phase=>{
+    const h=mainHarness(false,false,false,false,initial());open(h);h.element('#journey-restore').onclick();const before=h.run('JSON.stringify(save)');
+    if(phase==='backup')h.setStorageFails(true);else if(phase==='primary')h.run("const originalSet=localStorage.setItem;localStorage.setItem=(key,value)=>{if(key==='pawblossom.save.v1')throw Error('primary failed');originalSet(key,value)}");else h.run("localStorage.setItem('pawblossom.save.v1',JSON.stringify({...save,coins:7999}))");
+    const primary=h.run("localStorage.getItem('pawblossom.save.v1')");h.element('#space-preview-confirm').onclick();expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.run("localStorage.getItem('pawblossom.save.v1')")).toBe(primary);expect(h.run('save.gardenDesign?.journeyProjects')).toBeUndefined();
+  });
+  it.each(['project','hidden','route','language','oldDOM'] as const)('%s 무효화뒤늦은확정은소비하지않습니다',kind=>{
+    const h=mainHarness(false,false,false,false,initial());open(h);h.element('#journey-restore').onclick();const stale=h.element('#space-preview-confirm').onclick,disk=h.disk(),stars=h.run('save.stars');
+    if(kind==='project')h.run("selectedJourneyProject='lotus'");else if(kind==='hidden')h.run('document.hidden=true');else if(kind==='route')h.run("switchView('journal')");else if(kind==='language')h.run("changeLanguage('en')");else h.element('#space-preview-confirm').isConnected=false;
+    const after=h.disk();stale();expect(h.run('save.stars')).toBe(stars);expect(h.run('save.gardenDesign?.journeyProjects')).toBeUndefined();expect(h.disk()).toEqual(kind==='language'?after:disk);
+  });
+  it('완성후무료방문은성장0에서도가능하고수치/지갑/판을바꾸지않으며복귀시정리됩니다',()=>{
+    const h=mainHarness(false,false,false,false,initial());open(h);confirm(h);confirm(h);const before=h.run(board),disk=h.disk(),writes=h.writes();h.element('#journey-visit').onclick();expect(h.run('journeyMoment')).toBe(true);expect(h.run('gardenWorkshop(false)')).toContain(t('ko','journeyMoment'));h.flushCareReaction();expect(h.run('journeyMoment')).toBe(false);expect(h.run(board)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    h.element('#journey-visit').onclick();h.run("switchView('journal')");expect(h.run('journeyMoment')).toBe(false);expect(h.run('nextGardenProject()')).toContain('journal-open-journey');h.element('#journal-open-journey').onclick();expect(h.run('selectedGardenArea')).toBe('journey');expect(h.run('selectedJourneyProject')).toBe('lotus');
+  });
+  it('500체험은실제완료/회차를조작하지않고모든복원/꾸미기후키세개와원래선택을복원합니다',()=>{
+    const h=mainHarness(false,false,true,false,initial(121,30,600));open(h);select(h,'reading');const normal=h.run('JSON.stringify(save)'),round=h.run(board),disk=h.disk(),writes=h.writes();h.run('enterCareDemo()');h.element('#care-demo-preset-500-village').onclick();expect(h.run('gardenCompletedCount()')).toBe(500);expect(h.run('save.completed.length')).toBe(121);expect(h.run('save.stars')).toBe(500);expect(h.run('save.coins')).toBe(8000);
+    for(const spec of journeyModel.journeyProjectSpecs){select(h,spec.id);confirm(h);confirm(h);h.element('#journey-style-alt').onclick();h.element('#space-preview-confirm').onclick();}
+    expect(h.run('save.stars')).toBe(100);expect(h.run('save.coins')).toBe(3400);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);h.element('#care-demo-exit-village').onclick();expect(h.run('JSON.stringify(save)')).toBe(normal);expect(h.run(board)).toBe(round);expect(h.run('selectedJourneyProject')).toBe('reading');expect(h.run('selectedGardenArea')).toBe('journey');expect(h.disk()).toEqual(disk);
+  });
+  it('체험프리셋교체는모달/비활성에서차단하고낡은확정을정상저장으로넘기지않습니다',()=>{
+    const h=mainHarness(false,false,true,false,initial());open(h);h.run('enterCareDemo();setCareDemoPreset(500)');h.element('#journey-restore').onclick();const stale=h.element('#space-preview-confirm').onclick;h.run('setCareDemoPreset(100)');expect(h.run('careDemo.preset')).toBe(500);h.element('#space-preview-cancel').onclick();h.run('setCareDemoPreset(100)');expect(h.run('careDemo.preset')).toBe(100);const stars=h.run('save.stars'),disk=h.disk();stale();expect(h.run('save.stars')).toBe(stars);h.run('document.hidden=true;setCareDemoPreset(500)');expect(h.run('careDemo.preset')).toBe(100);expect(h.disk()).toEqual(disk);
   });
 });
