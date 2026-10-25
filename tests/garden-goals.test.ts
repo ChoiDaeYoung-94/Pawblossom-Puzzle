@@ -36,8 +36,9 @@ describe('저장과 소비 없는 공동 정원 목표',()=>{
     for(const space of Object.values(state.design!.spaces!))space.phase=2;
     const goals=gardenGoals(state);expect(goals.every(g=>g.done)).toBe(true);expect(nextGardenGoal(goals)).toBeUndefined();
   });
-  it('100판 첫 보상 소진 뒤 부족 재화를 재플레이로 벌 수 있다고 안내하지 않습니다',()=>{
-    const state:GoalState={...fresh(),plots:5,pip:{growth:100,affection:100},clears:100,design:{...freshGardenDesign(),flowers:['meadow','daisy','violet','meadow','meadow'],owned:['bench','butterflies']}};
+  it('100판 이후 새보상을 안내하고500판 소진 뒤 재플레이 수입을 약속하지 않습니다',()=>{
+    const state:GoalState={...fresh(),plots:5,pip:{growth:100,affection:100},clears:500,design:{...freshGardenDesign(),flowers:['meadow','daisy','violet','meadow','meadow'],owned:['bench','butterflies']}};
+    const earlier=gardenGoals({...state,clears:100}).find(g=>g.id==='lantern')!;expect(goalNextStep(earlier)).toMatchObject({destination:'map',missing:{kind:'coins'}});expect(goalNextStep(earlier)).not.toHaveProperty('unavailableIncome');
     const lantern=gardenGoals(state).find(g=>g.id==='lantern')!;expect(goalNextStep(lantern)).toMatchObject({destination:'flowers',unavailableIncome:true,missing:{kind:'coins'}});
     const pond=gardenGoals(state).find(g=>g.id==='pond-1')!;expect(goalNextStep(pond)).toMatchObject({destination:'flowers',unavailableIncome:true,missing:{kind:'stars'}});
     state.pip={growth:0,affection:0};state.plots=1;state.design=undefined;

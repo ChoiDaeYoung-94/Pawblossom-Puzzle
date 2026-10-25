@@ -1,0 +1,75 @@
+{
+  "date": "2026-10-25",
+  "tool": "built-in image_gen",
+  "purpose": "#338 신규101–500의20풍경/원본atlas5개. 다른게임참조/복제없음.",
+  "prompts": {
+    "worldA": "Use case: stylized-concept. Asset: ONE square original mobile game environment atlas, four exact equal square quadrants with NO gutter, 2x2 grid. All four are high-quality hand painted dimensional miniature garden landscapes viewed from 30-degree overhead, cozy and bright cream/coral/lavender/sky-blue palette, soft light, tactile polished stone and lush detailed natural edges. Top-left: lavender terrace garden with terraced ivory stone, lavender banks and tiny warm glasshouse at edge. Top-right: honey hill, golden flower meadow with rounded amber beehive cottages at edges. Bottom-left: lotus water garden, jade-turquoise water, lotus flowers and curved stone balustrade at edges. Bottom-right: pearl coast, turquoise sea and ivory-pink shells with smooth rockpools at edges. Each square must have mostly calm open center (central 55 percent) for separately rendered game level buttons; denser enchanting storytelling scenery at the outside edges, no drawn paths/nodes/buttons/numbers/words/UI/characters/logos/watermarks. All four individually framed with same camera, scale, painterly 3D depth and material sophistication. Keep each quadrant self contained, no features crossing quadrant borders, no strokes separating cells. This is original Pawblossom Puzzle art, do not replicate any existing game. Request 2048x2048 square.",
+    "worldB": "Use case: stylized-concept. ONE square original mobile game environment atlas with four exact equal square quadrants, 2x2 grid, no gutter. Premium dimensional hand-painted miniature garden diorama seen from 30-degree overhead. Rich tactile natural materials, cozy friendly mobile puzzle look, inviting light, detailed scenery at outside edges and a calm open central55percent for runtime game nodes. Same camera/scale across four squares. No words/numbers/logos/characters/paths/nodes/UI/watermark. Each quadrant self-contained, no scene crossing borders. Original Pawblossom Puzzle, not art copied from any existing game. Request2048square. Top-left: amber autumn orchard with copper leaves, little cider mill and rustic stone terrace at edge. Top-right: snowy plum garden, white rounded snowdrifts, pale pink plum blossoms, tiny wooden greenhouse with warm windows. Bottom-left: aurora lake, soft teal-violet night sky reflected in frozen-turquoise pool and warm lantern stones at edges. Bottom-right: bamboo moon garden, graceful pale jade bamboo, ivory moon gate and a tiny stream along one side.",
+    "worldC": "Use case: stylized-concept. ONE square original mobile game environment atlas with four exact equal square quadrants, 2x2 grid, no gutter. Premium dimensional hand-painted miniature garden diorama seen from 30-degree overhead. Rich tactile natural materials, cozy friendly mobile puzzle look, inviting light, detailed scenery at outside edges and a calm open central55percent for runtime game nodes. Same camera/scale across four squares. No words/numbers/logos/characters/paths/nodes/UI/watermark. Each quadrant self-contained, no scene crossing borders. Original Pawblossom Puzzle, not art copied from any existing game. Request2048square. Top-left: emerald tea terraces, layered sculpted tea bushes, ivory stairs and a little cream tea pavilion at edge. Top-right: enchanted mushroom grove, rosy bell-shaped mushrooms and mossy stone around a sunlit lilac clearing. Bottom-left: coral lagoon garden, shallow clear turquoise water, pastel coral flower shapes and shell pavilion at edges, a calm sandy center. Bottom-right: desert oasis garden, smooth peach dunes, blue tiled fountain, palms and cream stone scallops around a quiet sandy center.",
+    "worldD": "Use case: stylized-concept. ONE square original mobile game environment atlas with four exact equal square quadrants, 2x2 grid, no gutter. Premium dimensional hand-painted miniature garden diorama seen from 30-degree overhead. Rich tactile natural materials, cozy friendly mobile puzzle look, inviting light, detailed scenery at outside edges and a calm open central55percent for runtime game nodes. Same camera/scale across four squares. No words/numbers/logos/characters/paths/nodes/UI/watermark. Each quadrant self-contained, no scene crossing borders. Original Pawblossom Puzzle, not art copied from any existing game. Request2048square. Top-left: crystal blossom grotto, translucent lavender and blush crystals growing like flowers at edges around a smooth lilac stone clearing, gentle warm glow. Top-right: cloud promenade, ivory floating cloud gardens and sky-blue distance, small peach arched pavilion at edge around a soft cream courtyard. Bottom-left: firefly marsh garden, lilac-blue evening water, soft luminous reeds and warm specks around open calm water, cozy not dark. Bottom-right: rose conservatory, lush pink and cream climbing roses, ivory glasshouse and stone balustrades at edge around an open blush stone courtyard.",
+    "worldE": "Use case: stylized-concept. ONE square original mobile game environment atlas with four exact equal square quadrants, 2x2 grid, no gutter. Premium dimensional hand-painted miniature garden diorama seen from 30-degree overhead. Rich tactile natural materials, cozy friendly mobile puzzle look, inviting light, detailed scenery at outside edges and a calm open central55percent for runtime game nodes. Same camera/scale across four squares. No words/numbers/logos/characters/paths/nodes/UI/watermark. Each quadrant self-contained, no scene crossing borders. Original Pawblossom Puzzle, not art copied from any existing game. Request2048square. Top-left: clockwork flower village, tiny pastel clock towers and brass botanical gears at edge with peach stone courtyard, whimsical and no clock numerals. Top-right: rainbow waterfall garden, turquoise cascades and ivory bridges at edges, pastel rainbow mist behind a calm jade clearing. Bottom-left: starglass hills, lavender star-shaped glass flowers, tiny domed observatory at edge under a cozy indigo evening sky around open periwinkle courtyard, no actual star symbols as UI. Bottom-right: grand blossom fair, warm flower garlands and cream little festival pavilions at edges, pink blossom confetti and ivory-peach central plaza, celebratory but readable."
+  },
+  "acceptance": "생성/코드연결은상용품질/사람난이도/모바일성능승인이아닙니다.",
+  "assets": [
+    {
+      "file": "public\\assets\\campaign\\worlds-expansion-a-v1.png",
+      "source": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-afa288ce-53d7-48bd-b7ae-922b6dbf3dff.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "bytes": 3619712,
+      "sha256": "e21838db7104c40a80ed5c10b17aae4b911e8e812689fe9c77527b79011911eb",
+      "rawCopy": true,
+      "processing": "원본그대로복사/SVG627정사각crop/재인코딩없음"
+    },
+    {
+      "file": "public\\assets\\campaign\\worlds-expansion-b-v1.png",
+      "source": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-7a6fdc77-a8e2-4740-8395-cb4b697edd12.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "bytes": 3511436,
+      "sha256": "7a9ed6f3c6ea1b2539eed02a77210ff1c83099823bb54ddc0cb47b7faedcd4a7",
+      "rawCopy": true,
+      "processing": "원본그대로복사/SVG627정사각crop/재인코딩없음"
+    },
+    {
+      "file": "public\\assets\\campaign\\worlds-expansion-c-v1.png",
+      "source": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-11a1faac-2772-460b-abf3-250eb9804934.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "bytes": 3742135,
+      "sha256": "5691f47620e57907000de810209ed953eeb46e3627fd364d347140c946394d7c",
+      "rawCopy": true,
+      "processing": "원본그대로복사/SVG627정사각crop/재인코딩없음"
+    },
+    {
+      "file": "public\\assets\\campaign\\worlds-expansion-d-v1.png",
+      "source": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-2be70f90-3d20-4df6-9c03-49a8de911d4b.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "bytes": 3332045,
+      "sha256": "9ee7d7d7d5f68cde360e49e3a6853b8730a63ed6db559af08797e204b55df629",
+      "rawCopy": true,
+      "processing": "원본그대로복사/SVG627정사각crop/재인코딩없음"
+    },
+    {
+      "file": "public\\assets\\campaign\\worlds-expansion-e-v1.png",
+      "source": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-2fe6e218-6ecf-47a8-b692-9d419a6035a0.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "bytes": 3733026,
+      "sha256": "8eb73f2717c9a0b252beaba5ad9f174aff80fd4edc2b1bd1b521d03efbd2d4d2",
+      "rawCopy": true,
+      "processing": "원본그대로복사/SVG627정사각crop/재인코딩없음"
+    }
+  ]
+}

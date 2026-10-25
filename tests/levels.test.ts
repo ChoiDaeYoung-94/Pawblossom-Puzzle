@@ -1,4 +1,5 @@
 import {describe,expect,it} from 'vitest';
+import {readFileSync} from 'node:fs';
 import {levels,LEVEL_COUNT,chapters,chapterForLevel} from '../src/levels';
 import {BoardEngine,seededRng} from '../src/core';
 
@@ -28,8 +29,11 @@ describe('출시 전 레벨 데이터 점검',()=>{
       }
     }
   });
-  it('100판/11장에 활성·비중복 장애물과 생성 공간을 보장하고 새60판은 명시된 파형을 가집니다',()=>{
-    expect(LEVEL_COUNT).toBe(100);expect(chapters).toHaveLength(11);expect(new Set(levels.slice(40).map(l=>JSON.stringify({...l,id:0}))).size).toBe(60);
+  it('500판/31장에 활성·비중복 장애물과 연결성·생성 공간을 보장합니다',()=>{
+    expect(LEVEL_COUNT).toBe(500);expect(chapters).toHaveLength(31);expect(new Set(levels.slice(40,100).map(l=>JSON.stringify({...l,id:0}))).size).toBe(60);
+    expect(levels.slice(0,100)).toEqual(JSON.parse(readFileSync(new URL('./fixtures/levels-100-50653c0.json',import.meta.url),'utf8')));
+    expect(new Set(levels.slice(100).map(l=>JSON.stringify({...l,id:0}))).size).toBe(400);
+    for(let id=1;id<=500;id++)expect(chapters.filter(c=>id>=c.first&&id<=c.last)).toHaveLength(1);
     for(const level of levels){
       const active=(r:number,c:number)=>r>=0&&r<8&&c>=0&&c<8&&level.mask?.[r][c]!==false;
       const crates=new Set((level.crates??[]).map(p=>`${p.row},${p.col}`)),leaves=new Set((level.leaves??[]).map(p=>`${p.row},${p.col}`));
