@@ -1,3 +1,4 @@
+import {cloneJourneyProjects,validateJourneyProjects,type JourneyProjects} from './journeyGarden';
 import {LEVEL_COUNT} from './levels';
 import {gardenSpacesFor,validateGardenSpaces,type GardenSpaces} from './gardenSpaces';
 export const flowerStyles=['meadow','daisy','violet'] as const;
@@ -14,11 +15,11 @@ export const gardenThemes=[
 ] as const;
 export type OwnedGardenTheme=typeof gardenThemes[number]['id'];
 export type GardenTheme='meadow'|OwnedGardenTheme;
-export interface GardenDesign {schema:1;flowers:FlowerStyle[];owned:GardenProject[];placed:GardenProject[];lanternPlot?:number;ownedThemes?:OwnedGardenTheme[];theme?:GardenTheme;spaces?:GardenSpaces;}
+export interface GardenDesign {schema:1;flowers:FlowerStyle[];owned:GardenProject[];placed:GardenProject[];lanternPlot?:number;ownedThemes?:OwnedGardenTheme[];theme?:GardenTheme;spaces?:GardenSpaces;journeyProjects?:JourneyProjects;}
 type Care={growth:number;affection:number};
 export type GardenAction={kind:'flower';plot:number;flower:FlowerStyle}|{kind:'claim'|'toggle';project:GardenProject}|{kind:'placeLantern';plot:number}|{kind:'buyTheme';theme:OwnedGardenTheme}|{kind:'selectTheme';theme:GardenTheme};
 export const freshGardenDesign=():GardenDesign=>({schema:1,flowers:Array(5).fill('meadow') as FlowerStyle[],owned:[],placed:[]});
-export const gardenDesignFor=(design?:GardenDesign):GardenDesign=>design?{...design,flowers:design.flowers.slice(),owned:design.owned.slice(),placed:design.placed.slice(),...(design.ownedThemes===undefined?{}:{ownedThemes:design.ownedThemes.slice()}),...(design.spaces===undefined?{}:{spaces:gardenSpacesFor(design.spaces)})}:freshGardenDesign();
+export const gardenDesignFor=(design?:GardenDesign):GardenDesign=>design?{...design,flowers:design.flowers.slice(),owned:design.owned.slice(),placed:design.placed.slice(),...(design.ownedThemes===undefined?{}:{ownedThemes:design.ownedThemes.slice()}),...(design.spaces===undefined?{}:{spaces:gardenSpacesFor(design.spaces)}),...(design.journeyProjects===undefined?{}:{journeyProjects:cloneJourneyProjects(design.journeyProjects)})}:freshGardenDesign();
 export const flowerDiversity=(design:GardenDesign,plots:number)=>new Set(design.flowers.slice(0,plots)).size;
 export function projectReady(project:typeof gardenProjects[number],plots:number,pip:Care,design:GardenDesign):boolean {
   return plots>=project.plots&&pip.growth>=project.growth&&pip.affection>=project.affection&&flowerDiversity(design,plots)>=project.diversity;
@@ -29,7 +30,7 @@ export function validateGardenDesign(value:unknown,plots:number,pip:Care,complet
   if(!value||typeof value!=='object'||Array.isArray(value)||!Number.isInteger(plots)||plots<0||plots>5
     ||![pip.growth,pip.affection].every(n=>Number.isInteger(n)&&n>=0&&n<=100)||!Number.isInteger(completed)||completed<0||completed>LEVEL_COUNT)return;
   const v=value as Record<string,unknown>;
-  if(Object.keys(v).some(k=>!['schema','flowers','owned','placed','lanternPlot','ownedThemes','theme','spaces'].includes(k))||v.schema!==1
+  if(Object.keys(v).some(k=>!['schema','flowers','owned','placed','lanternPlot','ownedThemes','theme','spaces','journeyProjects'].includes(k))||v.schema!==1
     ||!Array.isArray(v.flowers)||v.flowers.length!==5||!Array.isArray(v.owned)||v.owned.length>3||!Array.isArray(v.placed)||v.placed.length>3)return;
   const flowers:FlowerStyle[]=[],owned:GardenProject[]=[],placed:GardenProject[]=[],sourceOwned=v.owned;
   for(let i=0;i<5;i++){if(!flowerStyles.includes(v.flowers[i] as FlowerStyle)||i>=plots&&v.flowers[i]!=='meadow')return;flowers.push(v.flowers[i] as FlowerStyle);}
@@ -47,7 +48,8 @@ export function validateGardenDesign(value:unknown,plots:number,pip:Care,complet
   }
   if(v.theme!==undefined&&v.theme!=='meadow'&&!ownedThemes.includes(v.theme as OwnedGardenTheme))return;
   const spaces=Object.hasOwn(v,'spaces')?validateGardenSpaces(v.spaces,completed):undefined;if(Object.hasOwn(v,'spaces')&&!spaces)return;
-  return {schema:1,flowers,owned,placed,...(v.lanternPlot===undefined?{}:{lanternPlot:v.lanternPlot as number}),...(v.ownedThemes===undefined?{}:{ownedThemes}),...(v.theme===undefined?{}:{theme:v.theme as GardenTheme}),...(spaces?{spaces}:{})};
+  const journeyProjects=Object.hasOwn(v,'journeyProjects')?validateJourneyProjects(v.journeyProjects,completed):undefined;if(Object.hasOwn(v,'journeyProjects')&&!journeyProjects)return;
+  return {schema:1,flowers,owned,placed,...(v.lanternPlot===undefined?{}:{lanternPlot:v.lanternPlot as number}),...(v.ownedThemes===undefined?{}:{ownedThemes}),...(v.theme===undefined?{}:{theme:v.theme as GardenTheme}),...(spaces?{spaces}:{}),...(journeyProjects?{journeyProjects}:{})};
 }
 /** 재화와 선택을 함께 계산하고 입력 객체/배열은 바꾸지 않습니다. */
 export function prepareGardenAction(coins:number,plots:number,pip:Care,current:GardenDesign|undefined,action:GardenAction,completed=0):{coins:number;design:GardenDesign;cost:number}|undefined {
