@@ -198,8 +198,8 @@
 
 /* 작은부분의날개·회전·물결을움직입니다. 배경사진전체를흔들지않습니다. */
 .map-world-atmosphere{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.map-world-motif{position:absolute;width:clamp(30px,10%,46px);height:auto;overflow:visible;translate:0 calc(var(--map-drift,0px)*-.25);filter:drop-shadow(0 2px 2px #80708a18)}
-.map-world-motif-0{left:2%;top:18%}.map-world-motif-1{right:2%;top:48%}.map-world-motif-2{left:3%;top:78%}
+.map-world-motif{position:absolute;width:clamp(30px,10%,46px);height:auto;overflow:visible;translate:0 calc(var(--map-drift,0px)*-.25 + var(--map-scroll-progress,0)*var(--motif-travel,-12px));filter:drop-shadow(0 2px 2px #80708a18)}
+.map-world-motif-0{left:2%;top:18%;--motif-travel:-12px}.map-world-motif-1{right:2%;top:48%;--motif-travel:8px}.map-world-motif-2{left:3%;top:78%;--motif-travel:-5px}
 .map-world-motif .motif-fall{animation:motif-fall 9s var(--motif-delay) ease-in-out infinite paused}
 .map-world-motif .motif-fly{animation:motif-fly 7s var(--motif-delay) ease-in-out infinite paused}
 .map-world-motif .motif-wings{transform-origin:22px 17px;animation:motif-wings .45s ease-in-out infinite alternate paused}
@@ -218,3 +218,10 @@
 @keyframes motif-twinkle{0%,100%{opacity:.35}50%{opacity:1}}
 @keyframes motif-gear{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.map-world-motif{translate:none}.map-world-motif [class]{animation:none!important;transform:none!important;opacity:1}}
+
+/* 신규20풍경의 실루엣과 정원 작품을 잇습니다. 모든 입력/발판은 별도 앞 레이어입니다. */
+.map-memory{position:absolute;left:0;top:150px;width:clamp(84px,24%,118px);height:auto;pointer-events:none;filter:drop-shadow(0 3px 3px #6d517633);translate:0 calc(var(--map-scroll-progress,0)*-9px)}
+.map-memory-painted{display:none}
+.campaign-chapter[data-scenery-art-ready="true"] .map-memory-painted{display:inline}
+.campaign-chapter[data-scenery-art-ready="true"] .map-memory-fallback{display:none}
+@media(prefers-reduced-motion:reduce){.map-memory{translate:none}}
