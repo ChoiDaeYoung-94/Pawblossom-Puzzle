@@ -1,4 +1,5 @@
 import {worldAtmosphere} from './WorldAtmosphere';
+import {campaignMemoryArt} from './CampaignMemories';
 import type {MusicTheme} from './audio/AudioManager';
 export const CAMPAIGN_WORLDS=["meadow", "brook", "orchard", "woodland", "lantern", "lavender", "honey", "lotus", "coast", "autumn", "snow", "aurora", "bamboo", "tea", "mushroom", "coral", "oasis", "crystal", "cloud", "firefly", "rose", "clock", "falls", "stars", "celebration"] as const;
 export type CampaignWorld=typeof CAMPAIGN_WORLDS[number];
@@ -30,7 +31,7 @@ export function campaignGatewayBranches(){
 }
 /** 자체 제작한 작은 풍경입니다. 진행·난수·저장에 관여하지 않는 장식 레이어입니다. */
 export function campaignScenery(chapter:number,stageCount=10){
-  if(campaignWorldIndex(chapter)>=5)return `<div class="campaign-scenery" aria-hidden="true">${worldAtmosphere(campaignWorldIndex(chapter))}</div>`;
+  if(campaignWorldIndex(chapter)>=5)return `<div class="campaign-scenery" aria-hidden="true">${campaignMemoryArt(campaignWorldIndex(chapter),chapter)}${worldAtmosphere(campaignWorldIndex(chapter))}</div>`;
   const world=campaignMusicTheme(chapter),water=world==='brook',festival=world==='lantern',hills=world==='woodland';
   const crown=(x:number,y:number,scale=1)=>`<g transform="translate(${x} ${y}) scale(${scale})"><ellipse cy="28" rx="24" ry="5" fill="#365b3820"/><path d="M-3 24L0-27L5 24" fill="#95704a"/><g class="map-tree-crown"><path d="M-4-58C-30-62-38-35-27-23C-45-4-22 13-4 5C13 21 39-2 25-19C43-40 21-68-4-58Z" fill="#68966a"/><path d="M-4-58C-24-58-30-41-25-29C-9-41 5-20 19-32C30-45 13-63-4-58Z" fill="#97b27b"/><path d="M-21-18Q-5-29 18-11" fill="none" stroke="#b8c88b" stroke-width="3" stroke-linecap="round"/></g></g>`;
   const windmill=`<g transform="translate(43 90)"><ellipse cy="29" rx="29" ry="5" fill="#365b3820"/><path d="M-13 27L-9-25H11L17 27Z" fill="#e1c38f" stroke="#a6835b" stroke-width="2"/><path d="M-17-24L1-47L20-24Z" fill="#a96b54"/><path d="M-3 27V12Q3 6 9 12V27" fill="#807558"/><g class="map-windmill-blades"><path d="M0-2L-7-29L2-36L5-4M2 0L29-7L36 2L4 5M0 2L7 29L-2 36L-5 4M-2 0L-29 7L-36-2L-4-5" fill="#fff0ca" stroke="#b49a6d" stroke-width="1.5"/><circle r="5" fill="#c38b5e"/></g></g>`;

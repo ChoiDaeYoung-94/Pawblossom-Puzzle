@@ -2,6 +2,8 @@ import {describe,it,expect,vi} from 'vitest';
 import {createCampaignScenery,campaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches,campaignWorldPaint,campaignMusicTheme} from '../src/CampaignScenery';
 import {levels,chapters} from '../src/levels';
 import {existsSync,readFileSync} from 'node:fs';
+import {campaignMemory,campaignMemoryArt} from '../src/CampaignMemories';
+import {journeyArtSource} from '../src/JourneyGardenArt';
 
 function setup(assetPaths:string[]=[],sourceChapters:number[]=[]){
   const frames=new Map<number,FrameRequestCallback>();let serial=0;
@@ -20,6 +22,21 @@ function setup(assetPaths:string[]=[],sourceChapters:number[]=[]){
   return {controller,scroll,chapters,positions,frames,media,listeners,windowListeners,mediaListeners,selected,flush,event,images,createImage,sources};
 }
 describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
+  it('신규20풍경은여행정원의정확한원본/스타일한개만연결하고기존5풍경은변경하지않습니다',()=>{
+    const seen=new Set<string>();
+    for(let index=0;index<5;index++){expect(campaignMemory(index)).toBeUndefined();expect(campaignMemoryArt(index,index+1)).toBe('');}
+    for(let index=5;index<25;index++){
+      const memory=campaignMemory(index)!,source=journeyArtSource(memory.project,memory.alt),html=campaignScenery(index+7,20);seen.add(memory.project+':'+memory.alt);
+      expect(html.match(/data-map-memory=/g)).toHaveLength(1);expect(html).toContain(`data-map-src="${source.path}"`);expect(html).toContain(`rect x="${source.x}" y="${source.y}" width="${source.width}" height="${source.height}"`);expect(html).toContain(`id="map-memory-${index+7}"`);expect(html).not.toMatch(/\shref=|<button|<a |tabindex=|https?:/);
+    }
+    expect(seen.size).toBe(20);expect(campaignMemory(11)).toEqual({project:'moonbridge',alt:true});expect(campaignMemory(12)).toEqual({project:'moonbridge',alt:false});
+  });
+  it('3배경띠·20발판·입구·새작품도현재장안에서같은파일을한번만해독합니다',async()=>{
+    const paths=[...campaignWorldPaint(12).matchAll(/data-map-src="([^\"]+)"/g),...Array.from({length:20},()=>[...campaignIsland(12).matchAll(/data-map-src="([^\"]+)"/g)][0]),...campaignGatewayBranches().matchAll(/data-map-src="([^\"]+)"/g),...campaignScenery(12,20).matchAll(/data-map-src="([^\"]+)"/g)].map(match=>match[1]);
+    const h=setup(paths);h.controller.setActive(true);h.flush();expect(h.images).toHaveLength(new Set(paths).size);expect(h.images).toHaveLength(4);
+    h.images.forEach(image=>image.onload?.());for(let i=0;i<12;i++)await Promise.resolve();expect(h.sources.every(source=>source.getAttribute('href')===source.getAttribute('data-map-src'))).toBe(true);
+    h.controller.setActive(false);expect(h.sources.every(source=>!source.hasAttribute('href'))).toBe(true);expect(h.frames.size).toBe(0);
+  });
   it('발판·입구는 내부 원본과 정확한 crop을 쓰며 해독 전에 주소나 입력 요소를 공개하지 않습니다',()=>{
     for(const chapter of [1,3,6,8,10]){const art=campaignIsland(chapter);expect(art).toContain('overflow="hidden"');expect(art).not.toMatch(/\shref=|<button|<a |https?:/);for(const match of art.matchAll(/data-map-src="([^"]+)"/g))expect(existsSync(new URL('../public'+match[1],import.meta.url))).toBe(true);}
     expect(campaignIsland(3)).toContain('x="18" width="100" height="100" viewBox="0 0 627 627"');expect(campaignIsland(10)).toContain('viewBox="627 627 627 627"');
