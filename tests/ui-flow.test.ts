@@ -15,7 +15,7 @@ import {specialTileArt,specialArtKinds,specialBodyKey,specialBodyPath} from '../
 import * as paintedGardenArt from '../src/GardenPaintedArt';
 import * as gardenStructureArt from '../src/GardenStructureArt';
 import * as boardDisplay from '../src/BoardDisplay';
-import {campaignScenery} from '../src/CampaignScenery';
+import {campaignScenery,campaignWorld,campaignWorldName} from '../src/CampaignScenery';
 
 import {gardenGoals,goalNextStep,nextGardenGoal} from '../src/GardenGoals';
 import {previewGardenPreset} from '../src/GardenPresets';
@@ -223,7 +223,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     cloneSnapshot,prepareShuffle,
     showResultPip:()=>{resultArtCalls++;},
     RoundFeedback:FeedbackStub,
-    campaignScenery,
+    campaignScenery,campaignWorld,campaignWorldName,
     createCampaignScenery:()=>{const controller={disposed:false,active:false,setActive(value:boolean){if(!this.disposed)this.active=value;},dispose(){this.disposed=true;this.active=false;}};sceneryControllers.push(controller);return controller;},
     createPipIdle:(pip:ElementStub,_createImage?:()=>HTMLImageElement,alignment:'center'|'bottom'='center')=>{
       const idle={pip,alignment,disposed:false,disposals:0,
@@ -354,6 +354,9 @@ describe('독립 스테이지 지도',()=>{
   it('지도에서 부팅하고 보드는 같은 Scene으로 일시중단하며100단계 잠금/완료/현재 상태를 표시합니다',()=>{
     const h=boot();expect(h.run('route')).toBe('map');expect(h.run('game.paused')).toBe(true);expect(h.element('#game-canvas').tabIndex).toBe(-1);
     const html=h.element('#map-view').innerHTML;expect(html.match(/data-level="/g)).toHaveLength(100);
+    expect(html.match(/data-world-start="true"/g)).toHaveLength(5);
+    expect(html.match(/preserveAspectRatio="xMidYMid slice"/g)).toHaveLength(9);
+    expect(html).toContain('viewBox="627 627 627 627"');expect(html).toContain('data-map-src="/assets/campaign/worlds-atlas-v1.png"');
     expect(html).toMatch(/id="map-stage-2"[^>]+aria-current="step"/);
     expect(html).toMatch(/data-level="3" disabled/);expect(html).toContain(t('en','levelCompleted'));
     expect(h.element('#village-view').innerHTML).not.toContain('data-level=');

@@ -1,4 +1,3 @@
-/* 지도만 스크롤합니다. 실제 버튼과 진행 상태는 배경 그림에 굽지 않습니다. */
 #map-view{position:relative;display:flex;flex-direction:column;overflow:hidden;isolation:isolate;margin:-10px -12px 0;padding:0 12px;background:#dce9ba}
 #map-view::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(#f8f8eebd,#f8f8ee00 24%,#f8f8ee00 82%,#f8f8eea3),url('/assets/campaign/meadow-journey.webp') center/cover no-repeat;pointer-events:none}
 .campaign-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:16px 4px 8px;flex:none}
@@ -64,3 +63,56 @@
 @media(max-width:359px){.campaign-heading h2{font-size:20px}.map-locate{font-size:10px;padding-inline:8px}.campaign-play{gap:6px;padding:10px}.campaign-play .primary{min-width:112px;padding-inline:12px}.campaign-play strong{font-size:18px}}
 @media(orientation:landscape) and (max-height:600px){#map-view{display:grid;grid-template-columns:185px minmax(0,1fr);grid-template-rows:auto 1fr auto;gap:0 12px}.campaign-heading{grid-column:1;grid-row:1;display:block;padding-top:10px}.campaign-heading h2{font-size:20px}.map-locate{margin-top:8px}.campaign-chapters{grid-column:1;grid-row:2;overflow:visible;align-self:end}.campaign-chapters .chapter-tabs{display:grid;grid-template-columns:1fr 1fr;overflow:visible;gap:5px}.campaign-chapters .chapter-tabs button{min-width:0;min-height:44px}.campaign-chapters .chapter-tabs small{font-size:9px}.campaign-play{grid-column:1;grid-row:3;display:block;padding:8px}.campaign-play>div{display:none}.campaign-play .primary{width:100%;min-height:44px}.campaign-scroll{grid-column:2;grid-row:1/4}.campaign-chapter{padding-top:12px}.campaign-path{width:min(100%,400px)}}
 @media(prefers-reduced-motion:reduce){.campaign-node{transition:none}.campaign-node.current::before,.campaign-leaf{animation:none!important}}
+
+/* 지도만 스크롤합니다. 실제 버튼과 진행 상태는 배경 그림에 굽지 않습니다. */
+.campaign-world-name{font-size:11px;color:#52684a;margin:5px 0 0;line-height:1.4}
+.campaign-heading{background:linear-gradient(#fffdf3e8,#fffdf3bd);border-radius:18px 18px 0 0;margin-top:8px;padding-inline:12px}
+@media(max-width:359px){.campaign-heading h2{font-size:18px}.campaign-heading .map-locate{width:44px;height:44px;min-width:44px;justify-content:center;padding:8px}.campaign-heading .map-locate span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}}
+.campaign-scroll{overflow-x:hidden}
+.campaign-chapter[data-world="meadow"]{--world-tint:#bfd58e;--path-light:#fff0c2;--path-edge:#bb995a;--leaf-color:#86a45b}
+.campaign-chapter[data-world="brook"]{--world-tint:#a5d2c7;--path-light:#e9e7c8;--path-edge:#90a397;--leaf-color:#98c9c5;--world-x:0%;--world-y:0%}
+.campaign-chapter[data-world="orchard"]{--world-tint:#e7c9bb;--path-light:#ffe7c4;--path-edge:#ba9875;--leaf-color:#efb9b2;--world-x:100%;--world-y:0%}
+.campaign-chapter[data-world="woodland"]{--world-tint:#acc6ab;--path-light:#e1dcc0;--path-edge:#7d9277;--leaf-color:#9fbb7e;--world-x:0%;--world-y:100%}
+.campaign-chapter[data-world="lantern"]{--world-tint:#c6bbdb;--path-light:#f7e3c2;--path-edge:#ad91ae;--leaf-color:#f3d78f;--world-x:100%;--world-y:100%}
+.map-world-ground{position:absolute;inset:0;z-index:-2;pointer-events:none;background:linear-gradient(180deg,transparent,var(--world-tint) 12%,var(--world-tint) 85%,transparent);mask-image:linear-gradient(transparent,#000 9%,#000 90%,transparent);overflow:hidden}
+.map-world-ground::before{content:'';position:absolute;inset:0;background:url('/assets/campaign/meadow-journey.webp') center/100% 100% no-repeat;opacity:.72}
+.campaign-chapter:not([data-world="meadow"]) .map-world-ground::before{display:none}
+.map-world-paint{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;opacity:.85;translate:0 calc(var(--map-drift,0px)*-.3)}
+.campaign-chapter[data-world-start="true"]{padding-top:105px}
+.map-world-gateway{position:absolute;top:3px;left:50%;width:min(94%,310px);height:88px;transform:translateX(-50%);display:grid;place-items:center;pointer-events:none;z-index:0}
+.map-world-gateway b{font-size:13px;line-height:1.5;color:#3c5037;text-align:center;max-width:85%;padding:10px 15px;background:#fffae9f5;border:2px solid #d8c29a;border-radius:28px;box-shadow:0 4px 0 #95785e30,0 7px 15px #46683c20}
+.map-world-gateway>span{position:absolute;top:10px;width:50px;height:64px;border-radius:70% 15% 75% 20%;background:radial-gradient(ellipse at 65% 30%,#d2df9a,#6f9c68 68%);box-shadow:inset 0 3px 0 #f3efbe50;z-index:-1}
+.map-world-gateway>span:first-child{left:0;rotate:-28deg}.map-world-gateway>span:nth-child(2){right:0;rotate:28deg;scale:-1 1}
+.map-arrival-petals{position:absolute;inset:0;pointer-events:none;z-index:2;overflow:hidden;border-radius:32px}
+.map-arrival-petals i{position:absolute;top:30px;width:14px;height:9px;background:var(--leaf-color);border-radius:80% 15% 70% 20%;opacity:0;left:calc(8% + var(--petal-i)*19%)}
+.map-arrival-petals i:nth-child(1){--petal-i:0}.map-arrival-petals i:nth-child(2){--petal-i:1}.map-arrival-petals i:nth-child(3){--petal-i:2}.map-arrival-petals i:nth-child(4){--petal-i:3}.map-arrival-petals i:nth-child(5){--petal-i:4}
+[data-scenery-active="true"][data-arrival="a"]>.map-arrival-petals i{animation:world-petal-a 1.6s calc(var(--petal-i)*.07s) ease-out both}
+[data-scenery-active="true"][data-arrival="b"]>.map-arrival-petals i{animation:world-petal-b 1.6s calc(var(--petal-i)*.07s) ease-out both}
+[data-scenery-active="true"][data-arrival="a"]>h3,[data-scenery-active="true"][data-arrival="a"]>.map-world-gateway{animation:world-welcome-a .7s ease-out}
+[data-scenery-active="true"][data-arrival="b"]>h3,[data-scenery-active="true"][data-arrival="b"]>.map-world-gateway{animation:world-welcome-b .7s ease-out}
+/* 손으로 경계를 넘겨 장의 처음이 화면 밖이어도 고정 제목에서 도착을 알립니다. */
+#map-view:has(.campaign-scroll[data-arrival="a"]) .campaign-world-name{animation:world-welcome-a .7s ease-out}
+#map-view:has(.campaign-scroll[data-arrival="b"]) .campaign-world-name{animation:world-welcome-b .7s ease-out}
+@keyframes world-petal-a{0%{translate:0 -10px;rotate:-30deg;opacity:0}18%{opacity:.9}100%{translate:22px 240px;rotate:155deg;opacity:0}}
+@keyframes world-petal-b{0%{translate:0 -10px;rotate:-30deg;opacity:0}18%{opacity:.9}100%{translate:22px 240px;rotate:155deg;opacity:0}}
+@keyframes world-welcome-a{0%{opacity:.4;translate:0 12px}100%{opacity:1;translate:0 0}}
+@keyframes world-welcome-b{0%{opacity:.4;translate:0 12px}100%{opacity:1;translate:0 0}}
+/* 발판은 장식, 원래60px 버튼은 위에 유지합니다. 스크롤 반응은 위치/입력 좌표를 움직이지 않습니다. */
+.campaign-stop::before{content:'';position:absolute;inset:2px -32px -4px;pointer-events:none;background:url('/assets/campaign/level-island-v1.png') center/contain no-repeat;filter:drop-shadow(0 3px 2px #34472830);z-index:-1}
+.campaign-trail .trail-earth{stroke:var(--path-edge);stroke-width:32;filter:drop-shadow(0 5px 1px #5b613c40)}
+.campaign-trail .trail-edge{stroke:#fff9d7;stroke-width:26;filter:none}
+.campaign-trail .trail-surface{stroke:var(--path-light);stroke-width:21;filter:none}
+.campaign-trail .trail-gravel{stroke:var(--path-edge);stroke-width:2;stroke-dasharray:1 10;opacity:.4;filter:none}
+.campaign-node{background:radial-gradient(ellipse at 33% 22%,#c9e39e,#7ba766 55%,#507d51);box-shadow:inset 0 3px 1px #ffffff60,0 4px 0 #456545,0 6px 4px #345b2933}
+.campaign-node.completed{background:radial-gradient(ellipse at 33% 22%,#fff1b5,#e8b35f 60%,#bd863d)}
+.campaign-node.current{background:radial-gradient(ellipse at 33% 22%,#ffe5ba,#efa27c 50%,#cf7059)}
+.campaign-chapter[data-world="brook"] .map-cloud{opacity:.28}
+.campaign-chapter[data-world="orchard"] .map-fireflies i{border-radius:80% 10% 70% 20%;width:8px;height:5px;background:#f8c4ba;box-shadow:none}
+.campaign-chapter[data-world="woodland"] .map-fireflies i{background:#e2ed9c}
+.campaign-chapter[data-world="lantern"] .map-fireflies i{background:#ffe2a5;box-shadow:0 0 10px 4px #ffe0a050}
+.map-world-ground::before{translate:0 calc(var(--map-drift,0px)*-.3);scale:1.02}
+.campaign-chapter[data-world="brook"] .map-world-ground::after{content:'';position:absolute;inset:8% 4% 10% auto;width:30%;border-right:3px solid #f3ffff90;border-radius:45%;translate:0 calc(var(--map-scroll-progress,0)*-48px);filter:drop-shadow(0 0 4px #9be0d9)}
+.campaign-chapter[data-world="orchard"] .map-cloud{background:radial-gradient(ellipse,#fff3d660,transparent 70%);translate:0 calc(var(--map-scroll-progress,0)*-30px)}
+.campaign-chapter[data-world="woodland"] .map-cloud{opacity:.2;filter:blur(8px);scale:1.6;translate:calc(var(--map-scroll-progress,0)*22px) 0}
+.campaign-chapter[data-world="lantern"] .map-landmark-two{filter:drop-shadow(0 0 12px #ffe0a580)}
+@media(prefers-reduced-motion:reduce){.map-arrival-petals i,.map-world-gateway,.campaign-chapter>h3,.campaign-world-name{animation:none!important}.map-world-ground::before{translate:none;scale:1}.map-world-paint{translate:none!important}.campaign-chapter .map-world-ground::after,.campaign-chapter .map-cloud{translate:none!important}.map-arrival-petals{display:none}}
