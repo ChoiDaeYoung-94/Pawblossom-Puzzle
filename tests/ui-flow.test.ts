@@ -359,6 +359,13 @@ describe('독립 스테이지 지도',()=>{
     h.run("switchView('journal')");expect(h.run('audio.theme')).toBe('pip');h.run("switchView('settings')");expect(h.run('audio.theme')).toBe('pip');
     h.run("switchView('puzzle')");expect(h.run('audio.theme')).toBe('meadow');expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.writes()).toBe(writes);
   });
+  it('숨은지도는재생성하지않고복귀시최신진행·언어로만들며오래된알림은거절합니다',()=>{
+    const h=boot(),initial=h.sceneryControllers.length,observer=h.sceneryControllers.find(c=>!c.disposed)!;
+    h.run("switchView('journal');renderViews();renderViews();changeLanguage('ko')");expect(h.sceneryControllers).toHaveLength(initial);expect(observer.disposed).toBe(false);expect(observer.active).toBe(false);
+    h.run("switchView('puzzle');startLevel(1);finish(true)");expect(h.sceneryControllers).toHaveLength(initial);expect(h.stored().highestLevel).toBe(2);
+    h.run("switchView('map')");expect(h.sceneryControllers).toHaveLength(initial+1);expect(observer.disposed).toBe(true);expect(h.element('#map-view').innerHTML).toContain('aria-current="step"');expect(h.element('#map-view').innerHTML).toContain('스테이지 2');
+    const chapter=h.run('selectedChapter'),label=h.element('#map-world-name').textContent;observer.notify(10);expect(h.run('selectedChapter')).toBe(chapter);expect(h.element('#map-world-name').textContent).toBe(label);
+  });
   it('지도에서 부팅하고 보드는 같은 Scene으로 일시중단하며100단계 잠금/완료/현재 상태를 표시합니다',()=>{
     const h=boot();expect(h.run('route')).toBe('map');expect(h.run('game.paused')).toBe(true);expect(h.element('#game-canvas').tabIndex).toBe(-1);
     const html=h.element('#map-view').innerHTML;expect(html.match(/data-level="/g)).toHaveLength(100);
@@ -1322,7 +1329,7 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     expect(h.stored().garden).toBe(0);
   });
   it.each(['ko','en'] as const)('스테이지 이름에 %s 완료·잠금 상태를 포함하고 잠금은 비활성으로 유지합니다',language=>{
-    const h=mainHarness();h.run(`changeLanguage('${language}')`);
+    const h=mainHarness();h.run(`changeLanguage('${language}');switchView('map')`);
     const html=h.element('#map-view').innerHTML;
     expect(html).toContain(`aria-label="${t(language,'level')} 1 · ${t(language,'levelCompleted')}"`);
     expect(html).toContain(`aria-label="${t(language,'level')} 2 · ${t(language,'mapAvailable')} · ${t(language,'previewCurrent')}"`);
@@ -2627,7 +2634,7 @@ describe('퍼즐 핍 idle 표시 수명',()=>{
     expect(h.pipLifecycle.slice(0,2)).toEqual(['dispose:map-current-pip:true','map-replace']);
     expect(previous.disposals).toBe(1);expect(previous.pip.isConnected).toBe(false);expect(liveMap()).toHaveLength(1);
     expect(liveMap()[0].pip).not.toBe(previous.pip);expect(liveMap()[0].pip.dataset.idleActive).toBe('true');
-    h.run("switchView('puzzle');renderViews()");expect(liveMap()).toHaveLength(0);
+    const cached=liveMap()[0];h.run("switchView('puzzle');renderViews()");expect(liveMap()).toHaveLength(1);expect(liveMap()[0]).toBe(cached);expect(cached.pip.dataset.idleActive).toBe('false');
     h.run("switchView('map')");expect(liveMap()).toHaveLength(1);
     const map=liveMap()[0];h.windowEvents.pagehide();expect(map.disposed).toBe(false);
   });
