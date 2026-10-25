@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-25",
+  "tool": "built-in image_gen",
+  "authoring": "Pawblossom 자체 생성. 발판은 기존 자체level-island-v1을 재질/각도 참고. 다른 게임/외부 사진/에셋 없음. 원본 그대로 복사.",
+  "reference": "public/assets/campaign/level-island-v1.png",
+  "assets": [
+    {
+      "path": "public/assets/campaign/level-worlds-atlas-v1.png",
+      "original": "exec-cb212dbb-c584-4681-923b-6651fa756b68.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha": [
+        0,
+        255
+      ],
+      "bytes": 2132368,
+      "sha256": "80facb7b42c2da5216546801daa86b3ca0ad9119b92d058e12d9b9b6d83cd3b8",
+      "rawCopy": true
+    },
+    {
+      "path": "public/assets/campaign/gateway-branches-v1.png",
+      "original": "exec-1a912c0a-0261-4fc0-aa1b-08912e86b25a.png",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA",
+      "alpha": [
+        0,
+        255
+      ],
+      "bytes": 1191285,
+      "sha256": "f79eb46a3aeec4223a077264f05be4558992a45afcf83f4bea77668c9149ac47",
+      "rawCopy": true
+    }
+  ],
+  "prompts": [
+    "Own material reference only. NEW transparent square2x2 sprite atlas. Four equal square cells, each one same30-degree overhead round stepping platform with empty pale inset medallion: top-left ivory limestone/cool river stones/lily/blue reflection; top-right peach stone/moss/pink petals/rosebuds; bottom-left timber cross-section/fern/moss/wood grain; bottom-right lavender-grey stone/gold accents/amber crystal flowers.12% margin requested, actual silhouettes visually inspected. No numbers/text/UI/characters/logos/landscape. Premium painterly dimensional shading readable at96px.",
+    "NEW transparent2:1 atlas, exact two equal square cells. Left rooted warm curved wood post at lower-left arcing upper-right with cream daisies/peach blossoms, right mirrored counterpart rooted lower-right arcing upper-left with pink blossoms. Empty inner space, no banner/crossbar/stonebase/characters/text/logos/numbers. Same dimension/root height, premium hand-painted bark/leaves/soft upper-left lighting. Only two complementary garden arch sides."
+  ],
+  "integration": "Full PNGs never cropped/re-encoded. Runtime nested square SVG crops 627 perplatform to prevent neighboring cell bleed in wide letterbox; branch887square. Exact native input60px/labels retained. Decode owner/late failure fallback shared. Two branch portions open once on region arrival; no character rig/wholemap wobble claimed.",
+  "boundary": "Small-screen visual verification and low-end/native performance separate; image generation is not commercial quality acceptance."
+}

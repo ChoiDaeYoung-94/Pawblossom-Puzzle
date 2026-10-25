@@ -116,3 +116,28 @@
 .campaign-chapter[data-world="woodland"] .map-cloud{opacity:.2;filter:blur(8px);scale:1.6;translate:calc(var(--map-scroll-progress,0)*22px) 0}
 .campaign-chapter[data-world="lantern"] .map-landmark-two{filter:drop-shadow(0 0 12px #ffe0a580)}
 @media(prefers-reduced-motion:reduce){.map-arrival-petals i,.map-world-gateway,.campaign-chapter>h3,.campaign-world-name{animation:none!important}.map-world-ground::before{translate:none;scale:1}.map-world-paint{translate:none!important}.campaign-chapter .map-world-ground::after,.campaign-chapter .map-cloud{translate:none!important}.map-arrival-petals{display:none}}
+
+/* 그림 해독 전/실패에는 기존 색 버튼과 공통 발판을 남깁니다. */
+.campaign-stop{isolation:isolate;z-index:1}
+.campaign-island{display:none;position:absolute;top:9px;left:-36px;width:136px;height:100px;pointer-events:none;z-index:-1;overflow:hidden;filter:drop-shadow(0 4px 2px #34472830)}
+.campaign-scroll[data-scenery-art-ready="true"] .campaign-island{display:block}
+.campaign-scroll[data-scenery-art-ready="true"] .campaign-stop::before{display:none}
+.campaign-scroll[data-scenery-art-ready="true"] .campaign-node{background:transparent;border:0;box-shadow:none;color:#344732;text-shadow:0 1px 0 #fff9df;font-size:23px}
+.campaign-scroll[data-scenery-art-ready="true"] .campaign-node.current{color:#8b4e32;font-size:25px;text-shadow:0 1px 0 #fff5df}
+.campaign-scroll[data-scenery-art-ready="true"] .campaign-node.current::before{inset:12px -4px 8px;border:2px solid #fff5bc;box-shadow:0 0 11px 3px #fff8d47a}
+.campaign-scroll[data-scenery-art-ready="true"] .campaign-node:disabled{color:#5d6757;text-shadow:0 1px 0 #fff8e2}
+.campaign-scroll[data-scenery-art-ready="true"] .campaign-node:disabled>svg{background:#fff9e8;border:1px solid #b6bd99;border-radius:50%;width:19px;height:19px;padding:3px;right:-1px;bottom:1px;box-shadow:0 1px 2px #42513130}
+.campaign-scroll[data-scenery-art-ready="true"] .campaign-stop:has(.campaign-node:disabled)>.campaign-island{filter:saturate(.62) drop-shadow(0 3px 2px #34472830);opacity:.94}
+.map-gateway-branch{display:none;position:absolute;top:-4px;width:100px;height:100px;pointer-events:none;overflow:hidden;z-index:-1}
+.map-gateway-branch-left{left:-6px;transform-origin:20% 90%}.map-gateway-branch-right{right:-6px;transform-origin:80% 90%}
+.campaign-scroll[data-scenery-art-ready="true"] .map-gateway-branch{display:block}
+.campaign-scroll[data-scenery-art-ready="true"] .map-world-gateway>span{display:none}
+[data-scenery-active="true"][data-arrival="a"] .map-gateway-branch-left{animation:gateway-open-left-a 1.25s ease-out}
+[data-scenery-active="true"][data-arrival="a"] .map-gateway-branch-right{animation:gateway-open-right-a 1.25s ease-out}
+[data-scenery-active="true"][data-arrival="b"] .map-gateway-branch-left{animation:gateway-open-left-b 1.25s ease-out}
+[data-scenery-active="true"][data-arrival="b"] .map-gateway-branch-right{animation:gateway-open-right-b 1.25s ease-out}
+@keyframes gateway-open-left-a{from{transform:rotate(12deg)}to{transform:rotate(0)}}
+@keyframes gateway-open-right-a{from{transform:rotate(-12deg)}to{transform:rotate(0)}}
+@keyframes gateway-open-left-b{from{transform:rotate(12deg)}to{transform:rotate(0)}}
+@keyframes gateway-open-right-b{from{transform:rotate(-12deg)}to{transform:rotate(0)}}
+@media(prefers-reduced-motion:reduce){.map-gateway-branch{animation:none!important;transform:none!important}}

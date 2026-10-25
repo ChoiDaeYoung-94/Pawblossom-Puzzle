@@ -1,7 +1,7 @@
 import {describe,it,expect,vi} from 'vitest';
-import {createCampaignScenery,campaignScenery,campaignWorld,campaignWorldName} from '../src/CampaignScenery';
+import {createCampaignScenery,campaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches} from '../src/CampaignScenery';
 import {levels,chapters} from '../src/levels';
-import {existsSync} from 'node:fs';
+import {existsSync,readFileSync} from 'node:fs';
 
 function setup(assetPaths:string[]=[]){
   const frames=new Map<number,FrameRequestCallback>();let serial=0;
@@ -20,6 +20,12 @@ function setup(assetPaths:string[]=[]){
   return {controller,scroll,chapters,positions,frames,media,listeners,windowListeners,mediaListeners,selected,flush,event,images,createImage,sources};
 }
 describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
+  it('발판·입구는 내부 원본과 정확한 crop을 쓰며 해독 전에 주소나 입력 요소를 공개하지 않습니다',()=>{
+    for(const chapter of [1,3,6,8,10]){const art=campaignIsland(chapter);expect(art).toContain('overflow="hidden"');expect(art).not.toMatch(/\shref=|<button|<a |https?:/);for(const match of art.matchAll(/data-map-src="([^"]+)"/g))expect(existsSync(new URL('../public'+match[1],import.meta.url))).toBe(true);}
+    expect(campaignIsland(3)).toContain('x="18" width="100" height="100" viewBox="0 0 627 627"');expect(campaignIsland(10)).toContain('viewBox="627 627 627 627"');
+    const branches=campaignGatewayBranches();expect(branches.match(/map-gateway-branch map-/g)).toHaveLength(2);expect(branches).toContain('viewBox="887 0 887 887"');expect(branches).not.toMatch(/\shref=|<button|<a /);
+    for(const [name,w,h] of [['level-worlds-atlas-v1.png',1254,1254],['gateway-branches-v1.png',1774,887]] as const){const png=readFileSync(new URL('../public/assets/campaign/'+name,import.meta.url));expect([png.readUInt32BE(16),png.readUInt32BE(20),png[25]]).toEqual([w,h,6]);}
+  });
   it('기존100레벨·11장ID를 보존하면서 큰 풍경은 정확히20레벨마다 바뀝니다',()=>{
     const counts=new Map<string,number>();
     for(const level of levels){const chapter=chapters.find(c=>c.first<=level.id&&c.last>=level.id)!;const world=campaignWorld(chapter.id);counts.set(world,(counts.get(world)??0)+1);}
