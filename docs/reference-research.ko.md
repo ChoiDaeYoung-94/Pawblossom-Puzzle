@@ -1,5 +1,25 @@
 # Pawblossom Puzzle 레퍼런스 조사
 
+## 2026-10-25 · 향후 소셜·아이템 결제와 PlayFab 조사
+
+사용자가 친구 등록·아이템 사용/현금 구매 확대와 캔디크러쉬사가 소셜 참고를 지시했습니다. 이번은 공식자료 조사이며 LD 소셜 직접관찰·실결제·서비스 설정·기능 구현 완료가 아닙니다. 기존 즉시플레이/로컬진행·광고제거 구매복원 범위를 즉시 변경하지 않습니다.
+
+King 공식안내의 친구탭은 만료되는 초대링크·비슷한 진행의 추천친구, 생명 요청/받은편지함으로 연결됩니다([친구](https://candycrush.zendesk.com/hc/en-us/articles/6064417890845-How-can-I-add-new-Friends), [생명](https://candycrush.zendesk.com/hc/en-us/articles/360000750878-How-do-lives-work)). Social의 Candy Teams는 공개/비공개 팀과 공동이벤트·보상을 지원하며 점진 제공됩니다([팀](https://candycrush.zendesk.com/hc/en-us/articles/34612008106653-What-is-Candy-Teams)). 이는 참고사실이며 하트제/팀/채팅을 우리 게임에 그대로 확정한 것은 아닙니다.
+
+공식기능을 근거로 별도 VM/전용서버 임대 없이 PlayFab 중심 구성은 가능하다고 판단합니다. 다만 아래 게임규칙 개발과 비용은 별도입니다.
+
+| 범위 | 지원과 설계 경계 |
+|---|---|
+| 친구 | Friends는 기본 단방향입니다. 상호요청/수락·차단·초대만료·선물횟수/중복수령 방지는 별도 서버 권한 로직이 필요합니다([공식 Friends](https://learn.microsoft.com/en-us/gaming/playfab/community/associations/friends/quickstart)). |
+| 팀/랭킹 | Groups의 가입/역할/공유데이터와 소셜·랭킹 기능을 기반으로 기획할 수 있습니다. 공동진행/보상은 우리 규칙입니다([Community](https://learn.microsoft.com/en-us/gaming/playfab/community/what-is-community), [Groups](https://learn.microsoft.com/en-us/gaming/playfab/community/associations/groups/)). |
+| 아이템 | Economy v2의 카탈로그·재화·인벤토리·묶음과 영수증 검증을 검토합니다. 현금창은 기존 Capacitor Android의 Google Play Billing으로 연결합니다. 공식 Android 예제는 Unity용이므로 코드 복사가 아니라 흐름만 참고합니다([Economy FAQ](https://learn.microsoft.com/en-us/xbox/playfab/economy-monetization/economy-v2/faq), [Android 흐름](https://learn.microsoft.com/gaming/playfab/economy-monetization/economy-v2/tutorials/getting-started-with-unity-and-android)). |
+| 검증/복원 | GooglePlay Redeem은 동일영수증 중복지급을 막는 기능이 있지만 pending·환불/회수·앱중단·사용차감·계정복구를 자동완료로 가정하지 않습니다. 광고제거 비소모성 복원과 소모품의 남은잔액 복구를 구분하고 기존 원장은 이관검증 전 보존합니다([검증/환불](https://learn.microsoft.com/en-au/gaming/playfab/economy-monetization/economy-v2/fraud-prevention/)). |
+| 실행/비용 | CloudScript/Azure Functions로 서버권한 규칙을 구현할 수 있습니다. Azure Functions 방식은 별도 Azure구독/요금이며 PlayFab도 사용량 과금입니다. 현재 공식 개발모드는 타이틀당 누적1,000계정 한도입니다. 서버 임대 불필요와 운영비 무료를 혼동하지 않습니다([Functions](https://learn.microsoft.com/en-us/xbox/playfab/live-service-management/service-gateway/automation/cloudscript-af/), [가격](https://developer.microsoft.com/en-us/games/products/playfab/pricing/)). |
+
+제안순서는 선택 계정연결/복구가능 식별자→친구 초대·요청/수락·삭제/차단→일일 도움/친구비교→서버권한 인벤토리·상점/구매검증→팀이벤트입니다. 친구·유료잔액을 다른 기기에서도 유지하려면 복구가능 계정연결을 설계해야 합니다. 이는 게임진행 클라우드복원 승인으로 확대하지 않습니다. 어린이 포함 기획의 프로필 노출·신고/차단·개인정보와 실패 재전송/중복차감·선물 악용·환불을 별도로 검증합니다. 실제 상품/계정·키/env·Azure구독/비용·배포는 변경하지 않습니다.
+
+다음 보고에는 확인된 지원/제안·미검증/비용·사용자 결정사항을 구분해 포함합니다. 다음 단계는 TypeScript/Capacitor 기반 PoC, 익명→연결/재설치 복구와 Android 실제 구매·환불 검증이며 현재 기능 완료로 표시하지 않습니다.
+
 ## 2026-10-23 · 직접 플레이 분석과 첫 지도 개편 #236
 
 사용자 LDPlayer의 캔디크러쉬사가를 화면 관찰·실제 입력으로1–26단계까지 완료했고27에서는 한 번의 교환 뒤 중단/복귀만 확인했습니다. 지도 양방향 탐색·현재 위치 복귀, 초반 특수/조합과 장애물/공급, 의도한 실패와 재시도, 시작 부스터 선택, 상점/이벤트/보상 화면을 관찰했습니다. 실제 결제·골드 소비·계정 연결은 하지 않았습니다. 일부 판은 화면 색상 읽기 보조를 사용했으므로 이용자 승률·난이도 통계로 해석하지 않습니다. 사운드 청취·후반/장기 운영 경제·내부 난수/통신/저장은 조사하지 않았습니다.
