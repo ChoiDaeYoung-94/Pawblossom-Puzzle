@@ -1,6 +1,20 @@
-## 최신 Drive 전달 APK · 밝은 공통 UI 포함 · 2026-10-25 · #73
+## 최신500판 통합 APK · 2026-10-25 · #350
 
-현재 전달 파일은 **`Pawblossom-Puzzle-v0.1.7-2026-10-25-50653c0-debug.apk`**입니다. 게임 소스 `50653c0549f55e829400167510d85c3c9b6fc926`/PR335까지 포함하며 최초 정확 [main CI40165877341](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40165877341)의 양Node가 성공했습니다. 앞선 지도5풍경/발판/7곡에 밝은 크림·코럴·라벤더 공통 UI와 새 보드 바탕/초점 색을 더했습니다. UI 관련 기존720개·type3/production·DEV/production 실화면·독립 읽기 검수의 경계는 browser-qa 기록을 따릅니다.
+현재 전달 파일은 **`Pawblossom-Puzzle-v0.1.7-2026-10-25-a4d8f51-debug.apk`**입니다. 게임 소스 `a4d8f512849c8ebac34ff9ede1cc5647aa997fa8`/PR339·342·343·345·347·349를 포함합니다.500판/25풍경·새400판/20풍경 자체 그림과 부분 연출·10여행 정원/20스타일·지도 작품 랜드마크·자체12곡·풍경 완주 기록/결과 이동 보호입니다. 정확한 최초 [main CI40183463906](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40183463906)는Node22/24 각각65파일3,874개·스토어12개·타입3종·두웹빌드/분리 성공입니다. 로컬 동결 전체도65파일3,874개 성공이며 CI/브라우저/단말 범위를 합치지 않습니다.
+
+APK0.1.7/code8·**55,695,703바이트**, SHA256 **`8d6d8043aba156d0cb350c9fa63ccd21dbdbcdaf7289a1f1bd9eff790a255bb7`**입니다. testing웹102+정확한 빈cordova2/public104 전수 SHA·ZIP중복0·기준7c32의 고정SHA/비웹536개 exact·단일v2/전체signer1/기존동일서명·package/min24target36을 확인했습니다. production3flag=false/시험3flag=true를 각 빌드에서 확인했고, APK의 실제 웹 파일은 검증한 testing웹102개와 일치합니다. production dist94/Android public96을 전수 SHA로 복원하고 Git clean을 확인했습니다. Gradle91태스크 중21실행/70up-to-date이며 새native JUnit/lint 검사를 실행한 것이 아닙니다.
+
+최종 preflight는git506의 실제 원100판/고정fixture/현재첫100과 회차서명, 기존11장·전체31장 ID·500 ID·25세계 각20판을 대조했습니다. 원7곡은git256/고정fixture/현재와 exact이고 신규5곡의16×8음칸/베이스·5도·MIDI범위와 EIGHTH 이후 오디오 실행/출력부 exact도 확인했습니다. 신규 지도5/정원5 원본 atlas의 크기/SHA가 제작 기록과 같습니다. core/state/native/deps는7c32대비 변경0이며 레벨 확장은 의도적으로 별도 검증합니다.
+
+기존 작업용 Chrome의 `doeud1410@gmail.com`/[테스트 폴더](https://drive.google.com/drive/u/1/folders/1dUUwNPZXmSpX8z0t1GsLjbnHuYI-MSHm)에 새APK+121바이트 checksum을 추가했습니다. 실제 「항목2개 업로드 완료」/53.1MB/소유자나를 확인했고 APK파일ID는 `1U2P4UWi33DzLjO47MZOYJZRFEXFsRh42`, checksum은 `1Iz45gW8VKUqUbaYvOxUKLikB84U7qL14`입니다. 실제 Downloads 경로로 다시 내려받은55,695,703바이트/SHA가 원본과 같습니다. 기존파일/공유 설정은 바꾸지 않았고 Share대화상자의 별도 권한 감사를 새로 했다는 뜻은 아닙니다. 처음20초 이벤트 대기는 Google대용량 검사불가 안내 앞에서 만료됐고, 안내에서 직접 만든APK다운로드를 진행한 뒤 실제 경로를 받았습니다. 이를 업로드 실패/해시 불일치로 합산하지 않습니다.
+
+Git밖 `2026-10-25-a4d8f51/artifact-verification.json`·`drive-delivery.json`·실제Drive스크린샷과 `qa/integration-20261025/campaign500-*`에 원문을 보존합니다. 별도 사용자 테스트 안내 문서는 만들지 않습니다. 이후 전달 문서 PR은 제품/버전 변경이 없으며 실제 게임 소스는 위 커밋입니다. 이전506/100판 전달은 아래 이력으로 남깁니다.
+
+최신 LD0는 공식ADB의offline과 선택 창/실제캡처 불일치로 입력을 중단했습니다. 최신APK 설치·폰/LD 플레이/청취·저사양 성능·모든500판 인간 난이도/상용 품질 승인은 미완료입니다. #122간헐실패 원인·실UMP/GMA/Play구매복원pending환불·정책/운영/스토어/AAB/공개배포도 별도입니다. 현재 녹색이 과거 실패 원인을 해결한 근거는 아닙니다.
+
+## 이전100판 Drive 전달 APK · 밝은 공통 UI 포함 · 2026-10-25 · #73
+
+이 절은100판 당시 전달 이력이며 현재500판은 위 #350 절을 따릅니다. 당시 전달 파일은 **`Pawblossom-Puzzle-v0.1.7-2026-10-25-50653c0-debug.apk`**입니다. 게임 소스 `50653c0549f55e829400167510d85c3c9b6fc926`/PR335까지 포함하며 최초 정확 [main CI40165877341](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40165877341)의 양Node가 성공했습니다. 앞선 지도5풍경/발판/7곡에 밝은 크림·코럴·라벤더 공통 UI와 새 보드 바탕/초점 색을 더했습니다. UI 관련 기존720개·type3/production·DEV/production 실화면·독립 읽기 검수의 경계는 browser-qa 기록을 따릅니다.
 
 APK0.1.7/code8·**25,397,795바이트**, SHA256 **`9ffb10f345d043470b8832b8ad437e1dca1abd52e091ae1a0aaf2fd25935f310`**입니다. testing 웹92+정확한 빈cordova2/public94 전수 SHA·META 포함 비웹536의7c32 불변·ZIP 중복0·v2/전체 signer 정확1/기존 서명·package/min24target36을 확인했습니다. APK의 실제 CSS에는 새 팔레트, JS에는 새 canvas 바탕이 포함되며 e00 APK에는 해당 표시가 없음을 별도 비교했습니다. production dist84/Android public86을 전수 SHA로 복원하고 빌드 직후 Git clean을 확인했습니다. 새 native JUnit/lint 실행·최신 LD 설치/조작은 없습니다.
 
