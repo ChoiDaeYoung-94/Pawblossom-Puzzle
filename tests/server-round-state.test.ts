@@ -13,7 +13,7 @@ describe('서버 순수 회차 상태·기존 엔진 기준 동등성',()=>{
     expect(createHash('sha256').update(source).digest('hex')).toBe(ENGINE_SOURCE_SHA256);
     expect(createHash('sha256').update(JSON.stringify(levels)).digest('hex')).toBe(CONTENT_HASH);
     const l=levelSnapshot(1);l.moves=1;expect(levelSnapshot(1)).toEqual(levels[0]);
-    const last=startState(100,42);expect(()=>validateState(last)).not.toThrow();expect(levelSnapshot(100).id).toBe(100);expect(()=>startState(101,42)).toThrow();
+    for(const id of [100,101,500]){const last=startState(id,42);expect(()=>validateState(last)).not.toThrow();expect(levelSnapshot(id).id).toBe(id);}expect(()=>startState(501,42)).toThrow();
   });
   it.each([0,1,0xffffffff,0x6d2b79f5,123456789])('seed %s: 초기 생성/수천 난수 진행·복원 뒤 셔플이 기존 Mulberry32와 동일',seed=>{
     let s=startState(4,seed),calls=0;const next=seededRng(seed),rng=()=>{calls++;return next();};
@@ -27,7 +27,7 @@ describe('서버 순수 회차 상태·기존 엔진 기준 동등성',()=>{
     if(s.status==='active'){e.shuffle();s=advanceState(clone(s),{type:'shuffle'}).state;expect(s.board).toEqual(e.board);expect(s.leaves).toEqual(e.leaves);expect(s.rngState).toBe((seed+Math.imul(calls,0x6d2b79f5))>>>0);}
   });
   it.each(levels.map(l=>l.id))('level %s: 전체 회차 점수/수집/낙엽/이동/승패를 기준 엔진과 비교',id=>{
-    const seed=id*9876543;let s=startState(id,seed),score=0,leaves=0,moves=levels[id-1].moves,items=[0,0,0,0,0,0];
+    const seed=(id*9876543)>>>0;let s=startState(id,seed),score=0,leaves=0,moves=levels[id-1].moves,items=[0,0,0,0,0,0];
     const e=new BoardEngine(8,8,seededRng(seed),undefined,2,levels[id-1].mask,levels[id-1].crates);e.setLeaves(levels[id-1].leaves??[]);
     expect(s.board).toEqual(e.board);
     for(let n=0;n<40&&s.status==='active';n++){

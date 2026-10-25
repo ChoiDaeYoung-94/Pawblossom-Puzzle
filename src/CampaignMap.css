@@ -22,7 +22,7 @@
 @keyframes map-butterfly-flutter{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.38)}}
 @media(prefers-reduced-motion:reduce){.map-butterfly-flight,.map-butterfly-wing{animation:none!important;transform:none!important}}
 .map-tree-crown{transform-origin:0 18px}.map-windmill-blades{transform-origin:0 0}.map-flower-head{transform-origin:0 8px}.map-pond-rings{transform-origin:9px 3px}
-.map-landmark-painted{display:none}.campaign-scroll[data-scenery-art-ready="true"] .map-landmark-painted{display:inline}.campaign-scroll[data-scenery-art-ready="true"] .map-landmark-fallback{display:none}.map-windmill-rotor{transform-origin:0 0}
+.map-landmark-painted{display:none}.campaign-chapter[data-scenery-art-ready="true"] .map-landmark-painted{display:inline}.campaign-chapter[data-scenery-art-ready="true"] .map-landmark-fallback{display:none}.map-windmill-rotor{transform-origin:0 0}
 [data-scenery-active="true"] .map-windmill-rotor{animation:map-windmill-turn 22s linear infinite}
 .map-cloud{position:absolute;display:flex;align-items:flex-end;width:100px;height:36px;opacity:.55;filter:blur(.2px);transform:translateX(calc(var(--map-drift,0px) * .75))}
 .map-cloud i{display:block;border-radius:50%;background:#fffdf1;width:45px;height:25px;margin-left:-10px;box-shadow:0 4px 0 #d0dcc440}.map-cloud i:nth-child(2){height:36px;width:54px}.map-cloud-one{right:3%;top:75px}.map-cloud-two{left:1%;bottom:50px;opacity:.38;scale:.8}
@@ -120,18 +120,18 @@
 /* 그림 해독 전/실패에는 기존 색 버튼과 공통 발판을 남깁니다. */
 .campaign-stop{isolation:isolate;z-index:1}
 .campaign-island{display:none;position:absolute;top:9px;left:-36px;width:136px;height:100px;pointer-events:none;z-index:-1;overflow:hidden;filter:drop-shadow(0 4px 2px #34472830)}
-.campaign-scroll[data-scenery-art-ready="true"] .campaign-island{display:block}
-.campaign-scroll[data-scenery-art-ready="true"] .campaign-stop::before{display:none}
-.campaign-scroll[data-scenery-art-ready="true"] .campaign-node{background:transparent;border:0;box-shadow:none;color:#344732;text-shadow:0 1px 0 #fff9df;font-size:23px}
-.campaign-scroll[data-scenery-art-ready="true"] .campaign-node.current{color:#8b4e32;font-size:25px;text-shadow:0 1px 0 #fff5df}
-.campaign-scroll[data-scenery-art-ready="true"] .campaign-node.current::before{inset:12px -4px 8px;border:2px solid #fff5bc;box-shadow:0 0 11px 3px #fff8d47a}
-.campaign-scroll[data-scenery-art-ready="true"] .campaign-node:disabled{color:#5d6757;text-shadow:0 1px 0 #fff8e2}
-.campaign-scroll[data-scenery-art-ready="true"] .campaign-node:disabled>svg{background:#fff9e8;border:1px solid #b6bd99;border-radius:50%;width:19px;height:19px;padding:3px;right:-1px;bottom:1px;box-shadow:0 1px 2px #42513130}
-.campaign-scroll[data-scenery-art-ready="true"] .campaign-stop:has(.campaign-node:disabled)>.campaign-island{filter:saturate(.62) drop-shadow(0 3px 2px #34472830);opacity:.94}
+.campaign-chapter[data-scenery-art-ready="true"] .campaign-island{display:block}
+.campaign-chapter[data-scenery-art-ready="true"] .campaign-stop::before{display:none}
+.campaign-chapter[data-scenery-art-ready="true"] .campaign-node{background:transparent;border:0;box-shadow:none;color:#344732;text-shadow:0 1px 0 #fff9df;font-size:23px}
+.campaign-chapter[data-scenery-art-ready="true"] .campaign-node.current{color:#8b4e32;font-size:25px;text-shadow:0 1px 0 #fff5df}
+.campaign-chapter[data-scenery-art-ready="true"] .campaign-node.current::before{inset:12px -4px 8px;border:2px solid #fff5bc;box-shadow:0 0 11px 3px #fff8d47a}
+.campaign-chapter[data-scenery-art-ready="true"] .campaign-node:disabled{color:#5d6757;text-shadow:0 1px 0 #fff8e2}
+.campaign-chapter[data-scenery-art-ready="true"] .campaign-node:disabled>svg{background:#fff9e8;border:1px solid #b6bd99;border-radius:50%;width:19px;height:19px;padding:3px;right:-1px;bottom:1px;box-shadow:0 1px 2px #42513130}
+.campaign-chapter[data-scenery-art-ready="true"] .campaign-stop:has(.campaign-node:disabled)>.campaign-island{filter:saturate(.62) drop-shadow(0 3px 2px #34472830);opacity:.94}
 .map-gateway-branch{display:none;position:absolute;top:-4px;width:100px;height:100px;pointer-events:none;overflow:hidden;z-index:-1}
 .map-gateway-branch-left{left:-6px;transform-origin:20% 90%}.map-gateway-branch-right{right:-6px;transform-origin:80% 90%}
-.campaign-scroll[data-scenery-art-ready="true"] .map-gateway-branch{display:block}
-.campaign-scroll[data-scenery-art-ready="true"] .map-world-gateway>span{display:none}
+.campaign-chapter[data-scenery-art-ready="true"] .map-gateway-branch{display:block}
+.campaign-chapter[data-scenery-art-ready="true"] .map-world-gateway>span{display:none}
 [data-scenery-active="true"][data-arrival="a"] .map-gateway-branch-left{animation:gateway-open-left-a 1.25s ease-out}
 [data-scenery-active="true"][data-arrival="a"] .map-gateway-branch-right{animation:gateway-open-right-a 1.25s ease-out}
 [data-scenery-active="true"][data-arrival="b"] .map-gateway-branch-left{animation:gateway-open-left-b 1.25s ease-out}
@@ -151,3 +151,70 @@
 @media(prefers-reduced-motion:reduce){#map-view::after{transition:none}}
 /* 짧은 세로 화면에서는 같은 구간명이 상단에 있으므로 큰 입구 대신 첫 발판을 바로 보여줍니다. */
 @media(orientation:portrait) and (max-height:640px){.campaign-chapter[data-world-start="true"]{padding-top:14px}.map-world-gateway{display:none}}
+
+/* #338 신규20풍경: 20판길에서는3장의원본그림띠를부드럽게겹칩니다. */
+.map-expansion-paint{inset:auto 0;width:100%;height:42%;opacity:.86;mask-image:linear-gradient(transparent,#000 12%,#000 88%,transparent)}
+.map-expansion-paint-0{top:0}.map-expansion-paint-1{top:30%}.map-expansion-paint-2{bottom:0}
+.campaign-chapter[data-world="lavender"]{--world-tint:#e4d8ef;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#e4d8ef}
+#map-view:has(.campaign-scroll[data-world="lavender"])::after{opacity:1;background-color:#e4d8ef}
+.campaign-chapter[data-world="honey"]{--world-tint:#f4e2ab;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#f4e2ab}
+#map-view:has(.campaign-scroll[data-world="honey"])::after{opacity:1;background-color:#f4e2ab}
+.campaign-chapter[data-world="lotus"]{--world-tint:#c8e1da;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#c8e1da}
+#map-view:has(.campaign-scroll[data-world="lotus"])::after{opacity:1;background-color:#c8e1da}
+.campaign-chapter[data-world="coast"]{--world-tint:#e1ede8;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#e1ede8}
+#map-view:has(.campaign-scroll[data-world="coast"])::after{opacity:1;background-color:#e1ede8}
+.campaign-chapter[data-world="autumn"]{--world-tint:#efd5b3;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#efd5b3}
+#map-view:has(.campaign-scroll[data-world="autumn"])::after{opacity:1;background-color:#efd5b3}
+.campaign-chapter[data-world="snow"]{--world-tint:#e2e9f5;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#e2e9f5}
+#map-view:has(.campaign-scroll[data-world="snow"])::after{opacity:1;background-color:#e2e9f5}
+.campaign-chapter[data-world="aurora"]{--world-tint:#c1d5e8;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#c1d5e8}
+#map-view:has(.campaign-scroll[data-world="aurora"])::after{opacity:1;background-color:#c1d5e8}
+.campaign-chapter[data-world="bamboo"]{--world-tint:#d3e1ca;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#d3e1ca}
+#map-view:has(.campaign-scroll[data-world="bamboo"])::after{opacity:1;background-color:#d3e1ca}
+.campaign-chapter[data-world="tea"]{--world-tint:#d8e4c4;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#d8e4c4}
+#map-view:has(.campaign-scroll[data-world="tea"])::after{opacity:1;background-color:#d8e4c4}
+.campaign-chapter[data-world="mushroom"]{--world-tint:#e6d2e5;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#e6d2e5}
+#map-view:has(.campaign-scroll[data-world="mushroom"])::after{opacity:1;background-color:#e6d2e5}
+.campaign-chapter[data-world="coral"]{--world-tint:#c7e5df;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#c7e5df}
+#map-view:has(.campaign-scroll[data-world="coral"])::after{opacity:1;background-color:#c7e5df}
+.campaign-chapter[data-world="oasis"]{--world-tint:#f5dfbd;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#f5dfbd}
+#map-view:has(.campaign-scroll[data-world="oasis"])::after{opacity:1;background-color:#f5dfbd}
+.campaign-chapter[data-world="crystal"]{--world-tint:#e0d1ef;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#e0d1ef}
+#map-view:has(.campaign-scroll[data-world="crystal"])::after{opacity:1;background-color:#e0d1ef}
+.campaign-chapter[data-world="cloud"]{--world-tint:#e8ebf6;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#e8ebf6}
+#map-view:has(.campaign-scroll[data-world="cloud"])::after{opacity:1;background-color:#e8ebf6}
+.campaign-chapter[data-world="firefly"]{--world-tint:#cfcce8;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#cfcce8}
+#map-view:has(.campaign-scroll[data-world="firefly"])::after{opacity:1;background-color:#cfcce8}
+.campaign-chapter[data-world="rose"]{--world-tint:#f2d8df;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#f2d8df}
+#map-view:has(.campaign-scroll[data-world="rose"])::after{opacity:1;background-color:#f2d8df}
+.campaign-chapter[data-world="clock"]{--world-tint:#eddbc9;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#eddbc9}
+#map-view:has(.campaign-scroll[data-world="clock"])::after{opacity:1;background-color:#eddbc9}
+.campaign-chapter[data-world="falls"]{--world-tint:#cee4dc;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#cee4dc}
+#map-view:has(.campaign-scroll[data-world="falls"])::after{opacity:1;background-color:#cee4dc}
+.campaign-chapter[data-world="stars"]{--world-tint:#d1d0ec;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#d1d0ec}
+#map-view:has(.campaign-scroll[data-world="stars"])::after{opacity:1;background-color:#d1d0ec}
+.campaign-chapter[data-world="celebration"]{--world-tint:#f5dce4;--path-light:#fff0d5;--path-edge:#b49a86;--leaf-color:#f5dce4}
+#map-view:has(.campaign-scroll[data-world="celebration"])::after{opacity:1;background-color:#f5dce4}
+
+/* 작은부분의날개·회전·물결을움직입니다. 배경사진전체를흔들지않습니다. */
+.map-world-atmosphere{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.map-world-motif{position:absolute;width:clamp(30px,10%,46px);height:auto;overflow:visible;translate:0 calc(var(--map-drift,0px)*-.25);filter:drop-shadow(0 2px 2px #80708a18)}
+.map-world-motif-0{left:2%;top:18%}.map-world-motif-1{right:2%;top:48%}.map-world-motif-2{left:3%;top:78%}
+.map-world-motif .motif-fall{animation:motif-fall 9s var(--motif-delay) ease-in-out infinite paused}
+.map-world-motif .motif-fly{animation:motif-fly 7s var(--motif-delay) ease-in-out infinite paused}
+.map-world-motif .motif-wings{transform-origin:22px 17px;animation:motif-wings .45s ease-in-out infinite alternate paused}
+.map-world-motif .motif-rings{transform-origin:22px 23px;animation:motif-rings 4s var(--motif-delay) ease-out infinite paused}
+.map-world-motif .motif-ribbon,.map-world-motif .motif-branch{transform-origin:22px 40px;animation:motif-ribbon 6s var(--motif-delay) ease-in-out infinite alternate paused}
+.map-world-motif .motif-steam,.map-world-motif .motif-rise{animation:motif-rise 6s var(--motif-delay) ease-in-out infinite paused}
+.map-world-motif .motif-twinkle{animation:motif-twinkle 4s var(--motif-delay) ease-in-out infinite paused}
+.map-world-motif .motif-gear{transform-origin:23px 22px;animation:motif-gear 24s linear infinite paused}
+[data-scenery-active="true"] .map-world-motif [class]{animation-play-state:running}
+@keyframes motif-fall{0%,100%{transform:translate(0,-4px) rotate(-12deg);opacity:.5}50%{transform:translate(5px,18px) rotate(18deg);opacity:.95}}
+@keyframes motif-fly{0%,100%{transform:translate(0,0)}50%{transform:translate(7px,-6px)}}
+@keyframes motif-wings{from{transform:scaleY(.55)}to{transform:scaleY(1.05)}}
+@keyframes motif-rings{0%{transform:scale(.6);opacity:.2}40%{opacity:.8}100%{transform:scale(1.2);opacity:.1}}
+@keyframes motif-ribbon{from{transform:skewX(-6deg)}to{transform:skewX(6deg)}}
+@keyframes motif-rise{0%,100%{transform:translateY(4px);opacity:.35}50%{transform:translateY(-11px);opacity:.9}}
+@keyframes motif-twinkle{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes motif-gear{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.map-world-motif{translate:none}.map-world-motif [class]{animation:none!important;transform:none!important;opacity:1}}

@@ -134,11 +134,13 @@ describe('추가 콘텐츠의 저장 호환',()=>{
 });
 
 describe('비정형 콘텐츠 해금과 구 회차 보존',()=>{
-  it('구40완료는41을 열고100완료·별100·풍경을 저장/백업 복원하며101을 거절합니다',()=>{
+  it('구40완료는41, 구100완료는101을 열고 재화·풍경을 백업 복원하며501을 거절합니다',()=>{
     const completed=Array.from({length:40},(_,i)=>i+1);storage({completed,highestLevel:40,stars:40});expect(loadSave().highestLevel).toBe(41);
     const data={version:1,language:'ko',completed:Array.from({length:100},(_,i)=>i+1),highestLevel:100,stars:100,coins:400,garden:5,music:true,sfx:true,tutorialSeen:true,pip:{growth:100,affection:100,owned:[],equipped:'none'},gardenDesign:{schema:1,flowers:Array(5).fill('meadow'),owned:[],placed:[],ownedThemes:['sunset','starlight'],theme:'starlight'}};
-    storage(data);const save=loadSave();expect(save.highestLevel).toBe(100);expect(save.completed).toHaveLength(100);expect(saveData(save)).toBe(true);localStorage.setItem('pawblossom.save.v1','{');expect(loadSave().gardenDesign?.theme).toBe('starlight');expect(loadSave().stars).toBe(100);
-    storage({...data,highestLevel:101});expect(loadSave().completed).toEqual([]);
+    storage(data);const save=loadSave();expect(save.highestLevel).toBe(101);expect(save.completed).toHaveLength(100);expect(saveData(save)).toBe(true);localStorage.setItem('pawblossom.save.v1','{');expect(loadSave().gardenDesign?.theme).toBe('starlight');expect(loadSave().stars).toBe(100);
+    storage({...data,highestLevel:101});expect(loadSave().highestLevel).toBe(101);
+    storage({...data,highestLevel:501});expect(loadSave().completed).toEqual([]);
+    storage({...data,completed:Array.from({length:500},(_,i)=>i+1),highestLevel:500,stars:500});expect(loadSave()).toMatchObject({highestLevel:500,stars:500,coins:400,garden:5});expect(loadSave().completed).toHaveLength(500);
   });
   it('1–30 완료만 31을 열며 구 30 checkpoint·Pip·재화는 변경하지 않습니다',()=>{
     const l=levels[29],e=new BoardEngine(8,8,seededRng(42),undefined,1);e.setLeaves(l.leaves??[]);

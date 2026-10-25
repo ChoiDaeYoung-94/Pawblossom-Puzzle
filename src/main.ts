@@ -39,7 +39,7 @@ import { flowerStyles,gardenProjects,gardenThemes,gardenDesignFor,freshGardenDes
 import { showResultPip } from './ResultPip';
 import { RoundFeedback } from './RoundFeedback';
 import { createPipIdle } from './PipIdle';
-import {campaignScenery,createCampaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches} from './CampaignScenery';
+import {campaignScenery,createCampaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches,campaignWorldPaint,campaignMusicTheme} from './CampaignScenery';
 import { createPipAccessoryArt } from './PipAccessoryArt';
 import { createGardenNature } from './GardenNature';
 import { cloneSnapshot,prepareShuffle } from './puzzleHelp';
@@ -362,7 +362,7 @@ previewDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='
 
 function syncMusicTheme(){
   if(route==='settings')return;
-  audio.setMusicTheme(route==='journal'?'pip':route==='village'?'garden':campaignWorld(route==='map'?selectedChapter:chapterForLevel(currentLevel).id));
+  audio.setMusicTheme(route==='journal'?'pip':route==='village'?'garden':campaignMusicTheme(route==='map'?selectedChapter:chapterForLevel(currentLevel).id));
 }
 
 // 문서와 Android 상태 중 하나라도 비활성이면 오디오와 진행을 멈춥니다.
@@ -1210,8 +1210,7 @@ function renderCampaignMap(){
     const points=stages.map((_,index)=>[positions[index%positions.length],45+index*90]);
     const path=points.map(([x,y],index)=>index?`Q ${points[index-1][0]} ${y} ${x} ${y}`:`M ${x} ${y}`).join(' ');
     const world=campaignWorld(chapter.id),worldStart=chapter.id===1||campaignWorld(chapter.id-1)!==world;
-    const atlasIndex=['brook','orchard','woodland','lantern'].indexOf(world);
-    return `<section class="campaign-chapter" data-world="${world}" data-world-start="${worldStart}" data-chapter="${chapter.id}" id="map-chapter-${chapter.id}" aria-labelledby="map-chapter-title-${chapter.id}">${campaignScenery(chapter.id,stages.length)}<div class="map-world-ground" aria-hidden="true">${atlasIndex<0?'':`<svg class="map-world-paint" viewBox="${(atlasIndex%2)*627} ${Math.floor(atlasIndex/2)*627} 627 627" preserveAspectRatio="xMidYMid slice"><image class="map-painted-image" data-map-src="/assets/campaign/worlds-atlas-v1.png" width="1254" height="1254"/></svg>`}</div><div class="map-arrival-petals" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>${worldStart?`<div class="map-world-gateway" aria-hidden="true"><span></span><span></span>${campaignGatewayBranches()}<b>${campaignWorldName(chapter.id,save.language)}</b></div>`:''}<h3 id="map-chapter-title-${chapter.id}"><span>${chapter.first}–${chapter.last}</span>${text(chapter.title)}</h3><div class="campaign-path" style="height:${height}px"><svg class="campaign-trail" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true"><path class="trail-earth" d="${path}"/><path class="trail-edge" d="${path}"/><path class="trail-surface" d="${path}"/><path class="trail-gravel" d="${path}"/></svg>${stages.map((level,index)=>{
+    return `<section class="campaign-chapter" data-world="${world}" data-world-start="${worldStart}" data-chapter="${chapter.id}" id="map-chapter-${chapter.id}" aria-labelledby="map-chapter-title-${chapter.id}">${campaignScenery(chapter.id,stages.length)}<div class="map-world-ground" aria-hidden="true">${campaignWorldPaint(chapter.id)}</div><div class="map-arrival-petals" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>${worldStart?`<div class="map-world-gateway" aria-hidden="true"><span></span><span></span>${campaignGatewayBranches()}<b>${campaignWorldName(chapter.id,save.language)}</b></div>`:''}<h3 id="map-chapter-title-${chapter.id}"><span>${chapter.first}–${chapter.last}</span>${text(chapter.title)}</h3><div class="campaign-path" style="height:${height}px"><svg class="campaign-trail" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true"><path class="trail-earth" d="${path}"/><path class="trail-edge" d="${path}"/><path class="trail-surface" d="${path}"/><path class="trail-gravel" d="${path}"/></svg>${stages.map((level,index)=>{
       const completed=save.completed.includes(level.id),locked=level.id>save.highestLevel,here=level.id===current;
       const name=`${text('level')} ${level.id} · ${text(status(level.id))}${here?' · '+text('previewCurrent'):''}`;
       return `<div class="campaign-stop" style="left:${positions[index%positions.length]}%;top:${index*90}px">${campaignIsland(chapter.id)}<button id="map-stage-${level.id}" data-level="${level.id}" ${locked?'disabled':''} class="campaign-node ${completed?'completed':''} ${here?'current':''}" ${here?'aria-current="step"':''} aria-label="${name}"><span>${level.id}</span>${locked?icon('lock',16):completed?`<i>${icon('star',15)}</i>`:''}</button>${here?`<span id="map-current-pip" class="campaign-pip" aria-hidden="true"><span class="pip-face"><img src="/assets/pip-idle-open-v2.webp" alt=""/></span></span><span class="campaign-breeze" aria-hidden="true">${[0,1,2,3].map(()=>`<span class="campaign-leaf">${icon('leaf',12)}</span>`).join('')}</span>`:''}</div>`;
