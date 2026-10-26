@@ -64,7 +64,7 @@ export function campaignScenery(chapter:number,stageCount=10){
   return `<div class="campaign-scenery" data-map-theme="${water?'water':festival?'festival':hills?'hills':'meadow'}" aria-hidden="true"><div class="map-distant"></div><div class="map-cloud map-cloud-one"><i></i><i></i><i></i></div><div class="map-cloud map-cloud-two"><i></i><i></i><i></i></div><svg class="map-landmark map-landmark-one" viewBox="0 0 86 140"><g class="map-landmark-fallback">${landmark}</g><g class="map-landmark-painted">${paintedMain}</g>${flower(16,119,'#e8b5a0')}${flower(65,125,'#f1d88c')}</svg><svg class="map-landmark map-landmark-two" viewBox="0 0 86 140"><g class="map-landmark-fallback">${crown(43,85,hills?1.15:.95)}</g><g class="map-landmark-painted">${paintedSide}</g>${flower(16,126,'#d9bbd0')}${flower(70,118,'#f2d88d')}</svg>${groves}<div class="map-fireflies"><i></i><i></i><i></i></div></div>`;
 }
 
-interface Scenery {setActive(active:boolean):void;dispose():void}
+interface Scenery {setActive(active:boolean,keepVisiblePaint?:boolean):void;dispose():void}
 const owners=new WeakMap<HTMLElement,Scenery>();
 /** 스크롤을 가로채지 않고 이벤트 묶음마다 한 프레임만 예약합니다. 숨은 장·다른 탭에서는 멈춥니다. */
 export function createCampaignScenery(scroll:HTMLElement,onChapter:(id:number)=>void,createImage:()=>HTMLImageElement=()=>new Image()):Scenery {
@@ -72,7 +72,7 @@ export function createCampaignScenery(scroll:HTMLElement,onChapter:(id:number)=>
   const win=scroll.ownerDocument.defaultView!;
   const chapters=Array.from(scroll.querySelectorAll<HTMLElement>('.campaign-chapter'));
   const media=win.matchMedia?.('(prefers-reduced-motion: reduce)');
-  let active=false,disposed=false,frame:number|undefined;
+  let active=false,paintVisible=false,disposed=false,frame:number|undefined;
   let lastWorld:CampaignWorld|undefined,arrival=false,lastSelected=0;
   type ArtSlot={node:SVGImageElement;src:string};
   type ArtGroup={element:HTMLElement;slots:ArtSlot[];images:HTMLImageElement[];assigned:Map<SVGImageElement,string>;run:number;wanted:boolean;status:'idle'|'loading'|'ready'|'failed'};
@@ -92,7 +92,7 @@ export function createCampaignScenery(scroll:HTMLElement,onChapter:(id:number)=>
   };
   const prepareArt=(group:ArtGroup)=>{
     if(group.status!=='idle'||!group.slots.length)return;group.status='loading';const run=++group.run;
-    const owns=()=>current()&&active&&group.wanted&&group.run===run;
+    const owns=()=>current()&&paintVisible&&group.wanted&&group.run===run;
     const sources=[...new Set(group.slots.map(slot=>slot.src))];
     void Promise.all(sources.map(src=>new Promise<void>((resolve,reject)=>{
       const image=createImage();group.images.push(image);image.decoding='async';image.alt='';
@@ -104,25 +104,28 @@ export function createCampaignScenery(scroll:HTMLElement,onChapter:(id:number)=>
       for(const {node,src} of group.slots){node.setAttribute('href',src);group.assigned.set(node,src);}group.status='ready';group.element.dataset.sceneryArtReady='true';reflectReady();
     }).catch(()=>{if(!owns())return;clearLoads(group);group.status='failed';reflectReady();});
   };
-  const reset=()=>{delete scroll.dataset.arrival;for(const group of groups)release(group);reflectReady();for(const chapter of chapters){chapter.dataset.sceneryActive='false';delete chapter.dataset.arrival;chapter.style.setProperty('--map-drift','0px');chapter.style.setProperty('--map-scroll-progress','0');}};
+  const stopMotion=()=>{delete scroll.dataset.arrival;for(const chapter of chapters){chapter.dataset.sceneryActive='false';delete chapter.dataset.arrival;}};
+  const reset=()=>{stopMotion();for(const group of groups)release(group);reflectReady();for(const chapter of chapters){chapter.style.setProperty('--map-drift','0px');chapter.style.setProperty('--map-scroll-progress','0');}};
   const paint=()=>{
-    frame=undefined;if(!current()||!active)return;
+    frame=undefined;if(!current()||!paintVisible)return;
     const bounds=scroll.getBoundingClientRect();if(bounds.height<=0){reset();return;}
     let largest=0,selected=0,previousOverlap=0;
     for(const chapter of chapters){
       const rect=chapter.getBoundingClientRect(),visible=rect.bottom>bounds.top&&rect.top<bounds.bottom;
       const group=groups.find(group=>group.element===chapter)!;
       if(visible){group.wanted=true;prepareArt(group);}else if(group.wanted||group.status==='ready'||group.status==='loading')release(group);
-      if(media?.matches||!visible)delete chapter.dataset.arrival;
-      chapter.dataset.sceneryActive=String(visible&&!media?.matches);
-      const drift=visible&&!media?.matches?Math.max(-30,Math.min(30,(bounds.top+bounds.height*.5-rect.top)*.045)):0;
-      chapter.style.setProperty('--map-scroll-progress',visible&&!media?.matches?String(Math.max(0,Math.min(1,(bounds.top+bounds.height-rect.top)/(rect.bottom-rect.top+bounds.height)))):'0');
-      chapter.style.setProperty('--map-drift',`${drift.toFixed(2)}px`);
+      if(!active||media?.matches||!visible)delete chapter.dataset.arrival;
+      chapter.dataset.sceneryActive=String(active&&visible&&!media?.matches);
+      if(active||media?.matches||!visible){
+        const drift=visible&&!media?.matches?Math.max(-30,Math.min(30,(bounds.top+bounds.height*.5-rect.top)*.045)):0;
+        chapter.style.setProperty('--map-scroll-progress',visible&&!media?.matches?String(Math.max(0,Math.min(1,(bounds.top+bounds.height-rect.top)/(rect.bottom-rect.top+bounds.height)))):'0');
+        chapter.style.setProperty('--map-drift',`${drift.toFixed(2)}px`);
+      }
       const overlap=Math.max(0,Math.min(rect.bottom,bounds.bottom)-Math.max(rect.top,bounds.top));
       if(Number(chapter.dataset.chapter)===lastSelected)previousOverlap=overlap;
       if(overlap>largest){largest=overlap;selected=Number(chapter.dataset.chapter);}
     }
-    reflectReady();
+    reflectReady();if(!active)return;
     // 경계에서 손가락이 조금 흔들릴 때 입장 연출·곡이 계속 왕복하지 않도록 여유를 둡니다.
     if(previousOverlap>0&&largest-previousOverlap<bounds.height*.12)selected=lastSelected;
     if(Number.isInteger(selected)&&selected>0){
@@ -137,8 +140,8 @@ export function createCampaignScenery(scroll:HTMLElement,onChapter:(id:number)=>
       lastSelected=selected;lastWorld=world;scroll.dataset.world=world;onChapter(selected);
     }
   };
-  const schedule=()=>{if(current()&&active&&frame===undefined)frame=win.requestAnimationFrame(paint);};
-  const scenery:Scenery={setActive(value){if(!current())return;active=value;cancel();if(active){schedule();}else reset();},dispose(){if(disposed)return;disposed=true;cancel();scroll.removeEventListener('scroll',schedule);win.removeEventListener('resize',schedule);media?.removeEventListener('change',schedule);if(owners.get(scroll)===scenery){reset();delete scroll.dataset.sceneryArtReady;delete scroll.dataset.world;owners.delete(scroll);}}};
+  const schedule=()=>{if(current()&&paintVisible&&frame===undefined)frame=win.requestAnimationFrame(paint);};
+  const scenery:Scenery={setActive(value,keepVisiblePaint=false){if(!current())return;active=value;paintVisible=value||keepVisiblePaint;cancel();if(paintVisible){if(!active)stopMotion();schedule();}else reset();},dispose(){if(disposed)return;disposed=true;cancel();scroll.removeEventListener('scroll',schedule);win.removeEventListener('resize',schedule);media?.removeEventListener('change',schedule);if(owners.get(scroll)===scenery){reset();delete scroll.dataset.sceneryArtReady;delete scroll.dataset.world;owners.delete(scroll);}}};
   owners.set(scroll,scenery);reset();scroll.addEventListener('scroll',schedule,{passive:true});win.addEventListener('resize',schedule);media?.addEventListener('change',schedule);
   return scenery;
 }
