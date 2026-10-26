@@ -11,6 +11,8 @@ import './CampaignMap.css';
 import './CampaignMilestone.css';
 import {campaignClearCount,campaignProgress,campaignMilestone} from './CampaignProgress';
 import {campaignMilestoneCard,milestoneCopy} from './CampaignMilestone';
+import {campaignAlbumCard,albumSelection,parseAlbumIndex} from './CampaignAlbum';
+import './CampaignAlbum.css';
 import './PuzzlePresentation.css';
 import './PipIdle.css';
 import './PipTending.css';
@@ -86,6 +88,8 @@ let careProcessing=false,careGeneration=0;
 let selectedGardenPlot=0;
 let selectedGardenArea:GardenArea='flowers';
 let selectedJourneyProject:JourneyProject='conservatory';
+let selectedAlbumWorld:number|undefined;
+let albumArt:ReturnType<typeof createCampaignScenery>|undefined,albumArtHost:HTMLElement|undefined;
 let journeyMoment=false;
 let journeyArt:ReturnType<typeof createJourneyGardenArt>|undefined,journeyArtHost:HTMLElement|undefined;
 let journeyPreviewArt:ReturnType<typeof createJourneyGardenArt>|undefined;
@@ -294,7 +298,14 @@ const boardFeedback=new RoundFeedback({layer:$('#round-feedback-layer'),pip:$('#
   active:()=>nativeActive&&!document.hidden&&!careDemo&&route==='puzzle'&&!boardPending&&!roundEnded&&!previewDialog.open&&!otherModal()&&!testAds?.pausesGame&&!testBilling?.pausesGame,
 });
 function otherModal(includeSpace=true,includeLook=true){return includeLook&&lookDialog.open||includeSpace&&spaceDialog.open||resourceDialog.open||$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open)||billingModal();}
-function disposeCarePipDisplay(){journeyArt?.dispose();journeyArt=undefined;journeyArtHost=undefined;carePipDisplay?.pose?.dispose();carePipDisplay?.nature?.dispose();carePipDisplay?.idle.dispose();carePipDisplay?.accessory?.dispose();carePipDisplay=undefined;}
+function disposeCarePipDisplay(){albumArt?.dispose();albumArt=undefined;albumArtHost=undefined;journeyArt?.dispose();journeyArt=undefined;journeyArtHost=undefined;carePipDisplay?.pose?.dispose();carePipDisplay?.nature?.dispose();carePipDisplay?.idle.dispose();carePipDisplay?.accessory?.dispose();carePipDisplay=undefined;}
+function syncAlbumActivity(){
+  const picture=document.querySelector<HTMLElement>('#album-picture');
+  if(albumArtHost!==picture){albumArt?.dispose();albumArt=undefined;albumArtHost=picture??undefined;}
+  const active=route==='journal'&&careEnvironment()&&!careProcessing;
+  if(active&&picture&&albumSelection(albumCompleted(),selectedAlbumWorld).collected&&!albumArt)albumArt=createCampaignScenery(picture,()=>{});
+  albumArt?.setActive(active);
+}
 function syncCarePipActivity(){
   const work=document.querySelector<HTMLElement>('#journey-work-picture');
   if(journeyArtHost!==work){journeyArt?.dispose();journeyArt=undefined;journeyArtHost=work??undefined;}
@@ -345,6 +356,7 @@ function syncPipActivity(){
   if(worldActive&&!resultWorldScenery){const picture=resultDialog.querySelector<HTMLElement>('#result-world-picture');if(picture)resultWorldScenery=createCampaignScenery(picture,()=>{});}
   resultDialog.dataset.worldActive=String(worldActive);resultWorldScenery?.setActive(worldActive);
   syncCarePipActivity();
+  syncAlbumActivity();
 }
 function previewEnvironment(){return !careDemo&&nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!otherModal()&&!boardPending&&Boolean(scene?.canLeave())&&!resultTimer;}
 function validPreview(context:StagePreview){return stagePreview===context&&context.round===round&&context.scene===scene&&context.testing===testingLevel&&context.route===route&&previewDialog.open&&previewEnvironment()&&Number.isInteger(context.id)&&context.id>=1&&context.id<=LEVEL_COUNT&&(context.intent==='restart'||context.id<=save.highestLevel);}
@@ -1030,6 +1042,7 @@ const projectName=(id:GardenProject)=>text(({bench:'gardenBench',butterflies:'ga
 const themeName=(id:GardenTheme)=>text(({meadow:'gardenThemeMeadow',sunset:'gardenThemeSunset',starlight:'gardenThemeStarlight'} as const)[id]);
 // 체험은 해금 조건만 미리 봅니다. 실제 완료 목록과 회차는 변경하지 않습니다.
 function gardenCompletedCount(data:SaveData=save){return careDemo?careDemo.preset:new Set(data.completed.filter(id=>Number.isInteger(id)&&id>=1&&id<=LEVEL_COUNT)).size;}
+function albumCompleted(){return (careDemo?.normalSave??save).completed;}
 const flowerName=(id:typeof flowerStyles[number])=>text(({meadow:'gardenMeadow',daisy:'gardenDaisy',violet:'gardenViolet'} as const)[id]);
 const gardenPlotPoints=[[158,153],[285,141],[413,153],[218,222],[351,222]];
 function gardenVisitor(){
@@ -1148,6 +1161,20 @@ function bindCareControls(){
   const expectedSave=save,generation=careGeneration;
   const bind=(id:string,handler:(button:HTMLButtonElement)=>void)=>{const button=document.querySelector<HTMLButtonElement>('#'+id);if(button)button.onclick=()=>{if(currentControl(button,expectedSave,generation))handler(button);};};
   bind('garden-look-open',button=>showLookPreview(button));
+  const albumSelect=document.querySelector<HTMLSelectElement>('#album-world-select');
+  if(albumSelect)albumSelect.onchange=()=>{
+    if(!currentControl(albumSelect,expectedSave,generation)||route!=='journal'||!careEnvironment()||careProcessing||growing)return;
+    const index=parseAlbumIndex(albumSelect.value);if(index===undefined)return;
+    selectedAlbumWorld=index;renderViews();$('#album-world-select').focus({preventScroll:true});
+  };
+  bind('album-open-map',()=>{
+    if(route!=='journal'||careDemo||!careEnvironment()||careProcessing||growing)return;
+    const world=albumSelection(albumCompleted(),selectedAlbumWorld);switchView('map');if((route as string)!=='map')return;
+    selectedChapter=world.chapter;$<HTMLSelectElement>('#map-chapter-select').value=String(world.chapter);
+    document.querySelector(`#map-chapter-${world.chapter}`)?.scrollIntoView?.({block:'start',behavior:'auto'});
+    mapScrollOffset=$('#campaign-scroll').scrollTop;
+    const title=$('#map-chapter-title-'+world.chapter);title.tabIndex=-1;title.focus({preventScroll:true});syncMusicTheme();
+  });
   const selectArea=(area:GardenArea)=>{
     if(route!=='village'||!careEnvironment()||careProcessing||growing)return;
     selectedGardenArea=area;clearCareReaction();renderViews();$('#garden-area-'+area).focus({preventScroll:true});
@@ -1327,7 +1354,7 @@ function renderViews(grew=false){
   if(careDemo)$('#village-view').innerHTML=$('#village-view').innerHTML.split('<div class="level-picker">')[0];
   $('#village-view').innerHTML=careDemoPanel('village')+$('#village-view').innerHTML;
   document.querySelector<HTMLButtonElement>('#grow')?.toggleAttribute('disabled',growing||careStorageBlocked()||save.stars<2||save.garden>=5);
-  $('#journal-view').innerHTML=`${careDemoPanel('journal')}<div class="subview-heading pip-view-heading"><div class="eyebrow">${text('friendsHeading')}</div><h2>${text('friendsTitle')}</h2></div>${pipCareCard()}${sharedGardenPlan('journal')}${!careDemo?`<button id="pip-tutorial-help" class="text-button guide-help">${text('tutorial')}</button>`:''}`;
+  $('#journal-view').innerHTML=`${careDemoPanel('journal')}<div class="subview-heading pip-view-heading"><div class="eyebrow">${text('friendsHeading')}</div><h2>${text('friendsTitle')}</h2></div>${pipCareCard()}${campaignAlbumCard(save.language,albumCompleted(),selectedAlbumWorld,Boolean(careDemo))}${sharedGardenPlan('journal')}${!careDemo?`<button id="pip-tutorial-help" class="text-button guide-help">${text('tutorial')}</button>`:''}`;
   if(!careDemo)$('#pip-tutorial-help').onclick=()=>showTutorial('help',$<HTMLButtonElement>('#pip-tutorial-help'));
   $('#settings-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><div class="storage-card" id="storage-card"><p id="save-status"></p><button id="save-retry" class="text-button" hidden></button><button id="save-reload" class="text-button" hidden></button></div><section class="support-note" aria-labelledby="support-title"><h3 id="support-title">${text('support')}</h3><p id="support-email">doeud1410@gmail.com</p></section><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v${APP_VERSION}</p>`;
   updateSaveStatus(focusedId);

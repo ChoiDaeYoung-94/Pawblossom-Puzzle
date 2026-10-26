@@ -1,4 +1,5 @@
 import * as campaignProgressModel from '../src/CampaignProgress';
+import * as albumModel from '../src/CampaignAlbum';
 import * as campaignMilestoneUi from '../src/CampaignMilestone';
 import {LEVEL_COUNT,chapters as currentChapters} from '../src/levels';
 import { describe, expect, it } from 'vitest';
@@ -232,6 +233,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     showResultPip:()=>{resultArtCalls++;},
     RoundFeedback:FeedbackStub,
     campaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches,campaignWorldPaint,campaignMusicTheme,
+    ...albumModel,
     createCampaignScenery:(_scroll:unknown,notify:(id:number)=>void)=>{const controller={notify,disposed:false,active:false,setActive(value:boolean){if(!this.disposed)this.active=value;},dispose(){this.disposed=true;this.active=false;}};sceneryControllers.push(controller);return controller;},
     createPipIdle:(pip:ElementStub,_createImage?:()=>HTMLImageElement,alignment:'center'|'bottom'='center')=>{
       const idle={pip,alignment,disposed:false,disposals:0,
@@ -2397,6 +2399,34 @@ describe('경로 표시 컨테이너와 메뉴 버튼의 이벤트 경계',()=>{
     expect(h.run('spaceDialog.open')).toBe(true);expect(h.run('Boolean(spacePreview)')).toBe(true);expect(h.disk()).toEqual(before);expect(h.writes()).toBe(writes);
     h.element('#space-preview-confirm').onclick();expect(h.run('spaceDialog.open')).toBe(false);expect(h.run('save.stars')).toBe(18);expect(h.run('save.gardenDesign.spaces.pond.phase')).toBe(1);
     h.element('#nav-map').onclick();expect(h.run('route')).toBe('map');expect(h.element('#nav-map').attributes['aria-current']).toBe('page');expect(h.element('#nav-village').attributes['aria-current']).toBeUndefined();
+  });
+});
+
+describe('핍 여행 앨범의 실제 기록·수명과 지도 이동',()=>{
+  const initial=(language='ko')=>({version:1,language,highestLevel:21,completed:Array.from({length:20},(_,i)=>i+1),coins:800,stars:20,garden:0,music:true,sfx:true,tutorialSeen:true});
+  const snapshot='JSON.stringify({save,round,currentLevel,moves,score,board:scene.engine.board})';
+  it.each(['ko','en'] as const)('%s: 실제20완료만1장으로 표시하고 선택·지도이동은 회차와 저장을 바꾸지 않습니다',language=>{
+    const h=mainHarness(false,false,true,false,initial(language));h.run("switchView('journal')");
+    expect(h.element('#journal-view').innerHTML).toContain(t(language,'albumCollection').replace('{count}','1').replace('{total}','25'));
+    const before=h.run(snapshot),disk=h.disk(),writes=h.writes();
+    h.run("document.querySelector('#album-world-select').value='24';document.querySelector('#album-world-select').onchange()");
+    expect(h.run('selectedAlbumWorld')).toBe(24);expect(h.element('#journal-view').innerHTML).not.toContain('album-postcard-31-0');
+    let focused=0;h.element('#map-chapter-title-31').focus=()=>{focused++;};
+    h.element('#album-open-map').onclick();expect(h.run('route')).toBe('map');expect(h.run('selectedChapter')).toBe(31);expect(focused).toBe(1);expect(h.element('#map-chapter-title-31').tabIndex).toBe(-1);
+    expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('체험500·시험 회차는 실제엽서를 만들지 않고 낡은/비활성 입력을 차단합니다',()=>{
+    const h=mainHarness(false,false,true,false,initial());h.run("switchView('journal')");const stale=h.element('#album-open-map').onclick;
+    h.run('enterCareDemo();setCareDemoPreset(500)');expect(h.run('albumCompleted().length')).toBe(20);expect(h.element('#journal-view').innerHTML).toContain(t('ko','albumRealOnly'));expect(h.element('#journal-view').innerHTML).toContain(t('ko','albumCollection').replace('{count}','1').replace('{total}','25'));
+    h.run("switchView('journal')");const before=h.run(snapshot);stale();h.element('#album-open-map').onclick();expect(h.run('route')).toBe('journal');expect(h.run(snapshot)).toBe(before);
+    h.run('exitCareDemo();document.hidden=true');h.element('#album-open-map').onclick();expect(h.run('route')).toBe('journal');
+  });
+  it('선택 그림은 숨김/모달에서 비활성화하고 DOM교체·언어변경 뒤 이전 소유자를 폐기합니다',()=>{
+    const h=mainHarness(false,false,true,false,initial());h.run("switchView('journal')");const art=h.run('albumArt');expect(art.active).toBe(true);
+    h.run('document.hidden=true;syncPipActivity()');expect(art.active).toBe(false);h.run('document.hidden=false;syncPipActivity()');expect(h.run('albumArt.active')).toBe(true);
+    h.run("changeLanguage('en')");expect(art.disposed).toBe(true);const next=h.run('albumArt');expect(next.active).toBe(true);
+    h.run("switchView('puzzle')");expect(next.active).toBe(false);
+    h.run("switchView('journal');document.querySelector('#tutorial-dialog').open=true;syncPipActivity()");expect(h.run('albumArt.active')).toBe(false);
   });
 });
 

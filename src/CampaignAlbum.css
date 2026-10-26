@@ -1,0 +1,21 @@
+.campaign-album { border:1px solid #e7d1df; background:linear-gradient(145deg,#fff8e9,#fff8fc 58%,#f1f7ff); }
+.album-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
+.album-heading small { color:#856476; font-size:11px; font-weight:800; letter-spacing:.06em; }
+.album-heading h3 { margin:4px 0; color:#654067; }
+.album-count { padding:5px 8px; border:1px solid #e8c993; border-radius:20px; color:#785c32; background:#fff1cf; font-size:11px; font-weight:800; }
+.album-intro,.album-message,.album-demo-note { font-size:12px; line-height:1.6; color:#725d78; }
+.album-demo-note { padding:8px; border-radius:10px; background:#f0e8f7; }
+.campaign-album>label { display:block; font-size:12px; font-weight:800; margin:13px 0 6px; }
+#album-world-select { width:100%; min-width:0; min-height:44px; border:1px solid #c9afc8; border-radius:12px; padding:8px; background:#fffcf8; color:#654866; font:inherit; font-size:12px; }
+.album-picture { position:relative; isolation:isolate; aspect-ratio:8/5; overflow:hidden; margin:15px 3px 10px; border:7px solid #fffdf7; border-radius:5px; box-shadow:0 3px 9px #8c5d7524; background:linear-gradient(135deg,#f2e1da,#e8e5f7 50%,#e5f3f2); }
+.album-picture .campaign-chapter { position:absolute; inset:0; height:100%; padding:0; border-radius:0; }
+.album-picture .result-world-paint { opacity:0; transition:opacity .25s ease; }
+.album-picture [data-scenery-art-ready=true] .result-world-paint { opacity:1; }
+.album-outline { width:100%; height:100%; stroke:#b99cba; stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.album-pending { position:absolute; inset:auto 0 17%; text-align:center; color:#866389; font-size:18px; font-weight:800; }
+.album-seal { position:absolute; bottom:7px; right:7px; padding:5px 9px; border-radius:50%; border:2px solid #bc9256; background:#fff0c8; color:#79512e; rotate:-9deg; font-size:12px; font-weight:900; }
+.album-caption { display:flex; flex-direction:column; gap:4px; font-size:14px; line-height:1.5; }
+.album-caption span { color:#86668a; font-size:11px; }
+.campaign-album>progress { display:block; width:100%; height:7px; margin:12px 0; accent-color:#c987a9; }
+.campaign-album #album-open-map { min-height:44px; }
+@media(prefers-reduced-motion:reduce) { .album-picture .result-world-paint { transition:none; } }
