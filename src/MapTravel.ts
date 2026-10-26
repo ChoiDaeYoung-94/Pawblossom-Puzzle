@@ -6,7 +6,7 @@ export function createMapTravel(scroll:HTMLElement,from:HTMLElement,to:HTMLEleme
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
   let phase:'armed'|'loading'|'walking'|'done'='armed',active=false,disposed=false;
   let ghost:HTMLElement|undefined,image:HTMLImageElement|undefined,frame:number|undefined,timer:number|undefined;
-  let origin:RoutePoint,destination:RoutePoint,seam:RoutePoint|undefined,duration=900,started:number|undefined;
+  let origin:RoutePoint,destination:RoutePoint,seam:RoutePoint|undefined,duration=900,started:number|undefined,facingX:number|undefined;
   const alive=()=>!disposed&&active&&owns()&&scroll.isConnected&&from.isConnected&&to.isConnected&&pip.isConnected&&!document.hidden&&!reduced.matches;
   const cleanup=()=>{
     if(frame!==undefined)cancelAnimationFrame(frame);frame=undefined;
@@ -20,10 +20,16 @@ export function createMapTravel(scroll:HTMLElement,from:HTMLElement,to:HTMLEleme
   const finish=()=>{if(phase==='done')return;phase='done';cleanup();onPlaying(false);};
   function cancel(){finish();}
   function visibility(){if(document.hidden)finish();}
+  function displayPoint(t:number){
+    const point=travelPoint(origin,destination,t,seam),side=-40*(1+Math.cos(2*Math.PI*t))/2;
+    return {x:point.x+side,y:point.y};
+  }
   function draw(t:number){
     if(!ghost)return;
-    const point=travelPoint(origin,destination,t,seam),side=-40*(1+Math.cos(2*Math.PI*t))/2;
-    ghost.style.transform=`translate3d(${point.x+side-36}px,${point.y+18-600/627*72}px,0)`;
+    const point=displayPoint(t),delta=facingX===undefined?displayPoint(Math.min(1,t+.02)).x-point.x:point.x-facingX;
+    // 발판 옆에서 길로 합류하는 가로 이동까지 반영하고 미세 이동은 누적합니다.
+    if(facingX===undefined||Math.abs(delta)>=.25){ghost.dataset.facing=delta<0?'left':'right';facingX=point.x;}
+    ghost.style.transform=`translate3d(${point.x-36}px,${point.y+18-600/627*72}px,0)`;
   }
   function tick(now:number){
     frame=undefined;if(!alive()||phase!=='walking'){finish();return;}
@@ -53,7 +59,7 @@ export function createMapTravel(scroll:HTMLElement,from:HTMLElement,to:HTMLEleme
       if(y>origin.y&&y<destination.y)seam={x:destination.x,y};
     }
     duration=Math.min(1500,Math.max(800,Math.hypot(destination.x-origin.x,destination.y-origin.y)*5));
-    phase='loading';ghost=document.createElement('span');ghost.className='map-pip-walk';ghost.setAttribute('aria-hidden','true');ghost.dataset.frame='0';ghost.dataset.facing=destination.x<origin.x?'left':'right';
+    phase='loading';ghost=document.createElement('span');ghost.className='map-pip-walk';ghost.setAttribute('aria-hidden','true');ghost.dataset.frame='0';
     ghost.innerHTML=`<span class="pip-walk-facing"><img class="pip-walk-loading" src="/assets/pip-idle-open-v2.webp" alt="">${pipWalkArt(++instance)}</span>`;
     scroll.append(ghost);pip.classList.add('map-pip-suspended');draw(0);
     scroll.scrollTop=Math.max(0,Math.min(scroll.scrollHeight-scroll.clientHeight,(origin.y+destination.y)/2-scroll.clientHeight/2));

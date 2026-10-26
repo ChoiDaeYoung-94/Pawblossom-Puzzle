@@ -49,11 +49,17 @@ function setup(){
 afterEach(()=>{vi.useRealTimers();vi.restoreAllMocks();vi.unstubAllGlobals();});
 
 describe('핍 지도 걷기의 실제 수명',()=>{
+  it.each([false,true])('왼쪽 목적지라도 길 합류의 실제 가로 이동을 따라 얼굴을 바꿉니다 (장 경계 %s)',async crossChapter=>{
+    const h=setup();h.to.rect.left=70;if(crossChapter)h.to.section=new Node();h.start();const ghost=h.ghost()!;expect(ghost.dataset.facing).toBe('right');
+    h.images[0].resolve();await settle();h.frame(0);const x=()=>Number(ghost.style.transform.match(/translate3d\(([-\d.]+)px/)![1]),start=x();
+    h.frame(1);h.frame(2);expect(ghost.dataset.facing).toBe('right');h.frame(300);const middle=x();expect(middle).toBeGreaterThan(start);expect(ghost.dataset.facing).toBe('right');
+    h.frame(600);expect(x()).toBeLessThan(middle);expect(ghost.dataset.facing).toBe('left');h.travel.dispose();h.clean();
+  });
   it('그림 decode 전에는 href가 없고 한 번만 네 포즈를 재생한 뒤 소유 자원만 정리합니다',async()=>{
     const h=setup();h.start();const ghost=h.ghost()!;expect(ghost.attrs['aria-hidden']).toBe('true');expect(h.pip.classes.has('map-pip-suspended')).toBe(true);
     expect(ghost.paint.every(image=>!image.attrs.href)).toBe(true);expect(h.frames.size).toBe(0);expect(vi.getTimerCount()).toBe(1);
     h.images[0].resolve();await settle();expect(ghost.dataset.ready).toBe('true');expect(ghost.paint.every(image=>image.attrs.href==='/assets/pip-walk-atlas-v1.png')).toBe(true);expect(vi.getTimerCount()).toBe(0);
-    h.frame(0);const first=ghost.style.transform;h.frame(400);expect(ghost.style.transform).not.toBe(first);expect(ghost.dataset.frame).toBe('3');
+    h.frame(0);const first=ghost.style.transform;h.frame(400);expect(ghost.style.transform).not.toBe(first);expect(ghost.dataset.frame).toBe('3');expect(ghost.dataset.facing).toBe('right');
     h.travel.start();expect(h.images).toHaveLength(1);h.frame(2000);h.clean();expect(h.notifications).toEqual([true,false]);expect(ghost.paint.every(image=>!image.attrs.href)).toBe(true);expect(h.images[0].removed).toBe(true);
     h.travel.start();h.travel.setActive(true);expect(h.images).toHaveLength(1);h.travel.dispose();h.travel.dispose();h.clean();
   });
