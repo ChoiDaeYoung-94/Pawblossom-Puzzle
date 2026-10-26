@@ -2,6 +2,7 @@
 import {createHash, createHmac, randomBytes, timingSafeEqual} from 'node:crypto';
 import {isAbsolute} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
+import {beginIdempotentWrite} from '../storage/transactionBegin.ts';
 import {createAdmobSsvVerifier, snapshotPolicy, SSV_PROFILE, type AdmobPolicy, type SsvDependencies} from './admobSsv.ts';
 
 export interface TrustedRewardRound {
@@ -158,8 +159,8 @@ export class RewardLedger {
     return {owner:this.#hmac('owner',owner),round:this.#hmac('round',JSON.stringify([owner,round]))};
     }catch{return;}
   }
-  #transaction<T>(work:()=>T):T {
-    this.#db.exec('BEGIN IMMEDIATE');
+  #transaction<T>(work:()=>T,retryRedemptionBegin=false):T {
+    if(retryRedemptionBegin)beginIdempotentWrite(this.#db);else this.#db.exec('BEGIN IMMEDIATE');
     try{if(this.#ready){this.#checkSchema(schema);this.#capacity();this.#validateRows(this.#profile(2),true);this.#checkSeal();}const result=work();if(this.#ready){this.#capacity();this.#validateRows(this.#profile(2),true);this.#seal();}this.#db.exec('COMMIT');return result;}
     catch{try{this.#db.exec('ROLLBACK');}catch{}throw new Error('reward-write-failed');}
   }
@@ -249,7 +250,7 @@ export class RewardLedger {
         const opaqueGrantId=this.#grantId(binding.owner,binding.round,String(voucher.tx_hash));
         this.#db.prepare('INSERT INTO reward_redemptions VALUES(?,?,?,?)').run(binding.round,String(voucher.tx_hash),opaqueGrantId,now);
         return {opaqueGrantId,consumed:true};
-      });
+      },true);
       if(result.kind!==undefined)return result;
       // COMMIT 성공 뒤에만 등록합니다. close는 이미 발급한 참조를 취소하지 않으며 회차 원장이 최종 상태를 검사합니다.
       const grant=Object.freeze({opaqueGrantId:result.opaqueGrantId});
