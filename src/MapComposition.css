@@ -1,0 +1,37 @@
+/* 풍경에는 장식 간판을 겹치지 않고, 장의 실제 제목 한 개만 남깁니다. */
+.campaign-chapter[data-world-title="integrated"]{padding-top:18px}
+.campaign-chapter[data-world-title="integrated"]>h3{position:relative;top:auto;left:auto;transform:none;display:flex;align-items:baseline;gap:8px;width:fit-content;max-width:calc(100% - 32px);margin:0 0 16px 16px;padding:7px 11px;border-radius:9px;background:#fffaf0dd;box-shadow:0 1px 0 #ffffffb3,inset 0 0 0 1px #eadbca80;font-size:13px;line-height:1.4;text-align:left}
+.campaign-chapter[data-world-title="integrated"]>h3>span{display:inline;margin:0;font-size:10px;letter-spacing:.5px;white-space:nowrap}
+.campaign-heading-copy{min-width:0}
+.campaign-heading h2.campaign-world-name{margin:0;font-size:20px;line-height:1.3;font-weight:800}
+.campaign-world-range{font-size:10px;letter-spacing:.2px;white-space:nowrap;color:var(--ui-muted)}
+/* 같은 원본을 화면마다 다시 뽑지 않고 장 ID의 여섯 배치로 연출합니다. */
+.campaign-scenery{--lead-left:1%;--lead-right:auto;--lead-top:12%;--detail-left:auto;--detail-right:2%;--detail-top:43%}
+.campaign-scenery[data-scenery-layout="1"]{--lead-left:auto;--lead-right:2%;--lead-top:43%;--detail-left:1%;--detail-right:auto;--detail-top:69%}
+.campaign-scenery[data-scenery-layout="2"]{--lead-left:0%;--lead-top:21%;--detail-right:3%;--detail-top:34%}
+.campaign-scenery[data-scenery-layout="3"]{--lead-left:auto;--lead-right:1%;--lead-top:33%;--detail-left:2%;--detail-right:auto;--detail-top:59%}
+.campaign-scenery[data-scenery-layout="4"]{--lead-left:1%;--lead-top:63%;--detail-right:1%;--detail-top:79%}
+.campaign-scenery[data-scenery-layout="5"]{--lead-left:auto;--lead-right:1%;--lead-top:78%;--detail-left:1%;--detail-right:auto;--detail-top:14%}
+.campaign-scenery .map-landmark-one{left:var(--lead-left);right:var(--lead-right);top:var(--lead-top);bottom:auto;width:clamp(48px,17%,80px)}
+.campaign-scenery .map-landmark-two{left:var(--detail-left);right:var(--detail-right);top:var(--detail-top);bottom:auto;width:clamp(40px,14%,70px)}
+.campaign-scenery .map-memory{left:var(--detail-left);right:var(--detail-right);top:var(--detail-top);bottom:auto;width:clamp(52px,18%,92px)}
+.campaign-scenery .map-landmark{opacity:.94;background:radial-gradient(ellipse 30% 5% at 50% 88%,#3e493b38,transparent);filter:drop-shadow(0 2px 1px #3c503320)}
+@media(orientation:portrait) and (max-width:600px){
+  #app:not([data-route="puzzle"]) .topbar{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;height:56px;padding:6px 12px}
+  #app:not([data-route="puzzle"]) .topbar .brand{width:44px;min-width:44px;justify-content:center}
+  #app:not([data-route="puzzle"]) .topbar .brand>span:last-child{display:none}
+  #app:not([data-route="puzzle"]) .header-right{display:grid;grid-template-columns:minmax(44px,1fr) minmax(52px,1.1fr) minmax(80px,1.4fr) 44px;gap:6px;min-width:0;width:100%}
+  #app:not([data-route="puzzle"]) .header-right .wallet{display:flex;justify-content:center;min-width:0;width:100%;padding:6px 4px;gap:4px;font-size:11px}
+  #app:not([data-route="puzzle"]) .header-right .icon-button{width:44px;height:44px;min-width:44px}
+  #app:not([data-route="puzzle"]) #language-toggle{min-width:0;width:100%;padding-inline:7px;font-size:11px}
+  .campaign-heading{padding-top:10px;padding-bottom:7px}
+  .campaign-heading h2.campaign-world-name{font-size:18px}
+  .campaign-heading .map-locate{width:44px;height:44px;min-width:44px;padding:0;justify-content:center}
+  .campaign-heading .map-locate span{display:none}
+  .campaign-world-line{margin-top:3px}
+}
+@media(orientation:portrait) and (max-width:360px){
+  #app:not([data-route="puzzle"]) .header-right .wallet{flex-direction:column;gap:0;padding:4px}
+  #app:not([data-route="puzzle"]) .header-right .wallet svg{width:13px;height:13px}
+  #app:not([data-route="puzzle"]) .header-right .wallet strong{line-height:14px;font-variant-numeric:tabular-nums}
+}

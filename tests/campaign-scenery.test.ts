@@ -120,6 +120,17 @@ describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
     expect(campaignScenery(1,10).match(/data-map-grove=/g)).toHaveLength(2);
     for(const count of [0,5,7,NaN])expect(campaignScenery(4,count)).not.toContain('data-map-grove=');
   });
+  it('풍경 배치는 장마다 재현 가능하게 달라지고 모든 장에 같은 보조 소품을 강제하지 않습니다',()=>{
+    const layouts=new Set<string>();
+    for(let chapter=1;chapter<=31;chapter++){
+      const html=campaignScenery(chapter,chapter===4||chapter===5?5:20);
+      expect(html).toBe(campaignScenery(chapter,chapter===4||chapter===5?5:20));
+      layouts.add(html.match(/data-scenery-layout="(\d+)"/)![1]);
+      for(const source of html.matchAll(/data-map-src="([^"]+)"/g))expect(existsSync(new URL('../public'+source[1],import.meta.url))).toBe(true);
+    }
+    expect(layouts.size).toBe(6);expect(campaignScenery(1)).not.toContain('/bench.webp');
+    expect(campaignScenery(4,5)).not.toContain('map-landmark-two');expect(campaignScenery(2)).toContain('map-landmark-two');
+  });
   it('지도 활성화 전에는 원본을 해독하지 않고 전부 준비한 현재 owner만 회화 그림을 공개합니다',async()=>{
     const h=setup(['/assets/campaign/windmill-rig-v1.png','/assets/garden-structures-v1/pond-base.webp']);
     expect(h.images).toHaveLength(0);expect(h.sources.every(node=>!node.hasAttribute('href'))).toBe(true);h.controller.setActive(true);h.flush();expect(h.images).toHaveLength(2);
