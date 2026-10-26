@@ -100,7 +100,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const accessoryControllers:{slot:ElementStub;kind:'ribbon'|'wateringCan';disposed:boolean}[]=[];
   const natureControllers:{picture:ElementStub;disposed:boolean;disposals:number;activations:boolean[]}[]=[];
   const pipLifecycle:string[]=[];
-  const sceneryControllers:{disposed:boolean;active:boolean;notify:(id:number)=>void}[]=[];
+  const sceneryControllers:{disposed:boolean;active:boolean;paintVisible:boolean;notify:(id:number)=>void}[]=[];
   let resolveNativeState!:(state:{isActive:boolean})=>void;
   const nativeState=new Promise<{isActive:boolean}>(resolve=>{resolveNativeState=resolve;});
   let stored = JSON.stringify({ version: 1, language: 'en', highestLevel: 2, completed: [1], stars: 1, coins: 40, garden: 0, music: true, sfx: true });
