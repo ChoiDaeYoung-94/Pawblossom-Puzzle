@@ -2,11 +2,12 @@ import {describe,it,expect} from 'vitest';
 import {gardenGoals,goalNextStep,nextGardenGoal,type GoalState} from '../src/GardenGoals';
 import {freshGardenDesign} from '../src/gardenDesign';
 import {freshGardenSpaces} from '../src/gardenSpaces';
+import {journeyProjectSpecs} from '../src/journeyGarden';
 const fresh=():GoalState=>({plots:0,pip:{growth:0,affection:0},clears:0,stars:0,coins:0});
 describe('저장과 소비 없는 공동 정원 목표',()=>{
   it('구 저장의 optional 부재·입력 객체를 렌더/조회로 채우지 않고 완료 소유도 추측하지 않습니다',()=>{
     const state=Object.freeze({...fresh(),pip:Object.freeze({growth:100,affection:100}),plots:5,clears:100,stars:100,coins:2000});
-    const before=JSON.stringify(state),goals=gardenGoals(state);expect(goals).toHaveLength(16);expect(goals.filter(g=>g.done)).toHaveLength(5);expect(nextGardenGoal(goals)?.id).toBe('bench');expect(JSON.stringify(state)).toBe(before);expect('design' in state).toBe(false);
+    const before=JSON.stringify(state),goals=gardenGoals(state);expect(goals).toHaveLength(36);expect(goals.filter(g=>g.done)).toHaveLength(5);expect(nextGardenGoal(goals)?.id).toBe('bench');expect(JSON.stringify(state)).toBe(before);expect('design' in state).toBe(false);
   });
   it('가능한 행동을 먼저 권하고 잔액이 없으면 첫 부족 조건과 퍼즐 이동을 제시합니다',()=>{
     const state=fresh(),goals=gardenGoals(state);expect(nextGardenGoal(goals)?.id).toBe('bed-1');expect(goalNextStep(goals[0])).toMatchObject({destination:'map',missing:{kind:'stars',current:0,required:2}});
@@ -30,11 +31,25 @@ describe('저장과 소비 없는 공동 정원 목표',()=>{
     state.clears=60;state.stars=11;expect(goalNextStep(pond())).toMatchObject({destination:'map',missing:{kind:'stars',required:12}});
     state.stars=12;expect(goalNextStep(pond())?.missing).toBeUndefined();state.design.spaces.pond.phase=2;expect(pond().done).toBe(true);expect(goalNextStep(pond())).toBeUndefined();
   });
-  it('소유한 목표는 나중에 꽃을 바꿔도 다시 권하지 않고 모든 복원 뒤 계획을 끝냅니다',()=>{
+  it('초반 정원을 마쳐도 여행 복원을 남겨두고 실제36단계 소유 뒤에만 계획을 끝냅니다',()=>{
     const design={...freshGardenDesign(),owned:['bench','butterflies','lantern'] as const,ownedThemes:['sunset','starlight'] as const,spaces:freshGardenSpaces()};
     const state:GoalState={plots:5,pip:{growth:100,affection:100},design:{...design,owned:[...design.owned],ownedThemes:[...design.ownedThemes]},clears:100,coins:0,stars:0};
     for(const space of Object.values(state.design!.spaces!))space.phase=2;
-    const goals=gardenGoals(state);expect(goals.every(g=>g.done)).toBe(true);expect(nextGardenGoal(goals)).toBeUndefined();
+    const goals=gardenGoals(state);expect(goals.filter(g=>g.done)).toHaveLength(16);expect(nextGardenGoal(goals)?.id).toBe('journey-conservatory-1');
+    state.clears=500;state.design!.journeyProjects=Object.fromEntries(journeyProjectSpecs.map(s=>[s.id,{phase:2,altOwned:false,style:'base'}]));
+    expect(gardenGoals(state)).toHaveLength(36);expect(gardenGoals(state).every(g=>g.done)).toBe(true);expect(nextGardenGoal(gardenGoals(state))).toBeUndefined();
+  });
+  it('여행은100판부터 보이며 기초·현재완료·별 순서로 실제 작품에 연결하고 재플레이 수입을 약속하지 않습니다',()=>{
+    const state:GoalState={...fresh(),clears:99,stars:30};
+    expect(gardenGoals(state)).toHaveLength(16);state.clears=100;
+    const goal=(phase:1|2)=>gardenGoals(state).find(g=>g.id===`journey-lotus-${phase}`)!;
+    expect(gardenGoals(state)).toHaveLength(36);expect(goal(1)).toMatchObject({project:'lotus',done:false});
+    expect(goalNextStep(goal(1))).toMatchObject({destination:'map',missing:{kind:'clears',required:160}});
+    expect(goalNextStep(goal(2))).toMatchObject({destination:'journey',missing:{kind:'foundation',required:1}});
+    state.clears=180;state.design={...freshGardenDesign(),journeyProjects:{lotus:{phase:1,altOwned:false,style:'base'}}};state.stars=24;
+    expect(goal(1).done).toBe(true);expect(goalNextStep(goal(2))).toMatchObject({destination:'map',missing:{kind:'stars',required:25}});
+    state.stars=25;expect(goalNextStep(goal(2))).toEqual({destination:'journey',missing:undefined});
+    state.clears=500;state.stars=0;expect(goalNextStep(goal(2))).toMatchObject({destination:'journey',unavailableIncome:true});
   });
   it('100판 이후 새보상을 안내하고500판 소진 뒤 재플레이 수입을 약속하지 않습니다',()=>{
     const state:GoalState={...fresh(),plots:5,pip:{growth:100,affection:100},clears:500,design:{...freshGardenDesign(),flowers:['meadow','daisy','violet','meadow','meadow'],owned:['bench','butterflies']}};

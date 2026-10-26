@@ -1084,7 +1084,7 @@ function sharedGardenPlan(view:'village'|'journal'){
   const goals=gardenGoals({plots:save.garden,pip:save.pip??freshPip(),design:save.gardenDesign,clears:gardenCompletedCount(),stars:save.stars,coins:save.coins});
   const next=nextGardenGoal(goals),done=goals.filter(goal=>goal.done).length;
   const achievements=[...(goals.filter(g=>g.kind==='project').every(g=>g.done)?[text('gardenProjectsDone')]:[]),...(goals.filter(g=>g.kind==='theme').every(g=>g.done)?[text('gardenThemesDone')]:[])];
-  const name=(goal:GardenGoal)=>goal.kind==='bed'?text('goalBed').replace('{number}',goal.name):goal.kind==='project'?projectName(goal.name as GardenProject):goal.kind==='theme'?themeName(goal.name as GardenTheme):gardenAreaName(save.language,goal.area as GardenArea)+' · '+text(goal.name==='1'?'spaceFoundation':'spaceComplete');
+  const name=(goal:GardenGoal)=>goal.kind==='bed'?text('goalBed').replace('{number}',goal.name):goal.kind==='project'?projectName(goal.name as GardenProject):goal.kind==='theme'?themeName(goal.name as GardenTheme):(goal.kind==='journey'?journeyName(save.language,goal.project!):gardenAreaName(save.language,goal.area as GardenArea))+' · '+text(goal.name==='1'?'spaceFoundation':'spaceComplete');
   const needName=(kind:GoalNeed)=>text(({plots:'goalPlots',growth:'pipGrowth',affection:'pipAffection',diversity:'goalDiversity',clears:'goalClears',stars:'stars',coins:'coins',foundation:'spaceFoundation'} as const)[kind]);
   const detail=(goal:GardenGoal)=>{
     const step=goalNextStep(goal);if(!step)return text('goalDone');
@@ -1172,7 +1172,8 @@ function bindCareControls(){
       switchView('journal');const target=$<HTMLButtonElement>(step.missing?.kind==='affection'?'#pip-play':'#pip-feed');
       const focus=target.disabled?$('#pip-care-title'):target;focus.focus({preventScroll:true});focus.scrollIntoView?.({block:'center'});return;
     }
-    selectedGardenArea=step.destination;switchView('village');renderViews();
+    selectedGardenArea=step.destination;if(step.destination==='journey'&&goal.project)selectedJourneyProject=goal.project;
+    switchView('village');renderViews();
     const id=step.destination!=='flowers'?'garden-space-title':step.missing?.kind==='diversity'?'garden-edit-title':goal.kind==='bed'?'garden-stage':'garden-edit-title';
     const target=$('#'+id);target.focus({preventScroll:true});target.scrollIntoView?.({block:'start'});
   });

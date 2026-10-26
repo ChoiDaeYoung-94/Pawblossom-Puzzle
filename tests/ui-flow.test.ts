@@ -13,6 +13,7 @@ import {cloneSnapshot,prepareShuffle} from '../src/puzzleHelp';
 import * as journeyModel from '../src/journeyGarden';
 import * as journeyUI from '../src/JourneyGardenUI';
 import {freshGardenSpaces} from '../src/gardenSpaces';
+import {freshGardenDesign} from '../src/gardenDesign';
 import {t, type TextKey} from '../src/i18n';
 import {icon as renderIcon} from '../src/icons';
 import {specialTileArt,specialArtKinds,specialBodyKey,specialBodyPath} from '../src/SpecialTileArt';
@@ -2402,6 +2403,25 @@ describe('경로 표시 컨테이너와 메뉴 버튼의 이벤트 경계',()=>{
 describe('공동 정원 계획의 이동 전용 입력',()=>{
   const initial=()=>({version:1,language:'ko',highestLevel:2,completed:[1],coins:100,stars:0,garden:1,music:true,sfx:true,tutorialSeen:true});
   const snapshot='JSON.stringify({save,round,currentLevel,moves,score,board:scene.engine.board})';
+  it.each(['ko','en'] as const)('%s: 실제36복원을 모두 소유했을 때만 전체 완료를 안내합니다',language=>{
+    const spaces=freshGardenSpaces();for(const space of Object.values(spaces))space.phase=2;
+    const design={...freshGardenDesign(),flowers:['meadow','daisy','violet','meadow','meadow'],owned:['bench','butterflies','lantern'],ownedThemes:['sunset','starlight'],spaces,journeyProjects:Object.fromEntries(journeyModel.journeyProjectSpecs.map(spec=>[spec.id,{phase:2,altOwned:false,style:'base'}]))};
+    const h=mainHarness(false,false,true,false,{...initial(),language,garden:5,pip:{growth:100,affection:100,owned:[],equipped:'none'},highestLevel:500,completed:Array.from({length:500},(_,i)=>i+1),gardenDesign:design});
+    h.run("switchView('village')");const html=h.run("sharedGardenPlan('village')");expect(html).toContain('36 / 36');expect(html).toContain(t(language,'goalAllDone'));expect(html).not.toContain('garden-plan-next');
+  });
+  it.each(['ko','en'] as const)('%s: 여행 목표의 기초 선행은 해당 작품을 열고 별 부족은 퍼즐로 안내하며 이동만으로 저장하지 않습니다',language=>{
+    const data={...initial(),language,highestLevel:181,completed:Array.from({length:180},(_,i)=>i+1),stars:30};
+    const h=mainHarness(false,false,true,false,data);h.run("switchView('village')");
+    expect(h.run("sharedGardenPlan('village')")).toContain('1 / 36');
+    expect(h.run("sharedGardenPlan('village')")).toContain(journeyUI.journeyName(language,'lotus'));
+    const before=h.run(snapshot),disk=h.disk(),writes=h.writes(),stale=h.element('#village-goal-journey-lotus-2').onclick;
+    let focused=0;h.element('#garden-space-title').focus=()=>{focused++;};
+    stale();expect(h.run('route')).toBe('village');expect(h.run('selectedGardenArea')).toBe('journey');expect(h.run('selectedJourneyProject')).toBe('lotus');expect(focused).toBe(1);
+    expect(h.run(snapshot)).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    h.element('#journey-restore').onclick();h.element('#space-preview-confirm').onclick();expect(h.stored().gardenDesign.journeyProjects.lotus.phase).toBe(1);expect(h.stored().stars).toBe(15);
+    h.run("switchView('journal')");const after=h.run(snapshot),afterWrites=h.writes();h.element('#journal-goal-journey-lotus-2').onclick();expect(h.run('route')).toBe('map');expect(h.run(snapshot)).toBe(after);expect(h.writes()).toBe(afterWrites);
+    stale();expect(h.run('route')).toBe('map');expect(h.run(snapshot)).toBe(after);
+  });
   it.each(['ko','en'] as const)('%s: 부족한 성장·별의 목적지에 이동하고 자동 소비/저장/회차 교체를 하지 않습니다',language=>{
     const h=mainHarness(false,false,false,false,{...initial(),language});h.run("switchView('village')");
     const before=h.run(snapshot),disk=h.disk(),writes=h.writes();
