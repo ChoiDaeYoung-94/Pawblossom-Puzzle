@@ -2,7 +2,7 @@
 import {createHash,createHmac,randomBytes,timingSafeEqual} from 'node:crypto';
 import {isAbsolute} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
-import {beginRoundCommand} from './commandBegin.ts';
+import {beginIdempotentWrite} from '../storage/transactionBegin.ts';
 import {readRedeemedGrant} from '../ads/rewardLedger.ts';
 import {advanceState,commandSnapshot,CONTENT_HASH,ENGINE_PROFILE,ENGINE_SOURCE_SHA256,exactRecord,freezeCopy,isLevelId,publicState,startState,validateState,
   type Command,type CommandOutcome,type PublicRoundState,type RoundState} from './roundState.ts';
@@ -152,14 +152,14 @@ export class RoundLedger {
   }
   #mac(domain:string,value:string):string{return createHmac('sha256',this.#keys[domain]).update(value).digest('hex');}
   #wipe(){Object.values(this.#keys).forEach(key=>key.fill(0));this.#keys={};}
-  #transaction<T>(work:()=>T,retryCommandBegin=false):T {
-    if(retryCommandBegin)beginRoundCommand(this.#db);else this.#db.exec('BEGIN IMMEDIATE');
+  #transaction<T>(work:()=>T,retryIdempotentBegin=false):T {
+    if(retryIdempotentBegin)beginIdempotentWrite(this.#db);else this.#db.exec('BEGIN IMMEDIATE');
     try{const r=work();this.#db.exec('COMMIT');return r;}
     catch(error){try{this.#db.exec('ROLLBACK');}catch{throw new RoundRollbackError();}throw error;}
   }
-  #run<T extends StartRoundResult|RoundCommandResult|GetRoundResult|RewardEligibilityResult|ApplyRewardResult>(work:()=>T,retryCommandBegin=false):T|Failure {
+  #run<T extends StartRoundResult|RoundCommandResult|GetRoundResult|RewardEligibilityResult|ApplyRewardResult>(work:()=>T,retryIdempotentBegin=false):T|Failure {
     if(this.#closed)return unavailable();
-    try{return this.#transaction(()=>{this.#schema();this.#capacity(0);return work();},retryCommandBegin);}
+    try{return this.#transaction(()=>{this.#schema();this.#capacity(0);return work();},retryIdempotentBegin);}
     catch(error){if(error instanceof RoundIntegrityError||error instanceof RoundRollbackError){try{this.close();}catch{}}return unavailable();}
   }
   #schema():void {
@@ -287,7 +287,7 @@ export class RoundLedger {
       row.state_mac=this.#rowMac(row);
       this.#db.prepare('INSERT INTO round_rounds VALUES(?,?,?,?,?,?,?,?,?)').run(row.round_id,owner,createHash,digest,now,row.expires_at,0,row.state_json,row.state_mac);
       return {kind:'round-started',created:true,snapshot:this.#snapshot(row,state)};
-    }) as StartRoundResult;
+    },true) as StartRoundResult;
   }
   get(context:TrustedRoundOwner,request:{readonly roundId:string}):GetRoundResult {
     if(this.#closed)return unavailable();

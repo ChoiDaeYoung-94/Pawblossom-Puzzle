@@ -57,12 +57,12 @@ describe('회차 명령의 업무 전 BEGIN 재진입',()=>{
     vi.spyOn(DatabaseSync.prototype,'exec').mockImplementation(function(this:DatabaseSync,sql:string){if(sql==='BEGIN IMMEDIATE')begins++;if(sql==='COMMIT'){commits++;throw busy();}if(sql==='ROLLBACK')rollbacks++;return native.call(this,sql);});
     expect(h.ledger.command(owner,h.request)).toEqual({kind:'service-error',code:'storage-unavailable'});expect({begins,commits,rollbacks}).toEqual({begins:1,commits:1,rollbacks:1});expect(h.now).toHaveBeenCalledTimes(1);expect(rowState(h.path)).toEqual({revision:0,operations:0});
   });
-  it('생성자·시작·조회는 명령 전용 재진입 정책을 사용하지 않습니다',()=>{
+  it('시작에는 추가1회만, 조회·생성자에는 추가 진입을 적용하지 않습니다',()=>{
     const h=fixture(),native=DatabaseSync.prototype.exec;let begins=0;
     vi.spyOn(DatabaseSync.prototype,'exec').mockImplementation(function(this:DatabaseSync,sql:string){if(sql==='BEGIN IMMEDIATE'){begins++;throw busy();}return native.call(this,sql);});
     expect(h.ledger.get(owner,{roundId:h.snapshot.roundId})).toEqual({kind:'service-error',code:'storage-unavailable'});expect(begins).toBe(1);
-    expect(h.ledger.start(owner,{requestId:'another-start',levelId:1})).toEqual({kind:'service-error',code:'storage-unavailable'});expect(begins).toBe(2);
-    expect(()=>new RoundLedger({databasePath:h.path,serverKey:new Uint8Array(32).fill(71),environment:'test',now:h.now})).toThrow();expect(begins).toBe(3);expect(h.now).not.toHaveBeenCalled();
+    expect(h.ledger.start(owner,{requestId:'another-start',levelId:1})).toEqual({kind:'service-error',code:'storage-unavailable'});expect(begins).toBe(3);
+    expect(()=>new RoundLedger({databasePath:h.path,serverKey:new Uint8Array(32).fill(71),environment:'test',now:h.now})).toThrow();expect(begins).toBe(4);expect(h.now).not.toHaveBeenCalled();
   });
   it('진입 지연 뒤의 현재 시각으로 만료를 판정하고 지나간 회차를 실행하지 않습니다',()=>{
     const h=fixture(),native=DatabaseSync.prototype.exec;let begins=0;

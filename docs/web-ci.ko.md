@@ -1,5 +1,15 @@
 # 웹 자동 검증
 
+## 2026-10-26 · #368 시작·보상소비의 업무 전 진입 정책
+
+main361의 redeem BEGIN BUSY5(첫 기대 실패:7개 voucher-redeemed/1개 storage-unavailable)와 PR367의 start BEGIN BUSY5(7개 round-started/1개 storage-unavailable)를 별도 보존했습니다. 모두 생성 성공 뒤 업무 본문에 들어가기 전 경계입니다. 기존 command helper의 알고리즘을 공통 저장소 모듈로 옮기고 기존 export는 호환하며, 기존명령과 새 start/redeem 두 호출에만 선택 적용합니다. 생성자·SSV callback·조회·applyReward와 다른 기본 경로는 그대로입니다.
+
+이는 단순 검사 재실행이 아닌 제품의 제한된 진입 정책 변경입니다. 열려 있고 transaction이 없는 동일 연결에서 own data의 정확ERR_SQLITE_ERROR/errcode5만25ms 뒤 BEGIN을 추가1회 시도합니다. 호출당native500ms는 유지하지만 두 업무의 명목상 총BEGIN예산은500+25+500=1,025ms가 될 수 있습니다. 스케줄 지연을 포함한 실제 wall시간의 엄격한 상한은 아닙니다. 두 번째 오류는 기존 service-error이며 업무·시계·난수/쓰기·COMMIT/ROLLBACK을 반복하지 않고 capability는 COMMIT 성공 뒤에만 발급합니다.
+
+원본새회귀4실패/4성공을 보존했습니다. 소스수정후 새8개는 성공했고 기존 명령단위의 「시작 never-retry」 1개가 새선택정책과 달라 실패한 원문도 보존했습니다. 해당 단위는 조회1회·시작2회·생성자1회의 정확한 누적으로 갱신했으며, 실제8worker·동일ID/행수/소비1회·500ms·5초·seed 기대는 바꾸지 않았습니다. 관련4파일341개와 타입3설정이 성공했고 공통helper의 native잠금→해제는 기존 worker 회귀를 그대로 통과했습니다. 웹/src/public/Android/설정은 기준main32ab63c와 같아 로컬 두웹빌드를 반복하지 않았습니다. 이전366의 dist는 다른 UI후보이므로 현재backend source의 산출물로 사용하지 않습니다. 최초필수PR/정확main/최종APK는 별도 확인합니다.
+
+이 정책이나 이후 녹색을 #122의 긴COMMIT·OS잠금 owner/스케줄/디스크 근본원인 해결로 표현하지 않습니다. 361의 verified span/닫힘과367의 legacy호출이벤트·종료상태미관측도 서로 합산하지 않습니다. 이미 존재하는 opt-in Linux thread-self schedstat/probe를 새로 구현했다고 세지 않으며, 실서버/실광고·결제·배포를 활성화하지 않습니다.
+
 ## 2026-10-25 · #265 보상 worker 구간 관측의 현행 helper 통합
 
 기존 Draft269의 보상 worker opt-in 구간/역할/부모-Worker 시간 기준을 현재 helper에 통합했습니다. #284 trusted prepare 실패/연결 닫힘, #287 Async 활성·소유 hook 조건부 복원, #317 고정8단계/family를 보존하고 구간 finish는 반환한 Sync cleanup에만 연결합니다. SQL/인수/오류 원문·receiver는 DTO에 추가하지 않습니다. 제품/src/server/public/Android·업무 기대·8이벤트/5hook·재시도·500ms/5초/8worker는 유지합니다.
