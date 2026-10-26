@@ -291,6 +291,16 @@ describe('유휴 힌트 (실제 Phaser Clock)',()=>{
     const shown=()=>reduced?(scene.hintMark?.strokes.length??0)>0:scene.hintPieces.length===2;
     return {...h,scene,clock,transition,advance,start,live,shown};
   }
+  it('남은 목표 힌트는 표시 시점에만 조회하며 기존 Clock·선택 억제를 유지합니다',()=>{
+    const motionReduced=reduced,h=timed(),pattern=[[0,1,0,2],[1,0,2,1],[2,0,1,0],[0,2,1,2]];
+    h.scene.engine=new BoardEngine(4,4,()=>{throw new Error('힌트가 난수를 소비했습니다');},{board:pattern.map(row=>row.map(kind=>({kind}))),leaves:pattern.map(row=>row.map(()=>0)),ruleVersion:1});
+    const getHintGoals=vi.fn(()=>({colors:[{kind:1,remaining:3}],leaves:false,crates:false}));Object.assign(h.scene.hooks,{getHintGoals});
+    h.start();h.advance(7499);expect(getHintGoals).not.toHaveBeenCalled();h.advance(1);expect(getHintGoals).toHaveBeenCalledOnce();
+    if(motionReduced)expect(h.scene.hintMark?.strokes).toEqual([[133,77,46,46,8],[189,77,46,46,8]]);
+    else expect(h.scene.hintPieces.map(piece=>[piece.x,piece.y])).toEqual([[156,100],[212,100]]);
+    h.transition('pause');h.advance(10000);expect(getHintGoals).toHaveBeenCalledOnce();h.transition('resume');h.scene.focusKeyboard();h.scene.keyboardKey('Enter');
+    h.advance(7500);expect(getHintGoals).toHaveBeenCalledOnce();h.scene.keyboardKey('Escape');h.advance(7499);expect(getHintGoals).toHaveBeenCalledOnce();h.advance(1);expect(getHintGoals).toHaveBeenCalledTimes(2);
+  });
   it('CREATE 전에는 예약하지 않고 RUNNING 뒤 처음 7.5초에 표시합니다',()=>{
     const h=timed();h.scene.create();expect(h.live()).toBe(0);h.scene.resetHint();expect(h.live()).toBe(0);
     h.transition('create');expect(h.live()).toBe(1);h.advance(7499);expect(h.shown()).toBe(false);

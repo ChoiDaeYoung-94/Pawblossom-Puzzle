@@ -312,6 +312,25 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   };
 }
 
+describe('현재 회차의 힌트 목표 조회',()=>{
+  it('남은 색 목표를 0 이상으로 읽고 조회만으로 저장하지 않습니다',()=>{
+    const h=mainHarness(false,false,true);h.run('startLevel(6,true);scene.hooks.onMove([15,0,0,0,0,7],200,1,1)');const writes=h.writes(),disk=h.disk();
+    expect(h.run('scene.hooks.getHintGoals()')).toEqual({colors:[{kind:5,remaining:9},{kind:0,remaining:0}],leaves:true,crates:false});
+    h.run('scene.hooks.getHintGoals()');expect(h.writes()).toBe(writes);expect(h.disk()).toEqual(disk);
+  });
+  it('상자 목표가 완료되면 후속 힌트의 상자 관련도를 사용하지 않습니다',()=>{
+    const h=mainHarness(false,false,true);h.run('startLevel(levels.find(level=>level.crates?.length).id,true)');expect(h.run('scene.hooks.getHintGoals().crates')).toBe(true);
+    h.run('clearedCrates=levels[currentLevel-1].crates.length');expect(h.run('scene.hooks.getHintGoals().crates')).toBe(false);
+  });
+  it('새 회차·다른 Scene·종료·체험에는 이전 목표 조회를 거부합니다',()=>{
+    for(const reason of ['round','scene','ended','demo']){
+      const h=mainHarness(false,false,true);h.run('priorHintScene=scene;startLevel(6,true)');const read=h.run('scene.hooks.getHintGoals');expect(read()).toBeDefined();
+      if(reason==='round')h.run('startLevel(7,true)');if(reason==='scene')h.run('scene=priorHintScene');if(reason==='ended')h.run('roundEnded=true');if(reason==='demo')h.run('careDemo=true');
+      expect(read()).toBeUndefined();
+    }
+  });
+});
+
 describe('첫 완료 뒤 지도의 단회 핍 이동',()=>{
   it('현재 최고레벨 첫 성공만 다음 발판으로 이동하며 완료 보상을 다시 쓰지 않습니다',()=>{
     const h=mainHarness();h.run('holdMapTravel=true;finish(true)');expect(h.mapTravels).toHaveLength(0);

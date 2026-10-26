@@ -557,7 +557,11 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   currentLevel=id;moves=levels[id-1].moves;score=0;collected=Array(6).fill(0);shuffles=1;clearedLeaves=0;clearedCrates=0;
   if(restored&&!testingLevel){moves=restored.moves;score=restored.score;collected=restored.collected.slice();shuffles=restored.shuffles;clearedLeaves=restored.clearedLeaves;clearedCrates=restored.clearedCrates??0;continueUsed=restored.continueUsed===true;paidShuffleUsed=restored.paidShuffleUsed===true;}
   scene?.stopPlaying();
-  const activeScene:BoardScene=scene=new BoardScene({audio,onBoardState:()=>{if(activeRound===round)updateBoardAccess();},onReady:()=>{
+  const activeScene:BoardScene=scene=new BoardScene({audio,getHintGoals:()=>{
+    if(activeRound!==round||scene!==activeScene||roundEnded||careDemo)return;
+    const level=levels[currentLevel-1];
+    return {colors:level.goals.map(goal=>({kind:goal.kind,remaining:Math.max(0,goal.count-collected[goal.kind])})),leaves:clearedLeaves<(level.leaves?.length??0),crates:clearedCrates<(level.crates?.length??0)};
+  },onBoardState:()=>{if(activeRound===round)updateBoardAccess();},onReady:()=>{
     if(activeRound!==round||scene!==activeScene)return;
     syncActivity();
     if(!focusRequested)return;

@@ -6,10 +6,11 @@ import { reducedMotion } from './reducedMotion';
 import type { ResolveVisual } from './RoundFeedback';
 import {specialArtKinds,specialBodyKey,specialBodyPath} from './SpecialTileArt';
 import {BOARD_RENDER_SCALE,configureBoardCamera} from './BoardDisplay';
+import {goalAwareHint,type HintGoals} from './GoalHint';
 
 export const tileNames = ['strawberry','carrot','blueberry','acorn','leaf','flower'];
 type Notice='matched'|'chain'|'specialCreated'|'noMoves'|'rowClear'|'columnClear'|'bombClear'|'colorClear'|'comboClear'|'leafThinned'|'leavesCleared'|'cratesCleared';
-interface Hooks { audio: AudioManager; onStart:()=>void; onReady?:()=>void; onBoardState?:()=>void; onResolveVisual?:(event:ResolveVisual)=>void; onVisualCancel?:()=>void; onMove:(collected:number[],score:number,chains:number,leavesCleared:number,cratesCleared?:number)=>void; onNotice:(kind:Notice)=>void; }
+interface Hooks { audio: AudioManager; onStart:()=>void; onReady?:()=>void; onBoardState?:()=>void; getHintGoals?:()=>HintGoals|undefined; onResolveVisual?:(event:ResolveVisual)=>void; onVisualCancel?:()=>void; onMove:(collected:number[],score:number,chains:number,leavesCleared:number,cratesCleared?:number)=>void; onNotice:(kind:Notice)=>void; }
 const CELL = 56, PAD = 16;
 export class BoardScene extends Phaser.Scene {
   engine: BoardEngine;
@@ -424,7 +425,7 @@ export class BoardScene extends Phaser.Scene {
   }
   private showHint(){
     if(!this.ready||!this.canInteract()||this.selected)return;
-    const move=this.engine.legalMoves()[0];
+    const moves=this.engine.legalMoves(),move=goalAwareHint(this.engine,moves,this.hooks.getHintGoals?.());
     if(move){const {a,b}=move,reduced=this.syncMotion();this.resetHint();
       if(reduced){
         const g=(this.hintMark??=this.add.graphics().setDepth(19).setName('board-hint')).clear();
