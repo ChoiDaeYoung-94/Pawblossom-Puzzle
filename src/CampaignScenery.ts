@@ -14,10 +14,10 @@ export function campaignWorldName(chapter:number,language:'ko'|'en'){
 const WORLD_MUSIC:readonly MusicTheme[]=['meadow','brook','orchard','woodland','lantern','orchard','meadow','tide','tide','orchard','winter','dream','woodland','meadow','dream','tide','meadow','dream','dream','dream','garden','clockwork','tide','dream','festival'];
 export function campaignMusicTheme(chapter:number):MusicTheme{return WORLD_MUSIC[campaignWorldIndex(chapter)]!;}
 /** 결과 엽서용 한 셀입니다. 지도 원본과 좌표를 재사용하고 인접 셀은 명시적으로 자릅니다. */
-export function campaignWorldPostcard(chapter:number,instance=0){
+export function campaignWorldPostcard(chapter:number,instance=0,scope:'result'|'album'='result'){
   const index=campaignWorldIndex(chapter),cell=index<5?index-1:(index-5)%4;
   const source=index===0?'/assets/campaign/meadow-journey.webp':index<5?'/assets/campaign/worlds-atlas-v1.png':`/assets/campaign/worlds-expansion-${String.fromCharCode(97+Math.floor((index-5)/4))}-v1.png`;
-  const x=index===0?0:cell%2*627,y=index===0?0:Math.floor(cell/2)*627,size=index===0?627:1254,clip=`world-postcard-${chapter}-${Number.isInteger(instance)?instance:0}`;
+  const x=index===0?0:cell%2*627,y=index===0?0:Math.floor(cell/2)*627,size=index===0?627:1254,clip=`${scope==='album'?'album-postcard':'world-postcard'}-${chapter}-${Number.isInteger(instance)?instance:0}`;
   return `<svg class="result-world-paint" viewBox="${x} ${y} 627 627" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><clipPath id="${clip}" clipPathUnits="userSpaceOnUse"><rect x="${x}" y="${y}" width="627" height="627"/></clipPath></defs><image class="map-painted-image" data-map-src="${source}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clip})"/></svg>`;
 }
 /** 원본정사각형을3장의그림띠로연결해20판긴장에서도가장자리풍경을지나치게확대하지않습니다. */
