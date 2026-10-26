@@ -2,11 +2,13 @@ import {gardenDesignFor,gardenProjects,gardenThemes,flowerDiversity,type GardenD
 import {gardenSpacesFor,gardenSpaceSpecs,type GardenSpace} from './gardenSpaces';
 import {careCost,freshPip,type PipCare} from './pipCare';
 import {LEVEL_COUNT} from './levels';
+import {journeyProjectSpecs,journeyProjectFor,JOURNEY_STAR_COSTS,type JourneyProject} from './journeyGarden';
 
 export type GoalNeed='plots'|'growth'|'affection'|'diversity'|'clears'|'stars'|'coins'|'foundation';
-export type GoalDestination='flowers'|'pip'|'map'|GardenSpace;
+export type GoalDestination='flowers'|'pip'|'map'|'journey'|GardenSpace;
 export interface GardenGoal {
-  id:string;kind:'bed'|'project'|'theme'|'space';name:string;area:GoalDestination;done:boolean;
+  id:string;kind:'bed'|'project'|'theme'|'space'|'journey';name:string;area:GoalDestination;done:boolean;
+  project?:JourneyProject;
   needs:{kind:GoalNeed;current:number;required:number}[];
   firstClearRewardsExhausted?:boolean;
 }
@@ -19,7 +21,13 @@ export function gardenGoals(state:GoalState):GardenGoal[]{
   const projects=gardenProjects.map(p=>({id:p.id,kind:'project' as const,name:p.id,area:'flowers' as const,done:design.owned.includes(p.id),needs:[need('plots',p.plots),need('growth',p.growth),need('affection',p.affection),need('diversity',p.diversity),need('coins',p.cost)]}));
   const themes=gardenThemes.map(t=>({id:t.id,kind:'theme' as const,name:t.id,area:'flowers' as const,done:Boolean(design.ownedThemes?.includes(t.id)),needs:[need('clears',t.clears),need('plots',t.plots),need('growth',t.growth),need('affection',t.affection),need('coins',t.cost)]}));
   const spaceGoals=gardenSpaceSpecs.flatMap(s=>[1,2].map(phase=>({id:`${s.id}-${phase}`,kind:'space' as const,name:String(phase),area:s.id,done:spaces[s.id].phase>=phase,needs:[{kind:'foundation' as const,current:spaces[s.id].phase,required:phase-1},need('clears',s.clears[phase-1]),need('stars',s.stars)]})));
-  return [bed(1),projects[0],bed(2),projects[1],bed(3),projects[2],bed(4),themes[0],bed(5),themes[1],...spaceGoals].map(goal=>{
+  // 초반에는 기존16계획을 유지하고 여행이 열리면 실제 소유 단계에서20복원을 이어갑니다.
+  const journeyGoals:GardenGoal[]=clears>=100||Object.keys(design.journeyProjects??{}).length>0?journeyProjectSpecs.flatMap(spec=>{
+    const state=journeyProjectFor(design.journeyProjects,spec.id);
+    return ([1,2] as const).map((phase):GardenGoal=>({id:`journey-${spec.id}-${phase}`,kind:'journey',name:String(phase),area:'journey',project:spec.id,done:state.phase>=phase,needs:[{kind:'foundation',current:state.phase,required:phase-1},need('clears',spec.clears[phase-1]),need('stars',JOURNEY_STAR_COSTS[phase-1])]}));
+  }):[];
+  const baseGoals:GardenGoal[]=[bed(1),projects[0],bed(2),projects[1],bed(3),projects[2],bed(4),themes[0],bed(5),themes[1],...spaceGoals];
+  return [...baseGoals,...journeyGoals].map(goal=>{
     const needs:GardenGoal['needs']=goal.needs.slice();
     const careIndex=needs.findIndex(n=>(n.kind==='growth'||n.kind==='affection')&&n.current<n.required),cost=careCost({...freshPip(),...pip});
     if(careIndex>=0&&coins<cost)needs.splice(careIndex,0,need('coins',cost));
@@ -31,7 +39,7 @@ export function gardenGoals(state:GoalState):GardenGoal[]{
 export function goalNextStep(goal:GardenGoal){
   if(goal.done)return;
   const missing=goal.needs.find(n=>n.current<n.required);
-  if(missing&&(missing.kind==='coins'||missing.kind==='stars')&&goal.firstClearRewardsExhausted)return {missing,destination:'flowers' as const,unavailableIncome:true};
+  if(missing&&(missing.kind==='coins'||missing.kind==='stars')&&goal.firstClearRewardsExhausted)return {missing,destination:goal.kind==='journey'?'journey' as const:'flowers' as const,unavailableIncome:true};
   const destination:GoalDestination=!missing||missing.kind==='foundation'?goal.area:missing.kind==='growth'||missing.kind==='affection'?'pip':missing.kind==='clears'||missing.kind==='stars'||missing.kind==='coins'?'map':'flowers';
   return {missing,destination};
 }
