@@ -373,7 +373,7 @@ describe('독립 스테이지 지도',()=>{
   });
   it('지도 관측·정원·핍·퍼즐의 곡을 연결하고 설정/오래된 지도 알림은 다른 화면의 곡을 바꾸지 않습니다',()=>{
     const h=boot(),before=h.run('JSON.stringify(save)'),writes=h.writes();expect(h.run('audio.theme')).toBe('meadow');
-    const observer=h.sceneryControllers.find(c=>!c.disposed)!;observer.notify(3);expect(h.run('audio.theme')).toBe('brook');expect(h.element('#map-world-name').textContent).toBe('Sunlit Brook · 21–40');
+    const observer=h.sceneryControllers.find(c=>!c.disposed)!;observer.notify(3);expect(h.run('audio.theme')).toBe('brook');expect(h.element('#map-world-name').textContent).toBe('Sunlit Brook');expect(h.element('#map-world-range').textContent).toBe('21–40');
     h.run("switchView('village')");expect(h.run('audio.theme')).toBe('garden');observer.notify(10);expect(h.run('audio.theme')).toBe('garden');
     h.run("switchView('journal')");expect(h.run('audio.theme')).toBe('pip');h.run("switchView('settings')");expect(h.run('audio.theme')).toBe('pip');
     h.run("switchView('puzzle')");expect(h.run('audio.theme')).toBe('meadow');expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.writes()).toBe(writes);
@@ -390,7 +390,9 @@ describe('독립 스테이지 지도',()=>{
     const html=h.element('#map-view').innerHTML;expect(html.match(/data-level="/g)).toHaveLength(500);
     expect(html.match(/data-world-start="true"/g)).toHaveLength(25);
     expect(html.match(/class="campaign-island"/g)).toHaveLength(500);
-    expect(html.match(/class="map-gateway-branch map-/g)).toHaveLength(50);
+    expect(html).not.toContain('map-world-gateway');expect(html).not.toContain('map-gateway-branch');
+    expect(html.match(/data-world-title="integrated"/g)).toHaveLength(31);
+    expect(new Set([...html.matchAll(/id="map-chapter-title-(\d+)"/g)].map(match=>match[1])).size).toBe(31);
     expect(html.match(/preserveAspectRatio="xMidYMid slice"/g)).toHaveLength(69);
     expect(html).toContain('viewBox="627 627 627 627"');expect(html).toContain('data-map-src="/assets/campaign/worlds-atlas-v1.png"');
     expect(html).toMatch(/id="map-stage-2"[^>]+aria-current="step"/);
@@ -407,7 +409,7 @@ describe('독립 스테이지 지도',()=>{
   });
   it('탐색 위치와 진행을 언어 변경·설정 왕복에서도 보존하고 현재 위치 버튼만 명시 이동합니다',()=>{
     const h=boot();h.run("document.querySelector('#campaign-scroll').scrollTop=613;globalThis.beforeMap=JSON.stringify(scene.engine.board);changeLanguage('ko')");
-    expect(h.element('#campaign-scroll').scrollTop).toBe(613);expect(h.element('#map-view').innerHTML).toContain('핍과 함께 한 걸음');
+    expect(h.element('#campaign-scroll').scrollTop).toBe(613);expect(h.element('#map-view').innerHTML).toContain('꽃바람 초원');expect(h.element('#map-view').innerHTML).toContain('id="map-world-range" class="campaign-world-range">1–20</span>');
     h.element('#settings-button').onclick();expect(h.run('route')).toBe('settings');h.element('#settings-button').onclick();expect(h.run('route')).toBe('map');
     expect(h.element('#campaign-scroll').scrollTop).toBe(613);expect(h.run('JSON.stringify(scene.engine.board)')).toBe(h.run('beforeMap'));
     h.run("globalThis.located=false;document.querySelector('#map-stage-2').scrollIntoView=()=>{located=true}");h.element('#map-locate').onclick();expect(h.run('located')).toBe(true);

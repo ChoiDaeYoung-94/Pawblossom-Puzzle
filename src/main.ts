@@ -25,6 +25,7 @@ import {journeyProjectSpecs,journeyProjectFor,nextJourneyProject,previewJourneyA
 import {journeyGardenPanel,journeyGardenPreview,journeyNextCard,journeyName,journeyPhase} from './JourneyGardenUI';
 import {createJourneyGardenArt} from './JourneyGardenArt';
 import './UiTheme.css';
+import './MapComposition.css';
 import { BoardScene,tileNames } from './BoardScene';
 import {BOARD_RENDER_SIZE} from './BoardDisplay';
 import {specialTileArt} from './SpecialTileArt';
@@ -48,7 +49,7 @@ import { flowerStyles,gardenProjects,gardenThemes,gardenDesignFor,freshGardenDes
 import { showResultPip } from './ResultPip';
 import { RoundFeedback } from './RoundFeedback';
 import { createPipIdle } from './PipIdle';
-import {campaignScenery,createCampaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches,campaignWorldPaint,campaignMusicTheme} from './CampaignScenery';
+import {campaignScenery,createCampaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignWorldPaint,campaignMusicTheme} from './CampaignScenery';
 import { createPipAccessoryArt } from './PipAccessoryArt';
 import { createGardenNature } from './GardenNature';
 import { cloneSnapshot,prepareShuffle } from './puzzleHelp';
@@ -1307,6 +1308,10 @@ function revealMapStage(){
   target?.scrollIntoView?.({block:'center',behavior:'auto'});
   mapScrollOffset=$('#campaign-scroll').scrollTop;
 }
+function mapWorldLabel(chapterId:number){
+  const full=campaignWorldName(chapterId,save.language),at=full.lastIndexOf(' · ');
+  return at<0?{name:full,range:''}:{name:full.slice(0,at),range:full.slice(at+3)};
+}
 function worldProgressText(chapterId:number){
   const chapter=chapters.find(chapter=>chapter.id===chapterId);if(!chapter)return '';
   const progress=campaignProgress(save.completed,chapter.first)!;
@@ -1319,14 +1324,15 @@ function updateMapWorldProgress(chapterId:number){
 }
 function renderCampaignMap(){
   const current=mapCurrentLevel(),active=hasRoundProgress();
+  const worldLabel=mapWorldLabel(selectedChapter);
   const positions=[50,69,62,38,29,46,68,60,36,50];
   const status=(id:number)=>id>save.highestLevel?'levelLocked':save.completed.includes(id)?'levelCompleted':'mapAvailable';
-  return `<div class="campaign-heading"><div><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('mapJourney')}</h2><div class="campaign-world-line"><p id="map-world-name" class="campaign-world-name">${campaignWorldName(selectedChapter,save.language)}</p><span id="map-world-progress" class="campaign-world-progress">${worldProgressText(selectedChapter)}</span></div></div><button id="map-locate" class="map-locate" aria-label="${text('mapLocate')}">${icon('paw',20)}<span>${text('mapLocate')}</span></button></div><div class="campaign-chapters"><select id="map-chapter-select" aria-label="${text('chapterSelect')}">${chapters.map(chapter=>`<option value="${chapter.id}" ${chapter.id===selectedChapter?'selected':''}>${chapter.first}–${chapter.last} · ${text(chapter.title)}</option>`).join('')}</select></div><div id="campaign-scroll" class="campaign-scroll" aria-label="${text('mapStages')}">${chapters.map(chapter=>{
+  return `<div class="campaign-heading"><div class="campaign-heading-copy"><h2 id="map-world-name" class="campaign-world-name">${worldLabel.name}</h2><div class="campaign-world-line"><span id="map-world-range" class="campaign-world-range">${worldLabel.range}</span><span id="map-world-progress" class="campaign-world-progress">${worldProgressText(selectedChapter)}</span></div></div><button id="map-locate" class="map-locate" aria-label="${text('mapLocate')}">${icon('paw',20)}<span>${text('mapLocate')}</span></button></div><div class="campaign-chapters"><select id="map-chapter-select" aria-label="${text('chapterSelect')}">${chapters.map(chapter=>`<option value="${chapter.id}" ${chapter.id===selectedChapter?'selected':''}>${chapter.first}–${chapter.last} · ${text(chapter.title)}</option>`).join('')}</select></div><div id="campaign-scroll" class="campaign-scroll" aria-label="${text('mapStages')}">${chapters.map(chapter=>{
     const stages=levels.filter(level=>level.id>=chapter.first&&level.id<=chapter.last),height=stages.length*90;
     const points=stages.map((_,index)=>[positions[index%positions.length],45+index*90]);
     const path=points.map(([x,y],index)=>index?`Q ${points[index-1][0]} ${y} ${x} ${y}`:`M ${x} ${y}`).join(' ');
     const world=campaignWorld(chapter.id),worldStart=chapter.id===1||campaignWorld(chapter.id-1)!==world;
-    return `<section class="campaign-chapter" data-world="${world}" data-world-start="${worldStart}"${chapter.first>100?' data-world-title="unified"':''} data-chapter="${chapter.id}" id="map-chapter-${chapter.id}" aria-labelledby="map-chapter-title-${chapter.id}">${campaignScenery(chapter.id,stages.length)}<div class="map-world-ground" aria-hidden="true">${campaignWorldPaint(chapter.id)}</div><div class="map-arrival-petals" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>${worldStart?`<div class="map-world-gateway" aria-hidden="true"><span></span><span></span>${campaignGatewayBranches()}<b>${campaignWorldName(chapter.id,save.language)}</b></div>`:''}<h3 id="map-chapter-title-${chapter.id}"><span>${chapter.first}–${chapter.last}</span>${text(chapter.title)}</h3><div class="campaign-path" style="height:${height}px"><svg class="campaign-trail" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true"><path class="trail-earth" d="${path}"/><path class="trail-edge" d="${path}"/><path class="trail-surface" d="${path}"/><path class="trail-gravel" d="${path}"/></svg>${stages.map((level,index)=>{
+    return `<section class="campaign-chapter" data-world="${world}" data-world-start="${worldStart}" data-world-title="integrated" data-chapter="${chapter.id}" id="map-chapter-${chapter.id}" aria-labelledby="map-chapter-title-${chapter.id}">${campaignScenery(chapter.id,stages.length)}<div class="map-world-ground" aria-hidden="true">${campaignWorldPaint(chapter.id)}</div><div class="map-arrival-petals" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><h3 id="map-chapter-title-${chapter.id}"><span>${chapter.first}–${chapter.last}</span>${text(chapter.title)}</h3><div class="campaign-path" style="height:${height}px"><svg class="campaign-trail" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true"><path class="trail-earth" d="${path}"/><path class="trail-edge" d="${path}"/><path class="trail-surface" d="${path}"/><path class="trail-gravel" d="${path}"/></svg>${stages.map((level,index)=>{
       const completed=save.completed.includes(level.id),locked=level.id>save.highestLevel,here=level.id===current;
       const name=`${text('level')} ${level.id} · ${text(status(level.id))}${here?' · '+text('previewCurrent'):''}`;
       return `<div class="campaign-stop" style="left:${positions[index%positions.length]}%;top:${index*90}px">${campaignIsland(chapter.id)}<button id="map-stage-${level.id}" data-level="${level.id}" ${locked?'disabled':''} class="campaign-node ${completed?'completed':''} ${here?'current':''}" ${here?'aria-current="step"':''} aria-label="${name}"><span>${level.id}</span>${locked?icon('lock',16):completed?`<i>${icon('star',15)}</i>`:''}</button>${here?`<span id="map-current-pip" class="campaign-pip" aria-hidden="true"><span class="pip-face"><img src="/assets/pip-idle-open-v2.webp" alt=""/></span></span><span class="campaign-breeze" aria-hidden="true">${[0,1,2,3].map(()=>`<span class="campaign-leaf">${icon('leaf',12)}</span>`).join('')}</span>`:''}</div>`;
@@ -1342,7 +1348,7 @@ function renderCampaignMapView(){
   $('#map-view').innerHTML=renderCampaignMap();
   const observer=createCampaignScenery($('#campaign-scroll'),id=>{
     if(mapScenery!==observer||route!=='map')return;selectedChapter=id;$<HTMLSelectElement>('#map-chapter-select').value=String(id);
-    $('#map-world-name').textContent=campaignWorldName(id,save.language);updateMapWorldProgress(id);syncMusicTheme();
+    const label=mapWorldLabel(id);$('#map-world-name').textContent=label.name;$('#map-world-range').textContent=label.range;updateMapWorldProgress(id);syncMusicTheme();
   });
   mapScenery=observer;
   const campaignScroll=$('#campaign-scroll');
