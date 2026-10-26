@@ -1,0 +1,269 @@
+{
+  "date": "2026-10-26",
+  "issue": 359,
+  "tool": "built-in image_gen",
+  "reference": "public/assets/campaign/level-worlds-atlas-v1.png",
+  "intent": "New original assets; own reference only, no third-party game images.",
+  "assets": [
+    {
+      "group": "a",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha": [
+        0,
+        255
+      ],
+      "cellAlphaBoxes": [
+        [
+          0,
+          19,
+          625,
+          619
+        ],
+        [
+          3,
+          19,
+          607,
+          627
+        ],
+        [
+          0,
+          0,
+          627,
+          627
+        ],
+        [
+          0,
+          3,
+          601,
+          609
+        ]
+      ],
+      "bytes": 2188780,
+      "sha256": "e78375a9c6357d8096997e480e792e696a7e95accd10a2079cb359535f011b2e",
+      "centerSeamAlphaPixels": 0,
+      "path": "public/assets/campaign/level-expansion-a-v1.png",
+      "original": "exec-0208afa6-a50e-4625-8a7c-7944fcfabb4e.png",
+      "rawCopy": true,
+      "worldCells": [
+        "lavender",
+        "honey",
+        "lotus",
+        "coast"
+      ]
+    },
+    {
+      "group": "b",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha": [
+        0,
+        255
+      ],
+      "cellAlphaBoxes": [
+        [
+          0,
+          31,
+          621,
+          619
+        ],
+        [
+          1,
+          19,
+          596,
+          627
+        ],
+        [
+          0,
+          1,
+          627,
+          627
+        ],
+        [
+          0,
+          1,
+          626,
+          627
+        ]
+      ],
+      "bytes": 2137607,
+      "sha256": "f51e6335c5b381a8a76bd04589fe91d05ed29c069cbfdfae427b5653637a35f9",
+      "centerSeamAlphaPixels": 0,
+      "path": "public/assets/campaign/level-expansion-b-v1.png",
+      "original": "exec-6d2c5554-f317-4712-9677-3e42c2406040.png",
+      "rawCopy": true,
+      "worldCells": [
+        "autumn",
+        "snow",
+        "aurora",
+        "bamboo"
+      ]
+    },
+    {
+      "group": "c",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha": [
+        0,
+        255
+      ],
+      "cellAlphaBoxes": [
+        [
+          0,
+          17,
+          625,
+          627
+        ],
+        [
+          1,
+          18,
+          605,
+          625
+        ],
+        [
+          0,
+          4,
+          627,
+          627
+        ],
+        [
+          0,
+          17,
+          621,
+          579
+        ]
+      ],
+      "bytes": 2184162,
+      "sha256": "26be1dc8a0d5dfc8b6e7571c6ecb4160fe0ec5c3bbde843a742b9f0a5f70ad5a",
+      "centerSeamAlphaPixels": 0,
+      "path": "public/assets/campaign/level-expansion-c-v1.png",
+      "original": "exec-948a1c8b-c69c-4ddf-aca4-734269981eae.png",
+      "rawCopy": true,
+      "worldCells": [
+        "tea",
+        "mushroom",
+        "coral",
+        "oasis"
+      ]
+    },
+    {
+      "group": "d",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha": [
+        0,
+        255
+      ],
+      "cellAlphaBoxes": [
+        [
+          23,
+          21,
+          627,
+          627
+        ],
+        [
+          0,
+          21,
+          613,
+          627
+        ],
+        [
+          0,
+          0,
+          627,
+          627
+        ],
+        [
+          0,
+          0,
+          617,
+          605
+        ]
+      ],
+      "bytes": 2158825,
+      "sha256": "baa46f5888ac1d4e9f273a8540cbf36033a71c6f369f5ee4cfd5508294a2f30f",
+      "centerSeamAlphaPixels": 0,
+      "path": "public/assets/campaign/level-expansion-d-v1.png",
+      "original": "exec-e581d56a-f6d2-4783-b115-d3a2ede7e809.png",
+      "rawCopy": true,
+      "worldCells": [
+        "crystal",
+        "cloud",
+        "firefly",
+        "rose"
+      ]
+    },
+    {
+      "group": "e",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha": [
+        0,
+        255
+      ],
+      "cellAlphaBoxes": [
+        [
+          0,
+          23,
+          627,
+          625
+        ],
+        [
+          1,
+          19,
+          599,
+          565
+        ],
+        [
+          0,
+          4,
+          627,
+          627
+        ],
+        [
+          0,
+          1,
+          601,
+          627
+        ]
+      ],
+      "bytes": 2123767,
+      "sha256": "d0284ae4546fb2b4c9e7108070b789643931c1a37f4b8e29907157a0c197601a",
+      "centerSeamAlphaPixels": 0,
+      "path": "public/assets/campaign/level-expansion-e-v1.png",
+      "original": "exec-2591c814-a7ef-4f3d-a8d6-ed79648bc437.png",
+      "rawCopy": true,
+      "worldCells": [
+        "clock",
+        "falls",
+        "stars",
+        "celebration"
+      ]
+    }
+  ],
+  "prompts": [
+    "Use case: stylized-concept. Make a NEW original production game sprite atlas for Pawblossom Puzzle. The attached image is our OWN material/style reference only, not the target to preserve. Output a square transparent RGBA 2x2 atlas with four equal square cells, no borders or text. One isolated 30-degree overhead round stepping platform per cell, matching the reference's dimensional painterly shading and camera. Each platform fills about 82% of its square cell, leaving generous clean transparent margins and no part touching another cell. Keep the large inset central oval very pale, calm, BLANK and unobstructed; the game adds its level number there. Strong readable material rim and layered side depth, refined small details at the edges. Top left: lavender limestone, lavender sprigs and purple petals around a warm ivory central medallion. Top right: honey-gold glazed stone, tiny amber honeycomb edge motifs and daisies, pale buttercream blank medallion. Bottom left: lotus courtyard platform with jade-green carved stone, pink lotus petals and shallow blue water rim, pale rose-ivory blank medallion. Bottom right: pearl coast platform with pale coral limestone, small seashells and turquoise reflective rim, ivory blank medallion. Consistent scale, silhouette, lighting from upper left. No characters, labels, letters, numbers, logos, interfaces, separate scene background, checkerboard, grid lines or exterior cast shadows. Actual transparency outside all four sprites. Premium original casual puzzle art, keep the centers readable at 96 pixels.",
+    "Use case: stylized-concept. NEW original game sprite atlas for Pawblossom Puzzle, using the attached OWN atlas only as a material/camera/style reference. Square transparent RGBA 2x2 layout, four equally sized square cells. Each cell has one isolated round stepping platform from the same 30-degree overhead view, with layered side depth and a large empty pale oval medallion for a separately drawn number. Four distinct worlds: TOP LEFT autumn orchard — warm copper-brown layered stones, tiny amber maple leaves, red-orange berries only on outer rim, warm ivory blank medallion. TOP RIGHT snow garden — powder-blue stone side, soft snow caps and tiny ice flowers at the rim, pearl-white medallion with enough gentle shading to define its edge. BOTTOM LEFT aurora lake — midnight teal crystalline stone with restrained aqua/violet light in edge cracks, a pale cool lilac blank medallion, tiny frosted leaves on perimeter. BOTTOM RIGHT bamboo moonwalk — pale jade stone with a few bamboo nodes and slender leaves hugging the perimeter, moon-ivory blank medallion. Painterly polished dimensional casual-game materials, soft upper-left light, same scale and silhouette as the reference; attractive readable at96px. Leave at least8% transparent margin in EVERY cell, center each sprite in its own cell, no overlaps and no exterior shadows. Actual transparent background, not black/white/checkerboard. No numbers, letters, labels, characters, UI, logos, scenery, grid lines. Centers remain calm, very light and completely unobstructed.",
+    "Use case: stylized-concept. Create a NEW original transparent square 2x2 game sprite atlas for Pawblossom Puzzle. Attached image is our own style/camera reference only. Four equal square cells, one isolated round stepping platform centered in each. Same30-degree overhead perspective, upper-left lighting, layered dimensional painterly materials and broad completely BLANK pale inset oval for a separate level number. TOP LEFT tea terraces: green tea leaves and a few tiny white tea blossoms around warm cream limestone, subtle bamboo-woven trim on side. TOP RIGHT mushroom grove: smooth walnut-brown earth and tiny red/cream mushrooms around edges, pale oat-ivory central stone, no mushrooms on the center. BOTTOM LEFT coral lagoon: aqua mineral side, branching small coral and pink shell accents around a pale pearl-blue blank central disc. BOTTOM RIGHT sunlit oasis: terracotta sandstone with turquoise glazed inlay on outer rim, tiny succulent/palm leaves and desert flowers, warm sand-ivory blank center. Keep silhouette/scale consistent with reference, polished casual-game tactile depth and small readable perimeter accents at96px. All center medallions very light, quiet and unobstructed. At least8% transparent margin in every square cell, no sprite overlap, actual RGBA transparency outside sprites. No exterior scene backgrounds/shadows, checkerboard, grids, labels, numbers, letters, characters, UI or logos. Original assets, not a recreation of any third-party game.",
+    "Use case: stylized-concept. NEW original Pawblossom Puzzle sprite atlas. The supplied image is our own camera/material style reference only. A square transparent RGBA 2x2 atlas of four equally sized square cells. One isolated 30-degree-overhead round stepping platform per cell; dimensional layered rim/side and a large light BLANK oval inset medallion for the game's number. TOP LEFT crystal flower cave: faceted mauve and clear pink crystal perimeter, modest luminous veins, smooth pale lilac-ivory blank central stone. TOP RIGHT cloud promenade: fluffy sculpted cloud-white side with small pearlescent cloud curls hugging rim, very pale sky-blue blank central medallion, tangible dimensional surface not a flat cloud icon. BOTTOM LEFT firefly marsh: deep turquoise-blue stone and tiny reeds at edges, only a few warm golden firefly glints around the outer rim, pale cool-ivory blank center. BOTTOM RIGHT rose conservatory: warm cream marble with a rose-gold rim, delicate pink roses and small leaves at outer edges, blush-ivory blank medallion. Same scale and reference silhouette, premium original painterly casual game art, soft upper-left light, clear at96px. No center decoration. At least8% transparent margin per cell, no touching/cropping/overlap. Genuine transparent background outside all sprites. No text, letters, numbers, labels, logos, characters, UI, grid, checkerboard, scenery or exterior shadows.",
+    "Use case: stylized-concept. A NEW original square transparent RGBA 2x2 sprite atlas for Pawblossom Puzzle. The attached OWN atlas is only a style/camera/material reference. Four equal square cells, one centered isolated round stepping platform per cell from the same30-degree-overhead view, premium painterly dimensional casual-game polish. Each has a large completely BLANK very pale oval inset medallion so the game can draw its number clearly. TOP LEFT clockwork flower village: rose-brass and warm timber side, a few subtle small gear teeth and tiny flower cogs only around rim, ivory blank central medallion. TOP RIGHT rainbow falls: cool blue polished stone rim, tiny flowing water rivulets and restrained iridescent crystal accents around edges, pale pearl-ivory blank center. BOTTOM LEFT starglass hill: midnight blue-violet glassy stone with tiny star-shaped inlays and glints at outer rim, luminous pale lilac-ivory blank center. BOTTOM RIGHT grand blossom fair: refined rose-gold and soft-pink stone side, elegant tiny flowers and ribbons hugging the perimeter, pale vanilla-ivory blank center. Same silhouette/scale as reference, upper-left soft lighting, deep tactile layered sides, readable at96px; restrained details away from central number space. At least8% transparent margin in every cell, no crop or overlap. True alpha transparency, no black/white/checkerboard background, exterior shadows or scenery. No letters, numbers, labels, logos, characters, UI, grid lines. This is original own game art, no third-party game copying."
+  ],
+  "processing": "Original RGBA PNG bytes copied without resizing, crop, recompression or alpha modification. Runtime nested SVG clips each627square of1254atlas. Requested margin not treated as guaranteed: faint alpha noise reaches some cell edges; no alpha>20 on central vertical seam in read inspection. Visual small-screen/clip review still required.",
+  "integration": "Only worlds5..24 (levels101..500). Legacy worlds0..4 HTML/render geometry unchanged; live HTML numbers, statuses,60px input area, resource ownership and failure fallback preserved.",
+  "status": "Generated asset candidates. Not user/commercial-quality approval or native performance verification."
+}

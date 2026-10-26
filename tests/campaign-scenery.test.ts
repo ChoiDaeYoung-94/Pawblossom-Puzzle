@@ -22,6 +22,18 @@ function setup(assetPaths:string[]=[],sourceChapters:number[]=[]){
   return {controller,scroll,chapters,positions,frames,media,listeners,windowListeners,mediaListeners,selected,flush,event,images,createImage,sources};
 }
 describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
+  it('후반20지역의 발판은 각 고유셀을 쓰고 기존100판11장의 HTML은 그대로입니다',()=>{
+    const legacy=JSON.parse(readFileSync(new URL('./fixtures/islands-100-d5713c8.json',import.meta.url),'utf8'));
+    for(let chapter=1;chapter<=11;chapter++)expect(campaignIsland(chapter)).toBe(legacy.chapters[String(chapter)]);
+    const cells=new Set<string>(),sources=new Set<string>();
+    for(let index=5;index<25;index++){
+      const chapter=index+7,art=campaignIsland(chapter),source=art.match(/data-map-src="([^"]+)"/)![1],box=art.match(/height="100" viewBox="([^"]+)"/)![1];
+      expect(art).toContain(`data-island-world="${campaignWorld(chapter)}"`);expect(art).toContain('x="18" width="100" height="100"');expect(art).toContain('overflow="hidden"');expect(art).not.toMatch(/\shref=|<button|<a |https?:/);
+      expect(box.split(' ').map(Number)).toEqual([(index-5)%2*627,Math.floor((index-5)%4/2)*627,627,627]);
+      const png=readFileSync(new URL('../public'+source,import.meta.url));expect([png.readUInt32BE(16),png.readUInt32BE(20),png[25]]).toEqual([1254,1254,6]);cells.add(source+' '+box);sources.add(source);
+    }
+    expect(cells.size).toBe(20);expect(sources.size).toBe(5);
+  });
   it('신규20풍경은여행정원의정확한원본/스타일한개만연결하고기존5풍경은변경하지않습니다',()=>{
     const seen=new Set<string>();
     for(let index=0;index<5;index++){expect(campaignMemory(index)).toBeUndefined();expect(campaignMemoryArt(index,index+1)).toBe('');}
