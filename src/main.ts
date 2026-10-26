@@ -698,17 +698,33 @@ function bindChapterTabs(test=false){
   });
   const selected=document.querySelector<HTMLElement>(`#${prefix}chapter-${test?selectedTestChapter:selectedChapter}`);if(selected)revealChapterTab(selected);
 }
+function testLevelNumber(raw:string):number|undefined {
+  if(!TEST_TOOLS_ENABLED||!/^\d{1,3}$/.test(raw.trim()))return;
+  const id=Number(raw.trim());return id>=1&&id<=LEVEL_COUNT?id:undefined;
+}
 function renderTestPicker(){
   if(!TEST_TOOLS_ENABLED)return;
   const dialog=$<HTMLDialogElement>('#test-level-dialog');
-  dialog.innerHTML=`<div class="test-picker"><h2 id="test-level-title">${text('testPickTitle')}</h2><p>${text('testPickDesc')}</p>${chapterTabs(selectedTestChapter,true)}<div class="test-level-grid" id="test-chapter-levels" role="tabpanel" aria-labelledby="test-chapter-${selectedTestChapter}">${levels.filter(level=>chapterForLevel(level.id).id===selectedTestChapter).map(level=>`<button id="test-stage-${level.id}" data-test-level="${level.id}" class="test-stage"><strong>${text('level')} ${level.id}</strong><small>${text(level.crates?'testCrates':level.mask?'testMasked':!level.leaves?'testBasic':level.leaves.some(p=>p.layers===2)?'testDouble':'testSingle')}</small></button>`).join('')}</div><a id="carrier-trial-entry" class="primary" href="/carrier-trial.html?lang=${save.language}">${text('carrierTrial')}</a><p>${text('carrierTrialNote')}</p><button id="test-normal" class="primary">${text('testNormal')}</button><button id="test-close" class="text-button">${text('testClose')}</button></div>`;
+  dialog.innerHTML=`<div class="test-picker"><h2 id="test-level-title" tabindex="-1" autofocus>${text('testPickTitle')}</h2><p>${text('testPickDesc')}</p><div class="test-level-direct"><label for="test-level-number">${text('testNumberLabel')}</label><input id="test-level-number" inputmode="numeric" autocomplete="off" aria-describedby="test-level-number-error" placeholder="1–${LEVEL_COUNT}"><button id="test-level-number-start" class="primary">${text('testNumberStart')}</button></div><p id="test-level-number-error" class="test-level-number-error" role="status"></p>${chapterTabs(selectedTestChapter,true)}<div class="test-level-grid" id="test-chapter-levels" role="tabpanel" aria-labelledby="test-chapter-${selectedTestChapter}">${levels.filter(level=>chapterForLevel(level.id).id===selectedTestChapter).map(level=>`<button id="test-stage-${level.id}" data-test-level="${level.id}" class="test-stage"><strong>${text('level')} ${level.id}</strong><small>${text(level.crates?'testCrates':level.mask?'testMasked':!level.leaves?'testBasic':level.leaves.some(p=>p.layers===2)?'testDouble':'testSingle')}</small></button>`).join('')}</div><a id="carrier-trial-entry" class="primary" href="/carrier-trial.html?lang=${save.language}">${text('carrierTrial')}</a><p>${text('carrierTrialNote')}</p><button id="test-normal" class="primary">${text('testNormal')}</button><button id="test-close" class="text-button">${text('testClose')}</button></div>`;
   const columnTrial=document.createElement('a');columnTrial.id='column-carrier-trial-entry';columnTrial.className='primary';
   columnTrial.href=`/carrier-trial.html?mode=column&lang=${save.language}`;columnTrial.textContent=text('columnCarrierTrial');
   dialog.querySelector('#carrier-trial-entry')!.before(columnTrial);
-  document.querySelectorAll<HTMLButtonElement>('[data-test-level]').forEach(button=>button.onclick=()=>{
-    if(!scene.canLeave()||resultTimer)return;
-    pickerReturnToResult=false;dialog.close();startLevel(Number(button.dataset.testLevel),true);switchView('puzzle');
-  });
+  const input=$<HTMLInputElement>('#test-level-number'),error=$('#test-level-number-error'),pickerRound=round,pickerScene=scene;
+  const canPick=()=>dialog.open&&input.isConnected&&input===document.querySelector('#test-level-number')&&pickerRound===round&&pickerScene===scene&&game.scene.getScene('Board')===scene&&!careDemo&&nativeActive&&!document.hidden&&!boardPending&&scene.canLeave()&&!resultTimer&&!testAds?.busy&&!testAds?.pausesGame&&!testBilling?.busy&&!testBilling?.pausesGame;
+  const choose=(id:number,keyboard=false)=>{
+    if(!canPick()||!Number.isInteger(id)||id<1||id>LEVEL_COUNT)return;
+    pickerReturnToResult=false;dialog.close();startLevel(id,true,undefined,{focusBoard:keyboard});switchView('puzzle');
+  };
+  const submit=(keyboard=false)=>{
+    if(!canPick())return;
+    const id=testLevelNumber(input.value);
+    if(id===undefined){input.setAttribute('aria-invalid','true');error.textContent=text('testNumberRange').replace('{max}',String(LEVEL_COUNT));input.focus();return;}
+    choose(id,keyboard);
+  };
+  input.oninput=()=>{input.removeAttribute('aria-invalid');error.textContent='';};
+  input.onkeydown=event=>{if(event.key!=='Enter'||event.isComposing)return;event.preventDefault();if(!event.repeat)submit(true);};
+  $('#test-level-number-start').onclick=()=>submit();
+  document.querySelectorAll<HTMLButtonElement>('[data-test-level]').forEach(button=>button.onclick=()=>choose(Number(button.dataset.testLevel)));
   bindChapterTabs(true);
   $('#test-normal').onclick=()=>{if(!scene.canLeave()||resultTimer)return;pickerReturnToResult=false;dialog.close();resumeNormal();switchView('puzzle');};
   $('#test-close').onclick=closeTestPicker;

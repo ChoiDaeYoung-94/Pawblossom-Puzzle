@@ -59,6 +59,7 @@ class ElementStub {
   scrollTop=0;scrollLeft=0;
   innerHTML = '';
   textContent = '';
+  value = '';
   style: Record<string, string> = {};
   attributes:Record<string,string>={};
   dataset: Record<string, string> = {};
@@ -1302,6 +1303,55 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     expect(h.stored()).toEqual(before);
     h.run('scene.hooks.onMove([0,12,10,0,0,0],220)');h.flushResults();
     expect(h.stored()).toMatchObject({completed:[1,2],stars:2,coins:80,highestLevel:3});
+  });
+  it('시험 번호는 첫 판·기존 경계·확장 시작·마지막 판으로 바로 이동하고 일반 저장을 유지합니다',()=>{
+    for(const id of [1,100,101,500]){
+      const h=mainHarness(false,false,true),before=h.disk();
+      h.element('#test-level-button').onclick();h.element('#test-level-number').value=String(id);
+      h.element('#test-level-number-start').onclick();
+      expect(h.run('currentLevel')).toBe(id);expect(h.run('testingLevel')).toBe(true);
+      expect(h.element('#test-level-dialog').open).toBe(false);expect(h.disk()).toEqual(before);
+      h.run('finish(true)');expect(h.disk()).toEqual(before);
+    }
+  });
+  it('시험 번호의 빈값·소수·과학 표기·범위 밖은 판을 바꾸지 않고 수정 후 시작할 수 있습니다',()=>{
+    const h=mainHarness(false,false,true),before=h.disk();h.run('showTestPicker()');const initial=h.run('round');
+    for(const value of ['', ' ', '0', '501', '5000', '999', '-1', '+1', '1.5', '1e2', '500x', '５００']){
+      h.element('#test-level-number').value=value;h.element('#test-level-number-start').onclick();
+      expect(h.run('round')).toBe(initial);expect(h.element('#test-level-dialog').open).toBe(true);
+      expect(h.element('#test-level-number').getAttribute('aria-invalid')).toBe('true');
+      expect(h.element('#test-level-number-error').textContent).toContain('500');expect(h.disk()).toEqual(before);
+    }
+    h.element('#test-level-number').value=' 500 ';h.run("document.querySelector('#test-level-number').oninput()");
+    expect(h.element('#test-level-number').getAttribute('aria-invalid')).toBeNull();expect(h.element('#test-level-number-error').textContent).toBe('');
+    h.element('#test-level-number-start').onclick();expect(h.run('currentLevel')).toBe(500);expect(h.disk()).toEqual(before);
+  });
+  it('시험 번호 Enter는 반복·조합 중에는 시작하지 않고 한 번만 새 판을 준비합니다',()=>{
+    const h=mainHarness(false,false,true);h.run('showTestPicker()');h.element('#test-level-number').value='500';const before=h.run('round');
+    h.run("globalThis.numberFocus=0;document.querySelector('#game-canvas').focus=()=>numberFocus++");
+    h.run("document.querySelector('#test-level-number').onkeydown({key:'Enter',repeat:true,preventDefault(){}})");
+    h.run("document.querySelector('#test-level-number').onkeydown({key:'Enter',isComposing:true,preventDefault(){}})");expect(h.run('round')).toBe(before);
+    h.run("document.querySelector('#test-level-number').onkeydown({key:'Enter',preventDefault(){}})");
+    expect(h.run('round')).toBe(Number(before)+1);expect(h.run('currentLevel')).toBe(500);expect(h.run('numberFocus')).toBe(1);
+    h.element('#test-level-number-start').onclick();expect(h.run('round')).toBe(Number(before)+1);
+  });
+  it('시험 번호는 닫힘·예전 회차·처리 중·앱 비활성·광고/결제 pause에서 시작하지 않습니다',()=>{
+    const states=["document.querySelector('#test-level-dialog').close()",'round++','boardPending=true','scene.canLeave=()=>false','nativeActive=false','document.hidden=true','resultTimer=77','testAds={pausesGame:true}','testBilling={pausesGame:true}','testAds={busy:true}','testBilling={busy:true}',"document.querySelector('#test-level-number').isConnected=false"];
+    for(const state of states){
+      const h=mainHarness(false,false,true,false,undefined,false);h.frame();h.run('showTestPicker()');h.element('#test-level-number').value='500';h.run(state);const before=h.run('round'),disk=h.disk();
+      h.element('#test-level-number-start').onclick();expect(h.run('round')).toBe(before);expect(h.run('currentLevel')).toBe(2);expect(h.disk()).toEqual(disk);
+    }
+  });
+  it('시험 번호 한영 표시는 현재 언어를 따르며 production에는 번호 진입을 노출하지 않습니다',()=>{
+    const test=mainHarness(false,false,true);test.run('showTestPicker()');expect(test.element('#test-level-dialog').innerHTML).toContain('Level number');
+    test.run("changeLanguage('ko')");expect(test.element('#test-level-dialog').innerHTML).toContain('스테이지 번호');
+    const normal=mainHarness();normal.run('showTestPicker()');expect(normal.element('#test-level-dialog').innerHTML).not.toContain('test-level-number');expect(normal.element('#test-level-dialog').open).toBe(false);
+  });
+  it('시험 번호로 이동·실패·복귀해도 일반 회차의 실제 저장과 이동 수를 복원합니다',()=>{
+    const h=mainHarness(false,false,true);h.run('scene.hooks.onMove([1,0,0,0,0,0],20)');const disk=h.disk(),saved=h.stored(),moves=h.run('moves');
+    h.run('showTestPicker()');h.element('#test-level-number').value='500';h.element('#test-level-number-start').onclick();h.run('finish(false)');
+    expect(h.disk()).toEqual(disk);h.element('#result-test').onclick();h.element('#test-normal').onclick();expect(h.run('currentLevel')).toBe(2);expect(h.run('moves')).toBe(moves);expect(h.stored()).toEqual(saved);
+    expect(JSON.parse(h.disk().find(([key])=>key==='pawblossom.save.v1.backup')![1])).toEqual(saved);
   });
   it('선택 창 취소는 기존 보드와 이동을 유지하고 연쇄·결과 대기 중에는 열리지 않습니다',()=>{
     const h=mainHarness(false,false,true);h.run('moves=20');
