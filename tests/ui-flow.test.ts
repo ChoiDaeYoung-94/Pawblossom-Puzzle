@@ -22,6 +22,7 @@ import * as paintedGardenArt from '../src/GardenPaintedArt';
 import * as gardenStructureArt from '../src/GardenStructureArt';
 import * as boardDisplay from '../src/BoardDisplay';
 import {campaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches,campaignWorldPaint,campaignMusicTheme} from '../src/CampaignScenery';
+import * as campaignRoute from '../src/CampaignRoute';
 
 import {gardenGoals,goalNextStep,nextGardenGoal} from '../src/GardenGoals';
 import {previewGardenPreset} from '../src/GardenPresets';
@@ -102,6 +103,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const natureControllers:{picture:ElementStub;disposed:boolean;disposals:number;activations:boolean[]}[]=[];
   const pipLifecycle:string[]=[];
   const sceneryControllers:{disposed:boolean;active:boolean;paintVisible:boolean;notify:(id:number)=>void}[]=[];
+  const mapTravels:{from:ElementStub;to:ElementStub;active:boolean;started:number;disposed:boolean;playing:boolean;finish():void;start():void;setActive(value:boolean):void;dispose():void}[]=[];
   let resolveNativeState!:(state:{isActive:boolean})=>void;
   const nativeState=new Promise<{isActive:boolean}>(resolve=>{resolveNativeState=resolve;});
   let stored = JSON.stringify({ version: 1, language: 'en', highestLevel: 2, completed: [1], stars: 1, coins: 40, garden: 0, music: true, sfx: true });
@@ -234,6 +236,15 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     showResultPip:()=>{resultArtCalls++;},
     RoundFeedback:FeedbackStub,
     campaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches,campaignWorldPaint,campaignMusicTheme,
+    ...campaignRoute,
+    createMapTravel:(_scroll:ElementStub,from:ElementStub,to:ElementStub,_pip:ElementStub,owns:()=>boolean,onPlaying:(value:boolean)=>void)=>{
+      const flight={from,to,active:false,started:0,disposed:false,playing:true,
+        finish(){if(!this.playing)return;this.playing=false;onPlaying(false);},
+        setActive(value:boolean){this.active=value;if(!value)this.finish();},
+        start(){if(this.disposed||!this.active||!this.playing||this.started||!owns())return;this.started++;if(!context.holdMapTravel)this.finish();},
+        dispose(){this.disposed=true;this.finish();}};
+      mapTravels.push(flight);return flight;
+    },
     ...albumModel,
     createCampaignScenery:(_scroll:unknown,notify:(id:number)=>void)=>{const controller={notify,disposed:false,active:false,paintVisible:false,setActive(value:boolean,keepVisiblePaint=false){if(!this.disposed){this.active=value;this.paintVisible=value||keepVisiblePaint;}},dispose(){this.disposed=true;this.active=false;this.paintVisible=false;}};sceneryControllers.push(controller);return controller;},
     createPipIdle:(pip:ElementStub,_createImage?:()=>HTMLImageElement,alignment:'center'|'bottom'='center')=>{
@@ -290,7 +301,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   return {
     setStorageFails:(value:boolean)=>{storageFails=value;},disk:()=>[...storageValues],
     resultArtCalls:()=>resultArtCalls,frame:()=>frame(),games:()=>games,destroys:()=>destroys,
-    documentEvents,windowEvents,nativeEvents,resolveNativeState,pipControllers,pipLifecycle,accessoryControllers,natureControllers,sceneryControllers,
+    documentEvents,windowEvents,nativeEvents,resolveNativeState,pipControllers,pipLifecycle,accessoryControllers,natureControllers,sceneryControllers,mapTravels,
     element, run: (code: string) => {const result=vm.runInContext(code, context);if(autoFrame)frame();return result;},
     resultTimers: () => [...timers.values()].filter(timer => timer.ms === 300),
     flushResults: () => [...timers].filter(([,timer]) => timer.ms === 300).forEach(([id,timer]) => {timers.delete(id);timer.callback();}),
@@ -300,6 +311,49 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     writes: () => writes, stored: () => JSON.parse(storageValues.get('pawblossom.save.v1')??'null'),
   };
 }
+
+describe('첫 완료 뒤 지도의 단회 핍 이동',()=>{
+  it('현재 최고레벨 첫 성공만 다음 발판으로 이동하며 완료 보상을 다시 쓰지 않습니다',()=>{
+    const h=mainHarness();h.run('holdMapTravel=true;finish(true)');expect(h.mapTravels).toHaveLength(0);
+    const disk=h.disk(),writes=h.writes();h.element('#result-home').onclick();
+    expect(h.mapTravels).toHaveLength(1);const flight=h.mapTravels[0];
+    expect(flight.from).toBe(h.element('#map-stage-2'));expect(flight.to).toBe(h.element('#map-stage-3'));expect(flight.started).toBe(1);expect(flight.playing).toBe(true);
+    expect(h.stored()).toMatchObject({highestLevel:3,completed:[1,2],stars:2,coins:80});expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    flight.finish();expect(flight.playing).toBe(false);h.run("switchView('journal');switchView('map')");expect(h.mapTravels).toHaveLength(1);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it.each(['replay','test','failure','final'] as const)('%s 결과에는 다음 위치 이동을 만들지 않습니다',reason=>{
+    const h=mainHarness(false,false,true);
+    if(reason==='replay')h.run('startLevel(1);finish(true)');
+    if(reason==='test')h.run('startLevel(3,true);finish(true)');
+    if(reason==='failure')h.run('finish(false)');
+    if(reason==='final')h.run('save.highestLevel=500;save.completed=Array.from({length:499},(_,index)=>index+1);startLevel(500);finish(true)');
+    h.element('#result-home').onclick();expect(h.run('route')).toBe('map');expect(h.mapTravels).toHaveLength(0);
+  });
+  it('지도로 돌아오기 전 새 판 시작과 비활성은 예약을 폐기합니다',()=>{
+    const next=mainHarness();next.run('finish(true)');next.element('#result-next').onclick();next.run("switchView('map')");expect(next.mapTravels).toHaveLength(0);
+    const hidden=mainHarness();hidden.run('finish(true);nativeActive=false;syncPipActivity();nativeActive=true;syncPipActivity()');hidden.element('#result-home').onclick();expect(hidden.mapTravels).toHaveLength(0);
+  });
+  it('재생 중 비활성·지도 교체는 한 번 정리하고 다시 활성화해도 재생하지 않습니다',()=>{
+    const h=mainHarness();h.run('holdMapTravel=true;finish(true)');h.element('#result-home').onclick();const flight=h.mapTravels[0],disk=h.disk(),writes=h.writes();
+    h.run('nativeActive=false;syncPipActivity()');expect(flight.playing).toBe(false);
+    h.run("nativeActive=true;syncPipActivity();changeLanguage('ko')");const languageWrites=h.writes(),languageDisk=h.disk();
+    h.run("switchView('journal');switchView('map')");expect(flight.disposed).toBe(true);expect(flight.started).toBe(1);expect(h.mapTravels).toHaveLength(1);
+    expect(h.stored()).toMatchObject({highestLevel:3,completed:[1,2],stars:2,coins:80,language:'ko'});expect(languageWrites).toBeGreaterThan(writes);expect(languageDisk).not.toEqual(disk);expect(h.writes()).toBe(languageWrites);expect(h.disk()).toEqual(languageDisk);
+  });
+  it('현재 위치 버튼은 걷기를 취소하고 정지 위치의 대기 동작을 복구합니다',()=>{
+    const h=mainHarness();h.run('holdMapTravel=true;finish(true)');h.element('#result-home').onclick();const flight=h.mapTravels[0],writes=h.writes();
+    h.element('#map-locate').onclick();expect(flight.disposed).toBe(true);expect(h.run('mapTravel')).toBeUndefined();expect(h.element('#map-view').dataset.motionActive).toBe('true');expect(h.writes()).toBe(writes);
+  });
+  it('걷는 동안 막은 장 콜백을 종료 후 같은 ID로 다시 받으면 상단에 반영합니다',()=>{
+    const h=mainHarness();h.run('holdMapTravel=true;finish(true)');h.element('#result-home').onclick();const observer=h.sceneryControllers.at(-1)!;
+    observer.notify(10);expect(h.run('selectedChapter')).toBe(1);
+    h.mapTravels[0].finish();observer.notify(10);expect(h.run('selectedChapter')).toBe(10);expect(h.element('#map-world-name').textContent).toBe(h.run('mapWorldLabel(10).name'));expect(h.element('#map-world-range').textContent).toBe(h.run('mapWorldLabel(10).range'));
+  });
+  it('저장 복구로 객체 소유자가 바뀌면 이전 완료의 이동 예약을 사용하지 않습니다',()=>{
+    const h=mainHarness();h.run('finish(true);save={...save}');const disk=h.disk(),writes=h.writes();
+    h.element('#result-home').onclick();expect(h.mapTravels).toHaveLength(0);expect(h.run('mapAdvance')).toBeUndefined();expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+});
 
 describe('무료 추천 코디의 미리보기와 저장 경계',()=>{
   const boot=()=>{const h=mainHarness();h.run("save.garden=2;switchView('village')");return h;};
