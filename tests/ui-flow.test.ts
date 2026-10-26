@@ -234,7 +234,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     RoundFeedback:FeedbackStub,
     campaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches,campaignWorldPaint,campaignMusicTheme,
     ...albumModel,
-    createCampaignScenery:(_scroll:unknown,notify:(id:number)=>void)=>{const controller={notify,disposed:false,active:false,setActive(value:boolean){if(!this.disposed)this.active=value;},dispose(){this.disposed=true;this.active=false;}};sceneryControllers.push(controller);return controller;},
+    createCampaignScenery:(_scroll:unknown,notify:(id:number)=>void)=>{const controller={notify,disposed:false,active:false,paintVisible:false,setActive(value:boolean,keepVisiblePaint=false){if(!this.disposed){this.active=value;this.paintVisible=value||keepVisiblePaint;}},dispose(){this.disposed=true;this.active=false;this.paintVisible=false;}};sceneryControllers.push(controller);return controller;},
     createPipIdle:(pip:ElementStub,_createImage?:()=>HTMLImageElement,alignment:'center'|'bottom'='center')=>{
       const idle={pip,alignment,disposed:false,disposals:0,
         setActive(active:boolean){if(!idle.disposed)pip.dataset.idleActive=String(active);},
@@ -361,6 +361,15 @@ describe('보드 고밀도 표시와 월드 분리',()=>{
 });
 describe('독립 스테이지 지도',()=>{
   const boot=()=>mainHarness(false,false,false,false,undefined,true,undefined,undefined,true);
+  it('보이는 모달의 지도 그림만 유지하고 실제 비활성·경로 이탈에서는 해제합니다',()=>{
+    const h=boot(),observer=h.sceneryControllers.find(c=>!c.disposed)!,before=h.run('JSON.stringify(save)'),writes=h.writes();
+    h.element('#map-play').onclick();expect(h.run('previewDialog.open')).toBe(true);expect(observer.active).toBe(false);expect(observer.paintVisible).toBe(true);
+    for(const [off,on] of [['nativeActive=false','nativeActive=true'],['document.hidden=true','document.hidden=false'],["document.querySelector('#map-view').hidden=true","document.querySelector('#map-view').hidden=false"],['testAds={pausesGame:true}','testAds=undefined'],['testBilling={pausesGame:true}','testBilling=undefined']]){
+      h.run(off+';syncPipActivity()');expect(observer.paintVisible).toBe(false);h.run(on+';syncPipActivity()');expect(observer.paintVisible).toBe(true);expect(observer.active).toBe(false);
+    }
+    h.element('#preview-cancel').onclick();expect(observer.active).toBe(true);h.element('#stars-help').onclick();expect(h.run('resourceDialog.open')).toBe(true);expect(observer.active).toBe(false);expect(observer.paintVisible).toBe(true);
+    h.element('#resource-help-close').onclick();expect(observer.active).toBe(true);h.run("switchView('journal')");expect(observer.paintVisible).toBe(false);expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.writes()).toBe(writes);
+  });
   it('지도 관측·정원·핍·퍼즐의 곡을 연결하고 설정/오래된 지도 알림은 다른 화면의 곡을 바꾸지 않습니다',()=>{
     const h=boot(),before=h.run('JSON.stringify(save)'),writes=h.writes();expect(h.run('audio.theme')).toBe('meadow');
     const observer=h.sceneryControllers.find(c=>!c.disposed)!;observer.notify(3);expect(h.run('audio.theme')).toBe('brook');expect(h.element('#map-world-name').textContent).toBe('Sunlit Brook · 21–40');

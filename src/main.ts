@@ -350,7 +350,8 @@ function syncPipActivity(){
   pipIdle.setActive(active&&route==='puzzle'&&!roundEnded);
   const mapActive=active&&route==='map';
   mapPipIdle?.setActive(mapActive);$('#map-view').dataset.motionActive=String(mapActive);
-  mapScenery?.setActive(mapActive);
+  const keepMapPaint=route==='map'&&!$('#map-view').hidden&&nativeActive&&!document.hidden&&!careDemo&&!boardPending&&!testAds?.pausesGame&&!testBilling?.pausesGame&&(previewDialog.open||otherModal());
+  mapScenery?.setActive(mapActive,keepMapPaint);
   const resultDialog=$<HTMLDialogElement>('#result-dialog');
   const worldActive=nativeActive&&!document.hidden&&!careDemo&&!boardPending&&!testAds?.pausesGame&&!testBilling?.pausesGame&&resultDialog.open&&Boolean(resultWorld)&&roundEnded&&resultShown&&!previewDialog.open&&!resourceDialog.open&&!spaceDialog.open&&!lookDialog.open;
   if(worldActive&&!resultWorldScenery){const picture=resultDialog.querySelector<HTMLElement>('#result-world-picture');if(picture)resultWorldScenery=createCampaignScenery(picture,()=>{});}

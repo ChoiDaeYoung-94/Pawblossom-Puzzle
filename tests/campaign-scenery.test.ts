@@ -128,6 +128,34 @@ describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
     expect(h.scroll.dataset.sceneryArtReady).toBeUndefined();expect(h.sources[0].getAttribute('href')).toBeNull();expect(h.chapters.every(c=>c.dataset.sceneryActive==='false')).toBe(true);h.controller.setActive(true);h.flush();expect(h.images).toHaveLength(4);h.images.slice(2).forEach(image=>image.onload!());for(let n=0;n<10;n++)await Promise.resolve();expect(h.chapters[0].dataset.sceneryArtReady).toBe('true');
     h.controller.dispose();expect(h.scroll.dataset.sceneryArtReady).toBeUndefined();expect(h.images.every(image=>image.onload===null&&image.onerror===null)).toBe(true);
   });
+  it('보이는 모달에서는 그림과 위치를 유지하고 모션·선택·도착만 멈춥니다',async()=>{
+    const path='/assets/campaign/windmill-rig-v1.png',h=setup([path]);h.controller.setActive(true);h.flush();h.images[0].onload!();for(let n=0;n<10;n++)await Promise.resolve();
+    const writes=h.chapters[0].style.setProperty.mock.calls.slice(),world=h.scroll.dataset.world;h.selected.mockClear();
+    h.controller.setActive(false,true);h.flush();
+    expect(h.sources[0].getAttribute('href')).toBe(path);expect(h.chapters[0].dataset.sceneryArtReady).toBe('true');expect(h.chapters.every(c=>c.dataset.sceneryActive==='false'&&!c.dataset.arrival)).toBe(true);
+    expect(h.selected).not.toHaveBeenCalled();expect(h.scroll.dataset.world).toBe(world);expect(h.chapters[0].style.setProperty.mock.calls).toEqual(writes);expect(h.frames.size).toBe(0);
+    h.controller.setActive(true);h.flush();expect(h.images).toHaveLength(1);expect(h.scroll.dataset.arrival).toBeUndefined();
+    h.controller.setActive(false);expect(h.sources[0].getAttribute('href')).toBeNull();expect(h.chapters[0].dataset.sceneryArtReady).toBeUndefined();
+  });
+  it('보이는 모달 중 decode는 완료되지만 실제 숨김/폐기 뒤 늦은 완료는 소유하지 않습니다',async()=>{
+    const path='/assets/campaign/windmill-rig-v1.png';
+    for(const end of ['visible','hidden','disposed'] as const){
+      const h=setup([path]);h.controller.setActive(true);h.flush();let ready!:()=>void;
+      h.images[0].decode.mockImplementation(()=>new Promise<void>(resolve=>ready=resolve));h.images[0].onload!();await Promise.resolve();
+      h.controller.setActive(false,true);h.flush();if(end==='hidden')h.controller.setActive(false);if(end==='disposed')h.controller.dispose();
+      ready();for(let n=0;n<10;n++)await Promise.resolve();
+      expect(h.sources[0].getAttribute('href')).toBe(end==='visible'?path:null);expect(h.chapters[0].dataset.sceneryArtReady).toBe(end==='visible'?'true':undefined);
+      expect(h.chapters.every(c=>c.dataset.sceneryActive==='false')).toBe(true);expect(h.images).toHaveLength(1);h.controller.dispose();
+    }
+  });
+  it('보이는 모달의 첫 정적그림과 resize는 현재 구간만 관리하고 세계 선택은 바꾸지 않습니다',async()=>{
+    const a='/assets/campaign/worlds-expansion-a-v1.png',b='/assets/campaign/worlds-expansion-b-v1.png',h=setup([a,b],[0,1]);
+    h.controller.setActive(false,true);h.flush();expect(h.images.map(i=>i.src)).toEqual([a]);h.images[0].onload!();for(let n=0;n<10;n++)await Promise.resolve();expect(h.sources[0].getAttribute('href')).toBe(a);expect(h.selected).not.toHaveBeenCalled();expect(h.scroll.dataset.world).toBeUndefined();
+    Object.assign(h.positions[0],{top:-950,bottom:0});Object.assign(h.positions[1],{top:0,bottom:950});h.event(h.windowListeners,'resize');h.flush();
+    expect(h.sources[0].getAttribute('href')).toBeNull();expect(h.images.map(i=>i.src)).toEqual([a,b]);h.images[1].onload!();for(let n=0;n<10;n++)await Promise.resolve();expect(h.sources[1].getAttribute('href')).toBe(b);
+    h.media.matches=true;h.event(h.mediaListeners,'change');h.flush();expect(h.selected).not.toHaveBeenCalled();expect(h.chapters.every(c=>c.dataset.sceneryActive==='false'&&!c.dataset.arrival)).toBe(true);expect(h.frames.size).toBe(0);
+    h.controller.setActive(false);expect(h.sources.every(node=>!node.hasAttribute('href'))).toBe(true);
+  });
   it('실패·폐기·owner 교체 뒤 늦은 decode는 회화 그림을 되살리거나 재요청하지 않습니다',async()=>{
     const h=setup(['/assets/campaign/windmill-rig-v1.png']);h.controller.setActive(true);h.flush();let ready!:()=>void;
     h.images[0].decode.mockImplementation(()=>new Promise<void>(resolve=>ready=resolve));h.images[0].onload!();await Promise.resolve();
