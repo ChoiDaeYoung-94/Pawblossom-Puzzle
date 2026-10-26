@@ -1,5 +1,6 @@
 import {CarrierEngine,CARRIER_PROFILE,type CarrierLevel,type CarrierInput,type CarrierSnapshot,type Cell,type Grid,type Position,type Motion,type Delivery,type CarrierFrame,type SwapFailure} from './CarrierEngine';
 import {clone,freezeBoard,point,plain,denseArray,integer,matches,makesMatch,boardMoves,settleCarrierWave,type Draft} from './CarrierMechanics';
+import {carrierCheckpointContract,makeCarrierCheckpoint,restoreCarrierDraft} from './CarrierCheckpoint';
 
 export const COLUMN_CARRIER_PROFILE='experimental-carrier-v2' as const;
 export type ColumnInput=CarrierInput|Readonly<{color:number;special:'column'}>;
@@ -29,6 +30,7 @@ export class ColumnCarrierEngine {
   private readonly initial:Draft;
   private current:Draft;
   private readonly cascadeLimit:number;
+  private readonly checkpointContract:string;
   constructor(input:ColumnCarrierLevel){
     const level=plain(input,['profile','id','board','exits','moves','seed','cascadeLimit']);
     if(level.profile!==COLUMN_CARRIER_PROFILE)throw new TypeError('column carrier profile');
@@ -52,6 +54,7 @@ export class ColumnCarrierEngine {
     if(tile?.type!=='tile')throw new Error('column initial tile invariant');
     const special:ColumnCell={...tile,special:'column'};this.current.board[at.row][at.col]=special;
     this.initial=clone(this.current);
+    this.checkpointContract=carrierCheckpointContract(this.snapshot,this.cascadeLimit);
   }
   get snapshot():ColumnSnapshot{
     const state=this.current,geometry=this.geometry;
@@ -63,6 +66,12 @@ export class ColumnCarrierEngine {
   legalActivations(){return this.current.status==='playing'?specials(this.current.board):[];}
   findMatches(){return matches(this.current.board);}
   restart(){this.current=clone(this.initial);return this.snapshot;}
+  checkpoint(){return makeCarrierCheckpoint(this.checkpointContract,this.snapshot);}
+  static restore(level:ColumnCarrierLevel,checkpoint:unknown):ColumnCarrierEngine|undefined{
+    try{const engine=new ColumnCarrierEngine(level),state=restoreCarrierDraft(engine.snapshot,engine.cascadeLimit,checkpoint);
+      if(!state)return;engine.current=state;return engine;
+    }catch{return;}
+  }
   private validPosition(p:Position){return p&&integer(p.row,0,this.geometry.mask.length-1)&&integer(p.col,0,this.geometry.mask[0].length-1);}
   activate(at:Position):ColumnResult{
     if(this.current.status!=='playing')return failure('ended');

@@ -1,5 +1,6 @@
 /** 기존 RuleVersion/저장/보상과 분리된 메모리 전용 운반 목표 시험 규칙입니다. */
 import {clone,freezeBoard,point,idPattern,plain,denseArray,integer,matches,makesMatch,boardMoves,settleCarrierWave,type Draft,type MutableGrid} from './CarrierMechanics';
+import {carrierCheckpointContract,makeCarrierCheckpoint,restoreCarrierDraft} from './CarrierCheckpoint';
 export const CARRIER_PROFILE = 'experimental-carrier-v1' as const;
 export type Position = Readonly<{row:number;col:number}>;
 export type CarrierInput = number | Readonly<{carrierId:string}> | null;
@@ -56,6 +57,7 @@ export class CarrierEngine {
   private readonly carriers:string[]=[];
   private readonly scenarioId:string;
   private readonly cascadeLimit:number;
+  private readonly checkpointContract:string;
   constructor(input:CarrierLevel){
     const level=plain(input,['profile','id','board','exits','moves','seed','cascadeLimit']);
     if(level.profile!==CARRIER_PROFILE||typeof level.id!=='string'||!idPattern.test(level.id)
@@ -94,6 +96,7 @@ export class CarrierEngine {
     this.current={board,delivered:[],movesRemaining:level.moves,status:boardMoves(board).length?'playing':'blocked',
       rngState:level.seed,randomDraws:0,serial};
     this.initial=clone(this.current);
+    this.checkpointContract=carrierCheckpointContract(this.snapshot,this.cascadeLimit);
   }
   get snapshot():CarrierSnapshot{
     const state=this.current;
@@ -105,6 +108,12 @@ export class CarrierEngine {
   legalMoves(){return this.current.status==='playing'?boardMoves(this.current.board):[];}
   findMatches(){return matches(this.current.board);}
   restart(){this.current=clone(this.initial);return this.snapshot;}
+  checkpoint(){return makeCarrierCheckpoint(this.checkpointContract,this.snapshot);}
+  static restore(level:CarrierLevel,checkpoint:unknown):CarrierEngine|undefined{
+    try{const engine=new CarrierEngine(level),state=restoreCarrierDraft(engine.snapshot,engine.cascadeLimit,checkpoint);
+      if(!state)return;engine.current=state;return engine;
+    }catch{return;}
+  }
   swap(a:Position,b:Position):CarrierSwap{
     if(this.current.status!=='playing')return fail('ended');
     const validPosition=(p:Position)=>p&&integer(p.row,0,this.mask.length-1)&&integer(p.col,0,this.mask[0].length-1);
