@@ -26,6 +26,9 @@ import {journeyGardenPanel,journeyGardenPreview,journeyNextCard,journeyName,jour
 import {createJourneyGardenArt} from './JourneyGardenArt';
 import './UiTheme.css';
 import './MapComposition.css';
+import './MapJourney.css';
+import {CAMPAIGN_NODE_STEP,CAMPAIGN_NODE_X,campaignNodePath} from './CampaignRoute';
+import {createMapTravel} from './MapTravel';
 import { BoardScene,tileNames } from './BoardScene';
 import {BOARD_RENDER_SIZE} from './BoardDisplay';
 import {specialTileArt} from './SpecialTileArt';
@@ -293,6 +296,8 @@ resourceDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key===
 const pipIdle=createPipIdle($('#header-pip'));
 let mapPipIdle:ReturnType<typeof createPipIdle>|undefined;
 let mapScenery:ReturnType<typeof createCampaignScenery>|undefined;
+let mapTravel:ReturnType<typeof createMapTravel>|undefined;
+let mapAdvance:{from:number;to:number;owner:SaveData}|undefined;
 let carePipDisplay:{host:HTMLElement;generation:number;idle:ReturnType<typeof createPipIdle>;accessory?:ReturnType<typeof createPipAccessoryArt>;nature?:ReturnType<typeof createGardenNature>;naturePicture?:HTMLElement;pose?:ReturnType<typeof createPipTendingPose>}|undefined;
 const boardFeedback=new RoundFeedback({layer:$('#round-feedback-layer'),pip:$('#header-pip-face'),
   canvas:()=>document.querySelector('#game-canvas canvas'),goal:key=>document.querySelector(`[data-feedback-goal="${key}"] img`),
@@ -346,11 +351,13 @@ function syncCarePipActivity(){
   carePipDisplay?.idle.setActive(idle);carePipDisplay?.accessory?.setActive(idle);
   carePipDisplay?.nature?.setActive(idle&&view==='village');
 }
+function clearMapTravel(){const previous=mapTravel;mapTravel=undefined;previous?.dispose();}
 function syncPipActivity(){
+  if(!nativeActive||document.hidden||testAds?.pausesGame||testBilling?.pausesGame)mapAdvance=undefined;
   const active=nativeActive&&!document.hidden&&!careDemo&&!boardPending&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!previewDialog.open&&!otherModal();
   pipIdle.setActive(active&&route==='puzzle'&&!roundEnded);
   const mapActive=active&&route==='map';
-  mapPipIdle?.setActive(mapActive);$('#map-view').dataset.motionActive=String(mapActive);
+  mapTravel?.setActive(mapActive);mapPipIdle?.setActive(mapActive&&!mapTravel?.playing);$('#map-view').dataset.motionActive=String(mapActive);
   const keepMapPaint=route==='map'&&!$('#map-view').hidden&&nativeActive&&!document.hidden&&!careDemo&&!boardPending&&!testAds?.pausesGame&&!testBilling?.pausesGame&&(previewDialog.open||otherModal());
   mapScenery?.setActive(mapActive,keepMapPaint);
   const resultDialog=$<HTMLDialogElement>('#result-dialog');
@@ -537,6 +544,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   if(stagePreview)closeStagePreview(false);
   abandonRewardContinue();
   if(!Number.isInteger(id)||id<1||id>levels.length)return;
+  mapAdvance=undefined;clearMapTravel();
   resultWorldScenery?.dispose();resultWorldScenery=undefined;resultWorld=undefined;
   clearResumeNotice();
   clearTimeout(resultTimer);resultTimer=undefined;round++;
@@ -751,10 +759,12 @@ function settleRound(won:boolean){
   if(careDemo||roundEnded)return;
   roundEnded=true;
   pipIdle.setActive(false);
+  const previousMapLevel=save.highestLevel;
   firstReward=won&&!testingLevel&&!save.completed.includes(currentLevel);
   if(testingLevel)return;
   delete save.inProgress;
   if(firstReward){save.completed.push(currentLevel);save.stars++;save.coins+=40;save.highestLevel=Math.min(LEVEL_COUNT,Math.max(save.highestLevel,currentLevel+1));selectedChapter=chapterForLevel(save.highestLevel).id;}
+  if(firstReward&&previousMapLevel===currentLevel&&save.highestLevel===currentLevel+1)mapAdvance={from:currentLevel,to:currentLevel+1,owner:save};
   // 결과창 타이머 전에 회차 제거와 첫 보상을 하나의 저장으로 확정합니다.
   persist();updateWallet();renderViews();
 }
@@ -1325,29 +1335,29 @@ function updateMapWorldProgress(chapterId:number){
 function renderCampaignMap(){
   const current=mapCurrentLevel(),active=hasRoundProgress();
   const worldLabel=mapWorldLabel(selectedChapter);
-  const positions=[50,69,62,38,29,46,68,60,36,50];
+  const positions=CAMPAIGN_NODE_X;
   const status=(id:number)=>id>save.highestLevel?'levelLocked':save.completed.includes(id)?'levelCompleted':'mapAvailable';
   return `<div class="campaign-heading"><div class="campaign-heading-copy"><h2 id="map-world-name" class="campaign-world-name">${worldLabel.name}</h2><div class="campaign-world-line"><span id="map-world-range" class="campaign-world-range">${worldLabel.range}</span><span id="map-world-progress" class="campaign-world-progress">${worldProgressText(selectedChapter)}</span></div></div><button id="map-locate" class="map-locate" aria-label="${text('mapLocate')}">${icon('paw',20)}<span>${text('mapLocate')}</span></button></div><div class="campaign-chapters"><select id="map-chapter-select" aria-label="${text('chapterSelect')}">${chapters.map(chapter=>`<option value="${chapter.id}" ${chapter.id===selectedChapter?'selected':''}>${chapter.first}–${chapter.last} · ${text(chapter.title)}</option>`).join('')}</select></div><div id="campaign-scroll" class="campaign-scroll" aria-label="${text('mapStages')}">${chapters.map(chapter=>{
-    const stages=levels.filter(level=>level.id>=chapter.first&&level.id<=chapter.last),height=stages.length*90;
-    const points=stages.map((_,index)=>[positions[index%positions.length],45+index*90]);
-    const path=points.map(([x,y],index)=>index?`Q ${points[index-1][0]} ${y} ${x} ${y}`:`M ${x} ${y}`).join(' ');
+    const stages=levels.filter(level=>level.id>=chapter.first&&level.id<=chapter.last),height=stages.length*CAMPAIGN_NODE_STEP;
+    const path=campaignNodePath(stages.length,chapter.id>1,chapter.last<LEVEL_COUNT);
     const world=campaignWorld(chapter.id),worldStart=chapter.id===1||campaignWorld(chapter.id-1)!==world;
-    return `<section class="campaign-chapter" data-world="${world}" data-world-start="${worldStart}" data-world-title="integrated" data-chapter="${chapter.id}" id="map-chapter-${chapter.id}" aria-labelledby="map-chapter-title-${chapter.id}">${campaignScenery(chapter.id,stages.length)}<div class="map-world-ground" aria-hidden="true">${campaignWorldPaint(chapter.id)}</div><div class="map-arrival-petals" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><h3 id="map-chapter-title-${chapter.id}"><span>${chapter.first}–${chapter.last}</span>${text(chapter.title)}</h3><div class="campaign-path" style="height:${height}px"><svg class="campaign-trail" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true"><path class="trail-earth" d="${path}"/><path class="trail-edge" d="${path}"/><path class="trail-surface" d="${path}"/><path class="trail-gravel" d="${path}"/></svg>${stages.map((level,index)=>{
+    return `<section class="campaign-chapter" data-world="${world}" data-world-start="${worldStart}" data-world-title="integrated" style="--campaign-path-height:${height}px" data-chapter="${chapter.id}" id="map-chapter-${chapter.id}" aria-labelledby="map-chapter-title-${chapter.id}">${campaignScenery(chapter.id,stages.length)}<div class="map-world-ground" aria-hidden="true">${campaignWorldPaint(chapter.id)}</div><div class="map-arrival-petals" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>${chapter.id>1?`<svg class="campaign-trail campaign-entry-trail" viewBox="0 0 100 1" preserveAspectRatio="none" aria-hidden="true"><path class="trail-earth" d="M 50 0 L 50 1"/><path class="trail-edge" d="M 50 0 L 50 1"/><path class="trail-surface" d="M 50 0 L 50 1"/><path class="trail-gravel" d="M 50 0 L 50 1"/></svg>`:''}<h3 id="map-chapter-title-${chapter.id}"><span>${chapter.first}–${chapter.last}</span>${text(chapter.title)}</h3><div class="campaign-path" style="height:${height}px"><svg class="campaign-trail" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true"><path class="trail-earth" d="${path}"/><path class="trail-edge" d="${path}"/><path class="trail-surface" d="${path}"/><path class="trail-gravel" d="${path}"/></svg>${stages.map((level,index)=>{
       const completed=save.completed.includes(level.id),locked=level.id>save.highestLevel,here=level.id===current;
       const name=`${text('level')} ${level.id} · ${text(status(level.id))}${here?' · '+text('previewCurrent'):''}`;
-      return `<div class="campaign-stop" style="left:${positions[index%positions.length]}%;top:${index*90}px">${campaignIsland(chapter.id)}<button id="map-stage-${level.id}" data-level="${level.id}" ${locked?'disabled':''} class="campaign-node ${completed?'completed':''} ${here?'current':''}" ${here?'aria-current="step"':''} aria-label="${name}"><span>${level.id}</span>${locked?icon('lock',16):completed?`<i>${icon('star',15)}</i>`:''}</button>${here?`<span id="map-current-pip" class="campaign-pip" aria-hidden="true"><span class="pip-face"><img src="/assets/pip-idle-open-v2.webp" alt=""/></span></span><span class="campaign-breeze" aria-hidden="true">${[0,1,2,3].map(()=>`<span class="campaign-leaf">${icon('leaf',12)}</span>`).join('')}</span>`:''}</div>`;
+      return `<div class="campaign-stop" style="left:${positions[index%positions.length]}%;top:${index*CAMPAIGN_NODE_STEP}px">${campaignIsland(chapter.id)}<button id="map-stage-${level.id}" data-level="${level.id}" ${locked?'disabled':''} class="campaign-node ${completed?'completed':''} ${here?'current':''}" ${here?'aria-current="step"':''} aria-label="${name}"><span>${level.id}</span>${locked?icon('lock',16):completed?`<i>${icon('star',15)}</i>`:''}</button>${here?`<span id="map-current-pip" class="campaign-pip" aria-hidden="true"><span class="pip-face"><img src="/assets/pip-idle-open-v2.webp" alt=""/></span></span><span class="campaign-breeze" aria-hidden="true">${[0,1,2,3].map(()=>`<span class="campaign-leaf">${icon('leaf',12)}</span>`).join('')}</span>`:''}</div>`;
     }).join('')}</div></section>`;
   }).join('')}</div><div class="campaign-play"><div><span>${text(chapterForLevel(current).title)}</span><strong>${text('level')} ${current}</strong></div><button id="map-play" class="primary">${text(active?'mapResume':'mapPlay')}${icon('arrow',20)}</button></div>`;
 }
 /** 숨은 지도는 유지하고, 다음 지도 진입에서 현재 진행/언어/회차를 반영합니다. */
 function renderCampaignMapView(){
   if(route!=='map'&&mapScenery)return;
+  clearMapTravel();
   mapPipIdle?.dispose();mapPipIdle=undefined;
   mapScenery?.dispose();mapScenery=undefined;
   detachMapScroll?.();detachMapScroll=undefined;
   $('#map-view').innerHTML=renderCampaignMap();
   const observer=createCampaignScenery($('#campaign-scroll'),id=>{
-    if(mapScenery!==observer||route!=='map')return;selectedChapter=id;$<HTMLSelectElement>('#map-chapter-select').value=String(id);
+    if(mapScenery!==observer||route!=='map'||mapTravel?.playing)return;selectedChapter=id;$<HTMLSelectElement>('#map-chapter-select').value=String(id);
     const label=mapWorldLabel(id);$('#map-world-name').textContent=label.name;$('#map-world-range').textContent=label.range;updateMapWorldProgress(id);syncMusicTheme();
   });
   mapScenery=observer;
@@ -1358,14 +1368,21 @@ function renderCampaignMapView(){
   detachMapScroll=()=>campaignScroll.removeEventListener('scroll',rememberMapScroll);
   if(route==='map'){
     const mapPip=document.querySelector<HTMLElement>('#map-current-pip');
-    if(mapPip)mapPipIdle=createPipIdle(mapPip);
+    if(mapPip){
+      mapPipIdle=createPipIdle(mapPip);
+      const advance=mapAdvance;mapAdvance=undefined;
+      if(advance&&advance.owner===save&&advance.to===mapCurrentLevel()&&save.completed.includes(advance.from)){
+        const from=document.querySelector<HTMLElement>(`#map-stage-${advance.from}`),to=document.querySelector<HTMLElement>(`#map-stage-${advance.to}`);
+        if(from&&to){const flight=createMapTravel(campaignScroll,from,to,mapPip,ownsMap,()=>{if(mapTravel===flight)syncPipActivity();});mapTravel=flight;}
+      }
+    }
   }
   $('#map-play').onclick=()=>{if(ownsMap())showStagePreview(mapCurrentLevel(),'map',$('#map-play'));};
-  $('#map-locate').onclick=()=>{if(ownsMap())revealMapStage();};
+  $('#map-locate').onclick=()=>{if(ownsMap()){clearMapTravel();revealMapStage();syncPipActivity();}};
   $<HTMLSelectElement>('#map-chapter-select').onchange=event=>{
     if(!ownsMap()||route!=='map'||stagePreview||otherModal())return;
     const id=Number((event.target as HTMLSelectElement).value);if(!chapters.some(chapter=>chapter.id===id))return;
-    selectedChapter=id;document.querySelector(`#map-chapter-${id}`)?.scrollIntoView?.({block:'start',behavior:'auto'});
+    clearMapTravel();selectedChapter=id;document.querySelector(`#map-chapter-${id}`)?.scrollIntoView?.({block:'start',behavior:'auto'});syncPipActivity();
     mapScrollOffset=campaignScroll.scrollTop;
   };
   campaignScroll.scrollTop=mapScrollOffset;
@@ -1462,6 +1479,7 @@ function switchView(name:string){
     if(androidAdEntry&&button&&testingLevel&&!continueUsed&&resultWon===false&&moves===0)bindRewardContinue(button);
   }
   syncActivity();
+  if(name==='map')mapTravel?.start();
   if(returnToResult)$('#result-next').focus({preventScroll:true});
 }
 document.querySelectorAll<HTMLButtonElement>('.bottom-nav button[data-route]').forEach(button=>button.onclick=()=>switchView(button.dataset.route!));

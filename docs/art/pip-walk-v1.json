@@ -1,0 +1,91 @@
+{
+  "issue": 377,
+  "prompt": "Create an original production-quality 2x2 walking sprite atlas for Pip, the exact original rabbit character in the provided reference. This is our own game character. Preserve its cream white fur, warm brown eyes, pink inner ears and cheeks, green linen overalls with small leaf pocket and brown buttons, short white feet, and the orange carrot held gently in BOTH forepaws. Soft polished storybook rendering, dimensional form, excellent small-size readability, consistent colors and lighting. Four equal SQUARE cells, two columns and two rows on a fully transparent square canvas. No border, grid lines, text, numbers, symbols, scenery, floor, or baked ground shadow. One COMPLETE full-body rabbit in EACH cell, at identical scale and identical standing ground baseline, centered with generous 10 percent transparent padding. Face and torso in a consistent three-quarter RIGHT-facing walking direction; never change outfit or identity. The four cells are consecutive, distinctly different phases of ONE gentle walk cycle: top left right foot forward contacting ground and left foot back; top right passing pose with left knee/foot lifting, body slightly higher and ears gently following; bottom left left foot forward contacting ground and right foot back; bottom right passing pose with right foot lifting and body slightly higher. Keep carrot and hands stable while hips and feet articulate visibly. Clear separation of the two feet, plausible short rabbit leg anatomy, subtle body bob and ear follow-through. Friendly relaxed expression in all four poses. Avoid four unrelated gestures or identical idle figures. The entire source will be used as four equal frame cells without raster editing, so strict equal cells, stable anchor and matching scale matter.",
+  "reference": "public/assets/pip-idle-open-v2.webp",
+  "original": "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-6b0b40ac-e68a-4d1c-9f64-211cf64ef46b.png",
+  "transparent": true,
+  "status": "자체 생성 후보. 사용자 감각 검수·상용 품질 승인 전입니다.",
+  "asset": "public/assets/pip-walk-atlas-v1.png",
+  "sizeBytes": 1137293,
+  "sha256": "649d44a3107597c5a1235698abf693dcb4f1c719dccc62ce922cd0478606aa53",
+  "referenceSha256": "68a2a1eceb9320aca746932b09480e1752166bf32684410f4d4fe1a15c7920b8",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "rgba": true,
+  "rawPreserved": true,
+  "alignment": "생성 결과의 두 행 여백이 정확히 같지 않아 원본 PNG는 수정하지 않고 SVG clip과 포즈별 바닥/크기 정규화만 적용합니다. 하단 왼쪽 귀를 보존하도록 행 경계는 y=600입니다.",
+  "frames": [
+    {
+      "crop": [
+        0,
+        0,
+        627,
+        600
+      ],
+      "alphaBounds": [
+        150,
+        22,
+        577,
+        577
+      ]
+    },
+    {
+      "crop": [
+        627,
+        0,
+        627,
+        600
+      ],
+      "alphaBounds": [
+        733,
+        24,
+        1162,
+        578
+      ]
+    },
+    {
+      "crop": [
+        0,
+        600,
+        627,
+        654
+      ],
+      "alphaBounds": [
+        162,
+        617,
+        594,
+        1189
+      ]
+    },
+    {
+      "crop": [
+        627,
+        600,
+        627,
+        654
+      ],
+      "alphaBounds": [
+        726,
+        628,
+        1163,
+        1192
+      ]
+    }
+  ],
+  "rendering": {
+    "viewBox": [
+      0,
+      0,
+      627,
+      627
+    ],
+    "normalizedAlphaHeight": 560,
+    "groundBaseline": 600,
+    "displayPixels": 72,
+    "cycleMilliseconds": 480,
+    "rasterEdits": "없음. 생성 원본과 바이트 동일.",
+    "scope": "정상 최고레벨 첫 완료 후 지도 복귀의 단회 표시 전용. 재화·진행·RNG와 분리합니다."
+  }
+}

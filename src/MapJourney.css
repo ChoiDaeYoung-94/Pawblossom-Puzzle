@@ -1,0 +1,25 @@
+.campaign-scroll{position:relative}
+.campaign-stop{width:80px;height:112px}
+.campaign-node{width:72px;height:72px;min-width:72px;min-height:72px;font-size:25px}
+.campaign-island{left:calc(50% - 78px);top:3px;width:156px;height:114px;filter:drop-shadow(0 5px 2px #34472836)}
+.campaign-stop::before{inset:1px -38px -5px}
+.campaign-trail .trail-earth{stroke-width:44;stroke:var(--path-edge);filter:drop-shadow(0 5px 2px #45583b38)}
+.campaign-trail .trail-edge{stroke-width:38;stroke:#fff4d2}
+.campaign-trail .trail-surface{stroke-width:30;stroke:var(--path-light)}
+.campaign-trail .trail-gravel{stroke-width:2;stroke-dasharray:1 13;opacity:.34}
+.campaign-entry-trail{inset:auto;top:0;left:50%;transform:translateX(-50%);width:min(100%,480px);height:calc(100% - var(--campaign-path-height) - 10px);z-index:0}
+.campaign-pip{left:calc(50% - 76px);top:calc(50% - 54px);bottom:auto;width:72px;height:82px}
+.campaign-pip.map-pip-suspended{visibility:hidden!important}
+.map-pip-walk{position:absolute;left:0;top:0;width:72px;height:72px;z-index:4;pointer-events:none;will-change:transform}
+.map-pip-walk::before{content:'';position:absolute;left:19px;top:65px;width:34px;height:8px;border-radius:50%;background:radial-gradient(ellipse,#3e493b4d,transparent 72%)}
+.pip-walk-facing,.pip-walk-art{display:block;width:100%;height:100%;overflow:visible}
+.map-pip-walk[data-facing="left"] .pip-walk-facing{transform:scaleX(-1)}
+.pip-walk-art{display:none}
+.map-pip-walk[data-ready="true"] .pip-walk-art{display:block}
+.map-pip-walk[data-ready="true"] .pip-walk-loading{display:none}
+.pip-walk-loading{display:block;width:100%;height:100%;object-fit:contain}
+.pip-walk-art [data-walk-frame]{display:none}
+.map-pip-walk[data-frame="0"] [data-walk-frame="0"],.map-pip-walk[data-frame="1"] [data-walk-frame="1"],.map-pip-walk[data-frame="2"] [data-walk-frame="2"],.map-pip-walk[data-frame="3"] [data-walk-frame="3"]{display:inline}
+.map-pip-walk[data-frame="1"] .pip-walk-art,.map-pip-walk[data-frame="3"] .pip-walk-art{translate:0 -1.5px}
+@media(orientation:landscape) and (max-height:600px){.campaign-entry-trail{width:min(100%,400px)}}
+@media(prefers-reduced-motion:reduce){.map-pip-walk{display:none!important}}
