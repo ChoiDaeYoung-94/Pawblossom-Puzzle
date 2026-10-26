@@ -1266,7 +1266,12 @@ function bindCareControls(){
     if(route!=='village'||selectedGardenArea!=='flowers'||growing)return;
     if(!commitCare(button,expectedSave,generation,next=>{if(next.stars<2||next.garden>=5)return false;next.stars-=2;next.garden++;return true;}))return;
     growing=true;audio.play('reward');renderViews(true);notice('planted');
-    const timer=setTimeout(()=>{if(generation!==careGeneration||growthTimer!==timer)return;growthTimer=undefined;growing=false;$('#grow').toggleAttribute('disabled',careStorageBlocked()||save.stars<2||save.garden>=5);syncCarePipActivity();},450);
+    const timer=setTimeout(()=>{
+      if(generation!==careGeneration||growthTimer!==timer)return;
+      growthTimer=undefined;growing=false;
+      document.querySelector<HTMLButtonElement>('#grow')?.toggleAttribute('disabled',careStorageBlocked()||save.stars<2||save.garden>=5);
+      syncCarePipActivity();
+    },450);
     growthTimer=timer;
   });
 }

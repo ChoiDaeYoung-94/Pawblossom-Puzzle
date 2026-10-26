@@ -1344,6 +1344,18 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     h.run('save.garden=5;save.stars=8;renderViews()');h.element('#grow').onclick();
     expect(h.run('save.garden')).toBe(5);expect(h.run('save.stars')).toBe(8);
   });
+  it('심기 직후 핍의 공간 바로가기로 이동해 버튼이 없어져도 타이머와 모션을 정리합니다',()=>{
+    const h=mainHarness();h.run("save.stars=4;switchView('village');const realQuery=document.querySelector;document.querySelector=selector=>selector==='#grow'&&selectedGardenArea!=='flowers'?null:realQuery(selector)");
+    h.element('#grow').onclick();const stored=h.stored(),disk=h.disk(),writes=h.writes();
+    expect(stored).toMatchObject({stars:2,garden:1,coins:40});expect(h.run('growing')).toBe(true);
+    h.run("switchView('journal')");h.element('#pip-open-space').onclick();
+    expect(h.run('route')).toBe('village');expect(h.run('selectedGardenArea')).toBe('pond');
+    expect(h.element('#village-view').innerHTML).not.toContain('id="grow"');expect(h.run("document.querySelector('#grow')")).toBeNull();
+    expect(h.natureControllers.filter(c=>!c.disposed).map(c=>c.picture.dataset.natureActive)).toEqual(['false']);
+    expect(()=>h.flushGrowth()).not.toThrow();expect(h.run('growing')).toBe(false);expect(h.run('growthTimer')).toBeUndefined();
+    expect(h.stored()).toEqual(stored);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    expect(h.natureControllers.filter(c=>!c.disposed).map(c=>c.picture.dataset.natureActive)).toEqual(['true']);
+  });
   it('정원 저장 실패 안내는 성공 메시지로 덮어쓰지 않습니다',()=>{
     const h=mainHarness(true);h.run("save.stars=2;switchView('village')");h.element('#grow').onclick();
     expect(h.run('save.garden')).toBe(0);expect(h.run('save.stars')).toBe(2);
