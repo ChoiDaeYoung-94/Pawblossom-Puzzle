@@ -1,0 +1,25 @@
+/* 그림을 바꾸는 조작은 같은 작업대에 두고 장기 계획은 그 아래에 둡니다. */
+.garden-workbench{display:grid;gap:12px;align-items:start;margin:8px 0 14px}
+.garden-art-column,.garden-work-tools{min-width:0;align-self:start}
+.garden-art-column{position:sticky;top:0;z-index:2}
+.garden-workbench .garden-preview{position:relative;top:auto;display:block;width:100%;max-width:480px;aspect-ratio:12/7;height:auto;overflow:hidden;margin:0 auto;grid-area:auto}
+.garden-workbench .garden-illustration{height:100%;aspect-ratio:auto}
+.garden-workbench .garden-pill{position:absolute;margin:0}
+.garden-workbench .garden-growth{display:block;padding:10px 12px;margin:0 0 8px}
+.garden-workbench .garden-growth>h3,.garden-workbench .garden-growth>.garden-stage{margin:0 0 6px}
+.garden-workbench .garden-growth #grow{width:100%;min-height:44px}
+.garden-workbench .garden-growth small{display:block;margin-top:5px}
+.garden-workbench .garden-companion{margin:6px 2px 10px}
+.garden-workbench .garden-visit-line{margin:0 0 3px}
+.garden-workbench .garden-visit-actions{gap:4px}
+.garden-workbench .garden-visit-actions button{flex:1;min-width:0;min-height:44px;overflow-wrap:anywhere}
+.garden-workbench .garden-editor{padding:10px}
+.garden-workbench #garden-nature{scroll-margin:0}
+@media(orientation:landscape) and (min-width:700px){
+  .garden-workbench{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+  .garden-workbench .garden-preview{max-width:clamp(220px,calc((100dvh - 190px)*12/7),480px)}
+}
+@media(orientation:portrait){
+  .garden-art-column{background:var(--cream);border-radius:12px}
+  .garden-workbench .garden-preview{max-width:min(480px,calc((100dvh - 240px)*12/7))}
+}
