@@ -1,0 +1,357 @@
+{
+  "original": "C:\\Users\\user\\.codex\\generated_images\\01a11a8c-0d58-7790-9dc7-218775f5bdb2\\exec-a51ba015-0b47-4026-bbd8-e9a42524d965.png",
+  "width": 1122,
+  "height": 1402,
+  "bytes": 1877069,
+  "sha256": "16e5a5a8d0622920ff588bd58822dc29f51bbe464fe60c0aeeb9b6c3efc0cdc8",
+  "columns": [
+    0,
+    289,
+    568,
+    846,
+    1122
+  ],
+  "rows": [
+    0,
+    287,
+    548,
+    816,
+    1078,
+    1402
+  ],
+  "alphaExtrema": [
+    0,
+    255
+  ],
+  "cells": [
+    {
+      "world": "lavender",
+      "worldIndex": 5,
+      "crop": [
+        0,
+        0,
+        289,
+        287
+      ],
+      "coreBounds": [
+        52,
+        45,
+        258,
+        253
+      ]
+    },
+    {
+      "world": "honey",
+      "worldIndex": 6,
+      "crop": [
+        289,
+        0,
+        279,
+        287
+      ],
+      "coreBounds": [
+        39,
+        71,
+        241,
+        258
+      ]
+    },
+    {
+      "world": "lotus",
+      "worldIndex": 7,
+      "crop": [
+        568,
+        0,
+        278,
+        287
+      ],
+      "coreBounds": [
+        24,
+        97,
+        249,
+        257
+      ]
+    },
+    {
+      "world": "coast",
+      "worldIndex": 8,
+      "crop": [
+        846,
+        0,
+        276,
+        287
+      ],
+      "coreBounds": [
+        31,
+        76,
+        216,
+        253
+      ]
+    },
+    {
+      "world": "autumn",
+      "worldIndex": 9,
+      "crop": [
+        0,
+        287,
+        289,
+        261
+      ],
+      "coreBounds": [
+        48,
+        29,
+        263,
+        230
+      ]
+    },
+    {
+      "world": "snow",
+      "worldIndex": 10,
+      "crop": [
+        289,
+        287,
+        279,
+        261
+      ],
+      "coreBounds": [
+        31,
+        36,
+        256,
+        231
+      ]
+    },
+    {
+      "world": "aurora",
+      "worldIndex": 11,
+      "crop": [
+        568,
+        287,
+        278,
+        261
+      ],
+      "coreBounds": [
+        34,
+        47,
+        255,
+        234
+      ]
+    },
+    {
+      "world": "bamboo",
+      "worldIndex": 12,
+      "crop": [
+        846,
+        287,
+        276,
+        261
+      ],
+      "coreBounds": [
+        39,
+        35,
+        241,
+        236
+      ]
+    },
+    {
+      "world": "tea",
+      "worldIndex": 13,
+      "crop": [
+        0,
+        548,
+        289,
+        268
+      ],
+      "coreBounds": [
+        47,
+        25,
+        266,
+        241
+      ]
+    },
+    {
+      "world": "mushroom",
+      "worldIndex": 14,
+      "crop": [
+        289,
+        548,
+        279,
+        268
+      ],
+      "coreBounds": [
+        36,
+        38,
+        247,
+        243
+      ]
+    },
+    {
+      "world": "coral",
+      "worldIndex": 15,
+      "crop": [
+        568,
+        548,
+        278,
+        268
+      ],
+      "coreBounds": [
+        27,
+        24,
+        250,
+        241
+      ]
+    },
+    {
+      "world": "oasis",
+      "worldIndex": 16,
+      "crop": [
+        846,
+        548,
+        276,
+        268
+      ],
+      "coreBounds": [
+        23,
+        25,
+        232,
+        241
+      ]
+    },
+    {
+      "world": "crystal",
+      "worldIndex": 17,
+      "crop": [
+        0,
+        816,
+        289,
+        262
+      ],
+      "coreBounds": [
+        46,
+        30,
+        260,
+        235
+      ]
+    },
+    {
+      "world": "cloud",
+      "worldIndex": 18,
+      "crop": [
+        289,
+        816,
+        279,
+        262
+      ],
+      "coreBounds": [
+        23,
+        25,
+        262,
+        228
+      ]
+    },
+    {
+      "world": "firefly",
+      "worldIndex": 19,
+      "crop": [
+        568,
+        816,
+        278,
+        262
+      ],
+      "coreBounds": [
+        21,
+        24,
+        253,
+        236
+      ]
+    },
+    {
+      "world": "rose",
+      "worldIndex": 20,
+      "crop": [
+        846,
+        816,
+        276,
+        262
+      ],
+      "coreBounds": [
+        21,
+        29,
+        241,
+        239
+      ]
+    },
+    {
+      "world": "clock",
+      "worldIndex": 21,
+      "crop": [
+        0,
+        1078,
+        289,
+        324
+      ],
+      "coreBounds": [
+        49,
+        22,
+        264,
+        249
+      ]
+    },
+    {
+      "world": "falls",
+      "worldIndex": 22,
+      "crop": [
+        289,
+        1078,
+        279,
+        324
+      ],
+      "coreBounds": [
+        28,
+        25,
+        255,
+        250
+      ]
+    },
+    {
+      "world": "stars",
+      "worldIndex": 23,
+      "crop": [
+        568,
+        1078,
+        278,
+        324
+      ],
+      "coreBounds": [
+        17,
+        31,
+        256,
+        251
+      ]
+    },
+    {
+      "world": "celebration",
+      "worldIndex": 24,
+      "crop": [
+        846,
+        1078,
+        276,
+        324
+      ],
+      "coreBounds": [
+        27,
+        26,
+        238,
+        256
+      ]
+    }
+  ],
+  "processing": "원본 PNG 수정 없음. 투명 여백의 실제 경계를 분석한 SVG viewBox로만 분리합니다. 균일 격자를 충족했다고 주장하지 않습니다.",
+  "asset": "public/assets/campaign/natural-props-v1.png",
+  "created": "2026-10-27",
+  "generator": "built-in image_gen",
+  "reference": "public/assets/campaign/worlds-expansion-a-v1.png (자체 풍경의 재질·조명 참고)",
+  "prompt": "Use case: stylized-concept. Asset type: ONE production sprite atlas for a commercial original cozy match-3 journey map, Pawblossom Puzzle. Input image 1 is ONLY a style/lighting/material reference of our own painted map scenery. Do not edit or reproduce its scenery; create a NEW TRANSPARENT sprite sheet. Exact composition: portrait atlas, FOUR equal columns by FIVE equal rows, twenty independent isolated small natural environment props, one centered prop per cell, generous transparent gutters (at least 18% cell padding on all sides). No visible grid, backgrounds, floor tiles, islands, frames, writing, labels, numbers, buildings, furniture or characters. Truly transparent alpha around each prop; preserve whole silhouettes. Beautiful cohesive hand-painted 2.5D casual game art, soft warm top-left light, charming natural materials, clear chunky silhouettes readable at 50–70 px, detailed but restrained, no black outlines or plastic icon bubbles. Slight overhead three-quarter view matching the reference, each subject resting naturally with only a very subtle soft contact shadow, not a circular platform. The props, in exact row-major order: Row1: (1) small lush lavender sprigs with one pale stone, (2) a golden honey-colored daisy clump with leaves, (3) one pink lotus blossom on two floating lily leaves, (4) a pearly open seashell with two tiny shore pebbles. Row2: (5) amber maple leaves with a small fern and pebble, (6) snow-capped small rock with a short evergreen sprig, (7) a compact translucent turquoise ice crystal with a dusting of snow, (8) three short bamboo shoots with fresh leaves and one stone. Row3: (9) delicate tea-leaf sprig growing beside a low stone, (10) three coral-pink woodland mushrooms with a little moss, (11) a small peach sea-coral branch with a white shell, (12) a tiny bright palm sapling with two warm sand-colored stones. Row4: (13) violet and peach quartz crystal cluster, (14) a small soft fluffy cloud with two tiny golden sparkles, (15) a short reed tuft with three warm firefly lights, (16) a small blush-rose bush with three full blossoms. Row5: (17) a whimsical brass-petaled garden flower with a subtle gear motif but no clock face, (18) wet mossy river stones with a small fern and faint water glint, (19) a luminous pale blue moonflower beside a violet geode, (20) a festive compact clump of pink, yellow and lavender flowers with two small coral ribbons. Keep every item independent, modest and naturally scaled. NO miniature architecture. The empty space between all cells must remain fully transparent. This is one atlas, not a UI mockup or a landscape.",
+  "layoutRefinementPrompt": "Edit ONLY the layout/spacing of this original transparent sprite atlas. Preserve all twenty existing natural prop designs, exact row-major order, painterly materials, colors, lighting, and true transparency. Recompose onto a STRICT uniform FOUR-COLUMN by FIVE-ROW grid. Every cell must be exactly the same size. Each complete prop, INCLUDING its shadow, foliage, glow and sparkles, must fit inside the CENTRAL 64% of its cell in both width and height; leave at least 18% fully transparent margin on ALL four sides of EVERY cell. The last two rows must have the same generous vertical spacing as the first rows. Nothing may cross a cell boundary or touch any other sprite. Align every prop centre to its exact geometric cell centre. Keep a portrait 4:5 canvas ratio. No lines, labels, numbers, backgrounds, frames, tiles, additions or deletions. Shrink the props as necessary to obtain clean transparent gutters; do not enlarge them to fill the sheet. This is a production sprite sheet that must be sliced by equal rectangular cells, so uniform row heights and wide clear alpha gutters are essential. Preserve crisp illustrated detail.",
+  "firstCandidate": "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-01dba5ec-3166-490f-a54c-22a198251e2a.png",
+  "status": "자체 제작 개발용 에셋. 사용자 감각 승인·상용 품질 최종 검수 전."
+}

@@ -82,9 +82,6 @@ select { color: var(--ui-ink); background-color: var(--ui-paper); border-color: 
 .campaign-chapter h3>span { color: var(--ui-muted); }
 .map-world-gateway b { color: var(--ui-ink); background: #fff6e8f5; border-color: #e7c0b5; }
 .campaign-play { background: #fffaf7f5; box-shadow: 0 -3px 12px #70496914; }
-.campaign-chapter[data-scenery-art-ready="true"] .campaign-node { color: #4e3c58; }
-.campaign-chapter[data-scenery-art-ready="true"] .campaign-node.current { color: #8b3f5d; }
-.campaign-chapter[data-scenery-art-ready="true"] .campaign-node:disabled { color: #6c5e71; }
 .campaign-chapter:not([data-scenery-art-ready="true"]) .campaign-node:not(.completed):not(:disabled) {
   color: var(--ui-action-ink); text-shadow: none;
   background: radial-gradient(ellipse at 33% 22%, #ffe6ec, #f7adc3 55%, #d8769d);
@@ -190,4 +187,3 @@ button:focus-visible, a:focus-visible, select:focus-visible,
 .chapter-tabs button:focus-visible, .stage-preview button:focus-visible,
 .garden-area-tabs button:focus-visible, .garden-space-editor button:focus-visible,
 .garden-space-preview button:focus-visible, .garden-look-preview button:focus-visible { outline-color: var(--ui-focus); }
-.campaign-chapter[data-scenery-art-ready="true"] .campaign-node:focus-visible { box-shadow: 0 0 0 7px #fffaf7; }
