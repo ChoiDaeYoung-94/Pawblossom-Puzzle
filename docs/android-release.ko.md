@@ -1,3 +1,15 @@
+## 최신 로컬 통합 APK · 2026-10-27 · #390
+
+[PR387](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/387)의 작은 원형 레벨·점선·상단 여백·지역 자연 소품·핍 보행과 [PR389](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/389)의 미사용8PNG 배포 제외를 통합했습니다. 게임 소스는 `6b50d9b07d6ba891911be5138599927a76885bb0`, 정확 main 최초 [CI40448796321](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40448796321)의 양Node 검사 성공을 확인했습니다. 이후 전달 기록만 변경한 커밋은 별도입니다.
+
+파일은 Git 밖 `Pawblossom-builds/2026-10-27-6b50d9b-compact/Pawblossom-Puzzle-v0.1.7-2026-10-27-6b50d9b-debug.apk`입니다. **0.1.7/code8 · 53,019,152바이트 · SHA256 `be16288878bd7182581b667f000a6fb5cb4835e377bebb6d20f49574a0333a8f`**입니다. 이전64cf APK 67,632,889바이트보다 **14,613,737바이트(21.6%) 작습니다**. 자체 자연 소품을 추가하면서 옛8원본15,611,462바이트를 비배포 보존 폴더로 옮긴 결과이며 원본 그림의 재인코딩/삭제나 PC 삭제량과 구분합니다. 사용자가 직접 올리므로 Drive 업로드는 하지 않았습니다.
+
+공식 aapt/min24/target36·동일 단일 v2 서명·ZIP 중복0/CRC·public78/testing웹101/APK public103(빈cordova2 포함) 전수 SHA·a4 대비 비웹536개 동일을 확인했습니다. APK와 Android 복원본에서 퇴역8PNG가 없고, production웹93/Android public95 전수 SHA·false플래그·Git clean을 복원했습니다. 새 native JUnit/lint·LD/폰 직접 실행은 하지 않았으며 동일 비웹 코드의 기존 검증 근거 재사용입니다. 근거는 같은 전달 폴더 `artifact-verification.json`과 `qa/integration-20261027/390-delivery-proof.json`입니다. 테스트 안내는 채팅에 직접 제공합니다.
+
+주의: 앞선 main b06e53f 정확 [CI40447990481](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40447990481)는 Node22 callback-inbox:85의8worker idle3expected7/process sqlite busy4로3994성공1실패였습니다(Node24성공). 관측·미실행 DB후속검사·원인/owner미확정 경계는 #122 댓글6433606512/6433625894에 보존했으며 최신 녹색을 원인 해결로 표현하지 않습니다. #375 Samsung 최근 앱 카드 오류·500판 인간 난이도·상용 감각/실광고/구매/스토어·최종 청취는 미완료입니다. AAB/공개배포/상품/실키env/최종믹스 보류를 유지합니다.
+
+초기 incremental 후보는 퇴역8파일이 ZIP 목록에서 빠졌는데도67,632,190바이트였고, 실제 항목 사이 최대11,300,645바이트 등의 빈 구간을 관측했습니다. 생성물 경로가 현재 저장소의 `android/app/build` 안임을 확인하고 `:app:clean assembleDebug`로 새 패키지를 생성했습니다. 최종53,019,152바이트는 위 compact 폴더이며, 이전 후보와 최종 검증을 혼동하지 않습니다. 소스/정확CI·버전·키·게임 데이터는 바꾸지 않았고 새 JUnit/lint 실행도 아닙니다.
+
 ## 최신 로컬 통합 APK · 2026-10-27 · #384
 
 사용자는 직접 업로드·테스트하기로 했으므로 이번 APK는 Drive에 업로드하지 않습니다. 어제 #370의 Drive 전달 계획은 이 로컬 전달 지시로 대체합니다. 게임 소스는 `64cf5da64e73b14e2966231193d08d6cbdcc7918`이며 지도 구성/장식·상단 비율(PR378), 확대된 발판/길과 자체 네 포즈 걷기(PR379), 남은 목표 관련 힌트(PR381), 실제 표시 이동을 따르는 얼굴 방향(PR383)을 포함합니다. 최초 정확 [main CI40315015725](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40315015725)는 Node22/24 모두 성공했습니다. 이후 이 전달 기록만 바꾸며 게임 소스·버전은 유지합니다.
