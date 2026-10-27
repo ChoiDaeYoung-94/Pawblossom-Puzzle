@@ -1,5 +1,7 @@
+import {createHash} from 'node:crypto';
+import {campaignIsland,campaignGatewayBranches} from './fixtures/retired-map-render';
 import {describe,it,expect,vi} from 'vitest';
-import {createCampaignScenery,campaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches,campaignWorldPaint,campaignMusicTheme} from '../src/CampaignScenery';
+import {createCampaignScenery,campaignScenery,campaignWorld,campaignWorldName,campaignWorldPaint,campaignMusicTheme} from '../src/CampaignScenery';
 import {levels,chapters} from '../src/levels';
 import {existsSync,readFileSync} from 'node:fs';
 import {campaignMemory,campaignMemoryArt} from '../src/CampaignMemories';
@@ -22,7 +24,20 @@ function setup(assetPaths:string[]=[],sourceChapters:number[]=[]){
   return {controller,scroll,chapters,positions,frames,media,listeners,windowListeners,mediaListeners,selected,flush,event,images,createImage,sources};
 }
 describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
-  it('후반20지역의 발판은 각 고유셀을 쓰고 기존100판11장의 HTML은 그대로입니다',()=>{
+  it('미사용 8원본은 동일 SHA로 보존하고 배포 public·런타임 참조에서 제외합니다',()=>{
+    const record=JSON.parse(readFileSync(new URL('../docs/art/retired-map-v1.json',import.meta.url),'utf8'));
+    expect(record.files).toHaveLength(8);expect(record.totalBytes).toBe(15611462);
+    const runtime=readFileSync(new URL('../src/CampaignScenery.ts',import.meta.url),'utf8')+readFileSync(new URL('../src/main.ts',import.meta.url),'utf8');
+    for(const file of record.files){
+      const raw=readFileSync(new URL('../'+file.archivedPath,import.meta.url));
+      expect(raw.length).toBe(file.bytes);expect(createHash('sha256').update(raw).digest('hex')).toBe(file.sha256);
+      expect(existsSync(new URL('../'+file.originalPath,import.meta.url))).toBe(false);
+      expect(runtime).not.toContain(file.originalPath.replace('public',''));
+    }
+    expect(runtime).not.toMatch(/campaignIsland|campaignGatewayBranches|level-expansion-/);
+  });
+
+  it('보존용 옛20지역 발판과 기존100판11장 HTML의 원형을 유지합니다',()=>{
     const legacy=JSON.parse(readFileSync(new URL('./fixtures/islands-100-d5713c8.json',import.meta.url),'utf8'));
     for(let chapter=1;chapter<=11;chapter++)expect(campaignIsland(chapter)).toBe(legacy.chapters[String(chapter)]);
     const cells=new Set<string>(),sources=new Set<string>();
@@ -30,7 +45,7 @@ describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
       const chapter=index+7,art=campaignIsland(chapter),source=art.match(/data-map-src="([^"]+)"/)![1],box=art.match(/height="100" viewBox="([^"]+)"/)![1];
       expect(art).toContain(`data-island-world="${campaignWorld(chapter)}"`);expect(art).toContain('x="18" width="100" height="100"');expect(art).toContain('overflow="hidden"');expect(art).not.toMatch(/\shref=|<button|<a |https?:/);
       expect(box.split(' ').map(Number)).toEqual([(index-5)%2*627,Math.floor((index-5)%4/2)*627,627,627]);
-      const png=readFileSync(new URL('../public'+source,import.meta.url));expect([png.readUInt32BE(16),png.readUInt32BE(20),png[25]]).toEqual([1254,1254,6]);cells.add(source+' '+box);sources.add(source);
+      const png=readFileSync(new URL('../assets/retired-map-v1/'+source.split('/').pop(),import.meta.url));expect([png.readUInt32BE(16),png.readUInt32BE(20),png[25]]).toEqual([1254,1254,6]);cells.add(source+' '+box);sources.add(source);
     }
     expect(cells.size).toBe(20);expect(sources.size).toBe(5);
   });
@@ -43,17 +58,17 @@ describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
     }
     expect(seen.size).toBe(20);expect(campaignMemory(11)).toEqual({project:'moonbridge',alt:true});expect(campaignMemory(12)).toEqual({project:'moonbridge',alt:false});
   });
-  it('3배경띠·20발판·입구·새작품도현재장안에서같은파일을한번만해독합니다',async()=>{
-    const paths=[...campaignWorldPaint(12).matchAll(/data-map-src="([^\"]+)"/g),...Array.from({length:20},()=>[...campaignIsland(12).matchAll(/data-map-src="([^\"]+)"/g)][0]),...campaignGatewayBranches().matchAll(/data-map-src="([^\"]+)"/g),...campaignScenery(12,20).matchAll(/data-map-src="([^\"]+)"/g)].map(match=>match[1]);
-    const h=setup(paths);h.controller.setActive(true);h.flush();expect(h.images).toHaveLength(new Set(paths).size);expect(h.images).toHaveLength(4);
+  it('현재 배경띠와 자연 소품은 같은 파일을 한 번만 해독합니다',async()=>{
+    const paths=[...campaignWorldPaint(12).matchAll(/data-map-src="([^\"]+)"/g),...campaignScenery(12,20).matchAll(/data-map-src="([^\"]+)"/g)].map(match=>match[1]);
+    const h=setup(paths);h.controller.setActive(true);h.flush();expect(h.images).toHaveLength(new Set(paths).size);expect(h.images).toHaveLength(2);
     h.images.forEach(image=>image.onload?.());for(let i=0;i<12;i++)await Promise.resolve();expect(h.sources.every(source=>source.getAttribute('href')===source.getAttribute('data-map-src'))).toBe(true);
     h.controller.setActive(false);expect(h.sources.every(source=>!source.hasAttribute('href'))).toBe(true);expect(h.frames.size).toBe(0);
   });
-  it('발판·입구는 내부 원본과 정확한 crop을 쓰며 해독 전에 주소나 입력 요소를 공개하지 않습니다',()=>{
-    for(const chapter of [1,3,6,8,10]){const art=campaignIsland(chapter);expect(art).toContain('overflow="hidden"');expect(art).not.toMatch(/\shref=|<button|<a |https?:/);for(const match of art.matchAll(/data-map-src="([^"]+)"/g))expect(existsSync(new URL('../public'+match[1],import.meta.url))).toBe(true);}
+  it('보존용 옛 발판·입구 원본과 crop·비상호작용 이력을 유지합니다',()=>{
+    for(const chapter of [1,3,6,8,10]){const art=campaignIsland(chapter);expect(art).toContain('overflow="hidden"');expect(art).not.toMatch(/\shref=|<button|<a |https?:/);for(const match of art.matchAll(/data-map-src="([^"]+)"/g))expect(existsSync(new URL('../assets/retired-map-v1/'+match[1].split('/').pop(),import.meta.url))).toBe(true);}
     expect(campaignIsland(3)).toContain('x="18" width="100" height="100" viewBox="0 0 627 627"');expect(campaignIsland(10)).toContain('viewBox="627 627 627 627"');
     const branches=campaignGatewayBranches();expect(branches.match(/map-gateway-branch map-/g)).toHaveLength(2);expect(branches).toContain('viewBox="887 0 887 887"');expect(branches).not.toMatch(/\shref=|<button|<a /);
-    for(const [name,w,h] of [['level-worlds-atlas-v1.png',1254,1254],['gateway-branches-v1.png',1774,887]] as const){const png=readFileSync(new URL('../public/assets/campaign/'+name,import.meta.url));expect([png.readUInt32BE(16),png.readUInt32BE(20),png[25]]).toEqual([w,h,6]);}
+    for(const [name,w,h] of [['level-worlds-atlas-v1.png',1254,1254],['gateway-branches-v1.png',1774,887]] as const){const png=readFileSync(new URL('../assets/retired-map-v1/'+name,import.meta.url));expect([png.readUInt32BE(16),png.readUInt32BE(20),png[25]]).toEqual([w,h,6]);}
   });
   it('기존100레벨·11장ID를 보존하면서 큰 풍경은 정확히20레벨마다 바뀝니다',()=>{
     const counts=new Map<string,number>();

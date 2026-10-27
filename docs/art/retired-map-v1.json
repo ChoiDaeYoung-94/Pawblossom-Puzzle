@@ -1,0 +1,55 @@
+{
+  "issue": 388,
+  "reason": "작은 원형 버튼과 점선으로 대체되어 배포에서 제외. 원본 픽셀·이력은 보존.",
+  "totalBytes": 15611462,
+  "files": [
+    {
+      "originalPath": "public/assets/campaign/level-island-v1.png",
+      "archivedPath": "assets/retired-map-v1/level-island-v1.png",
+      "bytes": 1494668,
+      "sha256": "4017b3f9d85629d175dc86e96071119a132d392b12584d93f599f8d11e6a71c6"
+    },
+    {
+      "originalPath": "public/assets/campaign/level-worlds-atlas-v1.png",
+      "archivedPath": "assets/retired-map-v1/level-worlds-atlas-v1.png",
+      "bytes": 2132368,
+      "sha256": "80facb7b42c2da5216546801daa86b3ca0ad9119b92d058e12d9b9b6d83cd3b8"
+    },
+    {
+      "originalPath": "public/assets/campaign/level-expansion-a-v1.png",
+      "archivedPath": "assets/retired-map-v1/level-expansion-a-v1.png",
+      "bytes": 2188780,
+      "sha256": "e78375a9c6357d8096997e480e792e696a7e95accd10a2079cb359535f011b2e"
+    },
+    {
+      "originalPath": "public/assets/campaign/level-expansion-b-v1.png",
+      "archivedPath": "assets/retired-map-v1/level-expansion-b-v1.png",
+      "bytes": 2137607,
+      "sha256": "f51e6335c5b381a8a76bd04589fe91d05ed29c069cbfdfae427b5653637a35f9"
+    },
+    {
+      "originalPath": "public/assets/campaign/level-expansion-c-v1.png",
+      "archivedPath": "assets/retired-map-v1/level-expansion-c-v1.png",
+      "bytes": 2184162,
+      "sha256": "26be1dc8a0d5dfc8b6e7571c6ecb4160fe0ec5c3bbde843a742b9f0a5f70ad5a"
+    },
+    {
+      "originalPath": "public/assets/campaign/level-expansion-d-v1.png",
+      "archivedPath": "assets/retired-map-v1/level-expansion-d-v1.png",
+      "bytes": 2158825,
+      "sha256": "baa46f5888ac1d4e9f273a8540cbf36033a71c6f369f5ee4cfd5508294a2f30f"
+    },
+    {
+      "originalPath": "public/assets/campaign/level-expansion-e-v1.png",
+      "archivedPath": "assets/retired-map-v1/level-expansion-e-v1.png",
+      "bytes": 2123767,
+      "sha256": "d0284ae4546fb2b4c9e7108070b789643931c1a37f4b8e29907157a0c197601a"
+    },
+    {
+      "originalPath": "public/assets/campaign/gateway-branches-v1.png",
+      "archivedPath": "assets/retired-map-v1/gateway-branches-v1.png",
+      "bytes": 1191285,
+      "sha256": "f79eb46a3aeec4223a077264f05be4558992a45afcf83f4bea77668c9149ac47"
+    }
+  ]
+}

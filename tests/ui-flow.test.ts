@@ -21,7 +21,7 @@ import {specialTileArt,specialArtKinds,specialBodyKey,specialBodyPath} from '../
 import * as paintedGardenArt from '../src/GardenPaintedArt';
 import * as gardenStructureArt from '../src/GardenStructureArt';
 import * as boardDisplay from '../src/BoardDisplay';
-import {campaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches,campaignWorldPaint,campaignMusicTheme} from '../src/CampaignScenery';
+import {campaignScenery,campaignWorld,campaignWorldName,campaignWorldPaint,campaignMusicTheme} from '../src/CampaignScenery';
 import * as campaignRoute from '../src/CampaignRoute';
 
 import {gardenGoals,goalNextStep,nextGardenGoal} from '../src/GardenGoals';
@@ -235,7 +235,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     cloneSnapshot,prepareShuffle,
     showResultPip:()=>{resultArtCalls++;},
     RoundFeedback:FeedbackStub,
-    campaignScenery,campaignWorld,campaignWorldName,campaignIsland,campaignGatewayBranches,campaignWorldPaint,campaignMusicTheme,
+    campaignScenery,campaignWorld,campaignWorldName,campaignWorldPaint,campaignMusicTheme,
     ...campaignRoute,
     createMapTravel:(_scroll:ElementStub,from:ElementStub,to:ElementStub,_pip:ElementStub,owns:()=>boolean,onPlaying:(value:boolean)=>void)=>{
       const flight={from,to,active:false,started:0,disposed:false,playing:true,
