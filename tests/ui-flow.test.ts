@@ -96,6 +96,7 @@ class ElementStub {
 
 function mainHarness(storageFails = false, firstUse = false, testTools = false, native = false, initial?:unknown, autoFrame=true, adsBridge?:TestAdsBridge,billingBridge?:TestBillingBridge,bootMap=false) {
   const elements = new Map<string, ElementStub>();
+  const rectangles = new Map<string, ReturnType<ElementStub['getBoundingClientRect']>>();
   const timers = new Map<number, { callback: () => void; ms: number }>();
   let timerId = 0, writes = 0;
   let games=0, destroys=0, frame=()=>{};
@@ -118,6 +119,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const element = (selector: string): ElementStub => {
     if (!elements.has(selector)) {
       elements.set(selector, new ElementStub(selector));
+      elements.get(selector)!.getBoundingClientRect=()=>rectangles.get(selector)??{left:0,top:0,right:180,bottom:180};
       if(selector==='#stars-help'||selector==='#coins-help')elements.get(selector)!.hidden=false;
       if(['#map-view','#village-view','#journal-view'].includes(selector)){
         const view=selector.slice(1,-5),owned=view==='map'?['map-current-pip']:[`${view}-pip-actor`,`${view}-pip-image`,`${view}-pip-accessory`,...(view==='village'?['garden-nature']:[])];
@@ -304,6 +306,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   // 기존 퍼즐 회귀는 실제 지도 부팅 뒤 퍼즐로 진입합니다. 지도 초기 상태는 bootMap으로 따로 검증합니다.
   if(!bootMap)vm.runInContext("switchView('puzzle')",context);
   return {
+    setBounds:(selector:string,bounds:ReturnType<ElementStub['getBoundingClientRect']>)=>{rectangles.set(selector,bounds);},
     setStorageFails:(value:boolean)=>{storageFails=value;},disk:()=>[...storageValues],
     resultArtCalls:()=>resultArtCalls,frame:()=>frame(),games:()=>games,destroys:()=>destroys,
     documentEvents,windowEvents,nativeEvents,resolveNativeState,pipControllers,pipLifecycle,accessoryControllers,natureControllers,sceneryControllers,mapTravels,
@@ -3224,6 +3227,22 @@ describe('선택한 정원 꽃밭에 무료 물주기',()=>{
       h.flushCareReaction();expect(h.run('gardenTendingPlot')).toBeUndefined();expect(h.element('#village-view').innerHTML).not.toContain('village-pip-tend-stage');
     }
     expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('JSON.stringify(save)')).toBe(before);
+  });
+  it('그림 밖에서 무료 돌보기를 누르면 정원 스크롤만 옮기고 실행 초점과 저장은 보존합니다',()=>{
+    const h=mainHarness(false,false,false,false,initial());h.run("switchView('village');selectedGardenPlot=1;renderViews()");
+    h.setBounds('#village-view',{left:0,right:480,top:100,bottom:500});h.setBounds('#garden-nature',{left:0,right:480,top:-160,bottom:60});
+    h.run("document.querySelector('#village-view').scrollTop=480;globalThis.tendFocus=[];document.activeElement={id:'garden-tend',isConnected:false};document.querySelector('#garden-tend').focus=options=>{tendFocus.push(options.preventScroll);document.activeElement=document.querySelector('#garden-tend')};document.querySelector('#journal-view').scrollTop=77");
+    const disk=h.disk(),writes=h.writes(),before=h.run('JSON.stringify(save)');h.element('#garden-tend').onclick();
+    expect(h.run('gardenTendingPlot')).toBe(1);expect(h.element('#village-view').scrollTop).toBe(220);expect(h.element('#journal-view').scrollTop).toBe(77);expect(h.run('tendFocus')).toEqual([true]);expect(h.run("document.activeElement===document.querySelector('#garden-tend')")).toBe(true);
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('JSON.stringify(save)')).toBe(before);
+  });
+  it('이미 보이는 그림과 거절된 돌보기는 사용자의 탐색 위치를 바꾸지 않습니다',()=>{
+    for(const [growth,top,bottom] of [[100,120,360],[20,-160,60]]){
+      const h=mainHarness(false,false,false,false,initial('ko',5,growth));h.run("switchView('village')");
+      h.setBounds('#village-view',{left:0,right:480,top:100,bottom:500});h.setBounds('#garden-nature',{left:0,right:480,top,bottom});h.element('#village-view').scrollTop=480;
+      h.element('#garden-tend').onclick();expect(h.element('#village-view').scrollTop).toBe(480);
+      expect(h.run('gardenTendingPlot')).toBe(growth===100?0:undefined);
+    }
   });
   it('빈칸·잠긴 성장·숨김·모달·성장 중에는 꽃밭 물주기를 시작하지 않습니다',()=>{
     for(const [garden,growth,guard] of [[0,100,''],[5,20,''],[5,100,'document.hidden=true'],[5,100,'nativeActive=false'],[5,100,"document.querySelector('#tutorial-dialog').open=true"],[5,100,'growing=true']] as const){
