@@ -1,11 +1,22 @@
 .journey-garden { padding:16px; border:1px solid #e5d6ed; border-radius:22px; background:linear-gradient(155deg,#fffaf0,#fcf4ff 65%,#edf9ff); }
 .journey-gallery-heading small { color:#765082; font-size:12px; font-weight:800; }
 .journey-gallery-heading h3 { margin:5px 0 9px; font-size:23px; }
-.journey-gallery-heading p,.journey-garden>p { line-height:1.6; font-size:13px; }
+.journey-gallery-heading p,.journey-garden>p,.journey-work-details>p { line-height:1.6; font-size:13px; }
 .journey-select-label { display:block; margin:14px 0 6px; font-size:12px; font-weight:800; }
 #journey-project-select { width:100%; min-width:0; min-height:44px; background:#fffaf6; border:1px solid #bba1c6; border-radius:12px; padding:8px; color:#523d60; font:inherit; font-size:13px; }
 .journey-work-picture { position:relative; isolation:isolate; overflow:hidden; border-radius:24px; margin:14px 0 6px; background:radial-gradient(ellipse at 50% 68%,#fffdf3 10%,#f0e6fb 62%,#e7f4fc); }
 .journey-work-art { display:block; width:100%; aspect-ratio:4/3; }
+.journey-workbench { display:grid; gap:14px; margin:14px 0 6px; }
+.journey-workbench>.journey-work-picture { width:100%; max-width:560px; margin:0; justify-self:center; }
+.journey-work-details { min-width:0; overflow-wrap:anywhere; }
+.journey-work-details>h4 { margin-top:0; }
+.journey-work-details>button { min-height:44px; max-width:100%; }
+@media (orientation:landscape) {
+  .journey-workbench>.journey-work-picture { max-width:clamp(220px,calc((100dvh - 180px)*4/3),480px); }
+}
+@media (orientation:landscape) and (min-width:700px) {
+  .journey-workbench { grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; }
+}
 .journey-work-badge { position:absolute; top:10px; left:10px; border-radius:20px; padding:5px 10px; background:#fffaf1ed; color:#76516f; font-size:11px; font-weight:800; }
 [data-journey-ready=true] .journey-work-fallback { display:none; }
 .journey-work-lights { opacity:0; }
