@@ -1,5 +1,13 @@
 # 웹 자동 검증
 
+## 2026-10-27 · #396 수신함 최초 선점 BEGIN의 검사 전용 관측
+
+main b06e53f의 첫 CI40447990481 Node22는 동일 수신함8worker에서 completed1·idle3/기대7·process/storage/sqlite busy4로 실패했습니다(개별3,843ms, 5초 timeout 아님). 여기의 busy는 기본코드5/6 묶음이며 원래 실패에서는 SQL 위치·잠금 소유자·최종 DB행수/실제 자식 종료·닫힘을 확인하지 못했습니다. 기존 #122 원문·comment6433606512/6433625894를 보존하며 이후 main의 녹색을 원인 해결로 합산하지 않습니다.
+
+검사 worker의 생성자·제한된 open 재시도가 끝난 뒤 process 직전에만 새 probe를 arm합니다. 현재 processNext의 첫 literal BEGIN IMMEDIATE 한 번에 대해 반환/예외·단조 시계 소요시간·숫자 SQLite 기본/확장 코드만 관측합니다. 생성자·receive·reward/finalize 후속 BEGIN은 이 행에 섞지 않고 SQL/인수/경로/반환값/원문 오류는 출력하지 않습니다. 시계·오류 getter가 실패해도 원래 함수 호출1회·동일 반환/예외를 보존하며 diagnostics=false에는 관측을 추가하지 않습니다. 제품 server/src/public/Android·500ms/5초/8worker·업무 기대·재시도 정책은 유지합니다. 관측 비용 자체가 경합 시점을 바꿀 수 있고 owner·오래 걸린 원인·실제 close 성공을 알려주지는 않습니다.
+
+최초 관련 검사는104성공1실패였습니다. 기존 생성자 BUSY 회귀의 정확 DTO 기대에 새 claimBegin 필드가 빠진 실패로, 업무 결과·openAttempts2·busy 알림1회·원장 신규1개 기대를 보존하면서 진단 필드만 명시 검증했습니다. 수정 후 관련2파일105개와 TypeScript 검사가 성공했고 독립 읽기에서 식별 위치·비노출·원래 호출 보존의 추가 P1/P2는 없었습니다. 실패/성공 로그는 Git 밖 integration-20261027/396-related-first.log와396-related-final.log로 분리합니다. 제품 코드가 같아 이 검사 전용 묶음의 로컬 웹 빌드는 반복하지 않으며 최초 PR/정확main CI·실제 새 실패의 관측은 제출 후 별도로 판단합니다.
+
 ## 2026-10-26 · #368 시작·보상소비의 업무 전 진입 정책
 
 main361의 redeem BEGIN BUSY5(첫 기대 실패:7개 voucher-redeemed/1개 storage-unavailable)와 PR367의 start BEGIN BUSY5(7개 round-started/1개 storage-unavailable)를 별도 보존했습니다. 모두 생성 성공 뒤 업무 본문에 들어가기 전 경계입니다. 기존 command helper의 알고리즘을 공통 저장소 모듈로 옮기고 기존 export는 호환하며, 기존명령과 새 start/redeem 두 호출에만 선택 적용합니다. 생성자·SSV callback·조회·applyReward와 다른 기본 경로는 그대로입니다.

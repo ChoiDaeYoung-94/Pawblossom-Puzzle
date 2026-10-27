@@ -2,21 +2,24 @@
 import {parentPort,workerData} from 'node:worker_threads';
 import {CallbackInbox} from '../../server/ads/callbackInbox.ts';
 import {DatabaseSync} from 'node:sqlite';
+import {createCallbackClaimProbe} from './callbackClaimProbe.ts';
 // 운영 오류 메시지에는 SQL 원인이 없으므로 테스트 worker 내부에서 숫자 코드만 분류합니다.
 // SQL·인수·원문 오류를 결과나 로그로 내보내지 않습니다.
 let sqliteFailure;
+let claimProbe=createCallbackClaimProbe(false);
 const classify=error=>{sqliteFailure=error?.code==='ERR_SQLITE_ERROR'&&[5,6].includes(error.errcode&255)?'busy':'sql-error';};
 const originalExec=DatabaseSync.prototype.exec,originalPrepare=DatabaseSync.prototype.prepare;
-DatabaseSync.prototype.exec=function(...args){try{return Reflect.apply(originalExec,this,args);}catch(error){classify(error);throw error;}};
+DatabaseSync.prototype.exec=function(...args){try{return claimProbe.observe(args[0],()=>Reflect.apply(originalExec,this,args));}catch(error){classify(error);throw error;}};
 DatabaseSync.prototype.prepare=function(...args){
   let statement;try{statement=Reflect.apply(originalPrepare,this,args);}catch(error){classify(error);throw error;}
   for(const method of ['get','all','run']){const original=statement[method];statement[method]=function(...values){try{return Reflect.apply(original,this,values);}catch(error){classify(error);throw error;}};}
   return statement;
 };
 async function run(d) {
+  claimProbe=createCallbackClaimProbe(d.diagnostics===true);
   let inbox,stage='open',openAttempts=0;
   const failures=[],limit=Number.isSafeInteger(d.openRetries)&&d.openRetries>=0&&d.openRetries<=2?d.openRetries+1:1;
-  const diagnostic=result=>d.diagnostics?{...result,diagnostic:{openAttempts,failures}}:result;
+  const diagnostic=result=>{const claimBegin=claimProbe.snapshot();return d.diagnostics?{...result,diagnostic:{openAttempts,failures,...(claimBegin?{claimBegin}:{})}}:result;};
   try {
     while(!inbox){
       sqliteFailure=undefined;openAttempts++;
@@ -33,6 +36,7 @@ async function run(d) {
       }
     }
     stage=d.action==='receive'?'receive':'process';
+    if(stage==='process')claimProbe.arm();
     sqliteFailure=undefined;
     const result=d.action==='receive'?inbox.receive(d.query):await inbox.processNext();
     return diagnostic(d.diagnostics&&result.kind==='unavailable'?{...result,stage,sqlite:sqliteFailure??'none'}:result);
