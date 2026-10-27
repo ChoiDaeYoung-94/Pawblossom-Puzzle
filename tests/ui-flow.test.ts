@@ -3002,13 +3002,21 @@ describe('정원·돌봄의 표시 전용 관절과 착용 슬롯',()=>{
     const h=boot();h.run("switchView('journal')");h.element('#pip-'+kind).onclick();
     expect(h.run('pipReaction')).toBe(kind);const timer=h.run('careReactionTimer'),after=h.run(snapshot),disk=h.disk(),writes=h.writes();
     expect(liveCare(h)[0].pip.dataset.idleActive).toBe('false');expect(liveArt(h)[0].slot.dataset.artActive).toBe('false');
-    expect(h.element('#journal-pip-image').getAttribute('src')).toBe(kind==='feed'?'/assets/pip-feed-v1.webp':kind==='play'?'/assets/pip-play-v1.webp':'/assets/pip.png');
+    expect(h.element('#journal-pip-image').getAttribute('src')).toBe(kind==='feed'?'/assets/pip-feed-v1.webp':kind==='play'?'/assets/pip-play-v1.webp':kind==='tend'?'/assets/pip-idle-open-v2.webp':'/assets/pip.png');
     expect(liveArt(h)[0].kind).toBe(kind==='tend'?'wateringCan':'ribbon');expect(h.run('save.pip.equipped')).toBe('ribbon');
     h.run('syncActivity();syncPipActivity()');h.run('document.hidden=true');h.documentEvents.visibilitychange();h.run('document.hidden=false');h.documentEvents.visibilitychange();
     expect(h.run('careReactionTimer')).toBe(timer);expect(h.run(snapshot)).toBe(after);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
     h.flushCareReaction();expect(h.run('pipReaction')).toBeUndefined();expect(h.run('careReactionTimer')).toBeUndefined();
     expect(liveCare(h)[0].pip.dataset.idleActive).toBe('true');expect(liveArt(h)[0].kind).toBe('ribbon');
     expect(h.element('#journal-pip-image').getAttribute('src')).toBe('/assets/pip-idle-open-v2.webp');expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it.each(['journal','village'] as const)('%s 물주기는 기본 idle 그림을 유지하지만 대기 관절과 착용 모션은 재개하지 않습니다',view=>{
+    const h=boot();h.run(`switchView('${view}')`);const image=`#${view}-pip-image`,before=h.element(image).getAttribute('src'),disk=h.disk(),writes=h.writes();
+    expect(before).toBe('/assets/pip-idle-open-v2.webp');h.element(view==='journal'?'#pip-tend':'#garden-tend').onclick();
+    expect(h.element(image).getAttribute('src')).toBe(before);expect(liveCare(h)[0].pip.dataset.idleActive).toBe('false');expect(liveArt(h)[0].slot.dataset.artActive).toBe('false');
+    expect(h.run('pipReaction')).toBe('tend');const timer=h.run('careReactionTimer');h.run('syncCarePipActivity()');expect(h.run('careReactionTimer')).toBe(timer);
+    h.flushCareReaction();expect(h.element(image).getAttribute('src')).toBe(before);expect(liveCare(h)[0].pip.dataset.idleActive).toBe('true');
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
   });
   it('무료 활동과 성장 중에는 기존 위치·pose를 보이고450ms 종료는 DOM 교체나 추가 소비 없이 표시만 재개합니다',()=>{
     const h=boot();h.run("switchView('village')");const before=h.run(snapshot),disk=h.disk(),writes=h.writes();
