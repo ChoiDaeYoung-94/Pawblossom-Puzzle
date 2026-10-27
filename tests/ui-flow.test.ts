@@ -1,3 +1,5 @@
+import {gardenTendingArt} from '../src/GardenTending';
+
 import {pipDecorationArt} from '../src/PipDecoration';
 import {previewGardenTheme,gardenThemePreview} from '../src/GardenThemePreview';
 import {reachedPipUnlock,pipUnlockCard} from '../src/PipUnlock';
@@ -232,7 +234,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     specialTileArt,
     ...campaignProgressModel,...campaignMilestoneUi,
     ...boardDisplay,
-    pipDecorationArt,gardenGoals,goalNextStep,nextGardenGoal,previewGardenPreset,gardenPresetPreview,pipTendingArt,previewGardenTheme,gardenThemePreview,reachedPipUnlock,pipUnlockCard,...journeyModel,...journeyUI,
+    gardenTendingArt,pipDecorationArt,gardenGoals,goalNextStep,nextGardenGoal,previewGardenPreset,gardenPresetPreview,pipTendingArt,previewGardenTheme,gardenThemePreview,reachedPipUnlock,pipUnlockCard,...journeyModel,...journeyUI,
     createJourneyGardenArt:()=>({setActive(){},dispose(){}}),
     bindPracticeBoard,
     cloneSnapshot,prepareShuffle,
@@ -425,7 +427,8 @@ describe('핍 꽃 돌보기의 실제 화면 수명',()=>{
   it('정원 동작에는 핍 화면의 받침꽃을 덧붙이지 않고 재렌더/교체는 이전 반응을 되살리지 않습니다',()=>{
     const h=mainHarness();h.run("save.pip={growth:60,affection:40,owned:[],equipped:'none'};switchView('village')");h.element('#garden-tend').onclick();expect(h.element('#village-view').innerHTML).not.toContain('pip-tending-scene');
     // 이 VM의 표시 시각만 고정합니다. CPU/렌더가100ms 이내라는 가정을 두지 않습니다.
-    h.run("switchView('journal');const fixedTendNow=Date.now();Date.now=()=>fixedTendNow;careReactionStarted=fixedTendNow-900;renderViews()");expect(h.element('#journal-view').innerHTML).toContain('--tend-elapsed:900ms');
+    // 정원과 핍 탭의 행동은 별개입니다. 정원 이탈 후 핍 탭에서 새 무료 행동을 시작합니다.
+    h.run("switchView('journal')");h.element('#pip-tend').onclick();h.run("const fixedTendNow=Date.now();Date.now=()=>fixedTendNow;careReactionStarted=fixedTendNow-900;renderViews()");expect(h.element('#journal-view').innerHTML).toContain('--tend-elapsed:900ms');
     h.element('#pip-feed').onclick();expect(h.element('#journal-view').innerHTML).not.toContain('pip-tending-scene');expect(h.run('pipReaction')).toBe('feed');
   });
 });
@@ -3205,5 +3208,31 @@ describe('풍경 완주와 결과 입력 소유권',()=>{
   });
   it('이전 결과의시험선택콜백은새회차에서옛결과로돌아오는선택창을열지않습니다',()=>{
     const h=mainHarness(false,false,true);h.run('startLevel(20,true);finish(true)');const picker=h.element('#result-test').onclick;h.element('#result-next').onclick();h.run('replaceBoard()');picker();expect(h.element('#test-level-dialog').open).toBe(false);expect(h.run('currentLevel')).toBe(21);
+  });
+});
+
+
+describe('선택한 정원 꽃밭에 무료 물주기',()=>{
+  const initial=(language='ko',garden=5,growth=100)=>({version:1,language,highestLevel:6,completed:[1,2,3,4,5],stars:10,coins:200,garden,music:true,sfx:true,tutorialSeen:true,pip:{growth,affection:100,owned:['ribbon'],equipped:'ribbon'},gardenDesign:{schema:1,flowers:['meadow','daisy','violet','meadow','daisy'],owned:[],placed:[]}});
+  it.each(['ko','en'] as const)('%s: 선택5칸의 위치·이름을 실제 돌보기에 연결하고 종료/반복에도 쓰기나 성장 보상이 없습니다',language=>{
+    const h=mainHarness(false,false,false,false,initial(language));h.run("switchView('village')");const disk=h.disk(),writes=h.writes(),before=h.run('JSON.stringify(save)');
+    for(let plot=0;plot<5;plot++){
+      h.element('#garden-plot-'+plot).onclick();h.element('#garden-tend').onclick();
+      expect(h.run('gardenTendingPlot')).toBe(plot);const html=h.element('#village-view').innerHTML;
+      expect(html).toContain(`data-tending-plot="${plot}"`);expect(html).toContain('id="village-pip-tend-stage"');expect(html).not.toContain('pip-tending-scene');
+      expect(html).toContain(t(language,'gardenTendMoment').replace('{number}',String(plot+1)).replace('{flower}',h.run(`flowerName(save.gardenDesign.flowers[${plot}])`)));
+      h.flushCareReaction();expect(h.run('gardenTendingPlot')).toBeUndefined();expect(h.element('#village-view').innerHTML).not.toContain('village-pip-tend-stage');
+    }
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('JSON.stringify(save)')).toBe(before);
+  });
+  it('빈칸·잠긴 성장·숨김·모달·성장 중에는 꽃밭 물주기를 시작하지 않습니다',()=>{
+    for(const [garden,growth,guard] of [[0,100,''],[5,20,''],[5,100,'document.hidden=true'],[5,100,'nativeActive=false'],[5,100,"document.querySelector('#tutorial-dialog').open=true"],[5,100,'growing=true']] as const){
+      const h=mainHarness(false,false,false,false,initial('ko',garden,growth));h.run("switchView('village')");if(guard)h.run(guard);h.element('#garden-tend').onclick();expect(h.run('gardenTendingPlot')).toBeUndefined();
+    }
+  });
+  it('다른 칸/구역/페이지·모달로 이동하면 이전 물주기는 남지 않습니다',()=>{
+    for(const change of ["document.querySelector('#garden-plot-3').onclick()","document.querySelector('#garden-area-pond').onclick()","switchView('journal')","document.querySelector('#garden-look-open').onclick()"]){
+      const h=mainHarness(false,false,false,false,initial());h.run("switchView('village')");h.element('#garden-tend').onclick();const disk=h.disk();h.run(change);expect(h.run('gardenTendingPlot')).toBeUndefined();h.flushCareReaction();expect(h.disk()).toEqual(disk);
+    }
   });
 });

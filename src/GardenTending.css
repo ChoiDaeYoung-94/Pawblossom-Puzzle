@@ -1,0 +1,11 @@
+.garden-tending-visitor{z-index:1!important;width:21.6667%!important;height:37.1429%!important;max-width:none!important;max-height:none!important}
+.garden-tending-visitor .pip-tending-stage{inset:0;left:0;top:0;width:100%;height:100%;transform:none}
+.garden-tending-visitor[data-tend-art-ready="true"]>.care-pip-visual{opacity:0}
+.garden-tending-visitor[data-tend-art-ready="true"] .pip-accessory{display:none}
+.garden-tending-art{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.garden-tending-drop{opacity:0;animation:garden-tending-water .9s ease-in both;animation-delay:calc(var(--garden-drop-delay) - var(--garden-tend-elapsed,0ms));animation-play-state:paused}
+.garden-tending-bloom,.garden-tending-spark{transform-origin:0 0;animation:garden-tending-flower 1.8s ease-in-out both;animation-delay:calc(0ms - var(--garden-tend-elapsed,0ms));animation-play-state:paused}
+[data-moment-active="true"] .garden-tending-drop,[data-moment-active="true"] .garden-tending-bloom,[data-moment-active="true"] .garden-tending-spark{animation-play-state:running}
+@keyframes garden-tending-water{0%{opacity:0;transform:translate(0,0)}15%{opacity:1}80%{opacity:1;transform:translate(17px,12px)}100%{opacity:0;transform:translate(21px,15px)}}
+@keyframes garden-tending-flower{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.09)}}
+@media(prefers-reduced-motion:reduce){.garden-tending-drop{display:none;animation:none!important}.garden-tending-bloom,.garden-tending-spark{animation:none!important;transform:none!important;opacity:1}}
