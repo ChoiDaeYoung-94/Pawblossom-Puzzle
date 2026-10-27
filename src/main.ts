@@ -16,6 +16,8 @@ import './CampaignAlbum.css';
 import './PuzzlePresentation.css';
 import './PipIdle.css';
 import './PipTending.css';
+import './PipUnlock.css';
+import {reachedPipUnlock,pipUnlockCard,type PipUnlockLevel} from './PipUnlock';
 import {pipTendingArt} from './PipTending';
 import {createPipTendingPose} from './PipTendingPose';
 import './SpecialTileArt.css';
@@ -99,6 +101,7 @@ let journeyArt:ReturnType<typeof createJourneyGardenArt>|undefined,journeyArtHos
 let journeyPreviewArt:ReturnType<typeof createJourneyGardenArt>|undefined;
 let careDemo:{normalSave:SaveData;returnRoute:'village'|'journal';chapter:number;plot:number;area:GardenArea;project:JourneyProject;preset:100|500}|undefined;
 let pipReaction:'feed'|'play'|'greet'|'tend'|undefined;
+let pipUnlock:PipUnlockLevel|undefined;
 let careReactionStarted=0;
 let gardenActivity:{kind:'flower'|'lily'|'ripples'|'rest'|'arch';plot:number}|undefined;
 let careReactionTimer:ReturnType<typeof setTimeout>|undefined;
@@ -417,6 +420,7 @@ function syncMusicTheme(){
 
 // 문서와 Android 상태 중 하나라도 비활성이면 오디오와 진행을 멈춥니다.
 function syncActivity(){
+  if(!nativeActive||document.hidden)clearPipUnlock();
   syncMusicTheme();
   if(lookPreview&&!validLookPreview(lookPreview))closeLookPreview(false);
   if(spacePreview&&!validSpacePreview(spacePreview))closeSpacePreview(false);
@@ -1013,7 +1017,8 @@ function commitCare(button:HTMLButtonElement,expectedSave:SaveData,generation:nu
     save=next;updateWallet();updateSaveStatus();return true;
   }finally{careProcessing=false;}
 }
-function clearCareReaction(){clearTimeout(careReactionTimer);careReactionTimer=undefined;pipReaction=undefined;careReactionStarted=0;gardenActivity=undefined;journeyMoment=false;}
+function clearPipUnlock(){pipUnlock=undefined;const card=document.querySelector<HTMLElement>('#pip-unlock-card');if(card)card.hidden=true;}
+function clearCareReaction(){clearPipUnlock();clearTimeout(careReactionTimer);careReactionTimer=undefined;pipReaction=undefined;careReactionStarted=0;gardenActivity=undefined;journeyMoment=false;}
 function reactPip(kind:NonNullable<typeof pipReaction>){
   clearCareReaction();pipReaction=kind;careReactionStarted=Date.now();
   const generation=careGeneration;
@@ -1175,7 +1180,7 @@ function pipCareCard(){
     const action=equipped?text('pipEquipped'):owned?text('pipEquipFree'):text('gardenBuy').replace('{cost}',String(price));
     return `<div class="pip-shop-item"><div><strong>${name}</strong><small>${owned?text('pipOwned'):text('pipUnlockAt').replace('{level}',String(required))}</small></div><button id="pip-${owned?'equip':'buy'}-${item}" class="text-button" aria-label="${name} · ${action}" ${blocked||equipped||(!owned&&(level<required||save.coins<price))?'disabled':''}>${equipped?text('pipEquipped'):owned?text('pipEquipFree'):`${icon('coin',15)} ${price}`}</button></div>`;
   };
-  return `<section class="journal-card pip-care-card" aria-labelledby="pip-care-title"><div class="pip-care-hero"><div id="journal-pip-portrait" class="pip-portrait ${pipReaction?'pip-reaction-'+pipReaction:''}"><span id="journal-pip-actor" class="care-pip-visual"><span class="pip-face"><img id="journal-pip-image" src="${image}" alt="${text(pipReaction==='feed'?'pipFeedAlt':pipReaction==='play'?'pipPlayAlt':'pip')}"/></span></span>${journalPipDecoration()}</div><div class="pip-summary"><h3 id="pip-care-title" tabindex="-1"><span class="pip-name">${text('pip')}</span><span class="pip-level">Lv. ${level}</span></h3><p class="pip-reaction-line" role="status" aria-live="polite">${text(reactionKey)}</p><div class="pip-stats"><label>${text('pipGrowth')} <strong>${pip.growth} / 100</strong><progress max="100" value="${pip.growth}"></progress></label><label>${text('pipAffection')} <strong>${pip.affection} / 100</strong><progress max="100" value="${pip.affection}"></progress></label></div></div></div><p class="pip-next">${text(level<3?'pipNextUnlock':'pipAllUnlocked').replace('{count}',String(Math.max(0,next-pip.growth))).replace('{reward}',text(level===1?'pipLevel2Unlock':'pipLevel3Unlock'))}</p>${nextGardenProject()}<div class="pip-care-actions"><button id="pip-feed" class="primary" ${blocked||save.coins<cost?'disabled':''}><span>${text('pipFeed')} · ${price}</span><small>${effect('feed')}</small></button><button id="pip-play" class="primary" ${blocked||save.coins<cost?'disabled':''}><span>${text('pipPlay')} · ${price}</span><small>${effect('play')}</small></button></div><p class="pip-purpose">${text('pipPurpose')}</p><p class="pip-care-note">${text('pipNoDecay')}</p><div class="pip-reactions"><button id="pip-greet" class="text-button" ${level<2?'disabled':''}>${text('pipGreet')}</button><button id="pip-tend" class="text-button" ${level<3?'disabled':''}>${text('pipTend')}</button></div><h4>${text('pipDecorate')}</h4><p class="pip-shop-note">${text('pipShopHint')}</p>${decoration('ribbon',2,40)}${decoration('wateringCan',3,80)}<button id="pip-equip-none" class="text-button" ${blocked||pip.equipped==='none'?'disabled':''}>${text('pipUnequip')}</button>${blocked?`<p class="pip-save-note" role="status">${text('careSaveBlocked')}</p>`:''}</section>`;
+  return `<section class="journal-card pip-care-card" aria-labelledby="pip-care-title"><div class="pip-care-hero"><div id="journal-pip-portrait" class="pip-portrait ${pipReaction?'pip-reaction-'+pipReaction:''}"><span id="journal-pip-actor" class="care-pip-visual"><span class="pip-face"><img id="journal-pip-image" src="${image}" alt="${text(pipReaction==='feed'?'pipFeedAlt':pipReaction==='play'?'pipPlayAlt':'pip')}"/></span></span>${journalPipDecoration()}</div><div class="pip-summary"><h3 id="pip-care-title" tabindex="-1"><span class="pip-name">${text('pip')}</span><span class="pip-level">Lv. ${level}</span></h3><p class="pip-reaction-line" role="status" aria-live="polite">${text(reactionKey)}</p><div class="pip-stats"><label>${text('pipGrowth')} <strong>${pip.growth} / 100</strong><progress max="100" value="${pip.growth}"></progress></label><label>${text('pipAffection')} <strong>${pip.affection} / 100</strong><progress max="100" value="${pip.affection}"></progress></label></div></div></div>${pipUnlockCard(save.language,pipUnlock)}<p class="pip-next">${text(level<3?'pipNextUnlock':'pipAllUnlocked').replace('{count}',String(Math.max(0,next-pip.growth))).replace('{reward}',text(level===1?'pipLevel2Unlock':'pipLevel3Unlock'))}</p>${nextGardenProject()}<div class="pip-care-actions"><button id="pip-feed" class="primary" ${blocked||save.coins<cost?'disabled':''}><span>${text('pipFeed')} · ${price}</span><small>${effect('feed')}</small></button><button id="pip-play" class="primary" ${blocked||save.coins<cost?'disabled':''}><span>${text('pipPlay')} · ${price}</span><small>${effect('play')}</small></button></div><p class="pip-purpose">${text('pipPurpose')}</p><p class="pip-care-note">${text('pipNoDecay')}</p><div class="pip-reactions"><button id="pip-greet" class="text-button" ${level<2?'disabled':''}>${text('pipGreet')}</button><button id="pip-tend" class="text-button" ${level<3?'disabled':''}>${text('pipTend')}</button></div><h4>${text('pipDecorate')}</h4><p class="pip-shop-note">${text('pipShopHint')}</p>${decoration('ribbon',2,40)}${decoration('wateringCan',3,80)}<button id="pip-equip-none" class="text-button" ${blocked||pip.equipped==='none'?'disabled':''}>${text('pipUnequip')}</button>${blocked?`<p class="pip-save-note" role="status">${text('careSaveBlocked')}</p>`:''}</section>`;
 }
 // 상점까지 내리거나 화면을 회전한 뒤에도 반응 그림과 돌보기 버튼을 함께 보여 줍니다.
 function revealPipCare(){
@@ -1250,11 +1255,14 @@ function bindCareControls(){
   for(const view of ['village','journal'] as const){
     if(TEST_TOOLS_ENABLED){for(const preset of [100,500] as const)bind('care-demo-preset-'+preset+'-'+view,()=>{if(route===view)setCareDemoPreset(preset);});bind('care-demo-enter-'+view,()=>{if(route===view)enterCareDemo();});bind('care-demo-exit-'+view,()=>{if(route===view)exitCareDemo();});}
   }
+  bind('pip-unlock-dismiss',()=>{if(route!=='journal'||!careEnvironment()||pipUnlock===undefined)return;clearPipUnlock();renderViews();$('#pip-care-title').focus({preventScroll:true});});
+  bind('pip-unlock-try',()=>{if(route!=='journal'||!careEnvironment()||pipUnlock===undefined)return;const kind=pipUnlock===2?'greet':'tend';reactPip(kind);renderViews();revealPipCare();$('#pip-'+kind).focus({preventScroll:true});});
   const actions:[string,PipAction][]=[['feed','feed'],['play','play'],['buy-ribbon','buyRibbon'],['buy-wateringCan','buyWateringCan'],['equip-ribbon','equipRibbon'],['equip-wateringCan','equipWateringCan'],['equip-none','equipNone']];
   for(const [id,action] of actions)bind('pip-'+id,button=>{
     if(route!=='journal')return;
+    const beforePip=save.pip??freshPip();
     if(commitCare(button,expectedSave,generation,next=>{const result=preparePipAction(next.coins,next.pip??freshPip(),action);if(!result)return false;next.coins=result.coins;next.pip=result.pip;return true;})){
-      if(action==='feed'||action==='play')reactPip(action);else clearCareReaction();
+      if(action==='feed'||action==='play'){reactPip(action);pipUnlock=reachedPipUnlock(beforePip,save.pip??freshPip());}else clearCareReaction();
       audio.play('reward');renderViews();revealPipCare();
     }
   });
@@ -1470,6 +1478,7 @@ function switchView(name:string){
   if(!scene.canLeave())return;
   if(route==='map')mapScrollOffset=$('#campaign-scroll').scrollTop;
   if(name!=='puzzle'){clearResumeNotice();clearBoardNotice();}
+  if(route==='journal'&&name!=='journal')clearPipUnlock();
   if(name!=='village'&&(gardenActivity||journeyMoment))clearCareReaction();
   route=name;$('#app').dataset.route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
   if(name==='village'||name==='map')renderViews();
