@@ -1,4 +1,5 @@
 import {previewGardenTheme,gardenThemePreview} from '../src/GardenThemePreview';
+import {reachedPipUnlock,pipUnlockCard} from '../src/PipUnlock';
 import * as campaignProgressModel from '../src/CampaignProgress';
 import * as albumModel from '../src/CampaignAlbum';
 import * as campaignMilestoneUi from '../src/CampaignMilestone';
@@ -230,7 +231,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     specialTileArt,
     ...campaignProgressModel,...campaignMilestoneUi,
     ...boardDisplay,
-    gardenGoals,goalNextStep,nextGardenGoal,previewGardenPreset,gardenPresetPreview,pipTendingArt,previewGardenTheme,gardenThemePreview,...journeyModel,...journeyUI,
+    gardenGoals,goalNextStep,nextGardenGoal,previewGardenPreset,gardenPresetPreview,pipTendingArt,previewGardenTheme,gardenThemePreview,reachedPipUnlock,pipUnlockCard,...journeyModel,...journeyUI,
     createJourneyGardenArt:()=>({setActive(){},dispose(){}}),
     bindPracticeBoard,
     cloneSnapshot,prepareShuffle,
@@ -2381,6 +2382,37 @@ describe('나무상자 챕터와 별도 목표·저장 연결',()=>{
   });
 });
 
+
+describe('확정된 핍 성장의 해금 안내',()=>{
+  const initial=(language:'ko'|'en'='ko',growth=10,coins=40)=>({version:1,language,highestLevel:2,completed:[1],stars:1,coins,garden:0,music:true,sfx:true,tutorialSeen:true,pip:{growth,affection:20,owned:[],equipped:'none'}});
+  it.each(['ko','en'] as const)('%s 성장20·60에서 실제 무료행동과 선택 구매를 알리고 자동 지급하지 않습니다',language=>{
+    for(const [growth,action,level] of [[10,'feed',2],[56,'play',3]] as const){
+      const h=mainHarness(false,false,false,false,initial(language,growth));h.run("switchView('journal')");
+      expect(h.run('pipUnlock')).toBeUndefined();h.element('#pip-'+action).onclick();
+      expect(h.run('pipUnlock')).toBe(level);expect(h.stored().pip.owned).toEqual([]);expect(h.stored().coins).toBe(30);
+      expect(h.element('#journal-view').innerHTML).toContain(t(language,'pipUnlockTitle'));
+      expect(h.element('#journal-view').innerHTML).toContain(t(language,level===2?'pipUnlockGreeting':'pipUnlockTending'));
+      expect(h.element('#journal-view').innerHTML).toContain(t(language,'pipUnlockShop').replace('{item}',t(language,level===2?'pipRibbon':'pipWateringCan')));
+      const disk=h.disk(),writes=h.writes();h.flushCareReaction();expect(h.run('pipUnlock')).toBe(level);
+      h.element('#pip-unlock-try').onclick();expect(h.run('pipReaction')).toBe(level===2?'greet':'tend');expect(h.run('pipUnlock')).toBeUndefined();expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    }
+  });
+  it('닫기·이탈·숨김은 안내만 지우고 이전 버튼으로 새 행동을 되살리지 않습니다',()=>{
+    for(const kind of ['dismiss','route','hidden'] as const){
+      const h=mainHarness(false,false,false,false,initial());h.run("switchView('journal')");h.element('#pip-feed').onclick();const stale=h.element('#pip-unlock-try').onclick,disk=h.disk(),writes=h.writes();
+      if(kind==='dismiss')h.element('#pip-unlock-dismiss').onclick();else if(kind==='route')h.run("switchView('map')");else h.run('document.hidden=true;syncActivity()');
+      expect(h.run('pipUnlock')).toBeUndefined();const reaction=h.run('pipReaction');stale();expect(h.run('pipReaction')).toBe(reaction);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    }
+  });
+  it.each(['storage','coins','existing','same-level'] as const)('%s 경계에서는 새로운 해금 안내가 생기지 않습니다',kind=>{
+    const h=mainHarness(kind==='storage',false,false,false,initial('ko',kind==='existing'?60:kind==='same-level'?0:10,kind==='coins'?9:40));h.run("switchView('journal')");h.element('#pip-feed').onclick();expect(h.run('pipUnlock')).toBeUndefined();
+    expect(h.element('#journal-view').innerHTML).not.toContain('id="pip-unlock-card"');
+  });
+  it('체험에서 열린 행동 안내와 예전 버튼을 정상 저장에 가져오지 않습니다',()=>{
+    const h=mainHarness(false,false,true,false,initial());h.run("switchView('journal')");const disk=h.disk();h.run('enterCareDemo()');h.element('#pip-feed').onclick();h.element('#pip-feed').onclick();expect(h.run('pipUnlock')).toBe(2);const stale=h.element('#pip-unlock-try').onclick;
+    h.run('exitCareDemo()');stale();expect(h.run('pipUnlock')).toBeUndefined();expect(h.run('save.pip.growth')).toBe(10);expect(h.disk()).toEqual(disk);
+  });
+});
 
 describe('별·코인 사용처의 읽기 전용 안내',()=>{
   const state=(h:ReturnType<typeof mainHarness>)=>h.run('JSON.stringify({round,currentLevel,testingLevel,moves,score,collected,clearedLeaves,clearedCrates,shuffles,paidShuffleUsed,continueUsed,save,careDemo,board:scene.engine.board,leaves:scene.engine.leaves,crates:scene.engine.crates})');
