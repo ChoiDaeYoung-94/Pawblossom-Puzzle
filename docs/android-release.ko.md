@@ -1,4 +1,14 @@
-## 최신 로컬 통합 APK · 2026-10-27 · #390
+## 최신 로컬 통합 APK · 2026-10-27 · #403
+
+게임 소스 `258332f2b53763f9323d6b0b81c8f443b7d3cda5`의 정원·핍 개선을 통합했습니다. 새 꽃밭 자동 선택(PR393), 성장 해금 안내(PR397), 테마 구매 전 비교(PR399), 여행 정원 장착 소품(PR402), 선택 꽃밭 무료 돌보기(PR404), 가로 여행 작품/조작 배치(PR406), 꽃밭·구역 작업대(PR408), 핍 반응/반복 행동 배치(PR410)를 포함합니다. PR398은 서버 테스트 경계 관측만 추가한 것으로 잠금 원인 해결이나 앱 실서비스 완료가 아닙니다. 정확한 최초 [main CI40466344566](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40466344566)는 Node22/24 각각76파일4,049개·스토어12개·타입3종·production/testing 빌드와 분리 검사를 통과했습니다.
+
+로컬 파일은 `Pawblossom-builds/2026-10-27-258332f-evening/Pawblossom-Puzzle-v0.1.7-2026-10-27-258332f-debug.apk`입니다. **0.1.7/code8 · 53,023,488바이트 · SHA256 `213ad73ee4282b6815319afa9ae277cf857ecb56dee5daaafbe269b5f7d3310e`**입니다. 공식 패키지/min24/target36·기존 단일 동일 v2·ZIP 중복0/CRC·testing웹101/APK public103(빈cordova2 포함)/원본 public78 전수 SHA·a4 대비 비웹536개 동일을 확인했습니다. production웹93/Android public95 전수 SHA·false플래그·Git clean을 복원했고 독립 읽기 검수에서도 새 P1/P2가 없었습니다. `:app:clean assembleDebug`의125태스크 중60실행/65재사용이며 새 JUnit/lint 실행은 아닙니다. 같은 전달 폴더의 `artifact-verification.json`, `exact-main-ci.json`, 공식 도구 출력과 단계 로그가 근거입니다. 이전 def3443 및6b50 전달/검수 파일은 별도 보존합니다.
+
+사용자가 직접 업로드하므로 **Drive 업로드는 하지 않았습니다**. 최종 시험 안내는 대화에 직접 제공하며 별도 안내 파일을 만들지 않습니다. APK 버전/서명·상품/실키env·AAB/공개배포·최종믹스는 바꾸지 않았습니다.
+
+새258 APK의 실제 설치·배치/핵심 행동 검수는 현재 별도 진행 예정입니다. 이전 def APK에서 확인한 레벨2/3 해금·무료 행동, 새 꽃밭 선택/미충족 테마 미리보기 취소·500번 시험3교환/오른쪽 끝 열 교환·일반3회차22이동/2별80코인 복원·HOME→최근 카드 복귀1회는 이전 소스의 관측입니다. 이를 새 배치·Samsung #375 원인 해결·500판 사람 난이도·실광고/구매/스토어 완료로 합산하지 않습니다.
+
+## 이전 로컬 통합 APK · 2026-10-27 · #390
 
 [PR387](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/387)의 작은 원형 레벨·점선·상단 여백·지역 자연 소품·핍 보행과 [PR389](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/389)의 미사용8PNG 배포 제외를 통합했습니다. 게임 소스는 `6b50d9b07d6ba891911be5138599927a76885bb0`, 정확 main 최초 [CI40448796321](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40448796321)의 양Node 검사 성공을 확인했습니다. 이후 전달 기록만 변경한 커밋은 별도입니다.
 
