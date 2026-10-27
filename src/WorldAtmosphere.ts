@@ -1,3 +1,8 @@
+/** 폭포에는 지면을 가정한 돌 대신 공중에 있어도 자연스러운 물안개를 둡니다. */
+export function waterfallMist(placement:string){
+  return `<svg class="map-world-falls-mist map-world-motif"${placement} viewBox="0 0 120 110" aria-hidden="true"><g class="motif-rings" fill="none" stroke="#e7ffff" stroke-width="1.5" opacity=".65"><ellipse cx="60" cy="84" rx="39" ry="9"/><ellipse cx="60" cy="84" rx="27" ry="5"/></g><g class="motif-rise" fill="#f2ffff"><path d="M38 31Q28 49 38 51Q48 49 38 31M75 17Q64 38 75 40Q86 38 75 17M93 53Q86 66 93 67Q100 66 93 53"/><circle cx="53" cy="62" r="2.4"/><circle cx="21" cy="64" r="1.8"/><circle cx="85" cy="80" r="2"/></g><g class="motif-rise" style="--motif-delay:-2.4s" fill="#e7f9ff" opacity=".7"><circle cx="57" cy="35" r="2"/><circle cx="99" cy="36" r="1.5"/><circle cx="31" cy="77" r="2.2"/><circle cx="68" cy="76" r="1.7"/></g></svg>`;
+}
+
 /** 신규 풍경의 작은 부분 연출입니다. 번호·입력·난수·게임 판정에는 관여하지 않습니다. */
 const WEATHER=['petal','bee','ripple','bird','leaf','snow','aurora','bamboo','steam','spore','bubble','heat','spark','cloud','firefly','petal','gear','spray','star','confetti'] as const;
 export function worldAtmosphere(index:number,placement?:(part:number,delay:number)=>string){
