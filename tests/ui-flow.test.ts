@@ -122,7 +122,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
       elements.get(selector)!.getBoundingClientRect=()=>rectangles.get(selector)??{left:0,top:0,right:180,bottom:180};
       if(selector==='#stars-help'||selector==='#coins-help')elements.get(selector)!.hidden=false;
       if(['#map-view','#village-view','#journal-view'].includes(selector)){
-        const view=selector.slice(1,-5),owned=view==='map'?['map-current-pip']:[`${view}-pip-actor`,`${view}-pip-image`,`${view}-pip-accessory`,...(view==='village'?['garden-nature']:[])];
+        const view=selector.slice(1,-5),owned=view==='map'?['map-current-pip']:[`${view}-pip-actor`,`${view}-pip-image`,`${view}-pip-accessory`,...(view==='village'?['garden-nature','garden-tend']:[])];
         let markup='';
         Object.defineProperty(elements.get(selector)!,'innerHTML',{get:()=>markup,set:(value:string)=>{
           pipLifecycle.push(`${view}-replace`);
@@ -141,6 +141,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
         }
       }
       if(selector==='#result-dialog')elements.get(selector)!.querySelector=child=>elements.get(selector)!.innerHTML.includes(`id="${child.slice(1)}"`)?element(child):null;
+      if(selector==='#garden-tend')elements.get(selector)!.disabled=Boolean(elements.get('#village-view')?.innerHTML.match(/<button id="garden-tend"[^>]*\bdisabled/));
       // 동적으로 만든 설정 도움말도 실제 onclick과 opener 참조로 검사합니다.
       if(selector==='#settings-view')elements.get(selector)!.append=child=>{elements.set('#'+child.id,child);};
       if(selector==='#pip-tutorial-help')elements.get(selector)!.hidden=false;
@@ -1493,6 +1494,28 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
       expect(h.stored().stars).toBe(10-2*(index+1));
     }
     const before=h.disk();h.element('#grow').onclick();expect(h.run('selectedGardenPlot')).toBe(4);expect(h.disk()).toEqual(before);
+  });
+  it('심기 종료 뒤 현재 돌보기 버튼을 풀고 그림·초점·스크롤·저장을 다시 만들지 않습니다',()=>{
+    const h=mainHarness();h.run("save.stars=4;save.pip={growth:60,affection:40,owned:[],equipped:'none'};switchView('village')");
+    expect(h.element('#garden-tend').disabled).toBe(true);h.element('#grow').onclick();
+    const button=h.element('#garden-tend'),html=h.element('#village-view').innerHTML,writes=h.writes(),disk=h.disk();
+    h.element('#village-view').scrollTop=83;h.run("document.activeElement=document.querySelector('#grow')");
+    expect(button.disabled).toBe(true);h.flushGrowth();
+    expect(h.element('#garden-tend')).toBe(button);expect(button.disabled).toBe(false);expect(h.element('#village-view').innerHTML).toBe(html);
+    expect(h.element('#village-view').scrollTop).toBe(83);expect(h.run('document.activeElement.id')).toBe('grow');expect(h.writes()).toBe(writes);expect(h.disk()).toEqual(disk);
+    if(!button.disabled)button.onclick();expect(h.run('gardenTendingPlot')).toBe(0);expect(h.run('pipReaction')).toBe('tend');expect(h.disk()).toEqual(disk);
+  });
+  it.each(['young','hidden','new-dom'] as const)('심기 종료는 %s의 현재 조건과 현재 버튼만 반영합니다',state=>{
+    const h=mainHarness();h.run("save.stars=4;save.pip={growth:60,affection:40,owned:[],equipped:'none'};switchView('village')");h.element('#grow').onclick();
+    const old=h.element('#garden-tend');
+    if(state==='young')h.run('save.pip.growth=20');
+    if(state==='hidden')h.run('document.hidden=true;syncActivity()');
+    if(state==='new-dom')h.run("switchView('journal');document.querySelector('#pip-open-space').onclick()");
+    const current=h.element('#garden-tend'),disk=h.disk(),writes=h.writes();h.flushGrowth();
+    expect(current.disabled).toBe(state==='young');expect(h.run('growing')).toBe(false);expect(h.run('growthTimer')).toBeUndefined();
+    if(state==='new-dom'){expect(current).not.toBe(old);expect(old.isConnected).toBe(false);expect(old.disabled).toBe(true);}
+    if(state==='hidden'){current.onclick();expect(h.run('pipReaction')).toBeUndefined();h.run('document.hidden=false;syncActivity()');expect(current.disabled).toBe(false);}
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
   });
   it.each(['stars','storage'] as const)('%s 때문에 심지 못하면 기존 선택을 바꾸지 않습니다',reason=>{
     const h=mainHarness(reason==='storage');h.run("save.garden=2;selectedGardenPlot=0;save.stars="+(reason==='stars'?1:2)+";switchView('village')");
@@ -3239,7 +3262,7 @@ describe('선택한 정원 꽃밭에 무료 물주기',()=>{
   it('그림 밖에서 무료 돌보기를 누르면 정원 스크롤만 옮기고 실행 초점과 저장은 보존합니다',()=>{
     const h=mainHarness(false,false,false,false,initial());h.run("switchView('village');selectedGardenPlot=1;renderViews()");
     h.setBounds('#village-view',{left:0,right:480,top:100,bottom:500});h.setBounds('#garden-nature',{left:0,right:480,top:-160,bottom:60});
-    h.run("document.querySelector('#village-view').scrollTop=480;globalThis.tendFocus=[];document.activeElement={id:'garden-tend',isConnected:false};document.querySelector('#garden-tend').focus=options=>{tendFocus.push(options.preventScroll);document.activeElement=document.querySelector('#garden-tend')};document.querySelector('#journal-view').scrollTop=77");
+    h.run("document.querySelector('#village-view').scrollTop=480;globalThis.tendFocus=[];document.activeElement={id:'garden-tend',isConnected:false};const currentQuery=document.querySelector;document.querySelector=selector=>{const target=currentQuery(selector);if(selector==='#garden-tend')target.focus=options=>{tendFocus.push(options.preventScroll);document.activeElement=target};return target};document.querySelector('#journal-view').scrollTop=77");
     const disk=h.disk(),writes=h.writes(),before=h.run('JSON.stringify(save)');h.element('#garden-tend').onclick();
     expect(h.run('gardenTendingPlot')).toBe(1);expect(h.element('#village-view').scrollTop).toBe(220);expect(h.element('#journal-view').scrollTop).toBe(77);expect(h.run('tendFocus')).toEqual([true]);expect(h.run("document.activeElement===document.querySelector('#garden-tend')")).toBe(true);
     expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('JSON.stringify(save)')).toBe(before);

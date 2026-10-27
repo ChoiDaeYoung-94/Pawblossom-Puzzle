@@ -1162,13 +1162,14 @@ function sharedGardenPlan(view:'village'|'journal'){
   };
   return `<section class="garden-plan" aria-labelledby="${view}-plan-title"><div class="garden-plan-heading"><h3 id="${view}-plan-title">${text('goalPlan')}</h3><span>${done} / ${goals.length}</span></div>${achievements.map(message=>`<p class="garden-plan-achievement">${message}</p>`).join('')}<progress aria-label="${text('goalPlan')}" value="${done}" max="${goals.length}"></progress>${next?`<div class="garden-plan-next"><small>${text('gardenNext')}</small><strong>${name(next)}</strong><p>${detail(next)}</p>${button(next)}</div>`:`<p>${text('goalAllDone')}</p>`}<details><summary>${text('goalAllPlans')}</summary><ol>${goals.map(goal=>`<li class="${goal.done?'done':''}"><span aria-hidden="true">${goal.done?'✓':'○'}</span><div><strong>${name(goal)}</strong>${goal.done?`<small>${text('goalDone')}</small>`:`<p>${detail(goal)}</p>${goal.id===next?.id?'':button(goal)}`}</div></li>`).join('')}</ol></details><p class="garden-plan-note">${text('goalNoAutoSpend')}</p></section>`;
 }
+function gardenTendDisabled(){return pipLevel(save.pip??freshPip())<3||growing||selectedGardenArea==='flowers'&&save.garden===0;}
 function gardenVisitControls(){
   if(selectedGardenArea==='journey')return '';
-  const design=gardenDesignFor(save.gardenDesign),pip=save.pip??freshPip();
+  const design=gardenDesignFor(save.gardenDesign);
   const phase=selectedGardenArea==='flowers'?undefined:gardenSpacesFor(design.spaces)[selectedGardenArea].phase;
   const reaction:TextKey=pipReaction==='tend'?'pipTendReaction':selectedGardenArea!=='flowers'?(phase===0?'spaceVisitEmpty':phase===1?'spaceVisitBuilding':({pond:'spaceVisitPond',shelter:'spaceVisitShelter',arch:'spaceVisitArch'} as const)[selectedGardenArea]):pipReaction==='greet'?design.placed.includes('lantern')?'gardenVisitLantern':design.placed.includes('butterflies')?'gardenVisitButterflies':design.placed.includes('bench')?'gardenVisitBench':'pipGreetReaction':'gardenVisitInvite';
   const activityLine=gardenTendingPlot!==undefined?text('gardenTendMoment').replace('{number}',String(gardenTendingPlot+1)).replace('{flower}',flowerName(design.flowers[gardenTendingPlot])):gardenActivity?text(gardenActivity.kind==='flower'?'gardenFlowerMoment':gardenActivity.kind==='lily'?'gardenLilyMoment':gardenActivity.kind==='rest'?'gardenRestMoment':gardenActivity.kind==='arch'?'gardenArchMoment':'gardenRippleMoment').replace('{flower}',flowerName(design.flowers[gardenActivity.plot])).replace('{number}',String(gardenActivity.plot+1)):text(reaction);
-  return `<div class="garden-companion"><div><p class="garden-visit-line" role="status">${activityLine}</p><div class="garden-visit-actions"><button id="garden-visit" class="text-button">${text('gardenVisit')}</button><button id="garden-tend" class="text-button" ${pipLevel(pip)<3||growing||selectedGardenArea==='flowers'&&save.garden===0?'disabled':''}>${selectedGardenArea==='flowers'&&save.garden>0?text('gardenTendTarget').replace('{number}',String(selectedGardenPlot+1)):text('pipTend')}</button></div></div></div>`;
+  return `<div class="garden-companion"><div><p class="garden-visit-line" role="status">${activityLine}</p><div class="garden-visit-actions"><button id="garden-visit" class="text-button">${text('gardenVisit')}</button><button id="garden-tend" class="text-button" ${gardenTendDisabled()?'disabled':''}>${selectedGardenArea==='flowers'&&save.garden>0?text('gardenTendTarget').replace('{number}',String(selectedGardenPlot+1)):text('pipTend')}</button></div></div></div>`;
 }
 function gardenEditor(){
   const design=gardenDesignFor(save.gardenDesign),blocked=careStorageBlocked();
@@ -1327,6 +1328,7 @@ function bindCareControls(){
       if(generation!==careGeneration||growthTimer!==timer)return;
       growthTimer=undefined;growing=false;
       document.querySelector<HTMLButtonElement>('#grow')?.toggleAttribute('disabled',careStorageBlocked()||save.stars<2||save.garden>=5);
+      document.querySelector<HTMLButtonElement>('#garden-tend')?.toggleAttribute('disabled',gardenTendDisabled());
       syncCarePipActivity();
     },450);
     growthTimer=timer;
