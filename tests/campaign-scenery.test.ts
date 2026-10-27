@@ -49,12 +49,14 @@ describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
     }
     expect(cells.size).toBe(20);expect(sources.size).toBe(5);
   });
-  it('신규20풍경은정원작품관계를보존하고배경에맞는자연소품을한개씩표시합니다',()=>{
+  it('신규20풍경은정원작품관계를보존하고폭포는물안개·나머지는자연소품을표시합니다',()=>{
     const seen=new Set<string>();
     for(let index=0;index<5;index++){expect(campaignMemory(index)).toBeUndefined();expect(campaignMemoryArt(index,index+1)).toBe('');}
     for(let index=5;index<25;index++){
       const memory=campaignMemory(index)!,source=journeyArtSource(memory.project,memory.alt),html=campaignScenery(index+7,20);seen.add(memory.project+':'+memory.alt);
-      expect(html.match(/data-map-memory=/g)).toHaveLength(1);expect(html).toContain(`data-map-memory="${memory.project}"`);expect(html).toContain(`data-memory-style="${memory.alt?'alt':'base'}"`);expect(html).toContain(`data-map-prop="${campaignWorld(index+7)}"`);expect(html).toContain('data-map-src="/assets/campaign/natural-props-v1.png"');expect(existsSync(new URL('../public'+source.path,import.meta.url))).toBe(true);expect(html).not.toMatch(/\shref=|<button|<a |tabindex=|https?:/);
+      if(index===22){expect(html).toContain('map-world-falls-mist');expect(html).not.toContain('data-map-memory=');}
+      else{expect(html.match(/data-map-memory=/g)).toHaveLength(1);expect(html).toContain(`data-map-memory="${memory.project}"`);expect(html).toContain(`data-memory-style="${memory.alt?'alt':'base'}"`);expect(html).toContain(`data-map-prop="${campaignWorld(index+7)}"`);expect(html).toContain('data-map-src="/assets/campaign/natural-props-v1.png"');}
+      expect(existsSync(new URL('../public'+source.path,import.meta.url))).toBe(true);expect(html).not.toMatch(/\shref=|<button|<a |tabindex=|https?:/);
     }
     expect(seen.size).toBe(20);expect(campaignMemory(11)).toEqual({project:'moonbridge',alt:true});expect(campaignMemory(12)).toEqual({project:'moonbridge',alt:false});
   });
@@ -196,6 +198,22 @@ describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
   it('신규20풍경은입력없는부분연출을가지며전역타이머나외부그림을추가하지않습니다',()=>{
     for(let chapter=12;chapter<=31;chapter++){const art=campaignScenery(chapter,20);expect(art).toContain('data-world-weather=');expect(art.match(/class="map-world-motif /g)).toHaveLength(3);expect(art).not.toMatch(/<button|<a |https?:|<script|setInterval/);}
     expect(campaignScenery(13)).toContain('motif-wings');expect(campaignScenery(17)).toContain('data-world-weather="snow"');expect(campaignScenery(28)).toContain('motif-gear');
+  });
+  it('폭포는 떠 보이는 지상 돌 대신 물안개를 쓰고 원본 수집 연결과 다른 풍경은 보존합니다',()=>{
+    const falls=campaignScenery(29,20);
+    expect(falls).toContain('map-world-falls-mist map-world-motif');
+    expect(falls).toContain('data-map-decor="0"');
+    expect(falls).toContain('motif-rings');expect(falls).toContain('motif-rise');
+    expect(falls).not.toContain('map-memory');
+    expect(falls).not.toContain('natural-props-v1.png');
+    expect(falls.match(/data-map-decor=/g)).toHaveLength(4);
+    expect(falls).not.toMatch(/<button|<a |https?:|<script|setInterval/);
+    expect(campaignMemory(22)).toEqual({project:'waterwheel',alt:true});
+    expect(campaignMemoryArt(22,29)).toContain('data-map-prop="falls"');
+    for(const chapter of [12,14,28,30,31]){
+      const other=campaignScenery(chapter,20);
+      expect(other).toContain('map-memory');expect(other).not.toContain('map-world-falls-mist');
+    }
   });
   it('500판카탈로그에서도보이는장의원본만해독하고떠난장의소유href를해제합니다',async()=>{
     const h=setup(['/assets/campaign/worlds-expansion-a-v1.png','/assets/campaign/worlds-expansion-b-v1.png'],[0,1]);

@@ -12,6 +12,9 @@
 .campaign-scenery .map-mid-grove{width:clamp(42px,14%,56px)}
 .campaign-scenery .map-memory{width:clamp(52px,18%,86px);transform:translateY(calc(var(--map-scroll-progress,0)*-9px))}
 .map-world-motif[data-map-decor]{left:var(--decor-left);right:var(--decor-right);top:var(--decor-y);bottom:auto;translate:0 -50%}
+/* 물보라는 지면 그림자 없이 안전 슬롯 안에서 작은 부분만 움직입니다. */
+.map-world-motif.map-world-falls-mist{width:clamp(52px,18%,86px);filter:none;opacity:.85}
+.map-world-falls-mist .motif-rings{transform-origin:60px 84px}
 /* 클릭 영역44px는 유지하고 보이는 칩만32px로 줄여 내부 빈 공간을 덜어냅니다. */
 .topbar .wallet-help,.topbar .wallet-help:hover,.topbar #settings-button{position:relative;isolation:isolate;background:transparent;box-shadow:none}
 .topbar .wallet-help{font-size:13px;line-height:16px}
