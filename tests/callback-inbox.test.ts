@@ -84,13 +84,16 @@ describe('암호화 수신·원장 내부검증·재시작',()=>{
     const results=await parallel(Array.from({length:8},()=>f.input({openRetries:2,diagnostics:true}))),safe=JSON.stringify(results.map(r=>({kind:r.kind,code:r.code,stage:r.stage,sqlite:r.sqlite,diagnostic:r.diagnostic})));
     expect(results.filter(r=>r.kind==='completed'),safe).toHaveLength(1);expect(results.filter(r=>r.kind==='idle'),safe).toHaveLength(7);
     for(const r of [...received,...results]){expect(r.diagnostic.openAttempts).toBeLessThanOrEqual(3);expect(r.diagnostic.failures.every((v:any)=>v.stage==='open'&&v.sqlite==='busy'),safe).toBe(true);}
+    for(const r of received)expect(r.diagnostic.claimBegin,safe).toBeUndefined();
+    for(const r of results){expect(r.diagnostic.claimBegin,safe).toEqual({stage:'inbox-claim-begin',outcome:'returned',elapsedMs:expect.any(Number),primaryCode:null,extendedCode:null});expect(Number.isFinite(r.diagnostic.claimBegin.elapsedMs),safe).toBe(true);expect(r.diagnostic.claimBegin.elapsedMs,safe).toBeGreaterThanOrEqual(0);}
     expect(f.conn().prepare('SELECT attempts FROM callback_inbox').get()?.attempts).toBe(1);expect(f.conn(f.rewardPath).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n).toBe(1);
   });
   it('worker 생성자 SQLite BUSY 진단→잠금 해제→같은 요청 제한 재시도',async()=>{
     const f=fixture(),b=f.open();b.receive(f.raw);const lock=f.conn(f.rewardPath);lock.exec('BEGIN IMMEDIATE');let busy=0;
     const release=releaseLockOnce(lock);let result:any;
     try{result=await child(f.input({openRetries:2,diagnostics:true,notifyOpenBusy:true}),()=>{busy++;release();});}finally{release();}
-    expect(busy).toBe(1);expect(result).toEqual({kind:'completed',diagnostic:{openAttempts:2,failures:[{stage:'open',sqlite:'busy'}]}});
+    expect(busy).toBe(1);expect(result).toEqual({kind:'completed',diagnostic:{openAttempts:2,failures:[{stage:'open',sqlite:'busy'}],claimBegin:{stage:'inbox-claim-begin',outcome:'returned',elapsedMs:expect.any(Number),primaryCode:null,extendedCode:null}}});
+    expect(Number.isFinite(result.diagnostic.claimBegin.elapsedMs)).toBe(true);expect(result.diagnostic.claimBegin.elapsedMs).toBeGreaterThanOrEqual(0);
     expect(f.conn().prepare('SELECT state,attempts FROM callback_inbox').get()).toEqual({state:'completed',attempts:1});expect(f.conn(f.rewardPath).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n).toBe(1);
   });
   it('worker 생성자 BUSY는 최대3회 뒤 오류·무한 재시도/성공 위장 없음',async()=>{
