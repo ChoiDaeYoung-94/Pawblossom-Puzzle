@@ -17,6 +17,15 @@ function setup(path='/assets/journey-garden/works-a-v1.png'){
 }
 async function settle(){for(let i=0;i<8;i++)await Promise.resolve();}
 describe('여행 작품 원본의 실제 크롭과 표시 수명',()=>{
+  it.each(['ribbon','wateringCan'] as const)('완성10작품의 idle·방문에서 장착 %s를 한 번 표시하고 미완성에는 핍을 미리 넣지 않습니다',equipped=>{
+    for(const spec of journeyProjectSpecs)for(const moment of [false,true]){
+      const projects={[spec.id]:{phase:2 as const,altOwned:false,style:'base' as const}};
+      const html=journeyGardenPanel('ko',spec.id,projects,500,0,moment,equipped);
+      expect(html.match(/id="village-pip-accessory"/g)).toHaveLength(1);expect(html).toContain(`data-pip-accessory="${equipped}"`);
+      expect(journeyGardenPanel('ko',spec.id,undefined,500,0,moment,equipped)).not.toContain('village-pip-accessory');
+      expect(journeyGardenPanel('ko',spec.id,projects,500,0,moment,'none')).not.toContain('village-pip-accessory');
+    }
+  });
   it('20스타일은5원본의실제분리경계를사용하고빈터/기초는완성bitmap을미리로드하지않습니다',()=>{
     const files=new Set<string>();
     for(const spec of journeyProjectSpecs)for(const style of ['base','alt'] as const){const source=journeyArtSource(spec.id,style==='alt');files.add(source.path);expect(source.x).toBe(style==='base'?0:627);expect(source.width).toBe(627);expect(source.y+source.height).toBe(source.y?1254:source.height);
