@@ -1296,6 +1296,7 @@ function bindCareControls(){
   bind('grow',button=>{
     if(route!=='village'||selectedGardenArea!=='flowers'||growing)return;
     if(!commitCare(button,expectedSave,generation,next=>{if(next.stars<2||next.garden>=5)return false;next.stars-=2;next.garden++;return true;}))return;
+    clearCareReaction();selectedGardenPlot=save.garden-1;
     growing=true;audio.play('reward');renderViews(true);notice('planted');
     const timer=setTimeout(()=>{
       if(generation!==careGeneration||growthTimer!==timer)return;

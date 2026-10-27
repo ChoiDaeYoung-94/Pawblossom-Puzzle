@@ -1471,6 +1471,33 @@ describe('첫 시제품 UI 흐름 회귀 검증 (모의 DOM/Phaser)', () => {
     h.run('save.garden=5;save.stars=8;renderViews()');h.element('#grow').onclick();
     expect(h.run('save.garden')).toBe(5);expect(h.run('save.stars')).toBe(8);
   });
+  it('두 번째 이후 심은 꽃밭을 바로 선택하고 꽃 변경은 새 칸에만 반영합니다',()=>{
+    const h=mainHarness();h.run("save.stars=10;switchView('village')");
+    const flowers=['daisy','violet','daisy','violet','daisy'];
+    for(let index=0;index<5;index++){
+      if(index)h.element('#garden-plot-0').onclick();
+      h.element('#grow').onclick();
+      expect(h.run('selectedGardenPlot')).toBe(index);
+      expect(h.element('#village-view').innerHTML).toMatch(new RegExp(`id="garden-plot-${index}"[^>]*aria-pressed="true"`));
+      h.flushGrowth();h.element('#garden-flower-'+flowers[index]).onclick();
+      expect(h.stored().gardenDesign.flowers.slice(0,index+1)).toEqual(flowers.slice(0,index+1));
+      expect(h.stored().stars).toBe(10-2*(index+1));
+    }
+    const before=h.disk();h.element('#grow').onclick();expect(h.run('selectedGardenPlot')).toBe(4);expect(h.disk()).toEqual(before);
+  });
+  it.each(['stars','storage'] as const)('%s 때문에 심지 못하면 기존 선택을 바꾸지 않습니다',reason=>{
+    const h=mainHarness(reason==='storage');h.run("save.garden=2;selectedGardenPlot=0;save.stars="+(reason==='stars'?1:2)+";switchView('village')");
+    const before=h.run('JSON.stringify({garden:save.garden,stars:save.stars,selectedGardenPlot})');h.element('#grow').onclick();
+    expect(h.run('JSON.stringify({garden:save.garden,stars:save.stars,selectedGardenPlot})')).toBe(before);
+    expect(h.run('growing')).toBe(false);
+  });
+  it('이전 꽃밭을 살펴보던 중 심어도 새 칸의 핍 활동을 다시 선택할 수 있습니다',()=>{
+    const h=mainHarness();h.run("save.stars=4;switchView('village')");h.element('#grow').onclick();h.flushGrowth();
+    h.element('#garden-activity-flower').onclick();expect(h.run('gardenActivity')).toEqual({kind:'flower',plot:0});
+    h.element('#grow').onclick();expect(h.run('selectedGardenPlot')).toBe(1);expect(h.run('gardenActivity')).toBeUndefined();
+    h.flushGrowth();h.element('#garden-activity-flower').onclick();expect(h.run('gardenActivity')).toEqual({kind:'flower',plot:1});
+    expect(h.stored()).toMatchObject({garden:2,stars:0});
+  });
   it('심기 직후 핍의 공간 바로가기로 이동해 버튼이 없어져도 타이머와 모션을 정리합니다',()=>{
     const h=mainHarness();h.run("save.stars=4;switchView('village');const realQuery=document.querySelector;document.querySelector=selector=>selector==='#grow'&&selectedGardenArea!=='flowers'?null:realQuery(selector)");
     h.element('#grow').onclick();const stored=h.stored(),disk=h.disk(),writes=h.writes();
