@@ -1,0 +1,12 @@
+/* 반응 초상화와 반복 행동을 먼저 연결하고 장기 정원 목표는 뒤에 둡니다. */
+.pip-care-stage{display:grid;gap:12px;align-items:start}
+.pip-care-console,.pip-care-controls{min-width:0}
+.pip-care-controls{display:grid;gap:6px}
+.pip-care-controls .pip-reactions{margin:0;padding:0;border-bottom:0;gap:4px}
+.pip-care-controls .pip-reactions button{flex:1;min-width:0;min-height:44px;overflow-wrap:anywhere}
+.pip-care-console .pip-unlock-card{margin-top:10px}
+@media(orientation:landscape) and (min-width:700px){
+  .pip-care-stage{grid-template-columns:minmax(240px,1fr) minmax(0,1fr);gap:18px}
+  .pip-care-stage .pip-care-hero{grid-template-columns:minmax(104px,42%) minmax(0,1fr);align-self:start}
+  .pip-care-stage .pip-stats{grid-template-columns:minmax(0,1fr);gap:7px}
+}
