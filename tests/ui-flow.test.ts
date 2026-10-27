@@ -1,3 +1,4 @@
+import {pipDecorationArt} from '../src/PipDecoration';
 import {previewGardenTheme,gardenThemePreview} from '../src/GardenThemePreview';
 import {reachedPipUnlock,pipUnlockCard} from '../src/PipUnlock';
 import * as campaignProgressModel from '../src/CampaignProgress';
@@ -231,7 +232,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     specialTileArt,
     ...campaignProgressModel,...campaignMilestoneUi,
     ...boardDisplay,
-    gardenGoals,goalNextStep,nextGardenGoal,previewGardenPreset,gardenPresetPreview,pipTendingArt,previewGardenTheme,gardenThemePreview,reachedPipUnlock,pipUnlockCard,...journeyModel,...journeyUI,
+    pipDecorationArt,gardenGoals,goalNextStep,nextGardenGoal,previewGardenPreset,gardenPresetPreview,pipTendingArt,previewGardenTheme,gardenThemePreview,reachedPipUnlock,pipUnlockCard,...journeyModel,...journeyUI,
     createJourneyGardenArt:()=>({setActive(){},dispose(){}}),
     bindPracticeBoard,
     cloneSnapshot,prepareShuffle,
@@ -3116,6 +3117,15 @@ describe('500판 여행 정원과 별·소유 확정 경계',()=>{
   const select=(h:ReturnType<typeof mainHarness>,id:string)=>h.run(`document.querySelector('#journey-project-select').value='${id}';document.querySelector('#journey-project-select').onchange()`);
   const confirm=(h:ReturnType<typeof mainHarness>)=>{h.element('#journey-restore').onclick();expect(h.run('spaceDialog.open')).toBe(true);h.element('#space-preview-confirm').onclick();};
   const board="JSON.stringify({round,moves,score,board:scene.engine.board,inProgress:save.inProgress,completed:save.completed,pip:save.pip,garden:save.garden})";
+  it.each(['ribbon','wateringCan'] as const)('장착 %s는 일반→여행작품→방문→핍 전환에도 유지되며 소유/재화를 쓰지 않습니다',equipped=>{
+    const h=mainHarness(false,false,false,false,{...initial(),garden:1,pip:{growth:100,affection:100,owned:[equipped],equipped},gardenDesign:{schema:1,flowers:Array(5).fill('meadow'),owned:[],placed:[],journeyProjects:{conservatory:{phase:2,altOwned:false,style:'base'}}}});
+    h.run("switchView('village')");expect(h.element('#village-view').innerHTML).toContain(`data-pip-accessory="${equipped}"`);const disk=h.disk(),writes=h.writes();
+    h.element('#garden-area-journey').onclick();expect(h.element('#village-view').innerHTML).toContain(`data-pip-accessory="${equipped}"`);
+    expect(h.accessoryControllers.filter(a=>!a.disposed)).toHaveLength(1);expect(h.accessoryControllers.filter(a=>!a.disposed)[0].kind).toBe(equipped);
+    h.element('#journey-visit').onclick();expect(h.element('#village-view').innerHTML).toContain(`data-pip-accessory="${equipped}"`);h.flushCareReaction();
+    h.run("switchView('journal')");expect(h.element('#journal-view').innerHTML).toContain(`data-pip-accessory="${equipped}"`);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    h.element('#pip-equip-none').onclick();h.run("switchView('village')");h.element('#garden-area-journey').onclick();expect(h.element('#village-view').innerHTML).not.toContain('village-pip-accessory');
+  });
   it.each(['ko','en'] as const)('%s: 10작품의두단계와선택스타일은기존판/성장없이한payload씩저장됩니다',language=>{
     const h=mainHarness(false,false,false,false,{...initial(),language});open(h);const before=h.run(board);let stars=500,coins=8000;
     for(const spec of journeyModel.journeyProjectSpecs){select(h,spec.id);for(const cost of [15,25]){confirm(h);stars-=cost;expect(h.stored().stars).toBe(stars);expect(h.stored().coins).toBe(coins);}
