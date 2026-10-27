@@ -462,7 +462,9 @@ describe('독립 스테이지 지도',()=>{
     const h=boot();expect(h.run('route')).toBe('map');expect(h.run('game.paused')).toBe(true);expect(h.element('#game-canvas').tabIndex).toBe(-1);
     const html=h.element('#map-view').innerHTML;expect(html.match(/data-level="/g)).toHaveLength(500);
     expect(html.match(/data-world-start="true"/g)).toHaveLength(25);
-    expect(html.match(/class="campaign-island"/g)).toHaveLength(500);
+    expect(html).not.toContain('class="campaign-island"');
+    expect(html).not.toMatch(/class="trail-(earth|edge|surface|gravel)"/);
+    expect(html.match(/class="trail-dots"/g)).toHaveLength(61);
     expect(html).not.toContain('map-world-gateway');expect(html).not.toContain('map-gateway-branch');
     expect(html.match(/data-world-title="integrated"/g)).toHaveLength(31);
     expect(new Set([...html.matchAll(/id="map-chapter-title-(\d+)"/g)].map(match=>match[1])).size).toBe(31);

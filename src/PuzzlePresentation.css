@@ -1,6 +1,7 @@
 /* 플레이 중에는 목표와 남은 이동을 우선합니다. 재화는 지도, 언어는 설정에서도 확인합니다. */
 #app[data-route="puzzle"] .topbar .wallet,
-#app[data-route="puzzle"] .topbar .language-button{display:none}
+#app[data-route="puzzle"] .topbar .language-button,
+#app[data-route="puzzle"] .topbar .header-language-control{display:none}
 #app[data-route="puzzle"] .brand{font-size:18px}
 #app[data-route="puzzle"] .brand small{display:none}
 #app[data-route="puzzle"]{background:linear-gradient(#fffdf51a,#fffdf536),url('/assets/puzzle-backdrop-v1.webp') center/cover no-repeat}

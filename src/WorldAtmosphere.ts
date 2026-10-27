@@ -1,6 +1,6 @@
 /** 신규 풍경의 작은 부분 연출입니다. 번호·입력·난수·게임 판정에는 관여하지 않습니다. */
 const WEATHER=['petal','bee','ripple','bird','leaf','snow','aurora','bamboo','steam','spore','bubble','heat','spark','cloud','firefly','petal','gear','spray','star','confetti'] as const;
-export function worldAtmosphere(index:number){
+export function worldAtmosphere(index:number,placement?:(part:number,delay:number)=>string){
   const weather=WEATHER[index-5];if(!weather)return '';
   const petal='<g class="motif-fall"><path d="M20 12C3 4 6 27 20 31C34 24 37 4 20 12Z" fill="#efb7ce" stroke="#c887a7"/><path d="M20 14V28" stroke="#ffe5ee"/></g>';
   const drawings:Record<typeof WEATHER[number],string>={
@@ -24,5 +24,5 @@ export function worldAtmosphere(index:number){
     star:'<g class="motif-twinkle" fill="#f6dfaa" stroke="#c6b7e8"><path d="M21 5L26 16L38 18L29 26L31 38L21 32L10 38L12 26L3 18L16 16Z"/><path d="M21 12L24 21L31 22L25 27" fill="none" stroke="#fff5d9"/></g>',
     confetti:'<g class="motif-fall"><path d="M4 6L11 4L15 13L8 15Z" fill="#f4b2c1"/><path d="M30 13L37 18L31 25L25 20Z" fill="#c7b6e7"/><path d="M13 28L20 26L25 35L18 38Z" fill="#efd08d"/></g>',
   };
-  return `<div class="map-world-atmosphere" data-world-weather="${weather}" aria-hidden="true">${[0,1,2].map(part=>`<svg class="map-world-motif map-world-motif-${part}" viewBox="0 0 46 46" style="--motif-delay:${part*1.3}s">${drawings[weather]}</svg>`).join('')}</div>`;
+  return `<div class="map-world-atmosphere" data-world-weather="${weather}" aria-hidden="true">${[0,1,2].map(part=>`<svg class="map-world-motif map-world-motif-${part}" viewBox="0 0 46 46"${placement?.(part,part*1.3)??` style="--motif-delay:${part*1.3}s"`}>${drawings[weather]}</svg>`).join('')}</div>`;
 }

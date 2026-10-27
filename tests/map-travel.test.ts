@@ -52,16 +52,27 @@ describe('핍 지도 걷기의 실제 수명',()=>{
   it.each([false,true])('왼쪽 목적지라도 길 합류의 실제 가로 이동을 따라 얼굴을 바꿉니다 (장 경계 %s)',async crossChapter=>{
     const h=setup();h.to.rect.left=70;if(crossChapter)h.to.section=new Node();h.start();const ghost=h.ghost()!;expect(ghost.dataset.facing).toBe('right');
     h.images[0].resolve();await settle();h.frame(0);const x=()=>Number(ghost.style.transform.match(/translate3d\(([-\d.]+)px/)![1]),start=x();
-    h.frame(1);h.frame(2);expect(ghost.dataset.facing).toBe('right');h.frame(300);const middle=x();expect(middle).toBeGreaterThan(start);expect(ghost.dataset.facing).toBe('right');
-    h.frame(600);expect(x()).toBeLessThan(middle);expect(ghost.dataset.facing).toBe('left');h.travel.dispose();h.clean();
+    h.frame(1);h.frame(2);expect(ghost.dataset.facing).toBe('right');h.frame(650);const middle=x();expect(middle).toBeGreaterThan(start);expect(ghost.dataset.facing).toBe('right');
+    h.frame(1650);expect(x()).toBeLessThan(middle);expect(ghost.dataset.facing).toBe('left');h.travel.dispose();h.clean();
   });
   it('그림 decode 전에는 href가 없고 한 번만 네 포즈를 재생한 뒤 소유 자원만 정리합니다',async()=>{
     const h=setup();h.start();const ghost=h.ghost()!;expect(ghost.attrs['aria-hidden']).toBe('true');expect(h.pip.classes.has('map-pip-suspended')).toBe(true);
     expect(ghost.paint.every(image=>!image.attrs.href)).toBe(true);expect(h.frames.size).toBe(0);expect(vi.getTimerCount()).toBe(1);
     h.images[0].resolve();await settle();expect(ghost.dataset.ready).toBe('true');expect(ghost.paint.every(image=>image.attrs.href==='/assets/pip-walk-atlas-v1.png')).toBe(true);expect(vi.getTimerCount()).toBe(0);
-    h.frame(0);const first=ghost.style.transform;h.frame(400);expect(ghost.style.transform).not.toBe(first);expect(ghost.dataset.frame).toBe('3');expect(ghost.dataset.facing).toBe('right');
-    h.travel.start();expect(h.images).toHaveLength(1);h.frame(2000);h.clean();expect(h.notifications).toEqual([true,false]);expect(ghost.paint.every(image=>!image.attrs.href)).toBe(true);expect(h.images[0].removed).toBe(true);
+    h.frame(0);const first=ghost.style.transform;h.frame(400);expect(ghost.style.transform).not.toBe(first);expect(ghost.dataset.facing).toBe('right');
+    h.travel.start();expect(h.images).toHaveLength(1);h.frame(4000);h.clean();expect(h.notifications).toEqual([true,false]);expect(ghost.paint.every(image=>!image.attrs.href)).toBe(true);expect(h.images[0].removed).toBe(true);
     h.travel.start();h.travel.setActive(true);expect(h.images).toHaveLength(1);h.travel.dispose();h.travel.dispose();h.clean();
+  });
+  it('출발 때 잠깐 발을 디딘 뒤 네 포즈로 2초 이상 걷고 목적지에서 멈춥니다',async()=>{
+    const h=setup();h.start();const ghost=h.ghost()!;h.images[0].resolve();await settle();
+    h.frame(0);const start=ghost.style.transform;h.frame(100);expect(ghost.style.transform).toBe(start);
+    const poses=new Set<string>();let arrival:string|undefined;
+    for(let time=150;time<=2250;time+=50){h.frame(time);expect(h.travel.playing).toBe(true);poses.add(ghost.dataset.frame);arrival=ghost.style.transform;}
+    expect(poses).toEqual(new Set(['0','1','2','3']));expect(arrival).not.toBe(start);
+    h.frame(3600);expect(ghost.dataset.frame).toBe('0');const destination=ghost.style.transform;
+    // 목적지 중앙246에서 대기 위치40과그림반폭36을 뺀 원래 위치입니다.
+    expect(destination).toContain('translate3d(170px,');h.frame(4000);h.clean();
+    expect(h.notifications).toEqual([true,false]);
   });
   it.each(['pointerdown','wheel','touchstart','keydown','resize','hidden','reduced','inactive','dispose','timeout'] as const)('%s 취소 뒤 늦은 decode가 연출을 되살리거나 입력을 막지 않습니다',async(reason)=>{
     const h=setup();h.start();const image=h.images[0];

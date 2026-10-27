@@ -34,12 +34,12 @@ describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
     }
     expect(cells.size).toBe(20);expect(sources.size).toBe(5);
   });
-  it('신규20풍경은여행정원의정확한원본/스타일한개만연결하고기존5풍경은변경하지않습니다',()=>{
+  it('신규20풍경은정원작품관계를보존하고배경에맞는자연소품을한개씩표시합니다',()=>{
     const seen=new Set<string>();
     for(let index=0;index<5;index++){expect(campaignMemory(index)).toBeUndefined();expect(campaignMemoryArt(index,index+1)).toBe('');}
     for(let index=5;index<25;index++){
       const memory=campaignMemory(index)!,source=journeyArtSource(memory.project,memory.alt),html=campaignScenery(index+7,20);seen.add(memory.project+':'+memory.alt);
-      expect(html.match(/data-map-memory=/g)).toHaveLength(1);expect(html).toContain(`data-map-src="${source.path}"`);expect(html).toContain(`rect x="${source.x}" y="${source.y}" width="${source.width}" height="${source.height}"`);expect(html).toContain(`id="map-memory-${index+7}"`);expect(html).not.toMatch(/\shref=|<button|<a |tabindex=|https?:/);
+      expect(html.match(/data-map-memory=/g)).toHaveLength(1);expect(html).toContain(`data-map-memory="${memory.project}"`);expect(html).toContain(`data-memory-style="${memory.alt?'alt':'base'}"`);expect(html).toContain(`data-map-prop="${campaignWorld(index+7)}"`);expect(html).toContain('data-map-src="/assets/campaign/natural-props-v1.png"');expect(existsSync(new URL('../public'+source.path,import.meta.url))).toBe(true);expect(html).not.toMatch(/\shref=|<button|<a |tabindex=|https?:/);
     }
     expect(seen.size).toBe(20);expect(campaignMemory(11)).toEqual({project:'moonbridge',alt:true});expect(campaignMemory(12)).toEqual({project:'moonbridge',alt:false});
   });
@@ -118,6 +118,10 @@ describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
       for(const match of art.matchAll(/data-map-src="([^"]+)"/g))expect(existsSync(new URL('../public'+match[1],import.meta.url))).toBe(true);
     }
     expect(campaignScenery(1,10).match(/data-map-grove=/g)).toHaveLength(2);
+    for(const chapter of [3,4,5]){
+      const water=campaignScenery(chapter,chapter===3?10:5);
+      expect(water).toContain('/lily.webp');expect(water).not.toMatch(/data-map-grove=|\/bench.webp|\/shelter-|\/pond-base.webp/);
+    }
     for(const count of [0,5,7,NaN])expect(campaignScenery(4,count)).not.toContain('data-map-grove=');
   });
   it('풍경 배치는 장마다 재현 가능하게 달라지고 모든 장에 같은 보조 소품을 강제하지 않습니다',()=>{
@@ -129,6 +133,7 @@ describe('지도 풍경의 실제 수명과 스크롤 경계',()=>{
       for(const source of html.matchAll(/data-map-src="([^"]+)"/g))expect(existsSync(new URL('../public'+source[1],import.meta.url))).toBe(true);
     }
     expect(layouts.size).toBe(6);expect(campaignScenery(1)).not.toContain('/bench.webp');
+    for(let chapter=12;chapter<=31;chapter++)expect(new Set([...campaignScenery(chapter,20).matchAll(/data-map-decor="(\d+)"/g)].map(match=>match[1])).size).toBe(4);
     expect(campaignScenery(4,5)).not.toContain('map-landmark-two');expect(campaignScenery(2)).toContain('map-landmark-two');
   });
   it('지도 활성화 전에는 원본을 해독하지 않고 전부 준비한 현재 owner만 회화 그림을 공개합니다',async()=>{
