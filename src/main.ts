@@ -1098,7 +1098,7 @@ function gardenVisitor(){
   const activity=gardenActivity,plot=gardenPlotPoints[activity?.plot??0];
   const tending=gardenTendingPlot!==undefined?gardenPlotPoints[gardenTendingPlot]:undefined;
   const position=tending?`left:${(tending[0]-75)/4.8}%;bottom:${(274-tending[1])/2.8}%;`:activity?activity.kind==='flower'?`left:${(plot[0]-130)/4.8}%;bottom:${(280-plot[1]-32)/2.8}%;`:activity.kind==='rest'?'left:35%;bottom:3%;':activity.kind==='arch'?'left:58%;bottom:2%;':`left:${activity.kind==='lily'?25:65}%;bottom:3%;`:'';
-  const image=activity?.kind==='rest'?'/assets/pip-idle-blink-v2.webp':pipReaction==='greet'?'/assets/pip-play-v1.webp':careIdlePose()?'/assets/pip-idle-open-v2.webp':'/assets/pip.png';
+  const image=activity?.kind==='rest'?'/assets/pip-idle-blink-v2.webp':pipReaction==='greet'?'/assets/pip-play-v1.webp':pipReaction==='tend'||careIdlePose()?'/assets/pip-idle-open-v2.webp':'/assets/pip.png';
   return `<div ${tending?'id="village-pip-portrait" ':''}data-area="${selectedGardenArea}" data-activity="${activity?.kind??'none'}" class="garden-visitor ${tending?'garden-tending-visitor ':''}${pipReaction==='greet'?'pip-reaction-greet':''}${activity?' garden-activity-visitor':''}"${position?` style="${position}"`:''}><span id="village-pip-actor" class="care-pip-visual"><span class="pip-face"><img id="village-pip-image" src="${image}" alt="${text('pip')}"/></span></span>${tending?`<span id="village-pip-tend-stage" class="pip-tending-stage">${pipDecoration('village')}</span>`:pipDecoration('village')}</div>`;
 }
 function gardenActivitySpots(mode:'art'|'controls'|'both'='both'){
@@ -1186,7 +1186,7 @@ function gardenCollection(){
 function pipCareCard(){
   const pip=save.pip??freshPip(),level=pipLevel(pip),cost=careCost(pip),blocked=careStorageBlocked();
   const next=level===1?20:level===2?60:100;
-  const image=pipReaction==='feed'?'/assets/pip-feed-v1.webp':pipReaction==='play'?'/assets/pip-play-v1.webp':careIdlePose()?'/assets/pip-idle-open-v2.webp':'/assets/pip.png';
+  const image=pipReaction==='feed'?'/assets/pip-feed-v1.webp':pipReaction==='play'?'/assets/pip-play-v1.webp':pipReaction==='tend'||careIdlePose()?'/assets/pip-idle-open-v2.webp':'/assets/pip.png';
   const reactionKey:TextKey=pipReaction==='feed'?'pipFeedReaction':pipReaction==='play'?'pipPlayReaction':pipReaction==='greet'?'pipGreetReaction':pipReaction==='tend'?'pipTendReaction':level===3?'pipLevel3Line':level===2?'pipLevel2Line':'pipLevel1Line';
   const effect=(kind:'feed'|'play')=>{
     const growth=Math.min(100-pip.growth,kind==='feed'?10:4),affection=Math.min(100-pip.affection,kind==='feed'?4:10);
