@@ -45,12 +45,13 @@ import { bindPracticeBoard } from './bindPracticeInputs';
 import { gardenArt,flowerArt } from './GardenArt';
 import {previewGardenPreset,type GardenPresetId} from './GardenPresets';
 import {gardenPresetPreview} from './GardenPresetsUI';
+import {previewGardenTheme,gardenThemePreview} from './GardenThemePreview';
 import {gardenGoals,goalNextStep,nextGardenGoal,type GardenGoal,type GoalNeed} from './GardenGoals';
 import {gardenSpaceArt} from './GardenSpaceArt';
 import {paintedGardenForeground} from './GardenStructureArt';
 import {gardenSpaceSpecs,gardenSpacesFor,prepareSpaceAction,previewSpaceAction,type GardenArea,type SpaceAction} from './gardenSpaces';
 import {gardenAreas,gardenAreaName,gardenAreaTabs,gardenSpacePanel,gardenSpacePreview,nextSpaceGoal,spacePhaseName,spaceStyleName} from './GardenSpacesUI';
-import { flowerStyles,gardenProjects,gardenThemes,gardenDesignFor,freshGardenDesign,flowerDiversity,projectReady,themeReady,prepareGardenAction,type GardenTheme,type GardenProject,type GardenAction } from './gardenDesign';
+import { flowerStyles,gardenProjects,gardenThemes,gardenDesignFor,freshGardenDesign,flowerDiversity,projectReady,prepareGardenAction,type GardenTheme,type GardenProject,type GardenAction } from './gardenDesign';
 import { showResultPip } from './ResultPip';
 import { RoundFeedback } from './RoundFeedback';
 import { createPipIdle } from './PipIdle';
@@ -228,7 +229,7 @@ function showSpacePreview(action:SpaceAction|JourneyAction,opener:HTMLButtonElem
 spaceDialog.addEventListener('cancel',event=>{event.preventDefault();closeSpacePreview();});
 spaceDialog.addEventListener('close',()=>{if(!spaceDialog.open&&spacePreview)closeSpacePreview(false);});
 spaceDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();});
-type LookPreview={save:SaveData;generation:number;route:string;demo:typeof careDemo;round:number;scene:BoardScene;opener:HTMLButtonElement;id:GardenPresetId;showCurrent:boolean;language:SaveData['language'];scroll:number};
+type LookPreview={save:SaveData;generation:number;route:string;demo:typeof careDemo;round:number;scene:BoardScene;opener:HTMLButtonElement;id:GardenPresetId;theme?:GardenTheme;showCurrent:boolean;language:SaveData['language'];scroll:number};
 let lookPreview:LookPreview|undefined;
 function lookPreviewEnvironment(){return route==='village'&&selectedGardenArea==='flowers'&&nativeActive&&!document.hidden&&!boardPending&&!resultTimer&&!puzzleProcessing&&!careProcessing&&!growing&&!stagePreview&&!previewDialog.open&&!otherModal(true,false)&&!testAds?.busy&&!testBilling?.busy&&!testAds?.pausesGame&&!testBilling?.pausesGame&&Boolean(scene?.canLeave())&&game.scene.getScene('Board')===scene;}
 function validLookPreview(context:LookPreview){return lookPreview===context&&lookDialog.open&&context.save===save&&context.language===save.language&&context.generation===careGeneration&&context.route===route&&context.demo===careDemo&&context.round===round&&context.scene===scene&&currentControl(context.opener,context.save,context.generation)&&lookPreviewEnvironment();}
@@ -240,8 +241,8 @@ function closeLookPreview(restore=true){
 }
 function renderLookPreview(){
   const context=lookPreview;if(!context)return;
-  lookDialog.innerHTML=gardenPresetPreview(save.language,save.gardenDesign,save.garden,save.pip??freshPip(),gardenCompletedCount(),context.id,context.showCurrent,careStorageBlocked(),Boolean(careDemo));
-  for(const id of ['sunny','butterfly','starlight'] as const){
+  lookDialog.innerHTML=context.theme?gardenThemePreview(save.language,save.gardenDesign,save.garden,save.pip??freshPip(),gardenCompletedCount(),save.coins,context.theme,context.showCurrent,careStorageBlocked(),Boolean(careDemo)):gardenPresetPreview(save.language,save.gardenDesign,save.garden,save.pip??freshPip(),gardenCompletedCount(),context.id,context.showCurrent,careStorageBlocked(),Boolean(careDemo));
+  if(!context.theme)for(const id of ['sunny','butterfly','starlight'] as const){
     const button=$<HTMLButtonElement>('#garden-look-'+id);
     button.onclick=()=>{if(!validLookPreview(context)||$('#'+button.id)!==button)return;context.id=id;context.showCurrent=false;renderLookPreview();$('#'+button.id).focus({preventScroll:true});};
   }
@@ -254,6 +255,12 @@ function renderLookPreview(){
     if(!validLookPreview(context)||confirm.disabled||$('#'+confirm.id)!==confirm)return;
     closeLookPreview(false);
     if(commitCare(confirm,context.save,context.generation,next=>{
+      if(context.theme){
+        const preview=previewGardenTheme(context.theme,next.gardenDesign,next.garden,next.pip??freshPip(),gardenCompletedCount(next),next.coins);
+        if(!preview?.canApply)return false;
+        const result=prepareGardenAction(next.coins,next.garden,next.pip??freshPip(),next.gardenDesign,preview.action,gardenCompletedCount(next));
+        if(!result)return false;next.coins=result.coins;next.gardenDesign=result.design;return true;
+      }
       const plan=previewGardenPreset(context.id,next.gardenDesign,next.garden,next.pip??freshPip(),gardenCompletedCount(next));
       if(!plan?.design||!plan.changed)return false;
       next.gardenDesign=plan.design;return true;
@@ -262,10 +269,11 @@ function renderLookPreview(){
   };
   $('#garden-look-cancel').onclick=()=>{if(lookPreview===context)closeLookPreview();};
 }
-function showLookPreview(opener:HTMLButtonElement){
+function showLookPreview(opener:HTMLButtonElement,theme?:GardenTheme){
   if(lookPreview||lookDialog.open||!lookPreviewEnvironment()||!currentControl(opener,save,careGeneration))return;
-  if(pipReaction||gardenActivity){clearCareReaction();renderViews();opener=$<HTMLButtonElement>('#garden-look-open');}
-  lookPreview={save,generation:careGeneration,route,demo:careDemo,round,scene,opener,id:'sunny',showCurrent:false,language:save.language,scroll:$('#village-view').scrollTop};
+  if(theme!==undefined&&!previewGardenTheme(theme,save.gardenDesign,save.garden,save.pip??freshPip(),gardenCompletedCount(),save.coins))return;
+  if(pipReaction||gardenActivity){const openerId=opener.id;clearCareReaction();renderViews();opener=$<HTMLButtonElement>('#'+openerId);}
+  lookPreview={save,generation:careGeneration,route,demo:careDemo,round,scene,opener,id:'sunny',theme,showCurrent:false,language:save.language,scroll:$('#village-view').scrollTop};
   renderLookPreview();scene.cancelInput();lookDialog.showModal();syncActivity();$('#garden-look-title').focus({preventScroll:true});
 }
 lookDialog.addEventListener('cancel',event=>{event.preventDefault();closeLookPreview();});
@@ -1122,9 +1130,9 @@ function themeConditions(theme:typeof gardenThemes[number]){
 function gardenThemePanel(){
   const design=gardenDesignFor(save.gardenDesign),selected=design.theme??'meadow',blocked=careStorageBlocked();
   return `<section class="garden-themes" aria-labelledby="garden-themes-title"><h4 id="garden-themes-title">${text('gardenThemes')}</h4>${(['meadow',...gardenThemes.map(t=>t.id)] as GardenTheme[]).map(id=>{
-    const theme=gardenThemes.find(t=>t.id===id),owned=id==='meadow'||design.ownedThemes?.includes(id),ready=!theme||themeReady(theme,save.garden,save.pip??freshPip(),gardenCompletedCount());
-    const label=selected===id?text('gardenThemeSelected'):owned?text('gardenThemeSelect'):text('gardenBuy').replace('{cost}',String(theme!.cost));
-    return `<article class="garden-project"><div><strong>${themeName(id)}</strong><p>${owned?text('gardenThemeOwned'):themeConditions(theme!)}</p></div><button id="garden-theme-${id}" type="button" aria-label="${themeName(id)} · ${label}" aria-pressed="${selected===id}" ${blocked||selected===id||!owned&&(!ready||save.coins<theme!.cost)?'disabled':''}>${label}</button></article>`;
+    const theme=gardenThemes.find(t=>t.id===id),owned=id==='meadow'||design.ownedThemes?.includes(id);
+    const label=selected===id?text('gardenThemeSelected'):owned?text('gardenThemeSelect'):text('spacePreview')+' · '+text('gardenBuy').replace('{cost}',String(theme!.cost));
+    return `<article class="garden-project"><div><strong>${themeName(id)}</strong><p>${owned?text('gardenThemeOwned'):themeConditions(theme!)}</p></div><button id="garden-theme-${id}" type="button" aria-label="${themeName(id)} · ${label}" aria-pressed="${selected===id}" ${selected===id||blocked&&owned?'disabled':''}>${label}</button></article>`;
   }).join('')}</section>`;
 }
 function nextGardenProject(){
@@ -1289,7 +1297,7 @@ function bindCareControls(){
   };
   const plot=selectedGardenPlot;
   bind('garden-theme-meadow',button=>changeGarden(button,{kind:'selectTheme',theme:'meadow'}));
-  for(const theme of gardenThemes){const owned=save.gardenDesign?.ownedThemes?.includes(theme.id);bind('garden-theme-'+theme.id,button=>changeGarden(button,{kind:owned?'selectTheme':'buyTheme',theme:theme.id}));}
+  for(const theme of gardenThemes){const owned=save.gardenDesign?.ownedThemes?.includes(theme.id);bind('garden-theme-'+theme.id,button=>owned?changeGarden(button,{kind:'selectTheme',theme:theme.id}):showLookPreview(button,theme.id));}
   bind('garden-lantern-place',button=>changeGarden(button,{kind:'placeLantern',plot}));
   for(const flower of flowerStyles)bind('garden-flower-'+flower,button=>changeGarden(button,{kind:'flower',plot,flower}));
   for(const project of gardenProjects){const owned=save.gardenDesign?.owned.includes(project.id);bind('garden-project-'+project.id,button=>changeGarden(button,{kind:owned?'toggle':'claim',project:project.id}));}
@@ -1419,7 +1427,7 @@ function renderViews(grew=false){
   for(const id of ['#save-retry','#save-reload'])$(id).addEventListener('blur',()=>updateSaveStatus());
   const renderedSave=save,renderedGeneration=careGeneration;
   const renderedControls=new Map(['save-retry','save-reload','music-toggle','sfx-toggle','language','reset'].map(id=>[id,$('#'+id)]));
-  const settingsAction=(id:string)=>!spaceDialog.open&&!resourceDialog.open&&!careDemo&&currentControl(renderedControls.get(id)!,renderedSave,renderedGeneration);
+  const settingsAction=(id:string)=>!lookDialog.open&&!spaceDialog.open&&!resourceDialog.open&&!careDemo&&currentControl(renderedControls.get(id)!,renderedSave,renderedGeneration);
   $('#save-retry').onclick=()=>{if(!settingsAction('save-retry'))return;retrySave(save);updateSaveStatus();};
   $('#save-reload').onclick=()=>{if(!settingsAction('save-reload'))return;if(confirm(text('saveReloadConfirm')))window.location.reload();};
   bindCareControls();
