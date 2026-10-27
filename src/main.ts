@@ -1,3 +1,5 @@
+import './GardenTending.css';
+import {gardenTendingArt} from './GardenTending';
 import Phaser from 'phaser';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
@@ -103,6 +105,7 @@ let careDemo:{normalSave:SaveData;returnRoute:'village'|'journal';chapter:number
 let pipReaction:'feed'|'play'|'greet'|'tend'|undefined;
 let pipUnlock:PipUnlockLevel|undefined;
 let careReactionStarted=0;
+let gardenTendingPlot:number|undefined;
 let gardenActivity:{kind:'flower'|'lily'|'ripples'|'rest'|'arch';plot:number}|undefined;
 let careReactionTimer:ReturnType<typeof setTimeout>|undefined;
 let clearedLeaves=0;
@@ -322,8 +325,8 @@ function syncCarePipActivity(){
   journeyArt?.setActive(route==='village'&&selectedGardenArea==='journey'&&careEnvironment()&&!careProcessing);
   journeyPreviewArt?.setActive(spaceDialog.open&&Boolean(spacePreview)&&nativeActive&&!document.hidden);
   const view=route==='village'||route==='journal'?route:undefined;
-  const tending=document.querySelector<HTMLElement>('#journal-pip-portrait');
-  if(tending)tending.dataset.tendActive=String(view==='journal'&&careEnvironment()&&!careProcessing&&pipReaction==='tend'&&Date.now()-careReactionStarted>=0&&Date.now()-careReactionStarted<2400);
+  const tending=view?document.querySelector<HTMLElement>(`#${view}-pip-portrait`):null;
+  if(tending)tending.dataset.tendActive=String((view==='journal'||gardenTendingPlot!==undefined)&&careEnvironment()&&!careProcessing&&pipReaction==='tend'&&Date.now()-careReactionStarted>=0&&Date.now()-careReactionStarted<2400);
   const momentPicture=document.querySelector<HTMLElement>('#garden-nature');
   if(momentPicture)momentPicture.dataset.momentActive=String(view==='village'&&careEnvironment()&&!careProcessing);
   const host=view?document.querySelector<HTMLElement>(`#${view}-pip-actor`):null;
@@ -341,9 +344,10 @@ function syncCarePipActivity(){
   if(visible&&view==='village'&&picture?.isConnected&&carePipDisplay&&!carePipDisplay.nature){
     carePipDisplay.nature=createGardenNature(picture);carePipDisplay.naturePicture=picture;
   }
-  if(visible&&view==='journal'&&pipReaction==='tend'&&tending?.isConnected&&carePipDisplay&&!carePipDisplay.pose){
-    const stage=document.querySelector<HTMLElement>('#journal-pip-tend-stage'),started=careReactionStarted,generation=careGeneration;
-    if(stage?.isConnected)carePipDisplay.pose=createPipTendingPose(tending,stage,()=>pipReaction==='tend'&&careReactionStarted===started&&careGeneration===generation&&route==='journal'&&Date.now()-started>=0&&Date.now()-started<2400);
+  if(carePipDisplay?.pose&&(!visible||pipReaction!=='tend')){carePipDisplay.pose.dispose();carePipDisplay.pose=undefined;}
+  if(visible&&view&&(view==='journal'||gardenTendingPlot!==undefined)&&pipReaction==='tend'&&tending?.isConnected&&carePipDisplay&&!carePipDisplay.pose){
+    const stage=document.querySelector<HTMLElement>(`#${view}-pip-tend-stage`),started=careReactionStarted,generation=careGeneration;
+    if(stage?.isConnected)carePipDisplay.pose=createPipTendingPose(tending,stage,()=>pipReaction==='tend'&&careReactionStarted===started&&careGeneration===generation&&route===view&&(view==='journal'||gardenTendingPlot!==undefined)&&Date.now()-started>=0&&Date.now()-started<2400);
   }
   const idle=visible&&careIdlePose();
   if(idle&&view){
@@ -1018,11 +1022,11 @@ function commitCare(button:HTMLButtonElement,expectedSave:SaveData,generation:nu
   }finally{careProcessing=false;}
 }
 function clearPipUnlock(){pipUnlock=undefined;const card=document.querySelector<HTMLElement>('#pip-unlock-card');if(card)card.hidden=true;}
-function clearCareReaction(){clearPipUnlock();clearTimeout(careReactionTimer);careReactionTimer=undefined;pipReaction=undefined;careReactionStarted=0;gardenActivity=undefined;journeyMoment=false;}
+function clearCareReaction(){clearPipUnlock();clearTimeout(careReactionTimer);careReactionTimer=undefined;pipReaction=undefined;careReactionStarted=0;gardenActivity=undefined;gardenTendingPlot=undefined;journeyMoment=false;}
 function reactPip(kind:NonNullable<typeof pipReaction>){
   clearCareReaction();pipReaction=kind;careReactionStarted=Date.now();
   const generation=careGeneration;
-  const timer=setTimeout(()=>{if(generation!==careGeneration||careReactionTimer!==timer)return;careReactionTimer=undefined;pipReaction=undefined;careReactionStarted=0;journeyMoment=false;renderViews();},2400);
+  const timer=setTimeout(()=>{if(generation!==careGeneration||careReactionTimer!==timer)return;careReactionTimer=undefined;pipReaction=undefined;careReactionStarted=0;gardenTendingPlot=undefined;journeyMoment=false;renderViews();},2400);
   careReactionTimer=timer;
 }
 function enterCareDemo():boolean {
@@ -1084,9 +1088,10 @@ const flowerName=(id:typeof flowerStyles[number])=>text(({meadow:'gardenMeadow',
 const gardenPlotPoints=[[158,153],[285,141],[413,153],[218,222],[351,222]];
 function gardenVisitor(){
   const activity=gardenActivity,plot=gardenPlotPoints[activity?.plot??0];
-  const position=activity?activity.kind==='flower'?`left:${(plot[0]-130)/4.8}%;bottom:${(280-plot[1]-32)/2.8}%;`:activity.kind==='rest'?'left:35%;bottom:3%;':activity.kind==='arch'?'left:58%;bottom:2%;':`left:${activity.kind==='lily'?25:65}%;bottom:3%;`:'';
+  const tending=gardenTendingPlot!==undefined?gardenPlotPoints[gardenTendingPlot]:undefined;
+  const position=tending?`left:${(tending[0]-75)/4.8}%;bottom:${(274-tending[1])/2.8}%;`:activity?activity.kind==='flower'?`left:${(plot[0]-130)/4.8}%;bottom:${(280-plot[1]-32)/2.8}%;`:activity.kind==='rest'?'left:35%;bottom:3%;':activity.kind==='arch'?'left:58%;bottom:2%;':`left:${activity.kind==='lily'?25:65}%;bottom:3%;`:'';
   const image=activity?.kind==='rest'?'/assets/pip-idle-blink-v2.webp':pipReaction==='greet'?'/assets/pip-play-v1.webp':careIdlePose()?'/assets/pip-idle-open-v2.webp':'/assets/pip.png';
-  return `<div data-area="${selectedGardenArea}" data-activity="${activity?.kind??'none'}" class="garden-visitor ${pipReaction==='greet'?'pip-reaction-greet':''}${activity?' garden-activity-visitor':''}"${position?` style="${position}"`:''}><span id="village-pip-actor" class="care-pip-visual"><span class="pip-face"><img id="village-pip-image" src="${image}" alt="${text('pip')}"/></span></span>${pipDecoration('village')}</div>`;
+  return `<div ${tending?'id="village-pip-portrait" ':''}data-area="${selectedGardenArea}" data-activity="${activity?.kind??'none'}" class="garden-visitor ${tending?'garden-tending-visitor ':''}${pipReaction==='greet'?'pip-reaction-greet':''}${activity?' garden-activity-visitor':''}"${position?` style="${position}"`:''}><span id="village-pip-actor" class="care-pip-visual"><span class="pip-face"><img id="village-pip-image" src="${image}" alt="${text('pip')}"/></span></span>${tending?`<span id="village-pip-tend-stage" class="pip-tending-stage">${pipDecoration('village')}</span>`:pipDecoration('village')}</div>`;
 }
 function gardenActivitySpots(mode:'art'|'controls'|'both'='both'){
   const flower=selectedGardenArea==='flowers'&&save.garden>0,spaces=gardenSpacesFor(save.gardenDesign?.spaces);
@@ -1154,8 +1159,8 @@ function gardenVisitControls(){
   const design=gardenDesignFor(save.gardenDesign),pip=save.pip??freshPip();
   const phase=selectedGardenArea==='flowers'?undefined:gardenSpacesFor(design.spaces)[selectedGardenArea].phase;
   const reaction:TextKey=pipReaction==='tend'?'pipTendReaction':selectedGardenArea!=='flowers'?(phase===0?'spaceVisitEmpty':phase===1?'spaceVisitBuilding':({pond:'spaceVisitPond',shelter:'spaceVisitShelter',arch:'spaceVisitArch'} as const)[selectedGardenArea]):pipReaction==='greet'?design.placed.includes('lantern')?'gardenVisitLantern':design.placed.includes('butterflies')?'gardenVisitButterflies':design.placed.includes('bench')?'gardenVisitBench':'pipGreetReaction':'gardenVisitInvite';
-  const activityLine=gardenActivity?text(gardenActivity.kind==='flower'?'gardenFlowerMoment':gardenActivity.kind==='lily'?'gardenLilyMoment':gardenActivity.kind==='rest'?'gardenRestMoment':gardenActivity.kind==='arch'?'gardenArchMoment':'gardenRippleMoment').replace('{flower}',flowerName(design.flowers[gardenActivity.plot])).replace('{number}',String(gardenActivity.plot+1)):text(reaction);
-  return `<div class="garden-companion"><div><p class="garden-visit-line" role="status">${activityLine}</p><div class="garden-visit-actions"><button id="garden-visit" class="text-button">${text('gardenVisit')}</button><button id="garden-tend" class="text-button" ${pipLevel(pip)<3?'disabled':''}>${text('pipTend')}</button></div></div></div>`;
+  const activityLine=gardenTendingPlot!==undefined?text('gardenTendMoment').replace('{number}',String(gardenTendingPlot+1)).replace('{flower}',flowerName(design.flowers[gardenTendingPlot])):gardenActivity?text(gardenActivity.kind==='flower'?'gardenFlowerMoment':gardenActivity.kind==='lily'?'gardenLilyMoment':gardenActivity.kind==='rest'?'gardenRestMoment':gardenActivity.kind==='arch'?'gardenArchMoment':'gardenRippleMoment').replace('{flower}',flowerName(design.flowers[gardenActivity.plot])).replace('{number}',String(gardenActivity.plot+1)):text(reaction);
+  return `<div class="garden-companion"><div><p class="garden-visit-line" role="status">${activityLine}</p><div class="garden-visit-actions"><button id="garden-visit" class="text-button">${text('gardenVisit')}</button><button id="garden-tend" class="text-button" ${pipLevel(pip)<3||growing||selectedGardenArea==='flowers'&&save.garden===0?'disabled':''}>${selectedGardenArea==='flowers'&&save.garden>0?text('gardenTendTarget').replace('{number}',String(selectedGardenPlot+1)):text('pipTend')}</button></div></div></div>`;
 }
 function gardenEditor(){
   const design=gardenDesignFor(save.gardenDesign),pip=save.pip??freshPip(),blocked=careStorageBlocked();
@@ -1300,7 +1305,7 @@ function bindCareControls(){
     clearCareReaction();gardenActivity={kind,plot:Math.max(0,Math.min(selectedGardenPlot,save.garden-1))};renderViews();
   });
   bind('garden-visit',()=>{if(route==='village'&&careEnvironment()&&!careProcessing){reactPip('greet');renderViews();}});
-  bind('garden-tend',()=>{if(route==='village'&&careEnvironment()&&!careProcessing&&pipLevel(save.pip??freshPip())>=3){reactPip('tend');renderViews();}});
+  bind('garden-tend',()=>{if(route!=='village'||!careEnvironment()||careProcessing||growing||pipLevel(save.pip??freshPip())<3||selectedGardenArea==='flowers'&&save.garden===0)return;reactPip('tend');if(selectedGardenArea==='flowers')gardenTendingPlot=Math.max(0,Math.min(selectedGardenPlot,save.garden-1));renderViews();});
   bind('grow',button=>{
     if(route!=='village'||selectedGardenArea!=='flowers'||growing)return;
     if(!commitCare(button,expectedSave,generation,next=>{if(next.stars<2||next.garden>=5)return false;next.stars-=2;next.garden++;return true;}))return;
@@ -1321,7 +1326,7 @@ function gardenWorkshop(grew:boolean){
   const space=selectedGardenArea as Exclude<GardenArea,'flowers'|'journey'>;
   const image=flowers?gardenArt(save.garden,grew,save.gardenDesign,{renderer:'painted-v4'}):gardenSpaceArt(space,spaces[space],save.gardenDesign?.theme??'meadow','garden-space','painted-v4',{foreground:false});
   const progress=flowers?`${icon('flower',17)} ${save.garden} / 5`:spacePhaseName(save.language,spaces[selectedGardenArea as Exclude<GardenArea,'flowers'|'journey'>]);
-  return `<section class="garden-workshop">${gardenAreaTabs(save.language,selectedGardenArea)}<div id="garden-area-panel" role="tabpanel" aria-labelledby="garden-area-${selectedGardenArea}"><div id="garden-nature" class="garden-picture garden-preview"><div class="garden-illustration" role="img" aria-label="${gardenDescription()}">${image}</div>${gardenVisitor()}${gardenActivitySpots('art')}${flowers?'':paintedGardenForeground(space,spaces[space])}<span class="garden-pill">${progress}</span></div>${gardenActivitySpots('controls')}${journeyNextCard(save.language,save.gardenDesign?.journeyProjects,gardenCompletedCount(),'village')}${sharedGardenPlan('village')}${flowers?`<div class="garden-card garden-growth"><h3>${text('garden')}</h3><p class="garden-stage" id="garden-stage" role="status" tabindex="-1">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div>${save.garden===5?`<section class="pip-project garden-next-space">${nextSpaceGoal(save.language,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}<button id="garden-open-space" class="text-button">${text('spaceOpen')}</button></section>`:''}${gardenEditor()}`:`${gardenVisitControls()}${gardenSpacePanel(save.language,selectedGardenArea as Exclude<GardenArea,'flowers'|'journey'>,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}`}</div></section>`;
+  return `<section class="garden-workshop">${gardenAreaTabs(save.language,selectedGardenArea)}<div id="garden-area-panel" role="tabpanel" aria-labelledby="garden-area-${selectedGardenArea}"><div id="garden-nature" class="garden-picture garden-preview"><div class="garden-illustration" role="img" aria-label="${gardenDescription()}">${image}</div>${gardenVisitor()}${gardenTendingPlot===undefined?'':gardenTendingArt(gardenTendingPlot,gardenPlotPoints[gardenTendingPlot],Date.now()-careReactionStarted)}${gardenActivitySpots('art')}${flowers?'':paintedGardenForeground(space,spaces[space])}<span class="garden-pill">${progress}</span></div>${gardenActivitySpots('controls')}${journeyNextCard(save.language,save.gardenDesign?.journeyProjects,gardenCompletedCount(),'village')}${sharedGardenPlan('village')}${flowers?`<div class="garden-card garden-growth"><h3>${text('garden')}</h3><p class="garden-stage" id="garden-stage" role="status" tabindex="-1">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div>${save.garden===5?`<section class="pip-project garden-next-space">${nextSpaceGoal(save.language,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}<button id="garden-open-space" class="text-button">${text('spaceOpen')}</button></section>`:''}${gardenEditor()}`:`${gardenVisitControls()}${gardenSpacePanel(save.language,selectedGardenArea as Exclude<GardenArea,'flowers'|'journey'>,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}`}</div></section>`;
 }
 function mapCurrentLevel(){return !testingLevel&&!roundEnded?currentLevel:save.highestLevel;}
 function revealMapStage(){
@@ -1479,7 +1484,7 @@ function switchView(name:string){
   if(route==='map')mapScrollOffset=$('#campaign-scroll').scrollTop;
   if(name!=='puzzle'){clearResumeNotice();clearBoardNotice();}
   if(route==='journal'&&name!=='journal')clearPipUnlock();
-  if(name!=='village'&&(gardenActivity||journeyMoment))clearCareReaction();
+  if(name!=='village'&&(gardenActivity||journeyMoment||gardenTendingPlot!==undefined))clearCareReaction();
   route=name;$('#app').dataset.route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
   if(name==='village'||name==='map')renderViews();
   if(name==='map'&&mapPositioned!==mapCurrentLevel()){revealMapStage();mapPositioned=mapCurrentLevel();}
