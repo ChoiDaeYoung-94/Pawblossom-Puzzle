@@ -1,3 +1,14 @@
+## 2026-10-28 · #422 Quad D 원본 회사 인트로
+
+사용자 소유 [브랜드 저장소](https://github.com/ChoiDaeYoung-94/ChoiDaeYoung-94/tree/55bf9e4aa48c2f95942f3c2c995f1d55414e97c0/brand)의 확정 커밋에서 `unity/com.quadd.intro/Runtime/Resources/QuadD/QuadDIntro.mp4`와 `brand/quad-d-intro-poster.png`를 그대로 재사용합니다. `unity/com.quadd.intro/LICENSE.md`는 소유자의 자체 게임/프로젝트 사용·수정을 허용하며 제3자의 브랜드 사용권을 주지 않습니다. 생성형 시안이나 다른 게임 에셋을 새로 가져오지 않았고 재인코딩·크롭·음량 가공 없이 원본 바이트를 유지합니다. Unity 연결 코드는 복사하지 않고 Phaser/Capacitor 웹 부트 흐름을 별도로 구현합니다.
+
+| 배포 파일 | 원본 바이트 | SHA256 |
+| --- | ---: | --- |
+| `public/assets/brand/quad-d-intro.mp4` | 88,032 | `79839ba1b4cc0ee0d17bcd13ad8118f35b67b5ffea5c5346d7f812253666c360` |
+| `public/assets/brand/quad-d-intro-poster.png` | 32,621 | `d16adfe308afcbd785d43f8e1a4e4a075972b0dbf67230917e55d2ac026abd89` |
+
+원본 안내의 영상은3.4초/1920×1080/30fps·자체 효과음 포함이고 포스터 실제 크기는1280×720입니다. 표시할 때만 작은 화면의 중앙 로고를 확대하고 검정 여백을 화면 밖으로 보내며 원본 파일은 가공하지 않습니다. 브라우저 자동재생 정책이나 무음 설정을 존중하며 기존 AudioManager/최종 출력 믹스를 바꾸지 않습니다. 파일별 Git blob/SHA와 읽기 원문은 Git 밖 `qa/integration-20261028/422-original-assets.json`에 보존했습니다. 격리 production Chrome에서 자연 종료·건너뛰기·실패 복구와 세로/가로 배치를 확인했으며, GPU/가청 출력이 꺼진 자동 검사이므로 Android 재생·실제 청취·최종 APK 검증을 뜻하지 않습니다.
+
 ## 2026-10-27 · #416 폭포 지형에 맞춘 물안개
 
 제품8a97af5의 LDPlayer 무지개 폭포(441–460)에서 기존 돌 소품이 폭포 앞에 떠 보이는 현상을 확인했습니다. 경로 안전 슬롯은 버튼·핍 겹침을 막지만 배경 지형을 판별하지 않으므로 접지를 보장하지 않습니다. 이 풍경의 지도 표시만 직접 작성한 SVG 물안개·물방울/물결로 바꾸고 기존 네 안전 슬롯·부분 모션 수명·모션 감소를 재사용합니다. 지면 그림자나 새 그림 다운로드 없이 표시되며, 자연 소품 원본·crop·정원 수집 연결과 다른19풍경은 보존합니다. 외부 그림·새 raster 생성 프롬프트는 없습니다. 수정528 APK의 실제 LD 상중하/다음 풍경 경계에서 돌 제거와 물방울·물결을 확인했고 이전/이후 원문은 Git 밖 QA에 보존했습니다. 전체25세계·세로 실단말의 자연스러움과 상용 감각 승인은 별도입니다.
