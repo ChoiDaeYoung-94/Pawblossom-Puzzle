@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 2,
+  "status": "draft",
+  "source": {
+    "path": "assets/branding/pip-icon-source-v2.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 1261319,
+    "sha256": "7bc3561cd54436ce6060e4839cd5e117c192c66db9f9a4f463d93b247b0336f0"
+  },
+  "palette": {
+    "light": "#FFF7E8",
+    "middle": "#FFE8E5",
+    "outer": "#F4B9D0"
+  },
+  "native": {
+    "canvas": 432,
+    "viewportDp": 108,
+    "targetRadiusDp": 32,
+    "maximumRadiusDp": 33,
+    "removeExactAlpha": 1,
+    "removedPixels": 12549
+  },
+  "store": {
+    "canvas": 512,
+    "inset": 16
+  },
+  "outputs": {
+    "foreground": {
+      "path": "android/app/src/main/res/drawable-nodpi/pip_icon_foreground_v2.png",
+      "bytes": 75518,
+      "sha256": "8245749fa477eac3014a258039fc32ef1f77952a5e31a526eb52cb92f5c9bf12"
+    },
+    "background": {
+      "path": "android/app/src/main/res/drawable-nodpi/pip_icon_background_v2.png",
+      "bytes": 19370,
+      "sha256": "b748c9cee3ee0cc03ba1610c4e521223c9daa8b35317ef1151835026c61a49b0"
+    },
+    "legacy": {
+      "path": "android/app/src/main/res/drawable-nodpi/pip_icon_legacy_v2.png",
+      "bytes": 212053,
+      "sha256": "68b1ed8548609de5abf1c650a629b8e23d5bcbe12efd18b49b954acfe18808ef"
+    },
+    "round": {
+      "path": "android/app/src/main/res/drawable-nodpi/pip_icon_round_v2.png",
+      "bytes": 213070,
+      "sha256": "b22426e279f054b2f89ff201e0132aa411933a8d726f257b6c72136bbe9b687b"
+    }
+  },
+  "proof": {
+    "normalizedRawSha256": "41968bcbfb63de6f074e710aaaaf498ac8e6be340947d2697259e2789e969b21",
+    "nativeSide": 236,
+    "removedAlphaOne": 12549,
+    "foregroundMaximumCellRadius": 128.68954891520912
+  }
+}

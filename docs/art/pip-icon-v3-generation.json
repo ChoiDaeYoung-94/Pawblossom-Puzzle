@@ -1,0 +1,20 @@
+{
+  "issue": 437,
+  "artRevision": 3,
+  "tool": "built-in image_gen;transparent_background=true",
+  "editTarget": "assets/branding/pip-icon-source-v2.png",
+  "editTargetSha256": "7bc3561cd54436ce6060e4839cd5e117c192c66db9f9a4f463d93b247b0336f0",
+  "generatedOriginal": "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-795397b7-4322-4dc4-8c6d-dfca88bbcb23.png",
+  "preservedCopy": "assets/branding/pip-puzzle-icon-source-v3.png",
+  "bytes": 1479827,
+  "sha256": "8eafa83f5b918a3c973c1034fc09858221e30c378680e046c1c234fd3ce1cbca",
+  "actualDimensions": [
+    1254,
+    1254
+  ],
+  "prompt": "Use case: identity-preserve / stylized game app icon. Edit target: our own Pip rabbit foreground artwork in the attached image. The user says this reads like a pet game rather than match-3: redesign the lower half into a clear MATCH-3 PUZZLE composition while preserving Pip's recognizable cream rabbit face, long pink inner ears, warm brown eyes, tiny pink nose, happy friendly expression, sage gardener clothing and polished soft painterly 3D materials. Make Pip's expressive head peeking from BEHIND a bold horizontal row of THREE separate chunky rounded-square puzzle tiles in the foreground, each tile carrying the SAME simple vivid red strawberry with one green leaf. The three aligned strawberry tiles must be immediately readable as a match at 32–48px; use rich coral/rose tile rims, bright warm cream tile faces, crisp dimensional bevels, and just one small clean gold match sparkle between tiles. The puzzle row takes the lower foreground and roughly two thirds of the composition width; the rabbit head and complete ears remain clearly visible above, paws gently holding the row from behind. Remove the large carrot/flower bouquet which obscures the puzzle identity. No grid board or scene, no typography, no numbers, no arrows, no outer icon frame, no badge, no extra fruit or decorative clutter, no ground shadow or glow outside the real silhouette. Keep broad legible shapes, premium original mobile puzzle-game illustration, warm soft upper-left light, natural friendly storybook character rather than plastic/flatvector/emoji. One compact centered composition fully contained in central 76% of a square canvas, with a generous genuinely transparent alpha border suitable for adaptive icon masks. Preserve the original mascot identity, but make the three matching tiles prominent enough that the puzzle genre is obvious. Do not imitate any existing game's icon, character or assets. One finished foreground artwork, no background.",
+  "inspection": "Cream Pip identity and ears retained;carrot replaced by three matching strawberry tiles;selected first edit. Original bytes/alpha preserved.",
+  "compatibility": "Manifest format2/store filenames/native resource IDs retain v2 names;artRevision3 and activeIcon pip-match3-v3 distinguish new art. Old source and frozen spec preserved. Existing monochrome unchanged.",
+  "processing": "Existing standard resize/padding/encoding;native exactalpha1 removal19851 only before resampling;store original alpha retained;safe-circle and profile checks remain. No creative pixel editing outside image_gen.",
+  "status": "own icon prototype;native rendering/user art approval/store submission pending"
+}

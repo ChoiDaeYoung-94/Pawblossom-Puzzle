@@ -19,6 +19,7 @@ test('native 정규화는 입력·RGB·alpha2 이상을 유지하고 정확 alph
   const expected=Buffer.from(before);expected[7]=0;assert.deepEqual(result.pixels,expected);
   assert.throws(()=>normalizeNative({width:5,height:1,channels:3,pixels}),/RGBA/);
   const invalid=structuredClone(spec);invalid.native.removeExactAlpha=2;assert.throws(()=>validatePipSpec(invalid),/native/);
+  for(const mutate of [s=>{s.artRevision=2;},s=>{s.source.path='assets/branding/pip-icon-source-v2.png';},s=>{s.native.removedPixels=12549;}]){const old=structuredClone(spec);mutate(old);assert.throws(()=>validatePipSpec(old),/pip/);}
 });
 test('희박한 alpha1과 픽셀 셀 모서리도 native 안전원 검사에서 제외하지 않습니다',()=>{
   const image={width:432,height:432,channels:4,colorType:6,opaque:false,pixels:Buffer.alloc(432*432*4)};

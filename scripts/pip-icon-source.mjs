@@ -1,16 +1,17 @@
 import {createHash} from 'node:crypto';
 
 export const pipSpecPath='assets/branding/pip-icon-v2.json';
-export const pipSourcePath='assets/branding/pip-icon-source-v2.png';
+// Android resource IDs와 manifest 형식2는 유지하고, 선택된 그림만 revision3으로 교체합니다.
+export const pipSourcePath='assets/branding/pip-puzzle-icon-source-v3.png';
 export const pipLayerPaths=Object.fromEntries(['foreground','background','legacy','round'].map(kind=>[kind,`android/app/src/main/res/drawable-nodpi/pip_icon_${kind}_v2.png`]));
 export const hash=data=>createHash('sha256').update(data).digest('hex');
 const requireThat=(condition,message)=>{if(!condition)throw Error(message);};
 
 export function validatePipSpec(spec){
-  requireThat(spec.schemaVersion===2&&spec.status==='draft','pip spec version/status');
-  requireThat(spec.source?.path===pipSourcePath&&spec.source.width===1254&&spec.source.height===1254&&spec.source.bytes===1261319&&/^[a-f0-9]{64}$/.test(spec.source.sha256),'pip source specification');
+  requireThat(spec.schemaVersion===2&&spec.status==='draft'&&spec.artRevision===3,'pip spec version/status');
+  requireThat(spec.source?.path===pipSourcePath&&spec.source.width===1254&&spec.source.height===1254&&spec.source.bytes===1479827&&/^[a-f0-9]{64}$/.test(spec.source.sha256),'pip source specification');
   requireThat(['light','middle','outer'].every(k=>/^#[a-f0-9]{6}$/i.test(spec.palette?.[k])),'pip palette');
-  requireThat(spec.native?.canvas===432&&spec.native.viewportDp===108&&spec.native.targetRadiusDp===32&&spec.native.maximumRadiusDp===33&&spec.native.removeExactAlpha===1&&spec.native.removedPixels===12549,'pip native layout');
+  requireThat(spec.native?.canvas===432&&spec.native.viewportDp===108&&spec.native.targetRadiusDp===32&&spec.native.maximumRadiusDp===33&&spec.native.removeExactAlpha===1&&spec.native.removedPixels===19851,'pip native layout');
   requireThat(spec.store?.canvas===512&&spec.store.inset===16,'pip store layout');
 }
 
