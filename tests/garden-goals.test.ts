@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {gardenGoals,goalNextStep,nextGardenGoal,type GoalState} from '../src/GardenGoals';
+import {gardenGoals,goalNextStep,nextGardenGoal,newlyReadyGardenGoal,type GoalState} from '../src/GardenGoals';
 import {freshGardenDesign} from '../src/gardenDesign';
 import {freshGardenSpaces} from '../src/gardenSpaces';
 import {journeyProjectSpecs} from '../src/journeyGarden';
@@ -58,5 +58,20 @@ describe('저장과 소비 없는 공동 정원 목표',()=>{
     const pond=gardenGoals(state).find(g=>g.id==='pond-1')!;expect(goalNextStep(pond)).toMatchObject({destination:'flowers',unavailableIncome:true,missing:{kind:'stars'}});
     state.pip={growth:0,affection:0};state.plots=1;state.design=undefined;
     expect(goalNextStep(gardenGoals(state).find(g=>g.id==='bench')!)).toMatchObject({destination:'flowers',unavailableIncome:true,missing:{kind:'coins',required:10}});
+  });
+});
+
+
+describe('이번 보상으로 준비된 작업',()=>{
+  it('별1→2로 가능한 첫 꽃밭을 고르고 이미 가능했던 계획·완료 작업은 안내하지 않는다',()=>{
+    const before=gardenGoals({...fresh(),clears:1,stars:1,coins:40}),after=gardenGoals({...fresh(),clears:2,stars:2,coins:80});
+    expect(newlyReadyGardenGoal(before,after)?.id).toBe('bed-1');expect(newlyReadyGardenGoal(after,after)).toBeUndefined();
+    expect(newlyReadyGardenGoal(before,gardenGoals({...fresh(),plots:1,clears:2,stars:0,coins:80}))).toBeUndefined();
+  });
+  it('여러 새 작업은 기존 계획 순서로 하나만 고르며 전후 목록을 변경하지 않는다',()=>{
+    const state:GoalState={...fresh(),plots:3,pip:{growth:80,affection:80},design:{...freshGardenDesign(),flowers:['meadow','daisy','violet','meadow','meadow']}};
+    const before=gardenGoals({...state,clears:49,stars:43,coins:0}),after=gardenGoals({...state,clears:50,stars:44,coins:40});
+    const original=JSON.stringify({before,after});expect(after.filter(g=>!g.done&&!goalNextStep(g)?.missing).length).toBeGreaterThan(1);
+    expect(newlyReadyGardenGoal(before,after)?.id).toBe('lantern');expect(newlyReadyGardenGoal(before,after.filter(goal=>goal.id!=='lantern'))?.id).toBe('pond-1');expect(JSON.stringify({before,after})).toBe(original);
   });
 });
