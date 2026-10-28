@@ -3,17 +3,18 @@ import { LEVEL_COUNT, levels, type Level } from './levels';
 import { BoardEngine, type BoardSnapshot, type Cell, type Special } from './core';
 import { validatePip, type PipCare } from './pipCare';
 import { validateGardenDesign, type GardenDesign } from './gardenDesign';
+import {freshToolProgress,validateToolProgress,validateToolIds,type PuzzleToolProgress,type PuzzleToolId} from './puzzleTools';
 export interface RoundCheckpoint extends BoardSnapshot {
-  schema: 1; levelId: number; levelSignature: string; moves: number; score: number;
+  schema: 1|2; actionProfile?:'tools-v1'; toolsUsed?:PuzzleToolId[]; toolsStarted?:boolean; levelId: number; levelSignature: string; moves: number; score: number;
   collected: number[]; shuffles: number; clearedLeaves: number;
   paidShuffleUsed?:boolean; continueUsed?:boolean;
   clearedCrates?:number;
 }
-export interface SaveData { version: 1; language: Language; highestLevel: number; completed: number[]; stars: number; coins: number; garden: number; music: boolean; sfx: boolean; tutorialSeen: boolean; pip?:PipCare; gardenDesign?:GardenDesign; inProgress?: RoundCheckpoint; }
+export interface SaveData { version: 2; puzzleTools:PuzzleToolProgress; language: Language; highestLevel: number; completed: number[]; stars: number; coins: number; garden: number; music: boolean; sfx: boolean; tutorialSeen: boolean; pip?:PipCare; gardenDesign?:GardenDesign; inProgress?: RoundCheckpoint; }
 export const SAVE_KEY = 'pawblossom.save.v1';
 export const BACKUP_KEY = `${SAVE_KEY}.backup`;
 export const RESET_KEY = `${SAVE_KEY}.reset`;
-const defaults = (): SaveData => ({version:1, language:'ko', highestLevel:1, completed:[], stars:0, coins:0, garden:0, music:true, sfx:true, tutorialSeen:false});
+const defaults = (): SaveData => ({version:2,puzzleTools:freshToolProgress(), language:'ko', highestLevel:1, completed:[], stars:0, coins:0, garden:0, music:true, sfx:true, tutorialSeen:false});
 const safeNumber = (x: unknown, fallback: number, max: number) => typeof x === 'number' && Number.isInteger(x) && x >= 0 && x <= max ? x : fallback;
 // 기존 ID·목표·이동 수·고정 낙엽 구성이 달라진 저장은 복원하지 않습니다.
 export function levelSignature(level:Level):string {
@@ -27,10 +28,14 @@ const record=(x:unknown):x is Record<string,unknown>=>typeof x==='object'&&x!==n
 const grid=(x:unknown):x is unknown[][]=>Array.isArray(x)&&x.length===8&&x.every(row=>Array.isArray(row)&&row.length===8);
 /** 작은 고정 크기만 순회하며 진행 중 회차가 손상돼도 영구 기록은 보존합니다. */
 export function validateCheckpoint(value:unknown,highestLevel:number):RoundCheckpoint|undefined {
-  if(!record(value)||value.schema!==1||!integer(value.levelId,LEVEL_COUNT)||value.levelId<1||value.levelId>highestLevel)return;
+  if(!record(value)||(value.schema!==1&&value.schema!==2)||!integer(value.levelId,LEVEL_COUNT)||value.levelId<1||value.levelId>highestLevel)return;
+  const toolsUsed=value.schema===2?validateToolIds(value.toolsUsed,2):undefined;
+  if(value.schema===2?value.actionProfile!=='tools-v1'||!toolsUsed||typeof value.toolsStarted!=='boolean'||toolsUsed.length>0&&!value.toolsStarted:value.actionProfile!==undefined||value.toolsUsed!==undefined||value.toolsStarted!==undefined)return;
   const ruleVersion=value.ruleVersion===undefined?1:value.ruleVersion;
   if(ruleVersion!==1&&ruleVersion!==2)return;
+  if(value.schema===2&&ruleVersion!==2)return;
   const level=levels[value.levelId-1];
+  if(value.schema===2&&!value.toolsStarted&&(value.moves!==level.moves||value.score!==0||value.shuffles!==1||value.paidShuffleUsed===true||value.continueUsed===true||value.clearedLeaves!==0||(value.clearedCrates??0)!==0||!Array.isArray(value.collected)||value.collected.some(n=>n!==0)))return;
   if((level.mask||level.crates)&&ruleVersion!==2)return;
   if(value.levelSignature!==levelSignature(level)||!integer(value.moves,level.moves)||value.moves<1||!integer(value.score,100_000_000)||!integer(value.shuffles,1))return;
   if(['paidShuffleUsed','continueUsed'].some(key=>value[key]!==undefined&&typeof value[key]!=='boolean')
@@ -65,17 +70,19 @@ export function validateCheckpoint(value:unknown,highestLevel:number):RoundCheck
   // 초기 생성 없이 조회하므로 실제 게임의 보충 난수를 소비하지 않습니다.
   const engine=new BoardEngine(8,8,()=>{throw Error('저장 검증 중 난수 사용');},{board,leaves,ruleVersion,...(crates?{crates}:{})},undefined,level.mask,level.crates);
   if(engine.findMatches().length||!engine.hasMoves())return;
-  return {schema:1,...(value.ruleVersion===undefined?{}:{ruleVersion}),levelId:level.id,levelSignature:levelSignature(level),board,leaves,moves:value.moves,score:value.score,
+  return {schema:value.schema,...(value.schema===2?{actionProfile:'tools-v1' as const,toolsUsed,toolsStarted:value.toolsStarted as boolean}:{}),...(value.ruleVersion===undefined?{}:{ruleVersion}),levelId:level.id,levelSignature:levelSignature(level),board,leaves,moves:value.moves,score:value.score,
     collected:value.collected.slice() as number[],shuffles:value.shuffles,clearedLeaves:total-remaining,...(crates?{crates,clearedCrates:crateTotal-remainingCrates}:{}),
     ...(value.paidShuffleUsed===undefined?{}:{paidShuffleUsed:value.paidShuffleUsed as boolean}),...(value.continueUsed===undefined?{}:{continueUsed:value.continueUsed as boolean})};
 }
 /** 구형 v1의 선택 필드는 정규화하되, 영구 기록의 필수 구조는 추측하지 않습니다. */
 function normalizeSave(x:unknown,backup=false):SaveData|undefined {
-    if(!record(x)||x.version!==1||!Array.isArray(x.completed)||x.completed.length>LEVEL_COUNT*4||
+    if(!record(x)||(x.version!==1&&x.version!==2)||!Array.isArray(x.completed)||x.completed.length>LEVEL_COUNT*4||
       !integer(x.highestLevel,LEVEL_COUNT)||x.highestLevel<1||!integer(x.stars,LEVEL_COUNT)||!integer(x.coins,1_000_000)||!integer(x.garden,5))return;
     if((x.language!==undefined&&x.language!=='ko'&&x.language!=='en')||
       ['music','sfx','tutorialSeen'].some(k=>x[k]!==undefined&&typeof x[k]!=='boolean'))return;
     if(backup&&(x.language===undefined||['music','sfx','tutorialSeen'].some(k=>typeof x[k]!=='boolean')))return;
+    const puzzleTools=x.version===1?freshToolProgress():validateToolProgress(x.puzzleTools);
+    if(!puzzleTools)return;
     // 구형 저장은 핍 필드 없이 그대로 보존합니다. 첫 육성 때 기본 상태에서 확장합니다.
     const pip=x.pip===undefined?undefined:validatePip(x.pip);
     if(x.pip!==undefined&&!pip)return;
@@ -85,9 +92,9 @@ function normalizeSave(x:unknown,backup=false):SaveData|undefined {
     // 기존 마지막 스테이지까지 완료한 저장도 새 콘텐츠의 첫 미완료 스테이지로 이어집니다.
     let frontier=1;while(frontier<LEVEL_COUNT&&completed.includes(frontier))frontier++;
     const highestLevel=Math.max(frontier,safeNumber(x.highestLevel,1,LEVEL_COUNT));
-    const inProgress=validateCheckpoint(x.inProgress,highestLevel);
+    const inProgress=x.version===1&&record(x.inProgress)&&x.inProgress.schema===2?undefined:validateCheckpoint(x.inProgress,highestLevel);
     if(backup&&(completed.length!==x.completed.length||!x.completed.every(n=>integer(n,LEVEL_COUNT)&&n>=1)||(x.inProgress!==undefined&&!inProgress)))return;
-    return {version:1,language:x.language==='en'?'en':'ko', highestLevel,completed,
+    return {version:2,puzzleTools,language:x.language==='en'?'en':'ko', highestLevel,completed,
       stars:safeNumber(x.stars,0,LEVEL_COUNT), coins:safeNumber(x.coins,0,1000000), garden:safeNumber(x.garden,0,5),
       music:x.music!==false,sfx:x.sfx!==false,tutorialSeen:typeof x.tutorialSeen==='boolean'?x.tutorialSeen:completed.length>0,...(pip?{pip}:{}),...(gardenDesign?{gardenDesign}:{}),...(inProgress?{inProgress}:{})};
 }
@@ -102,7 +109,12 @@ function decode(raw:string|null,backup=false):Decoded {
   if(raw===null)return {kind:'missing'};
   try {
     const value:unknown=JSON.parse(raw);
-    if(record(value)&&value.version!==undefined&&value.version!==1)return {kind:'unsupported'};
+    if(record(value)&&value.version!==undefined&&value.version!==1&&value.version!==2)return {kind:'unsupported'};
+    if(record(value)&&value.version===2){
+      const progress=value.puzzleTools,round=value.inProgress;
+      if(record(progress)&&progress.schema!==undefined&&progress.schema!==1)return {kind:'unsupported'};
+      if(record(round)&&(round.schema!==undefined&&round.schema!==1&&round.schema!==2||round.actionProfile!==undefined&&round.actionProfile!=='tools-v1'||typeof round.ruleVersion==='number'&&round.ruleVersion>2))return {kind:'unsupported'};
+    }
     const data=normalizeSave(value,backup);return data?{kind:'valid',data}:{kind:'corrupt'};
   }catch{return {kind:'corrupt'};}
 }

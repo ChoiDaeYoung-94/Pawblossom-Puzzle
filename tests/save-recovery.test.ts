@@ -2,12 +2,15 @@ import {describe,it,expect} from 'vitest';
 import {SaveStore,SAVE_KEY,BACKUP_KEY,RESET_KEY,levelSignature,type SaveData} from '../src/state';
 import {levels} from '../src/levels';
 import {BoardEngine,seededRng} from '../src/core';
+import type {SaveData as LegacySaveData} from './fixtures/legacy-save-v1';
+import {freshToolProgress} from '../src/puzzleTools';
 
-function fixture():SaveData {
+function fixture():LegacySaveData {
   const level=levels[5],engine=new BoardEngine(8,8,seededRng(42));engine.setLeaves(level.leaves??[]);
   return {version:1,language:'en',highestLevel:6,completed:[1,2,3,4,5],stars:3,coins:200,garden:1,music:false,sfx:true,tutorialSeen:true,
     inProgress:{schema:1,levelId:6,levelSignature:levelSignature(level),board:engine.board,leaves:engine.leaves,moves:24,score:120,collected:[1,2,3,4,5,6],shuffles:0,clearedLeaves:0}};
 }
+const migratedFixture=(data=fixture()):SaveData=>({...data,version:2,puzzleTools:freshToolProgress()});
 function disk(primary:string|null=JSON.stringify(fixture()),backup?:string){
   const values=new Map<string,string>();if(primary!==null)values.set(SAVE_KEY,primary);if(backup!==undefined)values.set(BACKUP_KEY,backup);
   const calls:string[]=[];let failRead='',failWrite='',failRemove=false;
@@ -35,7 +38,7 @@ describe('검증한 로컬 저장 복구와 보호',()=>{
     expect(d.store().load().coins).toBe(0);expect(d.store().load().inProgress).toBeUndefined();
   });
   const externalChanges=[
-    ['삭제',null],['미래 형식','{"version":2}'],['손상','{'],['정상 진행',JSON.stringify({...fixture(),coins:280})],
+    ['삭제',null],['미래 형식','{"version":3}'],['손상','{'],['정상 진행',JSON.stringify({...fixture(),coins:280})],
     ['동일 의미의 다른 원문',JSON.stringify(fixture(),null,2)],
   ] as const;
   it.each([SAVE_KEY,BACKUP_KEY].flatMap(key=>externalChanges.map(([name,raw])=>[key,name,raw] as const)))('%s 외부 %s 변경은 무쓰기 충돌입니다',(key,_name,raw)=>{
@@ -107,7 +110,7 @@ describe('검증한 로컬 저장 복구와 보호',()=>{
   });
   it('정상 primary가 backup보다 우선이고 로드만으로 디스크를 쓰지 않습니다',()=>{
     const old=fixture();old.coins=80;const d=disk(JSON.stringify(fixture()),JSON.stringify(old)),s=d.store();
-    expect(s.load()).toEqual(fixture());expect(s.status.load).toBe('loaded');expect(d.calls).toEqual([]);
+    expect(s.load()).toEqual(migratedFixture());expect(s.status.load).toBe('loaded');expect(d.calls).toEqual([]);
   });
   it('저장 없음과 손상·불완전 구조를 구분하고 임의 version:1은 승격하지 않습니다',()=>{
     const d=disk(null),s=d.store();expect(s.load().highestLevel).toBe(1);expect(s.status.load).toBe('new');
@@ -123,27 +126,27 @@ describe('검증한 로컬 저장 복구와 보호',()=>{
     const broken=disk('{',JSON.stringify(old)),b=broken.store();b.load();expect(b.status.load).toBe('corrupt');
   });
   it.each(['{',null])('primary %s에서 정상 사본의 회차·보상·설정을 복구하고 재실행합니다',raw=>{
-    const d=disk(raw,JSON.stringify(fixture())),s=d.store(),save=s.load();expect(save).toEqual(fixture());expect(s.status.load).toBe('recovered');
+    const d=disk(raw,JSON.stringify(fixture())),s=d.store(),save=s.load();expect(save).toEqual(migratedFixture());expect(s.status.load).toBe('recovered');
     expect(s.save(save)).toBe(true);expect(d.store().load()).toEqual(save);
   });
-  it.each(['{"version":2}','{"version":999}'])('미래 primary %s는 구형 사본으로 롤백하지 않습니다',raw=>{
+  it.each(['{"version":3}','{"version":999}'])('미래 primary %s는 구형 사본으로 롤백하지 않습니다',raw=>{
     const d=disk(raw,JSON.stringify(fixture())),s=d.store(),save=s.load();expect(s.status.load).toBe('unsupported');
     expect(s.retry(save)).toBe(false);expect(d.values.get(SAVE_KEY)).toBe(raw);expect(d.calls).toEqual([]);
   });
   it('미래 사본과 손상 사본도 기본값으로 덮지 않습니다',()=>{
-    for(const raw of ['{"version":2}','{"version":1}',JSON.stringify({...fixture(),inProgress:{schema:1}})]){
+    for(const raw of ['{"version":3}','{"version":2}','{"version":1}',JSON.stringify({...fixture(),inProgress:{schema:1}})]){
       const d=disk('{',raw),s=d.store();expect(s.save(s.load())).toBe(false);expect(d.values.get(BACKUP_KEY)).toBe(raw);
     }
   });
   it('정상 primary를 읽어도 미래 backup은 보호하고 자동 쓰기를 차단합니다',()=>{
-    const future='{"version":2,"progress":"future"}',d=disk(JSON.stringify(fixture()),future),s=d.store(),memory=s.load();
-    expect(memory).toEqual(fixture());expect(s.status.load).toBe('unsupported');memory.coins+=40;
+    const future='{"version":3,"progress":"future"}',d=disk(JSON.stringify(fixture()),future),s=d.store(),memory=s.load();
+    expect(memory).toEqual(migratedFixture());expect(s.status.load).toBe('unsupported');memory.coins+=40;
     expect(s.save(memory)).toBe(false);expect(s.retry(memory)).toBe(false);expect(d.calls).toEqual([]);expect(d.values.get(BACKUP_KEY)).toBe(future);
   });
   it('정상 primary 뒤 backup 읽기 실패는 원본에서 플레이하며 복구 뒤 최신 메모리를 저장합니다',()=>{
-    const d=disk(),s=d.store();d.failRead(BACKUP_KEY);const memory=s.load();expect(memory).toEqual(fixture());expect(s.status.load).toBe('read-error');
+    const d=disk(),s=d.store();d.failRead(BACKUP_KEY);const memory=s.load();expect(memory).toEqual(migratedFixture());expect(s.status.load).toBe('read-error');
     memory.coins+=40;expect(s.save(memory)).toBe(false);expect(d.calls).toEqual([]);d.failRead('');expect(s.retry(memory)).toBe(true);
-    expect(d.read(SAVE_KEY).coins).toBe(240);expect(d.read(BACKUP_KEY)).toEqual(fixture());
+    expect(d.read(SAVE_KEY).coins).toBe(240);expect(d.read(BACKUP_KEY)).toEqual(migratedFixture());
   });
   it.each([RESET_KEY,SAVE_KEY,BACKUP_KEY])('%s 읽기 예외는 자동 쓰기를 차단합니다',key=>{
     const d=disk(key===BACKUP_KEY?'{':JSON.stringify(fixture()),JSON.stringify(fixture()));d.failRead(key);
@@ -168,17 +171,17 @@ describe('검증한 로컬 저장 복구와 보호',()=>{
     const old=fixture(),d=disk(JSON.stringify(old),JSON.stringify(old)),s=d.store(),memory=s.load();memory.coins+=40;delete memory.inProgress;
     d.failWrite(BACKUP_KEY);expect(s.save(memory)).toBe(false);expect(s.status.write).toBe('backup-failed');
     expect(d.read(SAVE_KEY)).toEqual(old);expect(d.read(BACKUP_KEY)).toEqual(old);
-    memory.coins+=40;d.failWrite('');expect(s.retry(memory)).toBe(true);expect(d.read(SAVE_KEY).coins).toBe(280);expect(d.read(BACKUP_KEY)).toEqual(old);
+    memory.coins+=40;d.failWrite('');expect(s.retry(memory)).toBe(true);expect(d.read(SAVE_KEY).coins).toBe(280);expect(d.read(BACKUP_KEY)).toEqual(migratedFixture(old));
   });
   it('primary 쓰기 실패 후 연속 진행·보상 재시도는 과거 load로 롤백하지 않습니다',()=>{
     const d=disk(),s=d.store(),memory=s.load();d.failWrite(SAVE_KEY);memory.completed.push(6);memory.highestLevel=7;memory.coins+=40;memory.stars++;delete memory.inProgress;
-    expect(s.save(memory)).toBe(false);expect(s.status.write).toBe('failed');expect(d.read(BACKUP_KEY)).toEqual(fixture());
+    expect(s.save(memory)).toBe(false);expect(s.status.write).toBe('failed');expect(d.read(BACKUP_KEY)).toEqual(migratedFixture());
     memory.garden++;memory.stars-=2;d.failWrite('');expect(s.retry(memory)).toBe(true);expect(d.store().load()).toEqual(memory);
-    d.values.set(SAVE_KEY,'{');expect(d.store().load()).toEqual(fixture()); // 사본은 직전 정상 기록입니다.
+    d.values.set(SAVE_KEY,'{');expect(d.store().load()).toEqual(migratedFixture()); // 사본은 직전 정상 기록입니다.
   });
   it('초기화 의도 쓰기 실패는 메모리와 모든 디스크 기록을 유지합니다',()=>{
     const d=disk(JSON.stringify(fixture()),JSON.stringify(fixture())),s=d.store(),memory=s.load(),before=[...d.values];d.failWrite(RESET_KEY);
-    expect(s.reset()).toBeUndefined();expect(s.status.write).toBe('reset-failed');expect([...d.values]).toEqual(before);expect(memory).toEqual(fixture());
+    expect(s.reset()).toBeUndefined();expect(s.status.write).toBe('reset-failed');expect([...d.values]).toEqual(before);expect(memory).toEqual(migratedFixture());
   });
   it.each([BACKUP_KEY,SAVE_KEY])('초기화 후 %s 실패·종료에도 과거 기록을 부활시키지 않습니다',key=>{
     const d=disk(JSON.stringify(fixture()),JSON.stringify(fixture())),s=d.store();s.load();const reset=s.reset()!;d.failWrite(key);

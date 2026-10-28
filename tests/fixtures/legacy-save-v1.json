@@ -1,0 +1,6 @@
+{
+  "sourceCommit": "60de8a876d8bc7466095581f287cf406d4534e52",
+  "sourcePath": "src/state.ts",
+  "sourceLfSha256": "4ef6e9881884c69c781f369f77545ebad4d528ad1e451367e1f73093f0caa97a",
+  "policy": "frozen old SaveStore;relative imports rebased only;do not update to new protocol"
+}

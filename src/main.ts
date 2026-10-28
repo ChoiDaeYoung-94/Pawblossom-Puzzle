@@ -20,6 +20,7 @@ import './CampaignAlbum.css';
 import './PuzzlePresentation.css';
 import './TrailEpisode.css';
 import {trailStoryCard,trailJournal,updateTrailEncounter} from './TrailEpisode';
+import type {PuzzleToolRound} from './puzzleTools';
 import './PipIdle.css';
 import './PipTending.css';
 import './PipUnlock.css';
@@ -119,6 +120,7 @@ let clearedLeaves=0;
 let clearedCrates=0;
 let testingLevel=false;
 let continueUsed=false,paidShuffleUsed=false,puzzleProcessing=false;
+let roundTools:PuzzleToolRound|undefined;
 let pickerReturnToResult=false;
 let selectedChapter=chapterForLevel(save.highestLevel).id;
 let selectedTestChapter=chapterForLevel(currentLevel).id;
@@ -391,7 +393,7 @@ function syncPipActivity(){
 }
 function previewEnvironment(){return !careDemo&&nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!otherModal()&&!boardPending&&Boolean(scene?.canLeave())&&!resultTimer;}
 function validPreview(context:StagePreview){return stagePreview===context&&context.round===round&&context.scene===scene&&context.testing===testingLevel&&context.route===route&&previewDialog.open&&previewEnvironment()&&Number.isInteger(context.id)&&context.id>=1&&context.id<=LEVEL_COUNT&&(context.intent==='restart'||context.id<=save.highestLevel);}
-function hasRoundProgress(){return !testingLevel&&!roundEnded&&(moves<levels[currentLevel-1].moves||shuffles<1||continueUsed||paidShuffleUsed);}
+function hasRoundProgress(){return !testingLevel&&!roundEnded&&(moves<levels[currentLevel-1].moves||shuffles<1||continueUsed||paidShuffleUsed||Boolean(roundTools?.used.length));}
 function canContinuePreview(context:StagePreview){return context.intent==='map'&&!testingLevel&&!roundEnded&&context.id===currentLevel;}
 function closeStagePreview(restore=true){
   const context=stagePreview;stagePreview=undefined;previewDialog.close();syncActivity();
@@ -520,8 +522,8 @@ function updateGoals(){
   const expectedRound=round,expectedScene=scene,expectedSave=save;
   shuffle.onclick=()=>shuffleRound(shuffle,expectedRound,expectedScene,expectedSave);
 }
-function roundCheckpoint(snapshot:BoardSnapshot,nextMoves=moves,free=shuffles,paid=paidShuffleUsed,continued=continueUsed):RoundCheckpoint {
-  return {...cloneSnapshot(snapshot),schema:1,levelId:currentLevel,levelSignature:levelSignature(levels[currentLevel-1]),moves:nextMoves,score,
+function roundCheckpoint(snapshot:BoardSnapshot,nextMoves=moves,free=shuffles,paid=paidShuffleUsed,continued=continueUsed,tools=roundTools):RoundCheckpoint {
+  return {...cloneSnapshot(snapshot),...(tools?{schema:2 as const,actionProfile:'tools-v1' as const,toolsUsed:tools.used.slice(),toolsStarted:tools.started}:{schema:1 as const}),levelId:currentLevel,levelSignature:levelSignature(levels[currentLevel-1]),moves:nextMoves,score,
     collected:collected.slice(),shuffles:free,clearedLeaves,...(levels[currentLevel-1].crates?{clearedCrates}:{}),...(paid?{paidShuffleUsed:true}:{}),...(continued?{continueUsed:true}:{})};
 }
 function shuffleRound(button:HTMLButtonElement,expectedRound:number,expectedScene:BoardScene,expectedSave:SaveData):boolean {
@@ -539,11 +541,12 @@ function shuffleRound(button:HTMLButtonElement,expectedRound:number,expectedScen
     if(!candidate){notice('shuffleUnavailable');return false;}
     const next=JSON.parse(JSON.stringify(save)) as SaveData;
     const paid=paidShuffleUsed||!free;
-    if(!testingLevel){next.coins-=free?0:20;next.inProgress=roundCheckpoint(candidate,moves,0,paid);
+    const nextTools=roundTools?{used:roundTools.used.slice(),started:true}:undefined;
+    if(!testingLevel){next.coins-=free?0:20;next.inProgress=roundCheckpoint(candidate,moves,0,paid,continueUsed,nextTools);
       if(!saveData(next)){updateSaveStatus();notice('careSaveBlocked');return false;}}
     // 후보 생성·저장·적용 사이에는 await가 없으며 현재 Scene/RNG를 재생성하지 않습니다.
     if(!testingLevel)save=next;
-    shuffles=0;paidShuffleUsed=paid;scene.applyPreparedShuffle(candidate);updateWallet();updateGoals();renderViews();updateSaveStatus();return true;
+    roundTools=nextTools;shuffles=0;paidShuffleUsed=paid;scene.applyPreparedShuffle(candidate);updateWallet();updateGoals();renderViews();updateSaveStatus();return true;
   }finally{puzzleProcessing=false;}
 }
 function checkpoint(){
@@ -579,6 +582,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   pickerReturnToResult=false;
   $<HTMLDialogElement>('#result-dialog').close();
   currentLevel=id;moves=levels[id-1].moves;score=0;collected=Array(6).fill(0);shuffles=1;clearedLeaves=0;clearedCrates=0;
+  roundTools=restored?(restored.schema===2?{used:restored.toolsUsed!.slice(),started:restored.toolsStarted!}:undefined):{used:[],started:false};
   if(restored&&!testingLevel){moves=restored.moves;score=restored.score;collected=restored.collected.slice();shuffles=restored.shuffles;clearedLeaves=restored.clearedLeaves;clearedCrates=restored.clearedCrates??0;continueUsed=restored.continueUsed===true;paidShuffleUsed=restored.paidShuffleUsed===true;}
   scene?.stopPlaying();
   const activeScene:BoardScene=scene=new BoardScene({audio,getHintGoals:()=>{
@@ -609,6 +613,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
     boardNoticeKey=key;$('#board-notice').textContent=text(key);$('#board-notice').classList.remove('pop');void $('#board-notice').offsetWidth;$('#board-notice').classList.add('pop');
   },onMove:(items,points,_chains,leavesCleared,cratesCleared)=>{
     if(careDemo||activeRound!==round||roundEnded)return;
+    if(roundTools)roundTools.started=true;
     boardFeedback.cancel();
     moves--;score+=points;clearedLeaves+=leavesCleared??0;clearedCrates+=cratesCleared??0;items.forEach((n,i)=>collected[i]+=n);updateGoals();
     const level=levels[currentLevel-1];
