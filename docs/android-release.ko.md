@@ -1,8 +1,24 @@
+## 최신 로컬 테스트 APK · 2026-10-28 · #426 · 35155d7
+
+제품 소스 `35155d7db8427d439de9a6798ca7a175fb38eab1`은 기존528 게임에 [PR423 회사 인트로](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/423)·[PR425 핍 아이콘](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/425)을 포함합니다. 정확 최초 [main CI40623633497](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40623633497)은 Node22/24 각각77파일4,089개·스토어19개·타입3종·production/testing 두 빌드·플래그를 통과했습니다. 이후 전달 기록만 바꾸는 문서 커밋과 제품 소스/빌드 시점을 구분합니다.
+
+로컬 파일은 `Pawblossom-builds/2026-10-28-35155d7-brand/Pawblossom-Puzzle-v0.1.7-2026-10-28-35155d7-debug.apk`입니다. **0.1.7/code8 · 53,818,010바이트 · SHA256 `58f62f6d4b3825c7983aa1cd00b185256a4428166beca9b5e1a1d6a00ac1cb20`**입니다. 패키지 `com.choidaeyoung.pawblossompuzzle`·min24/target36·debug·단일 동일v2 서명·이전 전달본과 권한 동일을 확인했습니다. 기존528 전달본은 보존했고 새 파일을 Drive에 업로드하지 않았습니다. APK 크기 증가794,142바이트와 PC의 누적 파일 정리 용량은 별개입니다.
+
+testing 웹106파일과 APK public108파일을 전수 대조했습니다. source public80개는 그대로이며 Capacitor 빈 cordova2개만 추가됩니다. ZIP CRC/중복0·시험flags3개 true·원본 회사 영상/포스터와 웹 해시 일치를 확인했고, APK에 들어간 native nodpi4PNG를 다시 해독해 소스와 RGBA 픽셀/크기까지 같음을 확인했습니다. Gradle assembleDebug는22초/Exit0·91task 중29실행/62 UP-TO-DATE입니다. 이번 묶음에서 JVM 단위/lint 전체를 다시 실행하거나 이전 성공을 새 검사로 합산하지 않았습니다.
+
+최초 산출물 검증기는 aapt2 출력 키를 sdkVersion으로 잘못 기대해 실패했습니다. 실제·이전 APK 모두 minSdkVersion24/targetSdkVersion36이므로 검사기 키만 바로잡았으며 min/target 기대나 제품 소스를 완화하지 않았습니다. 같은 APK의 정적 검증이 성공했고 재빌드는 하지 않았습니다. 최초 실패/스크립트와 수정 검증 로그를 분리 보존했습니다. wrapper는 실패 때도 finally에서 production 웹/sync를 복원했고, 최종97웹/Android99 public 전수 일치·3flags false·Git clean·Gradle daemon0을 확인했습니다.
+
+사용자의 알림 직접 처리 완료와 양측 자원 동의 후 기존 **LD14 index0**의 정상 APK 선택창에 위 파일의 전체 경로를 입력해 업데이트했습니다. 새 핍 런처 아이콘·앱 탭 닫기 후 재실행의 새 핍 splash·Quad D 인트로 화면/한국어 건너뛰기 버튼·지도 진입을 실제 관찰했습니다. 일반 진행은 현재5번/첫 완료4개/별2/코인100, 핍 성장60/친밀24를 유지했습니다. HOME→최근 앱의 우리 카드→핍 페이지 복귀 후 모험 탭 입력도 처리돼 같은5번 지도로 돌아왔습니다. 이 묶음에서 새 퍼즐 이동·재화 소비는0입니다.
+
+**Android 건너뛰기 동작·영상의 전 구간 움직임/정확한 종료 시각·청취·세로/다른 OEM 마스크·삼성 #375 해결은 확인하지 않았습니다.** 로고 관찰 뒤 건너뛰기를 누르려던 시점에는 인트로가 이미 끝나 핍 탭이 선택됐으므로 해당 동작을 성공으로 합산하지 않습니다. 설치 파일의 ADB pull/해시도 미실행이며, 위 SHA는 설치에 선택한 로컬 APK의 정적 검증값입니다. SDK37에서 LD0 연결이 offline/미검출이었고, 양측 사용0/자기 신규 PID·경로·생성 시각·listener를 확인한 뒤 그 서버만 정상 종료해 내장34로1회 교체했지만 연결은 해결되지 않았습니다. VM/기기 재시작·설정/계정 변경은0이며 정상 Windows APK 선택/화면 제어로 위 범위만 확인했습니다.
+
+파일 생성·정적 검증/production 복원·기본 LD 설치/복귀까지 완료하며 #426의 건너뛰기 등 남은 단말 확인과 실 광고/구매/스토어 #73은 별도입니다. 실제 제어는13분 새 입력 정지/15분 반환 한도 안에 마쳤고 공유 내장 ADB 서버를 보존해 다음 프로젝트에 반환했습니다. 상세 원문은 Git 밖 integration-20261028/426-*·420-native-slot2.json과 전달 폴더 artifact.json/checksum에 보존합니다. 테스트 안내는 별도 파일 없이 채팅으로 제공합니다.
+
 ## 현재 준비 · 2026-10-28 · #424 핍 아이콘 리소스
 
 새 자체 핍 그림을 런처8XML·nodpi4PNG에 연결하고 기존 v33 단색 발바닥을 유지했습니다. 같은 foreground를 사용하는 native splash에도 영향이 있습니다. 두 프로젝트 승인 아래 `:app:processDebugResources --no-daemon --max-workers=1`을1회 실행해44초/Exit0·45task 중17실행/28 UP-TO-DATE로 컴파일했습니다. AAPT에서 foreground bitmap의src와gravity=fill(0x77),anydpi-v21/v26/v33 연결·v33 monochrome·4PNG nodpi를 읽기 확인했습니다. 단일 Gradle daemon0·기존 APK53,023,868바이트/10월27일 수정 시각을 확인하고 자원을 반환했습니다. APK/웹 sync·기기 설치·런처/splash 실화면·청취 검증은 수행하지 않았습니다. 원문은 Git 밖 integration-20261028/424-android-resources.log·aapt-*/resource-proof에 보존합니다.
 
-아래528 전달본은 새 회사 인트로·핍 아이콘을 포함하지 않습니다. 최종 묶음 APK를 별도로 검증하기 전까지 최신 전달 파일은 그대로 유지하며 Drive에 업로드하지 않습니다.
+이 #424 리소스 검사 당시에는528 전달본을 그대로 유지했습니다. 현재 로컬 전달 파일은 위 #426의35155d7이며 Drive에는 업로드하지 않았습니다. 아래528은 이전 전달 이력입니다.
 
 ## 최신 로컬 통합 APK · 2026-10-27 · #418 · 528df56
 
