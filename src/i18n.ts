@@ -1,6 +1,11 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    trailJournalLabel:'MOMENTS ALONG THE TRAIL',trailJournalTitle:'The wolf in the meadow',trailJournalNote:'These moments follow your real first clears. Revisiting them is free and does not use stars or coins.',trailMemoryAt:'Complete stage {level} to keep this moment.',
+    trailEncounter:'A visitor on the trail',trailMemory:'A moment from our walk',trailPractice:'Story practice · Progress stays unchanged',trailTryAgain:'The walk can wait',trailRetryLine:'Pip takes a breather. Try the same trail again when you are ready.',
+    trailFirstTitle:'A wolf in the way',trailFirstProblem:'A mischievous wolf has piled leaves across Pip’s trail.',trailFirstTask:'Match beside the leaves and complete every goal to open the way.',trailFirstAfter:'One part of the path is clear. Pip takes another step into the meadow.',
+    trailSecondTitle:'A deeper pile',trailSecondProblem:'The wolf has made a thicker pile this time. Pip is ready for it.',trailSecondTask:'Two-layer leaves need two ordinary hits. A special can clear both layers. Complete the other goals too.',trailSecondAfter:'The thick leaves are gone. Even the wolf looks impressed.',
+    trailFinalTitle:'Room for two',trailFinalProblem:'One last leafy stretch stands between Pip and the open trail.',trailFinalTask:'Use your matches and specials to finish every goal.',trailFinalAfter:'The wolf steps aside. Pip’s walk can carry on!',trailLeavesLeft:'Leaves left: {count}',trailLeavesReady:'Leaves cleared!',
     albumLabel:'PIP’S TRAVEL MEMORIES',albumTitle:'Our landscape album',albumCollection:'Postcards {count}/{total}',albumIntro:'Every twenty different first clears leaves a landscape for us to keep. Revisit the places we finished together.',albumChoose:'Choose a landscape',albumCollected:'Postcard collected',albumPending:'A memory still to make',albumProgress:'Different stages cleared',albumRemaining:'Clear {count} more different stages in this landscape to collect its postcard.',albumMemory:'“Remember this place? A little of our journey stays here.”',albumOpenMap:'See this landscape on the map',albumRealOnly:'The album shows your real saved journey. Demo conditions do not collect postcards.',
     worldProgress:"Cleared {done}/{total}",worldComplete:"A whole landscape, together!",worldNextMemory:"A new landscape is waiting for you and Pip.",worldLastMemory:"Visit your garden and the memories you have made with Pip.",
     journeyMilestoneReady:"First-clear milestone reached. Check the stars needed for restoration.",
@@ -124,6 +129,11 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    trailJournalLabel:'산책길에 남긴 순간',trailJournalTitle:'초원에서 만난 늑대',trailJournalNote:'실제 첫 완료로 한 장면씩 남아요. 다시 보는 데 별이나 코인은 들지 않아요.',trailMemoryAt:'스테이지 {level}을 완료하면 이 장면이 남아요.',
+    trailEncounter:'산책길의 만남',trailMemory:'함께 걸었던 한 장면',trailPractice:'이야기 체험 · 실제 진행은 그대로예요',trailTryAgain:'산책은 기다려 줄 거예요',trailRetryLine:'핍이 잠깐 숨을 골라요. 준비되면 같은 길에 다시 도전해 보세요.',
+    trailFirstTitle:'길을 막은 늑대',trailFirstProblem:'심술쟁이 늑대가 핍의 산책길에 낙엽을 쌓아 두었어요.',trailFirstTask:'낙엽 옆에서 매치하고, 모든 목표를 채워 길을 열어요.',trailFirstAfter:'길 한쪽이 말끔해졌어요. 핍이 초원 안으로 한 걸음 더 나아가요.',
+    trailSecondTitle:'이번에는 두꺼운 낙엽',trailSecondProblem:'늑대가 이번엔 낙엽을 두껍게 쌓았네요. 핍도 준비됐어요.',trailSecondTask:'두 겹 낙엽은 일반 매치 두 번, 특수 범위로는 한 번에 정리해요. 나머지 목표도 채워 주세요.',trailSecondAfter:'두꺼운 낙엽도 정리했어요. 늑대도 조금 놀란 눈치예요.',
+    trailFinalTitle:'함께 걸을 만큼 넓게',trailFinalProblem:'탁 트인 산책길까지, 마지막 낙엽 구간이 남았어요.',trailFinalTask:'매치와 특수를 활용해 화면의 모든 목표를 완성해요.',trailFinalAfter:'늑대가 길을 비켰어요. 핍의 산책은 계속됩니다!',trailLeavesLeft:'남은 낙엽 {count}',trailLeavesReady:'낙엽 정리 끝!',
     albumLabel:'핍과 함께 남긴 여행',albumTitle:'우리의 풍경 앨범',albumCollection:'모은 엽서 {count}/{total}',albumIntro:'서로 다른 스무 판을 마칠 때마다 풍경 한 장이 남아요. 함께 지나온 곳을 다시 펼쳐 보세요.',albumChoose:'풍경 고르기',albumCollected:'함께 모은 엽서',albumPending:'아직 만들고 있는 추억',albumProgress:'서로 다른 스테이지 완료',albumRemaining:'이 풍경의 서로 다른 스테이지 {count}개를 더 마치면 엽서가 남아요.',albumMemory:'“이곳 기억나요? 함께 걸어온 여행이 여기 남아 있어요.”',albumOpenMap:'지도에서 이 풍경 보기',albumRealOnly:'앨범에는 실제 저장된 여행만 보여요. 체험 조건으로는 엽서를 모으지 않아요.',
     worldProgress:"첫 완료 {done}/{total}",worldComplete:"한 풍경을 함께 완성했어요!",worldNextMemory:"다음 풍경도 핍과 함께 만나 보세요.",worldLastMemory:"정원에서 핍과 모은 여행의 흔적을 둘러보세요.",
     journeyMilestoneReady:"완료 조건을 채웠어요. 복원에 쓸 별을 확인해 보세요.",

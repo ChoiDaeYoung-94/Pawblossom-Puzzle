@@ -1,0 +1,81 @@
+{
+  "issue": 429,
+  "status": "integrated-prototype",
+  "tool": "built-in image_gen;transparent_background=true",
+  "sourcePolicy": "raw originals copied byte-for-byte;standard WebP resize/padding only;consumed by TrailEpisode preview/HUD/result",
+  "sources": [
+    {
+      "path": "assets/art/trail-episode-v1/wolf-blocking-v1.png",
+      "bytes": 1371232,
+      "sha256": "ae33048bd82f58875ac58c17cdd7ee8b3d3bea353680040a025a73ff637832df",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "assets/art/trail-episode-v1/wolf-relieved-v1.png",
+      "bytes": 1347650,
+      "sha256": "ec912122cafe6d2abe4954f061a90c9c8a1e7d00962d5ecd575e8ebb0148c567",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA"
+    }
+  ],
+  "prompts": [
+    {
+      "source": "assets/art/trail-episode-v1/wolf-blocking-v1.png",
+      "intent": "generate",
+      "text": "Create an original production-quality 2D character sprite for a cozy commercial match-3 game named Pawblossom Puzzle. One full-body young woodland wolf, unmistakably a wolf with a slightly long muzzle, tall pointed ears and bushy curved tail, rounded appealing proportions like a premium painted storybook game. Soft charcoal-lavender and warm grey fur, ivory muzzle/chest, deep expressive brown eyes, subtle warm cheek tint, small terracotta neckerchief, no other clothing. Character stands in a three-quarter view facing left, arms lightly folded, mischievous stubborn expression with one raised eyebrow and closed mouth: a forest-path trickster blocking a walk, mildly challenging but never frightening, violent, or sinister. One forepaw partly lifted, grounded balanced feet; generous distinct silhouette readable at 80px. Painterly hand-crafted brush texture with refined soft 3D volume, warm daylight from upper left, gentle shaded fur layers, clean separations, material clarity, detailed but restrained. Match the quality and warmth of a cream rabbit in sage overalls in a sunlit flower meadow. Fully isolated single character on genuinely transparent background, complete tail and both ears/paws with comfortable 8% margins, no floor, no grass, no props, no cast shadow detached from feet, no frame, no text, no logo, no duplicate characters. 1024 by 1024 square. Must be wholly original, not resembling any existing game character."
+    },
+    {
+      "source": "assets/art/trail-episode-v1/wolf-relieved-v1.png",
+      "intent": "edit of own generated blocking sprite",
+      "reference": "assets/art/trail-episode-v1/wolf-blocking-v1.png",
+      "text": "Edit this original wolf sprite to create the matching relieved/happy state for the same cozy match-3 character. Preserve the same wolf identity, exact charcoal-lavender/ivory fur palette and detailed painted material, terracotta scarf, body scale, three-quarter facing-left view, ear and tail design, lighting direction and transparent-background treatment. Change only the expression and arms: soften the eyebrows into a friendly appreciative smile, eyes pleasantly half-closed, uncross the arms and hold both paws open around waist height as if saying 'All right, the path is open'. Relaxed stance with both feet visible. No new accessories, text, grass, ground or extra characters. Entire character including ear tips/tail/paws must fit with clear transparent margins on all sides, at least 6%, do not crop anything. Genuine transparency, premium hand-painted storybook volume. One single full-body sprite, not a sheet. This is our own original source, do not introduce resemblance to other games."
+    }
+  ],
+  "qualityNotes": [
+    "Own original woodland wolf character;not third-party game art.",
+    "Blocking and relieved poses visually inspected;requested1024/margins differ from actual output, not claimed pixel-exact match.",
+    "Game-size WebP exports inspected384px;final responsive/motion screenshots and user commercial-art approval still separate.",
+    "Production isolated headless KO390/EN320/landscape844/reduced740 inspected;short-landscape board clipping fixed by hiding encounter HUD;real device and commercial-art approval remain unverified.",
+    "Short landscape hints keep full accessible DOM text but clamp visible copy to two lines to preserve shuffle area;final capture queued after shared Editor return."
+  ],
+  "scope": "4/6/10 presentation only;engine/RNG/levels/save/economy/audio unchanged;19:00KST or90percent stop;headless/device approval tracked separately",
+  "outputs": [
+    {
+      "path": "public/assets/trail-episode-v1/wolf-blocking-v1.webp",
+      "width": 384,
+      "height": 384,
+      "bytes": 31486,
+      "sha256": "228d9e881333b62cc113eb50052b05b1e823f308fb29e24fdbcedb077458844d"
+    },
+    {
+      "path": "public/assets/trail-episode-v1/wolf-relieved-v1.webp",
+      "width": 384,
+      "height": 384,
+      "bytes": 32652,
+      "sha256": "876d6f04a2c84148c89b36449ded72a02ed556a7079e06073a28aaabdf1c31ad"
+    }
+  ],
+  "export": {
+    "sharp": "0.35.5",
+    "canvas": 384,
+    "content": 352,
+    "padding": 16,
+    "webpQuality": 90,
+    "alphaQuality": 100,
+    "policy": "original untouched;standard proportional resize/transparent padding/encoding only"
+  },
+  "integration": {
+    "module": "src/TrailEpisode.ts",
+    "styles": "src/TrailEpisode.css",
+    "motion": "complementary SVG masks animate only ear/tail while active;reduced motion static",
+    "gameplayRuleChanged": false,
+    "journal": "Pip tab read-only3-moment collection from real unique completed stages;demo uses normalSave;no new star/coin costs"
+  }
+}

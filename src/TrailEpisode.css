@@ -1,0 +1,54 @@
+.trail-story-card{display:grid;grid-template-columns:102px minmax(0,1fr);gap:12px;align-items:center;margin:12px 0;padding:10px 12px;border:1px solid #e6d6dc;border-radius:18px;background:linear-gradient(120deg,#fff3dd,#f8edfa);text-align:left}
+.trail-story-picture{height:100px;position:relative;isolation:isolate;overflow:hidden;border-radius:14px;background:linear-gradient(#d8eefa,#f5edce)}
+.trail-story-sun{position:absolute;right:10px;top:10px;width:25px;height:25px;border-radius:50%;background:#fff7bc;box-shadow:0 0 15px #ffffdb}
+.trail-story-path{position:absolute;width:120%;height:60%;left:-10%;bottom:-20%;border-radius:50%;background:#d8e6b8;transform:rotate(-10deg)}
+.trail-story-picture img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 2px 1px #705a6322)}
+.trail-story-copy small{font-size:10px;letter-spacing:.02em;color:#80516f;font-weight:800}
+.trail-story-copy h3{font-size:16px;line-height:1.3;margin:3px 0 5px;color:#4e345b}
+.trail-story-copy p{font-size:12px;line-height:1.55;margin:0;color:#63546a}
+.trail-story-copy .trail-story-task{font-size:11px;font-weight:800;color:#664552;margin-top:5px}
+.trail-story-card[data-trail-resolved="true"]{background:linear-gradient(120deg,#f6f9e9,#eff5ff)}
+#trail-encounter{display:flex;flex:0 1 116px;align-items:center;min-width:0;gap:1px}
+#trail-encounter[hidden]{display:none}
+.trail-opponent-art{position:relative;flex:0 0 66px;width:66px;height:78px;isolation:isolate}
+.trail-opponent-art>svg{position:absolute;inset:0;width:100%;height:100%;transition:opacity .18s ease;overflow:visible}
+.trail-wolf-tail{transform-origin:239px 260px;transform-box:view-box}
+.trail-wolf-ear{transform-origin:151px 85px;transform-box:view-box}
+#trail-encounter[data-active="true"]:not([data-resolved="true"]) .trail-wolf-blocking .trail-wolf-tail,
+#trail-encounter[data-active="true"][data-resolved="true"] .trail-wolf-relieved .trail-wolf-tail{animation:trail-tail-idle 4.8s ease-in-out infinite}
+#trail-encounter[data-active="true"]:not([data-resolved="true"]) .trail-wolf-blocking .trail-wolf-ear,
+#trail-encounter[data-active="true"][data-resolved="true"] .trail-wolf-relieved .trail-wolf-ear{animation:trail-ear-listen 7.3s ease-in-out infinite}
+@keyframes trail-tail-idle{0%,55%,100%{transform:rotate(0)}68%{transform:rotate(-2.5deg)}83%{transform:rotate(1.5deg)}}
+@keyframes trail-ear-listen{0%,70%,100%{transform:rotate(0)}76%{transform:rotate(-3deg)}82%{transform:rotate(1deg)}88%{transform:rotate(0)}}
+.trail-wolf-relieved{opacity:0}
+[data-resolved="true"] .trail-wolf-blocking{opacity:0}
+[data-resolved="true"] .trail-wolf-relieved{opacity:1}
+.trail-opponent-copy{font-size:10px;line-height:1.4;font-weight:800;color:#77505d;max-width:52px;overflow-wrap:anywhere}
+#trail-encounter[data-active="true"] .trail-opponent-art::after{content:'';position:absolute;left:8px;bottom:2px;width:49px;height:5px;background:#76536020;border-radius:50%;z-index:-1}
+@media(max-width:359px){#trail-encounter{flex-basis:84px}.trail-opponent-art{flex-basis:52px;width:52px;height:63px}.trail-opponent-copy{font-size:9px;max-width:34px}.trail-story-card{grid-template-columns:80px minmax(0,1fr);gap:9px;padding:8px}.trail-story-picture{height:86px}.trail-story-copy h3{font-size:14px}.trail-story-copy p{font-size:11px}}
+@media(orientation:portrait) and (max-height:650px){.trail-opponent-art{height:60px;flex-basis:52px;width:52px}#trail-encounter{flex-basis:100px}}
+#result-trail:empty{display:none}
+.trail-journal{margin:14px 0;border:1px solid #dfd4e7;border-radius:18px;background:#fffaf6;overflow:hidden;color:#4e345b}
+.trail-journal summary{display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;min-height:64px;list-style:none}
+.trail-journal summary::-webkit-details-marker{display:none}
+.trail-journal summary>img{object-fit:contain;flex-shrink:0}.trail-journal summary>span:nth-child(2){flex:1;min-width:0}
+.trail-journal summary small{display:block;font-size:9px;letter-spacing:.04em;color:#8e698d}.trail-journal summary strong{display:block;font-size:15px;line-height:1.4}
+.trail-memory-count{padding:5px 9px;border-radius:20px;background:#efe4f5;font-size:12px;font-weight:800}
+.trail-journal>p{font-size:11px;line-height:1.6;padding:0 16px;margin:4px 0 14px;color:#756779}
+.trail-journal ol{padding:0 16px 12px;margin:0;list-style:none}
+.trail-journal li{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #eee4ef}
+.trail-memory-stage{display:grid;place-items:center;flex:0 0 32px;height:32px;border-radius:50%;background:#f2eaf5;color:#8c7698;font-weight:800;font-size:12px}
+.trail-journal li[data-memory-owned="true"] .trail-memory-stage{background:#ffdfab;color:#7a592d}
+.trail-journal li strong{font-size:12px}.trail-journal li p{font-size:11px;line-height:1.55;margin:3px 0 0;color:#756779}
+.trail-journal summary:focus-visible{outline:3px solid #a260b3;outline-offset:-4px}
+@media(orientation:landscape) and (max-height:600px){
+  #puzzle-view .level-top:has(#trail-encounter:not([hidden])){height:132px;min-height:132px;max-height:132px;grid-template-rows:38px 44px 38px;row-gap:6px}
+  #trail-encounter{grid-column:1 / -1;grid-row:3;justify-self:center;width:100%;justify-content:center;gap:8px}
+  .trail-opponent-art{height:38px;flex-basis:42px;width:42px}.trail-opponent-copy{max-width:110px;font-size:10px}
+  .trail-story-picture{height:80px}.trail-story-card{grid-template-columns:84px minmax(0,1fr);margin:8px 0;padding:8px}
+  .result-content>#result-trail{grid-column:2;min-width:0}.result-content .trail-story-card{grid-template-columns:60px minmax(0,1fr);gap:7px}.result-content .trail-story-picture{height:68px}.result-content .trail-story-copy h3{font-size:13px}.result-content .trail-story-copy p{font-size:11px}
+}
+/* 낮은 가로는 기존72px 헤더를 유지해 보드/하단 탭이 겹치지 않게 합니다.
+   상황은 미리보기·결과·핍 추억과 기존 낙엽 목표에서 계속 확인할 수 있습니다. */
+@media(orientation:landscape) and (max-height:340px){#puzzle-view .level-top:has(#trail-encounter:not([hidden])){height:72px;min-height:72px;max-height:72px;grid-template-rows:22px 44px}#trail-encounter{display:none}.trail-opponent-art .trail-wolf-tail,.trail-opponent-art .trail-wolf-ear{animation:none!important}#puzzle-view .board-hint{overflow:hidden}#puzzle-view #board-hint-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}}
+@media(prefers-reduced-motion:reduce){.trail-opponent-art>svg{transition:none}.trail-opponent-art .trail-wolf-tail,.trail-opponent-art .trail-wolf-ear{animation:none!important;transform:none!important}}
