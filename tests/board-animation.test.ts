@@ -252,10 +252,10 @@ describe('저장한 도구 결과의 선택·재생과 일반 정산 분리',()=
     const h=ready(),move=h.scene.engine.legalMoves()[0],a=h.scene.pieces[move.a.row][move.a.col],b=h.scene.pieces[move.b.row][move.b.col],plan=preparePuzzleTool(h.round,'gloves',move.a,move.b,seededRng(3))!,done=vi.fn();
     expect(h.scene.playPreparedTool(plan,done)).toBe(true);expect(h.scene.pieces[move.a.row][move.a.col]).toBe(b);expect(h.scene.pieces[move.b.row][move.b.col]).toBe(a);await drain();expect(done).toHaveBeenCalledOnce();expect(h.scene.engine.board).toEqual(plan.after.board);expect(h.onMove).not.toHaveBeenCalled();
   });
-  it('pause/resize의 빠른 정리는 최종 저장판과 완료 한 번만 남기고 늦은 await를 폐기한다',async()=>{
+  it.each(['pause','resize'])('%s의 빠른 정리는 최종 저장판과 완료 한 번만 남기고 늦은 await를 폐기한다',async event=>{
     const h=ready(),resolves:(()=>void)[]=[],done=vi.fn(),plan=preparePuzzleTool(h.round,'broom',{row:2,col:2},undefined,seededRng(9))!;
     h.scene.wait=()=>new Promise<void>(resolve=>resolves.push(resolve));h.scene.playPreparedTool(plan,done);expect(h.scene.busy).toBe(true);
-    h.scene.events.emit('pause');h.scene.scale.emit('resize');expect(h.scene.busy).toBe(false);expect(done).toHaveBeenCalledOnce();expect(h.scene.engine.board).toEqual(plan.after.board);
+    if(event==='pause')h.scene.events.emit('pause');else h.scene.scale.emit('resize');expect(h.scene.busy).toBe(false);expect(done).toHaveBeenCalledOnce();expect(h.scene.engine.board).toEqual(plan.after.board);
     for(const resolve of resolves)resolve();await drain();expect(done).toHaveBeenCalledOnce();expect(h.onMove).not.toHaveBeenCalled();
   });
   it('씨앗은 해당 piece만 바꾸고 다른 블록/일반 이동을 건드리지 않는다',()=>{

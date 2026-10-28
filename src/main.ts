@@ -638,8 +638,13 @@ function confirmTool(context:NonNullable<typeof toolMode>){
     const plan=preparePuzzleTool(context.checkpoint,context.id,context.at,context.other),outcome=plan?puzzleToolOutcome(save,plan,testingLevel):undefined;
     if(!plan||!outcome){notice('toolUnavailable');return false;}
     if(outcome.save&&!saveData(outcome.save)){updateSaveStatus();notice('careSaveBlocked');return false;}
-    const previousMapLevel=save.highestLevel;if(outcome.save)save=outcome.save;closeToolMode(false);
-    const complete=()=>{if(round!==context.round||scene!==context.scene)return;if(outcome.won){roundEnded=true;firstReward=outcome.firstReward;pipIdle.setActive(false);scene.stopPlaying();finish(true);}renderPuzzleTools();};
+    const previousMapLevel=save.highestLevel,returnBoardFocus=document.activeElement===$('#tool-confirm')&&$('#tool-confirm').matches(':focus-visible');if(outcome.save)save=outcome.save;closeToolMode(false);
+    const complete=()=>{
+      if(round!==context.round||scene!==context.scene)return;
+      if(outcome.won){roundEnded=true;firstReward=outcome.firstReward;pipIdle.setActive(false);scene.stopPlaying();finish(true);}
+      else if(returnBoardFocus&&nativeActive&&!document.hidden&&route==='puzzle'&&!otherModal()&&(document.activeElement===document.body||document.activeElement===$('#tool-confirm'))){const board=$('#game-canvas');board.focus({preventScroll:true});if(board.matches(':focus-visible'))scene.focusKeyboard();}
+      renderPuzzleTools();
+    };
     const played=scene.playPreparedTool(plan,complete);
     score=outcome.score;collected=outcome.collected.slice();clearedLeaves=outcome.clearedLeaves;clearedCrates=outcome.clearedCrates;roundTools={used:outcome.tools.used.slice(),started:outcome.tools.started};
     if(outcome.firstReward){selectedChapter=chapterForLevel(save.highestLevel).id;if(previousMapLevel===currentLevel&&save.highestLevel===currentLevel+1)mapAdvance={from:currentLevel,to:currentLevel+1,owner:save};}
@@ -1660,7 +1665,12 @@ document.addEventListener('pointerdown',()=>{void audio.unlock().catch(()=>{});}
 // 한 Game 동안 DOM에 한 번만 등록합니다. 회차 교체는 현재 scene을 조회합니다.
 const boardFocus=$('#game-canvas');
 boardFocus.addEventListener('focus',()=>{if(boardFocus.matches(':focus-visible')){boardFocus.dataset.keyboard='true';scene?.focusKeyboard();}updateBoardAccess();});
-boardFocus.addEventListener('blur',()=>{boardFocus.dataset.keyboard='false';scene?.cancelInput();});
+boardFocus.addEventListener('blur',event=>{
+  boardFocus.dataset.keyboard='false';
+  // 보드에서 도구의 확정/취소로 옮기는 초점은 같은 선택 작업 안에 있습니다.
+  if(toolMode&&(event.relatedTarget===$('#tool-confirm')||event.relatedTarget===$('#tool-cancel'))){scene?.hideKeyboardCursor();return;}
+  scene?.cancelInput();
+});
 boardFocus.addEventListener('pointerdown',event=>{if(event.button===0&&event.isPrimary!==false&&scene?.keyboardState().available)clearResumeNotice();boardFocus.dataset.keyboard='false';scene?.hideKeyboardCursor();},{capture:true});
 boardFocus.addEventListener('keydown',event=>{
   if(event.target!==boardFocus||document.activeElement!==boardFocus||event.altKey||event.ctrlKey||event.metaKey||event.isComposing)return;

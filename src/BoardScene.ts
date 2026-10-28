@@ -78,7 +78,7 @@ export class BoardScene extends Phaser.Scene {
         touch.touches.length===1&&touch.changedTouches.length===1&&touch.touches[0].identifier===d.identifier&&touch.changedTouches[0].identifier===d.identifier)return;
       cancelPointer();
     };
-    const cancelResize=()=>{cancelPointer();this.hooks.onVisualCancel?.();};
+    const cancelResize=()=>{if(this.toolTarget||this.prepared)this.cancelInput();else cancelPointer();this.hooks.onVisualCancel?.();};
     this.input.on('gameout',canvasOut);
     this.scale.on(Phaser.Scale.Events.RESIZE,cancelResize);
     this.events.on(Phaser.Scenes.Events.PAUSE,cancelGesture);
