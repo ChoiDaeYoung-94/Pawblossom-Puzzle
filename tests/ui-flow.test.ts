@@ -344,7 +344,7 @@ describe('직접 고르는 산책 도구의 실제 저장/UI 경계',()=>{
   };
   it('5개 잠금은 정상 도달에서만 열리고 잠금 설명은 이동·재화·체험을 쓰지 않는다',()=>{
     const h=mainHarness(false,false,true),before=h.disk(),writes=h.writes();expect(h.element('#tool-shelf').innerHTML.match(/data-locked="true"/g)).toHaveLength(5);
-    h.run("showToolInfo('trowel','tool-trowel')");expect(h.run('toolDialog.innerHTML')).toContain(t('en','toolUnlock').replace('{level}','9'));h.element('#tool-info-start').onclick();expect(h.run('toolMode')).toBeUndefined();
+    h.run("showToolInfo('trowel','tool-trowel')");expect(h.run('toolDialog.innerHTML')).toContain(t('en','toolUnlock').replace('{level}','9'));expect(h.run('toolDialog.innerHTML')).not.toContain('class="tool-info-pip"');h.element('#tool-info-start').onclick();expect(h.run('toolMode')).toBeUndefined();
     h.element('#tool-info-close').onclick();expect(h.disk()).toEqual(before);expect(h.writes()).toBe(writes);expect(h.run('save.puzzleTools.trialUsed')).toEqual([]);
   });
   it('소개는 첫 무료 체험을 소비하지 않고 확정은 비용/판/집계를 한 번만 저장하며 이동은 유지한다',()=>{
@@ -389,9 +389,9 @@ describe('직접 고르는 산책 도구의 실제 저장/UI 경계',()=>{
     h.run('scene.completePrepared()');expect(h.element('#result-dialog').open).toBe(true);expect(h.run('moves')).toBe(moves);expect(h.writes()-writes).toBe(2);h.run("switchView('map');switchView('puzzle');finish(true)");expect(h.writes()-writes).toBe(2);
   });
   it('해금 소개는 저장된 새 판의 첫 퍼즐 진입에도 나오고 닫은 뒤 중복 표시/체험 소비가 없다',()=>{
-    const h=ready();h.run("save.highestLevel=9;startLevel(9);switchView('map')");h.frame();h.run("switchView('puzzle')");expect(h.run('toolDialog.open')).toBe(true);expect(h.run('moves')).toBe(h.run('levels[8].moves'));
+    const h=ready();h.run("save.highestLevel=9;startLevel(9);switchView('map')");h.frame();h.run("switchView('puzzle')");expect(h.run('toolDialog.open')).toBe(true);expect(h.run('toolDialog.innerHTML')).toContain(t('en','toolPipInvite'));expect(h.run('moves')).toBe(h.run('levels[8].moves'));
     h.element('#tool-info-close').onclick();expect(h.stored().puzzleTools.introduced).toEqual(['trowel']);expect(h.stored().puzzleTools.trialUsed).toEqual([]);expect(h.stored().inProgress.toolsStarted).toBe(false);
-    h.run("switchView('map');switchView('puzzle')");expect(h.run('toolDialog.open')).toBe(false);
+    h.run("switchView('map');switchView('puzzle')");expect(h.run('toolDialog.open')).toBe(false);h.run("showToolInfo('trowel','tool-trowel')");expect(h.run('toolDialog.innerHTML')).not.toContain('class="tool-info-pip"');expect(h.stored().puzzleTools.trialUsed).toEqual([]);
   });
 });
 
