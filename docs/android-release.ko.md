@@ -1,4 +1,18 @@
-## 최신 로컬 통합 APK · 2026-10-28 · #434 · 3e47d49
+## 최신 로컬 통합 APK · 2026-10-28 · #443 · 73174ff
+
+제품 소스 `73174ff79a2c1e0f605022716e31f6cfdf2c5a45`는 앞선3e의 숲길/추억·저장2·직접 도구5종/핍 소개·퍼즐 아이콘/Quad D에 [PR442 첫 보상→새 정원 작업 연결](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/442)을 더했습니다. 첫 완료 보상 전에는 불가·후에는 가능한 작업 하나만 기존 위치로 안내하며, 이동으로 지출하지 않고 심기/복원은 기존 선택 흐름에서 합니다. 정확 최초 [main CI40675622358](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40675622358)의 Node22/24 각각80파일4,204개·스토어19개·타입3종·두 웹 빌드/flags 성공 후 빌드했습니다. 이후 전달 기록만 바꾼 문서 커밋은 게임 소스와 분리합니다.
+
+파일은 `Pawblossom-builds/2026-10-28-73174ff-result-garden/Pawblossom-Puzzle-v0.1.7-2026-10-28-73174ff-debug.apk`입니다. **0.1.7/code8 · 54,805,274바이트 · SHA256 `a18cf643178e9d82cfce23629a0b6e0bef10277cbdd37de0c98adefeff7b7562`**입니다. 패키지/min24-target36/debug·기존과 같은 단일v2 서명과 권한을 확인했습니다. 사용자가 직접 업로드하므로 Drive 업로드와 새 테스트 안내 파일은 없습니다. 이전351/3f/3e와 진단 원문은 보존했습니다.
+
+testing 웹113·APK public115·원본 public87개를 전수 길이/SHA로 대조했고2개의 빈cordova만 추가됩니다. ZIP CRC/중복0·시험flags3개 true, 직전3e/f455의 비웹493개(서명 메타데이터 제외) 전체 바이트가 같고4nativePNG도 현재 소스와 RGBA/크기가 같습니다. 새 정원 조작 marker와 실제 웹 변경을 요구해 옛 APK가 대신 통과하지 않게 했습니다. 새 JVM 단위/lint 실행은0이며 동일 native의 기존 근거를 재사용합니다.
+
+최종 production 웹104/Android public106 전수 동일·flags false·Git clean으로 복원했습니다. production 전체 파일은 실제 화면에서 검수한 PR442 head238fdcf의 번들과도 길이/SHA가 모두 같습니다. 이 byte 연결과 정적 APK 검증을 새 Android 실행/청취·자연500판 승인으로 확대하지 않습니다. 단계 원문/공식 파일 검사·독립 읽기는 Git 밖 `integration-20261028/443-*`와 전달 폴더의artifact/checksum에 보존합니다.
+
+새 연결의 실제 웹 검수는 명시한 정상2번 near-win 저장 fixture에서 실제 교환→별2/코인80의 첫 보상→정원 위치/초점·이동 지출0으로 확인했습니다. KO390에서는 꽃밭 심기까지 별0/코인80/꽃밭1,EN320에서는 Shift+Tab/Enter를 확인했고 네 viewport에서 다음/정원 버튼이 화면 안에 있었습니다. 최초3조건은 통과했고 EN740 낮은 가로는 첫 자동 교환이 이동23/점수1000에서 진행되지 않아45초 결과 대기 실패를 보존했습니다. 실제canvas를 대상으로 해당 조건만 후속 관측한 결과 이동22·승리/안내·정원 이동이 통과했습니다. 후속 두rect는201×201이지만 최초 조기rect/이벤트가 미관측이어서 입력 대상/레이아웃 타이밍을 원인으로 확정하거나 제품 버그 수정으로 보고하지 않습니다. 원문/후속은 `441-browser-summary.json`에 분리하고 #73 출시 입력 점검에 남깁니다. 소스나 기대·timeout을 바꾸거나 CI를 재실행하지 않았습니다.
+
+**새 APK의 LD 추가 기동/복귀는 [#443의 시각별 관측](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/443)에서 정적 파일 검증과 별도로 관리합니다.** 앞선3e의 설치/새 아이콘·trowel1종/시험9·HOME최근 앱·일반5/별2/코인100 복원은 #434의 별도 범위입니다. 삼성최근카드 #375,새인트로/청취·다른4도구/자연 해금·실광고/Play구매/스토어 #73과 상용 미술/500판 밸런스는 남아 있습니다. #122의 과거 원인 미확정 실패도 현재 녹색으로 해결 처리하지 않습니다.
+
+## 이전 로컬 통합 APK · 2026-10-28 · #434 · 3e47d49
 
 제품 소스 `3e47d49a994a5dcad653406f46289943271a42c7`는 [PR430 숲길 이야기/추억](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/430)·[PR432 저장2 보호](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/432)·[PR433 도구5종](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/433)·[PR436 핍 첫 안내](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/436)와 [PR438 딸기3매치 아이콘](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/438)을 포함합니다. 기존 Quad D 인트로도 유지됩니다. 정확 최초 [main CI40661223663](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40661223663)의 Node22/24 각각80파일4,189개·스토어19개·타입3종·production/testing 빌드와 flags 성공 뒤 빌드했습니다. 이후 전달 기록만 바꾸는 문서 커밋은 제품 소스와 구분합니다.
 
