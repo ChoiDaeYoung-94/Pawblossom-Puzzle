@@ -1,0 +1,7 @@
+.studio-intro{position:fixed;inset:0;z-index:1000;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);place-items:center;background:#10151c;color:#f5f2eb;overflow:hidden}
+.studio-intro-film{grid-area:1/1;display:block;width:max(100%,720px);max-width:min(1280px,284vh);max-width:min(1280px,284dvh);object-fit:contain;aspect-ratio:16/9}
+.studio-intro-film[hidden],#app-startup[hidden]{display:none}
+.studio-intro-skip{position:absolute;right:max(20px,env(safe-area-inset-right));bottom:max(20px,env(safe-area-inset-bottom));min-width:88px;min-height:48px;padding:10px 18px;border:1px solid #9ba3ad;border-radius:24px;background:#10151c;color:#f5f2eb;font:600 15px/1.2 system-ui,sans-serif;cursor:pointer}
+.studio-intro-skip:focus-visible{outline:3px solid #ff8a4c;outline-offset:4px}
+.studio-boot-retry{min-width:112px;min-height:48px;padding:12px 20px;border:0;border-radius:24px;background:#68416f;color:#fff;font:600 16px/1.2 system-ui,sans-serif;cursor:pointer}
+.studio-boot-retry:focus-visible{outline:3px solid #68416f;outline-offset:4px}
