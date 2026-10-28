@@ -20,7 +20,10 @@ import './CampaignAlbum.css';
 import './PuzzlePresentation.css';
 import './TrailEpisode.css';
 import {trailStoryCard,trailJournal,updateTrailEncounter} from './TrailEpisode';
-import type {PuzzleToolRound} from './puzzleTools';
+import {puzzleToolCatalog,puzzleTool,type PuzzleToolId,type PuzzleToolRound} from './puzzleTools';
+import {preparePuzzleTool,puzzleToolArea,puzzleToolOutcome,validPuzzleToolTarget} from './puzzleToolActions';
+import {toolShelf,toolInfo,toolName,toolPicture,toolStatus} from './PuzzleToolUI';
+import './PuzzleTools.css';
 import './PipIdle.css';
 import './PipTending.css';
 import './PipUnlock.css';
@@ -172,7 +175,7 @@ $('#app').innerHTML=`
         <div class="board-wrap"><div id="game-canvas" tabindex="-1" aria-label="${text('boardLabel')}" aria-describedby="board-keyboard-help board-keyboard-status" role="application"></div><div id="board-notice" aria-live="polite"></div></div>
         <p class="board-hint">${icon('leaf',15)} <span id="board-hint-text">${text('hint')}</span><span id="board-keyboard-help">${text('boardKeyboardHelp')}</span><span id="round-resumed-notice" role="status" aria-live="polite" aria-atomic="true" hidden></span></p>
         <div id="board-keyboard-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
-        <div class="tools"><button id="shuffle" class="shuffle-button">${icon('shuffle',20)}${label('shuffle')}<span id="shuffle-count">1</span></button><span class="tool-note">${label('shuffleHelp')}</span></div>
+        <div class="tools puzzle-tools-bar"><button id="shuffle" class="shuffle-button">${icon('shuffle',20)}${label('shuffle')}<span id="shuffle-count">1</span></button><span class="tool-note">${label('shuffleHelp')}</span><div id="tool-shelf"></div><button id="tool-open" class="tool-open"></button><div id="tool-target-controls" hidden><span id="tool-choice-status" role="status" aria-live="polite" aria-atomic="true"></span><button id="tool-confirm"></button><button id="tool-cancel"></button></div></div>
       </div>
       <div id="village-view" class="view" hidden></div><div id="journal-view" class="view" hidden></div><div id="settings-view" class="view" hidden></div>
       <nav class="bottom-nav" aria-label="${text('navLabel')}">${(['map','village','journal'] as const).map((name,i)=>`<button data-route="${name}" class="${i===0?'active':''}" ${i===0?'aria-current="page"':''}>${icon(['map','home','paw'][i],21)}${label(name)}</button>`).join('')}</nav>
@@ -192,6 +195,7 @@ if(androidBillingEntry){
 function billingModal(){return Boolean(androidBillingEntry&&$<HTMLDialogElement>('#test-billing-dialog').open);}
 const previewDialog=document.createElement('dialog');previewDialog.id='stage-preview-dialog';previewDialog.setAttribute('aria-labelledby','stage-preview-title');previewDialog.setAttribute('aria-describedby','stage-preview-description');document.body.append(previewDialog);
 const resourceDialog=document.createElement('dialog');resourceDialog.id='resource-help-dialog';resourceDialog.setAttribute('aria-labelledby','resource-help-title');resourceDialog.setAttribute('aria-describedby','resource-help-description');document.body.append(resourceDialog);
+const toolDialog=document.createElement('dialog');toolDialog.id='tool-dialog';toolDialog.setAttribute('aria-labelledby','tool-title');document.body.append(toolDialog);
 const lookDialog=document.createElement('dialog');lookDialog.id='garden-look-dialog';lookDialog.setAttribute('aria-labelledby','garden-look-title');lookDialog.setAttribute('aria-describedby','garden-look-description');document.body.append(lookDialog);
 const spaceDialog=document.createElement('dialog');spaceDialog.id='garden-space-dialog';spaceDialog.setAttribute('aria-labelledby','garden-space-preview-title');spaceDialog.setAttribute('aria-describedby','garden-space-preview-description');document.body.append(spaceDialog);
 type SpacePreview={action:SpaceAction|JourneyAction;project:JourneyProject;save:SaveData;generation:number;route:string;demo:typeof careDemo;round:number;scene:BoardScene;opener:HTMLButtonElement;area:GardenArea;showCurrent:boolean;scroll:number};
@@ -325,7 +329,7 @@ const boardFeedback=new RoundFeedback({layer:$('#round-feedback-layer'),pip:$('#
   canvas:()=>document.querySelector('#game-canvas canvas'),goal:key=>document.querySelector(`[data-feedback-goal="${key}"] img`),
   active:()=>nativeActive&&!document.hidden&&!careDemo&&route==='puzzle'&&!boardPending&&!roundEnded&&!previewDialog.open&&!otherModal()&&!testAds?.pausesGame&&!testBilling?.pausesGame,
 });
-function otherModal(includeSpace=true,includeLook=true){return includeLook&&lookDialog.open||includeSpace&&spaceDialog.open||resourceDialog.open||$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open)||billingModal();}
+function otherModal(includeSpace=true,includeLook=true){return toolDialog.open||includeLook&&lookDialog.open||includeSpace&&spaceDialog.open||resourceDialog.open||$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open)||billingModal();}
 function disposeCarePipDisplay(){albumArt?.dispose();albumArt=undefined;albumArtHost=undefined;journeyArt?.dispose();journeyArt=undefined;journeyArtHost=undefined;carePipDisplay?.pose?.dispose();carePipDisplay?.nature?.dispose();carePipDisplay?.idle.dispose();carePipDisplay?.accessory?.dispose();carePipDisplay=undefined;}
 function syncAlbumActivity(){
   const picture=document.querySelector<HTMLElement>('#album-picture');
@@ -441,6 +445,7 @@ function syncMusicTheme(){
 
 // 문서와 Android 상태 중 하나라도 비활성이면 오디오와 진행을 멈춥니다.
 function syncActivity(){
+  if(!nativeActive||document.hidden||careDemo||testAds?.pausesGame||testBilling?.pausesGame){closeToolInfo(false,false);closeToolMode(false);}
   if(!nativeActive||document.hidden)clearPipUnlock();
   syncMusicTheme();
   if(lookPreview&&!validLookPreview(lookPreview))closeLookPreview(false);
@@ -455,7 +460,7 @@ function syncActivity(){
   if(!game)return;
   // pause만 한 Scene도 그려지므로 CSS로 숨긴 경로에서는 객체 그리기만 끕니다.
   game.scene.getScene('Board')?.sys.setVisible(route==='puzzle');
-  const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
+  const modal=toolDialog.open||$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
   const playing=active&&!careDemo&&route==='puzzle'&&!modal&&!previewDialog.open&&!resourceDialog.open&&!spaceDialog.open;
   syncPipActivity();
   if(!playing)boardFeedback.cancel();
@@ -465,7 +470,7 @@ function syncActivity(){
 }
 function updateBoardAccess(){
   const board=$('#game-canvas'),state=scene?.keyboardState();
-  const modal=$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
+  const modal=toolDialog.open||$<HTMLDialogElement>('#tutorial-dialog').open||$<HTMLDialogElement>('#result-dialog').open||(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)||(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open);
   const visible=!careDemo&&nativeActive&&!document.hidden&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!billingModal()&&route==='puzzle'&&!modal&&!previewDialog.open&&!resourceDialog.open&&!spaceDialog.open&&!boardPending;
   const available=visible&&Boolean(state?.available);
   board.tabIndex=visible&&(available||state?.busy)?0:-1;
@@ -521,13 +526,14 @@ function updateGoals(){
   $('.tool-note').textContent=text(testingLevel?'shuffleHelpTest':'shuffleHelp');
   const expectedRound=round,expectedScene=scene,expectedSave=save;
   shuffle.onclick=()=>shuffleRound(shuffle,expectedRound,expectedScene,expectedSave);
+  renderPuzzleTools();
 }
 function roundCheckpoint(snapshot:BoardSnapshot,nextMoves=moves,free=shuffles,paid=paidShuffleUsed,continued=continueUsed,tools=roundTools):RoundCheckpoint {
   return {...cloneSnapshot(snapshot),...(tools?{schema:2 as const,actionProfile:'tools-v1' as const,toolsUsed:tools.used.slice(),toolsStarted:tools.started}:{schema:1 as const}),levelId:currentLevel,levelSignature:levelSignature(levels[currentLevel-1]),moves:nextMoves,score,
     collected:collected.slice(),shuffles:free,clearedLeaves,...(levels[currentLevel-1].crates?{clearedCrates}:{}),...(paid?{paidShuffleUsed:true}:{}),...(continued?{continueUsed:true}:{})};
 }
 function shuffleRound(button:HTMLButtonElement,expectedRound:number,expectedScene:BoardScene,expectedSave:SaveData):boolean {
-  const valid=()=>!puzzleProcessing&&!careDemo&&!roundEnded&&route==='puzzle'&&nativeActive&&!document.hidden&&!boardPending&&!resultTimer
+  const valid=()=>!toolMode&&!puzzleProcessing&&!careDemo&&!roundEnded&&route==='puzzle'&&nativeActive&&!document.hidden&&!boardPending&&!resultTimer
     &&!document.querySelector('dialog[open]')&&!testAds?.pausesGame&&!testBilling?.pausesGame&&game.scene.isActive('Board')
     &&round===expectedRound&&scene===expectedScene&&save===expectedSave&&game.scene.getScene('Board')===scene
     &&button.isConnected&&$('#shuffle')===button&&scene.keyboardState().available;
@@ -549,6 +555,100 @@ function shuffleRound(button:HTMLButtonElement,expectedRound:number,expectedScen
     roundTools=nextTools;shuffles=0;paidShuffleUsed=paid;scene.applyPreparedShuffle(candidate);updateWallet();updateGoals();renderViews();updateSaveStatus();return true;
   }finally{puzzleProcessing=false;}
 }
+type ToolContext={round:number;scene:BoardScene;save:SaveData;testing:boolean;opener:string};
+let toolInfoContext:(ToolContext&{id?:PuzzleToolId})|undefined;
+let toolMode:(ToolContext&{id:PuzzleToolId;checkpoint:RoundCheckpoint;at?:{row:number;col:number};other?:{row:number;col:number}})|undefined;
+function toolEnvironment(){
+  return !careDemo&&!roundEnded&&!boardPending&&!resultTimer&&!puzzleProcessing&&route==='puzzle'&&nativeActive&&!document.hidden
+    &&!testAds?.busy&&!testAds?.pausesGame&&!testBilling?.pausesGame&&!billingModal()&&Boolean(game&&game.scene.getScene('Board')===scene)&&scene.canLeave();
+}
+function sameToolContext(context:ToolContext){return context.round===round&&context.scene===scene&&context.save===save&&context.testing===testingLevel;}
+function currentToolRound(){return roundCheckpoint(scene.snapshot());}
+function renderPuzzleTools(){
+  $('#tool-shelf').innerHTML=toolShelf(save.language,save.highestLevel,save.puzzleTools,testingLevel);
+  for(const button of Array.from(document.querySelectorAll<HTMLButtonElement>('#tool-shelf button[data-tool]')))button.onclick=()=>{if(button.isConnected&&document.querySelector('#'+button.id)===button)showToolInfo(button.dataset.tool as PuzzleToolId,button.id);};
+  const all=$<HTMLButtonElement>('#tool-open');all.innerHTML=`<img src="${toolPicture('trowel')}" width="26" height="26" alt=""/><span>${text('toolShelf')}</span>`;all.onclick=()=>showToolInfo(undefined,all.id);
+  $('.puzzle-tools-bar').dataset.selecting=String(Boolean(toolMode));$('#tool-target-controls').hidden=!toolMode;
+  if(toolMode){
+    const context=toolMode,ready=Boolean(context.at&&validPuzzleToolTarget(context.checkpoint,context.id,context.at,context.other)),cost=toolStatus(save,context.checkpoint,context.id,testingLevel).cost;
+    $('#tool-choice-status').textContent=toolName(save.language,context.id)+' · '+(ready?(context.other?text('toolPairChosen'):text('toolChosen').replace('{row}',String(context.at!.row+1)).replace('{col}',String(context.at!.col+1))).replace('{cost}',cost):text(context.id==='gloves'?'toolChooseTwo':'toolChooseOne'));
+    const confirm=$<HTMLButtonElement>('#tool-confirm');confirm.textContent=text('toolConfirm');confirm.disabled=!ready;confirm.onclick=()=>{confirmTool(context);};
+    const cancel=$<HTMLButtonElement>('#tool-cancel');cancel.textContent=text('toolCancel');cancel.onclick=()=>{if(toolMode===context)closeToolMode();};
+  }
+}
+function showToolInfo(id?:PuzzleToolId,opener='tool-open'){
+  if(toolMode||toolInfoContext||!toolEnvironment()||otherModal()||previewDialog.open||resourceDialog.open)return false;
+  toolInfoContext={round,scene,save,testing:testingLevel,opener,id};renderToolInfo();scene.cancelInput();toolDialog.showModal();syncActivity();$('#tool-title').focus({preventScroll:true});return true;
+}
+function renderToolInfo(){
+  const context=toolInfoContext;if(!context)return;
+  toolDialog.innerHTML=toolInfo(save.language,save,currentToolRound(),context.id,testingLevel);
+  $('#tool-info-close').onclick=()=>{if(toolInfoContext===context)closeToolInfo(true,true);};
+  if(context.id){
+    $('#tool-info-start').onclick=()=>{if(toolInfoContext===context)beginToolMode(context);};
+    $('#tool-info-all').onclick=()=>{if(toolInfoContext!==context||!sameToolContext(context))return;rememberToolIntroduction(context);closeToolInfo(false,false);showToolInfo(undefined,context.opener);};
+  }else for(const button of Array.from(toolDialog.querySelectorAll<HTMLButtonElement>('button[data-tool]')))button.onclick=()=>{
+    if(toolInfoContext!==context||!sameToolContext(context))return;toolInfoContext={...context,id:button.dataset.tool as PuzzleToolId};renderToolInfo();$('#tool-title').focus({preventScroll:true});
+  };
+}
+function rememberToolIntroduction(context:ToolContext&{id?:PuzzleToolId}){
+  if(!sameToolContext(context))return false;
+  const id=context.id;if(!id||testingLevel||save.highestLevel<puzzleTool(id).unlock||save.puzzleTools.introduced.includes(id))return true;
+  if(careStorageBlocked()){notice('careSaveBlocked');return false;}
+  const next=JSON.parse(JSON.stringify(save)) as SaveData;next.puzzleTools.introduced.push(id);
+  if(!saveData(next)){updateSaveStatus();notice('careSaveBlocked');return false;}save=next;context.save=next;updateSaveStatus();renderPuzzleTools();return true;
+}
+function closeToolInfo(focus=true,remember=false){
+  const context=toolInfoContext;if(!context)return;
+  if(remember)rememberToolIntroduction(context);toolInfoContext=undefined;if(toolDialog.open)toolDialog.close();syncActivity();
+  if(focus&&nativeActive&&!document.hidden&&route==='puzzle')document.getElementById(context.opener)?.focus({preventScroll:true});
+}
+function offerToolIntroduction(){
+  if(toolMode||toolInfoContext||!toolEnvironment()||otherModal())return false;
+  const next=puzzleToolCatalog.find(tool=>tool.unlock===currentLevel&&!save.puzzleTools.introduced.includes(tool.id));return next?showToolInfo(next.id,'tool-'+next.id):false;
+}
+function beginToolMode(context:NonNullable<typeof toolInfoContext>){
+  const id=context.id;if(!id||!sameToolContext(context)||!toolEnvironment()||!toolDialog.open||!toolStatus(save,currentToolRound(),id,testingLevel).available)return false;
+  if(!rememberToolIntroduction(context))return false;closeToolInfo(false,false);
+  const selection:NonNullable<typeof toolMode>=toolMode={round,scene,save,testing:testingLevel,opener:context.opener,id,checkpoint:currentToolRound()};
+  if(!scene.beginToolSelection(at=>selectToolTarget(selection,at))){toolMode=undefined;renderPuzzleTools();return false;}
+  renderPuzzleTools();const board=$('#game-canvas');board.focus({preventScroll:true});if(board.matches(':focus-visible'))scene.focusKeyboard();return true;
+}
+function closeToolMode(focus=true){
+  const context=toolMode;if(!context)return;toolMode=undefined;context.scene.endToolSelection();renderPuzzleTools();
+  if(focus&&nativeActive&&!document.hidden&&route==='puzzle')document.getElementById(context.opener)?.focus({preventScroll:true});
+}
+function validToolMode(context:NonNullable<typeof toolMode>){
+  return toolMode===context&&sameToolContext(context)&&toolEnvironment()&&!otherModal()&&!previewDialog.open
+    &&scene.keyboardState().available&&JSON.stringify(currentToolRound())===JSON.stringify(context.checkpoint);
+}
+function selectToolTarget(context:NonNullable<typeof toolMode>,at:{row:number;col:number}){
+  if(!validToolMode(context))return;
+  if(!puzzleToolArea(context.checkpoint,context.id,at).length){context.at=undefined;context.other=undefined;scene.showToolArea([]);renderPuzzleTools();notice('toolInvalid');return;}
+  if(context.id==='gloves'&&context.at&&!context.other&&Math.abs(context.at.row-at.row)+Math.abs(context.at.col-at.col)===1)context.other={...at};
+  else {context.at={...at};context.other=undefined;}
+  scene.showToolArea(puzzleToolArea(context.checkpoint,context.id,context.at!,context.other));renderPuzzleTools();
+}
+function confirmTool(context:NonNullable<typeof toolMode>){
+  if(!validToolMode(context)||!context.at||!validPuzzleToolTarget(context.checkpoint,context.id,context.at,context.other))return false;
+  if(careStorageBlocked()){notice('careSaveBlocked');return false;}
+  puzzleProcessing=true;
+  try{
+    const plan=preparePuzzleTool(context.checkpoint,context.id,context.at,context.other),outcome=plan?puzzleToolOutcome(save,plan,testingLevel):undefined;
+    if(!plan||!outcome){notice('toolUnavailable');return false;}
+    if(outcome.save&&!saveData(outcome.save)){updateSaveStatus();notice('careSaveBlocked');return false;}
+    const previousMapLevel=save.highestLevel;if(outcome.save)save=outcome.save;closeToolMode(false);
+    const complete=()=>{if(round!==context.round||scene!==context.scene)return;if(outcome.won){roundEnded=true;firstReward=outcome.firstReward;pipIdle.setActive(false);scene.stopPlaying();finish(true);}renderPuzzleTools();};
+    const played=scene.playPreparedTool(plan,complete);
+    score=outcome.score;collected=outcome.collected.slice();clearedLeaves=outcome.clearedLeaves;clearedCrates=outcome.clearedCrates;roundTools={used:outcome.tools.used.slice(),started:outcome.tools.started};
+    if(outcome.firstReward){selectedChapter=chapterForLevel(save.highestLevel).id;if(previousMapLevel===currentLevel&&save.highestLevel===currentLevel+1)mapAdvance={from:currentLevel,to:currentLevel+1,owner:save};}
+    updateWallet();updateGoals();renderViews();updateSaveStatus();updateBoardAccess();
+    if(!played){scene.applyPreparedShuffle(plan.after);complete();}return true;
+  }finally{puzzleProcessing=false;}
+}
+toolDialog.addEventListener('cancel',event=>{event.preventDefault();closeToolInfo(true,true);});
+toolDialog.addEventListener('close',()=>{if(!toolDialog.open&&toolInfoContext)closeToolInfo(false,false);});
+toolDialog.addEventListener('keydown',event=>{if(event.repeat&&(event.key==='Enter'||event.key===' '))event.preventDefault();});
 function checkpoint(){
   if(careDemo||testingLevel||roundEnded)return;
   save.inProgress=roundCheckpoint(scene.snapshot());
@@ -565,6 +665,7 @@ function replaceBoard(){
 }
 function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{focusBoard?:boolean}={}){
   if(careDemo)return;
+  closeToolInfo(false,false);closeToolMode(false);
   if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);
   if(resourceHelp)closeResourceHelp(false);
   boardFeedback.cancel();
@@ -592,6 +693,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   },onBoardState:()=>{if(activeRound===round)updateBoardAccess();},onReady:()=>{
     if(activeRound!==round||scene!==activeScene)return;
     syncActivity();
+    if(!restored&&!testingLevel&&offerToolIntroduction())return;
     if(!focusRequested)return;
     focusRequested=false;
     const board=$('#game-canvas'),focused=document.activeElement;
@@ -611,7 +713,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   onVisualCancel:()=>{if(activeRound===round&&scene===activeScene)boardFeedback.cancel();},onNotice:key=>{
     if(activeRound!==round)return;
     boardNoticeKey=key;$('#board-notice').textContent=text(key);$('#board-notice').classList.remove('pop');void $('#board-notice').offsetWidth;$('#board-notice').classList.add('pop');
-  },onMove:(items,points,_chains,leavesCleared,cratesCleared)=>{
+  },onToolCancel:()=>{if(activeRound===round&&scene===activeScene)closeToolMode(false);},onMove:(items,points,_chains,leavesCleared,cratesCleared)=>{
     if(careDemo||activeRound!==round||roundEnded)return;
     if(roundTools)roundTools.started=true;
     boardFeedback.cancel();
@@ -1497,6 +1599,7 @@ function localize(){
   if(boardNoticeKey)$('#board-notice').textContent=text(boardNoticeKey);
 }
 function changeLanguage(language:'en'|'ko'){
+  closeToolInfo(false,false);closeToolMode(false);
   if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);
   boardFeedback.cancel();
   const focused=document.activeElement as HTMLElement|null,focusedId=focused?.id;
@@ -1509,7 +1612,7 @@ function changeLanguage(language:'en'|'ko'){
   if(focusedId&&!focused?.isConnected)document.querySelector<HTMLElement>('#'+focusedId)?.focus();
 }
 function switchView(name:string){
-  if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);
+  closeToolInfo(false,false);closeToolMode(false);  if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);
   if(resourceDialog.open)return;
   if(careDemo&&!['village','journal'].includes(name)&&!exitCareDemo(false))return;
   if(stagePreview)return;
@@ -1581,7 +1684,7 @@ if(Capacitor.isNativePlatform()){
     // 늦게 반환된 초기 상태가 이후의 복귀 이벤트를 덮어쓰지 않도록 합니다.
     if(revision===nativeRevision){nativeActive=state.isActive;syncActivity();}
   }).catch(()=>{ /* 네이티브 상태를 확인할 수 없으면 비활성 상태를 유지합니다. */ });
-  void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if(billingModal())closeBillingDialog();else if(testBilling?.pausesGame)return;else if(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open){void closeAdDialog();}else if(testAds?.pausesGame)return;else if(lookPreview)closeLookPreview();else if(spacePreview)closeSpacePreview();else if(resourceHelp)closeResourceHelp();else if(stagePreview)closeStagePreview();else if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('map');}else if(route==='settings')switchView(settingsReturnRoute);else if(route!=='map')switchView('map');else void App.minimizeApp();});
+  void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if(billingModal())closeBillingDialog();else if(testBilling?.pausesGame)return;else if(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open){void closeAdDialog();}else if(testAds?.pausesGame)return;else if(toolDialog.open)closeToolInfo(true,true);else if(toolMode)closeToolMode();else if(lookPreview)closeLookPreview();else if(spacePreview)closeSpacePreview();else if(resourceHelp)closeResourceHelp();else if(stagePreview)closeStagePreview();else if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('map');}else if(route==='settings')switchView(settingsReturnRoute);else if(route!=='map')switchView('map');else void App.minimizeApp();});
 }
 if(androidAdEntry)$<HTMLDialogElement>('#test-ad-dialog').addEventListener('cancel',event=>{event.preventDefault();void closeAdDialog();});
 if(androidBillingEntry)$<HTMLDialogElement>('#test-billing-dialog').addEventListener('cancel',event=>{event.preventDefault();closeBillingDialog();});

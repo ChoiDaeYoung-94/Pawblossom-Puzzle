@@ -3,6 +3,8 @@ import { createRequire } from 'node:module';
 import type Phaser from 'phaser';
 import { BoardEngine, seededRng, type Cell, type Tile, type Position, type ResolveStep } from '../src/core';
 import {prepareShuffle} from '../src/puzzleHelp';
+import {preparePuzzleTool} from '../src/puzzleToolActions';
+import {levelSignature,type RoundCheckpoint} from '../src/state';
 import type {BoardEffects} from '../src/BoardEffects';
 
 class Piece {
@@ -49,6 +51,7 @@ import {levels} from '../src/levels';
 // 렌더링은 대역을 유지하되 예약/만료/제거는 설치된 Phaser 3.90 Clock 원본을 사용합니다.
 const Clock=createRequire(import.meta.url)('phaser/src/time/Clock.js') as new(scene:unknown)=>Phaser.Time.Clock&{start():void};
 interface RenderScene {
+  beginToolSelection:BoardScene['beginToolSelection'];endToolSelection:BoardScene['endToolSelection'];showToolArea:BoardScene['showToolArea'];playPreparedTool:BoardScene['playPreparedTool'];
   cameras:{main:{getWorldPoint(x:number,y:number):{x:number,y:number}}};
   sys:{isActive():boolean;isPaused():boolean};shuffle():boolean;resumeAfterFailure():boolean;
   snapshot:BoardScene['snapshot'];applyPreparedShuffle:BoardScene['applyPreparedShuffle'];canResumeAfterFailure:BoardScene['canResumeAfterFailure'];
@@ -219,13 +222,51 @@ describe('보드 포인터 종료 (Phaser 입력 대역)',()=>{
 });
 const snapshot=(engine:BoardEngine)=>({board:engine.board.map(row=>row.map(tile=>tile?{...tile}:null)),leaves:engine.leaves.map(row=>row.slice())});
 function harness(){
-  const onMove=vi.fn(),onNotice=vi.fn(),onResolveVisual=vi.fn<(event:ResolveVisual)=>void>(),onVisualCancel=vi.fn();
-  const scene=new BoardScene({audio:{play(){}} as never,onStart(){},onMove,onNotice,onResolveVisual,onVisualCancel}) as unknown as RenderScene;
+  const onMove=vi.fn(),onNotice=vi.fn(),onResolveVisual=vi.fn<(event:ResolveVisual)=>void>(),onVisualCancel=vi.fn(),onToolCancel=vi.fn();
+  const scene=new BoardScene({audio:{play(){}} as never,onStart(){},onMove,onNotice,onResolveVisual,onVisualCancel,onToolCancel}) as unknown as RenderScene;
   scene.engine=new BoardEngine(8,8,seededRng(42));
   scene.engine.board=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({kind:(r*2+c)%6})));
   scene.resetHint=()=>{};
-  return {scene,onMove,onNotice,onResolveVisual,onVisualCancel};
+  return {scene,onMove,onNotice,onResolveVisual,onVisualCancel,onToolCancel};
 }
+
+describe('저장한 도구 결과의 선택·재생과 일반 정산 분리',()=>{
+  const ready=(started=true)=>{
+    const h=harness(),level=levels[5],rng=vi.fn(seededRng(42));h.scene.engine=new BoardEngine(8,8,rng,undefined,2);h.scene.engine.setLeaves(level.leaves??[]);h.scene.create();h.scene.events.emit('create');
+    const e=h.scene.engine,round:RoundCheckpoint={schema:2,actionProfile:'tools-v1',toolsUsed:[],toolsStarted:started,ruleVersion:2,levelId:6,levelSignature:levelSignature(level),board:JSON.parse(JSON.stringify(e.board)),leaves:JSON.parse(JSON.stringify(e.leaves)),moves:level.moves,score:0,collected:Array(6).fill(0),shuffles:1,clearedLeaves:0};
+    return {...h,round,rng};
+  };
+  const drain=()=>new Promise<void>(resolve=>setImmediate(resolve));
+  it('키보드 도구 선택은 매치를 실행하지 않고 Escape가 한 번 취소한다',()=>{
+    const h=ready(),pick=vi.fn(),board=JSON.stringify(h.scene.engine.board),calls=h.rng.mock.calls.length;
+    expect(h.scene.beginToolSelection(pick)).toBe(true);h.scene.focusKeyboard();h.scene.keyboardKey('Enter');expect(pick).toHaveBeenCalledWith({row:0,col:0});
+    h.scene.keyboardKey('Escape');h.scene.cancelInput();expect(h.onToolCancel).toHaveBeenCalledOnce();expect(h.onMove).not.toHaveBeenCalled();expect(JSON.stringify(h.scene.engine.board)).toBe(board);expect(h.rng).toHaveBeenCalledTimes(calls);
+  });
+  it('준비 결과를 낙하로 재생해도 live 엔진 명령/RNG/onMove를 다시 쓰지 않는다',async()=>{
+    const h=ready(),plan=preparePuzzleTool(h.round,'trowel',{row:2,col:2},undefined,seededRng(81))!,done=vi.fn(),calls=h.rng.mock.calls.length;
+    const activate=vi.spyOn(h.scene.engine,'activate'),swap=vi.spyOn(h.scene.engine,'swap');expect(h.scene.playPreparedTool(plan,done)).toBe(true);await drain();
+    expect(done).toHaveBeenCalledOnce();expect(h.onMove).not.toHaveBeenCalled();expect(activate).not.toHaveBeenCalled();expect(swap).not.toHaveBeenCalled();expect(h.rng).toHaveBeenCalledTimes(calls);expect(h.scene.engine.board).toEqual(plan.after.board);expect(h.scene.busy).toBe(false);
+    h.scene.pieces.forEach((line,r)=>line.forEach((piece,c)=>{expect(piece?.x).toBe(44+c*56);expect(piece?.y).toBe(44+r*56);}));
+  });
+  it('장갑은 두 piece를 먼저 교환하고 교환후 제거/낙하를 재생한다',async()=>{
+    const h=ready(),move=h.scene.engine.legalMoves()[0],a=h.scene.pieces[move.a.row][move.a.col],b=h.scene.pieces[move.b.row][move.b.col],plan=preparePuzzleTool(h.round,'gloves',move.a,move.b,seededRng(3))!,done=vi.fn();
+    expect(h.scene.playPreparedTool(plan,done)).toBe(true);expect(h.scene.pieces[move.a.row][move.a.col]).toBe(b);expect(h.scene.pieces[move.b.row][move.b.col]).toBe(a);await drain();expect(done).toHaveBeenCalledOnce();expect(h.scene.engine.board).toEqual(plan.after.board);expect(h.onMove).not.toHaveBeenCalled();
+  });
+  it('pause/resize의 빠른 정리는 최종 저장판과 완료 한 번만 남기고 늦은 await를 폐기한다',async()=>{
+    const h=ready(),resolves:(()=>void)[]=[],done=vi.fn(),plan=preparePuzzleTool(h.round,'broom',{row:2,col:2},undefined,seededRng(9))!;
+    h.scene.wait=()=>new Promise<void>(resolve=>resolves.push(resolve));h.scene.playPreparedTool(plan,done);expect(h.scene.busy).toBe(true);
+    h.scene.events.emit('pause');h.scene.scale.emit('resize');expect(h.scene.busy).toBe(false);expect(done).toHaveBeenCalledOnce();expect(h.scene.engine.board).toEqual(plan.after.board);
+    for(const resolve of resolves)resolve();await drain();expect(done).toHaveBeenCalledOnce();expect(h.onMove).not.toHaveBeenCalled();
+  });
+  it('씨앗은 해당 piece만 바꾸고 다른 블록/일반 이동을 건드리지 않는다',()=>{
+    const h=ready(false),old=h.scene.pieces.map(line=>line.slice()),plan=preparePuzzleTool(h.round,'seeds',{row:0,col:0})!,done=vi.fn(),calls=h.rng.mock.calls.length;
+    h.scene.playPreparedTool(plan,done);expect(done).toHaveBeenCalledOnce();expect(h.scene.pieces[0][0]).not.toBe(old[0][0]);expect(old[0][0]!.destroyed).toBe(true);expect(h.scene.pieces[0][1]).toBe(old[0][1]);expect(h.onMove).not.toHaveBeenCalled();expect(h.rng).toHaveBeenCalledTimes(calls);
+  });
+  it('이미 재생 중인 두 번째 적용과 종료 뒤 적용은 실행하지 않는다',()=>{
+    const h=ready(),plan=preparePuzzleTool(h.round,'bell',{row:0,col:0},undefined,seededRng(9))!,done=vi.fn();h.scene.wait=()=>new Promise(()=>{});
+    expect(h.scene.playPreparedTool(plan,done)).toBe(true);expect(h.scene.playPreparedTool(plan,vi.fn())).toBe(false);h.scene.stopPlaying();expect(done).toHaveBeenCalledOnce();expect(h.scene.playPreparedTool(plan,vi.fn())).toBe(false);expect(h.onMove).not.toHaveBeenCalled();
+  });
+});
 
 describe('제거 단계 표시 훅과 엔진 정산 분리',()=>{
   it('생성 보호 칸은 비행에서 빼고 각 단계 before의 종류·완전 낙엽 제거 좌표만 복사합니다',async()=>{

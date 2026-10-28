@@ -24,6 +24,8 @@ import {t, type TextKey} from '../src/i18n';
 import {icon as renderIcon} from '../src/icons';
 import * as trailEpisode from '../src/TrailEpisode';
 import * as puzzleToolsModel from '../src/puzzleTools';
+import * as puzzleToolActions from '../src/puzzleToolActions';
+import * as puzzleToolUi from '../src/PuzzleToolUI';
 import {specialTileArt,specialArtKinds,specialBodyKey,specialBodyPath} from '../src/SpecialTileArt';
 import * as paintedGardenArt from '../src/GardenPaintedArt';
 import * as gardenStructureArt from '../src/GardenStructureArt';
@@ -153,20 +155,27 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   };
   class SceneStub {
     engine:BoardEngine;
+    busy=false;toolTarget?: (at:Position)=>void;preparedComplete?:()=>void;toolArea:Position[]=[];
     stopped=false;
     sys={settings:{visible:true},setVisible(value:boolean){this.settings.visible=value;}};
-    constructor(public hooks: { onMove(items: number[], points: number): void; onReady():void; onNotice(key:string):void },snapshot?:BoardSnapshot,mask?:BoardMask,crates?:Position[]) {this.engine=new BoardEngine(8,8,seededRng(42),snapshot,undefined,mask,crates);}
+    constructor(public hooks: { onMove(items: number[], points: number): void; onReady():void; onNotice(key:string):void;onStart?():void;onToolCancel?():void },snapshot?:BoardSnapshot,mask?:BoardMask,crates?:Position[]) {this.engine=new BoardEngine(8,8,seededRng(42),snapshot,undefined,mask,crates);}
     configureLeaves(piles:Parameters<BoardEngine['setLeaves']>[0]) {this.engine.setLeaves(piles);}
     shuffle(){this.engine.shuffle();return true;}
     snapshot(){return cloneSnapshot({board:this.engine.board,leaves:this.engine.leaves,ruleVersion:this.engine.ruleVersion,...(this.engine.hasCrates?{crates:this.engine.crates}:{})});}
     applyPreparedShuffle(value:BoardSnapshot){const copy=cloneSnapshot(value);this.engine.board=copy.board;this.engine.leaves=copy.leaves;if(copy.crates)this.engine.crates=copy.crates;}
     canResumeAfterFailure(){return this.stopped;}
     resumePreparedFailure(){this.stopped=false;}
-    canLeave() { return true; }
+    canLeave() { return !this.busy; }
     stopPlaying() {this.stopped=true;}
     resumeAfterFailure(){if(!this.stopped)return false;this.stopped=false;return true;}
-    keyboardState(){return {available:!this.stopped,busy:false,finished:this.stopped};}
-    focusKeyboard() {} cancelInput() {} keyboardKey() {} hideKeyboardCursor() {}
+    keyboardState(){return {available:!this.stopped&&!this.busy,busy:this.busy,finished:this.stopped};}
+    focusKeyboard() {} keyboardKey() {} hideKeyboardCursor() {}
+    cancelInput(){if(this.toolTarget){this.toolTarget=undefined;this.hooks.onToolCancel?.();}this.completePrepared();}
+    beginToolSelection(target:(at:Position)=>void){if(this.stopped||this.busy)return false;this.toolTarget=target;return true;}
+    endToolSelection(){this.toolTarget=undefined;this.toolArea=[];}
+    showToolArea(at:Position[]){this.toolArea=at;}
+    playPreparedTool(plan:puzzleToolActions.PuzzleToolPlan,complete:()=>void){if(this.stopped||this.busy)return false;this.hooks.onStart?.();this.applyPreparedShuffle(plan.after);this.busy=true;this.preparedComplete=complete;return true;}
+    completePrepared(){if(!this.preparedComplete)return;const done=this.preparedComplete;this.preparedComplete=undefined;this.busy=false;done();}
   }
   class GameStub {
     constructor(public config:Record<string,unknown>){games++;}
@@ -238,7 +247,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     specialTileArt,
     ...campaignProgressModel,...campaignMilestoneUi,
-    ...trailEpisode,
+    ...trailEpisode,...puzzleToolsModel,...puzzleToolActions,...puzzleToolUi,
     ...boardDisplay,
     gardenTendingArt,pipDecorationArt,gardenGoals,goalNextStep,nextGardenGoal,previewGardenPreset,gardenPresetPreview,pipTendingArt,previewGardenTheme,gardenThemePreview,reachedPipUnlock,pipUnlockCard,...journeyModel,...journeyUI,
     createJourneyGardenArt:()=>({setActive(){},dispose(){}}),

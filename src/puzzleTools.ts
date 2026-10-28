@@ -3,6 +3,14 @@ export const puzzleToolIds=['trowel','gloves','broom','bell','seeds'] as const;
 export type PuzzleToolId=typeof puzzleToolIds[number];
 export interface PuzzleToolProgress {schema:1;introduced:PuzzleToolId[];trialUsed:PuzzleToolId[]}
 export interface PuzzleToolRound {used:PuzzleToolId[];started:boolean}
+export const puzzleToolCatalog=[
+  {id:'trowel',unlock:9,coins:30,mode:'target',special:'bomb'},
+  {id:'gloves',unlock:19,coins:20,mode:'swap'},
+  {id:'broom',unlock:29,coins:40,mode:'target',special:'row'},
+  {id:'bell',unlock:49,coins:60,mode:'target',special:'rainbow'},
+  {id:'seeds',unlock:69,coins:35,mode:'start',special:'bomb'},
+] as const;
+export const puzzleTool=(id:PuzzleToolId)=>puzzleToolCatalog.find(tool=>tool.id===id)!;
 export const freshToolProgress=():PuzzleToolProgress=>({schema:1,introduced:[],trialUsed:[]});
 const record=(value:unknown):value is Record<string,unknown>=>typeof value==='object'&&value!==null&&!Array.isArray(value);
 export function validateToolIds(value:unknown,max:number=puzzleToolIds.length):PuzzleToolId[]|undefined {
