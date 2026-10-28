@@ -13,6 +13,7 @@ import '@fontsource/fraunces/latin-600.css';
 import './style.css';
 import './CampaignMap.css';
 import './CampaignMilestone.css';
+import './ResultGarden.css';
 import {campaignClearCount,campaignProgress,campaignMilestone} from './CampaignProgress';
 import {campaignMilestoneCard,milestoneCopy} from './CampaignMilestone';
 import {campaignAlbumCard,albumSelection,parseAlbumIndex} from './CampaignAlbum';
@@ -58,7 +59,7 @@ import { gardenArt,flowerArt } from './GardenArt';
 import {previewGardenPreset,type GardenPresetId} from './GardenPresets';
 import {gardenPresetPreview} from './GardenPresetsUI';
 import {previewGardenTheme,gardenThemePreview} from './GardenThemePreview';
-import {gardenGoals,goalNextStep,nextGardenGoal,type GardenGoal,type GoalNeed} from './GardenGoals';
+import {gardenGoals,goalNextStep,nextGardenGoal,newlyReadyGardenGoal,type GardenGoal,type GoalNeed} from './GardenGoals';
 import {gardenSpaceArt} from './GardenSpaceArt';
 import {paintedGardenForeground} from './GardenStructureArt';
 import {gardenSpaceSpecs,gardenSpacesFor,prepareSpaceAction,previewSpaceAction,type GardenArea,type SpaceAction} from './gardenSpaces';
@@ -91,6 +92,7 @@ let round=0;
 let boardPending=false;
 let roundEnded=false, resultShown=false, firstReward=false;
 let resultWon:boolean|undefined;
+let resultGardenPlan:{id:string;round:number;scene:BoardScene;owner:SaveData}|undefined;
 let resultWorld:ReturnType<typeof campaignMilestone>;
 let resultWorldScenery:ReturnType<typeof createCampaignScenery>|undefined;
 let noticeKey:TextKey|undefined, boardNoticeKey:TextKey|undefined;
@@ -637,8 +639,10 @@ function confirmTool(context:NonNullable<typeof toolMode>){
   try{
     const plan=preparePuzzleTool(context.checkpoint,context.id,context.at,context.other),outcome=plan?puzzleToolOutcome(save,plan,testingLevel):undefined;
     if(!plan||!outcome){notice('toolUnavailable');return false;}
+    const previousGardenPlans=outcome.firstReward?currentGardenPlans():undefined;
     if(outcome.save&&!saveData(outcome.save)){updateSaveStatus();notice('careSaveBlocked');return false;}
     const previousMapLevel=save.highestLevel,returnBoardFocus=document.activeElement===$('#tool-confirm')&&$('#tool-confirm').matches(':focus-visible');if(outcome.save)save=outcome.save;closeToolMode(false);
+    if(previousGardenPlans)rememberResultGarden(previousGardenPlans);
     const complete=()=>{
       if(round!==context.round||scene!==context.scene)return;
       if(outcome.won){roundEnded=true;firstReward=outcome.firstReward;pipIdle.setActive(false);scene.stopPlaying();finish(true);}
@@ -679,7 +683,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   abandonRewardContinue();
   if(!Number.isInteger(id)||id<1||id>levels.length)return;
   mapAdvance=undefined;clearMapTravel();
-  resultWorldScenery?.dispose();resultWorldScenery=undefined;resultWorld=undefined;
+  resultWorldScenery?.dispose();resultWorldScenery=undefined;resultWorld=undefined;resultGardenPlan=undefined;
   clearResumeNotice();
   clearTimeout(resultTimer);resultTimer=undefined;round++;
   roundEnded=false;resultShown=false;firstReward=false;resultWon=undefined;clearBoardNotice();continueUsed=false;paidShuffleUsed=false;
@@ -896,6 +900,29 @@ function closeTestPicker(){
   else $('#test-level-button').focus();
   syncActivity();
 }
+function currentGardenPlans(data:SaveData=save){
+  return gardenGoals({plots:data.garden,pip:data.pip??freshPip(),design:data.gardenDesign,clears:gardenCompletedCount(data),stars:data.stars,coins:data.coins});
+}
+function rememberResultGarden(before:GardenGoal[]){
+  const goal=newlyReadyGardenGoal(before,currentGardenPlans());
+  resultGardenPlan=goal?{id:goal.id,round,scene,owner:save}:undefined;
+}
+function resultGardenGoal(){
+  const context=resultGardenPlan;
+  if(!context||careDemo||testingLevel||!firstReward||resultWon!==true||context.round!==round||context.scene!==scene||context.owner!==save||game.scene.getScene('Board')!==scene||careStorageBlocked())return;
+  const goal=currentGardenPlans().find(goal=>goal.id===context.id);
+  return goal&&!goal.done&&!goalNextStep(goal)?.missing?goal:undefined;
+}
+function updateResultGardenCopy(){
+  const card=document.querySelector<HTMLElement>('#result-garden-card');if(!card)return;
+  const goal=resultGardenGoal(),button=$<HTMLButtonElement>('#result-garden-open'),active=document.activeElement===button;
+  card.hidden=!goal;button.disabled=!goal;
+  if(!goal){if(active&&$<HTMLDialogElement>('#result-dialog').open)$('#result-next').focus();return;}
+  $('#result-garden-title').textContent=text('resultGardenReady');
+  $('#result-garden-name').textContent=gardenGoalName(goal);
+  $('#result-garden-label').textContent=text('resultGardenOpen');
+  button.setAttribute('aria-label',gardenGoalName(goal)+' · '+text('resultGardenOpen'));
+}
 function settleRound(won:boolean){
   if(careDemo||roundEnded)return;
   roundEnded=true;
@@ -903,11 +930,15 @@ function settleRound(won:boolean){
   const previousMapLevel=save.highestLevel;
   firstReward=won&&!testingLevel&&!save.completed.includes(currentLevel);
   if(testingLevel)return;
+  const previousGardenPlans=firstReward?currentGardenPlans():undefined;
   delete save.inProgress;
   if(firstReward){save.completed.push(currentLevel);save.stars++;save.coins+=40;save.highestLevel=Math.min(LEVEL_COUNT,Math.max(save.highestLevel,currentLevel+1));selectedChapter=chapterForLevel(save.highestLevel).id;}
   if(firstReward&&previousMapLevel===currentLevel&&save.highestLevel===currentLevel+1)mapAdvance={from:currentLevel,to:currentLevel+1,owner:save};
   // 결과창 타이머 전에 회차 제거와 첫 보상을 하나의 저장으로 확정합니다.
-  persist();updateWallet();renderViews();
+  const stored=persist();
+  resultGardenPlan=undefined;
+  if(stored&&previousGardenPlans)rememberResultGarden(previousGardenPlans);
+  updateWallet();renderViews();
 }
 function finish(won:boolean){
   if(careDemo||resultShown)return;
@@ -918,8 +949,8 @@ function finish(won:boolean){
   const testContinue=TEST_TOOLS_ENABLED&&testingLevel&&!won&&!continueUsed&&moves===0;
   const dialog=$<HTMLDialogElement>('#result-dialog');
   resultWorldScenery?.dispose();resultWorldScenery=undefined;resultWorld=campaignMilestone(save.completed,currentLevel,first,testingLevel,won);
-  dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}${testContinue?' result-with-continue':''}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><span class="result-character"><img class="result-pip" src="/assets/pip.png" decoding="async" alt=""/></span><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line" id="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow" id="result-level">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p><div id="result-trail">${trailStoryCard(save.language,currentLevel,won?'won':'retry',save.completed.includes(currentLevel),testingLevel)}</div>${first?`<div class="result-rewards"><span>${icon('star',20)}<span class="sr-only" data-t="stars">${text('stars')}</span> +1</span><span>${icon('coin',20)}<span class="sr-only" data-t="coins">${text('coins')}</span> +40</span></div>`:''}${campaignMilestoneCard(save.language,resultWorld,round)}<button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${androidBillingEntry&&!won&&!continueUsed&&moves===0?`<button class="result-test-button" id="result-buyer-continue" hidden>${text('buyerContinueTest')}</button>`:''}${testContinue?`<button class="result-test-button" id="result-continue" aria-describedby="result-continue-note">${text('testContinue')}</button><p id="result-continue-note">${text('testContinueNote')}</p>`:''}${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
-  dialog.showModal();syncActivity();
+  dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}${testContinue?' result-with-continue':''}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><span class="result-character"><img class="result-pip" src="/assets/pip.png" decoding="async" alt=""/></span><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line" id="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow" id="result-level">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p><div id="result-trail">${trailStoryCard(save.language,currentLevel,won?'won':'retry',save.completed.includes(currentLevel),testingLevel)}</div>${first?`<div class="result-rewards"><span>${icon('star',20)}<span class="sr-only" data-t="stars">${text('stars')}</span> +1</span><span>${icon('coin',20)}<span class="sr-only" data-t="coins">${text('coins')}</span> +40</span></div>`:''}${campaignMilestoneCard(save.language,resultWorld,round)}<section class="result-garden-card" id="result-garden-card" aria-labelledby="result-garden-title" hidden><div><p id="result-garden-title"></p><strong id="result-garden-name"></strong></div><button type="button" class="text-button" id="result-garden-open"><span id="result-garden-label"></span>${icon('arrow',16)}</button></section><button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${androidBillingEntry&&!won&&!continueUsed&&moves===0?`<button class="result-test-button" id="result-buyer-continue" hidden>${text('buyerContinueTest')}</button>`:''}${testContinue?`<button class="result-test-button" id="result-continue" aria-describedby="result-continue-note">${text('testContinue')}</button><p id="result-continue-note">${text('testContinueNote')}</p>`:''}${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
+  updateResultGardenCopy();dialog.showModal();syncActivity();
   $('#result-next').focus();
   const resultRound=round,resultScene=scene,resultLevel=currentLevel,resultTesting=testingLevel;
   const canNavigate=(button:HTMLButtonElement)=>!careDemo&&!puzzleProcessing&&nativeActive&&!document.hidden&&!boardPending&&resultTimer===undefined
@@ -930,6 +961,12 @@ function finish(won:boolean){
   const next=$<HTMLButtonElement>('#result-next'),home=$<HTMLButtonElement>('#result-home');
   next.onclick=()=>{if(!canNavigate(next))return;dialog.close();startLevel(won&&!done?Math.min(LEVEL_COUNT,currentLevel+1):currentLevel,testingLevel,undefined,{focusBoard:true});switchView('puzzle');};
   home.onclick=()=>{if(!canNavigate(home))return;dialog.close();switchView('map');};
+  const garden=$<HTMLButtonElement>('#result-garden-open');
+  garden.onclick=()=>{
+    if(!canNavigate(garden)||route!=='puzzle')return;
+    const goal=resultGardenGoal();if(!goal){updateResultGardenCopy();return;}
+    dialog.close();visitGardenGoal(goal);
+  };
   if(testingLevel){const picker=$<HTMLButtonElement>('#result-test');picker.onclick=()=>{if(!canNavigate(picker))return;dialog.close();showTestPicker(true);};}
   const continueButton=dialog.querySelector<HTMLButtonElement>('#result-continue');
   if(continueButton){const activeRound=round,activeScene=scene;continueButton.onclick=()=>{if(!testAds?.busy&&!rewardedContinue?.preparing)continueTestRound(activeRound,activeScene,continueButton);};}
@@ -1040,7 +1077,7 @@ function updateResultCopy(){
   $('#result-title').textContent=text(done?'complete':won?'win':'lose');
   $('#result-description').textContent=text(testingLevel?'testResultDesc':done?'completeDesc':won?(firstReward?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT));
   $('#result-next').innerHTML=text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')+icon('arrow',19);
-  $('#result-home').textContent=text('home');
+  $('#result-home').textContent=text('home');updateResultGardenCopy();
   const trail=document.querySelector<HTMLElement>('#result-trail');if(trail)trail.innerHTML=trailStoryCard(save.language,currentLevel,won?'won':'retry',save.completed.includes(currentLevel),testingLevel);
   if(resultWorld){const copy=milestoneCopy(save.language,resultWorld);for(const [id,value] of [['title',copy.title],['name',copy.name],['note',copy.note]]){const node=document.querySelector<HTMLElement>('#result-world-'+id);if(node)node.textContent=value;}}
   if(testingLevel)$('#result-test').textContent=text('testOther');
@@ -1261,11 +1298,12 @@ function gardenThemePanel(){
 function nextGardenProject(){
   return `${journeyNextCard(save.language,save.gardenDesign?.journeyProjects,gardenCompletedCount(),'journal')}<details class="pip-project"><summary>${text('gardenTogether')}</summary>${nextSpaceGoal(save.language,save.gardenDesign?.spaces,gardenCompletedCount(),save.stars)}<button id="pip-open-space" class="text-button">${text('spaceOpen')}</button><button id="pip-open-garden" class="text-button">${text('gardenOpenEditor')}</button></details>`;
 }
+function gardenGoalName(goal:GardenGoal){return goal.kind==='bed'?text('goalBed').replace('{number}',goal.name):goal.kind==='project'?projectName(goal.name as GardenProject):goal.kind==='theme'?themeName(goal.name as GardenTheme):(goal.kind==='journey'?journeyName(save.language,goal.project!):gardenAreaName(save.language,goal.area as GardenArea))+' · '+text(goal.name==='1'?'spaceFoundation':'spaceComplete');}
 function sharedGardenPlan(view:'village'|'journal'){
-  const goals=gardenGoals({plots:save.garden,pip:save.pip??freshPip(),design:save.gardenDesign,clears:gardenCompletedCount(),stars:save.stars,coins:save.coins});
+  const goals=currentGardenPlans();
   const next=nextGardenGoal(goals),done=goals.filter(goal=>goal.done).length;
   const achievements=[...(goals.filter(g=>g.kind==='project').every(g=>g.done)?[text('gardenProjectsDone')]:[]),...(goals.filter(g=>g.kind==='theme').every(g=>g.done)?[text('gardenThemesDone')]:[])];
-  const name=(goal:GardenGoal)=>goal.kind==='bed'?text('goalBed').replace('{number}',goal.name):goal.kind==='project'?projectName(goal.name as GardenProject):goal.kind==='theme'?themeName(goal.name as GardenTheme):(goal.kind==='journey'?journeyName(save.language,goal.project!):gardenAreaName(save.language,goal.area as GardenArea))+' · '+text(goal.name==='1'?'spaceFoundation':'spaceComplete');
+  const name=gardenGoalName;
   const needName=(kind:GoalNeed)=>text(({plots:'goalPlots',growth:'pipGrowth',affection:'pipAffection',diversity:'goalDiversity',clears:'goalClears',stars:'stars',coins:'coins',foundation:'spaceFoundation'} as const)[kind]);
   const detail=(goal:GardenGoal)=>{
     const step=goalNextStep(goal);if(!step)return text('goalDone');
@@ -1330,6 +1368,20 @@ function revealPipCare(){
     if(active&&view.contains(active)&&!hero.contains(active)&&!actions.contains(active))$('#pip-care-title').focus({preventScroll:true});
   }
 }
+// 결과와 목록은 각각 유효성을 확인한 뒤 같은 작업 위치로 이동합니다.
+function visitGardenGoal(goal:GardenGoal){
+  const step=goalNextStep(goal);if(!step)return;
+  clearCareReaction();
+  if(step.destination==='map'){switchView('map');if((route as string)!=='map')return;$('#map-play').focus({preventScroll:true});return;}
+  if(step.destination==='pip'){
+    switchView('journal');if((route as string)!=='journal')return;const target=$<HTMLButtonElement>(step.missing?.kind==='affection'?'#pip-play':'#pip-feed');
+    const focus=target.disabled?$('#pip-care-title'):target;focus.focus({preventScroll:true});focus.scrollIntoView?.({block:'center'});return;
+  }
+  selectedGardenArea=step.destination;if(step.destination==='journey'&&goal.project)selectedJourneyProject=goal.project;
+  switchView('village');if((route as string)!=='village')return;renderViews();
+  const id=step.destination!=='flowers'?'garden-space-title':step.missing?.kind==='diversity'?'garden-edit-title':goal.kind==='bed'?'garden-stage':'garden-edit-title';
+  const target=$('#'+id);target.focus({preventScroll:true});target.scrollIntoView?.({block:'start'});
+}
 function bindCareControls(){
   const expectedSave=save,generation=careGeneration;
   const bind=(id:string,handler:(button:HTMLButtonElement)=>void)=>{const button=document.querySelector<HTMLButtonElement>('#'+id);if(button)button.onclick=()=>{if(currentControl(button,expectedSave,generation))handler(button);};};
@@ -1362,20 +1414,10 @@ function bindCareControls(){
     };
   }
   const area=selectedGardenArea;
-  const plans=gardenGoals({plots:save.garden,pip:save.pip??freshPip(),design:save.gardenDesign,clears:gardenCompletedCount(),stars:save.stars,coins:save.coins});
+  const plans=currentGardenPlans();
   for(const view of ['village','journal'] as const)for(const goal of plans)bind(`${view}-goal-${goal.id}`,()=>{
     if(route!==view||!careEnvironment()||careProcessing||growing)return;
-    const step=goalNextStep(goal);if(!step)return;
-    clearCareReaction();
-    if(step.destination==='map'){switchView('map');$('#map-play').focus({preventScroll:true});return;}
-    if(step.destination==='pip'){
-      switchView('journal');const target=$<HTMLButtonElement>(step.missing?.kind==='affection'?'#pip-play':'#pip-feed');
-      const focus=target.disabled?$('#pip-care-title'):target;focus.focus({preventScroll:true});focus.scrollIntoView?.({block:'center'});return;
-    }
-    selectedGardenArea=step.destination;if(step.destination==='journey'&&goal.project)selectedJourneyProject=goal.project;
-    switchView('village');renderViews();
-    const id=step.destination!=='flowers'?'garden-space-title':step.missing?.kind==='diversity'?'garden-edit-title':goal.kind==='bed'?'garden-stage':'garden-edit-title';
-    const target=$('#'+id);target.focus({preventScroll:true});target.scrollIntoView?.({block:'start'});
+    visitGardenGoal(goal);
   });
   if(area==='journey'){
     const select=document.querySelector<HTMLSelectElement>('#journey-project-select');
@@ -1639,7 +1681,7 @@ function switchView(name:string){
   // Phaser refresh는 직전 parentSize로 계산하므로 숨김→표시 직후 부모 크기를 먼저 갱신합니다.
   if(name==='puzzle'&&game.isBooted){game.scale.getParentBounds();game.scale.refresh();updateGoals();}
   if(returnToResult){
-    const dialog=$<HTMLDialogElement>('#result-dialog');dialog.showModal();
+    const dialog=$<HTMLDialogElement>('#result-dialog');updateResultGardenCopy();dialog.showModal();
     const button=dialog.querySelector<HTMLButtonElement>('#result-continue');
     if(androidAdEntry&&button&&testingLevel&&!continueUsed&&resultWon===false&&moves===0)bindRewardContinue(button);
   }

@@ -44,3 +44,9 @@ export function goalNextStep(goal:GardenGoal){
   return {missing,destination};
 }
 export function nextGardenGoal(goals:GardenGoal[]){return goals.find(goal=>!goal.done&&!goalNextStep(goal)?.missing)??goals.find(goal=>!goal.done);}
+/** 이번 보상으로 처음 준비된 계획 하나만 안내합니다. 소유·소비·저장은 바꾸지 않습니다. */
+export function newlyReadyGardenGoal(before:GardenGoal[],after:GardenGoal[]){
+  const ready=(goal:GardenGoal)=>!goal.done&&!goalNextStep(goal)?.missing;
+  const alreadyReady=new Set(before.filter(ready).map(goal=>goal.id));
+  return after.find(goal=>ready(goal)&&!alreadyReady.has(goal.id));
+}
