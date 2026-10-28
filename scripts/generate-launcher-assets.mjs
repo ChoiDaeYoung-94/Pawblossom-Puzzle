@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import {pipLauncherXml} from './pip-icon-source.mjs';
+import {checkPipLayers} from './check-pip-icon.mjs';
 
-// 기존 자체 발바닥·꽃 도형의 단일 원본에서 Android XML과 검수용 SVG를 만듭니다.
+// 핍 런처 레이어와 기존 단색 발바닥·꽃 원본에서 XML/검수용 SVG를 만듭니다.
 const mark=JSON.parse(fs.readFileSync('assets/branding/pawblossom-mark.json','utf8'));
 const res='android/app/src/main/res',preview='assets/branding';
 const checking=process.argv.includes('--check');
@@ -17,8 +19,6 @@ const write=(file,content)=>{
 };
 if(mark.viewport!==108||mark.paths.some(p=>!/^#[0-9A-F]{6}$/i.test(p.fill)||!/^[\d.,\sA-Za-z+-]+$/.test(p.path)))throw Error('지원하지 않는 도형 원본입니다.');
 const xmlPaths=monochrome=>mark.paths.map(p=>`    <path android:fillColor="${monochrome?'#FFFFFF':p.fill}" android:pathData="${p.path}"/>`).join('\n');
-const rect=`    <path android:fillColor="${mark.background}" android:pathData="M0,0H108V108H0Z"/>`;
-const circle=`    <path android:fillColor="${mark.background}" android:pathData="M0,54A54,54 0,1 0,108 54A54,54 0,1 0,0 54Z"/>`;
 function vector(background='',scale=mark.adaptiveScale,monochrome=false){
   return `<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
 ${background}
@@ -27,19 +27,9 @@ ${xmlPaths(monochrome)}
     </group>
 </vector>`;
 }
-write(`${res}/drawable/pawblossom_foreground.xml`,vector());
+checkPipLayers();
+for(const [file,content]of Object.entries(pipLauncherXml()))write(`${res}/${file}`,content);
 write(`${res}/drawable/pawblossom_monochrome.xml`,vector('',mark.adaptiveScale,true));
-write(`${res}/drawable/pawblossom_icon.xml`,vector(rect,mark.legacyScale));
-write(`${res}/mipmap-anydpi/ic_launcher.xml`,vector(rect,mark.legacyScale));
-write(`${res}/mipmap-anydpi/ic_launcher_round.xml`,vector(circle,mark.legacyScale));
-for(const [qualifier,mono] of [['v26',false],['v33',true]]){
-  const adaptive=`<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/ic_launcher_background"/>
-    <foreground android:drawable="@drawable/pawblossom_foreground"/>${mono?'\n    <monochrome android:drawable="@drawable/pawblossom_monochrome"/>':''}
-</adaptive-icon>`;
-  for(const name of ['ic_launcher','ic_launcher_round'])write(`${res}/mipmap-anydpi-${qualifier}/${name}.xml`,adaptive);
-}
 write(`${res}/values/ic_launcher_background.xml`,`<?xml version="1.0" encoding="utf-8"?>\n<resources><color name="ic_launcher_background">${mark.background}</color></resources>`);
 function svg(background,monochrome=false){
   return `<svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 108 108">${background?`<rect width="108" height="108" fill="${mark.background}"/>`:''}<g transform="translate(54 54) scale(${mark.adaptiveScale}) translate(-54 -54)">${mark.paths.map(p=>`<path fill="${monochrome?'#FFFFFF':p.fill}" d="${p.path}"/>`).join('')}</g></svg>`;
