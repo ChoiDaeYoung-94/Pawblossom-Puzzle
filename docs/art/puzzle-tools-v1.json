@@ -1,5 +1,5 @@
 {
-  "status": "five original concept sources copied byte-exact;runtime exports/effects/unlock UI not yet integrated",
+  "status": "five-tool prototype integrated;actual browser use checked with explicit save fixtures;Android and commercial art approval pending",
   "mode": "built-in image_gen;transparent background",
   "entries": [
     {
@@ -8,7 +8,9 @@
       "generatedPath": "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-96556c5d-ecbb-4b08-bdc8-8e99d906718d.png",
       "path": "assets/art/puzzle-tools-v1/trowel-v1.png",
       "bytes": 1018792,
-      "sha256": "a106f981c220c1a83571759cc34b6f7d71f6b4bfa9dff45c14e3d78a9a236309"
+      "sha256": "a106f981c220c1a83571759cc34b6f7d71f6b4bfa9dff45c14e3d78a9a236309",
+      "width": 1254,
+      "height": 1254
     },
     {
       "id": "gloves",
@@ -16,7 +18,9 @@
       "generatedPath": "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-46ea5356-0628-44f2-aef0-d26fa4ac1f72.png",
       "path": "assets/art/puzzle-tools-v1/gloves-v1.png",
       "bytes": 1892268,
-      "sha256": "93f04019cc949d2858a240c0a01a6fc2680acd5fd8444fdf8fb3b66253c3db75"
+      "sha256": "93f04019cc949d2858a240c0a01a6fc2680acd5fd8444fdf8fb3b66253c3db75",
+      "width": 1254,
+      "height": 1254
     },
     {
       "id": "broom",
@@ -24,7 +28,9 @@
       "generatedPath": "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-7cd0ce28-0f02-4fa7-beda-d195d865cef7.png",
       "path": "assets/art/puzzle-tools-v1/broom-v1.png",
       "bytes": 1375072,
-      "sha256": "e6e05f727cd666c20f858b942361700bda1f6c6c265c5ba5bd41e288c5db06e4"
+      "sha256": "e6e05f727cd666c20f858b942361700bda1f6c6c265c5ba5bd41e288c5db06e4",
+      "width": 1254,
+      "height": 1254
     },
     {
       "id": "bell",
@@ -32,7 +38,9 @@
       "generatedPath": "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-12ee0668-987d-4b9b-96b5-c039aa4f686f.png",
       "path": "assets/art/puzzle-tools-v1/bell-v1.png",
       "bytes": 1277963,
-      "sha256": "e0a3468c172789f90c61eb486a8407b1337200e40df5308ef9d7f8bb5a2aaa3f"
+      "sha256": "e0a3468c172789f90c61eb486a8407b1337200e40df5308ef9d7f8bb5a2aaa3f",
+      "width": 1254,
+      "height": 1254
     },
     {
       "id": "seeds",
@@ -40,7 +48,60 @@
       "generatedPath": "C:/Users/user/.codex/generated_images/01a11a8c-0d58-7790-9dc7-218775f5bdb2/exec-56e878e5-d8d4-46fa-ab67-42a7439a582e.png",
       "path": "assets/art/puzzle-tools-v1/seeds-v1.png",
       "bytes": 1640099,
-      "sha256": "64ef31692270949a36234567d868734ddf9ace7d330af24a7755565c97a92e01"
+      "sha256": "64ef31692270949a36234567d868734ddf9ace7d330af24a7755565c97a92e01",
+      "width": 1254,
+      "height": 1254
     }
-  ]
+  ],
+  "outputs": [
+    {
+      "id": "trowel",
+      "path": "public/assets/puzzle-tools-v1/trowel-v1.webp",
+      "width": 192,
+      "height": 192,
+      "bytes": 8936,
+      "sha256": "81ffb353c343722f9c5f674837bef2bb13426b0523d380491293fbb51f13e13d"
+    },
+    {
+      "id": "gloves",
+      "path": "public/assets/puzzle-tools-v1/gloves-v1.webp",
+      "width": 192,
+      "height": 192,
+      "bytes": 11654,
+      "sha256": "36b346f6480ecd72488ce5b3461313af680ca92a4c16a7b3ecac46c40401cb43"
+    },
+    {
+      "id": "broom",
+      "path": "public/assets/puzzle-tools-v1/broom-v1.webp",
+      "width": 192,
+      "height": 192,
+      "bytes": 11020,
+      "sha256": "374feb05f2623f1018cc6b388e616a27f02d59ccc4132a691b70df39450962c4"
+    },
+    {
+      "id": "bell",
+      "path": "public/assets/puzzle-tools-v1/bell-v1.webp",
+      "width": 192,
+      "height": 192,
+      "bytes": 10900,
+      "sha256": "7c87ddaa5c6a78b90ad6e7d5cd06666663b183811ce7db5bd74da7d4e060e12f"
+    },
+    {
+      "id": "seeds",
+      "path": "public/assets/puzzle-tools-v1/seeds-v1.webp",
+      "width": 192,
+      "height": 192,
+      "bytes": 11922,
+      "sha256": "5ac4bf40e413b4c0277b093ab2449a729c17f3d9e1e9116b1436631e08cc5927"
+    }
+  ],
+  "export": {
+    "sharp": "0.35.5",
+    "canvas": 192,
+    "content": 176,
+    "padding": 8,
+    "quality": 90,
+    "alphaQuality": 100,
+    "policy": "original untouched;standard resize/padding/encoding only"
+  }
 }
