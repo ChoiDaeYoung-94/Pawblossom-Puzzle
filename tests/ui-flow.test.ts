@@ -352,6 +352,8 @@ describe('직접 고르는 산책 도구의 실제 저장/UI 경계',()=>{
     const writes=h.writes(),use=h.element('#tool-confirm').onclick;expect(h.element('#tool-confirm').disabled).toBe(false);use();const stored=h.stored();
     expect(h.writes()-writes).toBe(2);expect(stored.puzzleTools.trialUsed).toEqual(['trowel']);expect(stored.inProgress).toMatchObject({moves,toolsUsed:['trowel'],toolsStarted:true});expect(stored.coins).toBe(200);expect(h.run('moves')).toBe(moves);
     h.run('scene.completePrepared()');use();expect(h.stored()).toEqual(stored);expect(h.writes()-writes).toBe(2);expect(h.run('moves')).toBe(moves);
+    expect(h.element('#tool-shelf').innerHTML).toContain('data-tool="trowel" data-locked="false" data-used="true"');expect(h.element('#tool-shelf').innerHTML).toContain(t('en','toolUsedBadge'));
+    h.run('startLevel(69)');expect(h.element('#tool-shelf').innerHTML).toContain('data-tool="trowel" data-locked="false" data-used="false"');if(h.run('toolDialog.open'))h.element('#tool-info-close').onclick();h.run("showToolInfo('trowel','tool-trowel')");expect(h.run('toolDialog.innerHTML')).toContain(t('en','toolCost').replace('{coins}','30'));
   });
   it.each(['#tool-confirm','#tool-cancel'])('보드→%s 초점 이동은 같은 선택을 유지하고 버튼을 누를 수 있다',id=>{
     const h=ready();select(h);h.element('#game-canvas').listeners.blur({relatedTarget:h.element(id)} as never);expect(h.run('Boolean(toolMode)')).toBe(true);

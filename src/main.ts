@@ -565,7 +565,7 @@ function toolEnvironment(){
 function sameToolContext(context:ToolContext){return context.round===round&&context.scene===scene&&context.save===save&&context.testing===testingLevel;}
 function currentToolRound(){return roundCheckpoint(scene.snapshot());}
 function renderPuzzleTools(){
-  $('#tool-shelf').innerHTML=toolShelf(save.language,save.highestLevel,save.puzzleTools,testingLevel);
+  $('#tool-shelf').innerHTML=toolShelf(save.language,save.highestLevel,save.puzzleTools,testingLevel,roundTools?.used);
   for(const button of Array.from(document.querySelectorAll<HTMLButtonElement>('#tool-shelf button[data-tool]')))button.onclick=()=>{if(button.isConnected&&document.querySelector('#'+button.id)===button)showToolInfo(button.dataset.tool as PuzzleToolId,button.id);};
   const all=$<HTMLButtonElement>('#tool-open');all.innerHTML=`<img src="${toolPicture('trowel')}" width="26" height="26" alt=""/><span>${text('toolShelf')}</span>`;all.onclick=()=>showToolInfo(undefined,all.id);
   $('.puzzle-tools-bar').dataset.selecting=String(Boolean(toolMode));$('#tool-target-controls').hidden=!toolMode;
