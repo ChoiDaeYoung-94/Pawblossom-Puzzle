@@ -2144,6 +2144,20 @@ describe('저장 상태·초기화 UI 보호',()=>{
 });
 
 
+describe('도구 행동 프로필과 실제 저장 경계',()=>{
+  it('새 판은 tools-v1로 시작하고 설정/언어는 시작 전 자격을 소비하지 않으며 한 수 뒤 복원한다',()=>{
+    const h=mainHarness(),first=h.stored();expect(first.version).toBe(2);expect(first.inProgress).toMatchObject({schema:2,actionProfile:'tools-v1',toolsUsed:[],toolsStarted:false});
+    h.run("switchView('settings');changeLanguage('ko');switchView('puzzle')");expect(h.stored().inProgress.toolsStarted).toBe(false);
+    h.run('scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');expect(h.stored().inProgress.toolsStarted).toBe(true);
+    const next=mainHarness(false,false,false,false,h.stored());expect(next.run('moves')).toBe(first.inProgress.moves-1);expect(next.run('roundTools.started')).toBe(true);
+  });
+  it('이동0 섞기도 시작 행동이며 실패한 저장은 live판/자격/재화를 먼저 바꾸지 않는다',()=>{
+    const h=mainHarness(),before=h.run('JSON.stringify({roundTools,board:scene.snapshot(),moves,coins:save.coins})'),stored=h.stored();h.setStorageFails(true);
+    h.element('#shuffle').onclick();expect(h.run('JSON.stringify({roundTools,board:scene.snapshot(),moves,coins:save.coins})')).toBe(before);expect(h.stored()).toEqual(stored);
+    h.setStorageFails(false);h.element('#shuffle').onclick();expect(h.run('roundTools.started')).toBe(true);expect(h.stored().inProgress).toMatchObject({toolsStarted:true,toolsUsed:[],shuffles:0});expect(h.run('moves')).toBe(stored.inProgress.moves);
+  });
+});
+
 describe('V1 회차 보존과 V2 정사각 안내',()=>{
   it('버전 없는 기존 판을 그대로 복원·재저장하고 명시 재시작부터2를 쓰며 Pip·영구 기록을 보존합니다',()=>{
     const original=mainHarness().stored();original.version=1;delete original.puzzleTools;original.inProgress.schema=1;for(const key of ['ruleVersion','actionProfile','toolsUsed','toolsStarted'])delete original.inProgress[key];

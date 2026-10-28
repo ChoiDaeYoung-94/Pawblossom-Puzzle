@@ -23,7 +23,7 @@ function disk(primary?:string,backup?:string){
 describe('도구 저장2 이행과 동결 구앱의 쓰기 차단',()=>{
   it('구앱 검수 fixture는 상대 import 외에 이전 소스와 같다',()=>{
     let code=readFileSync(new URL('./fixtures/legacy-save-v1.ts',import.meta.url),'utf8').replaceAll('\r\n','\n').split('\n').slice(1).join('\n');
-    for(const name of ['i18n','levels','core','pipCare','gardenDesign'])code=code.replace(`from '../../src/${name}'`,`from './${name}'`);
+    for(const name of ['i18n','levels','core','pipCare','gardenDesign'])code=code.replaceAll(`from '../../src/${name}'`,`from './${name}'`);
     expect(createHash('sha256').update(code).digest('hex')).toBe(legacySource.sourceLfSha256);
   });
   it.each([1,2] as const)('기존 룰%s 회차와 영구 기록은 무쓰기 이행하고 행동 프로필을 덧붙이지 않는다',rule=>{
@@ -47,6 +47,11 @@ describe('도구 저장2 이행과 동결 구앱의 쓰기 차단',()=>{
     expect(d.read(SAVE_KEY).version).toBe(2);expect(d.read(BACKUP_KEY).version).toBe(2);d.values.set(SAVE_KEY,'{');d.writes.length=0;
     const old=new LegacyStore(d.access);expect(old.save(old.load())).toBe(false);expect(d.writes).toEqual([]);
     const restored=d.store();expect(restored.load()).toEqual(current());expect(restored.status.load).toBe('recovered');
+  });
+  it('부분 이행의 정상v1 primary와 v2 backup도 구앱은 두 원문을 쓰지 않는다',()=>{
+    const primary=JSON.stringify(legacy()),backup=JSON.stringify(current()),d=disk(primary,backup),old=new LegacyStore(d.access),data=old.load();
+    expect(data.coins).toBe(200);expect(old.status.load).toBe('unsupported');data.coins+=40;
+    expect(old.save(data)).toBe(false);expect(old.retry(data)).toBe(false);expect([...d.values]).toEqual([[SAVE_KEY,primary],[BACKUP_KEY,backup]]);expect(d.writes).toEqual([]);
   });
   it.each([SAVE_KEY,BACKUP_KEY])('v1 이행 중 %s 쓰기 실패/재시도는 기존 기록과 소비를 함께 유지한다',key=>{
     const raw=JSON.stringify(legacy()),d=disk(raw,raw),s=d.store(),next=s.load();next.coins-=30;next.puzzleTools={schema:1,introduced:['trowel'],trialUsed:['trowel']};

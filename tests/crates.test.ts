@@ -124,7 +124,7 @@ describe('상자 저장·서버와 원본 DB 실패 폐쇄',()=>{
   it('35 완료 저장은 보상·재화·핍을 재지급하지 않고 36으로 이어집니다',()=>{
     const value={version:1,highestLevel:35,completed:Array.from({length:35},(_,i)=>i+1),stars:35,coins:777,garden:5,language:'ko',music:true,sfx:true,tutorialSeen:true};
     const storage={getItem:(key:string)=>key===SAVE_KEY?JSON.stringify(value):null,setItem(){},removeItem(){}};
-    expect(new SaveStore(()=>storage).load()).toMatchObject({...value,highestLevel:36});
+    expect(new SaveStore(()=>storage).load()).toMatchObject({...value,version:2,highestLevel:36});
   });
   it.each(['ledger-v1-fixture.json','ledger-square-v2-baseline.json','ledger-mask-v2-baseline.json'])('실제 원본 %s의 DDL/행/profile을 변경하지 않고 거절합니다',name=>{
     const source=JSON.parse(readFileSync(new URL('./helpers/'+name,import.meta.url),'utf8')),directory=mkdtempSync(join(tmpdir(),'pawblossom-crates-old-')),path=join(directory,'round.sqlite');
