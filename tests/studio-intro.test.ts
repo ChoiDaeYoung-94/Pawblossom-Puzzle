@@ -93,7 +93,7 @@ describe('기존 저장 설정 의미 보존',()=>{
   });
   it('손상 primary의 유효 backup 무음을 존중한다',()=>{const h=probe({[SAVE_KEY]:'broken',[BACKUP_KEY]:valid(false,'en')});expect(studioPreferences(h.store)).toEqual({language:'en',sound:false});expect(h.store.status.load).toBe('recovered');expect(h.setItem).not.toHaveBeenCalled();});
   it('초기화 의도는 과거 payload보다 우선하고 오래된 언어를 부활시키지 않는다',()=>{const h=probe({[RESET_KEY]:'1',[SAVE_KEY]:valid(false,'en')});expect(studioPreferences(h.store)).toEqual({language:'ko',sound:true});expect(h.removeItem).not.toHaveBeenCalled();});
-  const uncertain:Record<string,string>[]=[{[SAVE_KEY]:'broken'},{[SAVE_KEY]:JSON.stringify({version:2}),[BACKUP_KEY]:valid(true)}];
+  const uncertain:Record<string,string>[]=[{[SAVE_KEY]:'broken'},{[SAVE_KEY]:JSON.stringify({version:3}),[BACKUP_KEY]:valid(true)}];
   it.each(uncertain)('불확실한 저장은 소리를 켜지 않는다',data=>{expect(studioPreferences(probe(data).store).sound).toBe(false);});
   it('저장 읽기 예외도 무음 기본값으로 지나간다',()=>{const store=new SaveStore(()=>{throw Error('storage');});expect(studioPreferences(store)).toEqual({language:'ko',sound:false});});
 });

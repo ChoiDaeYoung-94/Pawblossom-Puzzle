@@ -207,19 +207,20 @@ describe('선택하는 꽃과 영구 정원 작품',()=>{
 });
 describe('선택 필드와 기존 저장 보호',()=>{
   const legacy={version:1,language:'ko',highestLevel:3,completed:[1,2],stars:0,coins:70,garden:1,music:false,sfx:true,tutorialSeen:true};
+  const migratedLegacy={...legacy,version:2,puzzleTools:{schema:1,introduced:[],trialUsed:[]}};
   const setup=(primary:unknown,backup?:unknown)=>{const disk=new Map([[SAVE_KEY,JSON.stringify(primary)],...(backup?[[BACKUP_KEY,JSON.stringify(backup)]]:[])] as [string,string][]);let writes=0;const store=new SaveStore(()=>({getItem:key=>disk.get(key)??null,setItem:(key,value)=>{writes++;disk.set(key,value);},removeItem:key=>{disk.delete(key);}}));return {store,disk,writes:()=>writes};};
   it('새 공간은 실제 고유 완료로 검증하고 구 저장 무삽입·정상 재저장·손상 backup 분리를 보존합니다',()=>{
     const spaces=freshGardenSpaces();spaces.pond={phase:1,altOwned:false,style:'base'};
     const source={...legacy,garden:5,stars:38,coins:100,completed:Array.from({length:50},(_,i)=>i+1),highestLevel:51,pip:{...grown,owned:[],equipped:'none'},gardenDesign:{...freshGardenDesign(),spaces}};
     const h=setup(source),save=h.store.load();expect(save.gardenDesign?.spaces).toEqual(spaces);expect(h.writes()).toBe(0);expect(h.store.save(save)).toBe(true);expect(h.store.load().gardenDesign?.spaces).toEqual(spaces);
     for(const completed of [Array(50).fill(1),[...Array.from({length:49},(_,i)=>i+1),0,LEVEL_COUNT+1,1.5,'50']]){
-      const bad={...source,completed},broken=setup(bad,legacy),raw=broken.disk.get(SAVE_KEY);expect(broken.store.load()).toEqual(legacy);expect(broken.store.status.load).toBe('recovered');expect(broken.disk.get(SAVE_KEY)).toBe(raw);expect(broken.store.save(bad as never)).toBe(false);
+      const bad={...source,completed},broken=setup(bad,legacy),raw=broken.disk.get(SAVE_KEY);expect(broken.store.load()).toEqual(migratedLegacy);expect(broken.store.status.load).toBe('recovered');expect(broken.disk.get(SAVE_KEY)).toBe(raw);expect(broken.store.save(bad as never)).toBe(false);
     }
     const old=setup({...legacy,gardenDesign:freshGardenDesign()}),oldSave=old.store.load();gardenSpacesFor(oldSave.gardenDesign?.spaces);expect(oldSave.gardenDesign).not.toHaveProperty('spaces');expect(old.store.save(oldSave)).toBe(true);expect(old.store.load().gardenDesign).not.toHaveProperty('spaces');
     const corrupt={...source,gardenDesign:{...source.gardenDesign,spaces:{...spaces,pond:{phase:2,altOwned:true,style:'alt'}}}};const recovery=setup(null,corrupt);expect(recovery.store.load().completed).toEqual([]);expect(recovery.store.status.load).toBe('corrupt');
   });
   it('구 저장과 백업은 로드/렌더/재저장만으로 gardenDesign을 삽입하지 않습니다',()=>{
-    for(const recover of [false,true]){const h=setup(recover?null:legacy,recover?legacy:undefined),raw=h.disk.get(SAVE_KEY),save=h.store.load();expect(save).toEqual(legacy);gardenArt(save.garden,false,save.gardenDesign);expect(h.writes()).toBe(0);expect(h.disk.get(SAVE_KEY)).toBe(raw);expect(h.store.save(save)).toBe(true);expect(JSON.parse(h.disk.get(SAVE_KEY)!)).not.toHaveProperty('gardenDesign');}
+    for(const recover of [false,true]){const h=setup(recover?null:legacy,recover?legacy:undefined),raw=h.disk.get(SAVE_KEY),save=h.store.load();expect(save).toEqual(migratedLegacy);gardenArt(save.garden,false,save.gardenDesign);expect(h.writes()).toBe(0);expect(h.disk.get(SAVE_KEY)).toBe(raw);expect(h.store.save(save)).toBe(true);expect(JSON.parse(h.disk.get(SAVE_KEY)!)).not.toHaveProperty('gardenDesign');}
   });
   it('선택/소유/배치는 reload로 복원하며 꽃 변경으로 다양성이 줄어도 소유를 잃지 않습니다',()=>{
     const h=setup(legacy),save=h.store.load(),design=freshGardenDesign();design.owned=['bench'];design.placed=['bench'];expect(h.store.save({...save,pip:{growth:20,affection:20,owned:[],equipped:'none'},gardenDesign:design})).toBe(true);expect(h.store.load().gardenDesign).toEqual(design);
@@ -227,12 +228,12 @@ describe('선택 필드와 기존 저장 보호',()=>{
     const lantern:GardenDesign={...freshGardenDesign(),owned:['lantern'],placed:['lantern'],lanternPlot:4};expect(h.store.save({...h.store.load(),garden:5,pip:{growth:100,affection:100,owned:[],equipped:'none'},gardenDesign:lantern})).toBe(true);expect(h.store.load().gardenDesign).toEqual(lantern);
   });
   it('손상된 선택 primary는 유효 backup을 읽고 원문을 보존하며 손상 backup 저장은 거절합니다',()=>{
-    const bad={...legacy,gardenDesign:{...freshGardenDesign(),placed:['lantern']}},h=setup(bad,legacy),raw=h.disk.get(SAVE_KEY);expect(h.store.load()).toEqual(legacy);expect(h.store.status.load).toBe('recovered');expect(h.disk.get(SAVE_KEY)).toBe(raw);expect(h.store.save(bad as never)).toBe(false);
-    const broken=setup({...legacy,gardenDesign:{...freshGardenDesign(),lanternPlot:null}},legacy),brokenRaw=broken.disk.get(SAVE_KEY);expect(broken.store.load()).toEqual(legacy);expect(broken.disk.get(SAVE_KEY)).toBe(brokenRaw);
+    const bad={...legacy,gardenDesign:{...freshGardenDesign(),placed:['lantern']}},h=setup(bad,legacy),raw=h.disk.get(SAVE_KEY);expect(h.store.load()).toEqual(migratedLegacy);expect(h.store.status.load).toBe('recovered');expect(h.disk.get(SAVE_KEY)).toBe(raw);expect(h.store.save(bad as never)).toBe(false);
+    const broken=setup({...legacy,gardenDesign:{...freshGardenDesign(),lanternPlot:null}},legacy),brokenRaw=broken.disk.get(SAVE_KEY);expect(broken.store.load()).toEqual(migratedLegacy);expect(broken.disk.get(SAVE_KEY)).toBe(brokenRaw);
   });
   it('풍경 소유는 completed 정규화 뒤 고유 범위 개수를 검증하고 구 필드를 삽입하지 않습니다',()=>{
     const base={...legacy,highestLevel:40,garden:5,coins:200,pip:{...grown,owned:[],equipped:'none'}},theme={...freshGardenDesign(),ownedThemes:['sunset'],theme:'sunset'};
-    for(const completed of [Array(20).fill(1),[...Array.from({length:19},(_,i)=>i+1),0,LEVEL_COUNT+1,1.5,'20']]){const h=setup({...base,completed,gardenDesign:theme},legacy),raw=h.disk.get(SAVE_KEY);expect(h.store.load()).toEqual(legacy);expect(h.store.status.load).toBe('recovered');expect(h.disk.get(SAVE_KEY)).toBe(raw);}
+    for(const completed of [Array(20).fill(1),[...Array.from({length:19},(_,i)=>i+1),0,LEVEL_COUNT+1,1.5,'20']]){const h=setup({...base,completed,gardenDesign:theme},legacy),raw=h.disk.get(SAVE_KEY);expect(h.store.load()).toEqual(migratedLegacy);expect(h.store.status.load).toBe('recovered');expect(h.disk.get(SAVE_KEY)).toBe(raw);}
     const h=setup({...base,completed:[...Array.from({length:20},(_,i)=>i+1),1,2,LEVEL_COUNT+1],gardenDesign:theme}),save=h.store.load();expect(save.completed).toHaveLength(20);expect(save.gardenDesign?.theme).toBe('sunset');expect(h.writes()).toBe(0);expect(h.store.save(save)).toBe(true);expect(h.store.load().gardenDesign?.ownedThemes).toEqual(['sunset']);
     const old=setup({...base,completed:Array.from({length:40},(_,i)=>i+1),gardenDesign:freshGardenDesign()}),oldSave=old.store.load();expect(oldSave.gardenDesign).not.toHaveProperty('ownedThemes');expect(oldSave.gardenDesign).not.toHaveProperty('theme');expect(old.store.save(oldSave)).toBe(true);expect(old.store.load().gardenDesign).not.toHaveProperty('theme');
     const stars=setup({...base,completed:Array.from({length:40},(_,i)=>i+1),gardenDesign:{...theme,ownedThemes:['sunset','starlight'],theme:'starlight'}});expect(stars.store.load().gardenDesign?.theme).toBe('starlight');

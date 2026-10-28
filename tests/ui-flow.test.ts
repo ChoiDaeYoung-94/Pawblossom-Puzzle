@@ -23,6 +23,7 @@ import {freshGardenDesign} from '../src/gardenDesign';
 import {t, type TextKey} from '../src/i18n';
 import {icon as renderIcon} from '../src/icons';
 import * as trailEpisode from '../src/TrailEpisode';
+import * as puzzleToolsModel from '../src/puzzleTools';
 import {specialTileArt,specialArtKinds,specialBodyKey,specialBodyPath} from '../src/SpecialTileArt';
 import * as paintedGardenArt from '../src/GardenPaintedArt';
 import * as gardenStructureArt from '../src/GardenStructureArt';
@@ -290,7 +291,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const pipCareExports:Record<string,unknown>={};vm.runInNewContext(pipCareCode,{exports:pipCareExports});Object.assign(context,pipCareExports);
   const gardenSpacesExports:Record<string,unknown>={};vm.runInNewContext(gardenSpacesCode,{exports:gardenSpacesExports,require:()=>levelExports});Object.assign(context,gardenSpacesExports);
   const gardenDesignExports:Record<string,unknown>={};vm.runInNewContext(gardenDesignCode,{exports:gardenDesignExports,require:(name:string)=>name==='./levels'?levelExports:name==='./journeyGarden'?journeyModel:gardenSpacesExports});Object.assign(context,gardenDesignExports);
-  Object.assign(context,{require:(name:string) => {if(name==='./levels')return levelExports;if(name==='./core')return coreExports;if(name==='./pipCare')return pipCareExports;if(name==='./gardenDesign')return gardenDesignExports;throw new Error(name);}});
+  Object.assign(context,{require:(name:string) => {if(name==='./levels')return levelExports;if(name==='./core')return coreExports;if(name==='./pipCare')return pipCareExports;if(name==='./gardenDesign')return gardenDesignExports;if(name==='./puzzleTools')return puzzleToolsModel;throw new Error(name);}});
   const coreExports:Record<string,unknown>={}, practiceExports:Record<string,unknown>={};
   vm.runInNewContext(engineCode,{exports:coreExports});
   vm.runInNewContext(practiceCode,{exports:practiceExports,require:()=>coreExports});
@@ -929,7 +930,7 @@ describe('목표·남은 이동 접근성 안내',()=>{
     expect(h.element('#game-canvas').tabIndex).toBe(reason==='busy'?0:-1);
   });
   it.each(['ko','en'])('%s 저장 복원과 언어 전환이 같은 회차의 이동·목표를 안내합니다',language=>{
-    const h=mainHarness();h.run(`save.highestLevel=6;startLevel(6);changeLanguage('${language}');moves=8;collected=[12,0,0,0,0,5];clearedLeaves=2;scene.engine.leaves[2][2]=0;scene.engine.leaves[2][5]=0;checkpoint()`);
+    const h=mainHarness();h.run(`save.highestLevel=6;startLevel(6);changeLanguage('${language}');moves=8;collected=[12,0,0,0,0,5];clearedLeaves=2;scene.engine.leaves[2][2]=0;scene.engine.leaves[2][5]=0;roundTools.started=true;checkpoint()`);
     const next=mainHarness(false,false,false,false,h.stored());
     expect(next.element('#board-keyboard-status').textContent).toContain(language==='ko'?'남은 이동 8회. 꽃 11개 남음. 딸기 목표 완료. 낙엽 더미 2개 남음.':'Moves remaining: 8. Flower: 11 remaining. Strawberry: complete. Leaf pile: 2 remaining.');
     const before=next.run('JSON.stringify({moves,collected,clearedLeaves,round})');next.run(`changeLanguage('${language==='ko'?'en':'ko'}')`);
@@ -2143,9 +2144,23 @@ describe('저장 상태·초기화 UI 보호',()=>{
 });
 
 
+describe('도구 행동 프로필과 실제 저장 경계',()=>{
+  it('새 판은 tools-v1로 시작하고 설정/언어는 시작 전 자격을 소비하지 않으며 한 수 뒤 복원한다',()=>{
+    const h=mainHarness(),first=h.stored();expect(first.version).toBe(2);expect(first.inProgress).toMatchObject({schema:2,actionProfile:'tools-v1',toolsUsed:[],toolsStarted:false});
+    h.run("switchView('settings');changeLanguage('ko');switchView('puzzle')");expect(h.stored().inProgress.toolsStarted).toBe(false);
+    h.run('scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');expect(h.stored().inProgress.toolsStarted).toBe(true);
+    const next=mainHarness(false,false,false,false,h.stored());expect(next.run('moves')).toBe(first.inProgress.moves-1);expect(next.run('roundTools.started')).toBe(true);
+  });
+  it('이동0 섞기도 시작 행동이며 실패한 저장은 live판/자격/재화를 먼저 바꾸지 않는다',()=>{
+    const h=mainHarness(),before=h.run('JSON.stringify({roundTools,board:scene.snapshot(),moves,coins:save.coins})'),stored=h.stored();h.setStorageFails(true);
+    h.element('#shuffle').onclick();expect(h.run('JSON.stringify({roundTools,board:scene.snapshot(),moves,coins:save.coins})')).toBe(before);expect(h.stored()).toEqual(stored);
+    h.setStorageFails(false);h.element('#shuffle').onclick();expect(h.run('roundTools.started')).toBe(true);expect(h.stored().inProgress).toMatchObject({toolsStarted:true,toolsUsed:[],shuffles:0});expect(h.run('moves')).toBe(stored.inProgress.moves);
+  });
+});
+
 describe('V1 회차 보존과 V2 정사각 안내',()=>{
   it('버전 없는 기존 판을 그대로 복원·재저장하고 명시 재시작부터2를 쓰며 Pip·영구 기록을 보존합니다',()=>{
-    const original=mainHarness().stored();delete original.inProgress.ruleVersion;
+    const original=mainHarness().stored();original.version=1;delete original.puzzleTools;original.inProgress.schema=1;for(const key of ['ruleVersion','actionProfile','toolsUsed','toolsStarted'])delete original.inProgress[key];
     original.inProgress.board=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({kind:(r*2+c)%5})));
     for(const [r,c] of [[2,2],[2,3],[3,2],[3,3]])original.inProgress.board[r][c]={kind:5};original.inProgress.board[0][0].special='row';
     original.pip={growth:34,affection:22,owned:['ribbon'],equipped:'ribbon'};
