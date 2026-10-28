@@ -601,10 +601,11 @@ function rememberToolIntroduction(context:ToolContext&{id?:PuzzleToolId}){
 function closeToolInfo(focus=true,remember=false){
   const context=toolInfoContext;if(!context)return;
   if(remember)rememberToolIntroduction(context);toolInfoContext=undefined;if(toolDialog.open)toolDialog.close();syncActivity();
-  if(focus&&nativeActive&&!document.hidden&&route==='puzzle')document.getElementById(context.opener)?.focus({preventScroll:true});
+  if(focus&&nativeActive&&!document.hidden&&route==='puzzle')focusToolOpener(context.opener);
 }
+function focusToolOpener(id:string){const button=document.getElementById(id);(button?.getClientRects?.().length?button:$('#tool-open')).focus({preventScroll:true});}
 function offerToolIntroduction(){
-  if(toolMode||toolInfoContext||!toolEnvironment()||otherModal())return false;
+  if(toolMode||toolInfoContext||!roundTools||roundTools.started||roundTools.used.length||!toolEnvironment()||otherModal())return false;
   const next=puzzleToolCatalog.find(tool=>tool.unlock===currentLevel&&!save.puzzleTools.introduced.includes(tool.id));return next?showToolInfo(next.id,'tool-'+next.id):false;
 }
 function beginToolMode(context:NonNullable<typeof toolInfoContext>){
@@ -616,7 +617,7 @@ function beginToolMode(context:NonNullable<typeof toolInfoContext>){
 }
 function closeToolMode(focus=true){
   const context=toolMode;if(!context)return;toolMode=undefined;context.scene.endToolSelection();renderPuzzleTools();
-  if(focus&&nativeActive&&!document.hidden&&route==='puzzle')document.getElementById(context.opener)?.focus({preventScroll:true});
+  if(focus&&nativeActive&&!document.hidden&&route==='puzzle')focusToolOpener(context.opener);
 }
 function validToolMode(context:NonNullable<typeof toolMode>){
   return toolMode===context&&sameToolContext(context)&&toolEnvironment()&&!otherModal()&&!previewDialog.open
@@ -1637,7 +1638,7 @@ function switchView(name:string){
     const button=dialog.querySelector<HTMLButtonElement>('#result-continue');
     if(androidAdEntry&&button&&testingLevel&&!continueUsed&&resultWon===false&&moves===0)bindRewardContinue(button);
   }
-  syncActivity();
+  syncActivity();if(name==='puzzle'&&!returnToResult)offerToolIntroduction();
   if(name==='map')mapTravel?.start();
   if(returnToResult)$('#result-next').focus({preventScroll:true});
 }
