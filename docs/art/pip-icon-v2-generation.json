@@ -1,0 +1,27 @@
+{
+  "issue": 424,
+  "tool": "built-in image_gen, transparent_background=true",
+  "identityReference": "public/assets/pip-idle-open-v2.webp; SHA256 68a2a1eceb9320aca746932b09480e1752166bf32684410f4d4fe1a15c7920b8",
+  "generatedOriginal": "exec-0c6ebe4b-28c2-4b0b-8793-c0ea0bd1c8b2.png (built-in generation)",
+  "preservedCopy": "assets/branding/pip-icon-source-v2.png",
+  "sha256": "7bc3561cd54436ce6060e4839cd5e117c192c66db9f9a4f463d93b247b0336f0",
+  "actualDimensions": [
+    1254,
+    1254
+  ],
+  "bytes": 1261319,
+  "prompt": "Use case: stylized-concept. Asset: one polished original mobile puzzle-game app-icon FOREGROUND illustration, square canvas with genuinely transparent background. The attached local image is an IDENTITY REFERENCE for our own character Pip, not an edit target: preserve the cream white rabbit, long soft pink inner ears, warm dark brown oval eyes, tiny pink nose, rounded cheeks, friendly closed-mouth smile, sage green gardener overalls with warm brass buttons, and orange carrot with green leaves. Create a NEW close-up head-and-shoulders icon composition of Pip, facing nearly forward with a slight lively tilt, both ears completely visible, hugging one small carrot near the lower chest. Add a single small soft coral blossom beside the carrot to connect the Pawblossom name. Professional game illustration, softly sculpted volume, clean painterly fur, warm high-key light, crisp expressive face, broad simple readable shapes, restrained glossy highlights, strong silhouette that still reads at 48 pixels; match the gentle storybook character identity rather than a generic plastic mascot. Center the whole bust and ears in the middle 76% of a 1024 square, all visible details inside a generous transparent border for Android adaptive icon masks. No feet, no full body, no scenery, no badge, no tile, no circular frame, no shadow outside the subject, no text, no letters, no numbers, no logos, no watermark, no references to other game IP. True clean transparent alpha. Deliver one foreground artwork only.",
+  "inspection": "Selected first artwork. Actual1254square/RGBA, cream rabbit/pink ears/brown eyes/green overalls/carrot/coral blossom. Open smile accepted as friendly Pip identity. Original bytes retained. Store uses original alpha. Native export only removes exactalpha1 once before resize; other RGBA unchanged during normalization.",
+  "technicalProcessing": [
+    "Native exactalpha1 count12549; normalizedRawSHA41968bcbfb63de6f074e710aaaaf498ac8e6be340947d2697259e2789e969b21",
+    "Native236side at98,98 within432canvas=108dp; allfinalalpha cellcorners max128.68954891520912px=32.17238722880228dp <=33dp",
+    "Store512x512/RGBA/opaque/sRGB, own radial cream/coral background; no external shadow/rounded mask in submission",
+    "Sharp0.35.5 export only; original alpha/fur not thresholded in store or game art; native post-resampling alpha not thresholded"
+  ],
+  "alternativeMattingAttempt": {
+    "selected": false,
+    "image": "exec-a9516862-8d6f-4c80-ab97-27f457404a5a.png",
+    "reason": "Face/padding changed; not consumed by project",
+    "prompt": "Edit target: our original Pip icon illustration in the supplied file. Change ONLY the transparent matting and empty padding. Keep the same rabbit identity, face, happy expression, pose, all fur and ears, green gardener clothing, carrot, coral flower, lighting and painterly detail. Do not redesign or add anything. Remove the faint scattered translucent color pixels outside the actual connected rabbit silhouette. The empty area must be genuinely fully transparent (alpha=0), including every corner and the entire outermost border, with clean soft antialiasing only directly along the real fur edge. Recenter the same complete bust and both ears inside a generous clear 12% margin on all four sides, without clipping any ear, hand, carrot or flower. One square transparent foreground asset only. No background color, no glow, no shadow, no frame, no text or new decoration. This is matting cleanup of the existing illustration, not a new character."
+  }
+}

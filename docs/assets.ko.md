@@ -1,3 +1,21 @@
+## 2026-10-28 · #424 핍 얼굴 중심 게임 아이콘
+
+기존 자체 핍 `pip-idle-open-v2.webp`를 정체성 참고로 내장 image_gen에서 새 상반신 일러스트를 제작했습니다. 크림색 털·분홍 귀·갈색 눈·초록 작업복·당근과 코럴 꽃을 사용하며 다른 게임의 그림/로고를 복제하지 않았습니다. 선정 원본은 `assets/branding/pip-icon-source-v2.png`, 실제1254×1254 RGBA·1,261,319바이트·SHA256 `7bc3561cd54436ce6060e4839cd5e117c192c66db9f9a4f463d93b247b0336f0`입니다. 원본·입력 SHA·전체 프롬프트·미선정 정리 시도는 [제작 기록](art/pip-icon-v2-generation.json)에 구분합니다. 생성 요청의1024/닫힌 입과 달리 실제 출력은1254/열린 미소이며, 현재 핍의 정체성과 밝은 표정에 맞춰 선정했습니다.
+
+스토어 초안 `assets/store/play-icon-v2.png`는 원본을 그대로 배치한512×512·32bit RGBA·완전 불투명/sRGB·266,346바이트입니다. 자체 크림/코럴 방사 배경을 쓰며 제출 이미지 자체에 둥근 모서리·바깥 그림자·문구를 넣지 않았습니다. [Google Play 규격](https://developer.android.com/distribute/google-play/resources/icon-design-specifications)의512정사각/sRGB/1MiB 기준을 검사합니다. v1 원본/manifest와 기존 feature-v1은 보존하며 새 icon-v2를 활성 초안으로 명시한 별도 엄격 manifest를 추가합니다. 실제 콘솔 제출·아트 감각 승인은 별도입니다.
+
+Android 파생만 모서리에 흩어진 정확1/255 알파12,549개를 리샘플링 전에 한 번0으로 정규화합니다. 원본/스토어/게임 그림은 바꾸지 않고 나머지 RGBA는 정규화 단계에서 그대로 보존하며 새 경계 알파를 재제거하지 않습니다. 이 처리를 하지 않은 최초 배치에서는 희박한 노이즈를 실루엣으로 계산해 캐릭터가 작게 보였으며 두 배치를 Git 밖에 보존했습니다. 정규화 뒤 셀 모서리 반경으로236픽셀을432캔버스 중앙에 배치했고, 최종 foreground의 모든 alpha>0 셀 모서리는32.1724dp로 [108dp 레이어/66dp 안전 영역](https://developer.android.com/develop/ui/compose/system/icon_design_adaptive) 안에 들어갑니다. 원본/정규화/4PNG 해시는 `pip-icon-v2.json`에 기록합니다.
+
+런처는 고정 nodpi4PNG·8XML의 명시적 gravity=fill을 사용하며 v33 단색 발바닥은 보존합니다. native splash도 같은 foreground를 쓰므로 새 핍 그림이 적용됩니다. 밝은/어두운 배경의 실제32/48픽셀과 원형/둥근 사각형 근사를 PNG로 확인했고 원형의 완전 바깥 투명·안쪽 불투명/RGB도 검사합니다. 실제 OEM 전체 마스크·기기 런처/splash 감각 승인은 별도입니다. 내보내기는 기존 방식과 같이 Sharp0.35.5를 명령 인자로 받을 때만 사용하며 새 게임/CI 의존성을 추가하지 않습니다.
+
+```powershell
+node scripts/export-pip-icon.mjs <별도 Sharp 모듈 경로>
+npm run assets:generate
+npm run assets:check
+npm run store:check
+npm run store:test
+```
+
 ## 2026-10-28 · #422 Quad D 원본 회사 인트로
 
 사용자 소유 [브랜드 저장소](https://github.com/ChoiDaeYoung-94/ChoiDaeYoung-94/tree/55bf9e4aa48c2f95942f3c2c995f1d55414e97c0/brand)의 확정 커밋에서 `unity/com.quadd.intro/Runtime/Resources/QuadD/QuadDIntro.mp4`와 `brand/quad-d-intro-poster.png`를 그대로 재사용합니다. `unity/com.quadd.intro/LICENSE.md`는 소유자의 자체 게임/프로젝트 사용·수정을 허용하며 제3자의 브랜드 사용권을 주지 않습니다. 생성형 시안이나 다른 게임 에셋을 새로 가져오지 않았고 재인코딩·크롭·음량 가공 없이 원본 바이트를 유지합니다. Unity 연결 코드는 복사하지 않고 Phaser/Capacitor 웹 부트 흐름을 별도로 구현합니다.

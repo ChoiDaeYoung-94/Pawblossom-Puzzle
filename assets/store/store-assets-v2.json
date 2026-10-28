@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 2,
+  "status": "draft",
+  "activeIcon": "pip-v2",
+  "verifiedOn": "2026-10-28",
+  "tooling": {
+    "sharp": "0.35.5",
+    "libvips": "8.18.7",
+    "librsvg": "2.63.2"
+  },
+  "assets": [
+    {
+      "kind": "icon",
+      "path": "assets/store/play-icon-v2.png",
+      "width": 512,
+      "height": 512,
+      "colorType": 6,
+      "bytes": 266346,
+      "sha256": "6235a477d55ab034b282bbe54518c9db2933b6a553bd73ec5f8b724b0a55e10c",
+      "maxBytes": 1048576,
+      "profileHash": "c56e1685d888f5edb92fe07f2750f387f8fe8e91b32ff8fb0b56bfbbb9458353",
+      "source": "assets/store/play-icon-source-v2.svg"
+    },
+    {
+      "kind": "feature",
+      "path": "assets/store/play-feature-v1.png",
+      "width": 1024,
+      "height": 500,
+      "colorType": 2,
+      "bytes": 1313700,
+      "sha256": "aaeeab330e36941dd89cc0a6b232ab4503cd218f52f8ddaa5477af593c19b4f4",
+      "source": "assets/store/play-feature-source-v1.png"
+    }
+  ],
+  "references": [
+    {
+      "path": "assets/branding/pip-icon-source-v2.png",
+      "sha256": "7bc3561cd54436ce6060e4839cd5e117c192c66db9f9a4f463d93b247b0336f0"
+    },
+    {
+      "path": "assets/branding/pip-icon-v2.json",
+      "textNormalization": "LF",
+      "sha256": "0cc15f83fc2fb0112aa1b748ea0ac1b69725e6d7eb7b85a6a7f45be25113412f"
+    },
+    {
+      "path": "assets/store/play-icon-source-v2.svg",
+      "textNormalization": "LF",
+      "sha256": "11c01a33e0a4fd86c18a595ba3d0e09ee52faa3defadd52032f31e0421bd6675"
+    },
+    {
+      "path": "assets/store/play-icon-preview-v2.svg",
+      "textNormalization": "LF",
+      "sha256": "814ae4aa50ccccbcdd909c8ad09ef2cdcd65e328d40384b5641293e1ab8b81e7"
+    },
+    {
+      "path": "assets/store/play-feature-source-v1.png",
+      "sha256": "502bde83e94287c2fbda99a254f475d3520fae4ea21072f1cad882e3384eb0dd"
+    },
+    {
+      "path": "assets/store/play-feature-base-v1.png",
+      "sha256": "0bf43f085bf6fad1a9ae7ed6fc81c663fb64b69e0c6129592f294bb70bd9b43d"
+    },
+    {
+      "path": "public/assets/pip.png",
+      "sha256": "be54a5a265d05cff964eff3177e637a1540138c7680802ab0a553496e118bcba"
+    },
+    {
+      "path": "assets/source/meadow.png",
+      "sha256": "fdd7aa15f95518167d355d8aecb5952ee13d54d380956ed087d397a0ef4d4195"
+    },
+    {
+      "path": "assets/source/pip-win-v1.png",
+      "sha256": "df3601c2c9015f403c42e95a817d3772c12fe977bfa4910d2dfae5afbbe4f7da"
+    }
+  ]
+}

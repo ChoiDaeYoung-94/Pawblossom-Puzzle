@@ -1,3 +1,9 @@
+## 현재 준비 · 2026-10-28 · #424 핍 아이콘 리소스
+
+새 자체 핍 그림을 런처8XML·nodpi4PNG에 연결하고 기존 v33 단색 발바닥을 유지했습니다. 같은 foreground를 사용하는 native splash에도 영향이 있습니다. 두 프로젝트 승인 아래 `:app:processDebugResources --no-daemon --max-workers=1`을1회 실행해44초/Exit0·45task 중17실행/28 UP-TO-DATE로 컴파일했습니다. AAPT에서 foreground bitmap의src와gravity=fill(0x77),anydpi-v21/v26/v33 연결·v33 monochrome·4PNG nodpi를 읽기 확인했습니다. 단일 Gradle daemon0·기존 APK53,023,868바이트/10월27일 수정 시각을 확인하고 자원을 반환했습니다. APK/웹 sync·기기 설치·런처/splash 실화면·청취 검증은 수행하지 않았습니다. 원문은 Git 밖 integration-20261028/424-android-resources.log·aapt-*/resource-proof에 보존합니다.
+
+아래528 전달본은 새 회사 인트로·핍 아이콘을 포함하지 않습니다. 최종 묶음 APK를 별도로 검증하기 전까지 최신 전달 파일은 그대로 유지하며 Drive에 업로드하지 않습니다.
+
 ## 최신 로컬 통합 APK · 2026-10-27 · #418 · 528df56
 
 게임 소스 `528df56ca295bdd369d7b723dd1dd9c6ca803570`은 아래8a 통합본에 [PR417](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/417)의 폭포 물안개 보완을 포함합니다. 정확 최초 [main CI40487931688](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40487931688)의 Node22/24 각각76파일4,056개·스토어12개·타입3종·production/testing 빌드와 분리를 통과했습니다. Node22의 장시간 성공은 #122에 순수500판 엔진 비교 파일의 시간으로 구분해 보존했으며 잠금 원인 해결로 합산하지 않습니다.
