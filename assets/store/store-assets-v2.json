@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "status": "draft",
-  "activeIcon": "pip-v2",
+  "activeIcon": "pip-match3-v3",
   "verifiedOn": "2026-10-28",
   "tooling": {
     "sharp": "0.35.5",
@@ -15,8 +15,8 @@
       "width": 512,
       "height": 512,
       "colorType": 6,
-      "bytes": 266346,
-      "sha256": "6235a477d55ab034b282bbe54518c9db2933b6a553bd73ec5f8b724b0a55e10c",
+      "bytes": 327004,
+      "sha256": "27cec60189d7ea9d9ac2ec5c6278d8ded3a12d704cd2227ea8d7c8debadee0b7",
       "maxBytes": 1048576,
       "profileHash": "c56e1685d888f5edb92fe07f2750f387f8fe8e91b32ff8fb0b56bfbbb9458353",
       "source": "assets/store/play-icon-source-v2.svg"
@@ -34,23 +34,37 @@
   ],
   "references": [
     {
-      "path": "assets/branding/pip-icon-source-v2.png",
-      "sha256": "7bc3561cd54436ce6060e4839cd5e117c192c66db9f9a4f463d93b247b0336f0"
+      "path": "assets/branding/pip-puzzle-icon-source-v3.png",
+      "sha256": "8eafa83f5b918a3c973c1034fc09858221e30c378680e046c1c234fd3ce1cbca"
     },
     {
       "path": "assets/branding/pip-icon-v2.json",
       "textNormalization": "LF",
+      "sha256": "676f59d0aa32e9f886b283fb2148fc435c2572a78d07067f08e7f7cff354f0a2"
+    },
+    {
+      "path": "assets/branding/pip-icon-source-v2.png",
+      "sha256": "7bc3561cd54436ce6060e4839cd5e117c192c66db9f9a4f463d93b247b0336f0"
+    },
+    {
+      "path": "assets/branding/pip-icon-art-v2-frozen.json",
+      "textNormalization": "LF",
       "sha256": "0cc15f83fc2fb0112aa1b748ea0ac1b69725e6d7eb7b85a6a7f45be25113412f"
+    },
+    {
+      "path": "docs/art/pip-icon-v3-generation.json",
+      "textNormalization": "LF",
+      "sha256": "35586c0d33d97c8a69e73fd1f9fac9da3ac36f33cd280a077766975410263c07"
     },
     {
       "path": "assets/store/play-icon-source-v2.svg",
       "textNormalization": "LF",
-      "sha256": "11c01a33e0a4fd86c18a595ba3d0e09ee52faa3defadd52032f31e0421bd6675"
+      "sha256": "73369c999c4359169690b4befc0846043bcb996362f593991d878634022b5e80"
     },
     {
       "path": "assets/store/play-icon-preview-v2.svg",
       "textNormalization": "LF",
-      "sha256": "814ae4aa50ccccbcdd909c8ad09ef2cdcd65e328d40384b5641293e1ab8b81e7"
+      "sha256": "ad77bfbed9761950da1aed9a82b670f37d1fdd27ddcf5b93f5e6e8d6676736dc"
     },
     {
       "path": "assets/store/play-feature-source-v1.png",

@@ -4,12 +4,12 @@ import {fileURLToPath} from 'node:url';
 import {inspectPng,checkAsset,referenceHash} from './check-store-assets.mjs';
 import {pipSpecPath,pipSourcePath,pipLayerPaths,hash,validatePipSpec,normalizeNative,maximumAlphaRadius,nativeLayout,pipStoreSvg,pipLauncherXml,pipPreviewSvg} from './pip-icon-source.mjs';
 const requireThat=(condition,message)=>{if(!condition)throw Error(message);};
-export const pipReferences=[pipSourcePath,pipSpecPath,'assets/store/play-icon-source-v2.svg','assets/store/play-icon-preview-v2.svg','assets/store/play-feature-source-v1.png','assets/store/play-feature-base-v1.png','public/assets/pip.png','assets/source/meadow.png','assets/source/pip-win-v1.png'];
+export const pipReferences=[pipSourcePath,pipSpecPath,'assets/branding/pip-icon-source-v2.png','assets/branding/pip-icon-art-v2-frozen.json','docs/art/pip-icon-v3-generation.json','assets/store/play-icon-source-v2.svg','assets/store/play-icon-preview-v2.svg','assets/store/play-feature-source-v1.png','assets/store/play-feature-base-v1.png','public/assets/pip.png','assets/source/meadow.png','assets/source/pip-win-v1.png'];
 const read=(root,file)=>fs.readFileSync(path.join(root,file));
 const text=(root,file)=>read(root,file).toString('utf8').replace(/\r\n/g,'\n');
 
 export function checkPipManifest(manifest){
-  requireThat(manifest.schemaVersion===2&&manifest.status==='draft'&&manifest.activeIcon==='pip-v2','pip manifest version/status');
+  requireThat(manifest.schemaVersion===2&&manifest.status==='draft'&&manifest.activeIcon==='pip-match3-v3','pip manifest version/status');
   requireThat(Array.isArray(manifest.assets)&&manifest.assets.length===2&&new Set(manifest.assets.map(a=>a.kind)).size===2,'pip manifest kinds');
   requireThat(Array.isArray(manifest.references)&&manifest.references.length===pipReferences.length&&new Set(manifest.references.map(r=>r.path)).size===pipReferences.length&&pipReferences.every(p=>manifest.references.some(r=>r.path===p)),'pip required references');
   for(const ref of manifest.references)requireThat(/^[a-f0-9]{64}$/.test(ref.sha256)&&ref.textNormalization===(/\.(json|svg)$/.test(ref.path)?'LF':undefined),'pip reference hash/normalization');
@@ -44,7 +44,7 @@ export function checkPipLayers(root=process.cwd(),spec=JSON.parse(read(root,pipS
   requireThat(source.length===spec.source.bytes&&hash(source)===spec.source.sha256,'pip source bytes/hash');
   const decoded=inspectPng(source);requireThat(decoded.width===1254&&decoded.height===1254&&decoded.colorType===6&&!decoded.opaque,'pip source dimensions/alpha');
   const normalized=normalizeNative(decoded),layout=nativeLayout(spec,normalized);
-  requireThat(normalized.removedPixels===12549&&spec.proof?.removedAlphaOne===normalized.removedPixels&&spec.proof.normalizedRawSha256===hash(normalized.pixels)&&spec.proof.nativeSide===layout.side,'pip normalization proof');
+  requireThat(normalized.removedPixels===19851&&spec.proof?.removedAlphaOne===normalized.removedPixels&&spec.proof.normalizedRawSha256===hash(normalized.pixels)&&spec.proof.nativeSide===layout.side,'pip normalization proof');
   const images={};for(const [kind,file]of Object.entries(pipLayerPaths)){
     const expected=spec.outputs?.[kind];requireThat(expected?.path===file&&/^[a-f0-9]{64}$/.test(expected.sha256),'pip layer specification');
     const bytes=read(root,file);requireThat(bytes.length===expected.bytes&&hash(bytes)===expected.sha256,'pip layer bytes/hash');
@@ -74,6 +74,6 @@ export function checkPipIconAssets(root=process.cwd()){
   requireThat(text(root,'assets/store/play-icon-preview-v2.svg')===pipPreviewSvg(read(root,'assets/store/play-icon-v2.png'),read(root,pipLayerPaths.legacy)),'pip preview differs from exported files');
   const icon=inspectPng(read(root,'assets/store/play-icon-v2.png')),bg=Buffer.from(spec.palette.outer.slice(1),'hex');
   for(const point of [0,511,512*511,512*512-1])requireThat(icon.pixels.subarray(point*4,point*4+3).equals(bg),'pip full square background');
-  console.log(`핍 v2 초안·원본·런처8XML·4PNG·모든 foreground alpha 안전원 통과 (${radius/4}dp). 실제 단말/권리 최종 승인·콘솔 별도`);
+  console.log(`핍 매치3 그림3 초안·원본·런처8XML·4PNG·모든 foreground alpha 안전원 통과 (${radius/4}dp). 실제 단말/권리 최종 승인·콘솔 별도`);
 }
 if(process.argv[1]&&fs.realpathSync(process.argv[1])===fs.realpathSync(fileURLToPath(import.meta.url)))checkPipIconAssets();
