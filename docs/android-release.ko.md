@@ -1,4 +1,20 @@
-## 최신 로컬 테스트 APK · 2026-10-28 · #426 · 35155d7
+## 최신 로컬 통합 APK · 2026-10-28 · #434 · 3e47d49
+
+제품 소스 `3e47d49a994a5dcad653406f46289943271a42c7`는 [PR430 숲길 이야기/추억](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/430)·[PR432 저장2 보호](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/432)·[PR433 도구5종](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/433)·[PR436 핍 첫 안내](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/436)와 [PR438 딸기3매치 아이콘](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/438)을 포함합니다. 기존 Quad D 인트로도 유지됩니다. 정확 최초 [main CI40661223663](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40661223663)의 Node22/24 각각80파일4,189개·스토어19개·타입3종·production/testing 빌드와 flags 성공 뒤 빌드했습니다. 이후 전달 기록만 바꾸는 문서 커밋은 제품 소스와 구분합니다.
+
+파일은 `Pawblossom-builds/2026-10-28-3e47d49-tools-icon/Pawblossom-Puzzle-v0.1.7-2026-10-28-3e47d49-debug.apk`입니다. **0.1.7/code8 · 54,301,350바이트 · SHA256 `f4555bf2109351cf26eab2c7cdd2e98d59d47b4b97ff2afb6502a8ae18065dad`**입니다. 패키지 `com.choidaeyoung.pawblossompuzzle`·min24/target36·debug·단일 기존 동일v2 서명·이전 전달본과 같은 권한을 확인했습니다. 사용자 직접 업로드이므로 Drive에는 올리지 않았고 별도 테스트 안내 파일도 만들지 않았습니다.
+
+testing 웹113파일·APK public115파일·원본 public87개를 전수 길이/SHA로 대조했습니다. cordova 빈 파일2개만 추가되고 ZIP CRC/중복0·시험flags3개 true입니다. 게임/도구 웹 전체는 앞서 실제 브라우저로 확인한3f38700과 바이트가 같습니다. Native 비웹 path set도 이전351과 같고 foreground/legacy/round 아이콘3PNG만 변경되며,나머지490개는 바이트 SHA가 동일합니다. 바뀐3종과 background까지4PNG를 현재 소스와 RGBA/크기로 다시 맞췄습니다. 안전원/512·sRGB·불투명/32·48px 미리보기는 아이콘 개발 기록을 따릅니다. 이 비교는 변경을 임의 허용한 것이 아니라 정확히 의도한3개만 달라야 통과하는 조건입니다.
+
+빌드/공식 파일 검증은 `434-final-build-status.json`의 실행별 결과에 보존했습니다. JVM 단위/lint는 이번에 재실행하지 않았고 이전 성공을 새 검사로 합산하지 않습니다. Native 코드/의존성·게임/레벨/RNG·최종 믹스·실키env·상품·AAB/공개배포는 바꾸지 않았습니다. 실패 때도 production 복원을 시도하는 wrapper로 마쳤고 최종 production 웹104/Android public106 전수 동일·flags false·Git clean/공유 자원 반환을 각각 확인합니다.
+
+새 핍 안내의 실제 웹 검수는3f38700에서 KO390/EN320·가로KO844/모션감소EN740의 명시한69번 저장 fixture로 실행했습니다. 첫 핍 안내·버튼이 팝업/viewport 안에 도달함·씨앗 실제 사용/첫 무료 기록·이동30/코인200 유지·오류0을 확인했고,영어320의 내부 스크롤561>542도 버튼 접근을 막지 않았습니다. 그 밖의4도구는 이전 각 실제 DOM 실행 근거와 소스 경계를 보존합니다. 최종 웹 바이트 동일은 이 증거와의 연결이며 새 Android 실행이나 자연 해금/승리 검수로 확대하지 않습니다.
+
+**LD 설치·런처/splash·도구 입력·HOME/최근 앱 관측은 [#434의 시각별 실행 기록](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/434)에서 파일 검증과 따로 관리합니다.** 정적 파일 검증/웹 fixture만으로 삼성 #375·청취/모든 OEM·실광고/Play구매/스토어 #73이나 상용 미술 승인을 완료 처리하지 않습니다. 원장 #122도 현재 녹색 CI로 원인 해결을 주장하지 않습니다.
+
+아이콘 변경 전3f38700의 중간 APK(53,851,445바이트/SHA `c6816e9c57b0edec0a00fe64ab8985b84cc1ac1121ade4fc926a942f4649ed4f`)와 마지막351 전달본을 보존했습니다. 원문/체크섬·독립 읽기/실제 웹·공식 도구/복원 근거는 Git 밖 integration-20261028/434-final-*·437-*·435-browser-intro-layout과 전달 폴더에 있습니다. 파일 정리나 브라우저/검사를 수량만 늘리기 위해 반복하지 않습니다.
+
+## 이전 로컬 테스트 APK · 2026-10-28 · #426 · 35155d7
 
 제품 소스 `35155d7db8427d439de9a6798ca7a175fb38eab1`은 기존528 게임에 [PR423 회사 인트로](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/423)·[PR425 핍 아이콘](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/425)을 포함합니다. 정확 최초 [main CI40623633497](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40623633497)은 Node22/24 각각77파일4,089개·스토어19개·타입3종·production/testing 두 빌드·플래그를 통과했습니다. 이후 전달 기록만 바꾸는 문서 커밋과 제품 소스/빌드 시점을 구분합니다.
 
