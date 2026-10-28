@@ -22,6 +22,7 @@ import {freshGardenSpaces} from '../src/gardenSpaces';
 import {freshGardenDesign} from '../src/gardenDesign';
 import {t, type TextKey} from '../src/i18n';
 import {icon as renderIcon} from '../src/icons';
+import * as trailEpisode from '../src/TrailEpisode';
 import {specialTileArt,specialArtKinds,specialBodyKey,specialBodyPath} from '../src/SpecialTileArt';
 import * as paintedGardenArt from '../src/GardenPaintedArt';
 import * as gardenStructureArt from '../src/GardenStructureArt';
@@ -236,6 +237,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     specialTileArt,
     ...campaignProgressModel,...campaignMilestoneUi,
+    ...trailEpisode,
     ...boardDisplay,
     gardenTendingArt,pipDecorationArt,gardenGoals,goalNextStep,nextGardenGoal,previewGardenPreset,gardenPresetPreview,pipTendingArt,previewGardenTheme,gardenThemePreview,reachedPipUnlock,pipUnlockCard,...journeyModel,...journeyUI,
     createJourneyGardenArt:()=>({setActive(){},dispose(){}}),
@@ -320,6 +322,35 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     writes: () => writes, stored: () => JSON.parse(storageValues.get('pawblossom.save.v1')??'null'),
   };
 }
+
+describe('숲길 에피소드의 실제 UI 연결',()=>{
+  it('시험판 미리보기·HUD·결과와 한영 갱신이 재화/일반 진행을 건드리지 않는다',()=>{
+    const h=mainHarness(false,false,true);h.run("startLevel(4,true);switchView('puzzle')");const disk=h.disk(),writes=h.writes();
+    expect(h.element('#trail-encounter').hidden).toBe(false);expect(h.element('#trail-encounter').dataset.active).toBe('true');
+    h.run("showStagePreview(4,'restart',document.querySelector('#restart'))");
+    expect(h.run('previewDialog.innerHTML')).toContain(t('en','trailPractice'));expect(h.element('#trail-encounter').dataset.active).toBe('false');
+    h.element('#preview-cancel').onclick();h.run('scene.hooks.onMove([0,0,0,14,12,0],100,1,4)');h.flushResults();
+    expect(h.element('#result-dialog').innerHTML).toContain(t('en','trailFirstAfter'));expect(h.element('#result-dialog').innerHTML).toContain(t('en','trailPractice'));
+    expect(h.element('#trail-encounter').dataset.resolved).toBe('true');expect(h.element('#trail-encounter').dataset.active).toBe('false');
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    h.run("changeLanguage('ko')");expect(h.element('#result-trail').innerHTML).toContain(t('ko','trailFirstAfter'));
+  });
+  it('정상 첫 완료의 기존 보상만 한 번 주며 결과 재방문은 같은 기억을 표시한다',()=>{
+    const initial={version:1,language:'ko',highestLevel:4,completed:[1,2,3],stars:3,coins:120,garden:0,music:false,sfx:false,tutorialSeen:true};
+    const h=mainHarness(false,false,false,false,initial);
+    h.run('scene.hooks.onMove([0,0,0,14,12,0],100,1,4)');h.flushResults();
+    expect(h.run('save.stars')).toBe(4);expect(h.run('save.coins')).toBe(160);expect(h.run('save.completed')).toEqual([1,2,3,4]);
+    expect(h.element('#result-dialog').innerHTML).toContain(t('ko','trailFirstAfter'));const disk=h.disk(),writes=h.writes(),art=h.resultArtCalls();
+    h.run("switchView('village');switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(h.element('#result-dialog').innerHTML).toContain(t('ko','trailFirstAfter'));
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.resultArtCalls()).toBe(art);
+  });
+  it('낙엽 없는 다른 판·다른 탭·비활성에서는 늑대 표시/움직임을 남기지 않는다',()=>{
+    const h=mainHarness(false,false,true);h.run("startLevel(6,true);switchView('puzzle')");expect(h.element('#trail-encounter').dataset.active).toBe('true');
+    h.run("document.hidden=true;syncActivity()");expect(h.element('#trail-encounter').dataset.active).toBe('false');
+    h.run("document.hidden=false;syncActivity();switchView('map')");expect(h.element('#trail-encounter').dataset.active).toBe('false');
+    h.run("startLevel(5,true);switchView('puzzle')");expect(h.element('#trail-encounter').hidden).toBe(true);expect(h.element('#trail-encounter').innerHTML).toBe('');
+  });
+});
 
 describe('현재 회차의 힌트 목표 조회',()=>{
   it('남은 색 목표를 0 이상으로 읽고 조회만으로 저장하지 않습니다',()=>{

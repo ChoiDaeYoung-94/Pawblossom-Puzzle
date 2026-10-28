@@ -1,8 +1,8 @@
 {
   "issue": 429,
-  "status": "unintegrated-generated-source",
+  "status": "integrated-prototype",
   "tool": "built-in image_gen;transparent_background=true",
-  "sourcePolicy": "raw originals copied byte-for-byte;no pixel edits;no current game consumer or gameplay completion",
+  "sourcePolicy": "raw originals copied byte-for-byte;standard WebP resize/padding only;consumed by TrailEpisode preview/HUD/result",
   "sources": [
     {
       "path": "assets/art/trail-episode-v1/wolf-blocking-v1.png",
@@ -41,7 +41,41 @@
   "qualityNotes": [
     "Own original woodland wolf character;not third-party game art.",
     "Blocking and relieved poses visually inspected;requested1024/margins differ from actual output, not claimed pixel-exact match.",
-    "Still needs game-size export/layout/transition/accessibility/device review;not release-art approval."
+    "Game-size WebP exports inspected384px;final responsive/motion screenshots and user commercial-art approval still separate.",
+    "Production isolated headless KO390/EN320/landscape844/reduced740 inspected;short-landscape board clipping fixed by hiding encounter HUD;real device and commercial-art approval remain unverified.",
+    "Short landscape hints keep full accessible DOM text but clamp visible copy to two lines to preserve shuffle area;final capture queued after shared Editor return."
   ],
-  "scope": "No implementation,engine,RNG,level,save,economy,audio or APK changes;preserved at weekly95 pending user time/cap priority clarification."
+  "scope": "4/6/10 presentation only;engine/RNG/levels/save/economy/audio unchanged;19:00KST or90percent stop;headless/device approval tracked separately",
+  "outputs": [
+    {
+      "path": "public/assets/trail-episode-v1/wolf-blocking-v1.webp",
+      "width": 384,
+      "height": 384,
+      "bytes": 31486,
+      "sha256": "228d9e881333b62cc113eb50052b05b1e823f308fb29e24fdbcedb077458844d"
+    },
+    {
+      "path": "public/assets/trail-episode-v1/wolf-relieved-v1.webp",
+      "width": 384,
+      "height": 384,
+      "bytes": 32652,
+      "sha256": "876d6f04a2c84148c89b36449ded72a02ed556a7079e06073a28aaabdf1c31ad"
+    }
+  ],
+  "export": {
+    "sharp": "0.35.5",
+    "canvas": 384,
+    "content": 352,
+    "padding": 16,
+    "webpQuality": 90,
+    "alphaQuality": 100,
+    "policy": "original untouched;standard proportional resize/transparent padding/encoding only"
+  },
+  "integration": {
+    "module": "src/TrailEpisode.ts",
+    "styles": "src/TrailEpisode.css",
+    "motion": "complementary SVG masks animate only ear/tail while active;reduced motion static",
+    "gameplayRuleChanged": false,
+    "journal": "Pip tab read-only3-moment collection from real unique completed stages;demo uses normalSave;no new star/coin costs"
+  }
 }
