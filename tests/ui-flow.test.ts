@@ -509,9 +509,11 @@ describe('첫 보상에서 새 정원 작업으로 이어가기',()=>{
 });
 
 describe('연속 진행의 첫 이야기 미리보기',()=>{
-  const resultRound=(level:number)=>{
+  const resultRound=(level:number,options:{testing?:boolean;won?:boolean;completedNext?:boolean}={})=>{
     const h=mainHarness(false,false,true,false,{version:2,puzzleTools:{schema:2,introduced:['trowel','gloves','broom','bell','seeds'],trialUsed:[]},language:'en',highestLevel:level,completed:Array.from({length:level-1},(_,i)=>i+1),stars:20,coins:200,garden:1,music:false,sfx:false,tutorialSeen:true});
-    h.run(`startLevel(${level});switchView('puzzle')`);h.frame();h.run('finish(true)');return h;
+    h.run(`startLevel(${level},${options.testing===true});switchView('puzzle')`);h.frame();
+    if(options.completedNext)h.run(`save.completed.push(${level+1})`);
+    h.run(`finish(${options.won!==false})`);return h;
   };
   it.each([4,6,10,36,38,40])('%s번을 처음 만나는 다음 버튼은 보드를 만들기 전에 기존 이야기/목표 미리보기를 연다',target=>{
     const h=resultRound(target-1),disk=h.disk(),writes=h.writes();
@@ -523,6 +525,48 @@ describe('연속 진행의 첫 이야기 미리보기',()=>{
     expect(h.run('previewDialog.innerHTML')).toContain('data-trail-resolved="false"');
     expect(h.run('JSON.stringify({round,currentLevel,moves,score,save,board:scene.engine.board})')).toBe(before);
     expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('취소와 재열기는 지도·완료 회차·보상을 보존하고 명시 시작 때만 새 보드를 만든다',()=>{
+    const h=resultRound(5),disk=h.disk(),writes=h.writes(),round=h.run('round'),click=h.element('#result-next').onclick;
+    const before=h.run('JSON.stringify({currentLevel,moves,score,save,board:scene.engine.board})');
+    click();h.element('#preview-cancel').onclick();expect(h.run('route')).toBe('map');expect(h.run('stagePreview')).toBeUndefined();
+    expect(h.run('round')).toBe(round);expect(h.run('JSON.stringify({currentLevel,moves,score,save,board:scene.engine.board})')).toBe(before);
+    click();expect(h.run('stagePreview')).toBeUndefined();expect(h.run('round')).toBe(round);
+    h.element('#map-play').onclick();expect(h.run('stagePreview.id')).toBe(6);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+    h.run("confirmStagePreview(stagePreview,'start')");h.frame();
+    expect(h.run('route')).toBe('puzzle');expect(h.run('currentLevel')).toBe(6);expect(h.run('round')).toBe(round+1);
+    expect(h.run('moves')).toBe(h.run('levels[5].moves'));expect(h.run('save.coins')).toBe(240);expect(h.run('save.stars')).toBe(21);
+    expect(h.run('save.completed.includes(6)')).toBe(false);expect(h.stored().inProgress.levelId).toBe(6);
+    const after=h.disk(),afterWrites=h.writes();click();expect(h.disk()).toEqual(after);expect(h.writes()).toBe(afterWrites);expect(h.run('round')).toBe(round+1);
+  });
+  it('미리보기 언어 변경은 같은 다음 판 문맥과 보상을 유지한다',()=>{
+    const h=resultRound(35);h.element('#result-next').onclick();const round=h.run('round');
+    h.run("changeLanguage('ko')");expect(h.run('stagePreview.id')).toBe(36);expect(h.run('previewDialog.innerHTML')).toContain('data-trail-episode="beaver-v1"');
+    expect(h.run('previewDialog.innerHTML')).toContain(t('ko','trailBeaverFirstBefore'));const disk=h.disk(),writes=h.writes();
+    h.element('#preview-cancel').onclick();expect(h.run('route')).toBe('map');expect(h.run('round')).toBe(round);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it.each(['hidden','inactive','ads','scene'] as const)('%s 뒤 오래된 첫 이야기 시작 문맥은 새 판이나 저장을 만들지 않는다',reason=>{
+    const h=resultRound(5);h.element('#result-next').onclick();h.run('globalThis.oldStoryPreview=stagePreview');
+    if(reason==='hidden')h.run('document.hidden=true');
+    if(reason==='inactive')h.run('nativeActive=false');
+    if(reason==='ads')h.run('testAds={busy:true,pausesGame:true}');
+    if(reason==='scene'){h.run('startLevel(7)');h.frame();}
+    const before=h.run('JSON.stringify({round,currentLevel,save,board:scene.engine.board})'),disk=h.disk(),writes=h.writes();
+    h.run("confirmStagePreview(oldStoryPreview,'start')");
+    expect(h.run('JSON.stringify({round,currentLevel,save,board:scene.engine.board})')).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it.each(['ordinary','completed-story','practice','loss','last'] as const)('%s는 기존 빠른 다음/재시도 경로를 유지한다',reason=>{
+    const level=reason==='ordinary'?4:reason==='loss'?6:reason==='last'?500:5;
+    const h=resultRound(level,{testing:reason==='practice',won:reason!=='loss',completedNext:reason==='completed-story'}),round=h.run('round');
+    const coins=h.run('save.coins'),stars=h.run('save.stars');h.element('#result-next').onclick();h.frame();
+    expect(h.element('#stage-preview-dialog').open).toBe(false);expect(h.run('stagePreview')).toBeUndefined();expect(h.run('route')).toBe('puzzle');
+    expect(h.run('currentLevel')).toBe(reason==='loss'||reason==='last'?level:level+1);expect(h.run('round')).toBe(round+1);
+    expect(h.run('save.coins')).toBe(coins);expect(h.run('save.stars')).toBe(stars);
+  });
+  it('보드가 이탈할 수 없으면 첫 이야기 결과창을 닫지 않는다',()=>{
+    const h=resultRound(5),round=h.run('round'),disk=h.disk(),writes=h.writes();h.run('scene.busy=true');h.element('#result-next').onclick();
+    expect(h.element('#result-dialog').open).toBe(true);expect(h.element('#stage-preview-dialog').open).toBe(false);expect(h.run('route')).toBe('puzzle');
+    expect(h.run('round')).toBe(round);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
   });
 });
 
