@@ -20,7 +20,7 @@ import {campaignAlbumCard,albumSelection,parseAlbumIndex} from './CampaignAlbum'
 import './CampaignAlbum.css';
 import './PuzzlePresentation.css';
 import './TrailEpisode.css';
-import {trailStoryCard,trailJournal,updateTrailEncounter} from './TrailEpisode';
+import {trailBeat,trailStoryCard,trailJournal,updateTrailEncounter} from './TrailEpisode';
 import {puzzleToolCatalog,puzzleTool,type PuzzleToolId,type PuzzleToolRound} from './puzzleTools';
 import {preparePuzzleTool,puzzleToolArea,puzzleToolOutcome,validPuzzleToolTarget} from './puzzleToolActions';
 import {toolShelf,toolInfo,toolName,toolPicture,toolStatus} from './PuzzleToolUI';
@@ -93,6 +93,7 @@ let boardPending=false;
 let roundEnded=false, resultShown=false, firstReward=false;
 let resultWon:boolean|undefined;
 let resultGardenPlan:{id:string;round:number;scene:BoardScene;owner:SaveData}|undefined;
+let resultMemory:{level:number;round:number;scene:BoardScene;owner:SaveData}|undefined;
 let resultWorld:ReturnType<typeof campaignMilestone>;
 let resultWorldScenery:ReturnType<typeof createCampaignScenery>|undefined;
 let noticeKey:TextKey|undefined, boardNoticeKey:TextKey|undefined;
@@ -644,6 +645,7 @@ function confirmTool(context:NonNullable<typeof toolMode>){
     if(outcome.save&&!saveData(outcome.save)){updateSaveStatus();notice('careSaveBlocked');return false;}
     const previousMapLevel=save.highestLevel,returnBoardFocus=document.activeElement===$('#tool-confirm')&&$('#tool-confirm').matches(':focus-visible');if(outcome.save)save=outcome.save;closeToolMode(false);
     if(previousGardenPlans)rememberResultGarden(previousGardenPlans);
+    if(outcome.firstReward)rememberResultMemory();
     const complete=()=>{
       if(round!==context.round||scene!==context.scene)return;
       if(outcome.won){roundEnded=true;firstReward=outcome.firstReward;pipIdle.setActive(false);scene.stopPlaying();finish(true);}
@@ -684,7 +686,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   abandonRewardContinue();
   if(!Number.isInteger(id)||id<1||id>levels.length)return;
   mapAdvance=undefined;clearMapTravel();
-  resultWorldScenery?.dispose();resultWorldScenery=undefined;resultWorld=undefined;resultGardenPlan=undefined;
+  resultWorldScenery?.dispose();resultWorldScenery=undefined;resultWorld=undefined;resultGardenPlan=undefined;resultMemory=undefined;
   clearResumeNotice();
   clearTimeout(resultTimer);resultTimer=undefined;round++;
   roundEnded=false;resultShown=false;firstReward=false;resultWon=undefined;clearBoardNotice();continueUsed=false;paidShuffleUsed=false;
@@ -924,6 +926,25 @@ function updateResultGardenCopy(){
   $('#result-garden-label').textContent=text('resultGardenOpen');
   button.setAttribute('aria-label',gardenGoalName(goal)+' · '+text('resultGardenOpen'));
 }
+/** 이미 저장된 첫 완료만 연결하며 추억·보상을 다시 지급하지 않습니다. */
+function rememberResultMemory(){
+  if(!careDemo&&!testingLevel&&trailBeat(currentLevel)&&save.completed.includes(currentLevel))resultMemory={level:currentLevel,round,scene,owner:save};
+}
+function currentResultMemory(){
+  const context=resultMemory;
+  if(!context||careDemo||testingLevel||!firstReward||resultWon!==true||context.round!==round||context.scene!==scene||context.owner!==save||context.level!==currentLevel||!save.completed.includes(context.level)||game.scene.getScene('Board')!==scene||careStorageBlocked())return;
+  const beat=trailBeat(context.level);return beat?{...context,episode:beat.episode}:undefined;
+}
+function updateResultMemoryCopy(){
+  const link=document.querySelector<HTMLElement>('#result-memory-link');if(!link)return;
+  const memory=currentResultMemory(),button=$<HTMLButtonElement>('#result-memory-open'),active=document.activeElement===button;
+  link.hidden=!memory;button.disabled=!memory;
+  if(!memory){if(active&&$<HTMLDialogElement>('#result-dialog').open)$('#result-next').focus();return;}
+  const owned=memory.episode.beats.filter(beat=>save.completed.includes(beat.level)).length;
+  $('#result-memory-copy').textContent=text('trailNewMemory').replace('{count}',String(owned)).replace('{total}',String(memory.episode.beats.length));
+  button.textContent=text('trailOpenMemory');
+  button.setAttribute('aria-label',text(memory.episode.journalTitle)+' · '+text('level')+' '+memory.level+' · '+text('trailOpenMemory'));
+}
 function settleRound(won:boolean){
   if(careDemo||roundEnded)return;
   roundEnded=true;
@@ -937,8 +958,9 @@ function settleRound(won:boolean){
   if(firstReward&&previousMapLevel===currentLevel&&save.highestLevel===currentLevel+1)mapAdvance={from:currentLevel,to:currentLevel+1,owner:save};
   // 결과창 타이머 전에 회차 제거와 첫 보상을 하나의 저장으로 확정합니다.
   const stored=persist();
-  resultGardenPlan=undefined;
+  resultGardenPlan=undefined;resultMemory=undefined;
   if(stored&&previousGardenPlans)rememberResultGarden(previousGardenPlans);
+  if(stored&&firstReward)rememberResultMemory();
   updateWallet();renderViews();
 }
 function finish(won:boolean){
@@ -950,8 +972,8 @@ function finish(won:boolean){
   const testContinue=TEST_TOOLS_ENABLED&&testingLevel&&!won&&!continueUsed&&moves===0;
   const dialog=$<HTMLDialogElement>('#result-dialog');
   resultWorldScenery?.dispose();resultWorldScenery=undefined;resultWorld=campaignMilestone(save.completed,currentLevel,first,testingLevel,won);
-  dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}${testContinue?' result-with-continue':''}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><span class="result-character"><img class="result-pip" src="/assets/pip.png" decoding="async" alt=""/></span><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line" id="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow" id="result-level">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p><div id="result-trail">${trailStoryCard(save.language,currentLevel,won?'won':'retry',save.completed.includes(currentLevel),testingLevel)}</div>${first?`<div class="result-rewards"><span>${icon('star',20)}<span class="sr-only" data-t="stars">${text('stars')}</span> +1</span><span>${icon('coin',20)}<span class="sr-only" data-t="coins">${text('coins')}</span> +40</span></div>`:''}${campaignMilestoneCard(save.language,resultWorld,round)}<section class="result-garden-card" id="result-garden-card" aria-labelledby="result-garden-title" hidden><div><p id="result-garden-title"></p><strong id="result-garden-name"></strong></div><button type="button" class="text-button" id="result-garden-open"><span id="result-garden-label"></span>${icon('arrow',16)}</button></section><button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${androidBillingEntry&&!won&&!continueUsed&&moves===0?`<button class="result-test-button" id="result-buyer-continue" hidden>${text('buyerContinueTest')}</button>`:''}${testContinue?`<button class="result-test-button" id="result-continue" aria-describedby="result-continue-note">${text('testContinue')}</button><p id="result-continue-note">${text('testContinueNote')}</p>`:''}${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
-  updateResultGardenCopy();dialog.showModal();syncActivity();
+  dialog.innerHTML=`<div class="result-content ${won?'result-win':'result-retry'}${testContinue?' result-with-continue':''}"><div class="result-stage" aria-hidden="true"><span class="result-ground"></span><span class="result-character"><img class="result-pip" src="/assets/pip.png" decoding="async" alt=""/></span><span class="result-symbol">${icon(won?'star':'leaf',25)}</span>${won?`<span class="result-sparkles">${[0,1,2].map(()=>`<i>${icon('star',14)}</i>`).join('')}</span>`:''}</div><p class="result-pip-line" id="result-pip-line">${text(won?'pipWin':'pipRetry')}</p><div class="eyebrow" id="result-level">${text('level')} ${currentLevel}${testingLevel?` · ${text('testPick')}`:''}</div><h2 id="result-title">${text(done?'complete':won?'win':'lose')}</h2><p id="result-description">${text(testingLevel?'testResultDesc':done?'completeDesc':won?(first?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT))}</p><div class="result-trail-wrap" ${trailBeat(currentLevel)?'':'hidden'}><div id="result-trail">${trailStoryCard(save.language,currentLevel,won?'won':'retry',save.completed.includes(currentLevel),testingLevel)}</div><div id="result-memory-link" class="trail-result-memory" hidden><span id="result-memory-copy"></span><button type="button" id="result-memory-open" class="text-button"></button></div></div>${first?`<div class="result-rewards"><span>${icon('star',20)}<span class="sr-only" data-t="stars">${text('stars')}</span> +1</span><span>${icon('coin',20)}<span class="sr-only" data-t="coins">${text('coins')}</span> +40</span></div>`:''}${campaignMilestoneCard(save.language,resultWorld,round)}<section class="result-garden-card" id="result-garden-card" aria-labelledby="result-garden-title" hidden><div><p id="result-garden-title"></p><strong id="result-garden-name"></strong></div><button type="button" class="text-button" id="result-garden-open"><span id="result-garden-label"></span>${icon('arrow',16)}</button></section><button class="primary" id="result-next">${text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')}${icon('arrow',19)}</button>${androidBillingEntry&&!won&&!continueUsed&&moves===0?`<button class="result-test-button" id="result-buyer-continue" hidden>${text('buyerContinueTest')}</button>`:''}${testContinue?`<button class="result-test-button" id="result-continue" aria-describedby="result-continue-note">${text('testContinue')}</button><p id="result-continue-note">${text('testContinueNote')}</p>`:''}${testingLevel?`<button class="result-test-button" id="result-test">${text('testOther')}</button>`:''}<button class="text-button" id="result-home">${text('home')}</button></div>`;
+  updateResultGardenCopy();updateResultMemoryCopy();dialog.showModal();syncActivity();
   $('#result-next').focus();
   const resultRound=round,resultScene=scene,resultLevel=currentLevel,resultTesting=testingLevel;
   const canNavigate=(button:HTMLButtonElement)=>!careDemo&&!puzzleProcessing&&nativeActive&&!document.hidden&&!boardPending&&resultTimer===undefined
@@ -967,6 +989,15 @@ function finish(won:boolean){
     if(!canNavigate(garden)||route!=='puzzle')return;
     const goal=resultGardenGoal();if(!goal){updateResultGardenCopy();return;}
     dialog.close();visitGardenGoal(goal);
+  };
+  const memoryButton=$<HTMLButtonElement>('#result-memory-open');
+  memoryButton.onclick=()=>{
+    if(!canNavigate(memoryButton)||route!=='puzzle')return;
+    const memory=currentResultMemory();if(!memory){updateResultMemoryCopy();return;}
+    const journal=document.querySelector<HTMLDetailsElement>('#trail-journal-'+memory.episode.id),title=document.querySelector<HTMLElement>('#trail-memory-'+memory.level+'-title');
+    if(!journal?.isConnected||!title?.isConnected)return;
+    dialog.close();switchView('journal');if((route as string)!=='journal')return;
+    journal.open=true;title.focus({preventScroll:true});title.scrollIntoView?.({block:'center'});
   };
   if(testingLevel){const picker=$<HTMLButtonElement>('#result-test');picker.onclick=()=>{if(!canNavigate(picker))return;dialog.close();showTestPicker(true);};}
   const continueButton=dialog.querySelector<HTMLButtonElement>('#result-continue');
@@ -1078,7 +1109,7 @@ function updateResultCopy(){
   $('#result-title').textContent=text(done?'complete':won?'win':'lose');
   $('#result-description').textContent=text(testingLevel?'testResultDesc':done?'completeDesc':won?(firstReward?'winDesc':'replayDesc'):'loseDesc').replace('{count}',String(LEVEL_COUNT));
   $('#result-next').innerHTML=text(won?(done||currentLevel===LEVEL_COUNT?'allDone':'next'):'retry')+icon('arrow',19);
-  $('#result-home').textContent=text('home');updateResultGardenCopy();
+  $('#result-home').textContent=text('home');updateResultGardenCopy();updateResultMemoryCopy();
   const trail=document.querySelector<HTMLElement>('#result-trail');if(trail)trail.innerHTML=trailStoryCard(save.language,currentLevel,won?'won':'retry',save.completed.includes(currentLevel),testingLevel);
   if(resultWorld){const copy=milestoneCopy(save.language,resultWorld);for(const [id,value] of [['title',copy.title],['name',copy.name],['note',copy.note]]){const node=document.querySelector<HTMLElement>('#result-world-'+id);if(node)node.textContent=value;}}
   if(testingLevel)$('#result-test').textContent=text('testOther');
@@ -1692,7 +1723,7 @@ function switchView(name:string){
   // Phaser refresh는 직전 parentSize로 계산하므로 숨김→표시 직후 부모 크기를 먼저 갱신합니다.
   if(name==='puzzle'&&game.isBooted){game.scale.getParentBounds();game.scale.refresh();updateGoals();}
   if(returnToResult){
-    const dialog=$<HTMLDialogElement>('#result-dialog');updateResultGardenCopy();dialog.showModal();
+    const dialog=$<HTMLDialogElement>('#result-dialog');updateResultGardenCopy();updateResultMemoryCopy();dialog.showModal();
     const button=dialog.querySelector<HTMLButtonElement>('#result-continue');
     if(androidAdEntry&&button&&testingLevel&&!continueUsed&&resultWon===false&&moves===0)bindRewardContinue(button);
   }

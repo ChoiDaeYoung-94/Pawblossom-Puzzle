@@ -102,6 +102,7 @@ class ElementStub {
 function mainHarness(storageFails = false, firstUse = false, testTools = false, native = false, initial?:unknown, autoFrame=true, adsBridge?:TestAdsBridge,billingBridge?:TestBillingBridge,bootMap=false) {
   const elements = new Map<string, ElementStub>();
   const readingNodes=new Map<string,ElementStub[]>(),readingIds=new Set<string>();
+  const memoryTitles=new Map<string,ElementStub[]>();
   const rectangles = new Map<string, ReturnType<ElementStub['getBoundingClientRect']>>();
   const timers = new Map<number, { callback: () => void; ms: number }>();
   let timerId = 0, writes = 0;
@@ -123,6 +124,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   if(initial!==undefined)stored=JSON.stringify(initial);
   const storageValues=new Map<string,string>(stored==='null'?[]:[['pawblossom.save.v1',stored]]);
   const element = (selector: string): ElementStub => {
+    if(/^#trail-memory-\d+-title$/.test(selector)&&!elements.has(selector))throw Error('Memory title was not rendered: '+selector);
     if (!elements.has(selector)) {
       elements.set(selector, new ElementStub(selector));
       elements.get(selector)!.getBoundingClientRect=()=>rectangles.get(selector)??{left:0,top:0,right:180,bottom:180};
@@ -137,7 +139,12 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
             previous.isConnected=false;if(previous.summary)previous.summary.isConnected=false;
             for(const node of [previous,previous.summary])if(node&&readingIds.has('#'+node.id))elements.delete('#'+node.id);
           }
+          for(const previous of memoryTitles.get(view)??[]){previous.isConnected=false;elements.delete('#'+previous.id);}
           markup=value;
+          const titles=Array.from(value.matchAll(/<strong\b[^>]*\bid="(trail-memory-\d+-title)"[^>]*>/g),match=>{
+            const node=new ElementStub('#'+match[1]);readingIds.add('#'+node.id);elements.set('#'+node.id,node);return node;
+          });
+          memoryTitles.set(view,titles);
           const details=Array.from(value.matchAll(/<details\b([^>]*)>([\s\S]*?)<\/details>/g),(match,index)=>{
             const id=match[1].match(/\bid="([^"]+)"/)?.[1],summaryId=match[2].match(/<summary\b[^>]*\bid="([^"]+)"/)?.[1];
             const node=new ElementStub('#'+(id??'harness-detail-'+view+'-'+index));
@@ -252,8 +259,8 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     document: {
       body:{append(){}},
       createElement: () => {const created=new ElementStub('button');created.hidden=false;return created;},
-      querySelector:(selector:string)=>selector==='dialog[open]'?null:readingIds.has(selector)?elements.get(selector)??null:element(selector),
-      getElementById:(id:string)=>readingIds.has('#'+id)?elements.get('#'+id)??null:element('#'+id),
+      querySelector:(selector:string)=>selector==='dialog[open]'?null:readingIds.has(selector)||/^#trail-memory-\d+-title$/.test(selector)?elements.get(selector)??null:element(selector),
+      getElementById:(id:string)=>readingIds.has('#'+id)||/^trail-memory-\d+-title$/.test(id)?elements.get('#'+id)??null:element('#'+id),
       querySelectorAll: (selector: string) => selector === '.bottom-nav button[data-route]' || selector === '[data-route]'
         ? [...(selector==='[data-route]'?[element('#app')]:[]),...['map','village','journal'].map(route=>{const button=element('#nav-'+route);button.dataset.route=route;return button;})] : selector === '[data-test-level]'
         ? Array.from({length:LEVEL_COUNT},(_,i)=>{const button=element(`#test-stage-${i+1}`);button.dataset.testLevel=String(i+1);return button;}) : selector === '[data-chapter]' || selector === '[data-test-chapter]'
@@ -498,6 +505,86 @@ describe('첫 보상에서 새 정원 작업으로 이어가기',()=>{
     const h=mainHarness();h.run('finish(true)');const button=h.element('#result-garden-open'),click=button.onclick;
     h.run("changeLanguage('ko')");expect(h.element('#result-garden-title').textContent).toBe(t('ko','resultGardenReady'));expect(h.element('#result-garden-name').textContent).toBe(t('ko','goalBed').replace('{number}','1'));expect(button.onclick).toBe(click);
     h.element('#result-garden-open').onclick();h.run("save=JSON.parse(JSON.stringify(save));save.garden=1;switchView('puzzle')");expect(h.element('#result-garden-card').hidden).toBe(true);expect(button.disabled).toBe(true);
+  });
+});
+
+describe('새 산책 추억에서 핍의 해당 장면으로 이어가기',()=>{
+  const memoryRound=(level=6,storageFails=false)=>{
+    const h=mainHarness(storageFails,false,true,false,{version:2,puzzleTools:{schema:2,introduced:['trowel','gloves','broom','bell','seeds'],trialUsed:[]},language:'en',highestLevel:level,completed:Array.from({length:level-1},(_,i)=>i+1),stars:20,coins:200,garden:1,music:false,sfx:false,tutorialSeen:true});
+    h.run(`startLevel(${level});switchView('puzzle')`);h.frame();return h;
+  };
+  it.each([4,6,10,36,38,40])('%s번의 저장된 정상 첫 완료만 해당 에피소드의 새 장면으로 연결한다',level=>{
+    const h=memoryRound(level);h.run('finish(true)');
+    expect(h.element('#result-memory-link').hidden).toBe(false);expect(h.element('#result-memory-open').disabled).toBe(false);
+    expect(h.run('resultMemory.level')).toBe(level);
+    const disk=h.disk(),writes=h.writes(),sounds=h.run('audio.plays.slice()'),art=h.resultArtCalls();let focus=0;
+    h.element(`#trail-memory-${level}-title`).focus=()=>focus++;
+    h.element('#result-memory-open').onclick();
+    expect(h.run('route')).toBe('journal');expect(h.element('#result-dialog').open).toBe(false);
+    expect(h.element(level<20?'#trail-journal-wolf-v1':'#trail-journal-beaver-v1').open).toBe(true);expect(focus).toBe(1);
+    h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(h.element('#result-memory-link').hidden).toBe(false);
+    h.run('finish(true);updateResultCopy()');expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('audio.plays')).toEqual(sounds);expect(h.resultArtCalls()).toBe(art);
+  });
+  it.each(['other','replay','practice','loss','storage'] as const)('%s에서는 새 추억을 안내하지 않는다',reason=>{
+    const h=memoryRound(6);
+    if(reason==='other')h.run('startLevel(5)');
+    if(reason==='replay')h.run('save.completed.push(6)');
+    if(reason==='practice')h.run('startLevel(6,true)');
+    if(reason==='storage')h.setStorageFails(true);
+    h.run(`finish(${reason!=='loss'})`);expect(h.element('#result-memory-link').hidden).toBe(true);expect(h.run('resultMemory')).toBeUndefined();
+  });
+  it.each(['new-round','owner','removed','hidden','inactive','busy','preview','ads','detached'] as const)('%s 뒤 오래된 추억 버튼은 이동하거나 저장하지 않는다',reason=>{
+    const h=memoryRound();h.run('finish(true)');const button=h.element('#result-memory-open'),click=button.onclick;
+    if(reason==='new-round')h.run('startLevel(7)');
+    if(reason==='owner')h.run('save=JSON.parse(JSON.stringify(save))');
+    if(reason==='removed')h.run('save.completed=save.completed.filter(id=>id!==6)');
+    if(reason==='hidden')h.run('document.hidden=true');
+    if(reason==='inactive')h.run('nativeActive=false');
+    if(reason==='busy')h.run('puzzleProcessing=true');
+    if(reason==='preview')h.run('previewDialog.open=true');
+    if(reason==='ads')h.run('testAds={busy:true,pausesGame:true}');
+    if(reason==='detached')button.isConnected=false;
+    const disk=h.disk(),writes=h.writes();click();expect(h.run('route')).toBe('puzzle');expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('언어 변경은 버튼/초점을 보존하고 다른 저장 소유자로 결과를 재방문하면 안내를 숨긴다',()=>{
+    const h=memoryRound();h.run('finish(true)');const button=h.element('#result-memory-open'),click=button.onclick;
+    h.run("document.activeElement=document.querySelector('#result-memory-open');changeLanguage('ko')");
+    expect(h.element('#result-memory-copy').textContent).toBe(t('ko','trailNewMemory').replace('{count}','2').replace('{total}','3'));
+    expect(button.textContent).toBe(t('ko','trailOpenMemory'));expect(button.onclick).toBe(click);expect(h.run('document.activeElement.id')).toBe('result-memory-open');
+    click();h.run("save=JSON.parse(JSON.stringify(save));switchView('puzzle')");
+    expect(h.element('#result-memory-link').hidden).toBe(true);expect(button.disabled).toBe(true);
+  });
+  it('저장 실패 뒤 저장 재시도는 이미 종료한 판의 새 추억을 소급 생성하지 않는다',()=>{
+    const h=memoryRound();h.setStorageFails(true);h.run('finish(true)');expect(h.run('resultMemory')).toBeUndefined();
+    h.setStorageFails(false);h.element('#save-retry').onclick();h.run('updateResultCopy()');
+    expect(h.run('resultMemory')).toBeUndefined();expect(h.element('#result-memory-link').hidden).toBe(true);
+  });
+  it('안내를 숨길 때 그 버튼에 있던 초점을 기존 다음 버튼으로 옮긴다',()=>{
+    const h=memoryRound();h.run('finish(true)');let focus=0;h.element('#result-next').focus=()=>focus++;
+    h.run("document.activeElement=document.querySelector('#result-memory-open');save=JSON.parse(JSON.stringify(save));updateResultMemoryCopy()");
+    expect(h.element('#result-memory-link').hidden).toBe(true);expect(focus).toBe(1);
+  });
+  it('실제 마크업에서 장면 제목이 사라지면 조회는 null이고 결과창을 닫지 않는다',()=>{
+    const h=memoryRound();h.run('finish(true)');const oldTitle=h.element('#trail-memory-6-title'),click=h.element('#result-memory-open').onclick;
+    h.run(`document.querySelector('#journal-view').innerHTML=document.querySelector('#journal-view').innerHTML.replace('id="trail-memory-6-title"','')`);
+    expect(oldTitle.isConnected).toBe(false);expect(h.run("document.querySelector('#trail-memory-6-title')")).toBeNull();
+    const disk=h.disk(),writes=h.writes();click();expect(h.run('route')).toBe('puzzle');expect(h.element('#result-dialog').open).toBe(true);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  const lastGloveMatch=()=>{
+    const h=memoryRound(36);
+    h.run("const toolOriginalPrepare=preparePuzzleTool;preparePuzzleTool=(r,id,a,b)=>toolOriginalPrepare(r,id,a,b,toolSeededRng(8));roundTools.started=true;scene.engine.crates=scene.engine.crates.map(r=>r.map(()=>0));clearedCrates=levels[35].crates.length;for(const g of levels[35].goals)collected[g.kind]=g.count-(g===levels[35].goals[0]?1:0);const goalKind=levels[35].goals[0].kind;scene.engine.board=scene.engine.board.map((line,r)=>line.map((t,c)=>({kind:(r+c*2)%6})));for(const p of [{row:0,col:0},{row:0,col:2},{row:1,col:1}])scene.engine.board[p.row][p.col]={kind:goalKind};scene.engine.board[0][1]={kind:(goalKind+1)%6};checkpoint();showToolInfo('gloves','tool-gloves')");
+    h.element('#tool-info-start').onclick();h.run('scene.toolTarget({row:0,col:1});scene.toolTarget({row:1,col:1})');return h;
+  };
+  it.each([false,true])('장갑 승리는 동기 완료=%s에서도 저장 직후 추억을 기억하고 보상을 반복하지 않는다',synchronous=>{
+    const h=lastGloveMatch();if(synchronous)h.run('scene.playPreparedTool=(plan,complete)=>{scene.applyPreparedShuffle(plan.after);complete();return true;}');
+    const before=h.stored(),writes=h.writes();expect(h.element('#tool-confirm').disabled).toBe(false);h.element('#tool-confirm').onclick();
+    expect(h.run('resultMemory.level')).toBe(36);h.run('scene.completePrepared()');expect(h.element('#result-memory-link').hidden).toBe(false);
+    expect(h.stored().stars).toBe(before.stars+1);expect(h.stored().coins).toBe(before.coins+40);expect(h.writes()-writes).toBe(2);
+    const disk=h.disk(),savedWrites=h.writes();h.element('#result-memory-open').onclick();h.run("switchView('puzzle');finish(true)");expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(savedWrites);
+  });
+  it('장갑 마지막 매치의 저장 실패는 새 추억 문맥을 만들지 않는다',()=>{
+    const h=lastGloveMatch(),disk=h.disk();h.setStorageFails(true);h.element('#tool-confirm').onclick();
+    expect(h.run('resultMemory')).toBeUndefined();expect(h.element('#result-dialog').open).toBe(false);expect(h.disk()).toEqual(disk);
   });
 });
 
