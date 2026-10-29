@@ -18,10 +18,14 @@ describe('실제 기록으로 다시 보는 풍경 앨범',()=>{
     }
     expect(campaignAlbum(completed(500)).filter(w=>w.collected)).toHaveLength(25);
   });
+  it.each([{done:0,world:0,collected:false},{done:19,world:0,collected:false},{done:20,world:0,collected:true},{done:21,world:1,collected:false},{done:39,world:1,collected:false},{done:40,world:1,collected:true},{done:41,world:2,collected:false},{done:500,world:24,collected:true}])('$done판의 기본 앨범은 진행 중 풍경을 잇고 완성 경계는 유지합니다',({done,world,collected})=>{
+    const ids=Object.freeze(completed(done)),before=[...ids],selected=albumSelection(ids,undefined);
+    expect(selected).toMatchObject({index:world,collected});expect(ids).toEqual(before);
+  });
   it('선택은0–24 정규 정수만 받고 범위 밖 선택은 실제 기록에서 복구합니다',()=>{
     for(const value of ['','-1','1.2','01','1e1',' 1','25','NaN','Infinity'])expect(parseAlbumIndex(value)).toBeUndefined();
     expect(parseAlbumIndex('0')).toBe(0);expect(parseAlbumIndex('24')).toBe(24);
-    expect(albumSelection(completed(21),NaN).index).toBe(0);expect(albumSelection(completed(40),undefined).index).toBe(1);expect(albumSelection([1,21],undefined).index).toBe(1);expect(albumSelection(completed(21),1).index).toBe(1);
+    expect(albumSelection(completed(21),NaN).index).toBe(1);expect(albumSelection(completed(40),undefined).index).toBe(1);expect(albumSelection([1,21],undefined).index).toBe(1);expect(albumSelection(completed(21),1).index).toBe(1);expect(albumSelection(completed(21),0).index).toBe(0);
   });
   it.each(['ko','en'] as const)('%s: 미완료는 그림을 해독하지 않고 수집한 선택 한 장만 표시하며 결과 엽서와 clip이 겹치지 않습니다',language=>{
     const pending=campaignAlbumCard(language,completed(19),0,false),ready=campaignAlbumCard(language,completed(20),0,false);
@@ -30,5 +34,10 @@ describe('실제 기록으로 다시 보는 풍경 앨범',()=>{
     expect(ready).toContain('album-postcard-1-0');expect(campaignWorldPostcard(1,0)).toContain('world-postcard-1-0');
     expect(ready).not.toMatch(/\shref=|localStorage|data-level=/);
     const demo=campaignAlbumCard(language,[],24,true);expect(demo).toContain(t(language,'albumRealOnly'));expect(demo).toContain('id="album-open-map" class="text-button" disabled');expect(demo).not.toContain('data-map-src');
+  });
+  it.each(['ko','en'] as const)('%s: 다음 풍경 첫 완료의 기본 카드는 남은 수량을 안내하고 수집 그림을 열지 않습니다',language=>{
+    const html=campaignAlbumCard(language,completed(21),undefined,false);
+    expect(html).toContain('data-collected="false"');expect(html).toContain('1/20');expect(html).toContain(t(language,'albumRemaining').replace('{count}','19'));expect(html).not.toContain('data-map-src');
+    expect(campaignAlbumCard(language,completed(21),0,false)).toContain('album-postcard-1-0');
   });
 });
