@@ -62,6 +62,7 @@ const i18nCode = compile(read('../src/i18n.ts'));
 const gardenCode = compile(read('../src/GardenArt.ts'));
 
 class ElementStub {
+  summary?:ElementStub;
   id: string;
   hidden: boolean;
   open = false;
@@ -83,7 +84,7 @@ class ElementStub {
   append(_child:ElementStub) {}
   before() {}
   focus() {}
-  matches(){return true;}
+  matches(_selector?:string){return true;}
   querySelector(selector:string){return this.innerHTML.includes(`id="${selector.slice(1)}"`)?new ElementStub(selector):null;}
   setPointerCapture() {}
   hasPointerCapture(){return false;}releasePointerCapture(){}
@@ -100,6 +101,7 @@ class ElementStub {
 
 function mainHarness(storageFails = false, firstUse = false, testTools = false, native = false, initial?:unknown, autoFrame=true, adsBridge?:TestAdsBridge,billingBridge?:TestBillingBridge,bootMap=false) {
   const elements = new Map<string, ElementStub>();
+  const readingNodes=new Map<string,ElementStub[]>(),readingIds=new Set<string>();
   const rectangles = new Map<string, ReturnType<ElementStub['getBoundingClientRect']>>();
   const timers = new Map<number, { callback: () => void; ms: number }>();
   let timerId = 0, writes = 0;
@@ -131,7 +133,24 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
         Object.defineProperty(elements.get(selector)!,'innerHTML',{get:()=>markup,set:(value:string)=>{
           pipLifecycle.push(`${view}-replace`);
           for(const id of owned){const previous=elements.get('#'+id);if(previous)previous.isConnected=false;elements.delete('#'+id);}
+          for(const previous of readingNodes.get(view)??[]){
+            previous.isConnected=false;if(previous.summary)previous.summary.isConnected=false;
+            for(const node of [previous,previous.summary])if(node&&readingIds.has('#'+node.id))elements.delete('#'+node.id);
+          }
           markup=value;
+          const details=Array.from(value.matchAll(/<details\b([^>]*)>([\s\S]*?)<\/details>/g),(match,index)=>{
+            const id=match[1].match(/\bid="([^"]+)"/)?.[1],summaryId=match[2].match(/<summary\b[^>]*\bid="([^"]+)"/)?.[1];
+            const node=new ElementStub('#'+(id??'harness-detail-'+view+'-'+index));
+            node.open=/(?:^|\s)open(?:\s|=|$)/.test(match[1]);
+            if(/(?:^|\s)data-retain-open(?:\s|=|$)/.test(match[1]))node.dataset.retainOpen='';
+            node.matches=selector=>selector==='details[data-retain-open]'&&node.dataset.retainOpen!==undefined;
+            node.summary=new ElementStub('#'+(summaryId??'harness-summary-'+view+'-'+index));
+            node.summary.focus=()=>{context.document.activeElement=node.summary;};
+            for(const [key,entry] of [[id,node],[summaryId,node.summary]] as const)if(key){readingIds.add('#'+key);elements.set('#'+key,entry);}
+            return node;
+          });
+          readingNodes.set(view,details);
+          elements.get(selector)!.querySelectorAll=selector=>selector==='details[data-retain-open]'?details.filter(node=>node.matches(selector)):[];
         }});
       }
       for(const view of ['village','journal']){
@@ -233,8 +252,8 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     document: {
       body:{append(){}},
       createElement: () => {const created=new ElementStub('button');created.hidden=false;return created;},
-      querySelector:(selector:string)=>selector==='dialog[open]'?null:element(selector),
-      getElementById:(id:string)=>element('#'+id),
+      querySelector:(selector:string)=>selector==='dialog[open]'?null:readingIds.has(selector)?elements.get(selector)??null:element(selector),
+      getElementById:(id:string)=>readingIds.has('#'+id)?elements.get('#'+id)??null:element('#'+id),
       querySelectorAll: (selector: string) => selector === '.bottom-nav button[data-route]' || selector === '[data-route]'
         ? [...(selector==='[data-route]'?[element('#app')]:[]),...['map','village','journal'].map(route=>{const button=element('#nav-'+route);button.dataset.route=route;return button;})] : selector === '[data-test-level]'
         ? Array.from({length:LEVEL_COUNT},(_,i)=>{const button=element(`#test-stage-${i+1}`);button.dataset.testLevel=String(i+1);return button;}) : selector === '[data-chapter]' || selector === '[data-test-chapter]'
@@ -324,7 +343,8 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     setStorageFails:(value:boolean)=>{storageFails=value;},disk:()=>[...storageValues],
     resultArtCalls:()=>resultArtCalls,frame:()=>frame(),games:()=>games,destroys:()=>destroys,
     documentEvents,windowEvents,nativeEvents,resolveNativeState,pipControllers,pipLifecycle,accessoryControllers,natureControllers,sceneryControllers,mapTravels,
-    element, run: (code: string) => {const result=vm.runInContext(code, context);if(autoFrame)frame();return result;},
+    element,reading:(view:'village'|'journal')=>readingNodes.get(view)??[],
+    run: (code: string) => {const result=vm.runInContext(code, context);if(autoFrame)frame();return result;},
     resultTimers: () => [...timers.values()].filter(timer => timer.ms === 300),
     flushResults: () => [...timers].filter(([,timer]) => timer.ms === 300).forEach(([id,timer]) => {timers.delete(id);timer.callback();}),
     flushToasts: () => [...timers.values()].filter(timer => timer.ms === 3200).forEach(timer => timer.callback()),
@@ -333,6 +353,57 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     writes: () => writes, stored: () => JSON.parse(storageValues.get('pawblossom.save.v1')??'null'),
   };
 }
+
+describe('계획과 산책 추억을 읽던 상태의 보존',()=>{
+  const ready=()=>{
+    const h=mainHarness(false,false,true,false,{version:2,puzzleTools:{schema:2,introduced:[],trialUsed:[]},language:'en',highestLevel:41,completed:Array.from({length:40},(_,i)=>i+1),stars:40,coins:200,garden:0,music:false,sfx:false,tutorialSeen:true});
+    h.run("switchView('journal')");expect(h.reading('journal')).toHaveLength(3);return h;
+  };
+  const choose=(h:ReturnType<typeof ready>,index:string)=>h.run("document.querySelector('#album-world-select').value='"+index+"';document.querySelector('#album-world-select').onchange()");
+  it.each([[true,false,false],[false,true,false],[false,false,true],[true,true,true],[false,true,true]])('앨범 선택은 각 항목의 펼침 %j를 새 DOM으로 옮기고 저장하지 않습니다',(...opened)=>{
+    const h=ready(),before=h.run('JSON.stringify(save)'),disk=h.disk(),writes=h.writes(),old=[...h.reading('journal')];
+    old.forEach((node,index)=>node.open=opened[index]);choose(h,'0');
+    const fresh=h.reading('journal');expect(fresh.map(node=>node.open)).toEqual(opened);
+    fresh.forEach((node,index)=>{expect(node).not.toBe(old[index]);expect(old[index].isConnected).toBe(false);});
+    fresh[1].open=false;choose(h,'1');expect(h.reading('journal')[1].open).toBe(false);
+    expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('일반 재렌더와 탭 왕복에서 닫힘·summary 초점·스크롤을 유지합니다',()=>{
+    const h=ready();h.reading('journal')[0].open=true;h.reading('journal')[2].open=true;
+    const old=h.reading('journal')[2];old.summary!.focus();h.element('#journal-view').scrollTop=723;
+    h.run('renderViews()');expect(h.reading('journal').map(node=>node.open)).toEqual([true,false,true]);
+    expect(h.run('document.activeElement.id')).toBe(h.reading('journal')[2].summary!.id);expect(h.run('document.activeElement.isConnected')).toBe(true);
+    expect(old.summary!.isConnected).toBe(false);expect(h.element('#journal-view').scrollTop).toBe(723);
+    h.run("switchView('village');switchView('journal')");expect(h.reading('journal').map(node=>node.open)).toEqual([true,false,true]);
+  });
+  it.each(['enter','exit','preset','reset'])('돌봄 세대 경계 %s는 같은 ID의 이전 펼침을 가져오지 않습니다',boundary=>{
+    const h=ready();if(boundary==='exit'||boundary==='preset')h.run('enterCareDemo()');
+    h.reading('journal').forEach(node=>node.open=true);
+    if(boundary==='enter')h.run('enterCareDemo()');
+    if(boundary==='exit')h.run('exitCareDemo(false)');
+    if(boundary==='preset')h.run('setCareDemoPreset(500)');
+    if(boundary==='reset')h.element('#reset').onclick();
+    expect(h.reading('journal').every(node=>!node.open)).toBe(true);
+  });
+  it('정상 돌봄으로 save 객체가 교체되고 언어를 바꿔도 두 화면의 계획을 독립적으로 유지합니다',()=>{
+    const h=ready();h.reading('village')[0].open=true;h.reading('journal')[1].open=true;
+    h.run('globalThis.previousCareSave=save');h.element('#pip-feed').onclick();
+    expect(h.run('save===previousCareSave')).toBe(false);expect(h.stored()).toMatchObject({coins:190,pip:{growth:10,affection:4}});
+    expect(h.reading('village')[0].open).toBe(true);expect(h.reading('journal').map(node=>node.open)).toEqual([false,true,false]);
+    h.run("changeLanguage('ko')");expect(h.reading('journal').map(node=>node.open)).toEqual([false,true,false]);
+    h.flushCareReaction();expect(h.reading('village')[0].open).toBe(true);expect(h.reading('journal').map(node=>node.open)).toEqual([false,true,false]);
+  });
+  it('사라진 비버 항목과 비대상 details를 기억해 새 화면에 되살리지 않습니다',()=>{
+    const h=ready();h.reading('journal')[1].open=true;h.reading('journal')[2].open=true;
+    h.element('#journal-view').innerHTML+='<details id="unrelated-reading" open><summary>Other</summary></details>';
+    h.reading('journal')[1].open=true;h.reading('journal')[2].open=true;
+    h.run('save.completed=[1];renderViews()');expect(h.reading('journal')).toHaveLength(2);
+    expect(h.run("document.querySelector('#trail-journal-beaver-v1')")).toBeNull();
+    expect(h.run("document.querySelector('#unrelated-reading')")).toBeNull();
+    h.run('save.completed=Array.from({length:40},(_,i)=>i+1);renderViews()');
+    expect(h.reading('journal').map(node=>node.open)).toEqual([false,true,false]);
+  });
+});
 
 describe('직접 고르는 산책 도구의 실제 저장/UI 경계',()=>{
   const ready=(testing=false)=>{

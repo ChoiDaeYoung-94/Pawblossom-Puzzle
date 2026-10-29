@@ -1318,7 +1318,7 @@ function sharedGardenPlan(view:'village'|'journal'){
     const label=text(destination==='map'?'goalPlay':destination==='pip'?'goalCare':destination==='flowers'?'goalEdit':'goalSpace');
     return `<button type="button" class="text-button" id="${view}-goal-${goal.id}" aria-label="${name(goal)} · ${label}">${label}${icon('arrow',16)}</button>`;
   };
-  return `<section class="garden-plan" aria-labelledby="${view}-plan-title"><div class="garden-plan-heading"><h3 id="${view}-plan-title">${text('goalPlan')}</h3><span>${done} / ${goals.length}</span></div>${achievements.map(message=>`<p class="garden-plan-achievement">${message}</p>`).join('')}<progress aria-label="${text('goalPlan')}" value="${done}" max="${goals.length}"></progress>${next?`<div class="garden-plan-next"><small>${text('gardenNext')}</small><strong>${name(next)}</strong><p>${detail(next)}</p>${button(next)}</div>`:`<p>${text('goalAllDone')}</p>`}<details><summary>${text('goalAllPlans')}</summary><ol>${goals.map(goal=>`<li class="${goal.done?'done':''}"><span aria-hidden="true">${goal.done?'✓':'○'}</span><div><strong>${name(goal)}</strong>${goal.done?`<small>${text('goalDone')}</small>`:`<p>${detail(goal)}</p>${goal.id===next?.id?'':button(goal)}`}</div></li>`).join('')}</ol></details><p class="garden-plan-note">${text('goalNoAutoSpend')}</p></section>`;
+  return `<section class="garden-plan" aria-labelledby="${view}-plan-title"><div class="garden-plan-heading"><h3 id="${view}-plan-title">${text('goalPlan')}</h3><span>${done} / ${goals.length}</span></div>${achievements.map(message=>`<p class="garden-plan-achievement">${message}</p>`).join('')}<progress aria-label="${text('goalPlan')}" value="${done}" max="${goals.length}"></progress>${next?`<div class="garden-plan-next"><small>${text('gardenNext')}</small><strong>${name(next)}</strong><p>${detail(next)}</p>${button(next)}</div>`:`<p>${text('goalAllDone')}</p>`}<details id="${view}-garden-plans" data-retain-open><summary id="${view}-garden-plans-summary">${text('goalAllPlans')}</summary><ol>${goals.map(goal=>`<li class="${goal.done?'done':''}"><span aria-hidden="true">${goal.done?'✓':'○'}</span><div><strong>${name(goal)}</strong>${goal.done?`<small>${text('goalDone')}</small>`:`<p>${detail(goal)}</p>${goal.id===next?.id?'':button(goal)}`}</div></li>`).join('')}</ol></details><p class="garden-plan-note">${text('goalNoAutoSpend')}</p></section>`;
 }
 function gardenTendDisabled(){return pipLevel(save.pip??freshPip())<3||growing||selectedGardenArea==='flowers'&&save.garden===0;}
 function gardenVisitControls(){
@@ -1597,6 +1597,9 @@ function renderCampaignMapView(){
 }
 function renderViews(grew=false){
   if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);
+  const readingViews=['village','journal'].map(view=>$('#'+view+'-view'));
+  const reading=readingViews.flatMap(view=>view.dataset.readingGeneration===String(careGeneration)
+    ?Array.from(view.querySelectorAll<HTMLDetailsElement>('details[data-retain-open]'),detail=>({id:detail.id,open:detail.open})):[]);
   const focused=document.activeElement as HTMLElement|null,focusedId=focused?.id;
   const scroll=Array.from(document.querySelectorAll<HTMLElement>('.view'),view=>({view,top:view.scrollTop,left:view.scrollLeft}));
   if(route==='map'&&$('#map-view').dataset.motionActive==='true')mapScrollOffset=document.querySelector<HTMLElement>('#campaign-scroll')?.scrollTop??mapScrollOffset;
@@ -1624,6 +1627,12 @@ function renderViews(grew=false){
   $('#sfx-toggle').onclick=()=>{if(!settingsAction('sfx-toggle'))return;save.sfx=!save.sfx;audio.setSfxEnabled(save.sfx);persist();$('#sfx-toggle').classList.toggle('on',save.sfx);$('#sfx-toggle').setAttribute('aria-checked',String(save.sfx));};
   $<HTMLSelectElement>('#language').onchange=event=>{if(settingsAction('language'))changeLanguage((event.target as HTMLSelectElement).value==='ko'?'ko':'en');};
   $('#reset').onclick=()=>{if(!settingsAction('reset')||!confirm(text('resetConfirm')))return;const cleared=clearSave();updateSaveStatus();if(!cleared)return;clearCareReaction();careGeneration++;clearTimeout(growthTimer);growthTimer=undefined;growing=false;save=cleared;selectedChapter=1;audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');showTutorial();};
+  // 같은 돌봄 세대의 읽기 상태를 먼저 복원한 뒤 기존 초점·스크롤을 잇습니다.
+  for(const view of readingViews)view.dataset.readingGeneration=String(careGeneration);
+  for(const {id,open} of reading){
+    const detail=document.querySelector<HTMLDetailsElement>('#'+id);
+    if(detail?.matches('details[data-retain-open]'))detail.open=open;
+  }
   // DOM 교체 뒤에도 읽던 위치를 유지합니다. 심기 버튼이 비활성이면 갱신된 상태로 초점을 잇습니다.
   let fallbackFocus:HTMLElement|undefined;
   if(focusedId&&!focused?.isConnected){
