@@ -9,8 +9,8 @@ const copy=<T>(value:T):T=>JSON.parse(JSON.stringify(value)) as T;
 const same=(a:Position,b:Position)=>a.row===b.row&&a.col===b.col;
 const integerPosition=(at:Position)=>at&&Number.isInteger(at.row)&&Number.isInteger(at.col);
 function source(round:RoundCheckpoint,id:PuzzleToolId){
-  if(!puzzleToolIds.includes(id)||round.schema!==2||round.ruleVersion!==2||round.actionProfile!=='tools-v1')return;
-  const valid=validateCheckpoint(round,round.levelId);if(!valid||valid.toolsUsed!.length>=2||valid.toolsUsed!.includes(id)||id==='seeds'&&valid.toolsStarted)return;
+  if(!puzzleToolIds.includes(id)||round.schema!==2||round.ruleVersion!==2||round.actionProfile!=='tools-v2')return;
+  const valid=validateCheckpoint(round,round.levelId);if(!valid||valid.toolsUsed!.length>=2||valid.toolsUsed!.includes(id))return;
   const level=levels[valid.levelId-1];
   const engine=new BoardEngine(8,8,()=>{throw Error('도구 미리보기의 난수 사용');},valid,2,level.mask,level.crates);
   return {round:valid,level,engine};
@@ -20,14 +20,13 @@ export function validPuzzleToolTarget(round:RoundCheckpoint,id:PuzzleToolId,at:P
   try{const c=source(round,id);return Boolean(c&&ordinary(c.engine,at)&&(id!=='gloves'||other&&ordinary(c.engine,other)&&c.engine.legalMoves().some(move=>same(move.a,at)&&same(move.b,other)||same(move.b,at)&&same(move.a,other))));}catch{return false;}
 }
 
-/** 기본 범위만 읽습니다. 그 안의 특수와 이후 연쇄는 더 넓어질 수 있습니다. 난수0. */
+/** 생성 대상 한 칸 또는 교환할 두 칸만 읽습니다. 아직 특수를 발동하지 않습니다. 난수0. */
 export function puzzleToolArea(round:RoundCheckpoint,id:PuzzleToolId,at:Position,other?:Position):Position[] {
   try{
     const context=source(round,id);if(!context||!ordinary(context.engine,at))return [];
-    const {engine}=context,kind=engine.board[at.row][at.col]!.kind;
+    const {engine}=context;
     if(id==='gloves')return other&&ordinary(engine,other)&&Math.abs(at.row-other.row)+Math.abs(at.col-other.col)===1?[{...at},{...other}]:[{...at}];
-    if(id==='seeds')return [{...at}];
-    return engine.mask.flatMap((line,row)=>line.flatMap((active,col)=>active&&(id==='trowel'?Math.abs(at.row-row)<=1&&Math.abs(at.col-col)<=1:id==='broom'?row===at.row:engine.board[row][col]?.kind===kind)?[{row,col}]:[]));
+    return [{...at}];
   }catch{return [];}
 }
 
@@ -44,11 +43,6 @@ export function preparePuzzleTool(round:RoundCheckpoint,id:PuzzleToolId,at:Posit
     else{
       if(!('special' in definition))return;
       engine.board[at.row][at.col]!.special=definition.special;
-      if(id!=='seeds'){
-        result=engine.activate(at);if(!result.valid||!result.steps.length)return;
-        // 원래 일반 블록의 시각 상태를 보존하고 실제 효과 표시는 effects에 남깁니다.
-        result.steps[0].before[at.row][at.col]={...context.round.board[at.row][at.col]!};
-      }
     }
     if(result&&!result.valid||engine.findMatches().length||!engine.hasMoves())return;
     const after:BoardSnapshot={board:engine.board,leaves:engine.leaves,ruleVersion:2,...(engine.hasCrates?{crates:engine.crates}:{})};
@@ -64,7 +58,7 @@ export function puzzleToolOutcome(save:SaveData,plan:PuzzleToolPlan,testing=fals
   const free=testing||!save.puzzleTools.trialUsed.includes(id),cost=free?0:definition.coins;if(!testing&&save.coins<cost)return;
   const next=copy(save),level=levels[round.levelId-1],collected=round.collected.map((n,i)=>n+(result?.collected[i]??0)),score=round.score+(result?.score??0);
   const clearedLeaves=round.clearedLeaves+(result?.leavesCleared??0),clearedCrates=(round.clearedCrates??0)+(result?.cratesCleared??0);
-  const tools={used:[...round.toolsUsed!,id],started:true};
+  const tools:PuzzleToolRound={profile:'tools-v2',used:[...round.toolsUsed!,id],started:true};
   const won=level.goals.every(goal=>collected[goal.kind]>=goal.count)&&clearedLeaves>=(level.leaves?.length??0)&&clearedCrates>=(level.crates?.length??0);
   const firstReward=won&&!testing&&!next.completed.includes(level.id);
   const checkpoint:RoundCheckpoint={...copy(round),...cloneSnapshot(plan.after),toolsUsed:tools.used,toolsStarted:true,collected,score,clearedLeaves,...(level.crates?{clearedCrates}:{})};

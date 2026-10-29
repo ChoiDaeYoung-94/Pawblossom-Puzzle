@@ -174,7 +174,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     beginToolSelection(target:(at:Position)=>void){if(this.stopped||this.busy)return false;this.toolTarget=target;return true;}
     endToolSelection(){this.toolTarget=undefined;this.toolArea=[];}
     showToolArea(at:Position[]){this.toolArea=at;}
-    playPreparedTool(plan:puzzleToolActions.PuzzleToolPlan,complete:()=>void){if(this.stopped||this.busy)return false;this.hooks.onStart?.();this.applyPreparedShuffle(plan.after);this.busy=true;this.preparedComplete=complete;return true;}
+    playPreparedTool(plan:puzzleToolActions.PuzzleToolPlan,complete:()=>void){if(this.stopped||this.busy)return false;this.hooks.onStart?.();this.applyPreparedShuffle(plan.after);if(!plan.result){complete();return true;}this.busy=true;this.preparedComplete=complete;return true;}
     completePrepared(){if(!this.preparedComplete)return;const done=this.preparedComplete;this.preparedComplete=undefined;this.busy=false;done();}
   }
   class GameStub {
@@ -351,7 +351,7 @@ describe('직접 고르는 산책 도구의 실제 저장/UI 경계',()=>{
     const h=ready(),moves=h.run('moves');select(h);expect(h.run('save.puzzleTools.introduced')).toEqual(['trowel']);expect(h.run('save.puzzleTools.trialUsed')).toEqual([]);
     const writes=h.writes(),use=h.element('#tool-confirm').onclick;expect(h.element('#tool-confirm').disabled).toBe(false);use();const stored=h.stored();
     expect(h.writes()-writes).toBe(2);expect(stored.puzzleTools.trialUsed).toEqual(['trowel']);expect(stored.inProgress).toMatchObject({moves,toolsUsed:['trowel'],toolsStarted:true});expect(stored.coins).toBe(200);expect(h.run('moves')).toBe(moves);
-    h.run('scene.completePrepared()');use();expect(h.stored()).toEqual(stored);expect(h.writes()-writes).toBe(2);expect(h.run('moves')).toBe(moves);
+    expect(h.run('scene.busy')).toBe(false);use();h.run('scene.completePrepared()');expect(h.stored()).toEqual(stored);expect(h.writes()-writes).toBe(2);expect(h.run('moves')).toBe(moves);
     expect(h.element('#tool-shelf').innerHTML).toContain('data-tool="trowel" data-locked="false" data-used="true"');expect(h.element('#tool-shelf').innerHTML).toContain(t('en','toolUsedBadge'));
     h.run('startLevel(69)');expect(h.element('#tool-shelf').innerHTML).toContain('data-tool="trowel" data-locked="false" data-used="false"');if(h.run('toolDialog.open'))h.element('#tool-info-close').onclick();h.run("showToolInfo('trowel','tool-trowel')");expect(h.run('toolDialog.innerHTML')).toContain(t('en','toolCost').replace('{coins}','30'));
   });
@@ -364,7 +364,7 @@ describe('직접 고르는 산책 도구의 실제 저장/UI 경계',()=>{
     expect(h.run('toolMode')).toBeUndefined();use();expect(h.writes()).toBe(writes);expect(h.stored().puzzleTools.trialUsed).toEqual([]);
   });
   it('저장 실패는 무료기록/지갑/live보드/회차를 그대로 두고 재시도 뒤30코인만 쓴다',()=>{
-    const h=ready();h.run("save.puzzleTools={schema:1,introduced:['trowel'],trialUsed:['trowel']};checkpoint()");select(h);
+    const h=ready();h.run("save.puzzleTools={schema:2,introduced:['trowel'],trialUsed:['trowel']};checkpoint()");select(h);
     const memory=h.run('JSON.stringify({save,roundTools,score,collected,board:scene.snapshot(),moves})'),disk=h.disk(),use=h.element('#tool-confirm').onclick;h.setStorageFails(true);use();
     expect(h.disk()).toEqual(disk);expect(h.run('JSON.stringify({save,roundTools,score,collected,board:scene.snapshot(),moves})')).toBe(memory);
     h.setStorageFails(false);h.element('#save-retry').onclick();use();h.run('scene.completePrepared()');expect(h.stored().coins).toBe(170);expect(h.stored().inProgress.toolsUsed).toEqual(['trowel']);
@@ -376,16 +376,16 @@ describe('직접 고르는 산책 도구의 실제 저장/UI 경계',()=>{
   });
   it('원래 특수 대상은 확정할 수 없고 사용한 도구/두 종 제한도 다시 사용할 수 없다',()=>{
     const h=ready();h.run("scene.engine.board[0][0].special='row';checkpoint()");select(h);expect(h.element('#tool-confirm').disabled).toBe(true);const writes=h.writes();h.element('#tool-confirm').onclick();expect(h.writes()).toBe(writes);
-    h.element('#tool-cancel').onclick();h.run("roundTools={used:['trowel','broom'],started:true};checkpoint();showToolInfo('bell','tool-bell')");expect(h.run('toolDialog.innerHTML')).toContain(t('en','toolRoundLimit'));const before=h.disk();h.element('#tool-info-start').onclick();expect(h.disk()).toEqual(before);expect(h.run('toolMode')).toBeUndefined();
+    h.element('#tool-cancel').onclick();h.run("roundTools={profile:'tools-v2',used:['trowel','broom'],started:true};checkpoint();showToolInfo('bell','tool-bell')");expect(h.run('toolDialog.innerHTML')).toContain(t('en','toolRoundLimit'));const before=h.disk();h.element('#tool-info-start').onclick();expect(h.disk()).toEqual(before);expect(h.run('toolMode')).toBeUndefined();
   });
   it('시험판은 정상 해금/무료사용/재화/원본 판에 기록하지 않는다',()=>{
     const h=ready(true),before=h.disk(),writes=h.writes(),normal=h.run('JSON.stringify(save)');select(h);h.element('#tool-confirm').onclick();h.run('scene.completePrepared()');
     expect(h.disk()).toEqual(before);expect(h.writes()).toBe(writes);expect(h.run('JSON.stringify(save)')).toBe(normal);expect(h.run('roundTools.used')).toEqual(['trowel']);
   });
-  it('승리 확정은 기존 첫 보상과 소비만 저장하고 연출 완료/결과 재방문은 다시 쓰지 않는다',()=>{
-    const h=ready();h.run("roundTools.started=true;scene.engine.leaves=scene.engine.leaves.map(r=>r.map(()=>0));clearedLeaves=levels[5].leaves.length;for(const g of levels[5].goals)collected[g.kind]=g.count-(g===levels[5].goals[0]?1:0);checkpoint()");
-    h.run("showToolInfo('trowel','tool-trowel')");h.element('#tool-info-start').onclick();h.run('const p=scene.engine.board.flatMap((r,row)=>r.flatMap((t,col)=>t.kind===levels[5].goals[0].kind?[{row,col}]:[]))[0];scene.toolTarget(p)');
-    const before=h.stored(),writes=h.writes(),moves=h.run('moves');h.element('#tool-confirm').onclick();expect(h.stored().inProgress).toBeUndefined();expect(h.stored().coins).toBe(before.coins+40);expect(h.stored().stars).toBe(before.stars+1);expect(h.writes()-writes).toBe(2);
+  it('교환 도구의 승리는 첫 보상과 소비만 저장하고 연출 완료/결과 재방문은 다시 쓰지 않는다',()=>{
+    const h=ready();h.run('roundTools.started=true;scene.engine.leaves=scene.engine.leaves.map(r=>r.map(()=>0));clearedLeaves=levels[5].leaves.length;for(const g of levels[5].goals)collected[g.kind]=g.count-(g===levels[5].goals[0]?1:0);const goalKind=levels[5].goals[0].kind;scene.engine.board=scene.engine.board.map((line,r)=>line.map((t,c)=>({kind:(r+c*2)%6})));for(const p of [{row:0,col:0},{row:0,col:2},{row:1,col:1}])scene.engine.board[p.row][p.col]={kind:goalKind};scene.engine.board[0][1]={kind:(goalKind+1)%6};checkpoint()');
+    h.run("showToolInfo('gloves','tool-gloves')");h.element('#tool-info-start').onclick();h.run('scene.toolTarget({row:0,col:1});scene.toolTarget({row:1,col:1})');
+    const before=h.stored(),writes=h.writes(),moves=h.run('moves');expect(h.element('#tool-confirm').disabled).toBe(false);h.element('#tool-confirm').onclick();expect(h.stored().inProgress).toBeUndefined();expect(h.stored().coins).toBe(before.coins+40);expect(h.stored().stars).toBe(before.stars+1);expect(h.writes()-writes).toBe(2);
     h.run('scene.completePrepared()');expect(h.element('#result-dialog').open).toBe(true);expect(h.run('resultGardenPlan.id')).toBe('bed-1');expect(h.element('#result-garden-card').hidden).toBe(false);expect(h.run('moves')).toBe(moves);expect(h.writes()-writes).toBe(2);h.run("switchView('map');switchView('puzzle');finish(true)");expect(h.writes()-writes).toBe(2);
   });
   it('해금 소개는 저장된 새 판의 첫 퍼즐 진입에도 나오고 닫은 뒤 중복 표시/체험 소비가 없다',()=>{
@@ -2251,11 +2251,23 @@ describe('저장 상태·초기화 UI 보호',()=>{
 
 
 describe('도구 행동 프로필과 실제 저장 경계',()=>{
-  it('새 판은 tools-v1로 시작하고 설정/언어는 시작 전 자격을 소비하지 않으며 한 수 뒤 복원한다',()=>{
-    const h=mainHarness(),first=h.stored();expect(first.version).toBe(2);expect(first.inProgress).toMatchObject({schema:2,actionProfile:'tools-v1',toolsUsed:[],toolsStarted:false});
+  it('새 판은 tools-v2로 시작하고 설정/언어는 시작 전 자격을 소비하지 않으며 한 수 뒤 복원한다',()=>{
+    const h=mainHarness(),first=h.stored();expect(first.version).toBe(2);expect(first.inProgress).toMatchObject({schema:2,actionProfile:'tools-v2',toolsUsed:[],toolsStarted:false});
     h.run("switchView('settings');changeLanguage('ko');switchView('puzzle')");expect(h.stored().inProgress.toolsStarted).toBe(false);
     h.run('scene.hooks.onMove([0,0,0,0,0,0],0,1,0)');expect(h.stored().inProgress.toolsStarted).toBe(true);
     const next=mainHarness(false,false,false,false,h.stored());expect(next.run('moves')).toBe(first.inProgress.moves-1);expect(next.run('roundTools.started')).toBe(true);
+  });
+  it('옛 tools-v1 판은 언어·일반 이동·섞기·이어하기에서 프로필을 유지하고 새 판만 v2다',()=>{
+    const base=mainHarness().stored();base.inProgress.actionProfile='tools-v1';base.inProgress.toolsUsed=['trowel'];base.inProgress.toolsStarted=true;
+    base.highestLevel=69;base.puzzleTools={schema:1,introduced:['trowel'],trialUsed:['trowel']};
+    const h=mainHarness(false,false,true,false,base),board=h.run('JSON.stringify(scene.snapshot())');
+    expect(h.run('roundTools.profile')).toBe('tools-v1');h.run("showToolInfo('broom','tool-broom')");expect(h.run('toolDialog.innerHTML')).toContain(t('en','toolNewRound'));
+    h.element('#tool-info-start').onclick();expect(h.run('toolMode')).toBeUndefined();h.element('#tool-info-close').onclick();
+    expect(h.run('JSON.stringify(scene.snapshot())')).toBe(board);expect(h.stored().puzzleTools.introduced).toEqual(['trowel']);
+    h.run("changeLanguage('ko');scene.hooks.onMove([0,0,0,0,0,0],0,1,0)");h.element('#shuffle').onclick();expect(h.run('shuffles')).toBe(0);
+    expect(h.stored().inProgress.actionProfile).toBe('tools-v1');expect(h.stored().inProgress.toolsUsed).toEqual(['trowel']);
+    const next=mainHarness(false,false,true,false,h.stored());expect(next.run('roundTools.profile')).toBe('tools-v1');
+    next.run('startLevel(currentLevel)');expect(next.stored().inProgress.actionProfile).toBe('tools-v2');expect(next.stored().puzzleTools.trialUsed).toEqual(['trowel']);
   });
   it('이동0 섞기도 시작 행동이며 실패한 저장은 live판/자격/재화를 먼저 바꾸지 않는다',()=>{
     const h=mainHarness(),before=h.run('JSON.stringify({roundTools,board:scene.snapshot(),moves,coins:save.coins})'),stored=h.stored();h.setStorageFails(true);

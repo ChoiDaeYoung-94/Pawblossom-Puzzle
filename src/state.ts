@@ -3,9 +3,9 @@ import { LEVEL_COUNT, levels, type Level } from './levels';
 import { BoardEngine, type BoardSnapshot, type Cell, type Special } from './core';
 import { validatePip, type PipCare } from './pipCare';
 import { validateGardenDesign, type GardenDesign } from './gardenDesign';
-import {freshToolProgress,validateToolProgress,validateToolIds,type PuzzleToolProgress,type PuzzleToolId} from './puzzleTools';
+import {freshToolProgress,validateToolProgress,validateToolIds,type PuzzleToolProgress,type PuzzleToolId,type PuzzleToolProfile} from './puzzleTools';
 export interface RoundCheckpoint extends BoardSnapshot {
-  schema: 1|2; actionProfile?:'tools-v1'; toolsUsed?:PuzzleToolId[]; toolsStarted?:boolean; levelId: number; levelSignature: string; moves: number; score: number;
+  schema: 1|2; actionProfile?:PuzzleToolProfile; toolsUsed?:PuzzleToolId[]; toolsStarted?:boolean; levelId: number; levelSignature: string; moves: number; score: number;
   collected: number[]; shuffles: number; clearedLeaves: number;
   paidShuffleUsed?:boolean; continueUsed?:boolean;
   clearedCrates?:number;
@@ -30,7 +30,7 @@ const grid=(x:unknown):x is unknown[][]=>Array.isArray(x)&&x.length===8&&x.every
 export function validateCheckpoint(value:unknown,highestLevel:number):RoundCheckpoint|undefined {
   if(!record(value)||(value.schema!==1&&value.schema!==2)||!integer(value.levelId,LEVEL_COUNT)||value.levelId<1||value.levelId>highestLevel)return;
   const toolsUsed=value.schema===2?validateToolIds(value.toolsUsed,2):undefined;
-  if(value.schema===2?value.actionProfile!=='tools-v1'||!toolsUsed||typeof value.toolsStarted!=='boolean'||toolsUsed.length>0&&!value.toolsStarted:value.actionProfile!==undefined||value.toolsUsed!==undefined||value.toolsStarted!==undefined)return;
+  if(value.schema===2?!['tools-v1','tools-v2'].includes(value.actionProfile as string)||!toolsUsed||typeof value.toolsStarted!=='boolean'||toolsUsed.length>0&&!value.toolsStarted:value.actionProfile!==undefined||value.toolsUsed!==undefined||value.toolsStarted!==undefined)return;
   const ruleVersion=value.ruleVersion===undefined?1:value.ruleVersion;
   if(ruleVersion!==1&&ruleVersion!==2)return;
   if(value.schema===2&&ruleVersion!==2)return;
@@ -70,7 +70,7 @@ export function validateCheckpoint(value:unknown,highestLevel:number):RoundCheck
   // 초기 생성 없이 조회하므로 실제 게임의 보충 난수를 소비하지 않습니다.
   const engine=new BoardEngine(8,8,()=>{throw Error('저장 검증 중 난수 사용');},{board,leaves,ruleVersion,...(crates?{crates}:{})},undefined,level.mask,level.crates);
   if(engine.findMatches().length||!engine.hasMoves())return;
-  return {schema:value.schema,...(value.schema===2?{actionProfile:'tools-v1' as const,toolsUsed,toolsStarted:value.toolsStarted as boolean}:{}),...(value.ruleVersion===undefined?{}:{ruleVersion}),levelId:level.id,levelSignature:levelSignature(level),board,leaves,moves:value.moves,score:value.score,
+  return {schema:value.schema,...(value.schema===2?{actionProfile:value.actionProfile as PuzzleToolProfile,toolsUsed,toolsStarted:value.toolsStarted as boolean}:{}),...(value.ruleVersion===undefined?{}:{ruleVersion}),levelId:level.id,levelSignature:levelSignature(level),board,leaves,moves:value.moves,score:value.score,
     collected:value.collected.slice() as number[],shuffles:value.shuffles,clearedLeaves:total-remaining,...(crates?{crates,clearedCrates:crateTotal-remainingCrates}:{}),
     ...(value.paidShuffleUsed===undefined?{}:{paidShuffleUsed:value.paidShuffleUsed as boolean}),...(value.continueUsed===undefined?{}:{continueUsed:value.continueUsed as boolean})};
 }
@@ -112,8 +112,8 @@ function decode(raw:string|null,backup=false):Decoded {
     if(record(value)&&value.version!==undefined&&value.version!==1&&value.version!==2)return {kind:'unsupported'};
     if(record(value)&&value.version===2){
       const progress=value.puzzleTools,round=value.inProgress;
-      if(record(progress)&&progress.schema!==undefined&&progress.schema!==1)return {kind:'unsupported'};
-      if(record(round)&&(round.schema!==undefined&&round.schema!==1&&round.schema!==2||round.actionProfile!==undefined&&round.actionProfile!=='tools-v1'||typeof round.ruleVersion==='number'&&round.ruleVersion>2))return {kind:'unsupported'};
+      if(record(progress)&&progress.schema!==undefined&&progress.schema!==1&&progress.schema!==2)return {kind:'unsupported'};
+      if(record(round)&&(round.schema!==undefined&&round.schema!==1&&round.schema!==2||round.actionProfile!==undefined&&!['tools-v1','tools-v2'].includes(round.actionProfile as string)||typeof round.ruleVersion==='number'&&round.ruleVersion>2))return {kind:'unsupported'};
     }
     const data=normalizeSave(value,backup);return data?{kind:'valid',data}:{kind:'corrupt'};
   }catch{return {kind:'corrupt'};}

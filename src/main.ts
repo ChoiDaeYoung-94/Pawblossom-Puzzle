@@ -531,7 +531,7 @@ function updateGoals(){
   renderPuzzleTools();
 }
 function roundCheckpoint(snapshot:BoardSnapshot,nextMoves=moves,free=shuffles,paid=paidShuffleUsed,continued=continueUsed,tools=roundTools):RoundCheckpoint {
-  return {...cloneSnapshot(snapshot),...(tools?{schema:2 as const,actionProfile:'tools-v1' as const,toolsUsed:tools.used.slice(),toolsStarted:tools.started}:{schema:1 as const}),levelId:currentLevel,levelSignature:levelSignature(levels[currentLevel-1]),moves:nextMoves,score,
+  return {...cloneSnapshot(snapshot),...(tools?{schema:2 as const,actionProfile:tools.profile,toolsUsed:tools.used.slice(),toolsStarted:tools.started}:{schema:1 as const}),levelId:currentLevel,levelSignature:levelSignature(levels[currentLevel-1]),moves:nextMoves,score,
     collected:collected.slice(),shuffles:free,clearedLeaves,...(levels[currentLevel-1].crates?{clearedCrates}:{}),...(paid?{paidShuffleUsed:true}:{}),...(continued?{continueUsed:true}:{})};
 }
 function shuffleRound(button:HTMLButtonElement,expectedRound:number,expectedScene:BoardScene,expectedSave:SaveData):boolean {
@@ -549,7 +549,7 @@ function shuffleRound(button:HTMLButtonElement,expectedRound:number,expectedScen
     if(!candidate){notice('shuffleUnavailable');return false;}
     const next=JSON.parse(JSON.stringify(save)) as SaveData;
     const paid=paidShuffleUsed||!free;
-    const nextTools=roundTools?{used:roundTools.used.slice(),started:true}:undefined;
+    const nextTools=roundTools?{profile:roundTools.profile,used:roundTools.used.slice(),started:true}:undefined;
     if(!testingLevel){next.coins-=free?0:20;next.inProgress=roundCheckpoint(candidate,moves,0,paid,continueUsed,nextTools);
       if(!saveData(next)){updateSaveStatus();notice('careSaveBlocked');return false;}}
     // 후보 생성·저장·적용 사이에는 await가 없으며 현재 Scene/RNG를 재생성하지 않습니다.
@@ -573,8 +573,8 @@ function renderPuzzleTools(){
   $('.puzzle-tools-bar').dataset.selecting=String(Boolean(toolMode));$('#tool-target-controls').hidden=!toolMode;
   if(toolMode){
     const context=toolMode,ready=Boolean(context.at&&validPuzzleToolTarget(context.checkpoint,context.id,context.at,context.other)),cost=toolStatus(save,context.checkpoint,context.id,testingLevel).cost;
-    $('#tool-choice-status').textContent=toolName(save.language,context.id)+' · '+(ready?(context.other?text('toolPairChosen'):text('toolChosen').replace('{row}',String(context.at!.row+1)).replace('{col}',String(context.at!.col+1))).replace('{cost}',cost):text(context.id==='gloves'?'toolChooseTwo':'toolChooseOne'));
-    const confirm=$<HTMLButtonElement>('#tool-confirm');confirm.textContent=text('toolConfirm');confirm.disabled=!ready;confirm.onclick=()=>{confirmTool(context);};
+    $('#tool-choice-status').textContent=toolName(save.language,context.id)+' · '+(ready?(context.other?text('toolPairChosen'):text('toolCreateChosen').replace('{row}',String(context.at!.row+1)).replace('{col}',String(context.at!.col+1))).replace('{cost}',cost):text(context.id==='gloves'?'toolChooseTwo':'toolChooseOne'));
+    const confirm=$<HTMLButtonElement>('#tool-confirm');confirm.textContent=text(context.id==='gloves'?'toolConfirm':'toolCreateConfirm');confirm.disabled=!ready;confirm.onclick=()=>{confirmTool(context);};
     const cancel=$<HTMLButtonElement>('#tool-cancel');cancel.textContent=text('toolCancel');cancel.onclick=()=>{if(toolMode===context)closeToolMode();};
   }
 }
@@ -594,7 +594,7 @@ function renderToolInfo(){
   };
 }
 function rememberToolIntroduction(context:ToolContext&{id?:PuzzleToolId}){
-  if(!sameToolContext(context))return false;
+  if(!sameToolContext(context)||roundTools?.profile!=='tools-v2')return false;
   const id=context.id;if(!id||testingLevel||save.highestLevel<puzzleTool(id).unlock||save.puzzleTools.introduced.includes(id))return true;
   if(careStorageBlocked()){notice('careSaveBlocked');return false;}
   const next=JSON.parse(JSON.stringify(save)) as SaveData;next.puzzleTools.introduced.push(id);
@@ -607,7 +607,7 @@ function closeToolInfo(focus=true,remember=false){
 }
 function focusToolOpener(id:string){const button=document.getElementById(id);(button?.getClientRects?.().length?button:$('#tool-open')).focus({preventScroll:true});}
 function offerToolIntroduction(){
-  if(toolMode||toolInfoContext||!roundTools||roundTools.started||roundTools.used.length||!toolEnvironment()||otherModal())return false;
+  if(toolMode||toolInfoContext||roundTools?.profile!=='tools-v2'||roundTools.started||roundTools.used.length||!toolEnvironment()||otherModal())return false;
   const next=puzzleToolCatalog.find(tool=>tool.unlock===currentLevel&&!save.puzzleTools.introduced.includes(tool.id));return next?showToolInfo(next.id,'tool-'+next.id):false;
 }
 function beginToolMode(context:NonNullable<typeof toolInfoContext>){
@@ -650,7 +650,7 @@ function confirmTool(context:NonNullable<typeof toolMode>){
       renderPuzzleTools();
     };
     const played=scene.playPreparedTool(plan,complete);
-    score=outcome.score;collected=outcome.collected.slice();clearedLeaves=outcome.clearedLeaves;clearedCrates=outcome.clearedCrates;roundTools={used:outcome.tools.used.slice(),started:outcome.tools.started};
+    score=outcome.score;collected=outcome.collected.slice();clearedLeaves=outcome.clearedLeaves;clearedCrates=outcome.clearedCrates;roundTools={profile:outcome.tools.profile,used:outcome.tools.used.slice(),started:outcome.tools.started};
     if(outcome.firstReward){selectedChapter=chapterForLevel(save.highestLevel).id;if(previousMapLevel===currentLevel&&save.highestLevel===currentLevel+1)mapAdvance={from:currentLevel,to:currentLevel+1,owner:save};}
     updateWallet();updateGoals();renderViews();updateSaveStatus();updateBoardAccess();
     if(!played){scene.applyPreparedShuffle(plan.after);complete();}return true;
@@ -693,7 +693,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   pickerReturnToResult=false;
   $<HTMLDialogElement>('#result-dialog').close();
   currentLevel=id;moves=levels[id-1].moves;score=0;collected=Array(6).fill(0);shuffles=1;clearedLeaves=0;clearedCrates=0;
-  roundTools=restored?(restored.schema===2?{used:restored.toolsUsed!.slice(),started:restored.toolsStarted!}:undefined):{used:[],started:false};
+  roundTools=restored?(restored.schema===2?{profile:restored.actionProfile!,used:restored.toolsUsed!.slice(),started:restored.toolsStarted!}:undefined):{profile:'tools-v2',used:[],started:false};
   if(restored&&!testingLevel){moves=restored.moves;score=restored.score;collected=restored.collected.slice();shuffles=restored.shuffles;clearedLeaves=restored.clearedLeaves;clearedCrates=restored.clearedCrates??0;continueUsed=restored.continueUsed===true;paidShuffleUsed=restored.paidShuffleUsed===true;}
   scene?.stopPlaying();
   const activeScene:BoardScene=scene=new BoardScene({audio,getHintGoals:()=>{
