@@ -102,6 +102,7 @@ class ElementStub {
 function mainHarness(storageFails = false, firstUse = false, testTools = false, native = false, initial?:unknown, autoFrame=true, adsBridge?:TestAdsBridge,billingBridge?:TestBillingBridge,bootMap=false) {
   const elements = new Map<string, ElementStub>();
   const readingNodes=new Map<string,ElementStub[]>(),readingIds=new Set<string>();
+  const memoryTitles=new Map<string,ElementStub[]>();
   const rectangles = new Map<string, ReturnType<ElementStub['getBoundingClientRect']>>();
   const timers = new Map<number, { callback: () => void; ms: number }>();
   let timerId = 0, writes = 0;
@@ -123,6 +124,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   if(initial!==undefined)stored=JSON.stringify(initial);
   const storageValues=new Map<string,string>(stored==='null'?[]:[['pawblossom.save.v1',stored]]);
   const element = (selector: string): ElementStub => {
+    if(/^#trail-memory-\d+-title$/.test(selector)&&!elements.has(selector))throw Error('Memory title was not rendered: '+selector);
     if (!elements.has(selector)) {
       elements.set(selector, new ElementStub(selector));
       elements.get(selector)!.getBoundingClientRect=()=>rectangles.get(selector)??{left:0,top:0,right:180,bottom:180};
@@ -137,7 +139,12 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
             previous.isConnected=false;if(previous.summary)previous.summary.isConnected=false;
             for(const node of [previous,previous.summary])if(node&&readingIds.has('#'+node.id))elements.delete('#'+node.id);
           }
+          for(const previous of memoryTitles.get(view)??[]){previous.isConnected=false;elements.delete('#'+previous.id);}
           markup=value;
+          const titles=Array.from(value.matchAll(/<strong\b[^>]*\bid="(trail-memory-\d+-title)"[^>]*>/g),match=>{
+            const node=new ElementStub('#'+match[1]);readingIds.add('#'+node.id);elements.set('#'+node.id,node);return node;
+          });
+          memoryTitles.set(view,titles);
           const details=Array.from(value.matchAll(/<details\b([^>]*)>([\s\S]*?)<\/details>/g),(match,index)=>{
             const id=match[1].match(/\bid="([^"]+)"/)?.[1],summaryId=match[2].match(/<summary\b[^>]*\bid="([^"]+)"/)?.[1];
             const node=new ElementStub('#'+(id??'harness-detail-'+view+'-'+index));
@@ -252,8 +259,8 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
     document: {
       body:{append(){}},
       createElement: () => {const created=new ElementStub('button');created.hidden=false;return created;},
-      querySelector:(selector:string)=>selector==='dialog[open]'?null:readingIds.has(selector)?elements.get(selector)??null:element(selector),
-      getElementById:(id:string)=>readingIds.has('#'+id)?elements.get('#'+id)??null:element('#'+id),
+      querySelector:(selector:string)=>selector==='dialog[open]'?null:readingIds.has(selector)||/^#trail-memory-\d+-title$/.test(selector)?elements.get(selector)??null:element(selector),
+      getElementById:(id:string)=>readingIds.has('#'+id)||/^trail-memory-\d+-title$/.test(id)?elements.get('#'+id)??null:element('#'+id),
       querySelectorAll: (selector: string) => selector === '.bottom-nav button[data-route]' || selector === '[data-route]'
         ? [...(selector==='[data-route]'?[element('#app')]:[]),...['map','village','journal'].map(route=>{const button=element('#nav-'+route);button.dataset.route=route;return button;})] : selector === '[data-test-level]'
         ? Array.from({length:LEVEL_COUNT},(_,i)=>{const button=element(`#test-stage-${i+1}`);button.dataset.testLevel=String(i+1);return button;}) : selector === '[data-chapter]' || selector === '[data-test-chapter]'
@@ -556,6 +563,12 @@ describe('새 산책 추억에서 핍의 해당 장면으로 이어가기',()=>{
     const h=memoryRound();h.run('finish(true)');let focus=0;h.element('#result-next').focus=()=>focus++;
     h.run("document.activeElement=document.querySelector('#result-memory-open');save=JSON.parse(JSON.stringify(save));updateResultMemoryCopy()");
     expect(h.element('#result-memory-link').hidden).toBe(true);expect(focus).toBe(1);
+  });
+  it('실제 마크업에서 장면 제목이 사라지면 조회는 null이고 결과창을 닫지 않는다',()=>{
+    const h=memoryRound();h.run('finish(true)');const oldTitle=h.element('#trail-memory-6-title'),click=h.element('#result-memory-open').onclick;
+    h.run(`document.querySelector('#journal-view').innerHTML=document.querySelector('#journal-view').innerHTML.replace('id="trail-memory-6-title"','')`);
+    expect(oldTitle.isConnected).toBe(false);expect(h.run("document.querySelector('#trail-memory-6-title')")).toBeNull();
+    const disk=h.disk(),writes=h.writes();click();expect(h.run('route')).toBe('puzzle');expect(h.element('#result-dialog').open).toBe(true);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
   });
   const lastGloveMatch=()=>{
     const h=memoryRound(36);
