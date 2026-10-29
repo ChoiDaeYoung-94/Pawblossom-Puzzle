@@ -130,7 +130,7 @@ let pickerReturnToResult=false;
 let selectedChapter=chapterForLevel(save.highestLevel).id;
 let selectedTestChapter=chapterForLevel(currentLevel).id;
 let nativeActive=!Capacitor.isNativePlatform();
-let nativeRevision=0;
+let nativeRevision=0,nativeStateRequest=0;
 type StagePreview={id:number;intent:'map'|'restart';round:number;scene:BoardScene;testing:boolean;route:string;opener:HTMLElement;scroll:{view:HTMLElement;top:number;left:number}[]};
 let stagePreview:StagePreview|undefined;
 let audioActive:boolean|undefined;
@@ -1728,16 +1728,20 @@ boardFocus.addEventListener('keydown',event=>{
 window.addEventListener('blur',()=>{if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);boardFocus.dataset.keyboard='false';scene?.cancelInput();practiceInputs?.cancel();boardFeedback.cancel();});
 window.addEventListener('resize',()=>{practiceInputs?.cancel();boardFeedback.cancel();});
 window.addEventListener('scroll',()=>boardFeedback.cancel(),{capture:true,passive:true});
-document.addEventListener('visibilitychange',()=>{syncActivity();if(testAds){renderAdDialog();if(!document.hidden)void testAds.refresh();}if(testBilling){renderBillingDialog();if(!document.hidden)void testBilling.refresh();}});
-window.addEventListener('pageshow',()=>syncActivity());
+function refreshNativeState(){
+  if(!Capacitor.isNativePlatform()||document.hidden)return;
+  const revision=nativeRevision,request=++nativeStateRequest;
+  void App.getState().then(state=>{
+    // 실제 네이티브 확인만 적용하고, 늦은 조회는 최신 요청/이벤트를 덮어쓰지 않습니다.
+    if(revision!==nativeRevision||request!==nativeStateRequest)return;
+    nativeActive=state.isActive;syncActivity();
+  }).catch(()=>{ /* 조회 실패만으로 전경을 가정하거나 다시 재개하지 않습니다. */ });
+}
+document.addEventListener('visibilitychange',()=>{syncActivity();if(!document.hidden)refreshNativeState();if(testAds){renderAdDialog();if(!document.hidden)void testAds.refresh();}if(testBilling){renderBillingDialog();if(!document.hidden)void testBilling.refresh();}});
+window.addEventListener('pageshow',()=>{syncActivity();refreshNativeState();});
 window.addEventListener('pagehide',()=>{resultWorldScenery?.dispose();resultWorldScenery=undefined;$('#result-dialog').dataset.worldActive='false';if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);boardFeedback.cancel();void testAds?.dispose();void testBilling?.dispose();});
 if(Capacitor.isNativePlatform()){
-  void App.addListener('appStateChange',({isActive})=>{nativeRevision++;nativeActive=isActive;syncActivity();if(testAds){renderAdDialog();if(isActive)void testAds.refresh();}if(testBilling){renderBillingDialog();if(isActive)void testBilling.refresh();}}).then(async()=>{
-    const revision=nativeRevision;
-    const state=await App.getState();
-    // 늦게 반환된 초기 상태가 이후의 복귀 이벤트를 덮어쓰지 않도록 합니다.
-    if(revision===nativeRevision){nativeActive=state.isActive;syncActivity();}
-  }).catch(()=>{ /* 네이티브 상태를 확인할 수 없으면 비활성 상태를 유지합니다. */ });
+  void App.addListener('appStateChange',({isActive})=>{nativeRevision++;nativeActive=isActive;syncActivity();if(testAds){renderAdDialog();if(isActive)void testAds.refresh();}if(testBilling){renderBillingDialog();if(isActive)void testBilling.refresh();}}).then(refreshNativeState,refreshNativeState);
   void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if(billingModal())closeBillingDialog();else if(testBilling?.pausesGame)return;else if(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open){void closeAdDialog();}else if(testAds?.pausesGame)return;else if(toolDialog.open)closeToolInfo(true,true);else if(toolMode)closeToolMode();else if(lookPreview)closeLookPreview();else if(spacePreview)closeSpacePreview();else if(resourceHelp)closeResourceHelp();else if(stagePreview)closeStagePreview();else if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('map');}else if(route==='settings')switchView(settingsReturnRoute);else if(route!=='map')switchView('map');else void App.minimizeApp();});
 }
 if(androidAdEntry)$<HTMLDialogElement>('#test-ad-dialog').addEventListener('cancel',event=>{event.preventDefault();void closeAdDialog();});

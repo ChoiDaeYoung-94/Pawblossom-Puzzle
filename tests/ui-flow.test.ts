@@ -2047,6 +2047,41 @@ describe('첫 활성 배경음과 현재 언어 선택',()=>{
 });
 
 describe('문서·Android·모달 복귀',()=>{
+  async function queriedNative(){
+    const app=mainHarness(false,false,false,true),requests:{resolve:(state:{isActive:boolean})=>void;reject:(error:Error)=>void}[]=[];
+    const bridge=app.run('App') as {getState:()=>Promise<{isActive:boolean}>};
+    bridge.getState=()=>new Promise((resolve,reject)=>requests.push({resolve,reject}));
+    await Promise.resolve();
+    return {app,requests,settle:()=>new Promise(resolve=>setTimeout(resolve,0))};
+  }
+  it('초기조회 실패 뒤 표시복귀도 확인 전에는 멈추고 새 네이티브 조회가 성공해야 이어갑니다',async()=>{
+    const {app,requests,settle}=await queriedNative();expect(requests).toHaveLength(1);
+    requests[0].reject(new Error('initial bridge failure'));await settle();
+    const state=app.run('JSON.stringify({round,currentLevel,moves,score,save,board:scene.engine.board})'),disk=app.disk(),writes=app.writes();
+    app.run('document.hidden=true');app.documentEvents.visibilitychange();expect(requests).toHaveLength(1);
+    app.run('document.hidden=false');app.documentEvents.visibilitychange();expect(requests).toHaveLength(2);
+    expect(app.run('nativeActive')).toBe(false);expect(app.run('game.paused')).toBe(true);expect(app.run('audio.suspended')).toBe(true);
+    requests[1].resolve({isActive:true});await settle();expect(app.run('nativeActive')).toBe(true);expect(app.run('game.paused')).toBe(false);expect(app.run('audio.suspended')).toBe(false);
+    expect(app.run('JSON.stringify({round,currentLevel,moves,score,save,board:scene.engine.board})')).toBe(state);expect(app.disk()).toEqual(disk);expect(app.writes()).toBe(writes);
+  });
+  it('pageshow 재조회 실패는 전경을 가정하지 않고 다음 표시 때 다시 확인합니다',async()=>{
+    const {app,requests,settle}=await queriedNative();requests[0].reject(new Error('bridge failure'));await settle();
+    app.windowEvents.pageshow();requests[1].reject(new Error('still unavailable'));await settle();expect(app.run('nativeActive')).toBe(false);expect(app.run('game.paused')).toBe(true);
+    app.windowEvents.pageshow();requests[2].resolve({isActive:true});await settle();expect(app.run('game.paused')).toBe(false);
+  });
+  it('역순조회 응답은 최신 비활성 확인을 오래된 전경 상태로 바꾸지 않습니다',async()=>{
+    const {app,requests,settle}=await queriedNative();app.windowEvents.pageshow();expect(requests).toHaveLength(2);
+    requests[1].resolve({isActive:false});await settle();requests[0].resolve({isActive:true});await settle();expect(app.run('nativeActive')).toBe(false);expect(app.run('game.paused')).toBe(true);
+  });
+  it('늦은 표시조회 성공은 이후 네이티브 비활성 이벤트를 덮어쓰지 않습니다',async()=>{
+    const {app,requests,settle}=await queriedNative();requests[0].resolve({isActive:true});await settle();app.windowEvents.pageshow();
+    app.nativeEvents.appStateChange({isActive:false});requests[1].resolve({isActive:true});await settle();expect(app.run('nativeActive')).toBe(false);expect(app.run('game.paused')).toBe(true);expect(app.run('audio.suspended')).toBe(true);
+  });
+  it('상태 재조회 성공 뒤에도 숨김 문서와 열린 안내창은 보드 재개를 막습니다',async()=>{
+    const {app,requests,settle}=await queriedNative();app.run('showTutorial();document.hidden=true');requests[0].resolve({isActive:true});await settle();expect(app.run('game.paused')).toBe(true);expect(app.run('audio.suspended')).toBe(true);
+    app.run('document.hidden=false');app.documentEvents.visibilitychange();requests[1].resolve({isActive:true});await settle();expect(app.run('game.paused')).toBe(true);
+    app.run('closeTutorial()');expect(app.run('game.paused')).toBe(false);
+  });
   it('문서 표시가 먼저 돌아와도 Android 비활성이면 보드와 소리를 재개하지 않습니다',async()=>{
     const app=mainHarness(false,false,true,true);
     await Promise.resolve();app.resolveNativeState({isActive:true});await new Promise(resolve=>setTimeout(resolve,0));
