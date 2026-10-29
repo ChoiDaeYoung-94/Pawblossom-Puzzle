@@ -1,7 +1,8 @@
 import {t,type Language,type TextKey} from './i18n';
+import {LEVEL_COUNT} from './levels';
 
-type TrailBeat={level:number;title:TextKey;problem:TextKey;task:TextKey;after:TextKey};
-type TrailEpisode={id:'wolf-v1'|'beaver-v1';counter:'leaves'|'crates';journalTitle:TextKey;journalFrom:number;images:{blocking:string;relieved:string};beats:readonly TrailBeat[]};
+type TrailBeat=Readonly<{level:number;title:TextKey;problem:TextKey;task:TextKey;after:TextKey}>;
+type TrailEpisode=Readonly<{id:'wolf-v1'|'beaver-v1';counter:'leaves'|'crates';journalTitle:TextKey;journalFrom:number;images:Readonly<{blocking:string;relieved:string}>;beats:readonly TrailBeat[]}>;
 export const wolfImages={blocking:'/assets/trail-episode-v1/wolf-blocking-v1.webp',relieved:'/assets/trail-episode-v1/wolf-relieved-v1.webp'} as const;
 export const beaverImages={blocking:'/assets/trail-episode-v2/beaver-blocking-v1.webp',relieved:'/assets/trail-episode-v2/beaver-relieved-v1.webp'} as const;
 export const trailEpisodes:readonly TrailEpisode[]=[
@@ -42,13 +43,13 @@ export function trailStoryCard(language:Language,level:number,phase:'preview'|'w
 
 /** 실제 완료에서만 추억을 읽습니다. 돌봄 체험·시험판은 수집을 만들지 않습니다. */
 export function trailJournal(language:Language,completed:readonly number[]){
-  return trailEpisodes.filter(episode=>episode.journalFrom===1||completed.some(level=>Number.isInteger(level)&&level>=episode.journalFrom-1&&level<=500)).map(episode=>{
+  return trailEpisodes.filter(episode=>episode.journalFrom===1||completed.some(level=>Number.isInteger(level)&&level>=episode.journalFrom-1&&level<=LEVEL_COUNT)).map(episode=>{
     const beats=episode.beats,owned=beats.filter(beat=>completed.includes(beat.level));
     return `<details class="trail-journal" data-trail-episode="${episode.id}"><summary><img src="${episode.images[owned.length===beats.length?'relieved':'blocking']}" width="54" height="54" alt="" decoding="async"/><span><small>${t(language,'trailJournalLabel')}</small><strong>${t(language,episode.journalTitle)}</strong></span><span class="trail-memory-count">${owned.length}/${beats.length}</span></summary><p>${t(language,'trailJournalNote')}</p><ol>${beats.map(beat=>{const done=completed.includes(beat.level);return `<li data-memory-owned="${done}"><span class="trail-memory-stage">${beat.level}</span><div><strong>${t(language,beat.title)}</strong><p>${done?t(language,beat.after):t(language,'trailMemoryAt').replace('{level}',String(beat.level))}</p></div></li>`;}).join('')}</ol></details>`;
   }).join('');
 }
 
-/** HUD는 확정된 낙엽 집계만 사용하며 중간 연출에서 진행을 앞당기지 않습니다. */
+/** HUD는 확정된 낙엽/상자 집계만 사용하며 중간 연출에서 진행을 앞당기지 않습니다. */
 export function updateTrailEncounter(host:HTMLElement,language:Language,level:number,cleared:number,total:number,crates?:{cleared:number;total:number}){
   const beat=trailBeat(level);
   if(beat?.episode.counter==='crates'){cleared=crates?.cleared??0;total=crates?.total??0;}

@@ -39,9 +39,9 @@
   ],
   "outputs": [],
   "qualityNotes": [
-    "Both originals visually inspected; distinct worried and relieved faces, consistent identity/pose and transparent output.",
-    "Source originals copied byte-for-byte; no local image conversion or build during Tamer shared SDK lease.",
-    "Standard384px export/tail-mask calibration/small-screen and reduced-motion QA remain pending; not commercial-art or Android approval."
+    "두 원본의 걱정/안도 표정과 같은 캐릭터·몸 포즈를 육안으로 확인했습니다. transparent_background=true이며 실제 픽셀 alpha/표준 내보내기 검사는 후속입니다.",
+    "원본을 바이트 그대로 복사했습니다. Tamer SDK 사용 중 로컬 이미지 변환·Node/브라우저·빌드는 실행하지 않았습니다.",
+    "384px 표준 출력·꼬리 마스크 경계/작은 화면·모션 감소 검수는 미완료입니다. 상용 미술/Android 승인과 구분합니다."
   ],
-  "scope": "36/38/40 narrative presentation; crates counter from actual level; preserve wolf4/6/10 and per-episode3-moment ownership from real completed; no new save/reward/engine/RNG changes"
+  "scope": "36/38/40 이야기 표시와 실제 상자 집계 연결입니다. 늑대4/6/10과 에피소드별3추억·실제 완료 소유를 보존하며 새 저장/보상·엔진/RNG는 바꾸지 않습니다."
 }

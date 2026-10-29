@@ -431,6 +431,25 @@ describe('첫 보상에서 새 정원 작업으로 이어가기',()=>{
 });
 
 describe('숲길 에피소드의 실제 UI 연결',()=>{
+  it('비버는 상자만 끝나도 안도하지만 블록 목표 전에는 승리나 정상 추억을 만들지 않습니다',()=>{
+    const h=mainHarness(false,false,true);h.run("startLevel(36,true);switchView('puzzle')");const disk=h.disk(),normal=h.run('JSON.stringify(save)');
+    expect(h.element('#trail-encounter').dataset.trailEpisode).toBe('beaver-v1');expect(h.element('#trail-encounter').dataset.resolved).toBe('false');
+    h.run('scene.hooks.onMove([0,0,0,0,0,0],100,1,0,4)');expect(h.element('#trail-encounter').dataset.resolved).toBe('true');expect(h.run('roundEnded')).toBe(false);expect(h.element('#result-dialog').open).toBe(false);
+    h.run('scene.hooks.onMove([0,0,0,24,0,22],100,1,0,0)');h.flushResults();expect(h.element('#result-dialog').innerHTML).toContain(t('en','trailBeaverFirstAfter'));expect(h.element('#result-dialog').innerHTML).toContain(t('en','trailPractice'));
+    expect(h.disk()).toEqual(disk);expect(h.run('JSON.stringify(save)')).toBe(normal);
+    h.run("startLevel(38,true);switchView('puzzle');document.hidden=true;syncActivity()");expect(h.element('#trail-encounter').dataset.active).toBe('false');h.run("document.hidden=false;switchView('map')");expect(h.element('#trail-encounter').dataset.active).toBe('false');
+  });
+  it('40번 정상 첫 완료는 기존 보상과 엽서만 한 번 주고 두 동물의 추억을 별도로 완성합니다',()=>{
+    const initial={version:2,puzzleTools:{schema:2,introduced:['trowel','gloves','broom'],trialUsed:[]},language:'ko',highestLevel:40,completed:Array.from({length:39},(_,i)=>i+1),stars:39,coins:1560,garden:0,music:false,sfx:false,tutorialSeen:true};
+    const h=mainHarness(false,false,false,false,initial);h.run('scene.hooks.onMove([0,0,0,28,0,26],100,1,0,8)');h.flushResults();
+    expect(h.run('save.stars')).toBe(40);expect(h.run('save.coins')).toBe(1600);expect(h.run('save.completed.length')).toBe(40);expect(h.element('#result-dialog').innerHTML).toContain(t('ko','trailBeaverFinalAfter'));expect(h.run('resultWorld')).toBeDefined();
+    const html=h.element('#journal-view').innerHTML;expect(html).toContain(t('ko','trailJournalTitle'));expect(html).toContain(t('ko','trailBeaverJournalTitle'));expect(html.match(/class="trail-memory-count">3\/3/g)).toHaveLength(2);
+    const disk=h.disk(),writes=h.writes();h.run('finish(true)');expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('돌봄 체험의100판 조건은 정상20판 미도달 사용자의 새 동물 추억을 열지 않습니다',()=>{
+    const h=mainHarness(false,false,true);h.run("switchView('journal')");const disk=h.disk();expect(h.element('#journal-view').innerHTML).not.toContain('data-trail-episode="beaver-v1"');expect(h.run('enterCareDemo()')).toBe(true);h.run("switchView('journal')");
+    expect(h.element('#journal-view').innerHTML).not.toContain('data-trail-episode="beaver-v1"');expect(h.disk()).toEqual(disk);expect(h.run('exitCareDemo()')).toBe(true);expect(h.disk()).toEqual(disk);
+  });
   it('시험판 미리보기·HUD·결과와 한영 갱신이 재화/일반 진행을 건드리지 않는다',()=>{
     const h=mainHarness(false,false,true);h.run("startLevel(4,true);switchView('puzzle')");const disk=h.disk(),writes=h.writes();
     expect(h.element('#trail-encounter').hidden).toBe(false);expect(h.element('#trail-encounter').dataset.active).toBe('true');

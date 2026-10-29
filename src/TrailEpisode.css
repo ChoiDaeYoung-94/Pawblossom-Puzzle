@@ -20,6 +20,14 @@
 #trail-encounter[data-active="true"][data-resolved="true"] .trail-wolf-relieved .trail-wolf-ear{animation:trail-ear-listen 7.3s ease-in-out infinite}
 @keyframes trail-tail-idle{0%,55%,100%{transform:rotate(0)}68%{transform:rotate(-2.5deg)}83%{transform:rotate(1.5deg)}}
 @keyframes trail-ear-listen{0%,70%,100%{transform:rotate(0)}76%{transform:rotate(-3deg)}82%{transform:rotate(1deg)}88%{transform:rotate(0)}}
+.trail-beaver-tail{transform-origin:250px 288px;transform-box:view-box}
+#trail-encounter[data-active="true"]:not([data-resolved="true"]) .trail-beaver-blocking .trail-beaver-tail{animation:trail-beaver-work 5.1s ease-in-out infinite}
+#trail-encounter[data-active="true"][data-resolved="true"] .trail-beaver-relieved .trail-beaver-tail{animation:trail-beaver-thanks 5.7s ease-in-out infinite}
+@keyframes trail-beaver-work{0%,60%,100%{transform:rotate(0)}67%{transform:rotate(-2deg)}72%{transform:rotate(1deg)}78%{transform:rotate(0)}}
+@keyframes trail-beaver-thanks{0%,55%,100%{transform:rotate(0)}65%{transform:rotate(2deg)}77%{transform:rotate(-1deg)}86%{transform:rotate(0)}}
+.trail-beaver-relieved{opacity:0}
+[data-resolved="true"] .trail-beaver-blocking{opacity:0}
+[data-resolved="true"] .trail-beaver-relieved{opacity:1}
 .trail-wolf-relieved{opacity:0}
 [data-resolved="true"] .trail-wolf-blocking{opacity:0}
 [data-resolved="true"] .trail-wolf-relieved{opacity:1}
@@ -50,5 +58,5 @@
 }
 /* 낮은 가로는 기존72px 헤더를 유지해 보드/하단 탭이 겹치지 않게 합니다.
    상황은 미리보기·결과·핍 추억과 기존 낙엽 목표에서 계속 확인할 수 있습니다. */
-@media(orientation:landscape) and (max-height:340px){#puzzle-view .level-top:has(#trail-encounter:not([hidden])){height:72px;min-height:72px;max-height:72px;grid-template-rows:22px 44px}#trail-encounter{display:none}.trail-opponent-art .trail-wolf-tail,.trail-opponent-art .trail-wolf-ear{animation:none!important}#puzzle-view .board-hint{overflow:hidden}#puzzle-view #board-hint-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}}
-@media(prefers-reduced-motion:reduce){.trail-opponent-art>svg{transition:none}.trail-opponent-art .trail-wolf-tail,.trail-opponent-art .trail-wolf-ear{animation:none!important;transform:none!important}}
+@media(orientation:landscape) and (max-height:340px){#puzzle-view .level-top:has(#trail-encounter:not([hidden])){height:72px;min-height:72px;max-height:72px;grid-template-rows:22px 44px}#trail-encounter{display:none}.trail-opponent-art .trail-wolf-tail,.trail-opponent-art .trail-wolf-ear,.trail-opponent-art .trail-beaver-tail{animation:none!important}#puzzle-view .board-hint{overflow:hidden}#puzzle-view #board-hint-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}}
+@media(prefers-reduced-motion:reduce){.trail-opponent-art>svg{transition:none}.trail-opponent-art .trail-wolf-tail,.trail-opponent-art .trail-wolf-ear,.trail-opponent-art .trail-beaver-tail{animation:none!important;transform:none!important}}
