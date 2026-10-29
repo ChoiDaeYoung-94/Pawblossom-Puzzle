@@ -508,6 +508,24 @@ describe('첫 보상에서 새 정원 작업으로 이어가기',()=>{
   });
 });
 
+describe('연속 진행의 첫 이야기 미리보기',()=>{
+  const resultRound=(level:number)=>{
+    const h=mainHarness(false,false,true,false,{version:2,puzzleTools:{schema:2,introduced:['trowel','gloves','broom','bell','seeds'],trialUsed:[]},language:'en',highestLevel:level,completed:Array.from({length:level-1},(_,i)=>i+1),stars:20,coins:200,garden:1,music:false,sfx:false,tutorialSeen:true});
+    h.run(`startLevel(${level});switchView('puzzle')`);h.frame();h.run('finish(true)');return h;
+  };
+  it.each([4,6,10,36,38,40])('%s번을 처음 만나는 다음 버튼은 보드를 만들기 전에 기존 이야기/목표 미리보기를 연다',target=>{
+    const h=resultRound(target-1),disk=h.disk(),writes=h.writes();
+    const before=h.run('JSON.stringify({round,currentLevel,moves,score,save,board:scene.engine.board})');
+    h.element('#result-next').onclick();
+    expect(h.run('stagePreview?.id')).toBe(target);expect(h.run('route')).toBe('map');
+    expect(h.element('#result-dialog').open).toBe(false);expect(h.element('#stage-preview-dialog').open).toBe(true);
+    expect(h.run('previewDialog.innerHTML')).toContain(`data-trail-level="${target}"`);
+    expect(h.run('previewDialog.innerHTML')).toContain('data-trail-resolved="false"');
+    expect(h.run('JSON.stringify({round,currentLevel,moves,score,save,board:scene.engine.board})')).toBe(before);
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+});
+
 describe('새 산책 추억에서 핍의 해당 장면으로 이어가기',()=>{
   const memoryRound=(level=6,storageFails=false)=>{
     const h=mainHarness(storageFails,false,true,false,{version:2,puzzleTools:{schema:2,introduced:['trowel','gloves','broom','bell','seeds'],trialUsed:[]},language:'en',highestLevel:level,completed:Array.from({length:level-1},(_,i)=>i+1),stars:20,coins:200,garden:1,music:false,sfx:false,tutorialSeen:true});
