@@ -36,6 +36,12 @@
 @media(max-width:359px){#trail-encounter{flex-basis:84px}.trail-opponent-art{flex-basis:52px;width:52px;height:63px}.trail-opponent-copy{font-size:9px;max-width:34px}.trail-story-card{grid-template-columns:80px minmax(0,1fr);gap:9px;padding:8px}.trail-story-picture{height:86px}.trail-story-copy h3{font-size:14px}.trail-story-copy p{font-size:11px}}
 @media(orientation:portrait) and (max-height:650px){.trail-opponent-art{height:60px;flex-basis:52px;width:52px}#trail-encounter{flex-basis:100px}}
 #result-trail:empty{display:none}
+.result-trail-wrap{min-width:0}
+.result-trail-wrap[hidden],.trail-result-memory[hidden]{display:none}
+.trail-result-memory{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 10px;margin:-5px 0 10px;padding:0 6px;color:#80516f}
+.trail-result-memory>span{font-size:11px;font-weight:800;line-height:1.5}
+.result-content .trail-result-memory>button{min-height:44px;max-width:100%;padding:7px 10px;font-size:12px;line-height:1.4}
+.trail-journal strong[id^="trail-memory-"]:focus{outline:2px solid #a260b3;outline-offset:4px;border-radius:2px}
 .trail-journal{margin:14px 0;border:1px solid #dfd4e7;border-radius:18px;background:#fffaf6;overflow:hidden;color:#4e345b}
 .trail-journal summary{display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;min-height:64px;list-style:none}
 .trail-journal summary::-webkit-details-marker{display:none}
@@ -54,7 +60,7 @@
   #trail-encounter{grid-column:1 / -1;grid-row:3;justify-self:center;width:100%;justify-content:center;gap:8px}
   .trail-opponent-art{height:38px;flex-basis:42px;width:42px}.trail-opponent-copy{max-width:110px;font-size:10px}
   .trail-story-picture{height:80px}.trail-story-card{grid-template-columns:84px minmax(0,1fr);margin:8px 0;padding:8px}
-  .result-content>#result-trail{grid-column:2;min-width:0}.result-content .trail-story-card{grid-template-columns:60px minmax(0,1fr);gap:7px}.result-content .trail-story-picture{height:68px}.result-content .trail-story-copy h3{font-size:13px}.result-content .trail-story-copy p{font-size:11px}
+  .result-content>.result-trail-wrap{grid-column:2;min-width:0}.result-content .trail-story-card{grid-template-columns:60px minmax(0,1fr);gap:7px}.result-content .trail-story-picture{height:68px}.result-content .trail-story-copy h3{font-size:13px}.result-content .trail-story-copy p{font-size:11px}
 }
 /* 낮은 가로는 기존72px 헤더를 유지해 보드/하단 탭이 겹치지 않게 합니다.
    상황은 미리보기·결과·핍 추억과 기존 낙엽/상자 목표에서 계속 확인할 수 있습니다. */

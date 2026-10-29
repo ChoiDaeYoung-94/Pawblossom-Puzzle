@@ -501,6 +501,80 @@ describe('첫 보상에서 새 정원 작업으로 이어가기',()=>{
   });
 });
 
+describe('새 산책 추억에서 핍의 해당 장면으로 이어가기',()=>{
+  const memoryRound=(level=6,storageFails=false)=>{
+    const h=mainHarness(storageFails,false,true,false,{version:2,puzzleTools:{schema:2,introduced:['trowel','gloves','broom','bell','seeds'],trialUsed:[]},language:'en',highestLevel:level,completed:Array.from({length:level-1},(_,i)=>i+1),stars:20,coins:200,garden:1,music:false,sfx:false,tutorialSeen:true});
+    h.run(`startLevel(${level});switchView('puzzle')`);h.frame();return h;
+  };
+  it.each([4,6,10,36,38,40])('%s번의 저장된 정상 첫 완료만 해당 에피소드의 새 장면으로 연결한다',level=>{
+    const h=memoryRound(level);h.run('finish(true)');
+    expect(h.element('#result-memory-link').hidden).toBe(false);expect(h.element('#result-memory-open').disabled).toBe(false);
+    expect(h.run('resultMemory.level')).toBe(level);
+    const disk=h.disk(),writes=h.writes(),sounds=h.run('audio.plays.slice()'),art=h.resultArtCalls();let focus=0;
+    h.element(`#trail-memory-${level}-title`).focus=()=>focus++;
+    h.element('#result-memory-open').onclick();
+    expect(h.run('route')).toBe('journal');expect(h.element('#result-dialog').open).toBe(false);
+    expect(h.element(level<20?'#trail-journal-wolf-v1':'#trail-journal-beaver-v1').open).toBe(true);expect(focus).toBe(1);
+    h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(h.element('#result-memory-link').hidden).toBe(false);
+    h.run('finish(true);updateResultCopy()');expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('audio.plays')).toEqual(sounds);expect(h.resultArtCalls()).toBe(art);
+  });
+  it.each(['other','replay','practice','loss','storage'] as const)('%s에서는 새 추억을 안내하지 않는다',reason=>{
+    const h=memoryRound(6);
+    if(reason==='other')h.run('startLevel(5)');
+    if(reason==='replay')h.run('save.completed.push(6)');
+    if(reason==='practice')h.run('startLevel(6,true)');
+    if(reason==='storage')h.setStorageFails(true);
+    h.run(`finish(${reason!=='loss'})`);expect(h.element('#result-memory-link').hidden).toBe(true);expect(h.run('resultMemory')).toBeUndefined();
+  });
+  it.each(['new-round','owner','removed','hidden','inactive','busy','preview','ads','detached'] as const)('%s 뒤 오래된 추억 버튼은 이동하거나 저장하지 않는다',reason=>{
+    const h=memoryRound();h.run('finish(true)');const button=h.element('#result-memory-open'),click=button.onclick;
+    if(reason==='new-round')h.run('startLevel(7)');
+    if(reason==='owner')h.run('save=JSON.parse(JSON.stringify(save))');
+    if(reason==='removed')h.run('save.completed=save.completed.filter(id=>id!==6)');
+    if(reason==='hidden')h.run('document.hidden=true');
+    if(reason==='inactive')h.run('nativeActive=false');
+    if(reason==='busy')h.run('puzzleProcessing=true');
+    if(reason==='preview')h.run('previewDialog.open=true');
+    if(reason==='ads')h.run('testAds={busy:true,pausesGame:true}');
+    if(reason==='detached')button.isConnected=false;
+    const disk=h.disk(),writes=h.writes();click();expect(h.run('route')).toBe('puzzle');expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('언어 변경은 버튼/초점을 보존하고 다른 저장 소유자로 결과를 재방문하면 안내를 숨긴다',()=>{
+    const h=memoryRound();h.run('finish(true)');const button=h.element('#result-memory-open'),click=button.onclick;
+    h.run("document.activeElement=document.querySelector('#result-memory-open');changeLanguage('ko')");
+    expect(h.element('#result-memory-copy').textContent).toBe(t('ko','trailNewMemory').replace('{count}','2').replace('{total}','3'));
+    expect(button.textContent).toBe(t('ko','trailOpenMemory'));expect(button.onclick).toBe(click);expect(h.run('document.activeElement.id')).toBe('result-memory-open');
+    click();h.run("save=JSON.parse(JSON.stringify(save));switchView('puzzle')");
+    expect(h.element('#result-memory-link').hidden).toBe(true);expect(button.disabled).toBe(true);
+  });
+  it('저장 실패 뒤 저장 재시도는 이미 종료한 판의 새 추억을 소급 생성하지 않는다',()=>{
+    const h=memoryRound();h.setStorageFails(true);h.run('finish(true)');expect(h.run('resultMemory')).toBeUndefined();
+    h.setStorageFails(false);h.element('#save-retry').onclick();h.run('updateResultCopy()');
+    expect(h.run('resultMemory')).toBeUndefined();expect(h.element('#result-memory-link').hidden).toBe(true);
+  });
+  it('안내를 숨길 때 그 버튼에 있던 초점을 기존 다음 버튼으로 옮긴다',()=>{
+    const h=memoryRound();h.run('finish(true)');let focus=0;h.element('#result-next').focus=()=>focus++;
+    h.run("document.activeElement=document.querySelector('#result-memory-open');save=JSON.parse(JSON.stringify(save));updateResultMemoryCopy()");
+    expect(h.element('#result-memory-link').hidden).toBe(true);expect(focus).toBe(1);
+  });
+  const lastGloveMatch=()=>{
+    const h=memoryRound(36);
+    h.run("const toolOriginalPrepare=preparePuzzleTool;preparePuzzleTool=(r,id,a,b)=>toolOriginalPrepare(r,id,a,b,toolSeededRng(8));roundTools.started=true;scene.engine.crates=scene.engine.crates.map(r=>r.map(()=>0));clearedCrates=levels[35].crates.length;for(const g of levels[35].goals)collected[g.kind]=g.count-(g===levels[35].goals[0]?1:0);const goalKind=levels[35].goals[0].kind;scene.engine.board=scene.engine.board.map((line,r)=>line.map((t,c)=>({kind:(r+c*2)%6})));for(const p of [{row:0,col:0},{row:0,col:2},{row:1,col:1}])scene.engine.board[p.row][p.col]={kind:goalKind};scene.engine.board[0][1]={kind:(goalKind+1)%6};checkpoint();showToolInfo('gloves','tool-gloves')");
+    h.element('#tool-info-start').onclick();h.run('scene.toolTarget({row:0,col:1});scene.toolTarget({row:1,col:1})');return h;
+  };
+  it.each([false,true])('장갑 승리는 동기 완료=%s에서도 저장 직후 추억을 기억하고 보상을 반복하지 않는다',synchronous=>{
+    const h=lastGloveMatch();if(synchronous)h.run('scene.playPreparedTool=(plan,complete)=>{scene.applyPreparedShuffle(plan.after);complete();return true;}');
+    const before=h.stored(),writes=h.writes();expect(h.element('#tool-confirm').disabled).toBe(false);h.element('#tool-confirm').onclick();
+    expect(h.run('resultMemory.level')).toBe(36);h.run('scene.completePrepared()');expect(h.element('#result-memory-link').hidden).toBe(false);
+    expect(h.stored().stars).toBe(before.stars+1);expect(h.stored().coins).toBe(before.coins+40);expect(h.writes()-writes).toBe(2);
+    const disk=h.disk(),savedWrites=h.writes();h.element('#result-memory-open').onclick();h.run("switchView('puzzle');finish(true)");expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(savedWrites);
+  });
+  it('장갑 마지막 매치의 저장 실패는 새 추억 문맥을 만들지 않는다',()=>{
+    const h=lastGloveMatch(),disk=h.disk();h.setStorageFails(true);h.element('#tool-confirm').onclick();
+    expect(h.run('resultMemory')).toBeUndefined();expect(h.element('#result-dialog').open).toBe(false);expect(h.disk()).toEqual(disk);
+  });
+});
+
 describe('숲길 에피소드의 실제 UI 연결',()=>{
   it('비버는 상자만 끝나도 안도하지만 블록 목표 전에는 승리나 정상 추억을 만들지 않습니다',()=>{
     const h=mainHarness(false,false,true);h.run("startLevel(36,true);switchView('puzzle')");const disk=h.disk(),normal=h.run('JSON.stringify(save)');
