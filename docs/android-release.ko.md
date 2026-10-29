@@ -1,3 +1,9 @@
+## 2026-10-29 · #445 시작 화면 중복 정리 · 구현 후보
+
+사용자 검수의 ‘앱 아이콘 후 Quad D 인트로’는 네이티브 시작 테마와 첫 HTML의 핍/게임명 화면을 함께 점검했습니다. 런처 리소스는 유지하고 시작 테마의 아이콘만 별도 투명 vector로 분리했으며, Android 창·Capacitor WebView·첫 HTML을 인트로의 `#10151c` 배경으로 맞췄습니다. 초기 한/영 로딩 안내는 접근성 트리에 남기고, 게임 import 실패의 오류·재시도 화면은 기존 가시 패널을 유지합니다. Java/인트로 lifecycle·건너뛰기·오디오/모션 감소·게임/저장/엔진/RNG 변경은 없습니다.
+
+[Android 시작 화면](https://developer.android.com/develop/ui/views/launch/splash-screen)과 [Capacitor v8 안내](https://capacitorjs.com/docs/apis/splash-screen)를 확인했습니다. Android12+의 시스템 시작 창 자체나 런처의 앱 열기 애니메이션을 없앤다는 보장이 아니라 앱이 지정한 아이콘 화면 중복을 없애는 범위입니다. 독립 읽기 검수에서 새 P1/P2는 없었고, 기존 `studio-intro` 33개 회귀와 수정XML3개의 파싱·diff-check가 통과했습니다. 빌드/브라우저·Android 리소스/기기 검증 결과는 실제 실행 후 구분하여 갱신합니다. 현재 전달731 APK에는 이 수정이 없으며 Samsung #375 해결로 합산하지 않습니다.
+
 ## 최신 로컬 통합 APK · 2026-10-28 · #443 · 73174ff
 
 제품 소스 `73174ff79a2c1e0f605022716e31f6cfdf2c5a45`는 앞선3e의 숲길/추억·저장2·직접 도구5종/핍 소개·퍼즐 아이콘/Quad D에 [PR442 첫 보상→새 정원 작업 연결](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/442)을 더했습니다. 첫 완료 보상 전에는 불가·후에는 가능한 작업 하나만 기존 위치로 안내하며, 이동으로 지출하지 않고 심기/복원은 기존 선택 흐름에서 합니다. 정확 최초 [main CI40675622358](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40675622358)의 Node22/24 각각80파일4,204개·스토어19개·타입3종·두 웹 빌드/flags 성공 후 빌드했습니다. 이후 전달 기록만 바꾼 문서 커밋은 게임 소스와 분리합니다.
