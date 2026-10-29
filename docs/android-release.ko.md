@@ -1,12 +1,24 @@
+## 최신 로컬 통합 APK · 2026-10-29 · #449 · c1409e4
+
+제품 소스 `c1409e4f14c79dca4655ddeec0dd80cb1bd6082f`는 [PR446 시작 화면 중복 정리](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/446)와 [PR448 보드 특수 생성 도구](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/448)를 포함합니다. 꽃폭탄·가로 로켓·무지개 구슬·세로 로켓은 일반 칸에 기존 보드 특수를 남기고 이후 탭/교환으로 발동합니다. 정원 장갑은 기존 유효 매치 교환입니다. 첫 무료/가격·해금·진행 이행/구판 보호는 도구 기록을 따릅니다. 정확 최초 [main CI40795837138](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40795837138) attempt1의 Node22/24 각각81파일4,220개·스토어19개·타입3종·두 웹 빌드/flags가 성공했습니다. 후속 정원/핍 목표 #450·앨범 #452는 이 APK에 포함되지 않습니다.
+
+로컬 파일은 `Pawblossom-builds/2026-10-29-c1409e4-special-tools-v2/Pawblossom-Puzzle-v0.1.7-2026-10-29-c1409e4-debug.apk`입니다. **0.1.7/code8 · 54,881,987바이트 · SHA256 `4a3c77bd857bd43f71ceda91557defe22dcd467a0bc68acead743ac3345ad52d`**입니다. min24/target36·패키지·단일 기존v2 서명·권한을 보존했습니다. 사용자 직접 업로드 원칙으로 Drive 업로드·별도 테스트 안내 파일은 없습니다. 이전731/3e APK·원인 미확정 진단도 보존합니다. 새 도구 진행schema2는 구앱에서 읽지 못하므로 백업 없는 구APK 다운그레이드는 지원하지 않습니다.
+
+testing 웹113개와 APK public115개를 전수 길이/SHA로 맞췄고 원본public87개는 이전 전달과 같습니다. 빈cordova2개만 추가되고 ZIP CRC/중복0·시험flags3개 true·native4PNG 크기/픽셀이 소스와 같습니다. 비웹 변경을 통째로 허용하지 않았습니다. 처음 엄격한 파일 허용검사는 `classes6.dex`와4XML 변경 때문에 중단됐고 원문을 보존했습니다. 후속 진단에서223클래스가 전부 생성된R이며 전체 decoded DEX는 리소스ID를 이름으로 정규화하면 기존과 같고 신규color/drawable2필드만 추가됩니다. switch-thumb/tooltip4XML도 같은 정규화 후 모두 같습니다. 전체 resources dump의 차이는 신규2리소스와 의도한 시작/일반 테마뿐이며 실제 패키지의 compat·Android31 아이콘/배경 링크와 투명 vector를 확인했습니다. 다른 Java/build/dependency 입력과 기존 나머지 native 바이트는 유지됩니다.
+
+처음 패키지검사 중단 뒤 테마검사기의 Android framework 속성명이 실제 aapt2 출력에서는16진ID·v31별도로 표시되는 점도 바로잡았습니다. 같은 APK의 정적 검사만 다시 실행해 성공했으며 재빌드는 하지 않았습니다. 이전 실패를 처음부터 성공한 것으로 합산하지 않습니다. Gradle assembleDebug는 성공했고 이번 JVM 단위/lint 재실행은0입니다. 원문/의미비교/테마연결·artifact/checksum은 Git밖 `integration-20261029/449-*`와 전달 폴더에 보존합니다.
+
+production 웹104/Android public106 전체·flagsfalse3를 복원했고, 실제 production 브라우저로 확인한 PR448 head0357c3c와 main c1409e4의 Git tree 및 최종production 파일이 같습니다. 새 APK를 실제 Android에서 실행한 것은 아니며 Samsung #375·OEM 시작/복귀·청취/영상 전구간·자연해금/500판·실광고/구매/스토어 #73은 미검증입니다. 공유 자원은 UTC01:10:25 시작→01:16:12.8704131 실제 반환, source clean·Gradle daemon0이며 GUI/ADB/SDK설정/키 변경은0입니다.
+
 ## 2026-10-29 · #445 시작 화면 중복 정리 · 웹/리소스 검증
 
 사용자 검수의 ‘앱 아이콘 후 Quad D 인트로’는 네이티브 시작 테마와 첫 HTML의 핍/게임명 화면을 함께 점검했습니다. 런처 리소스는 유지하고 시작 테마의 아이콘만 별도 투명 vector로 분리했으며, Android 창·Capacitor WebView·첫 HTML을 인트로의 `#10151c` 배경으로 맞췄습니다. 초기 한/영 로딩 안내는 접근성 트리에 남기고, 게임 import 실패의 오류·재시도 화면은 기존 가시 패널을 유지합니다. Java/인트로 lifecycle·건너뛰기·오디오/모션 감소·게임/저장/엔진/RNG 변경은 없습니다.
 
 [Android 시작 화면](https://developer.android.com/develop/ui/views/launch/splash-screen)과 [Capacitor v8 안내](https://capacitorjs.com/docs/apis/splash-screen)를 확인했습니다. Android12+의 시스템 시작 창 자체나 런처의 앱 열기 애니메이션을 없앤다는 보장이 아니라 앱이 지정한 아이콘 화면 중복을 없애는 범위입니다. 독립 읽기 검수에서 새 P1/P2는 없었고, 기존 `studio-intro` 33개 회귀와 수정XML3개 파싱·diff-check가 통과했습니다. PR446 head49f15a7의 양Node 필수CI·production/testing 빌드와 `:app:processDebugResources --no-daemon` 리소스 링크가 성공해 b359d48로 병합했습니다. 리소스45task 중17실행/28up-to-date이며 SDK XML/flatDir/Gradle deprecation 경고는 남습니다. Java 테스트/lint/APK/sync를 새로 실행한 것은 아닙니다.
 
-같은head의 실제 production 브라우저에서 entry JS를 지연해 초기HTML의 핍/게임명0·인트로와 같은 어두운 배경·접근성 한영로딩을 확인했습니다. KO390/EN320/KO844/모션감소EN740의 인트로→건너뛰기→지도와 main import 실패EN320의 가시 오류/재시도 버튼을 확인했고 pageerror0입니다. 일반영상 전구간·청취나 Android/OEM의 cold/warm 검수를 대신하지 않습니다. 원문/PNG는 Git밖 integration-20261029/445-browser에 보존했습니다. 현재 전달731 APK에는 이 수정이 없으며 Samsung #375 해결로 합산하지 않습니다.
+같은head의 실제 production 브라우저에서 entry JS를 지연해 초기HTML의 핍/게임명0·인트로와 같은 어두운 배경·접근성 한영로딩을 확인했습니다. KO390/EN320/KO844/모션감소EN740의 인트로→건너뛰기→지도와 main import 실패EN320의 가시 오류/재시도 버튼을 확인했고 pageerror0입니다. 일반영상 전구간·청취나 Android/OEM의 cold/warm 검수를 대신하지 않습니다. 원문/PNG는 Git밖 integration-20261029/445-browser에 보존했습니다. 당시 전달731 APK에는 이 수정이 없었습니다. 현재 c1409e4 APK에 포함됐으며 Samsung #375 해결로 합산하지 않습니다.
 
-## 최신 로컬 통합 APK · 2026-10-28 · #443 · 73174ff
+## 이전 로컬 통합 APK · 2026-10-28 · #443 · 73174ff
 
 제품 소스 `73174ff79a2c1e0f605022716e31f6cfdf2c5a45`는 앞선3e의 숲길/추억·저장2·직접 도구5종/핍 소개·퍼즐 아이콘/Quad D에 [PR442 첫 보상→새 정원 작업 연결](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/442)을 더했습니다. 첫 완료 보상 전에는 불가·후에는 가능한 작업 하나만 기존 위치로 안내하며, 이동으로 지출하지 않고 심기/복원은 기존 선택 흐름에서 합니다. 정확 최초 [main CI40675622358](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40675622358)의 Node22/24 각각80파일4,204개·스토어19개·타입3종·두 웹 빌드/flags 성공 후 빌드했습니다. 이후 전달 기록만 바꾼 문서 커밋은 게임 소스와 분리합니다.
 
