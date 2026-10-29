@@ -1,4 +1,16 @@
-## 최신 로컬 통합 APK · 2026-10-29 · #449 · c1409e4
+## 최신 로컬 통합 APK · 2026-10-29 · #461 · ed2684d
+
+제품 소스 `ed2684d903a90d33f824a6430776181bd4f8ec83`는 앞선 인트로·도움 도구5종에 정원 다음 목표(PR451), 현재 앨범(PR453), trusted 상태 재조회(PR456), 페이지 보존 시 시험 SDK 연결 유지(PR458), 물가 비버36/38/40 이야기·추억(PR460)을 포함합니다. 정확 최초 [main CI40808166123](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40808166123) attempt1에서 Node22/24 각각81파일4,253개·스토어19개·타입3설정·두 웹 빌드가 성공했습니다. 같은 head 재실행은 없습니다.
+
+로컬 파일은 `C:/Users/user/Documents/ChatGPT/Pawblossom-builds/2026-10-29-ed2684d-beaver-meta-resume/Pawblossom-Puzzle-v0.1.7-2026-10-29-ed2684d-debug.apk`입니다. **0.1.7/code8 · 54,882,201바이트 · SHA256 `dcd4fb793036a7797bb48f1e6fb21f833992c5e1674d82bafc30c800d5d8e7c4`**이며 min24/target36·기존 단일v2 서명·권한을 보존했습니다. Drive 업로드·별도 사용자 테스트 안내 파일은 없고, 이전c140/731/3e APK와 진단은 보존합니다. 구앱이 새 도구 진행schema2를 읽지 못하므로 백업 없는 다운그레이드는 지원하지 않습니다.
+
+fresh CPU/SDK 차례에서 `npm run build:test`→`npx --no-install cap sync android`→`:app:assembleDebug --no-daemon --max-workers=1`을 실행했습니다. assemble은13초·91태스크 중21실행/70재사용으로 성공했습니다. testing 웹115개와 APK public117개를 길이/SHA로 전수 대조하고 빈cordova2개·시험flags3개 true·ZIP CRC/중복0을 확인했습니다. 원본public87개는 c140과 같고 비버 WebP2개(합계64,384바이트)만 추가되며 원화PNG2개는 APK에 포함되지 않습니다. c140 APK의 비웹494개는 경로와 바이트가 모두 같고 Android/config/dependency 입력 변경도 없습니다. 아이콘·시작 테마의 #449 근거는 이 바이트 일치로 연결한 것이며 새 픽셀 decode나 JVM/lint 실행으로 세지 않습니다.
+
+실패 시에도 복원을 시도하는 wrapper로 production 웹106/Android public108·flagsfalse3·source clean을 확인했습니다. 실제 브라우저 검수 source c79a1a2와 제품 소스는 문서만 다르고, 보고서 내 manifest·별도 manifest·최종 production 파일의 길이/SHA가 모두 같습니다. 첫 실패 기록을 덮어쓰지 않는 guard와 정확한 CI ID/main/push/attempt1 연결을 독립 읽기로 보완한 뒤 실제 빌드 전체가 첫 시도에 성공했습니다. 원문·manifest·artifact/checksum은 Git 밖 `integration-20261029/461-*`와 전달 폴더에 있습니다.
+
+실제 공유 사용은 UTC03:05:27.7838430→03:06:29.1971311 반환이며 새 소유 Gradle daemon0·GUI/LD/ADB/폰/Drive 조작0입니다. 실제 Android/OEM 실행·Samsung #375·영상 전구간/청취·자연해금/500판·실광고/구매/스토어 #73은 미검증입니다. #462 펼친 계획/추억 유지 후보는 별도 후속으로 이 APK에 포함되지 않습니다. 아래 c140 기록은 이전 전달 이력입니다.
+
+## 이전 로컬 통합 APK · 2026-10-29 · #449 · c1409e4
 
 제품 소스 `c1409e4f14c79dca4655ddeec0dd80cb1bd6082f`는 [PR446 시작 화면 중복 정리](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/446)와 [PR448 보드 특수 생성 도구](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/448)를 포함합니다. 꽃폭탄·가로 로켓·무지개 구슬·세로 로켓은 일반 칸에 기존 보드 특수를 남기고 이후 탭/교환으로 발동합니다. 정원 장갑은 기존 유효 매치 교환입니다. 첫 무료/가격·해금·진행 이행/구판 보호는 도구 기록을 따릅니다. 정확 최초 [main CI40795837138](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40795837138) attempt1의 Node22/24 각각81파일4,220개·스토어19개·타입3종·두 웹 빌드/flags가 성공했습니다. 후속 정원/핍 목표 #450·앨범 #452는 이 APK에 포함되지 않습니다.
 
