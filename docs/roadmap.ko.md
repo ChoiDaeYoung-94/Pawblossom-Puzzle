@@ -1,5 +1,13 @@
 # 출시까지의 개발 순서
 
+## 2026-10-29 · #457 페이지 보존 복귀의 시험 SDK 연결 · 구현 후보
+
+persisted pagehide에서 같은 시험광고/결제 controller와 listener·요청/중복방지 기록을 보존하고, 표시 중 pageshow에서 기존 native snapshot을 refresh합니다. 일반 문서 종료는 기존 dispose·listener 제거를 유지합니다. 새 show/purchase/restore나 소유권·보상 정책 변경은 없습니다.
+
+수정 전 baseline067de393의 실제 glue 회귀6개는4실패/2성공으로 persisted 종료/재조회 단절을 확인했습니다. 수정 후 새6개와 기존 문서/Android 복귀13개,합계19개 및 타입3설정이 통과했습니다. 실제 controller+fake bridge의 showing/purchasing→종료 snapshot·같은 객체/listener1개·반복복귀 요청/무자격보상/저장지출0·조회실패 overlay 보호·nativefalse 우선·일반종료/늦은callback을 검사합니다. 원문은 Git밖 integration-20261029/457-*에 보존합니다.
+
+이는 실제 persisted BFCache/Android HOME·Samsung #375 재현/해결이나 운영 SDK 검증이 아닙니다. 정상 발급 receipt의 기존 최대1회 지급 계약은 유지하고 영원히 반환되지 않는 pending IPC를 DOM복귀로 임의 해제하지 않습니다. Java/Manifest·엔진/RNG·저장/경제·실키env/상품·최종믹스 변경은 없습니다. 현재 c1409e4 APK에도 포함되지 않습니다. 최초 PR/최신main CI는 제출 후 구분합니다.
+
 ## 2026-10-29 · #447 보드 특수와 도움 도구의 일치 · 구현 후보
 
 사용자 요청에 따라 기존 삽의 즉시3×3 제거를 꽃폭탄 생성으로 바꿉니다. 안정ID/9·19·29·49·69 해금/30·20·40·60·35코인·각첫무료/판당서로다른2종/각1회는 보존하고,가로·세로·무지개 생성과 기존 유효매치 교환으로 역할을 나눕니다. 생성4종은 일반칸의 kind를 유지해 특수만 남기며 이동/점수/수집/장애물/RNG를 소비하지 않습니다. 이후 탭·교환/조합은 기존 보드 특수 규칙이고,장갑은 실제 매치/연쇄 집계와 RNG를 사용하는 기존 경로입니다. 같은 몸체·과일·방향 그림과 KO/EN 이름·설명·한칸 선택/생성 확인을 연결하며 provenance는 `docs/art/puzzle-tools-v2.json`입니다. 기존씨앗의 시작전 제한은 새 세로생성 역할에서 제거합니다.
