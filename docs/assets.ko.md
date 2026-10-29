@@ -2,6 +2,8 @@
 
 ## 2026-10-29 · 물가 비버 두 표정 #459
 
+제품ed2684d·PR460과 첫 main40808166123 attempt1 양Node 검사를 통과했고 #461 로컬 APK에 WebP2개만 포함됐습니다. 기존public87개는 유지하고 원화PNG2개는 묶지 않았습니다. 실제 파일/검증·production 복원은 [Android 기록](android-release.ko.md), 프롬프트와 원본/출력은 아래 provenance를 따릅니다. Android/OEM·상용 미술/자연 진행 승인은 별도입니다.
+
 기본built-in imagegen으로 자체비버의걱정/안도2원본을만들고 `assets/art/trail-episode-v2/`에바이트그대로보존했습니다. 실제1254×1254 RGBA·원본합계3,163,127B이며 API키/CLI fallback은쓰지않았습니다. `public/assets/trail-episode-v2/`의384px WebP합계64,384B는표준비례축소/투명padding/encoding만적용했고 alpha동일·출력별64KiB/원본불변을확인했습니다. 전체prompt·원본/출력SHA와판단은 [provenance](art/trail-episode-v2.json)를따릅니다.
 
 36/38/40이야기·상자HUD/에피소드별정상추억에연결하고부분꼬리/모션감소·이탈을보호했습니다. c79a1a2의실제5조건/관련20개·타입/production은개발순서기록에있습니다. 자체원화/자동검사·fixture화면성공을상용미술감각·자연진행/500판·Android승인으로확대하지않으며 PR/main통합검증과최종APK는별도입니다. 기존늑대원본/그림은바꾸지않았습니다.

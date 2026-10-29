@@ -1,6 +1,6 @@
 {
   "issue": 459,
-  "status": "implementation-candidate-browser-checked; PR/main-CI-pending",
+  "status": "merged-ed2684d; first-main-CI40808166123-attempt1-success; local-APK461-static-verified; Android/commercial-art-unverified",
   "tool": "built-in image_gen; transparent_background=true; API key/CLI fallback unused",
   "sources": [
     {
