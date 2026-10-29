@@ -8,7 +8,7 @@ fresh CPU/SDK 차례에서 `npm run build:test`→`npx --no-install cap sync and
 
 실패 시에도 복원을 시도하는 wrapper로 production 웹106/Android public108·flagsfalse3·source clean을 확인했습니다. 실제 브라우저 검수 source c79a1a2와 제품 소스는 문서만 다르고, 보고서 내 manifest·별도 manifest·최종 production 파일의 길이/SHA가 모두 같습니다. 첫 실패 기록을 덮어쓰지 않는 guard와 정확한 CI ID/main/push/attempt1 연결을 독립 읽기로 보완한 뒤 실제 빌드 전체가 첫 시도에 성공했습니다. 원문·manifest·artifact/checksum은 Git 밖 `integration-20261029/461-*`와 전달 폴더에 있습니다.
 
-빌드 차례의 실제 공유 사용은 UTC03:05:27.7838430→03:06:29.1971311 반환이며 새 소유 Gradle daemon0·GUI/LD/ADB/폰/Drive 조작0입니다. 이후 개발용 LD 실행은 아래 #465와 구분합니다. Samsung #375·영상 전구간/청취·자연해금/500판·실광고/구매/스토어 #73은 미검증입니다. #462 펼친 계획/추억 유지는 main0c98f01·첫 CI40812234743의 웹/자동 검증을 마친 별도 후속으로 이 APK에 포함되지 않습니다. 아래 c140 기록은 이전 전달 이력입니다.
+빌드 차례의 실제 공유 사용은 UTC03:05:27.7838430→03:06:29.1971311 반환이며 새 소유 Gradle daemon0·GUI/LD/ADB/폰/Drive 조작0입니다. 이후 개발용 LD 실행은 아래 #465와 구분합니다. Samsung #375·영상 전구간/청취·자연해금/500판·실광고/구매/스토어 #73은 미검증입니다. #462 펼친 계획/추억 유지(main0c98f01·첫 CI40812234743)와 #468 새 추억 결과→핍 장면 연결(fc2f703 웹4조건/관련 검증)은 별도 웹 후속으로 이 APK에 포함되지 않습니다. 세부 구현/검증과 필수CI 구분은 [개발 기록](roadmap.ko.md)을 따릅니다. 아래 c140 기록은 이전 전달 이력입니다.
 
 ### #465 · 개발용 LD 업데이트·기동·도구5종 · 2026-10-29
 
