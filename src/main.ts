@@ -573,7 +573,8 @@ function renderPuzzleTools(){
   $('.puzzle-tools-bar').dataset.selecting=String(Boolean(toolMode));$('#tool-target-controls').hidden=!toolMode;
   if(toolMode){
     const context=toolMode,ready=Boolean(context.at&&validPuzzleToolTarget(context.checkpoint,context.id,context.at,context.other)),cost=toolStatus(save,context.checkpoint,context.id,testingLevel).cost;
-    $('#tool-choice-status').textContent=toolName(save.language,context.id)+' · '+(ready?(context.other?text('toolPairChosen'):text('toolCreateChosen').replace('{row}',String(context.at!.row+1)).replace('{col}',String(context.at!.col+1))).replace('{cost}',cost):text(context.id==='gloves'?'toolChooseTwo':'toolChooseOne'));
+    const choice=ready?(context.other?text('toolPairChosen'):text('toolCreateChosen').replace('{row}',String(context.at!.row+1)).replace('{col}',String(context.at!.col+1))):text(context.id==='gloves'?'toolChooseTwo':'toolChooseOne');
+    $('#tool-choice-status').innerHTML=`<span class="tool-choice-text">${toolName(save.language,context.id)} · ${choice}</span><strong class="tool-choice-cost">${cost}</strong>`;
     const confirm=$<HTMLButtonElement>('#tool-confirm');confirm.textContent=text(context.id==='gloves'?'toolConfirm':'toolCreateConfirm');confirm.disabled=!ready;confirm.onclick=()=>{confirmTool(context);};
     const cancel=$<HTMLButtonElement>('#tool-cancel');cancel.textContent=text('toolCancel');cancel.onclick=()=>{if(toolMode===context)closeToolMode();};
   }
