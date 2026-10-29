@@ -10,3 +10,6 @@
   .pip-care-stage .pip-care-hero{grid-template-columns:minmax(104px,42%) minmax(0,1fr);align-self:start}
   .pip-care-stage .pip-stats{grid-template-columns:minmax(0,1fr);gap:7px}
 }
+
+/* 돌봄 다음의 기존 계획 한 개와 짧은 정원 바로가기를 함께 보여 줍니다. */
+.pip-care-card>.garden-plan{margin:16px 0 10px}.pip-garden-links{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 18px}.pip-garden-links .text-button{flex:1 1 auto;min-height:44px;padding:8px 11px;border:1px solid #e5cde0;border-radius:12px;background:#fff4e9;text-align:center;white-space:normal}
