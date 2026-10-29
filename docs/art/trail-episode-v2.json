@@ -1,6 +1,6 @@
 {
   "issue": 459,
-  "status": "implementation-candidate; runtime-QA-pending",
+  "status": "implementation-candidate-browser-checked; PR/main-CI-pending",
   "tool": "built-in image_gen; transparent_background=true; API key/CLI fallback unused",
   "sources": [
     {
@@ -80,9 +80,12 @@
     }
   ],
   "qualityNotes": [
-    "두 자체 원본의 걱정/안도 표정과 같은 캐릭터·몸 포즈를 육안으로 확인했습니다.",
-    "원본 RGBA의 실제alpha범위0–255와 표준384px/출력별64KiB·alpha픽셀동일을 검사했습니다. 원본은 바꾸지 않았습니다.",
-    "꼬리 마스크 경계/작은 화면·모션 감소/40번 결과 검수는 후속입니다. 상용 미술·자연진행/Android 승인과 구분합니다."
+    "두 자체 원본의 걱정/안도 표정과 같은 캐릭터·포즈를 육안 확인했습니다. 요청1024와 실제1254는 다르며 픽셀 단위 동일 포즈를 주장하지 않습니다.",
+    "원본RGBA 실제alpha0–255·표준384px/출력별64KiB·내보내기 전후alpha픽셀동일을 검사했습니다. 원본은 바꾸지 않았고 출력 합계64,384바이트입니다.",
+    "c79a1a2의 실제production5조건과 관련20개/타입3설정이 첫 성공했습니다. KO39036/EN32038·가로KO84440/모션감소EN74040·EN740정상21 통합을 구분합니다.",
+    "40번은 명시한정상회차fixture의 실제유효교환으로 마지막상자를 정리했고 기존1별40코인/엽서·두추억3/3·결과버튼접근을 확인했습니다. 자연진행/사람난이도 검수가 아닙니다.",
+    "별도실제행렬관측은 꼬리−2.77도·몸/전체SVG변환none·이탈animationnone입니다. 모션감소/낮은가로는HUD와꼬리animation을끄며 보드한화면을 유지했습니다.",
+    "구체 PNG/회차fixture/전체bundleSHA·성공명령·source연결은Git밖 integration-20261029/459-*에 보존합니다. 실제Android/상용미술·자연500판 승인은 미검증입니다."
   ],
   "scope": "36/38/40 이야기 표시와 실제 상자 집계 연결입니다. 늑대4/6/10과 에피소드별3추억·실제 완료 소유를 보존하며 새 저장/보상·엔진/RNG는 바꾸지 않습니다.",
   "export": {
@@ -92,5 +95,17 @@
     "webpQuality": 90,
     "alphaQuality": 100,
     "policy": "원본 변경 없음·표준 비례 축소/투명padding/WebP encoding only"
+  },
+  "integration": {
+    "module": "src/TrailEpisode.ts",
+    "styles": "src/TrailEpisode.css",
+    "beaverBeats": [
+      36,
+      38,
+      40
+    ],
+    "counter": "확정 clearedCrates / 실제 level.crates 수; 낙엽과 분리",
+    "journal": "에피소드별 실제completed 소유/3추억;20번이상 정상완료기록부터 비버0/3예고;새저장/보상없음",
+    "motion": "상보 SVG mask로 꼬리만 움직이고 몸은 고정;active/reduced/낮은가로/이탈조건 보존"
   }
 }

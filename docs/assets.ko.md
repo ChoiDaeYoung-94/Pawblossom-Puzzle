@@ -1,5 +1,11 @@
 ## 2026-10-28 · #424 핍 얼굴 중심 게임 아이콘
 
+## 2026-10-29 · 물가 비버 두 표정 #459
+
+기본built-in imagegen으로 자체비버의걱정/안도2원본을만들고 `assets/art/trail-episode-v2/`에바이트그대로보존했습니다. 실제1254×1254 RGBA·원본합계3,163,127B이며 API키/CLI fallback은쓰지않았습니다. `public/assets/trail-episode-v2/`의384px WebP합계64,384B는표준비례축소/투명padding/encoding만적용했고 alpha동일·출력별64KiB/원본불변을확인했습니다. 전체prompt·원본/출력SHA와판단은 [provenance](art/trail-episode-v2.json)를따릅니다.
+
+36/38/40이야기·상자HUD/에피소드별정상추억에연결하고부분꼬리/모션감소·이탈을보호했습니다. c79a1a2의실제5조건/관련20개·타입/production은개발순서기록에있습니다. 자체원화/자동검사·fixture화면성공을상용미술감각·자연진행/500판·Android승인으로확대하지않으며 PR/main통합검증과최종APK는별도입니다. 기존늑대원본/그림은바꾸지않았습니다.
+
 기존 자체 핍 `pip-idle-open-v2.webp`를 정체성 참고로 내장 image_gen에서 새 상반신 일러스트를 제작했습니다. 크림색 털·분홍 귀·갈색 눈·초록 작업복·당근과 코럴 꽃을 사용하며 다른 게임의 그림/로고를 복제하지 않았습니다. 선정 원본은 `assets/branding/pip-icon-source-v2.png`, 실제1254×1254 RGBA·1,261,319바이트·SHA256 `7bc3561cd54436ce6060e4839cd5e117c192c66db9f9a4f463d93b247b0336f0`입니다. 원본·입력 SHA·전체 프롬프트·미선정 정리 시도는 [제작 기록](art/pip-icon-v2-generation.json)에 구분합니다. 생성 요청의1024/닫힌 입과 달리 실제 출력은1254/열린 미소이며, 현재 핍의 정체성과 밝은 표정에 맞춰 선정했습니다.
 
 스토어 초안 `assets/store/play-icon-v2.png`는 원본을 그대로 배치한512×512·32bit RGBA·완전 불투명/sRGB·266,346바이트입니다. 자체 크림/코럴 방사 배경을 쓰며 제출 이미지 자체에 둥근 모서리·바깥 그림자·문구를 넣지 않았습니다. [Google Play 규격](https://developer.android.com/distribute/google-play/resources/icon-design-specifications)의512정사각/sRGB/1MiB 기준을 검사합니다. v1 원본/manifest와 기존 feature-v1은 보존하며 새 icon-v2를 활성 초안으로 명시한 별도 엄격 manifest를 추가합니다. 실제 콘솔 제출·아트 감각 승인은 별도입니다.
