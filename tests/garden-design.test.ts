@@ -207,7 +207,7 @@ describe('선택하는 꽃과 영구 정원 작품',()=>{
 });
 describe('선택 필드와 기존 저장 보호',()=>{
   const legacy={version:1,language:'ko',highestLevel:3,completed:[1,2],stars:0,coins:70,garden:1,music:false,sfx:true,tutorialSeen:true};
-  const migratedLegacy={...legacy,version:2,puzzleTools:{schema:1,introduced:[],trialUsed:[]}};
+  const migratedLegacy={...legacy,version:2,puzzleTools:{schema:2,introduced:[],trialUsed:[]}};
   const setup=(primary:unknown,backup?:unknown)=>{const disk=new Map([[SAVE_KEY,JSON.stringify(primary)],...(backup?[[BACKUP_KEY,JSON.stringify(backup)]]:[])] as [string,string][]);let writes=0;const store=new SaveStore(()=>({getItem:key=>disk.get(key)??null,setItem:(key,value)=>{writes++;disk.set(key,value);},removeItem:key=>{disk.delete(key);}}));return {store,disk,writes:()=>writes};};
   it('새 공간은 실제 고유 완료로 검증하고 구 저장 무삽입·정상 재저장·손상 backup 분리를 보존합니다',()=>{
     const spaces=freshGardenSpaces();spaces.pond={phase:1,altOwned:false,style:'base'};
