@@ -46,7 +46,7 @@ describe('핍 육성과 저장 확장',()=>{
     for(const recover of [false,true]){
       const disk=new Map([[SAVE_KEY,recover?'{':JSON.stringify(old)],[BACKUP_KEY,JSON.stringify(old)]]);
       const store=new SaveStore(()=>({getItem:key=>disk.get(key)??null,setItem:(key,value)=>{disk.set(key,value);},removeItem:key=>{disk.delete(key);}}));
-      const save=store.load();expect(save).toEqual({...old,version:2,puzzleTools:{schema:1,introduced:[],trialUsed:[]}});expect(save.pip??freshPip()).toEqual(freshPip());
+      const save=store.load();expect(save).toEqual({...old,version:2,puzzleTools:{schema:2,introduced:[],trialUsed:[]}});expect(save.pip??freshPip()).toEqual(freshPip());
       expect(store.save({...save,pip:{...freshPip(),growth:10,affection:4},coins:60})).toBe(true);
       expect(store.load()).toMatchObject({stars:0,garden:1,coins:60,pip:{growth:10,affection:4}});
     }

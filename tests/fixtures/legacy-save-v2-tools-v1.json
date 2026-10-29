@@ -1,0 +1,6 @@
+{
+  "policy": "Frozen released version2/tool-schema1 app; only state imports rebased; do not update protocol",
+  "stateLfSha256": "ebe7236ca22c9f0395bbadbcc8bc3e1924c4154adaec3907e25c7e309824aa4d",
+  "sourceCommit": "cf883969ef3918621fe52cf705c33db8c6514df0",
+  "toolsLfSha256": "a35058b61aaf7b0c79e68a0bbf9269c1356eb841c29bffa2f8849fe37e2ac177"
+}

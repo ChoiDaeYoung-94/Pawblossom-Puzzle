@@ -54,7 +54,7 @@ describe('도구 저장2 이행과 동결 구앱의 쓰기 차단',()=>{
     expect(old.save(data)).toBe(false);expect(old.retry(data)).toBe(false);expect([...d.values]).toEqual([[SAVE_KEY,primary],[BACKUP_KEY,backup]]);expect(d.writes).toEqual([]);
   });
   it.each([SAVE_KEY,BACKUP_KEY])('v1 이행 중 %s 쓰기 실패/재시도는 기존 기록과 소비를 함께 유지한다',key=>{
-    const raw=JSON.stringify(legacy()),d=disk(raw,raw),s=d.store(),next=s.load();next.coins-=30;next.puzzleTools={schema:1,introduced:['trowel'],trialUsed:['trowel']};
+    const raw=JSON.stringify(legacy()),d=disk(raw,raw),s=d.store(),next=s.load();next.coins-=30;next.puzzleTools={schema:2,introduced:['trowel'],trialUsed:['trowel']};
     d.fail(key);expect(s.save(next)).toBe(false);expect(d.values.get(SAVE_KEY)).toBe(raw);
     if(key===BACKUP_KEY)expect(d.values.get(BACKUP_KEY)).toBe(raw);else expect(d.read(BACKUP_KEY)).toEqual(current());
     d.fail('');expect(s.retry(next)).toBe(true);expect(d.read(SAVE_KEY)).toEqual(next);expect(d.store().load().puzzleTools.trialUsed).toEqual(['trowel']);expect(d.store().load().coins).toBe(170);
@@ -73,9 +73,9 @@ describe('도구 저장2 이행과 동결 구앱의 쓰기 차단',()=>{
     d.failRemove(false);expect(s.retry(empty)).toBe(true);expect(d.values.has(RESET_KEY)).toBe(false);expect(d.store().load()).toEqual(empty);
   });
   it.each([
-    {puzzleTools:{schema:2,introduced:[],trialUsed:[]}},
+    {puzzleTools:{schema:3,introduced:[],trialUsed:[]}},
     {inProgress:{...legacy().inProgress,schema:3}},
-    {inProgress:{...legacy().inProgress,schema:2,actionProfile:'tools-v2',toolsUsed:[],toolsStarted:true}},
+    {inProgress:{...legacy().inProgress,schema:2,actionProfile:'tools-v3',toolsUsed:[],toolsStarted:true}},
     {inProgress:{...legacy().inProgress,ruleVersion:3}},
   ])('미지원 새 형식은 구형 backup으로 롤백하거나 덮어쓰지 않는다 %#',patch=>{
     const raw=JSON.stringify({...current(),...patch}),d=disk(raw,JSON.stringify(legacy())),s=d.store(),data=s.load();
@@ -90,7 +90,7 @@ describe('도구 저장2 이행과 동결 구앱의 쓰기 차단',()=>{
   });
   it('tools-v1 회차는 사용·시작 상태와 판을 보존하고 구 회차는 여전히 schema1이다',()=>{
     const round:RoundCheckpoint={...legacy().inProgress!,schema:2,ruleVersion:2,actionProfile:'tools-v1',toolsUsed:['trowel'],toolsStarted:true};
-    expect(validateCheckpoint(round,6)).toEqual(round);const data={...current(),inProgress:round,puzzleTools:{schema:1 as const,introduced:['trowel' as const],trialUsed:['trowel' as const]}};
+    expect(validateCheckpoint(round,6)).toEqual(round);const data={...current(),inProgress:round,puzzleTools:{schema:2 as const,introduced:['trowel' as const],trialUsed:['trowel' as const]}};
     const d=disk(JSON.stringify(data)),s=d.store();expect(s.load()).toEqual(data);expect(s.save(data)).toBe(true);expect(d.store().load()).toEqual(data);
     for(const patch of [{toolsStarted:false},{toolsUsed:['trowel','trowel']},{toolsUsed:['trowel','broom','bell']},{ruleVersion:1},{actionProfile:undefined}])expect(validateCheckpoint({...round,...patch},6)).toBeUndefined();
     expect(validateCheckpoint(legacy().inProgress,6)?.schema).toBe(1);

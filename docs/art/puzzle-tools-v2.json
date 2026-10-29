@@ -1,0 +1,17 @@
+{
+  "revision": 2,
+  "status": "implementation candidate; browser, Android and commercial balance validation pending",
+  "generatedNewRaster": false,
+  "visualPolicy": "Reuse the existing board-special body, fruit and direction composition from src/SpecialTileArt.ts; no copied game art or newly generated raster.",
+  "references": ["docs/art/specials-v4.json", "docs/art/puzzle-tools-v1.json"],
+  "stableIdPolicy": "Keep internal IDs, unlock levels, prices, introduced and trialUsed records. User-facing names and roles follow tools-v2 only. Previous tool images remain historical source artifacts.",
+  "bindings": [
+    {"id": "trowel", "nameKo": "꽃폭탄", "special": "bomb", "body": "public/assets/specials-v4/bomb.webp"},
+    {"id": "gloves", "nameKo": "정원 장갑", "effect": "existing valid-match swap", "body": "public/assets/puzzle-tools-v1/gloves-v1.webp"},
+    {"id": "broom", "nameKo": "가로 로켓", "special": "row", "body": "public/assets/specials-v4/row.webp"},
+    {"id": "bell", "nameKo": "무지개 구슬", "special": "rainbow", "body": "public/assets/specials-v4/rainbow.webp"},
+    {"id": "seeds", "nameKo": "세로 로켓", "special": "column", "body": "public/assets/specials-v4/column.webp"}
+  ],
+  "scope": "Four creators retain the normal piece kind and add one board special without activation, score, collection, obstacle damage or RNG. Gloves retain the existing real swap/cascade behavior. Old tools-v1 rounds keep their profile and ordinary play; new tools become available only in a new tools-v2 round.",
+  "sourceIssue": "https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/447"
+}
