@@ -1,4 +1,16 @@
-## 최신 로컬 통합 APK · 2026-10-29 · #461 · ed2684d
+## 최신 로컬 통합 APK · 2026-10-29 · #472 · 0acc3f6
+
+제품 소스 `0acc3f63dfdb19588df90b3563287d7dc2bc1257`는 아래 ed2684d 통합본에 #462 앨범 갱신 뒤 계획/추억의 읽기 상태 유지와 #468 저장된 첫 추억 결과에서 핍의 해당 장면으로 이동하는 연결을 더했습니다. [PR469](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/469) 최종 head f509e67의 첫 CI40824238688과 정확 [main 최초 CI40824770373](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40824770373) attempt1에서 Node22/24 각각81파일4,292개·스토어19개·타입3설정·두 웹 빌드가 성공했습니다. 원문 ANSI 표기가 실제 ESC 대신 문자 `^[[22m`이어서 최초 집계기의 일부 수치가 비었던 기록은 보존했고 파서만 보정했습니다. 같은 head CI 재실행은 없습니다.
+
+로컬 파일은 `C:/Users/user/Documents/ChatGPT/Pawblossom-builds/2026-10-29-0acc3f6-memory-reading/Pawblossom-Puzzle-v0.1.7-2026-10-29-0acc3f6-debug.apk`입니다. **0.1.7/code8 · 54,882,201바이트 · SHA256 `74110be74616d764342a8b6901078c2c1265a4eab55416c190279f13a175ec47`**이며 min24/target36·기존 단일v2 서명·권한을 보존했습니다. 기존 debug key의 존재만 확인하고 생성/교체하지 않았습니다. Drive 업로드·버전 증가·별도 사용자 테스트 안내 파일은 없고 이전 ed/c140/731/3e APK와 진단을 보존합니다.
+
+양측 fresh 동의 뒤 CPU/SDK 실제 사용 UTC06:07:17→06:08:10 반환입니다. `npm run build:test`→`npx --no-install cap sync android`→`:app:assembleDebug --no-daemon --max-workers=1`의 최초 빌드는11초·91태스크 중21실행/70재사용으로 성공했습니다. testing 웹115개와 APK public117개(빈cordova2개 포함)를 길이/SHA로 전수 대조했고 시험flags3개 true·ZIP658항목 CRC/중복0을 확인했습니다. 원본 public89개는 ed와 모두 같고 원화PNG는 APK에 없습니다. ed의 비웹494개·단일v2 서명자·권한과 Android/의존성 입력을 그대로 보존했습니다. 새 JVM/lint·아이콘 픽셀 decode를 실행한 것으로 세지 않고 #461/#449 근거와 바이트 일치로 연결합니다.
+
+실제 production 브라우저4조건을 확인한 fc2f703과 제품 소스는 문서만 다르며 보고서 안/별도 manifest·현재 production106개가 전수 같습니다. 실패 시에도 복원을 시도하는 wrapper의9단계가 모두 Exit0이고 production106/Android public108·flagsfalse3/source clean으로 복원했습니다. 작업 종료 후 현재 Java프로세스0을 직접 확인했습니다. 시작 전 빈 프로세스 파이프라인이 파일을 만들지 않은 점은 기록해 두고 존재하지 않는 baseline 파일로 비교했다고 주장하지 않습니다. GUI/VM/ADB·서버 변경·폰·Drive 조작은0입니다.
+
+정적 빌드와 파일 대조까지의 근거입니다. 이 APK의 실제 LD 업데이트·진행 중5번 보존·새 추억 이동/읽기 상태는 별도 실행 전이며, Samsung #375·건너뛰기/영상 전구간·청취·자연 도구 해금/500판·실광고/구매/스토어 #73은 미검증입니다. 원문·manifest·artifact/checksum·반환은 Git 밖 `integration-20261029/472-*`와 전달 폴더에 있습니다. 아래 기록은 이전 APK별 이력입니다.
+
+## 이전 로컬 통합 APK · 2026-10-29 · #461 · ed2684d
 
 제품 소스 `ed2684d903a90d33f824a6430776181bd4f8ec83`는 앞선 인트로·도움 도구5종에 정원 다음 목표(PR451), 현재 앨범(PR453), trusted 상태 재조회(PR456), 페이지 보존 시 시험 SDK 연결 유지(PR458), 물가 비버36/38/40 이야기·추억(PR460)을 포함합니다. 정확 최초 [main CI40808166123](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40808166123) attempt1에서 Node22/24 각각81파일4,253개·스토어19개·타입3설정·두 웹 빌드가 성공했습니다. 같은 head 재실행은 없습니다.
 
