@@ -32,9 +32,9 @@ npm run build:test
 
 ## 최신 테스트 전달
 
-게임 소스 `a4d8f512849c8ebac34ff9ede1cc5647aa997fa8`의 **`Pawblossom-Puzzle-v0.1.7-2026-10-25-a4d8f51-debug.apk`**를 [기존 테스트 Drive 폴더](https://drive.google.com/drive/u/1/folders/1dUUwNPZXmSpX8z0t1GsLjbnHuYI-MSHm)에 전달했습니다.0.1.7/code8·55,695,703바이트이며 실제 재다운로드의 크기/SHA 일치를 확인했습니다. 이전506 APK는100판 버전입니다. 같은 버전 번호이므로 파일의 날짜·커밋 이름으로 구분합니다.
+최신 로컬 통합본은 게임 소스 `c1409e4`의 **`Pawblossom-Puzzle-v0.1.7-2026-10-29-c1409e4-debug.apk`**입니다. 0.1.7/code8·54,881,987바이트이며 시작 화면 중복 정리와 보드 특수와 연계한 도움 도구5종을 포함합니다. 저장·서명/권한·내장웹/아이콘과 production 복원 근거는 [Android 기록](docs/android-release.ko.md)을 확인해 주세요. 작업 폴더 밖 `Pawblossom-builds/2026-10-29-c1409e4-special-tools-v2/`에 보존했고 사용자가 직접 업로드하므로 Drive에는 올리지 않았습니다. 같은 버전 번호이므로 날짜·커밋으로 구분합니다.
 
-APK 패키지 검증은 실제 설치·LD/폰 입력·성능·청취 검수를 대신하지 않습니다. 최신 LD0는ADB offline/창 캡처 불일치로 입력을 중단했고 다른 인스턴스는 건드리지 않았습니다. 운영 광고/Play 구매·복원·pending·환불과 정책·공개 배포는 미완료입니다. 게임 진행의 기기 간 클라우드 복원은 제공하지 않으며, 동일 Play 구매 계정의 광고 제거 복원과 구분합니다.
+기존 테스트 Drive의10월25일 a4d8f51은 이전500판 전달본이며, 더 이전506은100판 버전입니다. APK 정적 검증과 실제 단말 실행/청취는 구분합니다. c1409e4의 새 Android 실행과 삼성 최근 앱 복귀는 미확인이고 운영 광고/Play 구매·복원·pending·환불·정책/공개배포도 남아 있습니다. 게임 진행의 기기 간 클라우드 복원은 제공하지 않으며 동일 Play 계정의 광고 제거 구매 복원과 구분합니다.
 
 ## 개발 기록
 
@@ -48,4 +48,4 @@ APK 패키지 검증은 실제 설치·LD/폰 입력·성능·청취 검수를 �
 - [기존 게임 조사와 창작 방향](docs/reference-research.ko.md)
 - [CI 검증](docs/web-ci.ko.md)
 
-문서·이슈·PR·커밋 설명은 한국어로 관리합니다. 코드/Git 작성자는 한 명, 독립 검수는 읽기 역할이며 새 작업 세션은 **gpt-6.1-sol · High**을 사용합니다. 상세 규칙은 [AGENTS.md](AGENTS.md)에 있습니다.
+문서·이슈·PR·커밋 설명은 한국어로 관리합니다. 코드/Git 작성자는 한 명, 독립 검수는 읽기 역할이며 새 작업 세션은 **gpt-6.1-sol · Extra High (xhigh)**을 사용합니다. 상세 규칙은 [AGENTS.md](AGENTS.md)에 있습니다.
