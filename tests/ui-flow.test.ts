@@ -356,7 +356,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
 
 describe('계획과 산책 추억을 읽던 상태의 보존',()=>{
   const ready=()=>{
-    const h=mainHarness(false,false,true,false,{version:2,language:'en',highestLevel:41,completed:Array.from({length:40},(_,i)=>i+1),stars:40,coins:200,garden:0,music:false,sfx:false,tutorialSeen:true});
+    const h=mainHarness(false,false,true,false,{version:2,puzzleTools:{schema:2,introduced:[],trialUsed:[]},language:'en',highestLevel:41,completed:Array.from({length:40},(_,i)=>i+1),stars:40,coins:200,garden:0,music:false,sfx:false,tutorialSeen:true});
     h.run("switchView('journal')");expect(h.reading('journal')).toHaveLength(3);return h;
   };
   const choose=(h:ReturnType<typeof ready>,index:string)=>h.run("document.querySelector('#album-world-select').value='"+index+"';document.querySelector('#album-world-select').onchange()");
