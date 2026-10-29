@@ -28,7 +28,7 @@ function wolfFigure(state:'blocking'|'relieved'){
 }
 
 function beaverFigure(state:'blocking'|'relieved'){
-  const id=`trail-beaver-${state}`,tail='M232 222Q264 174 320 197Q366 231 348 286Q322 328 258 306L231 282Z',src=beaverImages[state];
+  const id=`trail-beaver-${state}`,tail='M258 260Q281 228 310 217Q341 206 352 225Q369 249 350 275Q318 313 258 319L257 300Q265 280 258 260Z',src=beaverImages[state];
   return `<svg class="trail-beaver-${state}" viewBox="0 0 384 384" aria-hidden="true" focusable="false"><defs><clipPath id="${id}-tail"><path d="${tail}"/></clipPath><mask id="${id}-body" maskUnits="userSpaceOnUse" x="0" y="0" width="384" height="384"><rect width="384" height="384" fill="white"/><path d="${tail}" fill="black"/></mask></defs><g class="trail-beaver-tail"><image href="${src}" width="384" height="384" clip-path="url(#${id}-tail)"/></g><image href="${src}" width="384" height="384" mask="url(#${id}-body)"/></svg>`;
 }
 
