@@ -106,7 +106,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   let games=0, destroys=0, frame=()=>{};
   let resultArtCalls=0;
   const documentEvents:Record<string,()=>void>={};
-  const windowEvents:Record<string,()=>void>={};
+  const windowEvents:Record<string,(event?:{persisted?:boolean})=>void>={};
   const nativeEvents:Record<string,(state:{isActive:boolean})=>void>={};
   const pipControllers:{pip:ElementStub;disposed:boolean;disposals:number;alignment:'center'|'bottom'}[]=[];
   const accessoryControllers:{slot:ElementStub;kind:'ribbon'|'wateringCan';disposed:boolean}[]=[];
@@ -243,7 +243,7 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
         ? ['map','puzzle', 'village', 'journal', 'settings'].map(name => element(`#${name}-view`)) : [],
       documentElement: {}, hidden:false, addEventListener:(name:string,callback:()=>void)=>{documentEvents[name]=callback;},
     },
-    window:{addEventListener:(name:string,callback:()=>void)=>{windowEvents[name]=callback;}},
+    window:{addEventListener:(name:string,callback:(event?:{persisted?:boolean})=>void)=>{windowEvents[name]=callback;}},
     Phaser: { Game: GameStub, AUTO: 0, Scale: { FIT: 0, CENTER_BOTH: 0 }, Core:{Events:{POST_RENDER:'postrender'}} },
     BoardScene: SceneStub, tileNames: ['strawberry', 'carrot', 'blueberry', 'acorn', 'leaf', 'flower'],
     specialTileArt,
@@ -2043,6 +2043,39 @@ describe('첫 활성 배경음과 현재 언어 선택',()=>{
     h.run('document.querySelector("#language").onchange({target:{value:"en"}})');
     expect(h.stored().language).toBe('en');expect(h.run('document.querySelector("#language-toggle").value')).toBe('en');
     expect(h.run('JSON.stringify({round,moves,score,collected,board:scene.engine.board,leaves:scene.engine.leaves})')).toBe(round);
+  });
+});
+
+describe('BFCache의 시험 SDK 연결 수명',()=>{
+  async function providerSetup(provider:'ads'|'billing'){
+    let ad:AdSnapshot={bridgeVersion:3,available:true,state:'showing',revision:0,error:'',privacyRequired:false,format:'interstitial',rewardEvents:0,receipt:null};
+    let billing:BillingSnapshot={available:true,configured:true,state:'purchasing',entitlement:'not-owned',revision:0,error:'',price:'',overlay:true,adsBlocked:true,preparingPurchase:false};
+    let onAd!:(value:AdSnapshot)=>void,onBilling!:(value:BillingSnapshot)=>void,fail=false;
+    const calls={status:0,listener:0,remove:0,action:0};
+    const adsBridge:TestAdsBridge={getStatus:async()=>{calls.status++;if(fail)throw new Error('unavailable');return {...ad};},prepare:async()=>{calls.action++;return {...ad};},show:async()=>{calls.action++;return {...ad};},cancel:async()=>{calls.action++;return {...ad};},privacyOptions:async()=>{calls.action++;return {...ad};},selectFormat:async()=>{calls.action++;return {...ad};},addListener:async(_name,callback)=>{calls.listener++;onAd=callback;return {remove:async()=>{calls.remove++;}};}};
+    const billingBridge:TestBillingBridge={getStatus:async()=>{calls.status++;if(fail)throw new Error('unavailable');return {...billing};},restore:async()=>{calls.action++;return {...billing};},queryProduct:async()=>{calls.action++;return {...billing};},purchase:async()=>{calls.action++;return {...billing};},addListener:async(_name,callback)=>{calls.listener++;onBilling=callback;return {remove:async()=>{calls.remove++;}};}};
+    const h=mainHarness(false,false,true,true,undefined,true,provider==='ads'?adsBridge:undefined,provider==='billing'?billingBridge:undefined);h.nativeEvents.appStateChange({isActive:true});
+    if(provider==='ads')await h.run('showAdDialog()');else await h.run('testBilling.connect()');
+    const owner=h.run(provider==='ads'?'testAds':'testBilling') as TestAdsController|TestBillingController;
+    const closed=()=>{ad={...ad,state:'closed',revision:ad.revision+1};billing={...billing,state:'idle',overlay:false,adsBlocked:false,revision:billing.revision+1};};
+    return {h,owner,calls,closed,setFail:(value:boolean)=>{fail=value;},late:()=>provider==='ads'?onAd({...ad}):onBilling({...billing}),settle:()=>new Promise(resolve=>setTimeout(resolve,0))};
+  }
+  it.each(['ads','billing'] as const)('%s persisted 복귀는 같은 연결을 재조회하고 새 요청이나 저장/보상을 만들지 않습니다',async provider=>{
+    const x=await providerSetup(provider),{h,owner,calls}=x,disk=h.disk(),memory=h.run('JSON.stringify({round,moves,score,save,continueUsed})'),status=calls.status;
+    h.windowEvents.pagehide({persisted:true});await x.settle();expect(calls.remove).toBe(0);x.closed();h.windowEvents.pageshow({persisted:true});await x.settle();
+    expect(h.run(provider==='ads'?'testAds':'testBilling')).toBe(owner);expect(calls.listener).toBe(1);expect(calls.status).toBeGreaterThan(status);expect(owner.pausesGame).toBe(false);expect(calls.action).toBe(0);
+    if(provider==='ads')await h.run('closeAdDialog()');expect(h.run('game.paused')).toBe(false);
+    h.windowEvents.pagehide({persisted:true});h.windowEvents.pageshow({persisted:true});await x.settle();expect(calls.listener).toBe(1);expect(calls.remove).toBe(0);expect(calls.action).toBe(0);
+    expect(h.run('JSON.stringify({round,moves,score,save,continueUsed})')).toBe(memory);expect(h.disk()).toEqual(disk);if(provider==='billing')expect((owner as TestBillingController).verifiedOwned).toBe(false);
+  });
+  it.each(['ads','billing'] as const)('%s 복귀 조회 실패는 overlay 보호를 유지하고 native 비활성 중의 성공도 보드를 재개하지 않습니다',async provider=>{
+    const x=await providerSetup(provider),{h,owner}=x;h.windowEvents.pagehide({persisted:true});x.setFail(true);h.windowEvents.pageshow({persisted:true});await x.settle();expect(owner.pausesGame).toBe(true);expect(h.run('game.paused')).toBe(true);
+    x.setFail(false);x.closed();h.nativeEvents.appStateChange({isActive:false});h.windowEvents.pageshow({persisted:true});await x.settle();expect(owner.pausesGame).toBe(false);expect(h.run('nativeActive')).toBe(false);expect(h.run('game.paused')).toBe(true);expect(h.run('audio.suspended')).toBe(true);
+    if(provider==='ads')await h.run('closeAdDialog()');h.nativeEvents.appStateChange({isActive:true});await x.settle();expect(h.run('game.paused')).toBe(false);
+  });
+  it.each(['ads','billing'] as const)('%s 일반 종료는 listener를 한 번 제거하고 늦은 native callback을 무시합니다',async provider=>{
+    const x=await providerSetup(provider),{h,owner,calls}=x;h.windowEvents.pagehide({persisted:false});h.windowEvents.pagehide({persisted:false});await x.settle();expect(calls.remove).toBe(1);
+    const snapshot=JSON.stringify(owner.snapshot),disk=h.disk();x.closed();x.late();await x.settle();expect(JSON.stringify(owner.snapshot)).toBe(snapshot);expect(h.disk()).toEqual(disk);
   });
 });
 

@@ -1739,8 +1739,13 @@ function refreshNativeState(){
   }).catch(()=>{ /* 조회 실패만으로 전경을 가정하거나 다시 재개하지 않습니다. */ });
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden)nativeStateRequest++;syncActivity();if(!document.hidden)refreshNativeState();if(testAds){renderAdDialog();if(!document.hidden)void testAds.refresh();}if(testBilling){renderBillingDialog();if(!document.hidden)void testBilling.refresh();}});
-window.addEventListener('pageshow',()=>{syncActivity();refreshNativeState();});
-window.addEventListener('pagehide',()=>{nativeStateRequest++;resultWorldScenery?.dispose();resultWorldScenery=undefined;$('#result-dialog').dataset.worldActive='false';if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);boardFeedback.cancel();void testAds?.dispose();void testBilling?.dispose();});
+window.addEventListener('pageshow',()=>{
+  syncActivity();refreshNativeState();
+  if(document.hidden)return;
+  if(testAds){renderAdDialog();void testAds.refresh();}
+  if(testBilling){renderBillingDialog();void testBilling.refresh();}
+});
+window.addEventListener('pagehide',event=>{nativeStateRequest++;resultWorldScenery?.dispose();resultWorldScenery=undefined;$('#result-dialog').dataset.worldActive='false';if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);boardFeedback.cancel();if(!event?.persisted){void testAds?.dispose();void testBilling?.dispose();}});
 if(Capacitor.isNativePlatform()){
   void App.addListener('appStateChange',({isActive})=>{nativeRevision++;nativeActive=isActive;syncActivity();if(testAds){renderAdDialog();if(isActive)void testAds.refresh();}if(testBilling){renderBillingDialog();if(isActive)void testBilling.refresh();}}).then(refreshNativeState,refreshNativeState);
   void App.addListener('backButton',()=>{const dialog=$<HTMLDialogElement>('#result-dialog');if(billingModal())closeBillingDialog();else if(testBilling?.pausesGame)return;else if(androidAdEntry&&$<HTMLDialogElement>('#test-ad-dialog').open){void closeAdDialog();}else if(testAds?.pausesGame)return;else if(toolDialog.open)closeToolInfo(true,true);else if(toolMode)closeToolMode();else if(lookPreview)closeLookPreview();else if(spacePreview)closeSpacePreview();else if(resourceHelp)closeResourceHelp();else if(stagePreview)closeStagePreview();else if($<HTMLDialogElement>('#tutorial-dialog').open)closeTutorial();else if(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)closeTestPicker();else if(dialog.open){dialog.close();switchView('map');}else if(route==='settings')switchView(settingsReturnRoute);else if(route!=='map')switchView('map');else void App.minimizeApp();});
