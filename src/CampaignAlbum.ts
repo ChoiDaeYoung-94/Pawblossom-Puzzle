@@ -16,7 +16,8 @@ export function parseAlbumIndex(value:string){
 }
 export function albumSelection(completed:readonly number[],selected:number|undefined){
   const worlds=campaignAlbum(completed),recent=[...worlds].reverse();
-  return worlds.find(world=>world.index===selected)??recent.find(world=>world.collected)??recent.find(world=>world.done>0)??worlds[0];
+  // 명시한 선택을 유지하고, 자동 선택은 지금 쌓는 풍경의 다음 목표를 먼저 보여 줍니다.
+  return worlds.find(world=>world.index===selected)??recent.find(world=>world.done>0&&!world.collected)??recent.find(world=>world.collected)??worlds[0];
 }
 export function campaignAlbumCard(language:Language,completed:readonly number[],selected:number|undefined,demo:boolean){
   const worlds=campaignAlbum(completed),world=albumSelection(completed,selected),count=worlds.filter(w=>w.collected).length;
