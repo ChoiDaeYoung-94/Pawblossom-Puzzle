@@ -520,7 +520,7 @@ describe('연속 진행의 첫 이야기 미리보기',()=>{
     const before=h.run('JSON.stringify({round,currentLevel,moves,score,save,board:scene.engine.board})');
     h.element('#result-next').onclick();
     expect(h.run('stagePreview?.id')).toBe(target);expect(h.run('route')).toBe('map');
-    expect(h.element('#result-dialog').open).toBe(false);expect(h.element('#stage-preview-dialog').open).toBe(true);
+    expect(h.element('#result-dialog').open).toBe(false);expect(h.run('previewDialog.open')).toBe(true);
     expect(h.run('previewDialog.innerHTML')).toContain(`data-trail-level="${target}"`);
     expect(h.run('previewDialog.innerHTML')).toContain('data-trail-resolved="false"');
     expect(h.run('JSON.stringify({round,currentLevel,moves,score,save,board:scene.engine.board})')).toBe(before);
@@ -542,7 +542,7 @@ describe('연속 진행의 첫 이야기 미리보기',()=>{
   it('미리보기 언어 변경은 같은 다음 판 문맥과 보상을 유지한다',()=>{
     const h=resultRound(35);h.element('#result-next').onclick();const round=h.run('round');
     h.run("changeLanguage('ko')");expect(h.run('stagePreview.id')).toBe(36);expect(h.run('previewDialog.innerHTML')).toContain('data-trail-episode="beaver-v1"');
-    expect(h.run('previewDialog.innerHTML')).toContain(t('ko','trailBeaverFirstBefore'));const disk=h.disk(),writes=h.writes();
+    expect(h.run('previewDialog.innerHTML')).toContain(t('ko','trailBeaverFirstProblem'));const disk=h.disk(),writes=h.writes();
     h.element('#preview-cancel').onclick();expect(h.run('route')).toBe('map');expect(h.run('round')).toBe(round);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
   });
   it.each(['hidden','inactive','ads','scene'] as const)('%s 뒤 오래된 첫 이야기 시작 문맥은 새 판이나 저장을 만들지 않는다',reason=>{
@@ -559,13 +559,13 @@ describe('연속 진행의 첫 이야기 미리보기',()=>{
     const level=reason==='ordinary'?4:reason==='loss'?6:reason==='last'?500:5;
     const h=resultRound(level,{testing:reason==='practice',won:reason!=='loss',completedNext:reason==='completed-story'}),round=h.run('round');
     const coins=h.run('save.coins'),stars=h.run('save.stars');h.element('#result-next').onclick();h.frame();
-    expect(h.element('#stage-preview-dialog').open).toBe(false);expect(h.run('stagePreview')).toBeUndefined();expect(h.run('route')).toBe('puzzle');
+    expect(h.run('previewDialog.open')).toBe(false);expect(h.run('stagePreview')).toBeUndefined();expect(h.run('route')).toBe('puzzle');
     expect(h.run('currentLevel')).toBe(reason==='loss'||reason==='last'?level:level+1);expect(h.run('round')).toBe(round+1);
     expect(h.run('save.coins')).toBe(coins);expect(h.run('save.stars')).toBe(stars);
   });
   it('보드가 이탈할 수 없으면 첫 이야기 결과창을 닫지 않는다',()=>{
     const h=resultRound(5),round=h.run('round'),disk=h.disk(),writes=h.writes();h.run('scene.busy=true');h.element('#result-next').onclick();
-    expect(h.element('#result-dialog').open).toBe(true);expect(h.element('#stage-preview-dialog').open).toBe(false);expect(h.run('route')).toBe('puzzle');
+    expect(h.element('#result-dialog').open).toBe(true);expect(h.run('previewDialog.open')).toBe(false);expect(h.run('route')).toBe('puzzle');
     expect(h.run('round')).toBe(round);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
   });
 });
@@ -2873,6 +2873,8 @@ describe('나무상자 챕터와 별도 목표·저장 연결',()=>{
   it.each(['ko','en'] as const)('%s: 35 완료는 36을 열고 상자 파괴/목표/미리보기/복원을 연결합니다',language=>{
     const app=mainHarness();app.run('startLevel(35);finish(true)');expect(app.stored().highestLevel).toBe(36);
     app.element('#result-next').onclick();app.run("changeLanguage('"+language+"')");
+    expect(app.run('stagePreview.id')).toBe(36);expect(app.run('currentLevel')).toBe(35);expect(app.stored().inProgress).toBeUndefined();
+    app.run("confirmStagePreview(stagePreview,'start')");
     expect(app.run('currentLevel')).toBe(36);expect(app.stored().inProgress.crates[2][2]).toBe(1);expect(app.stored().inProgress.board[2][2]).toBeNull();
     expect(app.element('#goals').innerHTML).toContain('data-feedback-goal="crates"');expect(app.element('#goals').innerHTML).toContain(t(language,'woodenCrate'));
     expect(app.element('#board-hint-text').textContent).toBe(t(language,'cratePlayHint'));
