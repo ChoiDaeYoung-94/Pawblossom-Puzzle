@@ -1,0 +1,111 @@
+{
+  "issue": 459,
+  "status": "implementation-candidate-browser-checked; PR/main-CI-pending",
+  "tool": "built-in image_gen; transparent_background=true; API key/CLI fallback unused",
+  "sources": [
+    {
+      "path": "assets/art/trail-episode-v2/beaver-blocking-v1.png",
+      "bytes": 1604434,
+      "sha256": "1823832038bdc11b61907a93811ed001e18c8e5eda96f9929bc41cc7915ab933",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "pngColorType": 6
+    },
+    {
+      "path": "assets/art/trail-episode-v2/beaver-relieved-v1.png",
+      "bytes": 1558693,
+      "sha256": "07395e81a7add82e3fbf7501a95a12b2158cf06fbce124abd607cf89eb3a5904",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "pngColorType": 6
+    }
+  ],
+  "prompts": [
+    {
+      "intent": "generate",
+      "target": "beaver-blocking-v1",
+      "text": "Use case: stylized-concept. Asset type: original full-body game character sprite for Pawblossom Puzzle, a cozy hand-painted match-3 game with a cream rabbit hero and softly shaded woodland animals. Create one young beaver who has been busy stacking work crates beside a sunny pond. Character only, with a mildly worried, stubborn-but-kind expression: brows slightly knitted, mouth closed with two small recognizable beaver incisors, bright expressive dark brown eyes. A rounded stocky warm chestnut body, cream muzzle/chest, small rounded ears, short sturdy feet, and a broad flat dark-brown paddle tail clearly visible beside and behind the body on the viewer's right. Both forepaws rest together at the belly; keep limbs separated and readable. A small muted blue neckerchief is the only accessory. Three-quarter view facing slightly left, a balanced standing pose, complete figure. Premium painted storybook material with refined soft 3D volume, gentle fur strokes and clear silhouette readable at 64–96px. Warm daylight from upper left, soft amber edge light, restrained lavender in shadows; a friendly waterside neighbor rather than a frightening enemy. Subject fills about 82% of a square canvas with comfortable transparent margins around every ear, foot and tail tip. Genuinely transparent background, no ground, water, crates, tools, scenery, floor or detached cast shadow. One character only, no sheet, frame, text, logo or watermark. Original design, no resemblance to an existing game character. Intended square 1024 by 1024."
+    },
+    {
+      "intent": "edit own generated sprite; expression only",
+      "target": "beaver-relieved-v1",
+      "reference": "assets/art/trail-episode-v2/beaver-blocking-v1.png",
+      "text": "Use case: identity-preserve. Edit target: our own original full-body beaver game sprite. Make the matching relieved/happy state for this exact character. Change only the facial expression: relax the worried eyebrows into a gentle grateful smile, make the eyes warmly happy and slightly narrowed, and turn the mouth corners up while retaining the same two little beaver incisors. Preserve the same beaver identity, warm chestnut/cream fur colors and painterly soft 3D material, small muted blue neckerchief, exact body proportions and scale, three-quarter view facing slightly left, forepaws together at the belly, feet, broad flat paddle-tail design and placement, lighting, complete full-body composition and transparent margins. Keep the body pose and every accessory unchanged so both states can be used in the same animation layout. Single character on a genuinely transparent background, no floor, scenery, props, extra characters, frames, text, logo or watermark. This is our own original sprite; do not introduce resemblance to any existing game character."
+    }
+  ],
+  "outputs": [
+    {
+      "path": "public/assets/trail-episode-v2/beaver-blocking-v1.webp",
+      "width": 384,
+      "height": 384,
+      "bytes": 33160,
+      "sha256": "eaa65e6812930c0826dddbca0e92110cee7920deab18d161ca7977435338cd38",
+      "sourceAlphaBounds": [
+        0,
+        4,
+        1244,
+        1254
+      ],
+      "exportAlphaBounds": [
+        16,
+        26,
+        352,
+        357
+      ],
+      "alphaPreserved": true
+    },
+    {
+      "path": "public/assets/trail-episode-v2/beaver-relieved-v1.webp",
+      "width": 384,
+      "height": 384,
+      "bytes": 31224,
+      "sha256": "08f2806a4bf7113372a665dd8e402203ff83a2b749d3069a79cb3e426604d7ff",
+      "sourceAlphaBounds": [
+        0,
+        4,
+        1238,
+        1254
+      ],
+      "exportAlphaBounds": [
+        39,
+        25,
+        353,
+        358
+      ],
+      "alphaPreserved": true
+    }
+  ],
+  "qualityNotes": [
+    "두 자체 원본의 걱정/안도 표정과 같은 캐릭터·포즈를 육안 확인했습니다. 요청1024와 실제1254는 다르며 픽셀 단위 동일 포즈를 주장하지 않습니다.",
+    "원본RGBA 실제alpha0–255·표준384px/출력별64KiB·내보내기 전후alpha픽셀동일을 검사했습니다. 원본은 바꾸지 않았고 출력 합계64,384바이트입니다.",
+    "c79a1a2의 실제production5조건과 관련20개/타입3설정이 첫 성공했습니다. KO39036/EN32038·가로KO84440/모션감소EN74040·EN740정상21 통합을 구분합니다.",
+    "40번은 명시한정상회차fixture의 실제유효교환으로 마지막상자를 정리했고 기존1별40코인/엽서·두추억3/3·결과버튼접근을 확인했습니다. 자연진행/사람난이도 검수가 아닙니다.",
+    "별도실제행렬관측은 꼬리−2.77도·몸/전체SVG변환none·이탈animationnone입니다. 모션감소/낮은가로는HUD와꼬리animation을끄며 보드한화면을 유지했습니다.",
+    "구체 PNG/회차fixture/전체bundleSHA·성공명령·source연결은Git밖 integration-20261029/459-*에 보존합니다. 실제Android/상용미술·자연500판 승인은 미검증입니다."
+  ],
+  "scope": "36/38/40 이야기 표시와 실제 상자 집계 연결입니다. 늑대4/6/10과 에피소드별3추억·실제 완료 소유를 보존하며 새 저장/보상·엔진/RNG는 바꾸지 않습니다.",
+  "export": {
+    "canvas": 384,
+    "content": 352,
+    "padding": 16,
+    "webpQuality": 90,
+    "alphaQuality": 100,
+    "policy": "원본 변경 없음·표준 비례 축소/투명padding/WebP encoding only"
+  },
+  "integration": {
+    "module": "src/TrailEpisode.ts",
+    "styles": "src/TrailEpisode.css",
+    "beaverBeats": [
+      36,
+      38,
+      40
+    ],
+    "counter": "확정 clearedCrates / 실제 level.crates 수; 낙엽과 분리",
+    "journal": "에피소드별 실제completed 소유/3추억;20번이상 정상완료기록부터 비버0/3예고;새저장/보상없음",
+    "motion": "상보 SVG mask로 꼬리만 움직이고 몸은 고정;active/reduced/낮은가로/이탈조건 보존"
+  }
+}
