@@ -385,6 +385,24 @@ describe('계획과 산책 추억을 읽던 상태의 보존',()=>{
     if(boundary==='reset')h.element('#reset').onclick();
     expect(h.reading('journal').every(node=>!node.open)).toBe(true);
   });
+  it('정상 돌봄으로 save 객체가 교체되고 언어를 바꿔도 두 화면의 계획을 독립적으로 유지합니다',()=>{
+    const h=ready();h.reading('village')[0].open=true;h.reading('journal')[1].open=true;
+    h.run('globalThis.previousCareSave=save');h.element('#pip-feed').onclick();
+    expect(h.run('save===previousCareSave')).toBe(false);expect(h.stored()).toMatchObject({coins:190,pip:{growth:10,affection:4}});
+    expect(h.reading('village')[0].open).toBe(true);expect(h.reading('journal').map(node=>node.open)).toEqual([false,true,false]);
+    h.run("changeLanguage('ko')");expect(h.reading('journal').map(node=>node.open)).toEqual([false,true,false]);
+    h.flushCareReaction();expect(h.reading('village')[0].open).toBe(true);expect(h.reading('journal').map(node=>node.open)).toEqual([false,true,false]);
+  });
+  it('사라진 비버 항목과 비대상 details를 기억해 새 화면에 되살리지 않습니다',()=>{
+    const h=ready();h.reading('journal')[1].open=true;h.reading('journal')[2].open=true;
+    h.element('#journal-view').innerHTML+='<details id="unrelated-reading" open><summary>Other</summary></details>';
+    h.reading('journal')[1].open=true;h.reading('journal')[2].open=true;
+    h.run('save.completed=[1];renderViews()');expect(h.reading('journal')).toHaveLength(2);
+    expect(h.run("document.querySelector('#trail-journal-beaver-v1')")).toBeNull();
+    expect(h.run("document.querySelector('#unrelated-reading')")).toBeNull();
+    h.run('save.completed=Array.from({length:40},(_,i)=>i+1);renderViews()');
+    expect(h.reading('journal').map(node=>node.open)).toEqual([false,true,false]);
+  });
 });
 
 describe('직접 고르는 산책 도구의 실제 저장/UI 경계',()=>{
