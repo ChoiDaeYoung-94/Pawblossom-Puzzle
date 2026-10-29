@@ -1,6 +1,6 @@
 {
   "issue": 459,
-  "status": "source-art-only; runtime-export-and-validation-pending",
+  "status": "implementation-candidate; runtime-QA-pending",
   "tool": "built-in image_gen; transparent_background=true; API key/CLI fallback unused",
   "sources": [
     {
@@ -37,11 +37,60 @@
       "text": "Use case: identity-preserve. Edit target: our own original full-body beaver game sprite. Make the matching relieved/happy state for this exact character. Change only the facial expression: relax the worried eyebrows into a gentle grateful smile, make the eyes warmly happy and slightly narrowed, and turn the mouth corners up while retaining the same two little beaver incisors. Preserve the same beaver identity, warm chestnut/cream fur colors and painterly soft 3D material, small muted blue neckerchief, exact body proportions and scale, three-quarter view facing slightly left, forepaws together at the belly, feet, broad flat paddle-tail design and placement, lighting, complete full-body composition and transparent margins. Keep the body pose and every accessory unchanged so both states can be used in the same animation layout. Single character on a genuinely transparent background, no floor, scenery, props, extra characters, frames, text, logo or watermark. This is our own original sprite; do not introduce resemblance to any existing game character."
     }
   ],
-  "outputs": [],
-  "qualityNotes": [
-    "두 원본의 걱정/안도 표정과 같은 캐릭터·몸 포즈를 육안으로 확인했습니다. transparent_background=true이며 실제 픽셀 alpha/표준 내보내기 검사는 후속입니다.",
-    "원본을 바이트 그대로 복사했습니다. Tamer SDK 사용 중 로컬 이미지 변환·Node/브라우저·빌드는 실행하지 않았습니다.",
-    "384px 표준 출력·꼬리 마스크 경계/작은 화면·모션 감소 검수는 미완료입니다. 상용 미술/Android 승인과 구분합니다."
+  "outputs": [
+    {
+      "path": "public/assets/trail-episode-v2/beaver-blocking-v1.webp",
+      "width": 384,
+      "height": 384,
+      "bytes": 33160,
+      "sha256": "eaa65e6812930c0826dddbca0e92110cee7920deab18d161ca7977435338cd38",
+      "sourceAlphaBounds": [
+        0,
+        4,
+        1244,
+        1254
+      ],
+      "exportAlphaBounds": [
+        16,
+        26,
+        352,
+        357
+      ],
+      "alphaPreserved": true
+    },
+    {
+      "path": "public/assets/trail-episode-v2/beaver-relieved-v1.webp",
+      "width": 384,
+      "height": 384,
+      "bytes": 31224,
+      "sha256": "08f2806a4bf7113372a665dd8e402203ff83a2b749d3069a79cb3e426604d7ff",
+      "sourceAlphaBounds": [
+        0,
+        4,
+        1238,
+        1254
+      ],
+      "exportAlphaBounds": [
+        39,
+        25,
+        353,
+        358
+      ],
+      "alphaPreserved": true
+    }
   ],
-  "scope": "36/38/40 이야기 표시와 실제 상자 집계 연결입니다. 늑대4/6/10과 에피소드별3추억·실제 완료 소유를 보존하며 새 저장/보상·엔진/RNG는 바꾸지 않습니다."
+  "qualityNotes": [
+    "두 자체 원본의 걱정/안도 표정과 같은 캐릭터·몸 포즈를 육안으로 확인했습니다.",
+    "원본 RGBA의 실제alpha범위0–255와 표준384px/출력별64KiB·alpha픽셀동일을 검사했습니다. 원본은 바꾸지 않았습니다.",
+    "꼬리 마스크 경계/작은 화면·모션 감소/40번 결과 검수는 후속입니다. 상용 미술·자연진행/Android 승인과 구분합니다."
+  ],
+  "scope": "36/38/40 이야기 표시와 실제 상자 집계 연결입니다. 늑대4/6/10과 에피소드별3추억·실제 완료 소유를 보존하며 새 저장/보상·엔진/RNG는 바꾸지 않습니다.",
+  "export": {
+    "canvas": 384,
+    "content": 352,
+    "padding": 16,
+    "webpQuality": 90,
+    "alphaQuality": 100,
+    "policy": "원본 변경 없음·표준 비례 축소/투명padding/WebP encoding only"
+  }
 }
