@@ -509,7 +509,7 @@ function updateGoals(){
   $('#board-keyboard-help').textContent=text('boardKeyboardHelp');
   $('.bottom-nav').setAttribute('aria-label',text('navLabel'));
   const level=levels[currentLevel-1];
-  updateTrailEncounter($('#trail-encounter'),save.language,currentLevel,clearedLeaves,level.leaves?.length??0);
+  updateTrailEncounter($('#trail-encounter'),save.language,currentLevel,clearedLeaves,level.leaves?.length??0,{cleared:clearedCrates,total:level.crates?.length??0});
   const descriptions=goalDescriptions();
   const chapter=chapterForLevel(currentLevel);
   $('#chapter-name').textContent=`${text(chapter.title)} · ${chapter.first}–${chapter.last}`;

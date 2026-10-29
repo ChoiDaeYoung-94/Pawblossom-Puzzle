@@ -1,0 +1,47 @@
+{
+  "issue": 459,
+  "status": "source-art-only; runtime-export-and-validation-pending",
+  "tool": "built-in image_gen; transparent_background=true; API key/CLI fallback unused",
+  "sources": [
+    {
+      "path": "assets/art/trail-episode-v2/beaver-blocking-v1.png",
+      "bytes": 1604434,
+      "sha256": "1823832038bdc11b61907a93811ed001e18c8e5eda96f9929bc41cc7915ab933",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "pngColorType": 6
+    },
+    {
+      "path": "assets/art/trail-episode-v2/beaver-relieved-v1.png",
+      "bytes": 1558693,
+      "sha256": "07395e81a7add82e3fbf7501a95a12b2158cf06fbce124abd607cf89eb3a5904",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "pngColorType": 6
+    }
+  ],
+  "prompts": [
+    {
+      "intent": "generate",
+      "target": "beaver-blocking-v1",
+      "text": "Use case: stylized-concept. Asset type: original full-body game character sprite for Pawblossom Puzzle, a cozy hand-painted match-3 game with a cream rabbit hero and softly shaded woodland animals. Create one young beaver who has been busy stacking work crates beside a sunny pond. Character only, with a mildly worried, stubborn-but-kind expression: brows slightly knitted, mouth closed with two small recognizable beaver incisors, bright expressive dark brown eyes. A rounded stocky warm chestnut body, cream muzzle/chest, small rounded ears, short sturdy feet, and a broad flat dark-brown paddle tail clearly visible beside and behind the body on the viewer's right. Both forepaws rest together at the belly; keep limbs separated and readable. A small muted blue neckerchief is the only accessory. Three-quarter view facing slightly left, a balanced standing pose, complete figure. Premium painted storybook material with refined soft 3D volume, gentle fur strokes and clear silhouette readable at 64–96px. Warm daylight from upper left, soft amber edge light, restrained lavender in shadows; a friendly waterside neighbor rather than a frightening enemy. Subject fills about 82% of a square canvas with comfortable transparent margins around every ear, foot and tail tip. Genuinely transparent background, no ground, water, crates, tools, scenery, floor or detached cast shadow. One character only, no sheet, frame, text, logo or watermark. Original design, no resemblance to an existing game character. Intended square 1024 by 1024."
+    },
+    {
+      "intent": "edit own generated sprite; expression only",
+      "target": "beaver-relieved-v1",
+      "reference": "assets/art/trail-episode-v2/beaver-blocking-v1.png",
+      "text": "Use case: identity-preserve. Edit target: our own original full-body beaver game sprite. Make the matching relieved/happy state for this exact character. Change only the facial expression: relax the worried eyebrows into a gentle grateful smile, make the eyes warmly happy and slightly narrowed, and turn the mouth corners up while retaining the same two little beaver incisors. Preserve the same beaver identity, warm chestnut/cream fur colors and painterly soft 3D material, small muted blue neckerchief, exact body proportions and scale, three-quarter view facing slightly left, forepaws together at the belly, feet, broad flat paddle-tail design and placement, lighting, complete full-body composition and transparent margins. Keep the body pose and every accessory unchanged so both states can be used in the same animation layout. Single character on a genuinely transparent background, no floor, scenery, props, extra characters, frames, text, logo or watermark. This is our own original sprite; do not introduce resemblance to any existing game character."
+    }
+  ],
+  "outputs": [],
+  "qualityNotes": [
+    "Both originals visually inspected; distinct worried and relieved faces, consistent identity/pose and transparent output.",
+    "Source originals copied byte-for-byte; no local image conversion or build during Tamer shared SDK lease.",
+    "Standard384px export/tail-mask calibration/small-screen and reduced-motion QA remain pending; not commercial-art or Android approval."
+  ],
+  "scope": "36/38/40 narrative presentation; crates counter from actual level; preserve wolf4/6/10 and per-episode3-moment ownership from real completed; no new save/reward/engine/RNG changes"
+}
