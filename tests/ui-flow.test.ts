@@ -2077,6 +2077,14 @@ describe('문서·Android·모달 복귀',()=>{
     const {app,requests,settle}=await queriedNative();requests[0].resolve({isActive:true});await settle();app.windowEvents.pageshow();
     app.nativeEvents.appStateChange({isActive:false});requests[1].resolve({isActive:true});await settle();expect(app.run('nativeActive')).toBe(false);expect(app.run('game.paused')).toBe(true);expect(app.run('audio.suspended')).toBe(true);
   });
+  it.each(['hidden','pagehide'])('%s 경계의 오래된 전경조회는 다음 표시의 확인 전에 보드나 소리를 재개하지 않습니다',async boundary=>{
+    const {app,requests,settle}=await queriedNative();
+    if(boundary==='hidden'){app.run('document.hidden=true');app.documentEvents.visibilitychange();}else app.windowEvents.pagehide();
+    requests[0].resolve({isActive:true});await settle();expect(app.run('nativeActive')).toBe(false);expect(app.run('game.paused')).toBe(true);
+    app.run('document.hidden=false');if(boundary==='hidden')app.documentEvents.visibilitychange();else app.windowEvents.pageshow();
+    expect(requests).toHaveLength(2);expect(app.run('game.paused')).toBe(true);expect(app.run('audio.suspended')).toBe(true);
+    requests[1].resolve({isActive:true});await settle();expect(app.run('game.paused')).toBe(false);expect(app.run('audio.suspended')).toBe(false);
+  });
   it('상태 재조회 성공 뒤에도 숨김 문서와 열린 안내창은 보드 재개를 막습니다',async()=>{
     const {app,requests,settle}=await queriedNative();app.run('showTutorial();document.hidden=true');requests[0].resolve({isActive:true});await settle();expect(app.run('game.paused')).toBe(true);expect(app.run('audio.suspended')).toBe(true);
     app.run('document.hidden=false');app.documentEvents.visibilitychange();requests[1].resolve({isActive:true});await settle();expect(app.run('game.paused')).toBe(true);
