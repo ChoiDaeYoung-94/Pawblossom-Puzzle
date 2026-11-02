@@ -3,6 +3,7 @@ import {parentPort,workerData} from 'node:worker_threads';
 import {CallbackInbox} from '../../server/ads/callbackInbox.ts';
 import {DatabaseSync} from 'node:sqlite';
 import {createCallbackClaimProbe} from './callbackClaimProbe.ts';
+import {createCallbackCloseReceipt} from './callbackCloseReceipt.ts';
 // 운영 오류 메시지에는 SQL 원인이 없으므로 테스트 worker 내부에서 숫자 코드만 분류합니다.
 // SQL·인수·원문 오류를 결과나 로그로 내보내지 않습니다.
 let sqliteFailure;
@@ -17,9 +18,10 @@ DatabaseSync.prototype.prepare=function(...args){
 };
 async function run(d) {
   claimProbe=createCallbackClaimProbe(d.diagnostics===true);
+  const closeReceipt=createCallbackCloseReceipt(d.diagnostics===true);
   let inbox,stage='open',openAttempts=0;
   const failures=[],limit=Number.isSafeInteger(d.openRetries)&&d.openRetries>=0&&d.openRetries<=2?d.openRetries+1:1;
-  const diagnostic=result=>{const claimBegin=claimProbe.snapshot();return d.diagnostics?{...result,diagnostic:{openAttempts,failures,...(claimBegin?{claimBegin}:{})}}:result;};
+  const diagnostic=result=>{const claimBegin=claimProbe.snapshot();return d.diagnostics?{...result,diagnostic:{openAttempts,failures,close:closeReceipt.receipt,...(claimBegin?{claimBegin}:{})}}:result;};
   try {
     while(!inbox){
       sqliteFailure=undefined;openAttempts++;
@@ -41,7 +43,8 @@ async function run(d) {
     const result=d.action==='receive'?inbox.receive(d.query):await inbox.processNext();
     return diagnostic(d.diagnostics&&result.kind==='unavailable'?{...result,stage,sqlite:sqliteFailure??'none'}:result);
   }catch(error){return diagnostic({kind:'worker-error',stage,code:error?.message==='callback-inbox-open-failed'?'open-failed':'unexpected',sqlite:sqliteFailure??'none'});}
-  finally{try{inbox?.close();}catch{}}
+  // 반환 DTO의 같은 영수증은 finally 뒤 IPC 직렬화 때 최종 값을 읽습니다.
+  finally{try{closeReceipt.close(inbox);}catch{}}
 }
 if(parentPort){parentPort.postMessage('ready');parentPort.once('message',async()=>parentPort.postMessage(await run(workerData)));}
 else process.once('message',async d=>{process.send?.(await run(d));process.disconnect?.();});

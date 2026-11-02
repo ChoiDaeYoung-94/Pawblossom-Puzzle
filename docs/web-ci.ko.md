@@ -1,5 +1,15 @@
 # 웹 자동 검증
 
+## 2026-11-02 · #122 callback close 반환·작업자 종료 관측
+
+현재 녹색을 잠금 원인 해결로 보지 않고 검사 전용 관측 공백을 보강했습니다. worker는 기존finally의 CallbackInbox.close를 그대로1회 호출/예외 삼킴하며, diagnostics에서만 not-attempted/returned/threw를 같은 결과 DTO에 남깁니다. not-attempted는 반환된inbox 참조가 없다는 뜻이고 생성 중 handle 미개방 증거가 아닙니다. returned는 해당 close 함수 반환이며 native isOpen 직접 관측이 아닙니다. 원문 오류·SQL·입력/키·DB행/경로를 복사하지 않습니다.
+
+부모의 선택 관측은 실제 non-ready IPC도착·exit이벤트/코드·terminate요청/Promise반환·reject/throw를 구분합니다. 배치 실패 뒤 도착도 수신으로 기록하되 업무수락/결과Promise는 기존대로 거절하며, observer 오류는 격리합니다. 기존 ready/go·payload·결과의exit무대기·실제exit/terminate정산 뒤 부모정리 계약은 유지합니다. 8worker receive/process의 assertion 시점과 기존cleanup 뒤 각최대8행/고정분류 결과를 따로 기록하며 미관측을 종료 성공으로 세지 않습니다.
+
+기준main f3359a7의6개 검사파일 작업본을 SHA로 고정한 최초 관련2파일33개와 타입3설정은 모두 성공했습니다. 독립 읽기에서 발견한 실패 뒤IPC 미수신 오분류를 수정하고 회귀를 추가했습니다. 기존8worker·500ms/5초·seed/golden·SQL/운영코드와1completed/7idle/attempt1 업무 기대는 그대로이며 **close returned 확인은 새 cleanup 통과 조건**입니다. 실제SQLite 동시성 검사는 로컬에서 반복하지 않고 필수PR/정확main 최초CI에서 별도로 확인합니다. 근본원인/lock owner·다른 회차의 실패 원문은 계속 #122에 보존합니다.
+
+최초 작업파일SHA/단위·타입원문은 Git 밖 `qa/integration-20261102/122-close-first-*`에 있습니다. 앱/경제·500판·Android/SDK·소스 에셋·최종 믹스·키/env·운영/배포·새APK/Drive 변경은 없으며, 이 관측 보강을 게임 기능이나 실제서비스 완료로 합산하지 않습니다.
+
 ## 2026-10-28 · #424 핍 아이콘 검증 경계
 
 v1 초안·기존12검사를 보존하고 v2 원본/manifest·4PNG/8XML·투명 레이어·전체 픽셀 안전원 검사를 추가했습니다. 최초18검사가 성공했고 독립 검수에서 원형 마스크의 의미 검증 한계를 확인해, AA 경계를 제외한 바깥 alpha0/안쪽 alpha255·legacyRGB 일치를 보강한 최종19검사가 성공했습니다. 제품 결함 재현이나 실패 기대 완화가 아니며 새변경의 의미 검증입니다. sourceRGBA의 alpha0/1/2/254/255·입력 불변,희박한alpha1도 안전원에서 제외하지 않음,픽셀 중심은 안쪽이어도 셀 모서리가 원 밖인 경우 거부,잘못된XML크기맞춤/연결과manifest경계를 검사합니다. 제출PNG의 기존 opaque/sRGB/1MiB 규칙은 완화하지 않았습니다.

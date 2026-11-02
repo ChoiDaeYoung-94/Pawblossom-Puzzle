@@ -12,12 +12,15 @@ import {isAdmobCallbackStructure} from '../server/ads/admobSsv';
 import {createCallbackHttpAdapter,CALLBACK_PATH} from '../server/ads/callbackHttp';
 import {callback,epoch,keyEntry,keyResponse,policy,malleate} from './helpers/ssvFixture';
 import {createCallbackChildScope,finishCallbackTest} from './helpers/callbackChild';
-import {createCallbackParallelScope} from './helpers/callbackParallel';
+import {createCallbackParallelScope,type CallbackWorkerObserver,type CallbackWorkerObservation} from './helpers/callbackParallel';
 import {createTrace,beginPhase,elapsed,projectTrace,recordError} from './helpers/ledgerDiagnostics';
 const key=randomBytes(32),rewardKey=randomBytes(32),owner={ownerId:'synthetic-private-owner',roundId:'synthetic-private-round'};
 const dirs:string[]=[],inboxes:CallbackInbox[]=[],ledgers:RewardLedger[]=[],dbs:DatabaseSync[]=[];
 const childJobs=createCallbackChildScope(),lockReleases:(()=>void)[]=[];
 const parallelWorkers=createCallbackParallelScope();
+let parallelReceipt:{receive:Map<number,Readonly<CallbackWorkerObservation>>;process:Map<number,Readonly<CallbackWorkerObservation>>;receiveResults?:unknown[];processResults?:unknown[]}|undefined;
+const receiptRows=(phase:'receive'|'process')=>[...(parallelReceipt?.[phase].values()??[])].sort((a,b)=>a.index-b.index).slice(0,8);
+const safeWorkerResults=(values:any[])=>values.map(r=>({kind:r.kind,code:r.code,stage:r.stage,sqlite:r.sqlite,diagnostic:r.diagnostic}));
 const workerUrl=new URL('./helpers/callback-inbox-worker.mjs',import.meta.url);
 const storage={kind:'unavailable',code:'storage'},clock={kind:'unavailable',code:'clock'};
 function fixture() {
@@ -46,7 +49,7 @@ function releaseLockOnce(lock:DatabaseSync){
   let released=false;const release=()=>{if(released)return;released=true;lock.exec('ROLLBACK');};
   lockReleases.push(release);return release;
 }
-function parallel(data:unknown[]){return parallelWorkers.run(data,d=>new Worker(workerUrl,{workerData:d,execArgv:['--experimental-strip-types']}));}
+function parallel(data:unknown[],observe?:CallbackWorkerObserver){return parallelWorkers.run(data,d=>new Worker(workerUrl,{workerData:d,execArgv:['--experimental-strip-types']}),observe);}
 function runCleanupSteps(steps:(()=>void)[]){let failed=false;for(const step of steps){try{step();}catch{failed=true;}}if(failed)throw new Error('callback-resource-cleanup-failed');}
 async function cleanup(){await finishCallbackTest(childJobs,{
   terminateWorkers:()=>parallelWorkers.cancelAllAndWait(),
@@ -54,7 +57,16 @@ async function cleanup(){await finishCallbackTest(childJobs,{
   closeParents:()=>runCleanupSteps([...dbs.splice(0),...inboxes.splice(0),...ledgers.splice(0)].map(resource=>()=>resource.close())),
   removeFolders:()=>dirs.splice(0).forEach(p=>rmSync(p,{recursive:true,force:true})),
 });}
-afterEach(async()=>{vi.restoreAllMocks();await cleanup();});
+afterEach(async()=>{
+  let cleanupOutcome='not-attempted';
+  try{vi.restoreAllMocks();cleanupOutcome='threw';await cleanup();cleanupOutcome='returned';}
+  finally{if(parallelReceipt){
+    // assertion 시점의 exit 미관측과 기존 cleanup 뒤의 실제 이벤트를 분리합니다.
+    try{console.info('callback-parallel-cleanup-receipt',JSON.stringify({stage:'cleanup',cleanupOutcome,ownedRemaining:parallelWorkers.size,observationFailed:parallelWorkers.observationFailed,
+      receive:{results:parallelReceipt.receiveResults,workers:receiptRows('receive')},process:{results:parallelReceipt.processResults,workers:receiptRows('process')}}));}catch{}
+    parallelReceipt=undefined;
+  }}
+});
 describe('암호화 수신·원장 내부검증·재시작',()=>{
   it('durable receipt, 동일원문 dedup·terminal tombstone·실원장 신규1회',async()=>{
     const f=fixture(),b=f.open(),a=b.receive(f.raw);expect(a.kind).toBe('accepted');expect(b.receive(f.raw)).toEqual(a);
@@ -79,11 +91,16 @@ describe('암호화 수신·원장 내부검증·재시작',()=>{
     expect(d.prepare('SELECT state,attempts FROM callback_inbox').get()).toEqual({state:'completed',attempts:2});
   });
   it('8worker 동일수신 row1/receipt1, 동시처리는 원자선점1회',async()=>{
-    const f=fixture(),received=await parallel(Array.from({length:8},()=>f.input({action:'receive',openRetries:2,diagnostics:true})));
-    expect(received.every(r=>r.kind==='accepted')).toBe(true);expect(new Set(received.map(r=>r.receipt)).size).toBe(1);
-    const results=await parallel(Array.from({length:8},()=>f.input({openRetries:2,diagnostics:true}))),safe=JSON.stringify(results.map(r=>({kind:r.kind,code:r.code,stage:r.stage,sqlite:r.sqlite,diagnostic:r.diagnostic})));
+    parallelReceipt={receive:new Map(),process:new Map()};const currentReceipt=parallelReceipt;
+    const observe=(phase:'receive'|'process'):CallbackWorkerObserver=>receipt=>{currentReceipt[phase].set(receipt.index,receipt);};
+    const f=fixture(),received=await parallel(Array.from({length:8},()=>f.input({action:'receive',openRetries:2,diagnostics:true})),observe('receive'));
+    currentReceipt.receiveResults=safeWorkerResults(received);const receiveSafe=JSON.stringify({stage:'receive-assertion',results:currentReceipt.receiveResults,workers:receiptRows('receive')});
+    expect(received.every(r=>r.kind==='accepted'),receiveSafe).toBe(true);expect(new Set(received.map(r=>r.receipt)).size,receiveSafe).toBe(1);
+    const results=await parallel(Array.from({length:8},()=>f.input({openRetries:2,diagnostics:true})),observe('process'));
+    currentReceipt.processResults=safeWorkerResults(results);const safe=JSON.stringify({stage:'process-assertion',results:currentReceipt.processResults,workers:receiptRows('process')});
     expect(results.filter(r=>r.kind==='completed'),safe).toHaveLength(1);expect(results.filter(r=>r.kind==='idle'),safe).toHaveLength(7);
     for(const r of [...received,...results]){expect(r.diagnostic.openAttempts).toBeLessThanOrEqual(3);expect(r.diagnostic.failures.every((v:any)=>v.stage==='open'&&v.sqlite==='busy'),safe).toBe(true);}
+    for(const r of [...received,...results])expect(r.diagnostic.close,safe).toEqual({outcome:'returned'});
     for(const r of received)expect(r.diagnostic.claimBegin,safe).toBeUndefined();
     for(const r of results){expect(r.diagnostic.claimBegin,safe).toEqual({stage:'inbox-claim-begin',outcome:'returned',elapsedMs:expect.any(Number),primaryCode:null,extendedCode:null});expect(Number.isFinite(r.diagnostic.claimBegin.elapsedMs),safe).toBe(true);expect(r.diagnostic.claimBegin.elapsedMs,safe).toBeGreaterThanOrEqual(0);}
     expect(f.conn().prepare('SELECT attempts FROM callback_inbox').get()?.attempts).toBe(1);expect(f.conn(f.rewardPath).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n).toBe(1);
@@ -92,14 +109,14 @@ describe('암호화 수신·원장 내부검증·재시작',()=>{
     const f=fixture(),b=f.open();b.receive(f.raw);const lock=f.conn(f.rewardPath);lock.exec('BEGIN IMMEDIATE');let busy=0;
     const release=releaseLockOnce(lock);let result:any;
     try{result=await child(f.input({openRetries:2,diagnostics:true,notifyOpenBusy:true}),()=>{busy++;release();});}finally{release();}
-    expect(busy).toBe(1);expect(result).toEqual({kind:'completed',diagnostic:{openAttempts:2,failures:[{stage:'open',sqlite:'busy'}],claimBegin:{stage:'inbox-claim-begin',outcome:'returned',elapsedMs:expect.any(Number),primaryCode:null,extendedCode:null}}});
+    expect(busy).toBe(1);expect(result).toEqual({kind:'completed',diagnostic:{openAttempts:2,failures:[{stage:'open',sqlite:'busy'}],close:{outcome:'returned'},claimBegin:{stage:'inbox-claim-begin',outcome:'returned',elapsedMs:expect.any(Number),primaryCode:null,extendedCode:null}}});
     expect(Number.isFinite(result.diagnostic.claimBegin.elapsedMs)).toBe(true);expect(result.diagnostic.claimBegin.elapsedMs).toBeGreaterThanOrEqual(0);
     expect(f.conn().prepare('SELECT state,attempts FROM callback_inbox').get()).toEqual({state:'completed',attempts:1});expect(f.conn(f.rewardPath).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n).toBe(1);
   });
   it('worker 생성자 BUSY는 최대3회 뒤 오류·무한 재시도/성공 위장 없음',async()=>{
     const f=fixture();f.open();const lock=f.conn(f.rewardPath);lock.exec('BEGIN IMMEDIATE');
     const release=releaseLockOnce(lock);
-    try{expect(await child(f.input({openRetries:2,diagnostics:true}))).toEqual({kind:'worker-error',stage:'open',code:'open-failed',sqlite:'busy',diagnostic:{openAttempts:3,failures:Array.from({length:3},()=>({stage:'open',sqlite:'busy'}))}});}finally{release();}
+    try{expect(await child(f.input({openRetries:2,diagnostics:true}))).toEqual({kind:'worker-error',stage:'open',code:'open-failed',sqlite:'busy',diagnostic:{openAttempts:3,failures:Array.from({length:3},()=>({stage:'open',sqlite:'busy'})),close:{outcome:'not-attempted'}}});}finally{release();}
     expect(f.conn(f.rewardPath).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n).toBe(0);
   });
   it('BUSY 대기 자식을 명시적으로 취소한 뒤 소유 DB와 임시 폴더를 정리',async()=>{
@@ -111,7 +128,7 @@ describe('암호화 수신·원장 내부검증·재시작',()=>{
   });
   it.each(['hmac','schema'])('worker %s 영구 오류는 BUSY로 오인/재시도하지 않음',mode=>{
     const f=fixture();f.open();const d=f.conn(f.rewardPath);if(mode==='hmac')d.prepare('UPDATE reward_auth SET state_mac=?').run('0'.repeat(64));else d.exec('ALTER TABLE reward_vouchers ADD COLUMN extra TEXT');
-    return child(f.input({openRetries:2,diagnostics:true})).then(result=>expect(result).toEqual({kind:'worker-error',stage:'open',code:'open-failed',sqlite:'none',diagnostic:{openAttempts:1,failures:[{stage:'open',sqlite:'none'}]}}));
+    return child(f.input({openRetries:2,diagnostics:true})).then(result=>expect(result).toEqual({kind:'worker-error',stage:'open',code:'open-failed',sqlite:'none',diagnostic:{openAttempts:1,failures:[{stage:'open',sqlite:'none'}],close:{outcome:'not-attempted'}}}));
   });
   it('외부 verified/event 객체와 processor 주입으로 지급할 수 없음',async()=>{
     const f=fixture(),fake=vi.fn(async()=>({kind:'voucher-recorded',newGrant:true})),b=f.open({processor:fake} as any);
