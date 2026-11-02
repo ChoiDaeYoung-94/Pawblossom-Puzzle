@@ -1,5 +1,23 @@
 # 웹 자동 검증
 
+## 2026-11-02 · main 통합과 소스별 최초 CI · #486
+
+아래 모든 run은 각 PR의 최종 head와 정확 squash main의 **attempt1**입니다. Node22/24가 각각 표의 파일/검사를 통과했고 스토어19개·타입3설정·testing/production 두웹빌드도 성공했습니다. 이전 실패·소스별 로컬 검증/실제 화면을 이 표의 성공으로 지우지 않으며 CI 재실행은 없습니다. 원문/attempt/집계는 Git 밖 #475의 `qa/integration-20261029/475-first-{pr,main}-*`와 나머지 `qa/integration-20261102/*-first-{pr,main}-*`에 보존했습니다.
+
+| 묶음 / PR | squash main | 첫 PR CI | 정확 첫 main CI | 각 Node의 파일 / 검사 |
+| --- | --- | --- | --- | --- |
+| #475 / [476](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/476) 첫 이야기 진입 | c34554a | 41391288749 | 41391797635 | 81 / 4,310 |
+| #478 / [479](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/479) 정책/구매 운영 읽기 | 85e5b3b | 41394460506 | 41395158531 | 81 / 4,310 |
+| #224 / [480](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/480) 유한 코인 사용자 결정 | f3359a7 | 41396604547 | 41397419406 | 81 / 4,310 |
+| #122 / [481](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/481) 닫기/종료 관측 | fa62420 | 41399267872 | 41400517122 | 82 / 4,320 |
+| #477 / [482](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/482) 정상1–9/도구9/필수 안내 | 618d98e | 41405785396 | 41406824317 | 82 / 4,320 |
+| #484 / [485](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/485) 계정별 외부 조건 | f9b3dd9 | 41409192937 | 41410115378 | 82 / 4,320 |
+| #483 / [487](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/487) 다람쥐/기존 도토리 목표 | 26249fb | 41411780375 | 41412848358 | 82 / 4,340 |
+
+#122의 실제 PR 영수증은 각Node close-returned16/actual-exit16·관측 소유worker0을 확인했습니다. terminate 요청은Node24에서1/Node22에서5였지만 실제 exit는0이므로 요청과 강제 종료 성공을 혼동하지 않습니다. 실패 재현·SQL owner/잠금 근본 원인 해결은 아니며 #122를 닫지 않습니다. close 반환 조건은 이번 새cleanup 검사라는 점도 유지합니다.
+
+#483 제품 실제 웹4dd2625→squash26249fb는 문서 차이뿐이며 최신 production108/flagsfalse3 전수SHA가 같습니다. #486의 testing117/Android APK웹119와 production108/Android110 복원·실제 SDK반환은 [Android 기록](android-release.ko.md) 상단을 따릅니다. 새 파일 생성/정적 대조를 Android 입력/진행 보존·Samsung/OEM/자연500판으로 합산하지 않습니다. 이 #486 기록 PR 자체의 최초 CI는 제출 뒤 별도 확인합니다. 아래 각 묶음의 '필수CI후속/새APK없음' 문장은 해당 당시 이력입니다.
+
 ## 2026-11-02 · #483 과수원 다람쥐·기존 도토리 목표의 표시
 
 45/51/57의 기존 도토리26/28/31·이동30/32/30과 다른 색/낙엽/상자·판 서명을 유지하고 세 번째 만남/추억을 연결했습니다. HUD는 기존collected[3]/해당goal.count만 읽으며 도토리 완료 문구는 남은 목표도 마치도록 안내합니다. 전체 목표의 기존 승리 판정·보상/저장 schema·엔진/RNG는 그대로입니다. 실제completed에서만 에피소드당3개를 파생해 기존40완료부터0/3 예고·기존500완료 소급표시를 무지급으로 읽습니다. 첫 이야기 미리보기와 저장된 첫승리→정확 추억 제목·읽기 상태는 기존 흐름을 재사용합니다.
