@@ -1,7 +1,7 @@
 import {describe,expect,it,vi} from 'vitest';
 import {EventEmitter} from 'node:events';
 import type {Worker} from 'node:worker_threads';
-import {createCallbackParallelScope} from './helpers/callbackParallel';
+import {createCallbackParallelScope,type CallbackWorkerObserver,type CallbackWorkerObservation} from './helpers/callbackParallel';
 import {createCallbackChildScope,finishCallbackTest} from './helpers/callbackChild';
 
 class FakeWorker extends EventEmitter {
@@ -14,9 +14,9 @@ class FakeWorker extends EventEmitter {
   end(code=1){if(this.ended)return;this.ended=true;this.emit('exit',code);this.resolveTermination(code);}
 }
 const flush=()=>new Promise<void>(resolve=>setImmediate(resolve));
-function setup(count=2){
+function setup(count=2,observe?:CallbackWorkerObserver){
   const scope=createCallbackParallelScope(),workers:FakeWorker[]=[],inputs:number[]=[];
-  const output=scope.run(Array.from({length:count},(_,i)=>i),input=>{inputs.push(input);const worker=new FakeWorker();workers.push(worker);return worker.asWorker();});
+  const output=scope.run(Array.from({length:count},(_,i)=>i),input=>{inputs.push(input);const worker=new FakeWorker();workers.push(worker);return worker.asWorker();},observe);
   return {scope,workers,inputs,output};
 }
 async function cleanup(scope:ReturnType<typeof createCallbackParallelScope>,workers:FakeWorker[]){
@@ -116,5 +116,38 @@ describe('callback parallel 준비·결과·실제 종료',()=>{
     await flush();await expect(output).rejects.toThrow(/^callback-parallel-cancelled$/);workers[0].end();await join;
     const next=new FakeWorker(),value={kind:'idle'},second=scope.run([0],()=>next.asWorker());next.emit('message','ready');await flush();next.emit('message',value);
     expect((await second)[0]).toBe(value);await cleanup(scope,[next]);
+  });
+});
+
+describe('callback parallel 관측과 실행 계약 분리',()=>{
+  it('다른 worker 오류 뒤 도착한 결과는 실제 수신으로 기록하되 batch 실패를 유지',async()=>{
+    const rows=new Map<number,Readonly<CallbackWorkerObservation>>(),{scope,workers,output}=setup(2,row=>rows.set(row.index,row));
+    workers.forEach(worker=>worker.emit('message','ready'));await flush();workers[0].emit('error',new Error('private-first-error'));
+    workers[1].emit('message',{kind:'idle'});expect(rows.get(1)).toMatchObject({resultReceived:true,exitObserved:false});
+    await expect(output).rejects.toThrow('callback-parallel-worker-error');await cleanup(scope,workers);
+  });
+  it('결과는 exit를 기다리지 않고 payload 그대로, terminate 반환도 실제 exit와 구분',async()=>{
+    const rows=new Map<number,Readonly<CallbackWorkerObservation>>(),{scope,workers,output}=setup(2,row=>rows.set(row.index,row));
+    workers.forEach(worker=>worker.emit('message','ready'));await flush();const values=[{kind:'completed'},{kind:'idle'}];
+    workers.forEach((worker,index)=>worker.emit('message',values[index]));const results=await output;results.forEach((result,index)=>expect(result).toBe(values[index]));
+    expect(rows.get(0)).toMatchObject({resultReceived:true,exitObserved:false,exitCode:null,terminationRequested:false,terminationOutcome:'not-requested'});
+    workers[0].end(0);expect(rows.get(0)).toMatchObject({exitObserved:true,exitCode:0,terminationRequested:false});
+    workers[1].terminate.mockResolvedValue(1);const beforeExit=rows.get(1),joining=scope.cancelAllAndWait();let joined=false;void joining.then(()=>{joined=true;});await flush();
+    expect(joined).toBe(false);expect(rows.get(1)).toMatchObject({exitObserved:false,terminationRequested:true,terminationOutcome:'returned'});
+    workers[1].end(1);await joining;expect(rows.get(1)).toMatchObject({exitObserved:true,exitCode:1,terminationOutcome:'returned'});expect(beforeExit?.exitObserved).toBe(false);expect(scope.size).toBe(0);
+  });
+  it('관측 콜백 오류는 표시하되 준비/go/결과·정리 계약을 바꾸지 않음',async()=>{
+    const {scope,workers,output}=setup(1,()=>{throw new Error('private-observer');}),value={kind:'idle'};
+    workers[0].emit('message','ready');await flush();workers[0].emit('message',value);expect((await output)[0]).toBe(value);
+    expect(scope.observationFailed).toBe(true);expect(workers[0].postMessage).toHaveBeenCalledExactlyOnceWith('go');await cleanup(scope,workers);
+  });
+  it.each(['throw','reject'] as const)('terminate %s와 실제 exit를 별도 관측하고 기존 정리 실패를 유지',async mode=>{
+    const rows=new Map<number,Readonly<CallbackWorkerObservation>>(),{scope,workers,output}=setup(1,row=>rows.set(row.index,row));
+    workers[0].emit('message','ready');await flush();workers[0].emit('message',{kind:'idle'});await output;
+    workers[0].terminate.mockImplementation(()=>{if(mode==='throw')throw new Error('private-termination');return Promise.reject(new Error('private-termination'));});
+    const joining=scope.cancelAllAndWait();void joining.catch(()=>{});await flush();
+    expect(rows.get(0)).toMatchObject({exitObserved:false,terminationRequested:true,terminationOutcome:mode==='throw'?'threw':'rejected'});
+    workers[0].end(1);await expect(joining).rejects.toThrow('callback-parallel-cleanup-unconfirmed');
+    expect(rows.get(0)).toMatchObject({resultReceived:true,exitObserved:true,exitCode:1});expect(scope.size).toBe(0);
   });
 });
