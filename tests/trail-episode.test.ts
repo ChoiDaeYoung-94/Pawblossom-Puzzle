@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {trailBeat,trailStoryCard,trailJournal,updateTrailEncounter,wolfImages,beaverImages} from '../src/TrailEpisode';
+import {trailBeat,trailStoryCard,trailJournal,updateTrailEncounter,wolfImages,beaverImages,squirrelImages} from '../src/TrailEpisode';
 import {t} from '../src/i18n';
 import {levels,levelSignature} from '../src/state';
 
@@ -43,6 +43,46 @@ describe('숲길 첫 만남의 표시 정책',()=>{
     expect(host.innerHTML).toBe(html);expect(host.dataset.resolved).toBe('true');expect(text.textContent).toBe(t('ko','trailLeavesReady'));
     updateTrailEncounter(host as unknown as HTMLElement,'en',6,4,4);expect(host.attributes['aria-label']).toContain('Leaves cleared!');
     updateTrailEncounter(host as unknown as HTMLElement,'ko',5,0,4);expect(host.hidden).toBe(true);expect(host.innerHTML).toBe('');expect(host.dataset.trailLevel).toBeUndefined();
+  });
+});
+
+describe('과수원 다람쥐와 기존 도토리 목표',()=>{
+  const part=(html:string,id:string)=>html.match(new RegExp(`<details[^>]*data-trail-episode="${id}"[^>]*>([\\s\\S]*?)</details>`))?.[1]??'';
+  it('45/51/57 기존 도토리 수량과 이동·목표·서명을 그대로 읽습니다',()=>{
+    expect(levels.filter(level=>trailBeat(level.id)?.episode.id==='squirrel-v1').map(level=>level.id)).toEqual([45,51,57]);
+    expect([45,51,57].map(id=>levels[id-1].goals.find(goal=>goal.kind===3)?.count)).toEqual([26,28,31]);
+    expect([45,51,57].map(id=>levels[id-1].moves)).toEqual([30,32,30]);
+    const before=levels.map(levelSignature);for(const level of levels)trailStoryCard('ko',level.id,'preview',false,false);expect(levels.map(levelSignature)).toEqual(before);
+  });
+  it('40 완료부터0/3을 예고하고 구500완료·중복을 새 지급/저장 없이 세 에피소드별로 읽습니다',()=>{
+    expect(trailJournal('en',[39])).not.toContain('data-trail-episode="squirrel-v1"');
+    expect(part(trailJournal('en',[40]),'squirrel-v1')).toContain('0/3');
+    const completed=[...Array.from({length:500},(_,i)=>i+1),45,51,57],before=completed.slice();
+    const html=trailJournal('ko',completed);for(const id of ['wolf-v1','beaver-v1','squirrel-v1'])expect(part(html,id)).toContain('3/3');
+    expect(html.match(/data-memory-owned="true"/g)).toHaveLength(9);expect(completed).toEqual(before);
+    expect(trailJournal('en',[Number.NaN,-1,999])).not.toContain('data-trail-episode="squirrel-v1"');
+  });
+  it.each(['ko','en'] as const)('%s 소개·구완료·시험·패배를 구분하고 번역을 누락하지 않습니다',language=>{
+    for(const id of [45,51,57]){
+      const beat=trailBeat(id)!;
+      expect(trailStoryCard(language,id,'preview',false,false)).toContain(t(language,beat.problem));
+      expect(trailStoryCard(language,id,'preview',false,false)).toContain(squirrelImages.blocking);
+      expect(trailStoryCard(language,id,'preview',true,false)).toContain(squirrelImages.relieved);
+      expect(trailStoryCard(language,id,'preview',true,true)).toContain(t(language,'trailPractice'));
+      expect(trailStoryCard(language,id,'retry',true,false)).not.toContain(t(language,beat.after));
+    }
+  });
+  it('낙엽/상자와 독립된 실제 도토리 집계만 표시하며 완성 문구도 전체 승리를 주장하지 않습니다',()=>{
+    const copy={textContent:''},host={hidden:false,innerHTML:'',dataset:{} as Record<string,string>,attributes:{} as Record<string,string>,querySelector:()=>copy,setAttribute(k:string,v:string){this.attributes[k]=v;}};
+    updateTrailEncounter(host as unknown as HTMLElement,'ko',45,99,99,{cleared:99,total:99});expect(host.hidden).toBe(true);
+    updateTrailEncounter(host as unknown as HTMLElement,'ko',45,99,99,{cleared:99,total:99},{collected:6,total:26});
+    expect(host.dataset.trailEpisode).toBe('squirrel-v1');expect(host.dataset.resolved).toBe('false');expect(copy.textContent).toBe('남은 도토리 20');
+    const art=host.innerHTML;updateTrailEncounter(host as unknown as HTMLElement,'ko',45,0,4,undefined,{collected:29,total:26});
+    expect(host.innerHTML).toBe(art);expect(host.dataset.resolved).toBe('true');expect(copy.textContent).toBe(t('ko','trailAcornsReady'));
+    expect(host.innerHTML).toContain('trail-squirrel-tail');expect(host.innerHTML).not.toContain('trail-beaver');
+    const ids=Array.from(art.matchAll(/ id="([^"]+)"/g),match=>match[1]);expect(new Set(ids).size).toBe(ids.length);
+    updateTrailEncounter(host as unknown as HTMLElement,'en',51,0,0,undefined,{collected:0,total:28});expect(copy.textContent).toBe('Acorns left: 28');
+    updateTrailEncounter(host as unknown as HTMLElement,'en',58,0,0);expect(host.hidden).toBe(true);expect(host.innerHTML).toBe('');
   });
 });
 

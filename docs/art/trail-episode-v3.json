@@ -1,0 +1,103 @@
+{
+  "issue": 483,
+  "tool": "built-in image_gen; transparent_background=true; API key/CLI fallback unused",
+  "prompts": [
+    {
+      "intent": "generate",
+      "target": "squirrel-blocking-v1",
+      "text": "Use case: stylized-concept. Asset type: original full-body transparent game character sprite for Pawblossom Puzzle, a cozy painted match-3 game with a cream rabbit hero and warm woodland neighbors. Create one small friendly red squirrel who has accidentally scattered its acorns along a flowering orchard path. Character only, with a mildly concerned, apologetic expression: brows gently raised, big expressive dark brown eyes, little closed mouth. Round soft warm rust-red body, cream muzzle and chest, short separated forepaws held together at the belly, short sturdy feet and small tufted ears. The squirrel must have a clearly recognizable large fluffy curved tail that curls up on the viewer's right behind the body, visually distinct from a beaver's flat paddle tail. A tiny muted lavender neckerchief is the only accessory. Three-quarter view facing slightly left, full standing figure, compact balanced pose. Premium painterly storybook material with refined soft 3D volume, fine gentle fur strokes, clean silhouette readable at 64–96px. Warm daylight from upper left, soft amber edge light and restrained lavender shadows. Friendly and original, not an enemy or existing franchise character. Subject fills about 82 percent of a square canvas with comfortable transparent margins around all ears, feet and tail tip. Genuinely transparent background; no scenery, floor, detached cast shadow, acorns, basket, props, extra characters, sheet, frame, text, logo or watermark. Intended square 1024 by 1024."
+    },
+    {
+      "intent": "edit own generated sprite; expression only",
+      "target": "squirrel-relieved-v1",
+      "text": "Use case: identity-preserve. Edit target: our own original full-body red squirrel game sprite. Create the matching relieved/happy expression for this exact character. Change only the facial expression: lower the worried inner eyebrows into a relaxed shape, make both dark-brown eyes warmly grateful and a little happily narrowed, lift the cheeks, and add a small friendly closed-mouth smile. Preserve the same squirrel identity, rust-red/cream fur, soft painterly 3D material, exact proportions and full-body standing pose, small lavender neckerchief, hands together at belly, feet, tufted ears, large fluffy curved tail on viewer's right, upper-left lighting, scale and placement. Keep transparent margins and all body/accessory positions so both expressions share one HUD layout. Single original character on a genuinely transparent background. No floor, props, acorns, scenery, extra characters, sheet, frame, text, logo or watermark. No resemblance to an existing game character.",
+      "reference": "assets/art/trail-episode-v3/squirrel-blocking-v1.png"
+    }
+  ],
+  "status": "웹 후보4dd2625의 실제5조건·독립읽기/PNG 검수 성공; 필수PR/정확main CI·새APK/Android/상용미술 미확인",
+  "sources": [
+    {
+      "path": "assets/art/trail-episode-v3/squirrel-blocking-v1.png",
+      "bytes": 1795458,
+      "sha256": "ad08260653ceacc9bb2a418d8a97df9a1743a14c13ab5253d67af7964231913b",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "pngColorType": 6
+    },
+    {
+      "path": "assets/art/trail-episode-v3/squirrel-relieved-v1.png",
+      "bytes": 1731642,
+      "sha256": "a8fd28113aeed744e744cdeda9a96254c0fb2deaff5f05d03bb158b076037cbf",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "pngColorType": 6
+    }
+  ],
+  "outputs": [
+    {
+      "path": "public/assets/trail-episode-v3/squirrel-blocking-v1.webp",
+      "width": 384,
+      "height": 384,
+      "bytes": 33744,
+      "sha256": "6ce127c4c1c090b2c77cfbf521f3123a98a20b4d7dbc0c29cd29fbdffde26942",
+      "alphaPreserved": true,
+      "alphaRange": [
+        0,
+        255
+      ]
+    },
+    {
+      "path": "public/assets/trail-episode-v3/squirrel-relieved-v1.webp",
+      "width": 384,
+      "height": 384,
+      "bytes": 30040,
+      "sha256": "d0ce0fb44d6a7bd5ee6f90f4c0e3f00ce140d7bb9f9ee4de41bd69a8571daf03",
+      "alphaPreserved": true,
+      "alphaRange": [
+        0,
+        255
+      ]
+    }
+  ],
+  "export": {
+    "sharp": "0.35.5",
+    "canvas": 384,
+    "content": 352,
+    "padding": 16,
+    "webpQuality": 90,
+    "alphaQuality": 100,
+    "policy": "original untouched;standard proportional resize/transparent padding/encoding only"
+  },
+  "qualityNotes": [
+    "내장 image_gen으로 자체 생성한 걱정/안도 두 표정이며 원본을 덮어쓰지 않았습니다. 요청1024와 실제1254px를 구분하고 픽셀 단위 같은 포즈를 주장하지 않습니다.",
+    "352px 비례 축소+16px 투명 여백으로384px 출력했고 각64KiB 미만/합계63,784바이트입니다. WebP decode의 전수alpha가 표준 축소/여백 결과와 같고 같은Sharp0.35.5 설정의 byte-exact 재생성을 확인했습니다.",
+    "제품38d10b3의 첫 관련687개 중13개는 기존3항목 기대/시험도구 꺼짐 하네스 설정으로 실패했습니다. 제품 바이트를 유지한9cf36a8에서 새4항목 보존/초점·정상/시험/저장 실패를 포함한689개가 성공했습니다.",
+    "첫 웹의 단일 시각 회전 판정 실패는 QA샘플링 문제로 보존했습니다. 후속실제 EN320 완료문구 높이75.5625가60px 헤더를 넘은 제품P2/원문·PNG를 확인하고4dd2625에서 한영문구만 줄였습니다.",
+    "4dd2625 최신 두 빌드/production108 전수SHA·실제KO39045/EN32051완료/모션감소KO32051완료/KO84457승리/모션감소EN74057승리의5조건이 성공했습니다. KO390 실제꼬리−1.4896도·전체SVG변환none, 표시모션감소와낮은가로숨김을분리했습니다.",
+    "명시한 초기 정상회차 표본 뒤 live Scene/엔진/RNG/저장 주입은 없습니다.57은 마지막상자 실제유효교환→기존1별40코인·동물별각3/3→정확57추억초점·읽기상태를 확인했으며 자연진행/500판난이도/Android/상용미술 승인은 아닙니다.",
+    "root가 실제9PNG를 직접 확인했고 원문/초기표본/실패·SHA/반환/PNG는 Git 밖 integration-20261102/483-*에 있습니다. 관련689는9cf소스근거로 재사용하고 최신문구의 빌드/실제화면과 구분했습니다."
+  ],
+  "scope": "기존45/51/57의 도토리 집계에 연결하는 세 번째 이야기 표시입니다. 늑대/비버 각3추억과 엔진/RNG·500판·저장/보상·가격은 유지합니다.",
+  "integration": {
+    "module": "src/TrailEpisode.ts",
+    "levels": [
+      45,
+      51,
+      57
+    ],
+    "counter": "기존 도토리 kind3 goal.count와collected[3]",
+    "journal": "completed 파생·에피소드당3개·기존40/500완료 무지급 소급표시",
+    "productSource": "4dd2625d95457744c9d3d3d2273d8e7f16add411",
+    "relatedSource": "9cf36a8ad67243ec36d02965752e53a530de638a",
+    "relatedTests": 689,
+    "productionFiles": 108,
+    "testingFiles": 117,
+    "actualWebCases": 5,
+    "androidVerified": false,
+    "commercialArtApproved": false
+  }
+}
