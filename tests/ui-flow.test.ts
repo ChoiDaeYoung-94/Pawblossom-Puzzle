@@ -364,10 +364,10 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
 describe('계획과 산책 추억을 읽던 상태의 보존',()=>{
   const ready=()=>{
     const h=mainHarness(false,false,true,false,{version:2,puzzleTools:{schema:2,introduced:[],trialUsed:[]},language:'en',highestLevel:41,completed:Array.from({length:40},(_,i)=>i+1),stars:40,coins:200,garden:0,music:false,sfx:false,tutorialSeen:true});
-    h.run("switchView('journal')");expect(h.reading('journal')).toHaveLength(3);return h;
+    h.run("switchView('journal')");expect(h.reading('journal')).toHaveLength(4);return h;
   };
   const choose=(h:ReturnType<typeof ready>,index:string)=>h.run("document.querySelector('#album-world-select').value='"+index+"';document.querySelector('#album-world-select').onchange()");
-  it.each([[true,false,false],[false,true,false],[false,false,true],[true,true,true],[false,true,true]])('앨범 선택은 각 항목의 펼침 %j를 새 DOM으로 옮기고 저장하지 않습니다',(...opened)=>{
+  it.each([[true,false,false,false],[false,true,false,false],[false,false,true,false],[false,false,false,true],[true,true,true,true],[false,true,true,false]])('앨범 선택은 각 항목의 펼침 %j를 새 DOM으로 옮기고 저장하지 않습니다',(...opened)=>{
     const h=ready(),before=h.run('JSON.stringify(save)'),disk=h.disk(),writes=h.writes(),old=[...h.reading('journal')];
     old.forEach((node,index)=>node.open=opened[index]);choose(h,'0');
     const fresh=h.reading('journal');expect(fresh.map(node=>node.open)).toEqual(opened);
@@ -375,13 +375,13 @@ describe('계획과 산책 추억을 읽던 상태의 보존',()=>{
     fresh[1].open=false;choose(h,'1');expect(h.reading('journal')[1].open).toBe(false);
     expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
   });
-  it('일반 재렌더와 탭 왕복에서 닫힘·summary 초점·스크롤을 유지합니다',()=>{
-    const h=ready();h.reading('journal')[0].open=true;h.reading('journal')[2].open=true;
-    const old=h.reading('journal')[2];old.summary!.focus();h.element('#journal-view').scrollTop=723;
-    h.run('renderViews()');expect(h.reading('journal').map(node=>node.open)).toEqual([true,false,true]);
-    expect(h.run('document.activeElement.id')).toBe(h.reading('journal')[2].summary!.id);expect(h.run('document.activeElement.isConnected')).toBe(true);
+  it.each([2,3])('일반 재렌더와 탭 왕복에서 %s번째 추억의 닫힘·summary 초점·스크롤을 유지합니다',index=>{
+    const h=ready(),opened=[true,false,false,false];opened[index]=true;h.reading('journal')[0].open=true;h.reading('journal')[index].open=true;
+    const old=h.reading('journal')[index];old.summary!.focus();h.element('#journal-view').scrollTop=723;
+    h.run('renderViews()');expect(h.reading('journal').map(node=>node.open)).toEqual(opened);
+    expect(h.run('document.activeElement.id')).toBe(h.reading('journal')[index].summary!.id);expect(h.run('document.activeElement.isConnected')).toBe(true);
     expect(old.summary!.isConnected).toBe(false);expect(h.element('#journal-view').scrollTop).toBe(723);
-    h.run("switchView('village');switchView('journal')");expect(h.reading('journal').map(node=>node.open)).toEqual([true,false,true]);
+    h.run("switchView('village');switchView('journal')");expect(h.reading('journal').map(node=>node.open)).toEqual(opened);
   });
   it.each(['enter','exit','preset','reset'])('돌봄 세대 경계 %s는 같은 ID의 이전 펼침을 가져오지 않습니다',boundary=>{
     const h=ready();if(boundary==='exit'||boundary==='preset')h.run('enterCareDemo()');
@@ -396,9 +396,9 @@ describe('계획과 산책 추억을 읽던 상태의 보존',()=>{
     const h=ready();h.reading('village')[0].open=true;h.reading('journal')[1].open=true;
     h.run('globalThis.previousCareSave=save');h.element('#pip-feed').onclick();
     expect(h.run('save===previousCareSave')).toBe(false);expect(h.stored()).toMatchObject({coins:190,pip:{growth:10,affection:4}});
-    expect(h.reading('village')[0].open).toBe(true);expect(h.reading('journal').map(node=>node.open)).toEqual([false,true,false]);
-    h.run("changeLanguage('ko')");expect(h.reading('journal').map(node=>node.open)).toEqual([false,true,false]);
-    h.flushCareReaction();expect(h.reading('village')[0].open).toBe(true);expect(h.reading('journal').map(node=>node.open)).toEqual([false,true,false]);
+    expect(h.reading('village')[0].open).toBe(true);expect(h.reading('journal').map(node=>node.open)).toEqual([false,true,false,false]);
+    h.run("changeLanguage('ko')");expect(h.reading('journal').map(node=>node.open)).toEqual([false,true,false,false]);
+    h.flushCareReaction();expect(h.reading('village')[0].open).toBe(true);expect(h.reading('journal').map(node=>node.open)).toEqual([false,true,false,false]);
   });
   it('사라진 비버 항목과 비대상 details를 기억해 새 화면에 되살리지 않습니다',()=>{
     const h=ready();h.reading('journal')[1].open=true;h.reading('journal')[2].open=true;
@@ -408,7 +408,7 @@ describe('계획과 산책 추억을 읽던 상태의 보존',()=>{
     expect(h.run("document.querySelector('#trail-journal-beaver-v1')")).toBeNull();
     expect(h.run("document.querySelector('#unrelated-reading')")).toBeNull();
     h.run('save.completed=Array.from({length:40},(_,i)=>i+1);renderViews()');
-    expect(h.reading('journal').map(node=>node.open)).toEqual([false,true,false]);
+    expect(h.reading('journal').map(node=>node.open)).toEqual([false,true,false,false]);
   });
 });
 
@@ -663,7 +663,7 @@ describe('숲길 에피소드의 실제 UI 연결',()=>{
   });
   it.each(['replay','practice','loss','storage'] as const)('다람쥐 %s는 새 정상 추억을 만들지 않습니다',reason=>{
     const initial={version:2,puzzleTools:{schema:2,introduced:['trowel'],trialUsed:[]},language:'ko',highestLevel:57,completed:Array.from({length:56},(_,i)=>i+1),stars:56,coins:2240,garden:0,music:false,sfx:false,tutorialSeen:true};
-    const h=mainHarness(false,false,false,false,initial);
+    const h=mainHarness(false,false,true,false,initial);
     if(reason==='replay')h.run('save.completed.push(57)');if(reason==='practice')h.run('startLevel(57,true)');if(reason==='storage')h.setStorageFails(true);
     h.run(`finish(${reason!=='loss'})`);expect(h.element('#result-memory-link').hidden).toBe(true);expect(h.run('resultMemory')).toBeUndefined();
   });
