@@ -2,9 +2,10 @@ import {t,type Language,type TextKey} from './i18n';
 import {LEVEL_COUNT} from './levels';
 
 type TrailBeat=Readonly<{level:number;title:TextKey;problem:TextKey;task:TextKey;after:TextKey}>;
-type TrailEpisode=Readonly<{id:'wolf-v1'|'beaver-v1';counter:'leaves'|'crates';journalTitle:TextKey;journalFrom:number;images:Readonly<{blocking:string;relieved:string}>;beats:readonly TrailBeat[]}>;
+type TrailEpisode=Readonly<{id:'wolf-v1'|'beaver-v1'|'squirrel-v1';counter:'leaves'|'crates'|'acorns';journalTitle:TextKey;journalFrom:number;images:Readonly<{blocking:string;relieved:string}>;beats:readonly TrailBeat[]}>;
 export const wolfImages={blocking:'/assets/trail-episode-v1/wolf-blocking-v1.webp',relieved:'/assets/trail-episode-v1/wolf-relieved-v1.webp'} as const;
 export const beaverImages={blocking:'/assets/trail-episode-v2/beaver-blocking-v1.webp',relieved:'/assets/trail-episode-v2/beaver-relieved-v1.webp'} as const;
+export const squirrelImages={blocking:'/assets/trail-episode-v3/squirrel-blocking-v1.webp',relieved:'/assets/trail-episode-v3/squirrel-relieved-v1.webp'} as const;
 export const trailEpisodes:readonly TrailEpisode[]=[
   {id:'wolf-v1',counter:'leaves',journalTitle:'trailJournalTitle',journalFrom:1,images:wolfImages,beats:[
     {level:4,title:'trailFirstTitle',problem:'trailFirstProblem',task:'trailFirstTask',after:'trailFirstAfter'},
@@ -15,6 +16,11 @@ export const trailEpisodes:readonly TrailEpisode[]=[
     {level:36,title:'trailBeaverFirstTitle',problem:'trailBeaverFirstProblem',task:'trailBeaverFirstTask',after:'trailBeaverFirstAfter'},
     {level:38,title:'trailBeaverSecondTitle',problem:'trailBeaverSecondProblem',task:'trailBeaverSecondTask',after:'trailBeaverSecondAfter'},
     {level:40,title:'trailBeaverFinalTitle',problem:'trailBeaverFinalProblem',task:'trailBeaverFinalTask',after:'trailBeaverFinalAfter'},
+  ]},
+  {id:'squirrel-v1',counter:'acorns',journalTitle:'trailSquirrelJournalTitle',journalFrom:41,images:squirrelImages,beats:[
+    {level:45,title:'trailSquirrelFirstTitle',problem:'trailSquirrelFirstProblem',task:'trailSquirrelFirstTask',after:'trailSquirrelFirstAfter'},
+    {level:51,title:'trailSquirrelSecondTitle',problem:'trailSquirrelSecondProblem',task:'trailSquirrelSecondTask',after:'trailSquirrelSecondAfter'},
+    {level:57,title:'trailSquirrelFinalTitle',problem:'trailSquirrelFinalProblem',task:'trailSquirrelFinalTask',after:'trailSquirrelFinalAfter'},
   ]},
 ];
 export function trailBeat(level:number){
@@ -30,6 +36,11 @@ function wolfFigure(state:'blocking'|'relieved'){
 function beaverFigure(state:'blocking'|'relieved'){
   const id=`trail-beaver-${state}`,tail='M258 260Q281 228 310 217Q341 206 352 225Q369 249 350 275Q318 313 258 319L257 300Q265 280 258 260Z',src=beaverImages[state];
   return `<svg class="trail-beaver-${state}" viewBox="0 0 384 384" aria-hidden="true" focusable="false"><defs><clipPath id="${id}-tail"><path d="${tail}"/></clipPath><mask id="${id}-body" maskUnits="userSpaceOnUse" x="0" y="0" width="384" height="384"><rect width="384" height="384" fill="white"/><path d="${tail}" fill="black"/></mask></defs><g class="trail-beaver-tail"><image href="${src}" width="384" height="384" clip-path="url(#${id}-tail)"/></g><image href="${src}" width="384" height="384" mask="url(#${id}-body)"/></svg>`;
+}
+
+function squirrelFigure(state:'blocking'|'relieved'){
+  const id=`trail-squirrel-${state}`,tail='M218 113Q221 75 270 68Q335 65 346 112Q359 155 328 188L299 188Q307 225 287 257Q269 286 232 297L226 272Q259 226 239 181Z',src=squirrelImages[state];
+  return `<svg class="trail-squirrel-${state}" viewBox="0 0 384 384" aria-hidden="true" focusable="false"><defs><clipPath id="${id}-tail"><path d="${tail}"/></clipPath><mask id="${id}-body" maskUnits="userSpaceOnUse" x="0" y="0" width="384" height="384"><rect width="384" height="384" fill="white"/><path d="${tail}" fill="black"/></mask></defs><g class="trail-squirrel-tail"><image href="${src}" width="384" height="384" clip-path="url(#${id}-tail)"/></g><image href="${src}" width="384" height="384" mask="url(#${id}-body)"/></svg>`;
 }
 
 /** 기존 고유 완료에서 표시만 파생하며 저장·보상·규칙을 바꾸지 않습니다. */
@@ -49,10 +60,11 @@ export function trailJournal(language:Language,completed:readonly number[]){
   }).join('');
 }
 
-/** HUD는 확정된 낙엽/상자 집계만 사용하며 중간 연출에서 진행을 앞당기지 않습니다. */
-export function updateTrailEncounter(host:HTMLElement,language:Language,level:number,cleared:number,total:number,crates?:{cleared:number;total:number}){
+/** HUD는 확정 집계만 사용합니다. 개별 이야기 목표 완료는 전체 판 승리와 별개입니다. */
+export function updateTrailEncounter(host:HTMLElement,language:Language,level:number,cleared:number,total:number,crates?:{cleared:number;total:number},acorns?:{collected:number;total:number}){
   const beat=trailBeat(level);
   if(beat?.episode.counter==='crates'){cleared=crates?.cleared??0;total=crates?.total??0;}
+  if(beat?.episode.counter==='acorns'){cleared=acorns?.collected??0;total=acorns?.total??0;}
   const visible=Boolean(beat&&total>0);
   host.hidden=!visible;
   if(!beat||!visible){host.innerHTML='';delete host.dataset.trailLevel;delete host.dataset.trailEpisode;return;}
@@ -60,12 +72,13 @@ export function updateTrailEncounter(host:HTMLElement,language:Language,level:nu
   const identity=`${level}:${language}`;
   if(host.dataset.trailLevel!==identity){
     host.dataset.trailLevel=identity;host.dataset.trailEpisode=beat.episode.id;
-    const figure=beat.episode.id==='wolf-v1'?wolfFigure:beaverFigure;
+    const figure={'wolf-v1':wolfFigure,'beaver-v1':beaverFigure,'squirrel-v1':squirrelFigure}[beat.episode.id];
     host.innerHTML=`<span class="trail-opponent-art" aria-hidden="true">${figure('blocking')}${figure('relieved')}</span><span class="trail-opponent-copy"></span>`;
   }
   host.dataset.resolved=String(resolved);
   const copy=host.querySelector<HTMLElement>('.trail-opponent-copy');
-  const key=beat.episode.counter==='crates'?(resolved?'trailCratesReady':'trailCratesLeft'):(resolved?'trailLeavesReady':'trailLeavesLeft');
+  const keys={leaves:['trailLeavesLeft','trailLeavesReady'],crates:['trailCratesLeft','trailCratesReady'],acorns:['trailAcornsLeft','trailAcornsReady']} as const;
+  const key=keys[beat.episode.counter][resolved?1:0];
   const status=t(language,key).replace('{count}',String(remaining));
   if(copy)copy.textContent=status;
   host.setAttribute('aria-label',t(language,'trailEncounter')+' · '+t(language,beat.title)+' · '+status);

@@ -1,0 +1,81 @@
+{
+  "issue": 483,
+  "tool": "built-in image_gen; transparent_background=true; API key/CLI fallback unused",
+  "prompts": [
+    {
+      "intent": "generate",
+      "target": "squirrel-blocking-v1",
+      "text": "Use case: stylized-concept. Asset type: original full-body transparent game character sprite for Pawblossom Puzzle, a cozy painted match-3 game with a cream rabbit hero and warm woodland neighbors. Create one small friendly red squirrel who has accidentally scattered its acorns along a flowering orchard path. Character only, with a mildly concerned, apologetic expression: brows gently raised, big expressive dark brown eyes, little closed mouth. Round soft warm rust-red body, cream muzzle and chest, short separated forepaws held together at the belly, short sturdy feet and small tufted ears. The squirrel must have a clearly recognizable large fluffy curved tail that curls up on the viewer's right behind the body, visually distinct from a beaver's flat paddle tail. A tiny muted lavender neckerchief is the only accessory. Three-quarter view facing slightly left, full standing figure, compact balanced pose. Premium painterly storybook material with refined soft 3D volume, fine gentle fur strokes, clean silhouette readable at 64–96px. Warm daylight from upper left, soft amber edge light and restrained lavender shadows. Friendly and original, not an enemy or existing franchise character. Subject fills about 82 percent of a square canvas with comfortable transparent margins around all ears, feet and tail tip. Genuinely transparent background; no scenery, floor, detached cast shadow, acorns, basket, props, extra characters, sheet, frame, text, logo or watermark. Intended square 1024 by 1024."
+    },
+    {
+      "intent": "edit own generated sprite; expression only",
+      "target": "squirrel-relieved-v1",
+      "text": "Use case: identity-preserve. Edit target: our own original full-body red squirrel game sprite. Create the matching relieved/happy expression for this exact character. Change only the facial expression: lower the worried inner eyebrows into a relaxed shape, make both dark-brown eyes warmly grateful and a little happily narrowed, lift the cheeks, and add a small friendly closed-mouth smile. Preserve the same squirrel identity, rust-red/cream fur, soft painterly 3D material, exact proportions and full-body standing pose, small lavender neckerchief, hands together at belly, feet, tufted ears, large fluffy curved tail on viewer's right, upper-left lighting, scale and placement. Keep transparent margins and all body/accessory positions so both expressions share one HUD layout. Single original character on a genuinely transparent background. No floor, props, acorns, scenery, extra characters, sheet, frame, text, logo or watermark. No resemblance to an existing game character.",
+      "reference": "assets/art/trail-episode-v3/squirrel-blocking-v1.png"
+    }
+  ],
+  "status": "implementation-candidate; actual UI/CI/Android/commercial art not approved",
+  "sources": [
+    {
+      "path": "assets/art/trail-episode-v3/squirrel-blocking-v1.png",
+      "bytes": 1795458,
+      "sha256": "ad08260653ceacc9bb2a418d8a97df9a1743a14c13ab5253d67af7964231913b",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "pngColorType": 6
+    },
+    {
+      "path": "assets/art/trail-episode-v3/squirrel-relieved-v1.png",
+      "bytes": 1731642,
+      "sha256": "a8fd28113aeed744e744cdeda9a96254c0fb2deaff5f05d03bb158b076037cbf",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "pngColorType": 6
+    }
+  ],
+  "outputs": [
+    {
+      "path": "public/assets/trail-episode-v3/squirrel-blocking-v1.webp",
+      "width": 384,
+      "height": 384,
+      "bytes": 33744,
+      "sha256": "6ce127c4c1c090b2c77cfbf521f3123a98a20b4d7dbc0c29cd29fbdffde26942",
+      "alphaPreserved": true,
+      "alphaRange": [
+        0,
+        255
+      ]
+    },
+    {
+      "path": "public/assets/trail-episode-v3/squirrel-relieved-v1.webp",
+      "width": 384,
+      "height": 384,
+      "bytes": 30040,
+      "sha256": "d0ce0fb44d6a7bd5ee6f90f4c0e3f00ce140d7bb9f9ee4de41bd69a8571daf03",
+      "alphaPreserved": true,
+      "alphaRange": [
+        0,
+        255
+      ]
+    }
+  ],
+  "export": {
+    "sharp": "0.35.5",
+    "canvas": 384,
+    "content": 352,
+    "padding": 16,
+    "webpQuality": 90,
+    "alphaQuality": 100,
+    "policy": "original untouched;standard proportional resize/transparent padding/encoding only"
+  },
+  "qualityNotes": [
+    "자체 생성한 걱정/안도 두 표정의 원본을 보존하고 비례 축소/투명 여백/WebP encoding만 적용했습니다.",
+    "실제1254px RGBA 원본과384px/각64KiB 미만 출력의 전수alpha 일치·byte-exact 재생성을 확인했습니다.",
+    "실제 작은 화면/부분 모션·Android/상용미술 승인은 별도입니다."
+  ],
+  "scope": "기존45/51/57의 도토리 집계에 연결하는 세 번째 이야기 표시입니다. 늑대/비버 각3추억과 엔진/RNG·500판·저장/보상·가격은 유지합니다."
+}

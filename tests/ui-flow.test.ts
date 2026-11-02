@@ -515,7 +515,7 @@ describe('연속 진행의 첫 이야기 미리보기',()=>{
     if(options.completedNext)h.run(`save.completed.push(${level+1})`);
     h.run(`finish(${options.won!==false})`);return h;
   };
-  it.each([4,6,10,36,38,40])('%s번을 처음 만나는 다음 버튼은 보드를 만들기 전에 기존 이야기/목표 미리보기를 연다',target=>{
+  it.each([4,6,10,36,38,40,45,51,57])('%s번을 처음 만나는 다음 버튼은 보드를 만들기 전에 기존 이야기/목표 미리보기를 연다',target=>{
     const h=resultRound(target-1),disk=h.disk(),writes=h.writes();
     const before=h.run('JSON.stringify({round,currentLevel,moves,score,save,board:scene.engine.board})');
     h.element('#result-next').onclick();
@@ -575,7 +575,7 @@ describe('새 산책 추억에서 핍의 해당 장면으로 이어가기',()=>{
     const h=mainHarness(storageFails,false,true,false,{version:2,puzzleTools:{schema:2,introduced:['trowel','gloves','broom','bell','seeds'],trialUsed:[]},language:'en',highestLevel:level,completed:Array.from({length:level-1},(_,i)=>i+1),stars:20,coins:200,garden:1,music:false,sfx:false,tutorialSeen:true});
     h.run(`startLevel(${level});switchView('puzzle')`);h.frame();return h;
   };
-  it.each([4,6,10,36,38,40])('%s번의 저장된 정상 첫 완료만 해당 에피소드의 새 장면으로 연결한다',level=>{
+  it.each([4,6,10,36,38,40,45,51,57])('%s번의 저장된 정상 첫 완료만 해당 에피소드의 새 장면으로 연결한다',level=>{
     const h=memoryRound(level);h.run('finish(true)');
     expect(h.element('#result-memory-link').hidden).toBe(false);expect(h.element('#result-memory-open').disabled).toBe(false);
     expect(h.run('resultMemory.level')).toBe(level);
@@ -583,7 +583,7 @@ describe('새 산책 추억에서 핍의 해당 장면으로 이어가기',()=>{
     h.element(`#trail-memory-${level}-title`).focus=()=>focus++;
     h.element('#result-memory-open').onclick();
     expect(h.run('route')).toBe('journal');expect(h.element('#result-dialog').open).toBe(false);
-    expect(h.element(level<20?'#trail-journal-wolf-v1':'#trail-journal-beaver-v1').open).toBe(true);expect(focus).toBe(1);
+    expect(h.element(`#trail-journal-${trailEpisode.trailBeat(level)!.episode.id}`).open).toBe(true);expect(focus).toBe(1);
     h.run("switchView('puzzle')");expect(h.element('#result-dialog').open).toBe(true);expect(h.element('#result-memory-link').hidden).toBe(false);
     h.run('finish(true);updateResultCopy()');expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('audio.plays')).toEqual(sounds);expect(h.resultArtCalls()).toBe(art);
   });
@@ -651,6 +651,22 @@ describe('새 산책 추억에서 핍의 해당 장면으로 이어가기',()=>{
 });
 
 describe('숲길 에피소드의 실제 UI 연결',()=>{
+  it.each([45,51,57])('%s 도토리만 완료하면 미승리/무지급이고 나머지 목표 완료 때만 기존 보상·새 추억을 저장합니다',level=>{
+    const initial={version:2,puzzleTools:{schema:2,introduced:['trowel','gloves','broom','bell','seeds'],trialUsed:[]},language:'en',highestLevel:level,completed:Array.from({length:level-1},(_,i)=>i+1),stars:level-1,coins:(level-1)*40,garden:0,music:false,sfx:false,tutorialSeen:true};
+    const h=mainHarness(false,false,false,false,initial),coins=h.run('save.coins'),stars=h.run('save.stars');
+    h.run('const acorns=Array(6).fill(0);acorns[3]=levels[currentLevel-1].goals.find(g=>g.kind===3).count;scene.hooks.onMove(acorns,100,1,0,0)');
+    expect(h.element('#trail-encounter').dataset.resolved).toBe('true');expect(h.run('roundEnded')).toBe(false);expect(h.element('#result-dialog').open).toBe(false);
+    expect(h.run('save.coins')).toBe(coins);expect(h.run('save.stars')).toBe(stars);expect(h.run(`save.completed.includes(${level})`)).toBe(false);expect(h.run('resultMemory')).toBeUndefined();
+    h.run('const rest=Array(6).fill(0);const current=levels[currentLevel-1];for(const goal of current.goals)if(goal.kind!==3)rest[goal.kind]=goal.count;scene.hooks.onMove(rest,100,1,current.leaves?.length??0,current.crates?.length??0)');h.flushResults();
+    expect(h.run('save.coins')).toBe(coins+40);expect(h.run('save.stars')).toBe(stars+1);expect(h.run(`save.completed.includes(${level})`)).toBe(true);expect(h.run('resultMemory.level')).toBe(level);
+    const disk=h.disk(),writes=h.writes();h.run('finish(true)');expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it.each(['replay','practice','loss','storage'] as const)('다람쥐 %s는 새 정상 추억을 만들지 않습니다',reason=>{
+    const initial={version:2,puzzleTools:{schema:2,introduced:['trowel'],trialUsed:[]},language:'ko',highestLevel:57,completed:Array.from({length:56},(_,i)=>i+1),stars:56,coins:2240,garden:0,music:false,sfx:false,tutorialSeen:true};
+    const h=mainHarness(false,false,false,false,initial);
+    if(reason==='replay')h.run('save.completed.push(57)');if(reason==='practice')h.run('startLevel(57,true)');if(reason==='storage')h.setStorageFails(true);
+    h.run(`finish(${reason!=='loss'})`);expect(h.element('#result-memory-link').hidden).toBe(true);expect(h.run('resultMemory')).toBeUndefined();
+  });
   it('비버는 상자만 끝나도 안도하지만 블록 목표 전에는 승리나 정상 추억을 만들지 않습니다',()=>{
     const h=mainHarness(false,false,true);h.run("startLevel(36,true);switchView('puzzle')");const disk=h.disk(),normal=h.run('JSON.stringify(save)');
     expect(h.element('#trail-encounter').dataset.trailEpisode).toBe('beaver-v1');expect(h.element('#trail-encounter').dataset.resolved).toBe('false');
