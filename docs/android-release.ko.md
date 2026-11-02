@@ -1,4 +1,26 @@
-## 최신 로컬 통합 APK · 2026-10-29 · #472 · 0acc3f6
+## 최신 로컬 통합 APK · 2026-11-02 · #486 · 26249fb
+
+제품 소스 `26249fb0b655e51d87ed4aadda09849eadd96888`는 이전0acc에 #475 첫 이야기 판의 다음 진입 미리보기와 #483 과수원45/51/57 다람쥐·기존 도토리 목표/추억 연결을 더했습니다. [PR487](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/487)의 최초 PR CI41411780375와 정확 [main 최초 CI41412848358](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/41412848358) attempt1에서 Node22/24 각각82파일4,340개·스토어19개·타입3설정·두 웹 빌드가 성공했습니다. 실제 웹4dd2625와 제품 입력은 같고 차이는 문서뿐이며 production108 전수SHA로 연결했습니다. 오늘 묶음별 첫 CI와 소스는 [웹 기록 상단](web-ci.ko.md)을 따릅니다.
+
+로컬 파일은 `C:/Users/user/Documents/ChatGPT/Pawblossom-builds/2026-11-02-26249fb-orchard-story/Pawblossom-Puzzle-v0.1.7-2026-11-02-26249fb-debug.apk`입니다. **0.1.7/code8 · 54,882,419바이트 · SHA256 `4fe64faeed5444f2ce1d406a16444da3cfb98f4dc86c2bd47bb496c350404dac`**이며 min24/target36·기존 단일v2 서명·권한을 보존했습니다. 기존 debug key의 존재만 확인하고 생성/교체하지 않았습니다. 이전0acc 및 ed/c140/731/3e APK·최초 진단·원화/서명은 보존하며 Drive 업로드·AAB·버전 증가는 없습니다. **이 파일은 시험 flags3개가 true인 testing APK**이고, 아래 production 복원본과 구분합니다.
+
+양측 fresh 동의 뒤 원래15분(new12/정리3) 차례를 UTC08:51:17.4899576에 시작했습니다. `npm run build:test`→`npx --no-install cap sync android`→`gradlew.bat :app:assembleDebug --no-daemon --max-workers=1 --offline --console=plain`의 첫 실행은 모두 Exit0이었고 assemble은08:52:27.977에 끝났습니다. Node24.21/JDK21.0.12.1+1과 기존 SDK를 현재 shell에서만 사용했으며 SDK 설치/업데이트·전역 환경 변경은 없습니다. 기존 SDK XML버전 경고와 Vite 큰 chunk 안내는 성공0의 원문에 남기고 해결/오류 은폐로 세지 않습니다.
+
+testing 웹117개와 APK public119개(빈 Cordova2개 포함)를 이름/길이/SHA로 전수 대조했습니다. source public91개는 이전89개 보존+다람쥐 WebP2개(33,744/30,040바이트)이며 새 원화PNG는 APK에 없습니다. ZIP660항목 CRC 성공·중복0, 이전0acc의 비웹494개는 추가/삭제/변경0으로 모두 byte exact입니다. 단일v2 서명자·권한·Android/의존성 입력도 같습니다. 런처/시작 테마는 #449→#461→#472의 기존 근거와 비웹 일치를 재사용하며 새 픽셀 decode/JUnit/lint를 실행한 것으로 세지 않습니다. APK 전체 크기 증가218바이트는 압축 payload+65,161과 header/alignment/signing 등 잔여−64,943의 합이며 새 그림 누락이나 새 최적화 성과로 해석하지 않습니다.
+
+실패 시에도 복원하는 wrapper9단계가 모두 Exit0이며 production108/Android public110·flagsfalse3·전수SHA를 기존 실제 웹4dd와 같게 복원했습니다. 실제 관측한 assemble 자손 PID/생성시각과 범위 내 helper0·source clean을 추가 확인하고 **UTC08:57:00.0737216에 실제 반환**했습니다. PC 전체 Java0으로 확대하지 않습니다. 첫 빌드/복원 실패는 없으며 준비 도구의 source guard/원문 streaming 보완은 실제 실행 전 검수입니다. 파일·manifest·서명 대조·실제 반환은 Git 밖 `qa/integration-20261102/486-*`와 위 전달 폴더에 있습니다.
+
+**마지막 실제 설치 관측은10/29의0acc입니다. 오늘 새 APK의 실제 설치 해시·실행·진행 보존은 아직 미확인**이며 아래 #465g/h 보호 중단과 구분합니다. 앞선 정상 웹1–9·도구9나 과수원5조건을 새 Android/OEM·Samsung #375·청취·자연45–57/500판·실광고/구매/스토어 성공으로 합산하지 않습니다. APK 테스트 안내는 사용자 채팅에 직접 적고 별도 안내 파일은 만들지 않습니다. 아래 '최신0acc/새APK없음/후속CI' 문구는 각 당시 상태이며 이 상단 최신 기록이 우선합니다.
+
+### #465f/g/h · 새 APK 설치 전 보호 중단 · 2026-11-02
+
+#465f는 UTC07:26:37.5470245→07:27:29.9042783에 공식 list2의 실제10필드를 이전7필드 파서가 거절해 자체 부팅/host socket/device명령/설치0으로 끝났습니다. 원문은 세 인스턴스 모두 `ready0/PID−1/−1`입니다. 다른 시점의 성공을 이 실패로 대체하지 않습니다.
+
+#465g는 fresh 차례 UTC09:14:07.5268845에 기존5037 단독 소유 LD14 adb의 경로/해시·생성시각을 고정하고 빈 host목록을 확인한 뒤 자체0를 정상 부팅했습니다. 다음 list2의 own상태값2·자체PID37356/4272를0/1만 허용한 guard가 거절했습니다. 2의 의미는 미확정이며 준비 완료로 취급하지 않습니다. 설치시도/device명령/앱입력0, official quit0·전체VM정지·관측 두PID 없음·서버 동일/source clean을 확인해 **09:14:47.7843823에 root 최종 반환**했습니다.
+
+#465h는 g의 원문을 보존하고 boot 관찰만 실측2를 구조값으로 허용하되 ready1까지60초/newStop 유한 대기하도록 보완했습니다. 실제 device guard는 ready1·동일PID/transport·다른VM정지 조건을 그대로 지키며, 순수 host10/native16·실제 g/h Shape 회귀·문법과 독립 읽기를 통과했습니다. UTC09:18:22.8761335의 새 차례에서 실제2→1을 관측했지만, VBox 실행 경로가 공통 `C:/Program Files/ldplayer9box/Ld9BoxHeadless.exe`여서 LD14폴더만 허용한 출처 guard가 거절했습니다. 실제 own0 comment/VM UUID·fresh 생성시각 원문을 보존했고 새 APK 설치/device명령/앱입력은0입니다. official quit0·모든VM정지·ownPID6628/25748 없음·기존 서버 동일/source clean을 확인해 **09:18:56.0038763에 root 최종 반환**했습니다. 전환/출처 guard의 중단을 게임 복귀 오류나 설치 실패로 부르지 않습니다. 후속은 실측 바이너리 해시/자체VM 결속을 준비한 뒤 별도 fresh 차례로만 진행합니다.
+
+## 이전 로컬 통합 APK · 2026-10-29 · #472 · 0acc3f6
 
 제품 소스 `0acc3f63dfdb19588df90b3563287d7dc2bc1257`는 아래 ed2684d 통합본에 #462 앨범 갱신 뒤 계획/추억의 읽기 상태 유지와 #468 저장된 첫 추억 결과에서 핍의 해당 장면으로 이동하는 연결을 더했습니다. [PR469](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/469) 최종 head f509e67의 첫 CI40824238688과 정확 [main 최초 CI40824770373](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40824770373) attempt1에서 Node22/24 각각81파일4,292개·스토어19개·타입3설정·두 웹 빌드가 성공했습니다. 원문 ANSI 표기가 실제 ESC 대신 문자 `^[[22m`이어서 최초 집계기의 일부 수치가 비었던 기록은 보존했고 파서만 보정했습니다. 같은 head CI 재실행은 없습니다.
 
