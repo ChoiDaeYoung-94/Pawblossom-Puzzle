@@ -1,5 +1,15 @@
 # 웹 자동 검증
 
+## 2026-11-02 · #489 실제 정상10–12·13 이어하기 보존 · 첫 차례
+
+main a9453c02dbd537cde299b093c337ed2f1a22e9a6/제품262를 고정하고 기존477 실제 정상1–9 프로필을 그대로 이어갔습니다. 기존 f816 대비 core/levels/state/puzzleTools/puzzleToolActions/BoardScene/PuzzleToolUI·Android/의존성이 같고 최신 production108/flagsfalse3 전수SHA가 기존 실제4dd와 같은 것을 확인했습니다. 초기fixture·직접 저장쓰기/live Scene·Phaser/엔진/RNG 조회나 주입은 없고, 공개접근성64칸/목표와 별도 오프라인 선택 보조의 실제 입력입니다. **사람 난이도·최적 해법·Android/실서비스 승인으로 세지 않습니다.**
+
+첫10 소개를 정상 취소/재열기해 저장 불변을 확인한 뒤 명시 진입했습니다. 10·11·12 첫 완료는 각각10별370/11별410/12별450코인이며 첫1별40 보상과 고유완료를 대조했습니다. 실제 이동 감소는 교환/특수발동을 포함59회이며 모든 키 입력 수가 아닙니다. 최종13번7이동·3,910점/낙엽6더미 완료·잎 색5개 남음의 정상checkpoint와12별450코인,꽃폭탄 소개/첫무료 이력만 보존했습니다.19/장갑의 자연 해금·효과는 미실행입니다. root가 직접 본390×844의 첫10 결과PNG에는 늑대추억3/3·정상 보상/다음 버튼이 들어왔으나,그 결과의 추억링크를 실제 누른 검수로 세지 않습니다.
+
+fresh 실제차례 UTC09:42:33.1641324→root최종반환09:56:01.9887488입니다. 원래 newStop09:55:33.164에서 BudgetStop/child0으로 정상 종료했고 페이지/observer/arrow/정리 오류0입니다. 외부 watchdog/강제 종료는 사용하지 않았습니다. 실제 관측한 ownNode/Chrome 자손11개 신원0·5231 listener0/고유프로필 보존·source clean/108SHA/false3를 추가감사해 원15분 안 명시 반환했습니다. 원문/PNG/report/lease·controller·감사는 Git밖 `qa/integration-20261102/489-first*`,직접PNG 읽기는489-root-first10-png-review.json,[첫 차례 댓글](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/489#issuecomment-6574923573)에 있습니다.
+
+후속 장갑 도구는 소개 저장/무료 소비·유료20/취소·재로드를 분리해 준비했습니다. 진행19 checkpoint가 있는 재로드는 전수일치,승리 뒤 재로드는 영구값과 부팅의 미행동20 checkpoint를 별도로 검증하도록 읽기 P2를 보완했습니다.20 명시UI 시작과 내부 회차 생성은 구분하며,준비/문법·독립검토를 실제 사용 성공으로 세지 않습니다. #490의320×568/모션감소23표본도 실제fixture함수의 순수 canonical 검사를 한 번 통과했을 뿐 브라우저/정상프로필 접근0입니다. 두 후속은 열어 둡니다. 이 관측 기록 PR의 최초CI는 제출 뒤 별도 확인합니다.
+
 ## 2026-11-02 · main 통합과 소스별 최초 CI · #486
 
 아래 모든 run은 각 PR의 최종 head와 정확 squash main의 **attempt1**입니다. Node22/24가 각각 표의 파일/검사를 통과했고 스토어19개·타입3설정·testing/production 두웹빌드도 성공했습니다. 이전 실패·소스별 로컬 검증/실제 화면을 이 표의 성공으로 지우지 않으며 CI 재실행은 없습니다. 원문/attempt/집계는 Git 밖 #475의 `qa/integration-20261029/475-first-{pr,main}-*`와 나머지 `qa/integration-20261102/*-first-{pr,main}-*`에 보존했습니다.
@@ -13,10 +23,11 @@
 | #477 / [482](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/482) 정상1–9/도구9/필수 안내 | 618d98e | 41405785396 | 41406824317 | 82 / 4,320 |
 | #484 / [485](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/485) 계정별 외부 조건 | f9b3dd9 | 41409192937 | 41410115378 | 82 / 4,320 |
 | #483 / [487](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/487) 다람쥐/기존 도토리 목표 | 26249fb | 41411780375 | 41412848358 | 82 / 4,340 |
+| #486 / [488](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/488) APK 정적검증/복원 기록 | a9453c0 | 41420299770 | 41421803827 | 82 / 4,340 |
 
 #122의 실제 PR 영수증은 각Node close-returned16/actual-exit16·관측 소유worker0을 확인했습니다. terminate 요청은Node24에서1/Node22에서5였지만 실제 exit는0이므로 요청과 강제 종료 성공을 혼동하지 않습니다. 실패 재현·SQL owner/잠금 근본 원인 해결은 아니며 #122를 닫지 않습니다. close 반환 조건은 이번 새cleanup 검사라는 점도 유지합니다.
 
-#483 제품 실제 웹4dd2625→squash26249fb는 문서 차이뿐이며 최신 production108/flagsfalse3 전수SHA가 같습니다. #486의 testing117/Android APK웹119와 production108/Android110 복원·실제 SDK반환은 [Android 기록](android-release.ko.md) 상단을 따릅니다. 새 파일 생성/정적 대조를 Android 입력/진행 보존·Samsung/OEM/자연500판으로 합산하지 않습니다. 이 #486 기록 PR 자체의 최초 CI는 제출 뒤 별도 확인합니다. 아래 각 묶음의 '필수CI후속/새APK없음' 문장은 해당 당시 이력입니다.
+#483 제품 실제 웹4dd2625→squash26249fb→a9453c0는 문서 차이뿐이며 최신 production108/flagsfalse3 전수SHA가 같습니다. #486의 testing117/Android APK웹119와 production108/Android110 복원·실제 SDK반환은 [Android 기록](android-release.ko.md) 상단을 따릅니다. 새 파일 생성/정적 대조를 Android 입력/진행 보존·Samsung/OEM/자연500판으로 합산하지 않습니다. #486 기록PR488의 정확 첫PR/main CI도 위 표와 Git밖486-first-{pr,main}-*에 보존했고,[완료댓글](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/486#issuecomment-6574138695)을 남겼습니다. 아래 각 묶음의 '필수CI후속/새APK없음' 문장은 해당 당시 이력입니다.
 
 ## 2026-11-02 · #483 과수원 다람쥐·기존 도토리 목표의 표시
 
