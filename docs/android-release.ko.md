@@ -26,6 +26,38 @@
 
 인트로의 실제 보이는 건너뛰기 버튼 뒤 클릭은 다시 핍 탭으로 끝났습니다. 입력 시각/자동 종료 경계가 관측되지 않아 건너뛰기 성공으로 세지 않았고, 이후 재진입은 입력 없이 지도 자동 진입을 확인했습니다. 정확한 skip/모든 영상 프레임·청취는 #426에 남깁니다. 직접ADB/CLI installapp·서버 start/kill/reset/reconnect·설정/권한/키·다른 VM·새 빌드/sync/Drive·실서비스 조작은0입니다. 후속 Tamer의 새5037 서버PID20812/06:16:27.9979800Z/같은LD14 binary/protocol41 관측은 별도 시점이며, 명시 서버 조작0을 서버 신원 불변으로 해석하지 않습니다. 다음 ADB 차례에는 직접 fresh 신원을 확인합니다. 원문과 반환은 Git 밖 `integration-20261029/465c-*`·이 채팅의 도구 화면에 있고 Samsung/OEM·저장 원본/설치hash·구 tools-v1 이행·native 앨범/비버·실서비스·최종 감각은 남습니다.
 
+## #478 한국·미국 출시 정책과 구매 운영 선택지 재대조 · 2026-11-02
+
+현재 제품/문서 기준은 #475 병합main c34554a이며 첫PR41391288749·정확main41391797635 attempt1의 양Node81파일4,310개·스토어19·타입3/두웹빌드가 성공했습니다. 아래는 공식 공개 문서/현재 소스의 **읽기 조사**로 계정·Console·SDK/폰·실키/env·상품·과금·배포·최종믹스·Drive를 실행하지 않았습니다. 최신 로컬/설치 APK는 상단0acc3f6 그대로이며 정책 검증·실서비스 완료나 연령 변경으로 확대하지 않습니다.
+
+### 대상 연령·동의·광고 준비
+
+6세 이상 기획/주 이용자30–50대·어린이도 즐김 방향은 유지합니다. 실제 그림·콘텐츠·홍보와 Play 대상 연령 선언을 맞춰야 하며 어린이를 포함하는 연령군은 Families 요구 대상입니다. 콘텐츠 등급과 대상 연령은 별개이고 혼합 연령의 중립 화면은 특정 응답을 유도하지 않아야 합니다. 운영 연령 화면·필요 부모 동의·SDK 초기화 순서는 아직 구현/실제 검증이 남습니다. [Play 대상 연령](https://support.google.com/googleplay/android-developer/answer/9867159?hl=en), [Families 요구](https://support.google.com/googleplay/android-developer/answer/9893335?hl=en)
+
+현재 debug GMA는 AgeRestrictedTreatment.CHILD/콘텐츠G, UMP는 TFUA=true를 각각 설정합니다. GMA의 새 연령 처리와 UMP의 동의 요청 억제 신호는 역할이 다르며 UMP 태그가 GMA로 자동 전달되거나 부모 동의를 취득하는 것은 아닙니다. release 광고/결제 등록은 no-op, SDK 의존성도 debug 전용입니다. 실제 동의·광고 노출 시점/닫기/보상/복귀는 별도 검증합니다. [GMA targeting](https://developers.google.com/admob/android/targeting), [UMP 미국 안내](https://developers.google.com/admob/android/privacy/us-iab-support)
+
+어린이/연령 불명 광고에는 Families 인증 SDK·적절한 비맞춤 요청·콘텐츠/형식까지 함께 확인합니다. AD_ID 제거나 npa만으로 모든 전송·법적 적용이 없어졌다고 판단하지 않습니다. 공개 데이터 안내는25.5.0 기준, 프로젝트 시험 GMA는25.4.0이고 개별 버전 인증·전이 의존성·실제 트래픽 대조가 남습니다. 이번 조사로 업그레이드하지 않았습니다. [SDK 목록](https://support.google.com/googleplay/android-developer/answer/12955712?hl=en), [SDK 데이터 설명](https://developers.google.com/admob/android/privacy/play-data-disclosure?hl=en)
+
+한국은 만14세 미만 개인정보 처리에 법상 동의가 필요한 경우 법정대리인 동의와 확인이 필요합니다. 미국의 아동·혼합 대상 정의/부모 동의·예외도 실제 데이터·목적에 맞춰 대조하며 연령 입력/UMP 태그만으로 끝내지 않습니다. 이는 적용 조건의 확인 항목이며 최종 법적 적합성 판정이 아닙니다. [한국22조의2](https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1020398523), [미국 정의](https://www.ecfr.gov/current/title-16/chapter-I/subchapter-C/part-312/section-312.2), [부모 동의/예외](https://www.ecfr.gov/current/title-16/chapter-I/subchapter-C/part-312/section-312.5)
+
+`public/app-ads.txt`와 웹 루트 제공은 이미 준비됐습니다. 남은 것은 정확한 공개 개발자 호스트·Play 웹사이트 연결·AdMob 크롤링/준비 인증입니다. 탐색은 개발자 웹사이트의 **hostname/app-ads.txt**를 기준으로 하므로 일반 GitHub 저장소 경로만으로 해당 호스트 루트를 통제하지 못합니다. 개인정보 페이지의 공개·앱 내부 접근성과 광고 판매자 인증을 구분합니다. [app-ads 설정/탐색](https://support.google.com/admob/answer/9363762?hl=en), [데이터 보안](https://support.google.com/googleplay/android-developer/answer/10787469?hl=en), [User Data](https://support.google.com/googleplay/android-developer/answer/10144311?hl=en)
+
+### 광고 제거 비소모성 구매의 최소 구성
+
+한국3,000원/미국US$2.50·모든 광고 제거·동일Play구매계정의 구매 복원·게임 진행 로컬 범위를 유지합니다. Google은 서버 검증을 권장하면서 클라이언트 단독 승인도 문서화하므로 자체 게임 서버를 필수 전제로 확정하지 않습니다. PENDING에는 권한/승인을 주지 않고 PURCHASED를 검증한 뒤 처리하며, 전환 뒤3일 승인 창·복귀 재조회·미승인 복구를 시험해야 합니다. 비소모성 광고 제거는 소비하지 않습니다. [Billing 통합](https://developer.android.com/google/play/billing/integrate), [보안 권장](https://developer.android.com/google/play/billing/security)
+
+| 선택지 | 준비/미완료와 차이 | 비용/계정 조건 |
+| --- | --- | --- |
+| 클라이언트 단독 | Play 현재 소유 구매 조회·검증·권한·승인. 앱 변조 방어와 앱 미실행 중 승인/환불 반영의 제약을 수용할지 결정합니다. | 별도 호스팅은 없지만 Play 개발자/상품/시험 계정·기기 검증이 필요합니다. |
+| 구매 전용 최소 관리형 backend | 검증·승인·RTDN과token별 영구 상태를 분리하는 설계안입니다. 게임 진행 서버나 게임 로그인을 함께 만들 필요가 자동으로 생기는 것은 아닙니다. | GCP/Developer API·서비스 계정 권한·Cloud Billing·영구 저장/로그/이벤트 비용을 검토하며 가입·배포 승인은 없습니다. |
+| 향후 PlayFab | 계정·소셜·현금 재고 확대 때 비교합니다. 인증/재고 예제를 광고 제거 비소모성 복원에 그대로 연결한 상태는 아닙니다. | 현행 종량제는 월기본0달러+사용량, Standard99달러입니다. Foundation 무료는 Xbox 출시/계획·Partner Center 조건이 있어 Android 단독이 자동 대상은 아닙니다. |
+
+RTDN은 상태 변경 알림이므로 최신 상태 조회·멱등 처리가 필요합니다. 환불과 권한 회수는 같은 상태가 아니며 Voided Purchases의 대상/기간·개발자 revoke 여부를 구분합니다. 별도 게임 로그인 없이 Play 구매 재조회를 복원의 출발점으로 삼을 수 있다는 설계 판단과 토큰 재사용·기기 변경/바인딩의 실제 보안은 구분합니다. [구매 수명](https://developer.android.com/google/play/billing/lifecycle/one-time), [RTDN](https://developer.android.com/google/play/billing/rtdn-reference), [Voided Purchases](https://developers.google.com/android-publisher/voided-purchases), [실제 시험](https://developer.android.com/google/play/billing/test)
+
+무료 사용량에 들어갈 가능성은 있지만 월0달러를 보장하지 않습니다. Cloud Run은 결제 계정 전체 사용량·빌드/이미지 저장·이벤트·DB/네트워크를 함께 산정해야 합니다. 기본 파일시스템은 종료 시 사라지므로 현재 파일 SQLite를 그대로 올려 영구 원장으로 사용할 수 없습니다. 기존 `googlePlayPurchase.ts`의 신뢰된 계정 binding도 현재 앱의 로그인 없는 복원과 아직 연결되지 않았습니다. 기존 검증을 삭제/우회하지 않고 운영 방식을 선택한 뒤 설계합니다. [Cloud Run 가격](https://cloud.google.com/run/pricing), [배포 준비](https://docs.cloud.google.com/run/docs/quickstarts/build-and-deploy/deploy-nodejs-service), [파일시스템 계약](https://docs.cloud.google.com/run/docs/container-contract#file_system_access), [PlayFab 가격](https://developer.microsoft.com/en-us/games/products/playfab/pricing/), [모드 조건](https://learn.microsoft.com/en-us/xbox/playfab/get-started/mode-overview), [Google 연동](https://learn.microsoft.com/en-us/xbox/playfab/economy-monetization/economy-v2/marketplace/marketplace-integrations/google)
+
+다음 결정은 실제 대상 연령·데이터 처리 기준, 공개 운영주체/정책·지원 URL/호스트, 클라이언트 단독 제약 수용 또는 최소 관리형 구성·월 예산, 오프라인 권한 재확인 기준입니다. 확정 가격/모든광고제거/첫 복원 범위를 다시 결정하지 않습니다. 승인 전에는 설계·시험 준비만 하며 실제 계정/키·상품·서버 과금·공개 배포를 활성화하지 않습니다. #122 원장 원인은 이번 조사와 별개로 미확정이며 #73/#354는 계속 열어 둡니다.
+
 ## 이전 로컬 통합 APK · 2026-10-29 · #461 · ed2684d
 
 제품 소스 `ed2684d903a90d33f824a6430776181bd4f8ec83`는 앞선 인트로·도움 도구5종에 정원 다음 목표(PR451), 현재 앨범(PR453), trusted 상태 재조회(PR456), 페이지 보존 시 시험 SDK 연결 유지(PR458), 물가 비버36/38/40 이야기·추억(PR460)을 포함합니다. 정확 최초 [main CI40808166123](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40808166123) attempt1에서 Node22/24 각각81파일4,253개·스토어19개·타입3설정·두 웹 빌드가 성공했습니다. 같은 head 재실행은 없습니다.
