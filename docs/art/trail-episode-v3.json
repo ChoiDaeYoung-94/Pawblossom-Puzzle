@@ -14,7 +14,7 @@
       "reference": "assets/art/trail-episode-v3/squirrel-blocking-v1.png"
     }
   ],
-  "status": "implementation-candidate; actual UI/CI/Android/commercial art not approved",
+  "status": "웹 후보4dd2625의 실제5조건·독립읽기/PNG 검수 성공; 필수PR/정확main CI·새APK/Android/상용미술 미확인",
   "sources": [
     {
       "path": "assets/art/trail-episode-v3/squirrel-blocking-v1.png",
@@ -73,9 +73,31 @@
     "policy": "original untouched;standard proportional resize/transparent padding/encoding only"
   },
   "qualityNotes": [
-    "자체 생성한 걱정/안도 두 표정의 원본을 보존하고 비례 축소/투명 여백/WebP encoding만 적용했습니다.",
-    "실제1254px RGBA 원본과384px/각64KiB 미만 출력의 전수alpha 일치·byte-exact 재생성을 확인했습니다.",
-    "실제 작은 화면/부분 모션·Android/상용미술 승인은 별도입니다."
+    "내장 image_gen으로 자체 생성한 걱정/안도 두 표정이며 원본을 덮어쓰지 않았습니다. 요청1024와 실제1254px를 구분하고 픽셀 단위 같은 포즈를 주장하지 않습니다.",
+    "352px 비례 축소+16px 투명 여백으로384px 출력했고 각64KiB 미만/합계63,784바이트입니다. WebP decode의 전수alpha가 표준 축소/여백 결과와 같고 같은Sharp0.35.5 설정의 byte-exact 재생성을 확인했습니다.",
+    "제품38d10b3의 첫 관련687개 중13개는 기존3항목 기대/시험도구 꺼짐 하네스 설정으로 실패했습니다. 제품 바이트를 유지한9cf36a8에서 새4항목 보존/초점·정상/시험/저장 실패를 포함한689개가 성공했습니다.",
+    "첫 웹의 단일 시각 회전 판정 실패는 QA샘플링 문제로 보존했습니다. 후속실제 EN320 완료문구 높이75.5625가60px 헤더를 넘은 제품P2/원문·PNG를 확인하고4dd2625에서 한영문구만 줄였습니다.",
+    "4dd2625 최신 두 빌드/production108 전수SHA·실제KO39045/EN32051완료/모션감소KO32051완료/KO84457승리/모션감소EN74057승리의5조건이 성공했습니다. KO390 실제꼬리−1.4896도·전체SVG변환none, 표시모션감소와낮은가로숨김을분리했습니다.",
+    "명시한 초기 정상회차 표본 뒤 live Scene/엔진/RNG/저장 주입은 없습니다.57은 마지막상자 실제유효교환→기존1별40코인·동물별각3/3→정확57추억초점·읽기상태를 확인했으며 자연진행/500판난이도/Android/상용미술 승인은 아닙니다.",
+    "root가 실제9PNG를 직접 확인했고 원문/초기표본/실패·SHA/반환/PNG는 Git 밖 integration-20261102/483-*에 있습니다. 관련689는9cf소스근거로 재사용하고 최신문구의 빌드/실제화면과 구분했습니다."
   ],
-  "scope": "기존45/51/57의 도토리 집계에 연결하는 세 번째 이야기 표시입니다. 늑대/비버 각3추억과 엔진/RNG·500판·저장/보상·가격은 유지합니다."
+  "scope": "기존45/51/57의 도토리 집계에 연결하는 세 번째 이야기 표시입니다. 늑대/비버 각3추억과 엔진/RNG·500판·저장/보상·가격은 유지합니다.",
+  "integration": {
+    "module": "src/TrailEpisode.ts",
+    "levels": [
+      45,
+      51,
+      57
+    ],
+    "counter": "기존 도토리 kind3 goal.count와collected[3]",
+    "journal": "completed 파생·에피소드당3개·기존40/500완료 무지급 소급표시",
+    "productSource": "4dd2625d95457744c9d3d3d2273d8e7f16add411",
+    "relatedSource": "9cf36a8ad67243ec36d02965752e53a530de638a",
+    "relatedTests": 689,
+    "productionFiles": 108,
+    "testingFiles": 117,
+    "actualWebCases": 5,
+    "androidVerified": false,
+    "commercialArtApproved": false
+  }
 }
