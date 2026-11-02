@@ -1,7 +1,7 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
-    trailSquirrelJournalTitle:'The orchard’s scattered acorns',trailAcornsLeft:'Acorns left: {count}',trailAcornsReady:'Acorns gathered · finish all goals',
+    trailSquirrelJournalTitle:'The orchard’s scattered acorns',trailAcornsLeft:'Acorns left: {count}',trailAcornsReady:'Acorns done · finish goals',
     trailSquirrelFirstTitle:'A trail of acorns',trailSquirrelFirstProblem:'A little squirrel has spilled its acorns across Pip’s orchard path.',trailSquirrelFirstTask:'Gather the acorns and finish every other goal to help clear the path.',trailSquirrelFirstAfter:'The first acorns are gathered. The squirrel spots a few more down the path.',
     trailSquirrelSecondTitle:'Between the blossom trees',trailSquirrelSecondProblem:'More acorns have rolled between the blossom trees. Pip and the squirrel follow the trail.',trailSquirrelSecondTask:'Collect the acorns, the other target pieces and every leaf pile.',trailSquirrelSecondAfter:'The next stretch is clear. The squirrel carries its acorns toward the last bend.',
     trailSquirrelFinalTitle:'The last little bundle',trailSquirrelFinalProblem:'The last acorns and work crates sit at the orchard’s final bend.',trailSquirrelFinalTask:'Gather the acorns, clear the crates and finish every target piece.',trailSquirrelFinalAfter:'The orchard path is open. A grateful squirrel waves Pip on to the next view.',
@@ -140,7 +140,7 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
-    trailSquirrelJournalTitle:'과수원에 흩어진 도토리',trailAcornsLeft:'남은 도토리 {count}',trailAcornsReady:'도토리 완료 · 남은 목표를 마쳐요',
+    trailSquirrelJournalTitle:'과수원에 흩어진 도토리',trailAcornsLeft:'남은 도토리 {count}',trailAcornsReady:'도토리 완료 · 목표도 마쳐요',
     trailSquirrelFirstTitle:'도토리가 이어진 길',trailSquirrelFirstProblem:'작은 다람쥐가 핍의 과수원 산책길에 도토리를 쏟았어요.',trailSquirrelFirstTask:'도토리를 모으고 다른 목표도 모두 마쳐 길을 정리해요.',trailSquirrelFirstAfter:'첫 도토리를 모았어요. 다람쥐가 길 아래 남은 도토리를 발견해요.',
     trailSquirrelSecondTitle:'꽃나무 사이를 따라서',trailSquirrelSecondProblem:'꽃나무 사이에도 도토리가 굴러갔어요. 핍과 다람쥐가 함께 따라가요.',trailSquirrelSecondTask:'도토리와 다른 목표 블록을 모으고 낙엽도 모두 정리해요.',trailSquirrelSecondAfter:'다음 길목도 정리됐어요. 다람쥐가 도토리를 안고 마지막 굽이로 향해요.',
     trailSquirrelFinalTitle:'마지막 작은 꾸러미',trailSquirrelFinalProblem:'과수원 마지막 굽이에 도토리와 작업 상자가 남았어요.',trailSquirrelFinalTask:'도토리를 모으고 상자와 모든 목표 블록을 마무리해요.',trailSquirrelFinalAfter:'과수원 길이 열렸어요. 고마워하는 다람쥐가 핍의 다음 산책을 배웅해요.',
