@@ -982,7 +982,19 @@ function finish(won:boolean){
     &&!previewDialog.open&&!resourceDialog.open&&!spaceDialog.open&&!lookDialog.open&&!$<HTMLDialogElement>('#tutorial-dialog').open
     &&!(TEST_TOOLS_ENABLED&&$<HTMLDialogElement>('#test-level-dialog').open)&&!billingModal()&&!testAds?.busy&&!testAds?.pausesGame&&!testBilling?.busy&&!testBilling?.pausesGame&&!rewardedContinue?.preparing;
   const next=$<HTMLButtonElement>('#result-next'),home=$<HTMLButtonElement>('#result-home');
-  next.onclick=()=>{if(!canNavigate(next))return;dialog.close();startLevel(won&&!done?Math.min(LEVEL_COUNT,currentLevel+1):currentLevel,testingLevel,undefined,{focusBoard:true});switchView('puzzle');};
+  next.onclick=()=>{
+    if(!canNavigate(next))return;
+    const target=won&&!done?Math.min(LEVEL_COUNT,currentLevel+1):currentLevel;
+    const firstStory=won&&!done&&!testingLevel&&Boolean(trailBeat(target))&&!save.completed.includes(target);
+    if(firstStory&&(route!=='puzzle'||stagePreview||!scene.canLeave()))return;
+    dialog.close();
+    if(firstStory){
+      switchView('map');
+      showStagePreview(target,'map',document.querySelector<HTMLElement>(`#map-stage-${target}`)??$('#map-play'));
+      return;
+    }
+    startLevel(target,testingLevel,undefined,{focusBoard:true});switchView('puzzle');
+  };
   home.onclick=()=>{if(!canNavigate(home))return;dialog.close();switchView('map');};
   const garden=$<HTMLButtonElement>('#result-garden-open');
   garden.onclick=()=>{
