@@ -1,6 +1,16 @@
 # 웹 자동 검증
 
-## 2026-11-02 · #489 실제 정상10–12·13 이어하기 보존 · 첫 차례
+## 2026-11-02 · #489 정상19·장갑 해금/취소/무료/유료/재진입 완료
+
+기존 #477의 실제 정상1–9 전용 프로필을 초기화하지 않고10–19까지 이어 완료했습니다. first는 source a945에서10–12/59회 이동 감소, third와 fourth는 문서만 달라진 source7d8/같은 제품262에서 각각13–15/44회,16–19/48회를 관측했습니다. 각 차례의 이전 저장·진행 중 회차를 전수 대조했으며 최종 완료ID1–19·19별710코인/highest20·진행 중 회차 없음,20 명시 UI 시작0입니다. 공개 접근성64칸/HUD와 별도 오프라인 선택 보조의 실제 입력 검수입니다. 초기 fixture·직접 저장쓰기/live Scene·Phaser·engine/RNG 조회는 없으며 사람 난이도·최적 해법·500판 재미·Android/실서비스 승인으로 세지 않습니다.
+
+18판까지 장갑을 포함한 후속4종 잠금과19판의 핍/장갑 첫 소개를 확인했습니다. 소개 기록과 무료 소비를 구분했고, 무료/유료 대상 선택 취소는 저장 전체가 같았습니다. 무료는690→690코인·30→30이동·0→30점으로 매치를 처리하고 체험/회차 사용 이력을 저장했습니다. 실제 새 판에서도 무료 이력이 유지됐고, 유료 확정1번은690→670코인/20차감·이동30 유지·0→150점이었습니다. 실제 page.reload와 명시 이어하기 뒤 저장 전체·19 checkpoint·670코인이 정확히 같았습니다(`existing19-checkpoint-exact`). 이후 정상19의 모든 목표를 완료해 기존 첫1별40만 더했고 추가 지급이나20 명시 시작은 없었습니다.
+
+fourth의 원래 실제 창은 UTC11:24:54.3852916 시작/newStop11:37:54.3852916/전체반환11:39:54.3852916이며 root 실제 반환은11:36:49.7699163입니다. child0·페이지/arrow/observer/finalObservation/cleanup/controller출력 오류0·watchdog/강제종료0, 관측 소유11개 PID+UTC 생성신원 잔존0·5231 listener0/source clean·production108 전수SHA/false3 불변을 원기한 안 확인했습니다. root는 소개/무료취소/유료20선택/재로드/19첫결과의5PNG를 직접 검수했고 독립 읽기도 비용/회차/재진입 값을 대조했습니다. [최종 실행 댓글](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/489#issuecomment-6576177415)과 Git밖 `qa/integration-20261102/489-fourth*`, `489-tool-progress.json`, `489-root-fourth-png-review.json`에 원문이 있습니다.
+
+second의 오프라인 TS import EISDIR는 browser/profile 할당·게임 입력 전에 발생했고 원문을 보존했습니다. 디렉터리→index.ts 해석과 실제 module-prefix 순수 검사 뒤, 새15분을 만들지 않고 원래10:59:44.7805047 시작/new11:12:44.7805047/전체11:14:44.7805047 창 안에서 third를 실행했습니다. third는13–15 첫 완료와16번5이동/2,350점·15별570코인을 보존하고11:12:58.9087324에 실제 반환했습니다. 그때 새입력 마감 직후 키 해제/DOM observer stop이 마감 검사에 막힌2건을 처음 기록에서 누락한 표현은 [정정 댓글](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/489#issuecomment-6575804816)로 바로잡았습니다. 최종 키 해제 재시도와 context 종료/소유신원0을 개별 observer stop 성공과 구분합니다. 후속 실행 전에 이 두 정리만 원 전체반환 기한을 사용하도록 QA 도구를 보완했고 실제 bounded함수의5경계 순수 검사·독립 읽기를 통과했습니다. fourth의 성공으로 이전 원문/보호 중단을 지우지 않습니다.
+
+## 2026-11-02 · #489 실제 정상10–12·13 이어하기 보존 · 첫 차례 이력
 
 main a9453c02dbd537cde299b093c337ed2f1a22e9a6/제품262를 고정하고 기존477 실제 정상1–9 프로필을 그대로 이어갔습니다. 기존 f816 대비 core/levels/state/puzzleTools/puzzleToolActions/BoardScene/PuzzleToolUI·Android/의존성이 같고 최신 production108/flagsfalse3 전수SHA가 기존 실제4dd와 같은 것을 확인했습니다. 초기fixture·직접 저장쓰기/live Scene·Phaser/엔진/RNG 조회나 주입은 없고, 공개접근성64칸/목표와 별도 오프라인 선택 보조의 실제 입력입니다. **사람 난이도·최적 해법·Android/실서비스 승인으로 세지 않습니다.**
 
@@ -9,6 +19,20 @@ main a9453c02dbd537cde299b093c337ed2f1a22e9a6/제품262를 고정하고 기존47
 fresh 실제차례 UTC09:42:33.1641324→root최종반환09:56:01.9887488입니다. 원래 newStop09:55:33.164에서 BudgetStop/child0으로 정상 종료했고 페이지/observer/arrow/정리 오류0입니다. 외부 watchdog/강제 종료는 사용하지 않았습니다. 실제 관측한 ownNode/Chrome 자손11개 신원0·5231 listener0/고유프로필 보존·source clean/108SHA/false3를 추가감사해 원15분 안 명시 반환했습니다. 원문/PNG/report/lease·controller·감사는 Git밖 `qa/integration-20261102/489-first*`,직접PNG 읽기는489-root-first10-png-review.json,[첫 차례 댓글](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/489#issuecomment-6574923573)에 있습니다.
 
 후속 장갑 도구는 소개 저장/무료 소비·유료20/취소·재로드를 분리해 준비했습니다. 진행19 checkpoint가 있는 재로드는 전수일치,승리 뒤 재로드는 영구값과 부팅의 미행동20 checkpoint를 별도로 검증하도록 읽기 P2를 보완했습니다.20 명시UI 시작과 내부 회차 생성은 구분하며,준비/문법·독립검토를 실제 사용 성공으로 세지 않습니다. #490의320×568/모션감소23표본도 실제fixture함수의 순수 canonical 검사를 한 번 통과했을 뿐 브라우저/정상프로필 접근0입니다. 두 후속은 열어 둡니다. 이 관측 기록 PR의 최초CI는 제출 뒤 별도 확인합니다.
+
+## 2026-11-02 · #490 실제320px23조건·본문/보드/버튼 검수
+
+문서 기록 e0cf583bbbdb7c1b87280ec51ad238d3e97d1829/제품262·production108/false3 전수SHA를 고정하고320×568/모션감소의 명시 canonical 초기 정상 표본23조건을 첫 실행에서 완료했습니다. 준비/SaveStore 순수로드7d8에서5문서만 바뀌었고 실제QA 소스/해시·문서전용 연결을 보존했습니다. active8·ready4·win6·retry4·completed-preview1이며 KO/EN6·36/38/40·45/57의 소개/이미지384decode/폰트/본문bounds·취소/재열기 저장 전체 불변23건, 정사각보드/하단탭 분리,10/40/57 마지막 합법 입력의 첫1별40 각6건/패배 무보상4건/완료57 resolved 소개를 대조했습니다. 기존 정상1–19 프로필은 열지 않았습니다. 자연1–57/500판 재미·사람 난이도·Android/OEM·실서비스 승인과 구분합니다.
+
+HUD22조건의 본문 높이는25.1875–50.375px/헤더60px, 보드는223/224px 정사각형이며 문서overflow x/y0입니다. 버튼95회 관측에서 최소44px/현재viewport 내 도달/elementFromPoint 실제 hit를 확인했습니다. 긴 모달은 내부 스크롤로 각 버튼에 도달하며 모든 문구/버튼이 한 정지화면에 동시에 들어온다는 뜻은 아닙니다. root는 KO6소개·EN36소개·EN40상자완료HUD·EN57결과의추억/다음/지도스크롤·KO57재도전·완료57소개6PNG를 직접 검수했고, 독립 읽기도23/6/4/95개와 비용·저장/소유 경계를 대조했습니다.
+
+원래 창은 UTC11:45:02.0181640 시작/new11:58:02.0181640/전체12:00:02.0181640이며 실제QA 완료11:48:23.819, root 최종반환11:49:26.9634310입니다. child0·페이지/실제cleanup오류객체0·controller/output오류0·watchdog/강제종료0, 관측 소유11신원 잔존0·5234=0/source clean·108SHA/false3를 원기한 안 확인했습니다. 원report cleanupErrors가 미생성되어 physical receipt에 `[null]`로 표현됐으며 실제 오류객체0과 구분하고 원문을 고치지 않았습니다. Tamer의 기존Gmail DOM5분과는 양측fresh/FPS명시동의로 임시프로필·컨트롤러를 분리하고 OS/native입력·성능/정밀시각 판정0으로 한정했습니다. 간섭0/각자의 실제반환은 별도입니다. [실행 댓글](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/490#issuecomment-6576428037)과 Git밖 `qa/integration-20261102/490-first*`, `490-root-png-and-metrics.json`에 원문/초기payload/PNG·소스snapshot/반환을 보존했습니다.
+
+## 2026-11-02 · 후반도구3종 준비 범위 · #492
+
+#492의390×844 EN 후반도구29/49/69 세 조건은 제품262 입력을 고정한 별도 canonical 정상 초기 표본입니다. checkpoint 검사뿐 아니라 실제 SaveStore의 읽기 전용 메모리 로드에서도3 payload가 원래 값 그대로 읽혔고 browser/profile 접근0입니다. 가격40/60/35·한 칸 row/rainbow/column 생성·첫무료/취소·유료1번/재로드·나중 발동의 실제UI 도구와 소유 컨트롤러·원13분/15분 반환·독립 읽기를 준비했습니다. 준비/순수검사를 실제 화면 성공·정상29/49/69 해금·가격/500판 재미 승인으로 세지 않습니다. 실제실행은 다음 fresh 차례에서 별도 기록합니다.
+
+후속7d8f6e4의 첫 main CI41433105938에서도 Node22/24 각각 close-returned16/actual-exit16·exitCode0·잔여 worker0·진단 실패0을 읽었습니다. terminate 요청은 각각2였으나 실제 강제 종료 성공이나 잠금 원인을 입증하지 않습니다. 서로 다른 소스/실행의 PR·첫main 기록과 구분하며 #122의 root cause는 미확정입니다.
 
 ## 2026-11-02 · main 통합과 소스별 최초 CI · #486
 
@@ -24,6 +48,7 @@ fresh 실제차례 UTC09:42:33.1641324→root최종반환09:56:01.9887488입니�
 | #484 / [485](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/485) 계정별 외부 조건 | f9b3dd9 | 41409192937 | 41410115378 | 82 / 4,320 |
 | #483 / [487](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/487) 다람쥐/기존 도토리 목표 | 26249fb | 41411780375 | 41412848358 | 82 / 4,340 |
 | #486 / [488](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/488) APK 정적검증/복원 기록 | a9453c0 | 41420299770 | 41421803827 | 82 / 4,340 |
+| #465/#489 / [491](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/491) 연결 보호중단·정상12 후속 기록 | 7d8f6e4 | 41432366806 | 41433105938 | 82 / 4,340 |
 
 #122의 실제 PR 영수증은 각Node close-returned16/actual-exit16·관측 소유worker0을 확인했습니다. terminate 요청은Node24에서1/Node22에서5였지만 실제 exit는0이므로 요청과 강제 종료 성공을 혼동하지 않습니다. 실패 재현·SQL owner/잠금 근본 원인 해결은 아니며 #122를 닫지 않습니다. close 반환 조건은 이번 새cleanup 검사라는 점도 유지합니다.
 
