@@ -1,5 +1,15 @@
 # 웹 자동 검증
 
+## 2026-11-02 · #495 정상24 첫 완료·25 회차 보존 · 두 번째 차례
+
+첫 차례의 실제 정상24 checkpoint와 모든 영구값을 전수 대조해 그대로 이어갔습니다. source `3c112ea9b9f8b9ab3c511f4e9cdb9e861ffa3712`는 제품262와 AGENTS/docs만 다르며, 같은 production108 전수SHA/false3·전용 프로필을 사용했습니다. 초기 fixture/직접 저장쓰기/live Scene·engine/RNG 조회 없이 공개64칸/HUD와 오프라인 선택 보조로 진행했습니다. 시작은23별870코인·24판30이동/0점·toolsStarted=false/toolsUsed=[]입니다.
+
+24판 첫 완료로 기존1별40만 증가해24별910코인이 됐습니다. 관측 완료한 이동 감소는27회(교환26/특수발동1)이며 전체 키/포인터 입력 수가 아닙니다. 최종 완료ID1–24/highest25·25판20이동/1,230점·수집18/19/9/8/10/10·제거낙엽11·toolsStarted=true/toolsUsed=[]를 보존했습니다. 남은 목표는 당근15/블루베리17/낙엽1이며 독립 읽기도 전후 저장/관측쌍·정산/반환을 대조했습니다. trowel/gloves 소개·무료 소비 이력은 같고 추가 도구/셔플 비용은0입니다. root가24 첫 결과 PNG의 핍·+1별40·다음/지도 버튼을 직접 확인했습니다. 정상29/자동소개·무료/유료40·재진입/29첫완료는 미달이며 #495를 열어 둡니다. 사람 난이도·500판 재미·Android 승인과 구분합니다.
+
+양측 fresh 확인 뒤 원창 UTC13:51:03.2487570 시작/new13:57:03.2487570/전체13:59:03.2487570의8분(새6/정리2)을 사용했습니다. 새입력 기한의 BudgetStop/child0 뒤 물리감사13:57:09.1843960/root최종반환13:57:10.0645873으로 원한도 안 명시 반환했습니다. 페이지/arrow/observer/finalObservation/cleanup/controller출력오류0·watchdog/강제종료0, 관측 소유11신원/5231잔존0·source clean·108SHA/false3·프로필 보존을 대조했습니다. Git밖 `qa/integration-20261102/495-second*`와 `495-root-second-png-review.json`에 소스 사본/관측/영수증을 보존합니다. 이후 추가 브라우저/SDK 없이 기록·원격CI·23시30분/주간90% 선도달 보고만 진행합니다.
+
+부모 [PR496](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/496)의 첫PR41452038655/정확main41453948592는 attempt1 양Node82파일4,340개·스토어19·타입3설정/두웹빌드 성공이며 원문 보존 뒤 브랜치를 정리했습니다. main Node22에서 가장 긴 파일은500판 기준 상태 비교를 포함한 server-round-state.test.ts 350,932ms였고 전체 검사는 성공했습니다. 지연 관측을 #122 잠금 원인/해결로 합산하지 않습니다. 이번 기록 head의 필수 최초PR/정확mainCI는 제출 후 별도 보존합니다.
+
 ## 2026-11-02 · 23시30분 연장 후 #495 정상20–23·24 회차 보존 · 첫 차례
 
 사용자는 종료시간만23시30분KST/14:30UTC로 연장했고 계정 전체 주간90% 선도달 기준은 유지했습니다. afc765a의 첫PR/mainCI·브랜치정리를 마친 이전22시 묶음은 이력으로 보존합니다. 실제 #495 source30538489418f6082d50081601173ffa8a3733a19는 이 지시3문서만 추가한 clean branch이며 제품262·production108/false3 전수SHA·기존 실제 웹 입력은 같습니다.
@@ -79,6 +89,7 @@ HUD22조건의 본문 높이는25.1875–50.375px/헤더60px, 보드는223/224px
 | #465/#489 / [491](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/491) 연결 보호중단·정상12 후속 기록 | 7d8f6e4 | 41432366806 | 41433105938 | 82 / 4,340 |
 | #489/#490 / [493](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/493) 정상19·장갑/작은화면23조건 기록 | 3fab0b6 | 41441428854 | 41442579261 | 82 / 4,340 |
 | #492 / [494](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/494) 후반도구3종·복귀 읽기 기록 | afc765a | 41443899010 | 41444659466 | 82 / 4,340 |
+| #495 / [496](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/496) 정상20–23·23시30분 연장 기록 | 3c112ea | 41452038655 | 41453948592 | 82 / 4,340 |
 
 #122의 실제 PR 영수증은 각Node close-returned16/actual-exit16·관측 소유worker0을 확인했습니다. terminate 요청은Node24에서1/Node22에서5였지만 실제 exit는0이므로 요청과 강제 종료 성공을 혼동하지 않습니다. 실패 재현·SQL owner/잠금 근본 원인 해결은 아니며 #122를 닫지 않습니다. close 반환 조건은 이번 새cleanup 검사라는 점도 유지합니다.
 
