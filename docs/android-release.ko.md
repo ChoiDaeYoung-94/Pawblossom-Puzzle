@@ -36,6 +36,20 @@
 
 실제 정상1–9 진행·9꽃폭탄 무료/유료/재진입·필수첫연습은 별도 #477 웹 전용 프로필에서 확인했습니다. 같은제품f816/production106SHA를고정한공개UI 보조실행이며 최종9별330코인/10소개미시작입니다. 자세한 입력/저장/PNG·네차례명시반환/첫정리오류는 [웹 검증 기록](web-ci.ko.md) 상단을 따릅니다. Android 자연진행·OEM/Samsung #375/청취·500판 재미/실서비스 승인으로 합산하지 않습니다. 새APK/Android sync·SDK·실키/env·상품/과금·공개배포·최종믹스·Drive 변경은 없습니다.
 
+## #484 Play 계정별 외부 선행조건·공개 지원 호스트 · 2026-11-02
+
+#478 공식 자료 읽기 이후 출시 일정의 외부 조건을 대조했습니다. **실제 Paw Play 계정 유형·생성일·신원/기기 확인·Production 접근 승인 여부는 미확인**입니다. 아래 조건을 모든 계정의 새 의무나 이미 시작한 테스트로 세지 않습니다.
+
+2023-11-13 이후 생성한 개인 계정은 Production 접근 신청 직전 최소12명의 테스터가14일 연속 참여 등록(opt-in) 상태를 유지한 closed test가 필요합니다. 탈퇴 후 재가입은 연속 기간을 새로 충족해야 하며 실제 참여/피드백과 반영 내용을 준비합니다. 조건 충족 뒤 접근 신청·검토가 별도로 있고 통상7일 이하이나 더 길거나 추가 테스트를 요구할 수 있어 자동 승인/출시일이 아닙니다. [공식 테스트 조건·연속 참여·검토](https://support.google.com/googleplay/android-developer/answer/14151465?hl=en)
+
+신규 개인 계정의 기기 확인은 소유자의 Play Console 모바일 앱과 루팅하지 않은 실물 Android10 이상 기기로 진행하며 개발용 LD 검수와 별개입니다. 개인/조직은 신원/공개 정보 요건이 다르고, 한국 개발자의 개인 계정은 개발자 전화번호도 확인해야 합니다. 조직은 통상 D-U-N-S·조직 문서/웹사이트 확인이 필요하며 신규DUNS 발급은 최대30일이 걸릴 수 있습니다. 적용 계정/기보유·인증 완료 여부를 먼저 확인합니다. [실물 기기](https://support.google.com/googleplay/android-developer/answer/14316361?hl=en), [계정 정보·DUNS](https://support.google.com/googleplay/android-developer/answer/13628312?hl=en), [신원·전화번호·웹사이트](https://support.google.com/googleplay/android-developer/answer/10841920?hl=en)
+
+지정 공개 브랜드 저장소에는 [Quad D 공통 지원 안내](https://github.com/ChoiDaeYoung-94/ChoiDaeYoung-94/blob/main/docs/support.md)가 있습니다. 공통 메일 `chleodud1410@gmail.com`과 Paw 확정 메일 `doeud1410@gmail.com`은 자동 대체하지 않습니다. [공개 정책 안내](https://github.com/ChoiDaeYoung-94/ChoiDaeYoung-94/blob/main/docs/policies/README.md)는 그 자체가 약관/개인정보처리방침이 아니며 Paw 문서는 게시 전이라고 명시합니다. 공통 안내의 존재를 Paw 정책 본문/운영주체 확정으로 세지 않습니다.
+
+로컬 `public/app-ads.txt` 원본은 이미 준비됐습니다. 공개GitHub 안내와 제어 가능한 hostname 루트의 app-ads.txt·Play 개발자 웹사이트 연결·AdMob 크롤링/인증은 별도로 확인해야 합니다. 이번 공개 읽기는 지정 브랜드 저장소 범위이며 운영 호스트 선택/실제 게시를 완료한 것이 아닙니다. [공식 호스트·스토어 연결·탐색 규칙](https://support.google.com/admob/answer/9363762?hl=en)
+
+개발/단말 검수·정책/스토어 초안과 계정 준비는 병행할 수 있습니다. 기존 집중19–36일/약4–8주 잠정 개발·검수 예산에 조건부14일·30일을 무조건 가산하거나 확정 출시일로 바꾸지 않습니다. Console/테스터 초대·신원문서·실물기기·계정/SDK·키env/상품/과금·호스팅/공개배포·새APK/Drive/최종믹스 변경은 없고 #73의 실제 운영/스토어 검증은 남습니다.
+
 ## #478 한국·미국 출시 정책과 구매 운영 선택지 재대조 · 2026-11-02
 
 현재 제품/문서 기준은 #475 병합main c34554a이며 첫PR41391288749·정확main41391797635 attempt1의 양Node81파일4,310개·스토어19·타입3/두웹빌드가 성공했습니다. 아래는 공식 공개 문서/현재 소스의 **읽기 조사**로 계정·Console·SDK/폰·실키/env·상품·과금·배포·최종믹스·Drive를 실행하지 않았습니다. 최신 로컬/설치 APK는 상단0acc3f6 그대로이며 정책 검증·실서비스 완료나 연령 변경으로 확대하지 않습니다.
