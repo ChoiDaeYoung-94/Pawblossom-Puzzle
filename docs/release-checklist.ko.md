@@ -1,5 +1,11 @@
 # 출시까지 남은 작업
 
+## #122 최초 claim native 연결 관측 · 2026-11-03
+
+- [x] 부모 PR500의 정확첫PR41574210423/main41574547673 attempt1 양Node82/4,340·스토어19·타입3·두빌드 성공 원문/브랜치정리를 확인했습니다.
+- [x] test-only 동일최초claim연결의 BEGIN직후/기존close뒤 상태·null사유를 추가하고 실제원본호출 내부의 성공 증거·임의getter0·finally DTO 연결을 독립 읽기로 검토했습니다. 초안101 성공 뒤P2 수정37ebfd7의 최초관련2파일102개/11.38초가 성공했습니다.
+- [ ] 필수첫PR/정확mainCI와 새진단의 실제수신/close/exit 영수증을 보존합니다. 원8worker·500ms/5초·1completed/7idle·보상1회·retry/SQL/close/IPC·제품은 유지합니다. #122 owner/근본원인은 미확정이며 이 관측 완료만으로 닫지 않습니다.
+
 ## #499 세로 도움 도구 터치영역 · 2026-11-03
 
 - [x] source96ff806/제품CSS136의 새testing117true3/production108false3·두carrier 최초4단계exit0·관측31고유신원/0잔존·미확정/03:35:42.3146518UTC 실제반환을 확인했습니다.

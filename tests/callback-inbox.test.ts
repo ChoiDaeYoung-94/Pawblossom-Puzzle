@@ -23,6 +23,8 @@ const receiptRows=(phase:'receive'|'process')=>[...(parallelReceipt?.[phase].val
 const safeWorkerResults=(values:any[])=>values.map(r=>({kind:r.kind,code:r.code,stage:r.stage,sqlite:r.sqlite,diagnostic:r.diagnostic}));
 const workerUrl=new URL('./helpers/callback-inbox-worker.mjs',import.meta.url);
 const storage={kind:'unavailable',code:'storage'},clock={kind:'unavailable',code:'clock'};
+const claimConnectionNotReached=()=>({afterBegin:{isOpen:null,isOpenReason:'not-reached',isTransaction:null,isTransactionReason:'not-reached'},afterClose:{isOpen:null,isOpenReason:'not-reached',isTransaction:null,isTransactionReason:'not-reached'}});
+const claimConnectionClosed=()=>({afterBegin:{isOpen:true,isOpenReason:null,isTransaction:true,isTransactionReason:null},afterClose:{isOpen:false,isOpenReason:null,isTransaction:null,isTransactionReason:'closed'}});
 function fixture() {
   const dir=mkdtempSync(join(tmpdir(),'pawblossom-inbox-'));dirs.push(dir);
   const path=join(dir,'inbox.sqlite'),rewardPath=join(dir,'reward.sqlite');let time=epoch;
@@ -101,22 +103,22 @@ describe('암호화 수신·원장 내부검증·재시작',()=>{
     expect(results.filter(r=>r.kind==='completed'),safe).toHaveLength(1);expect(results.filter(r=>r.kind==='idle'),safe).toHaveLength(7);
     for(const r of [...received,...results]){expect(r.diagnostic.openAttempts).toBeLessThanOrEqual(3);expect(r.diagnostic.failures.every((v:any)=>v.stage==='open'&&v.sqlite==='busy'),safe).toBe(true);}
     for(const r of [...received,...results])expect(r.diagnostic.close,safe).toEqual({outcome:'returned'});
-    for(const r of received)expect(r.diagnostic.claimBegin,safe).toBeUndefined();
-    for(const r of results){expect(r.diagnostic.claimBegin,safe).toEqual({stage:'inbox-claim-begin',outcome:'returned',elapsedMs:expect.any(Number),primaryCode:null,extendedCode:null});expect(Number.isFinite(r.diagnostic.claimBegin.elapsedMs),safe).toBe(true);expect(r.diagnostic.claimBegin.elapsedMs,safe).toBeGreaterThanOrEqual(0);}
+    for(const r of received){expect(r.diagnostic.claimBegin,safe).toBeUndefined();expect(r.diagnostic.claimConnection,safe).toEqual(claimConnectionNotReached());}
+    for(const r of results){expect(r.diagnostic.claimBegin,safe).toEqual({stage:'inbox-claim-begin',outcome:'returned',elapsedMs:expect.any(Number),primaryCode:null,extendedCode:null});expect(Number.isFinite(r.diagnostic.claimBegin.elapsedMs),safe).toBe(true);expect(r.diagnostic.claimBegin.elapsedMs,safe).toBeGreaterThanOrEqual(0);expect(r.diagnostic.claimConnection,safe).toEqual(claimConnectionClosed());}
     expect(f.conn().prepare('SELECT attempts FROM callback_inbox').get()?.attempts).toBe(1);expect(f.conn(f.rewardPath).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n).toBe(1);
   });
   it('worker 생성자 SQLite BUSY 진단→잠금 해제→같은 요청 제한 재시도',async()=>{
     const f=fixture(),b=f.open();b.receive(f.raw);const lock=f.conn(f.rewardPath);lock.exec('BEGIN IMMEDIATE');let busy=0;
     const release=releaseLockOnce(lock);let result:any;
     try{result=await child(f.input({openRetries:2,diagnostics:true,notifyOpenBusy:true}),()=>{busy++;release();});}finally{release();}
-    expect(busy).toBe(1);expect(result).toEqual({kind:'completed',diagnostic:{openAttempts:2,failures:[{stage:'open',sqlite:'busy'}],close:{outcome:'returned'},claimBegin:{stage:'inbox-claim-begin',outcome:'returned',elapsedMs:expect.any(Number),primaryCode:null,extendedCode:null}}});
+    expect(busy).toBe(1);expect(result).toEqual({kind:'completed',diagnostic:{openAttempts:2,failures:[{stage:'open',sqlite:'busy'}],close:{outcome:'returned'},claimConnection:claimConnectionClosed(),claimBegin:{stage:'inbox-claim-begin',outcome:'returned',elapsedMs:expect.any(Number),primaryCode:null,extendedCode:null}}});
     expect(Number.isFinite(result.diagnostic.claimBegin.elapsedMs)).toBe(true);expect(result.diagnostic.claimBegin.elapsedMs).toBeGreaterThanOrEqual(0);
     expect(f.conn().prepare('SELECT state,attempts FROM callback_inbox').get()).toEqual({state:'completed',attempts:1});expect(f.conn(f.rewardPath).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n).toBe(1);
   });
   it('worker 생성자 BUSY는 최대3회 뒤 오류·무한 재시도/성공 위장 없음',async()=>{
     const f=fixture();f.open();const lock=f.conn(f.rewardPath);lock.exec('BEGIN IMMEDIATE');
     const release=releaseLockOnce(lock);
-    try{expect(await child(f.input({openRetries:2,diagnostics:true}))).toEqual({kind:'worker-error',stage:'open',code:'open-failed',sqlite:'busy',diagnostic:{openAttempts:3,failures:Array.from({length:3},()=>({stage:'open',sqlite:'busy'})),close:{outcome:'not-attempted'}}});}finally{release();}
+    try{expect(await child(f.input({openRetries:2,diagnostics:true}))).toEqual({kind:'worker-error',stage:'open',code:'open-failed',sqlite:'busy',diagnostic:{openAttempts:3,failures:Array.from({length:3},()=>({stage:'open',sqlite:'busy'})),close:{outcome:'not-attempted'},claimConnection:claimConnectionNotReached()}});}finally{release();}
     expect(f.conn(f.rewardPath).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n).toBe(0);
   });
   it('BUSY 대기 자식을 명시적으로 취소한 뒤 소유 DB와 임시 폴더를 정리',async()=>{
@@ -128,7 +130,7 @@ describe('암호화 수신·원장 내부검증·재시작',()=>{
   });
   it.each(['hmac','schema'])('worker %s 영구 오류는 BUSY로 오인/재시도하지 않음',mode=>{
     const f=fixture();f.open();const d=f.conn(f.rewardPath);if(mode==='hmac')d.prepare('UPDATE reward_auth SET state_mac=?').run('0'.repeat(64));else d.exec('ALTER TABLE reward_vouchers ADD COLUMN extra TEXT');
-    return child(f.input({openRetries:2,diagnostics:true})).then(result=>expect(result).toEqual({kind:'worker-error',stage:'open',code:'open-failed',sqlite:'none',diagnostic:{openAttempts:1,failures:[{stage:'open',sqlite:'none'}],close:{outcome:'not-attempted'}}}));
+    return child(f.input({openRetries:2,diagnostics:true})).then(result=>expect(result).toEqual({kind:'worker-error',stage:'open',code:'open-failed',sqlite:'none',diagnostic:{openAttempts:1,failures:[{stage:'open',sqlite:'none'}],close:{outcome:'not-attempted'},claimConnection:claimConnectionNotReached()}}));
   });
   it('외부 verified/event 객체와 processor 주입으로 지급할 수 없음',async()=>{
     const f=fixture(),fake=vi.fn(async()=>({kind:'voucher-recorded',newGrant:true})),b=f.open({processor:fake} as any);
