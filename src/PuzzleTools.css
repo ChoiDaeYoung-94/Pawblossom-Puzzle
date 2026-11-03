@@ -11,3 +11,9 @@
 @media(orientation:landscape) and (max-height:600px){.puzzle-tool-art.tool-info-art{width:72px;height:72px}}
 /* 낮은 가로에서도 확정 전 비용은 별도 줄에 유지합니다. */
 #tool-choice-status{display:flex;flex-direction:column;justify-content:center;gap:2px;-webkit-line-clamp:unset}.tool-choice-text{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:14px}.tool-choice-cost{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;line-height:13px}
+
+/* 세로 화면에서는 안내·확정·취소의 터치 영역을 최소44px로 유지합니다. */
+@media(orientation:portrait){
+  .tool-info-actions button{min-height:44px}
+  #tool-target-controls button{min-width:44px;min-height:44px}
+}
