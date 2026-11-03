@@ -1,5 +1,15 @@
 # 웹 자동 검증
 
+## 2026-11-03 · #495 정상25–27 첫 완료·28 회차 보존 · 세 번째 차례
+
+새 지시는 계정 전체 주간90% 종료 기준이며 시작 조회67%/반환 후71%입니다. 이전11월2일 마감과 당시 추가브라우저 중지는 완료한 묶음 이력입니다. source `a1089d439b93e261d3b852530898beb4b5806e6f`는 main32dd7ea에 재개 지시3문서만 추가했고 제품262·production108 전수SHA/false3를 유지했습니다. 기존 실제 정상 프로필의25판20이동/1,230점·24별910코인과 영구값/checkpoint 전수를 입력 전에 대조했습니다.
+
+25/26/27 첫 완료는 각각25별950/26별990/27별1,030코인입니다. 관측 완료 행동–결과56쌍은 모두 교환이며 판별25/26/27/28에18/23/14/1회입니다. 모든 키/포인터 입력 수로 확대하지 않습니다. 초기fixture/직접저장쓰기/live Scene·engine/RNG 조회 없이 공개64칸/HUD와 별도오프라인선택 보조를 사용했습니다. 추가 도구/섞기 비용과 중복 보상은0, 소개/무료 소비 이력은 trowel/gloves 그대로입니다. 최종 완료ID1–27/highest28·27별1,030코인·28판29이동/170점·수집0/0/6/0/0/0·제거낙엽4·toolsStarted=true/toolsUsed=[]를 보존했습니다. 남은 목표는 당근36/도토리28/낙엽8이며29 자동소개/무료·유료40/재진입·첫완료는 아직 미달입니다. root는25 첫결과PNG의 핍·첫1별40/다음·지도 버튼을 직접 확인했습니다. 사람 난이도·500판 재미·Android/실서비스 승인과 구분합니다.
+
+양측 fresh/이전Tamer 실제반환 뒤 원창은 UTC02:14:18.3271152 시작/new02:27:18.3271152/전체02:29:18.3271152의15분(13+2)입니다. BudgetStop/child0·실제QA정리02:27:18.765 뒤 물리감사02:27:24.5590172/root최종반환02:27:25.3783540으로 원기한 안 명시 반환했습니다. 페이지/arrow/observer/finalObservation/cleanup/controller출력오류0·watchdog/강제종료0, 관측소유11신원/5231잔존0·sourceclean·108SHA/false3·프로필 보존을 대조했습니다. 컨트롤러6개는 지난second 사본과 SHA가 같고 독립 읽기검수를 먼저 통과했습니다. 실제 영수증/PNG/관측은 기존 절대경로를 보존한 Git밖 `qa/integration-20261102/495-third*`, 새 준비/소스사본·재개 기록은 `qa/integration-20261103/495-third*`에 분리합니다. 다음은 이28 회차 전수 대조와 새 fresh 차례이며, 원창을 늘리거나 미실행29를 완료로 세지 않습니다.
+
+부모 [PR497](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/497)의 첫PR41457966686/정확main41459391686은 attempt1 양Node82파일4,340개·스토어19·타입3설정/두웹빌드 성공입니다. 원문과 tree/브랜치 정리는 이전 `495-second-{pr,main}-*`에 보존했고 아래 표에 추가했습니다. 이번 후속의 필수 최초PR/정확mainCI는 제출 뒤 별도 보존합니다.
+
 ## 2026-11-02 · #495 정상24 첫 완료·25 회차 보존 · 두 번째 차례
 
 첫 차례의 실제 정상24 checkpoint와 모든 영구값을 전수 대조해 그대로 이어갔습니다. source `3c112ea9b9f8b9ab3c511f4e9cdb9e861ffa3712`는 제품262와 AGENTS/docs만 다르며, 같은 production108 전수SHA/false3·전용 프로필을 사용했습니다. 초기 fixture/직접 저장쓰기/live Scene·engine/RNG 조회 없이 공개64칸/HUD와 오프라인 선택 보조로 진행했습니다. 시작은23별870코인·24판30이동/0점·toolsStarted=false/toolsUsed=[]입니다.
@@ -90,6 +100,7 @@ HUD22조건의 본문 높이는25.1875–50.375px/헤더60px, 보드는223/224px
 | #489/#490 / [493](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/493) 정상19·장갑/작은화면23조건 기록 | 3fab0b6 | 41441428854 | 41442579261 | 82 / 4,340 |
 | #492 / [494](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/494) 후반도구3종·복귀 읽기 기록 | afc765a | 41443899010 | 41444659466 | 82 / 4,340 |
 | #495 / [496](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/496) 정상20–23·23시30분 연장 기록 | 3c112ea | 41452038655 | 41453948592 | 82 / 4,340 |
+| #495 / [497](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/497) 정상24·25 회차 보존 기록 | 32dd7ea | 41457966686 | 41459391686 | 82 / 4,340 |
 
 #122의 실제 PR 영수증은 각Node close-returned16/actual-exit16·관측 소유worker0을 확인했습니다. terminate 요청은Node24에서1/Node22에서5였지만 실제 exit는0이므로 요청과 강제 종료 성공을 혼동하지 않습니다. 실패 재현·SQL owner/잠금 근본 원인 해결은 아니며 #122를 닫지 않습니다. close 반환 조건은 이번 새cleanup 검사라는 점도 유지합니다.
 
