@@ -7,7 +7,7 @@ const state=(isOpen:boolean,isTransaction:boolean|null)=>({isOpen,isOpenReason:n
 describe('테스트 수신함 최초 claim 연결 상태',()=>{
   it('검증된 한 연결의 BEGIN과 기존 close 뒤 상태가 같은 영수증에 남습니다',()=>{
     const probe=createCallbackConnectionProbe(true),db=new DatabaseSync(':memory:');
-    const exec=(sql:string)=>probe.observe(sql,db,nativeExec,()=>Reflect.apply(nativeExec,db,[sql]));
+    const exec=(sql:string)=>probe.observe(sql,db,[sql],invoke=>invoke());
     try{
       exec('PRAGMA user_version');expect(probe.receipt?.afterBegin.isOpenReason).toBe('not-reached');
       probe.arm();exec('BEGIN IMMEDIATE');expect(probe.receipt?.afterBegin).toEqual(state(true,true));
@@ -19,42 +19,50 @@ describe('테스트 수신함 최초 claim 연결 상태',()=>{
   it('먼저 검증된 연결의 BEGIN throw도 같은 예외·현재 transaction 상태를 유지합니다',()=>{
     const probe=createCallbackConnectionProbe(true),db=new DatabaseSync(':memory:');let original:unknown,caught:unknown,calls=0;
     try{
-      probe.observe('BEGIN IMMEDIATE',db,nativeExec,()=>db.exec('BEGIN IMMEDIATE'));probe.arm();
-      try{probe.observe('BEGIN IMMEDIATE',db,nativeExec,()=>{calls++;try{return db.exec('BEGIN IMMEDIATE');}catch(error){original=error;throw error;}});}catch(error){caught=error;}
+      probe.observe('BEGIN IMMEDIATE',db,['BEGIN IMMEDIATE'],invoke=>invoke());probe.arm();
+      try{probe.observe('BEGIN IMMEDIATE',db,['BEGIN IMMEDIATE'],invoke=>{calls++;try{return invoke();}catch(error){original=error;throw error;}});}catch(error){caught=error;}
       expect(caught).toBe(original);expect(calls).toBe(1);expect(probe.receipt?.afterBegin).toEqual(state(true,true));
       db.exec('ROLLBACK');db.close();probe.afterClose();expect(probe.receipt?.afterClose).toEqual(state(false,null));
     }finally{if(db.isOpen)db.close();}
   });
   it('닫힌 연결을 false transaction으로 오인하지 않습니다',()=>{
     const probe=createCallbackConnectionProbe(true),db=new DatabaseSync(':memory:');
-    probe.observe('PRAGMA user_version',db,nativeExec,()=>db.exec('PRAGMA user_version'));db.close();probe.arm();
-    expect(()=>probe.observe('BEGIN IMMEDIATE',db,nativeExec,()=>db.exec('BEGIN IMMEDIATE'))).toThrow();
+    probe.observe('PRAGMA user_version',db,['PRAGMA user_version'],invoke=>invoke());db.close();probe.arm();
+    expect(()=>probe.observe('BEGIN IMMEDIATE',db,['BEGIN IMMEDIATE'],invoke=>invoke())).toThrow();
     expect(probe.receipt?.afterBegin).toEqual(state(false,null));
   });
-  it('mock·bound·미검증 receiver의 임의 getter를 호출하지 않습니다',()=>{
+  it('무호출 callback이 원본·bound 함수 참조를 반환해도 임의 getter를 호출하지 않습니다',()=>{
     const getter=vi.fn(()=>{throw Error('private getter');}),receiver={};
     Object.defineProperties(receiver,{isOpen:{get:getter,configurable:false},isTransaction:{get:getter,configurable:false}});
-    for(const executed of [vi.fn(),nativeExec.bind(receiver),undefined]){
-      const probe=createCallbackConnectionProbe(true),returned={exact:true},operation=vi.fn(()=>returned);probe.arm();
-      expect(probe.observe('BEGIN IMMEDIATE',receiver,executed,operation)).toBe(returned);probe.afterClose();
+    for(const returned of [42,nativeExec,nativeExec.bind(receiver),{executed:nativeExec}]){
+      const probe=createCallbackConnectionProbe(true),operation=vi.fn(()=>returned);probe.arm();
+      expect(probe.observe('BEGIN IMMEDIATE',receiver,['BEGIN IMMEDIATE'],operation)).toBe(returned);probe.afterClose();
       expect(operation).toHaveBeenCalledOnce();expect(probe.receipt?.afterBegin.isOpenReason).toBe('unverified');
     }
     expect(getter).not.toHaveBeenCalled();
   });
   it('최초 claim receiver를 이후 다른 연결로 바꾸지 않습니다',()=>{
     const probe=createCallbackConnectionProbe(true),first=new DatabaseSync(':memory:'),second=new DatabaseSync(':memory:');
-    const exec=(db:DatabaseSync,sql:string)=>probe.observe(sql,db,nativeExec,()=>db.exec(sql));
+    const exec=(db:DatabaseSync,sql:string)=>probe.observe(sql,db,[sql],invoke=>invoke());
     try{exec(first,'PRAGMA user_version');probe.arm();exec(first,'BEGIN IMMEDIATE');exec(first,'ROLLBACK');first.close();probe.arm();exec(second,'BEGIN IMMEDIATE');probe.afterClose();expect(probe.receipt?.afterClose).toEqual(state(false,null));}
     finally{if(first.isOpen)first.close();second.close();}
   });
   it('비진단은 추가 관측 없이 원래 호출·반환·예외를 보존합니다',()=>{
     const probe=createCallbackConnectionProbe(false),operation=vi.fn(()=>42),error={secret:'not-exported'};probe.arm();
-    expect(probe.observe('BEGIN IMMEDIATE',null,nativeExec,operation)).toBe(42);expect(operation).toHaveBeenCalledOnce();probe.afterClose();expect(probe.receipt).toBeUndefined();
-    let caught;try{probe.observe('BEGIN IMMEDIATE',null,nativeExec,()=>{throw error;});}catch(value){caught=value;}expect(caught).toBe(error);
+    expect(probe.observe('BEGIN IMMEDIATE',null,['BEGIN IMMEDIATE'],operation)).toBe(42);expect(operation).toHaveBeenCalledOnce();probe.afterClose();expect(probe.receipt).toBeUndefined();
+    let caught;try{probe.observe('BEGIN IMMEDIATE',null,['BEGIN IMMEDIATE'],()=>{throw error;});}catch(value){caught=value;}expect(caught).toBe(error);
+  });
+  it('비진단에서도 같은 native receiver·인수로 정확히 한 번 실행합니다',()=>{
+    const probe=createCallbackConnectionProbe(false),db=new DatabaseSync(':memory:'),around=vi.fn((invoke:()=>unknown)=>invoke());
+    try{
+      const sql='CREATE TABLE one_call (n INTEGER); INSERT INTO one_call VALUES (7)';
+      expect(probe.observe(sql,db,[sql],around)).toBeUndefined();expect(around).toHaveBeenCalledOnce();
+      expect(db.prepare('SELECT n FROM one_call').all()).toEqual([{n:7}]);expect(probe.receipt).toBeUndefined();
+    }finally{db.close();}
   });
   it('관측 영수증 쓰기 실패가 원래 반환·예외를 덮지 않습니다',()=>{
     const probe=createCallbackConnectionProbe(true),error={exact:true};Object.freeze(probe.receipt);probe.arm();let caught;
-    try{probe.observe('BEGIN IMMEDIATE',null,undefined,()=>{throw error;});}catch(value){caught=value;}probe.afterClose();expect(caught).toBe(error);
+    try{probe.observe('BEGIN IMMEDIATE',null,['BEGIN IMMEDIATE'],()=>{throw error;});}catch(value){caught=value;}probe.afterClose();expect(caught).toBe(error);
   });
   it('미지원·읽기실패·비boolean과 닫힘을 구분하고 불필요한 getter는 호출하지 않습니다',()=>{
     const transaction=vi.fn(()=>true),failed=()=>{throw Error('private path / SQL');};

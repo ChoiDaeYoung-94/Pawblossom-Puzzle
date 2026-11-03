@@ -29,9 +29,9 @@ export function createCallbackConnectionProbe(enabled:boolean){
   const receipt=enabled?{afterBegin:unavailable('not-reached'),afterClose:unavailable('not-reached')}:undefined;
   const verified=new WeakMap<object,Accessors>();
   let armed=false,reached=false,target:WeakRef<object>|undefined;
-  const verify=(receiver:unknown,executed:unknown)=>{
+  const verify=(receiver:unknown)=>{
     try{
-      if(typeof nativeExec!=='function'||executed!==nativeExec||receiver===null||(typeof receiver!=='object'&&typeof receiver!=='function')||verified.has(receiver))return;
+      if(receiver===null||(typeof receiver!=='object'&&typeof receiver!=='function')||verified.has(receiver))return;
       const accessors:Accessors={};
       // 원본 native exec의 성공 반환으로 확인한 receiver에만 Node22/24 공식 accessor를 보존합니다.
       for(const key of ['isOpen','isTransaction'] as const){
@@ -52,13 +52,16 @@ export function createCallbackConnectionProbe(enabled:boolean){
   const record=(point:'afterBegin'|'afterClose')=>{try{if(receipt)receipt[point]=read();}catch{}};
   return {receipt,
     arm(){if(enabled&&!reached)armed=true;},
-    observe<T>(sql:unknown,receiver:unknown,executed:unknown,operation:()=>T):T {
-      if(!enabled)return operation();
+    observe<T>(sql:unknown,receiver:unknown,args:unknown[],around:(invoke:()=>unknown)=>T):T {
+      let nativeReturned=false;
+      // 성공 표식은 이 원본 호출 안에서만 생성합니다. callback의 반환·함수 참조만으로는 검증하지 않습니다.
+      const invoke=()=>{const result=Reflect.apply(nativeExec,receiver,args);nativeReturned=true;return result;};
+      if(!enabled)return around(invoke);
       const selected=armed&&!reached&&sql==='BEGIN IMMEDIATE';
       if(selected){armed=false;reached=true;try{if(receiver!==null&&(typeof receiver==='object'||typeof receiver==='function'))target=new WeakRef(receiver);}catch{}}
       let result:T;
-      try{result=operation();}catch(error){if(selected)record('afterBegin');throw error;}
-      verify(receiver,executed);if(selected)record('afterBegin');return result;
+      try{result=around(invoke);}catch(error){if(nativeReturned)verify(receiver);if(selected)record('afterBegin');throw error;}
+      if(nativeReturned)verify(receiver);if(selected)record('afterBegin');return result;
     },
     afterClose(){if(enabled&&reached)record('afterClose');}
   };

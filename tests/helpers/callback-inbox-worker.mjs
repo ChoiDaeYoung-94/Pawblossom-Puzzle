@@ -11,8 +11,8 @@ let sqliteFailure;
 let claimProbe=createCallbackClaimProbe(false);
 let connectionProbe=createCallbackConnectionProbe(false);
 const classify=error=>{sqliteFailure=error?.code==='ERR_SQLITE_ERROR'&&[5,6].includes(error.errcode&255)?'busy':'sql-error';};
-const originalExec=DatabaseSync.prototype.exec,originalPrepare=DatabaseSync.prototype.prepare;
-DatabaseSync.prototype.exec=function(...args){try{return connectionProbe.observe(args[0],this,originalExec,()=>claimProbe.observe(args[0],()=>Reflect.apply(originalExec,this,args)));}catch(error){classify(error);throw error;}};
+const originalPrepare=DatabaseSync.prototype.prepare;
+DatabaseSync.prototype.exec=function(...args){try{return connectionProbe.observe(args[0],this,args,invoke=>claimProbe.observe(args[0],invoke));}catch(error){classify(error);throw error;}};
 DatabaseSync.prototype.prepare=function(...args){
   let statement;try{statement=Reflect.apply(originalPrepare,this,args);}catch(error){classify(error);throw error;}
   for(const method of ['get','all','run']){const original=statement[method];statement[method]=function(...values){try{return Reflect.apply(original,this,values);}catch(error){classify(error);throw error;}};}
