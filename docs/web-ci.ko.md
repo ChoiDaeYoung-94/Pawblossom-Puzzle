@@ -1,5 +1,17 @@
 # 웹 자동 검증
 
+## 2026-11-03 · #122 최초 claim 연결의 native 상태 관측
+
+기존 claimBegin은 최초 BEGIN의 반환/예외·시간·숫자코드, close 영수증은 CallbackInbox.close 함수의 반환, 부모 영수증은 IPC/worker exit를 관측합니다. 새 테스트 전용 claimConnection은 **동일한 최초 claim 연결 하나**의 BEGIN 직후와 기존 close 시도 직후 isOpen/isTransaction만 추가합니다. 제품 server/src/Android와 기존 claim/close/parallel/span helper는 바꾸지 않았습니다. 원8worker·500ms/5초·1completed/7idle/신규보상1회·제한retry·SQL/close/IPC 횟수를 유지합니다.
+
+생성자의 기존 원본native exec 성공에서만 receiver/accessor를 검증하고, process 직전에 arm한 첫 BEGIN의 receiver를 WeakRef로 고정합니다. 실제 Reflect.apply 원본 호출 내부에서 성공 표식을 만들므로 무호출 callback이 원본/bound 함수 참조를 반환해도 검증되지 않습니다. 상태값은 boolean/null과 not-reached/unverified/receiver-unavailable/unsupported/read-failed/closed 사유만 내보내고 receiver·SQL·인수·경로·원문 오류는 제외합니다. 닫힌 연결의 transaction은 false로 추정하지 않고 null/closed로 남기며 getter를 호출하지 않습니다. 공식 API는 [Node SQLite](https://nodejs.org/download/release/v22.21.0/docs/api/sqlite.html#databaseisopen)를 참조했습니다.
+
+outer 연결 probe 안의 기존 claimProbe가 BEGIN 종료 시각을 먼저 확정하므로 상태 getter 비용을 기존 elapsed에 포함하지 않습니다. 반환 DTO는 finally 전에 만들어져 기존 close 영수증처럼 동일 제한 DTO 참조를 finally에서 갱신합니다. worker 경로의 실제 close 추가0·추가SQL0·추가IPC0이며 관측 오류가 원래 반환/예외를 덮지 않습니다. constructor실패/receive는 not-reached, 닫힘·미지원·조회실패는 서로 다른 증거입니다. 관측 비용은 경합 시점에 영향을 줄 수 있으며 이 두 시점은 다른 보상/round 연결의 닫힘·잠금 owner·OS원인·worker 종료를 대신하지 않습니다.
+
+초안b8f9581의 최초 관련2파일101개가 성공했지만 독립 읽기에서 callback 반환만으로 native 성공을 인정할 수 있는P2를 찾았습니다. 실제 원본 호출 안의 표식과 무호출4조합/getter0·비진단실제receiver/SQL1회 회귀로 수정한37ebfd7의 최초2파일102개는11.38초/exit0입니다. native BEGIN 성공/throw·동일예외·첫연결고정·닫힘/transaction skip·미지원/조회throw/비boolean·영수증쓰기실패·finally뒤직렬화·원8worker 기대를 확인했습니다. 초안/수정 원문은 Git밖 `qa/integration-20261103/122-connection-*`에 보존하며 필수첫PR/mainCI는 별도 연결합니다. 이 진단 보강이나 이후 녹색을 #122 재현/근본원인 해결로 합산하지 않습니다.
+
+부모 PR500의 정확 첫PR41574210423/main50d4e55 첫41574547673는 attempt1·각Node82파일4,340개/스토어19/타입3·두빌드 성공입니다. 첫 원문 보존 뒤03:57:32.1642948UTC에 같은tree/정확head/다른worktree미사용을 확인해499브랜치를 정리했습니다. Node22 소요시간 차이는 잠금원인 근거가 아닙니다. 아래499 CI후속 표시는 당시 이력입니다.
+
 ## 2026-11-03 · #499 세로44px 수정·8개 초기표본 재검수 완료
 
 제품CSS136070c/source96ff806을 고정하고 기존262의웹결과를 재사용하지 않았습니다. 새testing빌드117/true3·production빌드108/false3와 각carrier검사 최초4단계가 모두exit0입니다. 원웹전용창UTC03:35:00.2853479/new03:47:00.2853479/full03:50:00.2853479 안03:35:42.3146518에 root가 관측31고유신원/잔존0·미확정0·production108 길이/SHA·sourceclean을 재대조해 실제반환했습니다. 기존Android public/262APK를 sync하거나 새APK를 만들지 않았습니다.
