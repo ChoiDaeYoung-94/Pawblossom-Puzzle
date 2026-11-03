@@ -2,6 +2,10 @@
 
 ## 최신 직접 지시 · 2026-11-03
 
+- 사용자 새 지시로 이번 묶음은 **계정 전체 주간 사용량50%**까지 진행하고 검증·정리·상세 보고를 마칩니다.08:43UTC 새조회39%에서 시작하며 아래90%는 이전 완료 묶음 이력입니다. 이전88%와 이번39%를 합쳐 변화 원인을 추정하지 않으며 사용량 초기화·예약/자동재개·새 시간 마감을 만들지 않습니다. Tamer/FPS 매 차례 fresh 확인·원기한·명시 실제반환과 총괄 단독작성/Ultra·독립읽기검수를 유지합니다.
+- PR501/mainad49787의 정확 첫PR41575455986/main41576518638 attempt1 양Node83파일4,349개·스토어19·타입3·두웹빌드 성공과 최초native영수증 원문을 보존했습니다. 각Node process8개는 최초claim BEGINtrue/true·기존close뒤false/null(closed), receive8개는not-reached입니다. 각16close함수반환·IPC16·실제exit16/잔존0이며 Node22의 PR worker6/main worker0은 부모terminate 요청 뒤exit1, 나머지15는exit0/Node24는16exit0입니다. 모든worker자연exit0·모든연결닫힘·owner/root cause 해결로 확대하지 않으며 #122는 유지합니다. 최초영수증파서의exit0가정 실패/수정은 CI실패와 구분해 보존했고 f0d2ac1 브랜치는 최초main원문 보존 뒤 정리했습니다.
+- #338 후속은 기존 실제1–29·29별1,070코인/highest30·진행회차없음부터 준비합니다. 새보조의 활성칸 BFS/공개상자문구/null타일·canonical mask 분리/오프라인model은 합성30–39의10표본·32,276경로/155,522step과 독립P2수정3건을 마쳤습니다. 이는 실제MutationObserver/입력·정상30–39 완료가 아니며 실제프로필/브라우저는 아직 열지 않았습니다. 다음실제첫저장은 영구값 전수일치·부팅30 미행동checkpoint와 명시UI시작을 구분하며 productionCSS136/108SHAfalse3·5231 origin/기존프로필·원13/15분·소유generation gate/명시반환을 유지합니다.262APK/Android sync·Drive/최종믹스는 바꾸지 않습니다.
+
 - PR500/main50d4e55의 첫PR41574210423/main41574547673 attempt1 양Node82/4,340·스토어19·타입3/두빌드 성공 원문 보존 뒤499브랜치를 정리했습니다. #499는 닫고 #338/122는 유지합니다. 후속 #122는 test-only 최초claim연결의 BEGIN직후/기존close뒤native상태 관측을 구현했습니다. 초안2파일101성공 뒤 독립P2의 실제native호출 증거를 강화했고 수정37ebfd7의 최초2파일102개/11.38초가 성공했습니다. 제품/8worker·500ms/5초·SQL/retry/close/IPC는 유지하며 필수첫PR/mainCI는 후속입니다. 새조회84%/90% 상한·공유사용0/파일·원격CI만 유지하고 root cause/owner 해결로 합산하지 않습니다.
 
 - #499는 source96ff806/제품CSS136070c의 새testing117/true3·production108/false3·두carrier 최초4단계exit0 뒤03:35:42.3146518UTC 관측31고유신원/미확정·잔존0으로 반환했습니다. 별도fresh 실제8초기표본은 KO/EN320×568의4/40/101/500·잠금4/선택취소6·64버튼최소44×44/중앙hit·viewport·저장전체무변경/오류0을 완료했습니다. root8PNG/관측7신원·5237=0/108SHAfalse3/sourceclean·원15분 안03:44:51.0293191UTC 실제반환을 대조했습니다. 실제정상1–29프로필은 미접근이며 첫PR/mainCI는 후속입니다. 새조회82%/주간90% 상한을 유지하고 아래 후보·미검수는 당시 이력입니다.262APK/Android sync·Drive·최종믹스는 바꾸지 않았습니다.

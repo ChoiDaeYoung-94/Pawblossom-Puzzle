@@ -1,5 +1,19 @@
 # 웹 자동 검증
 
+## 2026-11-03 오후 · 주간50% 재개와 #338 정상30 이후 준비
+
+사용자 최신 종료 기준은 계정 전체 주간50%이며08:43UTC 새조회39%에서 재개했습니다. 앞선90% 묶음은 완료했고 이전88%와 새39%의 변화 원인은 추정하지 않습니다. 총괄 단독작성/Ultra·독립읽기검수, Tamer/FPS fresh 자원 확인·원기한·실제반환과 예약/자동재개 없음은 유지합니다.
+
+정상 기준은 #495-fourth의 완료1–29·29별1,070코인/highest30·진행회차없음/30명시시작0입니다. 새 QA 보조는31 이후 활성좌표 BFS·상자 공개문구/null타일·mask/crates를 전달하는 별도오프라인 선택 모델을 연결했습니다. 비활성칸은 canonical 정의이며 실제공개관측칸으로 세지 않습니다. 합성30–39의10정의에서 공개문구 snapshot roundtrip·합법후보·32,276경로/155,522step·누락/중복/상태tail변화 거부가 최초 성공했습니다. 실제MutationObserver/키 입력·사람난이도·30–39 정상완료는 아직 검증하지 않았습니다.
+
+독립P2의 이야기36/38 미리보기 필수경로·실패행 원문 선보존·정상프로필 열림 boolean/null 관측을 실행 전에 수정했습니다. 첫PowerShell 준비본의 문자열치환 구문실패는 별도보존 후 수정했고 실제브라우저/프로필0에서 Node구문/PS5파일 parse를 확인했습니다. Git밖 `qa/integration-20261103/338-*`가 원문입니다. 실제후속은 이전 저장 전수대조·부팅생성과 명시UI시작 구분·공개보드/HUD 읽기·도구/셔플 추가소비0·원13/15분·첫입력전 소유generation gate·생산108SHAfalse3/5231반환으로 제한합니다. 이 문단은 준비 기록입니다.
+
+## 2026-11-03 · PR501 첫 PR/main CI·native 영수증 마감
+
+PR501 head `f0d2ac1dadcc6c5f0e86c663f44fa6bf1e0fd762`/main `ad497872c7160554a404c2c416fca40f701f5792`의 첫PR41575455986·첫main41576518638 attempt1은 양Node 각각83파일4,349개·스토어19·타입3·두웹빌드/carrier 성공입니다. 각Node receive8개는 claimConnection not-reached, process8개는 afterBegin isOpen/isTransaction=true/true·기존close뒤false/null(closed), completed1/idle7입니다. close함수반환16·IPC16·실제exit16·잔존0을 확인했습니다.
+
+Node22는 PR process worker6/main worker0이 부모terminate 요청/반환 뒤exit1이며 나머지15는exit0입니다. Node24는 각16exit0이나 부모terminate 요청도 각1개 있으므로 전체자연종료로 표현하지 않습니다. 최초영수증 보관파서의 all-exit0 가정 실패 원문/소스를 보존하고 기존CI 원문을 정확분포로 재감사했습니다. CI·제품테스트 재실행은 아닙니다. 이 두 최초claim 관측시점은 다른연결 수명·잠금 owner/원인을 증명하지 않으며 #122는 유지합니다. `122-connection-first-{pr,main}-*`/`122-receipt-parser-first-*` 보존 뒤04:19:05.8182577UTC에 브랜치를 정리했습니다. 아래의 필수CI 후속 표시는 당시 이력입니다.
+
 ## 2026-11-03 · #122 최초 claim 연결의 native 상태 관측
 
 기존 claimBegin은 최초 BEGIN의 반환/예외·시간·숫자코드, close 영수증은 CallbackInbox.close 함수의 반환, 부모 영수증은 IPC/worker exit를 관측합니다. 새 테스트 전용 claimConnection은 **동일한 최초 claim 연결 하나**의 BEGIN 직후와 기존 close 시도 직후 isOpen/isTransaction만 추가합니다. 제품 server/src/Android와 기존 claim/close/parallel/span helper는 바꾸지 않았습니다. 원8worker·500ms/5초·1completed/7idle/신규보상1회·제한retry·SQL/close/IPC 횟수를 유지합니다.
