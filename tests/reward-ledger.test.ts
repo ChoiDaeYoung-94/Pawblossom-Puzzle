@@ -103,9 +103,16 @@ describe('원자 저장·동시 worker·오류 비노출',()=>{
     expect(trace.workers.every(row=>row.sqlite?.report==='received'&&row.sqlite.diagnostic?.sqliteHook.installation==='installed'&&row.sqlite.diagnostic.sqliteHook.restoration==='restored'&&row.sqlite.diagnostic.sqliteTransactions.some(tx=>tx.phase==='adapter-call'&&tx.site==='transaction-commit'&&tx.outcome==='returned')),callbackOutcomeContext(trace)).toBe(true);
   });
   it('동시 다른claim/transaction 같은round 신규1회',async({task})=>{
-    const trace=task.meta.callbackOutcomeDiagnostic=createCallbackOutcomeTrace(3);
-    const {ledger,path}=open(),a=claim(ledger),b=claim(ledger),c=claim(ledger);close(ledger);const results=await concurrent([a,b,c].map((c,i)=>input(path,query(c,{transaction_id:String(i+1).repeat(32)}),{diagnostics:true})),trace);
+    const trace=task.meta.callbackOutcomeDiagnostic=createCallbackOutcomeTrace(3,{sqliteDiagnostics:true});
+    const {ledger,path}=open(),a=claim(ledger),b=claim(ledger),c=claim(ledger);close(ledger);const results=await concurrent([a,b,c].map((c,i)=>input(path,query(c,{transaction_id:String(i+1).repeat(32)}),{diagnostics:true,sqliteDiagnostics:true})),trace);
     expect(results.filter(r=>r.kind==='voucher-recorded'&&r.newGrant).length,callbackOutcomeContext(trace)).toBe(1);expect(results.filter(r=>r.kind==='rejected'&&r.code==='round-closed').length,callbackOutcomeContext(trace)).toBe(2);
+    expect(trace.workers.every(row=>{
+      const diagnostic=row.sqlite?.diagnostic;
+      return row.observationFailed===false&&row.sqlite?.report==='received'&&diagnostic!=null
+        &&diagnostic.sqliteTransactionObservationFailed===false&&diagnostic.sqliteErrorsTruncated===false&&diagnostic.sqliteTransactionsTruncated===false
+        &&diagnostic.sqliteHook.installation==='installed'&&diagnostic.sqliteHook.restoration==='restored'
+        &&diagnostic.sqliteHook.installedMethods===5&&diagnostic.sqliteHook.restoreFailures===0;
+    }),callbackOutcomeContext(trace)).toBe(true);
   });
   it('cancel/callback 경합 순서와 무관하게 후속 지급/발급 차단',async()=>{
     const {ledger,path}=open(),c=claim(ledger),raw=query(c);close(ledger);const results=await concurrent([input(path,raw),input(path,raw,{action:'close'})]);
