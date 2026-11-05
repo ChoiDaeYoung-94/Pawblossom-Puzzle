@@ -1,4 +1,20 @@
-## 최신 로컬 통합 APK · 2026-11-02 · #486 · 26249fb
+## 최신 로컬 통합 APK · 2026-11-05 · #503/#505/#507 · fcded21
+
+제품 소스 `fcded214acb64e640c5aef9ad9b5ca39a5259954`는 별도 테스트 진행·현재/누적 즉시완료·초기화, 퍼즐 하단 메뉴 숨김/설정 명시복귀, 인트로 완성로고 poster/건너뛰기 제거, 초반 도구3/4/6/8/10, 중앙 하단 메뉴·공통 카툰 프레임과 연속 완료 지도 복귀를 포함합니다. 시험 초기화 marker/복구와 돌봄 반응 수명 보완도 통합했습니다. 전체 원화의 카툰 재제작이나 사용자 감각 승인은 남습니다.
+
+로컬 파일은 `C:/Users/user/Documents/ChatGPT/Pawblossom-builds/2026-11-05-fcded21-test-progress/Pawblossom-Puzzle-v0.1.7-2026-11-05-fcded21-debug.apk`입니다. **0.1.7/code8 · 54,882,419바이트 · SHA256 `3802d7da5339ce69dbb031689af920f4df1dc1a2ef943790a3c703366df840db`**입니다. 기존 단일v2 서명자·권한·비웹494개는 이전262 APK와 같습니다. 버전/키를 바꾸지 않았으며 **시험 flags3개가 true인 testing debug APK**입니다. 이전 APK와 바이트 수는 같지만 SHA가 다르며 크기 최적화 성과로 해석하지 않습니다. 이전 APK/진단·원화·키/서명을 보존합니다.
+
+정확 첫 PR/main CI는 #503/PR504의41958459025/41959036167(양Node84파일4,369), #505/PR506의41959806778/41960508794(84/4,374), #507/PR508의41961254481/41962288472(84/4,378)입니다. 모두 attempt1 Node22/24·스토어19·타입3설정/두웹빌드/carrier가 성공했고 최초 원문·whole-tree 일치와 각 브랜치 정리를 보존했습니다. APK는 마지막 fcded21의 정확 첫 main CI 성공 뒤 만들었습니다. 이후 test/docs만의 변경은 이 APK 제품 소스를 바꾸지 않습니다.
+
+단독 작업으로03:39:03.0350084UTC에 원12분 신규/15분 전체창을 시작했습니다. 현재 shell의 기존 Node24.21/JDK21.0.12.1+1·SDK로 testing빌드→Capacitor sync→offline 단일worker debug assemble을 실행했고 wrapper9단계 첫 실행이 모두 exit0/실제exit0입니다. assemble은03:40:00.7570158UTC에 끝났습니다. 새 SDK 설치·전역 설정·키 생성·버전 증가는 없습니다.
+
+testing 웹117개+빈Cordova2개=APK public119개를 이름/길이/SHA로 전수 대조했습니다. public원본91개도 같은 바이트이며 새 원화는 없습니다. ZIP660항목 CRC정상/중복0·기존 비웹494개 동일·서명/권한 일치를 확인했습니다. 실패 시에도 복원하는 wrapper가 production108/Android public110·flagsfalse3를 빌드 직전 production manifest와 전수SHA 일치로 복원했습니다. 이 manifest는 빌드 직전 바이트 기준이며 실제 브라우저 served-byte manifest가 아닙니다. production 실제7항목/인트로 시작 frame의 poster없음·skip0은 별도 웹검수 근거입니다.
+
+03:42:10.1020236UTC에 직접 child9개의 exit0·알려진 .NET handle10신원 잔존0·범위 내 새 taskJDK/Node잔존0·sourceclean을 대조해 원한도 안 실제반환했습니다. **live CIM 자손 snapshot은 미확보**입니다. 최초 JSON date coercion에 따른 신원 바인딩 실패/종료 후 literal재감사와 직접 handle/최종감사를 구분해 보존하며 모든 자손을 실시간 관측했다거나 PC 전체 Java0으로 확대하지 않습니다. 근거는 Git 밖 `qa/integration-20261105/503-{artifact-proof,build-status,production-restored,actual-return}.json` 및 원문입니다.
+
+사용자는 이번 **PC 검수만 진행**을 선택했습니다. 새 APK 설치/업데이트 저장·Android/OEM/Samsung 최근 앱 #375·실제 영상/오디오 청취는 미검증입니다. 정상 웹은 기존1–39 저장 전수대조 뒤40–42 첫완료·42별1,590코인/highest43·43판28이동900점으로 저장했고, 실제52쌍/오류0·관측10잔존0/5231=0·원15분 안03:59:39.5029708UTC 실제반환했습니다. 자연40 이야기/추억과 별도 한영18합성 이야기·정원/돌봄 UI검수는 [웹 기록](web-ci.ko.md)에서 분리합니다. 이 근거를 Android·500판사람재미·실광고/구매/스토어 승인으로 합산하지 않습니다. Drive·AAB·실키/env·상품/과금·공개배포·최종믹스 변경은 없습니다. 테스트 안내는 채팅에 직접 제공합니다. 아래 '최신262/새APK없음/후속CI'는 각 당시 이력입니다.
+
+## 이전 로컬 통합 APK · 2026-11-02 · #486 · 26249fb
 
 제품 소스 `26249fb0b655e51d87ed4aadda09849eadd96888`는 이전0acc에 #475 첫 이야기 판의 다음 진입 미리보기와 #483 과수원45/51/57 다람쥐·기존 도토리 목표/추억 연결을 더했습니다. [PR487](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/487)의 최초 PR CI41411780375와 정확 [main 최초 CI41412848358](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/41412848358) attempt1에서 Node22/24 각각82파일4,340개·스토어19개·타입3설정·두 웹 빌드가 성공했습니다. 실제 웹4dd2625와 제품 입력은 같고 차이는 문서뿐이며 production108 전수SHA로 연결했습니다. 오늘 묶음별 첫 CI와 소스는 [웹 기록 상단](web-ci.ko.md)을 따릅니다.
 

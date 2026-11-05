@@ -1,6 +1,20 @@
 # 웹 자동 검증
 
+## 2026-11-05 · 통합 APK와 정상40–42 실제 검수
+
+#505/PR506 첫PR41959806778/main41960508794 양Node84/4,374, #507/PR508 첫PR41961254481/main41962288472 양Node84/4,378의 attempt1·스토어19·타입3설정/두웹빌드/carrier 성공 원문을 보존했습니다. main은 각각0ae5b93/fcded21이며 각 head와 whole-tree 일치·종속PR/worktree없음을 확인하고 브랜치를 정리했습니다. 앞선 #503/PR504 첫PR/main41958459025/41959036167 양Node84/4,369도 보존합니다. 아래 CI후속 표시는 당시 이력입니다.
+
+최신 fcded21의 실제 시험 반응 정리3경로10항목과 production7항목은 성공했습니다. 원13/15분 normal 후속은 이전 정상1–39의 영구값을 전수대조하고 boot40의 미행동34이동0점/상자8 checkpoint와 명시40시작을 구분했습니다. 자연 EN40비버의 정확소개/취소재열기 저장전체불변·첫완료/해당추억과21–40완료엽서를 확인하고40–42를 처음 완료했습니다. 최종42별1,590코인/highest43/완료1–42, 진행43판28이동900점·수집[1,3,10,14,13,0]·상자4제거·도구[]/셔플1을 보존합니다.
+
+실제52행동/결과쌍은 교환50/보드특수2, 판별40=23/41=12/42=15/43=2입니다. 계획53개 중 after-scan reserve중단1개는 실제행동에서 제외했습니다. 추가 도구/셔플 소비0·오류0·cleanup5필드null/empty이며 공개DOM/aria 관측·별도오프라인 선택보조 후 저장 전체보드 일치 대조입니다. 정상프로필 직접변조·시험진행/즉시완료는 사용하지 않았습니다. 합성40–49 mask 보조10표본31,616경로/152,068step은 준비검사이며 정상40–49완료가 아닙니다. helper7SHA를 고정해 실제반환 때 같음을 대조했습니다.
+
+실제창은03:46:31.9029275UTC 시작/newStop03:59:31.9029275/전체04:01:31.9029275입니다. 관측10신원(Chrome8포함)잔존0/5231=0·production108SHA/false3·sourceclean을03:59:39.5029708UTC에 root가 실제반환했습니다. 다음은 정상43회차/영구값 전수일치부터입니다. 실기기·새초반도구3/4/6/8/10의 자연학습·500판사람재미·실서비스는 남으며 #338/#122는 유지합니다. raw는 Git 밖 `qa/integration-20261105/338-normal-nov5-first`와 `338-normal-nov5-first-proof.json`, `*-actual-return.json`, `*-root-return-audit.json`입니다.
+
+새 fcded21 testing APK의 경로/SHA·서명/웹전수/production복원·직접handle종료와 liveCIM미관측 한계는 [Android 기록 상단](android-release.ko.md)을 따릅니다. 이후 test/docs 변경은 제품 입력을 바꾸지 않습니다. 이번은 사용자 PC-only 선택이며 다른 프로젝트 조율/기기 실행·Drive·공개배포·최종믹스 변경은 없습니다.
+
 ## 2026-11-05 · #122 생성자 경합 관측 연결
+
+관측 연결은 [PR509](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/509)의 head a66ed72에서 첫 PR CI41965448298 attempt1 Node22/24 각각84파일4,378개·스토어19·타입3/두빌드를 통과해 mainab27cbe에 반영했습니다. head/main whole-tree `709930ed3dd3fdcf095f3bc17613537401e1c784`가 같습니다. 정확 첫 main 시도는 [41966385052](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/41966385052)이며 해당 run과 Git 밖 `122-constructor-first-{pr,main}-{ci.json,attempt.json,all.log,counts.json}` 원문을 기준으로 판정합니다. 아래 첫CI후속 문장은 구현 당시 기록입니다. 제품/APK 입력은 fcded21 그대로입니다.
 
 최초 전체검사 `full-tests-corrected.log`의 같은round/다른claim 3worker 실패는 constructor worker-error 1개·신규지급1개·round-closed1개였고, 세 worker 결과가 모두 수신되어 IPC 미수신이나 timeout과 구분됩니다. `not-opened`는 바깥 ledger 변수에 객체가 할당되지 않았다는 뜻이며 native 연결이 한 번도 열리지 않았다는 증거가 아닙니다. 원문 숫자 오류/site가 없어 해당 기존 테스트에 이미 있는 SQLite 관측을 opt-in했습니다.
 
