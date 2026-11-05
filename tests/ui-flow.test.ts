@@ -47,6 +47,7 @@ const compile = (source: string): string => ts.transpileModule(source, {
 }).outputText;
 const mainCode = compile(read('../src/main.ts').replace(/^import .*;\r?\n/gm, ''));
 const stateCode = compile(read('../src/state.ts'));
+const progressLabCode=compile(read('../src/ProgressLab.ts'));
 const pipCareCode = compile(read('../src/pipCare.ts'));
 const gardenDesignCode = compile(read('../src/gardenDesign.ts'));
 const gardenSpacesCode = compile(read('../src/gardenSpaces.ts'));
@@ -341,6 +342,10 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   const gardenExports:Record<string,unknown>={};vm.runInNewContext(gardenCode,{exports:gardenExports,require:(name:string)=>name==='./gardenDesign'?gardenDesignExports:name==='./GardenPaintedArt'?paintedGardenArt:gardenStructureArt});Object.assign(context,gardenExports);
   vm.runInContext(stateCode, context);
   Object.assign(context, stateExports);
+  Object.assign(context,{normalLoadSave:stateExports.loadSave,normalSaveData:stateExports.saveData,normalRetrySave:stateExports.retrySave,normalSaveStatus:stateExports.saveStatus,normalClearSave:stateExports.clearSave});
+  const labExports:Record<string,unknown>={};
+  vm.runInNewContext(progressLabCode,{exports:labExports,localStorage:context.localStorage,require:(name:string)=>name==='./state'?stateExports:name==='./levels'?levelExports:puzzleToolsModel});
+  Object.assign(context,labExports);
   vm.runInContext(mainCode, context);
   if(autoFrame)frame();
   // 기존 퍼즐 회귀는 실제 지도 부팅 뒤 퍼즐로 진입합니다. 지도 초기 상태는 bootMap으로 따로 검증합니다.
@@ -414,7 +419,7 @@ describe('계획과 산책 추억을 읽던 상태의 보존',()=>{
 
 describe('직접 고르는 산책 도구의 실제 저장/UI 경계',()=>{
   const ready=(testing=false)=>{
-    const h=mainHarness(false,false,true);h.run(`save.highestLevel=${testing?2:69};save.coins=200;startLevel(6,${testing});switchView('puzzle')`);h.frame();
+    const h=mainHarness(false,false,true);h.run(`save.highestLevel=${testing?2:69};save.coins=200;startLevel(6,${testing});switchView('puzzle')`);h.frame();h.run('closeToolInfo(false,false);save.puzzleTools.introduced=[]');
     h.run('const toolOriginalPrepare=preparePuzzleTool;preparePuzzleTool=(r,id,a,b)=>toolOriginalPrepare(r,id,a,b,toolSeededRng(8))');return h;
   };
   const select=(h:ReturnType<typeof mainHarness>,id='trowel')=>{
@@ -422,7 +427,7 @@ describe('직접 고르는 산책 도구의 실제 저장/UI 경계',()=>{
   };
   it('5개 잠금은 정상 도달에서만 열리고 잠금 설명은 이동·재화·체험을 쓰지 않는다',()=>{
     const h=mainHarness(false,false,true),before=h.disk(),writes=h.writes();expect(h.element('#tool-shelf').innerHTML.match(/data-locked="true"/g)).toHaveLength(5);
-    h.run("showToolInfo('trowel','tool-trowel')");expect(h.run('toolDialog.innerHTML')).toContain(t('en','toolUnlock').replace('{level}','9'));expect(h.run('toolDialog.innerHTML')).not.toContain('class="tool-info-pip"');h.element('#tool-info-start').onclick();expect(h.run('toolMode')).toBeUndefined();
+    h.run("showToolInfo('trowel','tool-trowel')");expect(h.run('toolDialog.innerHTML')).toContain(t('en','toolUnlock').replace('{level}','3'));expect(h.run('toolDialog.innerHTML')).not.toContain('class="tool-info-pip"');h.element('#tool-info-start').onclick();expect(h.run('toolMode')).toBeUndefined();
     h.element('#tool-info-close').onclick();expect(h.disk()).toEqual(before);expect(h.writes()).toBe(writes);expect(h.run('save.puzzleTools.trialUsed')).toEqual([]);
   });
   it('소개는 첫 무료 체험을 소비하지 않고 확정은 비용/판/집계를 한 번만 저장하며 이동은 유지한다',()=>{
@@ -467,7 +472,7 @@ describe('직접 고르는 산책 도구의 실제 저장/UI 경계',()=>{
     h.run('scene.completePrepared()');expect(h.element('#result-dialog').open).toBe(true);expect(h.run('resultGardenPlan.id')).toBe('bed-1');expect(h.element('#result-garden-card').hidden).toBe(false);expect(h.run('moves')).toBe(moves);expect(h.writes()-writes).toBe(2);h.run("switchView('map');switchView('puzzle');finish(true)");expect(h.writes()-writes).toBe(2);
   });
   it('해금 소개는 저장된 새 판의 첫 퍼즐 진입에도 나오고 닫은 뒤 중복 표시/체험 소비가 없다',()=>{
-    const h=ready();h.run("save.highestLevel=9;startLevel(9);switchView('map')");h.frame();h.run("switchView('puzzle')");expect(h.run('toolDialog.open')).toBe(true);expect(h.run('toolDialog.innerHTML')).toContain(t('en','toolPipInvite'));expect(h.run('moves')).toBe(h.run('levels[8].moves'));
+    const h=ready();h.run("save.highestLevel=3;startLevel(3);switchView('map')");h.frame();h.run("switchView('puzzle')");expect(h.run('toolDialog.open')).toBe(true);expect(h.run('toolDialog.innerHTML')).toContain(t('en','toolPipInvite'));expect(h.run('moves')).toBe(h.run('levels[2].moves'));
     h.element('#tool-info-close').onclick();expect(h.stored().puzzleTools.introduced).toEqual(['trowel']);expect(h.stored().puzzleTools.trialUsed).toEqual([]);expect(h.stored().inProgress.toolsStarted).toBe(false);
     h.run("switchView('map');switchView('puzzle')");expect(h.run('toolDialog.open')).toBe(false);h.run("showToolInfo('trowel','tool-trowel')");expect(h.run('toolDialog.innerHTML')).not.toContain('class="tool-info-pip"');expect(h.stored().puzzleTools.trialUsed).toEqual([]);
   });
@@ -750,8 +755,8 @@ describe('첫 완료 뒤 지도의 단회 핍 이동',()=>{
     if(reason==='final')h.run('save.highestLevel=500;save.completed=Array.from({length:499},(_,index)=>index+1);startLevel(500);finish(true)');
     h.element('#result-home').onclick();expect(h.run('route')).toBe('map');expect(h.mapTravels).toHaveLength(0);
   });
-  it('지도로 돌아오기 전 새 판 시작과 비활성은 예약을 폐기합니다',()=>{
-    const next=mainHarness();next.run('finish(true)');next.element('#result-next').onclick();next.run("switchView('map')");expect(next.mapTravels).toHaveLength(0);
+  it('새 판 시작은 이동 기록을 보존하고 비활성은 예약을 폐기합니다',()=>{
+    const next=mainHarness();next.run('finish(true)');next.element('#result-next').onclick();next.run("switchView('map')");expect(next.mapTravels).toHaveLength(1);
     const hidden=mainHarness();hidden.run('finish(true);nativeActive=false;syncPipActivity();nativeActive=true;syncPipActivity()');hidden.element('#result-home').onclick();expect(hidden.mapTravels).toHaveLength(0);
   });
   it('재생 중 비활성·지도 교체는 한 번 정리하고 다시 활성화해도 재생하지 않습니다',()=>{
@@ -1078,7 +1083,7 @@ describe('핍 육성·재화 소비와 정원 전용 체험',()=>{
 describe('명시적 스테이지 전환의 보드 초점',()=>{
   function setup(){
     const h=mainHarness(false,false,false,false,undefined,false);h.frame();
-    h.run(`globalThis.focusCalls=[];globalThis.cursorStarts=0;document.activeElement=document.body;
+    h.run(`globalThis.focusCalls=[];globalThis.cursorStarts=0;save.puzzleTools.introduced=['trowel'];document.activeElement=document.body;
       BoardScene.prototype.focusKeyboard=()=>{cursorStarts++;};
       const target=document.querySelector('#game-canvas');target.matches=()=>true;
       target.focus=options=>{const changed=document.activeElement!==target;document.activeElement=target;
@@ -3150,7 +3155,7 @@ describe('후반 고유 완료 풍경과 정원 거래 context',()=>{
 describe('경로 표시 컨테이너와 메뉴 버튼의 이벤트 경계',()=>{
   it('내부 버튼 클릭이 app까지 버블링되어도 복원 미리보기를 닫지 않고 실제 메뉴만 경로를 바꿉니다',()=>{
     const h=mainHarness(false,false,true,false,{version:1,language:'ko',highestLevel:61,completed:Array.from({length:60},(_,i)=>i+1),coins:120,stars:30,garden:1,music:true,sfx:true,tutorialSeen:true});
-    h.element('#nav-village').onclick();expect(h.run('route')).toBe('village');expect(h.element('#nav-village').attributes['aria-current']).toBe('page');expect(h.element('#app').attributes['aria-current']).toBeUndefined();
+    h.element('#nav-village').onclick();expect(h.run('route')).toBe('puzzle');h.run("switchView('map')");h.element('#nav-village').onclick();expect(h.run('route')).toBe('village');expect(h.element('#nav-village').attributes['aria-current']).toBe('page');expect(h.element('#app').attributes['aria-current']).toBeUndefined();
     h.element('#garden-area-pond').onclick();h.element('#app').onclick();const before=h.disk(),writes=h.writes();h.element('#garden-space-restore').onclick();h.element('#app').onclick();
     expect(h.run('spaceDialog.open')).toBe(true);expect(h.run('Boolean(spacePreview)')).toBe(true);expect(h.disk()).toEqual(before);expect(h.writes()).toBe(writes);
     h.element('#space-preview-confirm').onclick();expect(h.run('spaceDialog.open')).toBe(false);expect(h.run('save.stars')).toBe(18);expect(h.run('save.gardenDesign.spaces.pond.phase')).toBe(1);
@@ -3782,4 +3787,76 @@ describe('선택한 정원 꽃밭에 무료 물주기',()=>{
       const h=mainHarness(false,false,false,false,initial());h.run("switchView('village')");h.element('#garden-tend').onclick();const disk=h.disk();h.run(change);expect(h.run('gardenTendingPlot')).toBeUndefined();h.flushCareReaction();expect(h.disk()).toEqual(disk);
     }
   });
+});
+
+
+describe('별도 테스트 진행과 명시적인 화면 복귀',()=>{
+  const ready=()=>{const h=mainHarness(false,false,true);h.run("switchView('settings')");expect(h.run('changeLabMode(true)')).toBe(true);return h;};
+  const normal=(h:ReturnType<typeof ready>)=>h.disk().filter(([key])=>!key.startsWith('pawblossom.progress-lab.v1:'));
+  it('진입 전부터 정상 primary·backup·reset 원문을 그대로 보존한다',()=>{
+    const h=mainHarness(false,false,true);h.run("switchView('settings')");const before=h.disk();
+    expect(h.run('changeLabMode(true)')).toBe(true);expect(normal(h)).toEqual(before);
+    h.run("switchView('settings')");expect(h.run('changeLabMode(false)')).toBe(true);expect(normal(h)).toEqual(before);
+  });
+  it('테스트 10 즉시 완료는 1–10 보상과 11 해금을 별도로 저장하고 정상 회차를 복원한다',()=>{
+    const h=ready(),disk=normal(h),previous=h.run('normalLoadSave().inProgress');
+    expect(h.run('completeLabLevel(10)')).toBe(true);
+    expect(h.run('save.completed')).toEqual(Array.from({length:10},(_,i)=>i+1));expect(h.run('[save.stars,save.coins,save.highestLevel]')).toEqual([10,400,11]);
+    expect(h.run('save.inProgress')).toBeUndefined();expect(h.element('#result-dialog').open).toBe(true);expect(h.run('firstReward')).toBe(true);expect(normal(h)).toEqual(disk);
+    h.element('#result-home').onclick();h.run("switchView('settings')");expect(h.run('changeLabMode(false)')).toBe(true);expect(h.run('save.inProgress')).toEqual(previous);expect(normal(h)).toEqual(disk);
+    h.run("switchView('settings')");expect(h.run('changeLabMode(true)')).toBe(true);expect(h.run('save.completed')).toHaveLength(10);
+  });
+  it('중복 완료는 추가 지급하지 않고 초기화는 설정을 보존하며 시험 저장만 지운다',()=>{
+    const h=ready(),disk=normal(h);h.run('completeLabLevel(10)');h.element('#result-home').onclick();
+    expect(h.run('completeLabLevel(10)')).toBe(true);expect(h.run('[save.stars,save.coins]')).toEqual([10,400]);expect(h.run('firstReward')).toBe(false);
+    h.element('#result-home').onclick();h.run("switchView('settings');changeLanguage('en');save.music=false;save.sfx=false;persist()");
+    expect(h.run('resetLab()')).toBe(true);expect(h.run('[save.highestLevel,save.stars,save.coins,save.garden]')).toEqual([1,0,0,0]);expect(h.run('[save.language,save.music,save.sfx]')).toEqual(['en',false,false]);expect(h.run('save.pip')).toBeUndefined();expect(normal(h)).toEqual(disk);
+  });
+  it('쓰기 실패·범위 밖·비활성·낡은 설정 버튼은 현재 진행을 바꾸지 않는다',()=>{
+    const h=ready(),before=h.run('JSON.stringify(save)'),disk=h.disk(),round=h.run('round');h.setStorageFails(true);
+    expect(h.run('completeLabLevel(40)')).toBe(false);expect(h.run('JSON.stringify(save)')).toBe(before);expect(h.run('round')).toBe(round);expect(h.disk()).toEqual(disk);
+    h.setStorageFails(false);for(const id of [0,501,1.5,NaN])expect(h.run(`completeLabLevel(${id})`)).toBe(false);
+    h.run("switchView('settings')");const old=h.element('#lab-reset').onclick;h.run('changeLabMode(false)');const normalDisk=h.disk();old();expect(h.disk()).toEqual(normalDisk);
+    h.run('nativeActive=false');expect(h.run('changeLabMode(true)')).toBe(false);
+  });
+  it('production은 직접 호출해도 테스트 저장을 열거나 진행을 강제로 완료하지 않는다',()=>{
+    const h=mainHarness(),disk=h.disk();expect(h.run('changeLabMode(true)')).toBe(false);expect(h.run('completeLabLevel(10)')).toBe(false);expect(h.run('resetLab()')).toBe(false);expect(h.disk()).toEqual(disk);
+  });
+  it('도구와 돌봄·설정의 직접 저장도 시험 세 키만 사용한다',()=>{
+    const h=ready(),disk=normal(h);h.run('completeLabLevel(70)');h.element('#result-home').onclick();
+    h.run("startLevel(9);switchView('puzzle')");h.frame();h.run("closeToolInfo(false,false);showToolInfo('trowel','tool-trowel')");h.element('#tool-info-start').onclick();h.run('scene.toolTarget({row:0,col:0})');h.element('#tool-confirm').onclick();
+    expect(h.run('save.puzzleTools.trialUsed')).toContain('trowel');h.run("switchView('journal')");h.element('#pip-feed').onclick();expect(h.run('save.pip.growth')).toBe(10);expect(normal(h)).toEqual(disk);
+  });
+  it('하단 메뉴는 퍼즐/설정에서 숨겨지고 설정의 화면 안 버튼이 진입 전 화면으로 돌아온다',()=>{
+    const h=mainHarness();expect(h.element('.bottom-nav').hidden).toBe(true);h.element('#settings-button').onclick();expect(h.run('route')).toBe('settings');expect(h.element('.bottom-nav').hidden).toBe(true);
+    h.element('#settings-return').onclick();expect(h.run('route')).toBe('puzzle');h.run("switchView('map')");expect(h.element('.bottom-nav').hidden).toBe(false);
+  });
+});
+
+
+describe('여러 판을 연속 완료한 뒤 지도 도착',()=>{
+  it('다음 판 시작은 이동 기록을 지우지 않고 연속 첫 완료를 합쳐 지도에서 한 번 소비한다',()=>{
+    const h=mainHarness();h.run('finish(true)');h.element('#result-next').onclick();h.run('closeToolInfo(false,false);finish(true)');
+    expect(h.run('[mapAdvance.from,mapAdvance.to]')).toEqual([2,4]);const disk=h.disk(),writes=h.writes();h.element('#result-home').onclick();
+    expect(h.run('mapAdvance')).toBeUndefined();expect(h.mapTravels).toHaveLength(0);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('시험 바로가기57에서 현재판 즉시 완료하면 요청대로 이전1–56도 함께 완료한다',()=>{
+    const h=mainHarness(false,false,true);h.run("switchView('settings');changeLabMode(true);startLevel(57,true);switchView('puzzle')");
+    h.element('#lab-clear-current').onclick();expect(h.run('save.completed')).toHaveLength(57);expect(h.run('[save.stars,save.coins,save.highestLevel]')).toEqual([57,2280,58]);
+  });
+});
+
+
+it('6·7 연속 완료 뒤8 도구 소개를 실제로 닫아 저장 객체가 바뀌어도 누적 이동을 보존한다',()=>{
+  const h=mainHarness(false,false,true,false,{version:2,puzzleTools:{schema:2,introduced:['trowel','gloves','broom'],trialUsed:['trowel']},language:'ko',highestLevel:6,completed:[1,2,3,4,5],stars:5,coins:170,garden:0,music:true,sfx:true,tutorialSeen:true});
+  h.run('finish(true)');h.element('#result-next').onclick();h.frame();h.run('finish(true)');h.element('#result-next').onclick();h.frame();expect(h.run('toolDialog.open')).toBe(true);
+  h.element('#tool-info-close').onclick();expect(h.run('save.puzzleTools.introduced')).toContain('seeds');expect(h.run('mapAdvance.owner===save')).toBe(true);expect(h.run('[mapAdvance.from,mapAdvance.to]')).toEqual([6,8]);
+  const disk=h.disk(),writes=h.writes();h.run("switchView('map')");expect(h.run('mapAdvance')).toBeUndefined();expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+});
+
+
+it('합성 완료의 결과·새 추억은 새 BoardScene이 실제 준비된 뒤에만 표시한다',()=>{
+  const h=mainHarness(false,false,true,false,undefined,false);h.frame();h.run("switchView('settings');changeLabMode(true)");h.frame();
+  expect(h.run('completeLabLevel(57)')).toBe(true);expect(h.run('resultShown')).toBe(false);expect(h.element('#result-dialog').open).toBe(false);h.frame();
+  expect(h.run('resultShown')).toBe(true);expect(h.element('#result-dialog').open).toBe(true);expect(h.element('#result-memory-open').disabled).toBe(false);expect(h.run('save.inProgress')).toBeUndefined();
 });

@@ -80,6 +80,6 @@ describe('도구 비용·체험·판·보상을 함께 준비한다',()=>{
   });
   it('정상 해금은 최고 도달에서만 읽고 시험 체험은 일반 저장/체험 지급을 만들지 않는다',()=>{
     const {round,at}=roundAt(),save=saveFor(round),before=copy(save),plan=preparePuzzleTool(round,'trowel',at,undefined,seededRng(8))!;
-    expect(puzzleToolOutcome({...save,highestLevel:8},plan)).toBeUndefined();const trial=puzzleToolOutcome({...save,highestLevel:1},plan,true)!;expect(trial.save).toBeUndefined();expect(trial.cost).toBe(0);expect(trial.firstReward).toBe(false);expect(trial.tools.used).toEqual(['trowel']);expect(save).toEqual(before);
+    expect(puzzleToolOutcome({...save,highestLevel:2},plan)).toBeUndefined();const trial=puzzleToolOutcome({...save,highestLevel:1},plan,true)!;expect(trial.save).toBeUndefined();expect(trial.cost).toBe(0);expect(trial.firstReward).toBe(false);expect(trial.tools.used).toEqual(['trowel']);expect(save).toEqual(before);
   });
 });

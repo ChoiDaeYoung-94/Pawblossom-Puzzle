@@ -12,12 +12,11 @@ export function studioPreferences(store=new SaveStore()):StudioPreferences {
 export function showStudioIntro(host:HTMLElement,prefs:StudioPreferences,reduce=false):StudioIntroTask {
   const doc=host.ownerDocument;
   if(doc.hidden||!host.isConnected)return {finished:Promise.resolve(),finish:()=>{}};
-  const root=doc.createElement('section'),video=doc.createElement('video'),poster=doc.createElement('img'),skip=doc.createElement('button');
+  const root=doc.createElement('section'),video=doc.createElement('video'),poster=doc.createElement('img');
   root.className='studio-intro';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');root.setAttribute('aria-label','Quad D');
-  video.className='studio-intro-film';video.poster='/assets/brand/quad-d-intro-poster.png';
+  video.className='studio-intro-film';
   video.playsInline=true;video.preload='auto';video.muted=!prefs.sound;video.setAttribute('aria-hidden','true');video.tabIndex=-1;
   poster.className='studio-intro-film';poster.src='/assets/brand/quad-d-intro-poster.png';poster.alt='Quad D';
-  skip.type='button';skip.className='studio-intro-skip';skip.textContent=prefs.language==='ko'?'건너뛰기':'Skip';
   const startup=host.querySelector<HTMLElement>('#app-startup');
   const wasHidden=startup?.hidden??false,oldAria=startup?.getAttribute('aria-hidden');
   if(startup){startup.hidden=true;startup.setAttribute('aria-hidden','true');}
@@ -27,7 +26,7 @@ export function showStudioIntro(host:HTMLElement,prefs:StudioPreferences,reduce=
   const finish=()=>{
     if(done)return;done=true;
     for(const timer of timers)clearTimeout(timer);
-    skip.removeEventListener('click',finish);root.removeEventListener('keydown',onKey);
+    root.removeEventListener('keydown',onKey);
     video.removeEventListener('ended',finish);video.removeEventListener('error',finish);
     doc.removeEventListener('visibilitychange',onVisibility);doc.defaultView?.removeEventListener('pagehide',finish);
     video.muted=true;
@@ -40,13 +39,13 @@ export function showStudioIntro(host:HTMLElement,prefs:StudioPreferences,reduce=
   };
   const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();finish();}};
   const onVisibility=()=>{if(doc.hidden)finish();};
-  skip.addEventListener('click',finish);root.addEventListener('keydown',onKey);
+  root.addEventListener('keydown',onKey);
   video.addEventListener('ended',finish);video.addEventListener('error',finish);
   doc.addEventListener('visibilitychange',onVisibility);doc.defaultView?.addEventListener('pagehide',finish);
   try {
-    root.append(poster,video,skip);host.append(root);
+    root.append(poster,video);host.append(root);
     timers.push(setTimeout(finish,6500));
-    skip.focus({preventScroll:true});
+    root.tabIndex=-1;root.focus({preventScroll:true});
     const staticOnly=reduce||!video.canPlayType('video/mp4');
     poster.hidden=!staticOnly;video.hidden=staticOnly;
     if(staticOnly)timers.push(setTimeout(finish,1200));

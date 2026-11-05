@@ -5,11 +5,11 @@ export type PuzzleToolProfile='tools-v1'|'tools-v2';
 export interface PuzzleToolProgress {schema:2;introduced:PuzzleToolId[];trialUsed:PuzzleToolId[]}
 export interface PuzzleToolRound {profile:PuzzleToolProfile;used:PuzzleToolId[];started:boolean}
 export const puzzleToolCatalog=[
-  {id:'trowel',unlock:9,coins:30,mode:'create',special:'bomb'},
-  {id:'gloves',unlock:19,coins:20,mode:'swap'},
-  {id:'broom',unlock:29,coins:40,mode:'create',special:'row'},
-  {id:'bell',unlock:49,coins:60,mode:'create',special:'rainbow'},
-  {id:'seeds',unlock:69,coins:35,mode:'create',special:'column'},
+  {id:'trowel',unlock:3,coins:30,mode:'create',special:'bomb'},
+  {id:'gloves',unlock:4,coins:20,mode:'swap'},
+  {id:'broom',unlock:6,coins:40,mode:'create',special:'row'},
+  {id:'bell',unlock:10,coins:60,mode:'create',special:'rainbow'},
+  {id:'seeds',unlock:8,coins:35,mode:'create',special:'column'},
 ] as const;
 export const puzzleTool=(id:PuzzleToolId)=>puzzleToolCatalog.find(tool=>tool.id===id)!;
 export const freshToolProgress=():PuzzleToolProgress=>({schema:2,introduced:[],trialUsed:[]});

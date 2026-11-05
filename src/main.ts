@@ -48,7 +48,7 @@ import { BoardScene,tileNames } from './BoardScene';
 import {BOARD_RENDER_SIZE} from './BoardDisplay';
 import {specialTileArt} from './SpecialTileArt';
 import { AudioManager } from './audio/AudioManager';
-import { loadSave,saveData,retrySave,saveStatus,clearSave,levels,LEVEL_COUNT,chapters,chapterForLevel,levelSignature,type RoundCheckpoint,type SaveData } from './state';
+import { loadSave as normalLoadSave,saveData as normalSaveData,retrySave as normalRetrySave,saveStatus as normalSaveStatus,clearSave as normalClearSave,levels,LEVEL_COUNT,chapters,chapterForLevel,levelSignature,type RoundCheckpoint,type SaveData } from './state';
 import { freshPip,pipLevel,careCost,preparePipAction,type PipAction } from './pipCare';
 import { t,type TextKey } from './i18n';
 import { icon } from './icons';
@@ -73,6 +73,7 @@ import { createPipAccessoryArt } from './PipAccessoryArt';
 import { createGardenNature } from './GardenNature';
 import { cloneSnapshot,prepareShuffle } from './puzzleHelp';
 import type { BoardSnapshot } from './core';
+import {createLabStore,freshLabProgress,completeLabThrough} from './ProgressLab';
 import { APP_VERSION } from './appVersion';
 import { TEST_TOOLS_ENABLED } from './buildFlags';
 import { ANDROID_TEST_ADS_ENABLED } from './buildFlags';
@@ -80,6 +81,12 @@ import { ANDROID_TEST_BILLING_ENABLED } from './buildFlags';
 import { TestAdsController,nativeTestAds,adCopy,type AdFormat } from './testAds';
 import { TestBillingController,nativeTestBilling,billingCopy } from './testBilling';
 
+let labStore:ReturnType<typeof createLabStore>|undefined;
+function loadSave(){return labStore?labStore.load():normalLoadSave();}
+function saveData(data:SaveData){return labStore?labStore.save(data):normalSaveData(data);}
+function retrySave(data:SaveData){return labStore?labStore.retry(data):normalRetrySave(data);}
+function saveStatus(){return labStore?labStore.status:normalSaveStatus();}
+function clearSave(){return labStore?labStore.reset():normalClearSave();}
 let save=loadSave(), currentLevel=save.highestLevel, moves=0, score=0, collected=Array(6).fill(0) as number[], shuffles=1;
 let scene:BoardScene, game:Phaser.Game, route='map', toastTimer:ReturnType<typeof setTimeout>;
 let settingsReturnRoute='map';
@@ -172,6 +179,7 @@ $('#app').innerHTML=`
   <main class="workspace">
     <section class="game-panel">
       <div id="map-view" class="view"></div>
+      ${TEST_TOOLS_ENABLED?`<aside id="progress-lab-banner" class="progress-lab-banner" hidden><span id="progress-lab-label"></span><button id="lab-clear-current" class="test-level-button" title="${text('labClearCurrent')}" hidden>${text('labClearButton')}</button></aside>`:''}
       <div id="puzzle-view" class="view" hidden>
         <div class="level-top"><div class="level-heading"><span id="header-pip" class="header-pip" aria-hidden="true"><span id="header-pip-face" class="pip-face"><img class="header-pip-image" src="/assets/pip-idle-open-v2.webp" alt=""/></span></span><div class="level-copy"><div class="eyebrow"><span id="chapter-name"></span></div><h2><span data-t="level">${text('level')}</span> <span id="level-number">1</span></h2></div></div><span id="trail-encounter" role="img" hidden></span><div class="level-actions">${TEST_TOOLS_ENABLED?`<button id="test-level-button" class="test-level-button">${label('testPick')}</button>`:''}<button id="restart" class="icon-button" aria-label="${text('restart')}">${icon('restart',20)}</button></div></div>
         <div class="mission-bar"><div class="moves-box"><strong id="moves">22</strong>${label('moves')}</div><div class="goal-box"><div class="goal-heading">${label('goal')}<span class="score-label">${label('score')} <span id="score">0</span></span></div><div id="goals"></div></div></div>
@@ -381,6 +389,8 @@ function syncCarePipActivity(){
   carePipDisplay?.idle.setActive(idle);carePipDisplay?.accessory?.setActive(idle);
   carePipDisplay?.nature?.setActive(idle&&view==='village');
 }
+function adoptSave(next:SaveData){if(mapAdvance?.owner===save&&next.completed.includes(mapAdvance.from)&&next.highestLevel>=mapAdvance.to)mapAdvance.owner=next;save=next;}
+function rememberMapAdvance(from:number,to:number){mapAdvance={from:mapAdvance?.to===from?mapAdvance.from:from,to,owner:save};}
 function clearMapTravel(){const previous=mapTravel;mapTravel=undefined;previous?.dispose();}
 function syncPipActivity(){
   if(!nativeActive||document.hidden||testAds?.pausesGame||testBilling?.pausesGame)mapAdvance=undefined;
@@ -554,7 +564,7 @@ function shuffleRound(button:HTMLButtonElement,expectedRound:number,expectedScen
     if(!testingLevel){next.coins-=free?0:20;next.inProgress=roundCheckpoint(candidate,moves,0,paid,continueUsed,nextTools);
       if(!saveData(next)){updateSaveStatus();notice('careSaveBlocked');return false;}}
     // 후보 생성·저장·적용 사이에는 await가 없으며 현재 Scene/RNG를 재생성하지 않습니다.
-    if(!testingLevel)save=next;
+    if(!testingLevel)adoptSave(next);
     roundTools=nextTools;shuffles=0;paidShuffleUsed=paid;scene.applyPreparedShuffle(candidate);updateWallet();updateGoals();renderViews();updateSaveStatus();return true;
   }finally{puzzleProcessing=false;}
 }
@@ -600,7 +610,7 @@ function rememberToolIntroduction(context:ToolContext&{id?:PuzzleToolId}){
   const id=context.id;if(!id||testingLevel||save.highestLevel<puzzleTool(id).unlock||save.puzzleTools.introduced.includes(id))return true;
   if(careStorageBlocked()){notice('careSaveBlocked');return false;}
   const next=JSON.parse(JSON.stringify(save)) as SaveData;next.puzzleTools.introduced.push(id);
-  if(!saveData(next)){updateSaveStatus();notice('careSaveBlocked');return false;}save=next;context.save=next;updateSaveStatus();renderPuzzleTools();return true;
+  if(!saveData(next)){updateSaveStatus();notice('careSaveBlocked');return false;}adoptSave(next);context.save=next;updateSaveStatus();renderPuzzleTools();return true;
 }
 function closeToolInfo(focus=true,remember=false){
   const context=toolInfoContext;if(!context)return;
@@ -643,7 +653,7 @@ function confirmTool(context:NonNullable<typeof toolMode>){
     if(!plan||!outcome){notice('toolUnavailable');return false;}
     const previousGardenPlans=outcome.firstReward?currentGardenPlans():undefined;
     if(outcome.save&&!saveData(outcome.save)){updateSaveStatus();notice('careSaveBlocked');return false;}
-    const previousMapLevel=save.highestLevel,returnBoardFocus=document.activeElement===$('#tool-confirm')&&$('#tool-confirm').matches(':focus-visible');if(outcome.save)save=outcome.save;closeToolMode(false);
+    const previousMapLevel=save.highestLevel,returnBoardFocus=document.activeElement===$('#tool-confirm')&&$('#tool-confirm').matches(':focus-visible');if(outcome.save)adoptSave(outcome.save);closeToolMode(false);
     if(previousGardenPlans)rememberResultGarden(previousGardenPlans);
     if(outcome.firstReward)rememberResultMemory();
     const complete=()=>{
@@ -654,7 +664,7 @@ function confirmTool(context:NonNullable<typeof toolMode>){
     };
     const played=scene.playPreparedTool(plan,complete);
     score=outcome.score;collected=outcome.collected.slice();clearedLeaves=outcome.clearedLeaves;clearedCrates=outcome.clearedCrates;roundTools={profile:outcome.tools.profile,used:outcome.tools.used.slice(),started:outcome.tools.started};
-    if(outcome.firstReward){selectedChapter=chapterForLevel(save.highestLevel).id;if(previousMapLevel===currentLevel&&save.highestLevel===currentLevel+1)mapAdvance={from:currentLevel,to:currentLevel+1,owner:save};}
+    if(outcome.firstReward){selectedChapter=chapterForLevel(save.highestLevel).id;if(previousMapLevel===currentLevel&&save.highestLevel===currentLevel+1)rememberMapAdvance(currentLevel,currentLevel+1);}
     updateWallet();updateGoals();renderViews();updateSaveStatus();updateBoardAccess();
     if(!played){scene.applyPreparedShuffle(plan.after);complete();}return true;
   }finally{puzzleProcessing=false;}
@@ -667,7 +677,7 @@ function checkpoint(){
   save.inProgress=roundCheckpoint(scene.snapshot());
   return persist();
 }
-function resumeNormal(){const saved=save.inProgress;return startLevel(saved?.levelId??save.highestLevel,false,saved);}
+function resumeNormal(preserveStorage=false){const saved=save.inProgress;return startLevel(saved?.levelId??save.highestLevel,false,saved,{preserveStorage});}
 function replaceBoard(){
   // Phaser 3.90은 추가 큐를 제거 큐보다 먼저 처리합니다.
   // POST_RENDER는 SceneManager.render() 뒤라 같은 키를 동기적으로 교체할 수 있습니다.
@@ -676,7 +686,7 @@ function replaceBoard(){
   if(game.scene.getScene('Board')){game.scene.stop('Board');game.scene.remove('Board');}
   game.scene.add('Board',scene,true);
 }
-function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{focusBoard?:boolean}={}){
+function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{focusBoard?:boolean;labResult?:boolean;preserveStorage?:boolean}={}){
   if(careDemo)return;
   closeToolInfo(false,false);closeToolMode(false);
   if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);
@@ -685,7 +695,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   if(stagePreview)closeStagePreview(false);
   abandonRewardContinue();
   if(!Number.isInteger(id)||id<1||id>levels.length)return;
-  mapAdvance=undefined;clearMapTravel();
+  clearMapTravel();
   resultWorldScenery?.dispose();resultWorldScenery=undefined;resultWorld=undefined;resultGardenPlan=undefined;resultMemory=undefined;
   clearResumeNotice();
   clearTimeout(resultTimer);resultTimer=undefined;round++;
@@ -706,7 +716,8 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   },onBoardState:()=>{if(activeRound===round)updateBoardAccess();},onReady:()=>{
     if(activeRound!==round||scene!==activeScene)return;
     syncActivity();
-    if(!restored&&!testingLevel&&offerToolIntroduction())return;
+    if(options.labResult&&TEST_TOOLS_ENABLED&&labStore&&roundEnded){finish(true);return;}
+    if(!options.labResult&&!options.preserveStorage&&!restored&&!testingLevel&&offerToolIntroduction())return;
     if(!focusRequested)return;
     focusRequested=false;
     const board=$('#game-canvas'),focused=document.activeElement;
@@ -738,7 +749,7 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   }},restored,levels[id-1].mask,levels[id-1].crates);
   if(!restored)scene.configureLeaves(levels[id-1].leaves??[]);
   // 엔진 생성/복원 직후부터 안정 상태를 유지하며 연쇄 도중에는 갱신하지 않습니다.
-  const stored=checkpoint();
+  const stored=TEST_TOOLS_ENABLED&&(options.preserveStorage||options.labResult&&labStore)?true:checkpoint();
   boardPending=true;
   if(!game){
     game=new Phaser.Game({type:Phaser.AUTO,width:BOARD_RENDER_SIZE,height:BOARD_RENDER_SIZE,parent:'game-canvas',backgroundColor:'#284c42',scene:[],transparent:false,
@@ -747,6 +758,62 @@ function startLevel(id:number,testPlay=false,restored?:RoundCheckpoint,options:{
   }
   updateGoals();syncActivity();
   return stored;
+}
+function labEnvironment(){
+  return TEST_TOOLS_ENABLED&&!careDemo&&!careProcessing&&!growing&&!puzzleProcessing&&!boardPending&&!resultTimer
+    &&nativeActive&&!document.hidden&&!otherModal()&&!previewDialog.open&&!stagePreview&&!toolMode
+    &&!testAds?.busy&&!testAds?.pausesGame&&!testBilling?.busy&&!testBilling?.pausesGame&&scene.canLeave();
+}
+function changeLabMode(enter:boolean){
+  if(!labEnvironment()||enter===Boolean(labStore))return false;
+  if(enter){
+    const normalStatus=normalSaveStatus();
+    if(!['idle','saved'].includes(normalStatus.write)||!['new','loaded','recovered'].includes(normalStatus.load)||normalStatus.resetPending)return false;
+    const candidate=createLabStore(),loaded=candidate.load(),status=candidate.status;
+    if(status.write==='blocked'||!['new','loaded','recovered'].includes(status.load)||status.resetPending)return false;
+    const next=status.load==='new'?freshLabProgress(save):loaded;
+    if(!candidate.save(next))return false;
+    labStore=candidate;save=next;
+  }else{labStore=undefined;save=normalLoadSave();}
+  mapAdvance=undefined;careGeneration++;selectedChapter=chapterForLevel(save.highestLevel).id;selectedAlbumWorld=undefined;mapPositioned=undefined;
+  audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);
+  resumeNormal(!enter);localize();updateWallet();renderViews();switchView('map');return true;
+}
+function resetLab(){
+  if(!labStore||!labEnvironment()||!confirm(text('labResetConfirm')))return false;
+  const next=freshLabProgress(save);
+  if(!labStore.save(next)){updateSaveStatus();return false;}
+  save=next;mapAdvance=undefined;careGeneration++;selectedChapter=1;selectedAlbumWorld=undefined;mapPositioned=undefined;
+  startLevel(1);localize();updateWallet();renderViews();switchView('map');return true;
+}
+function completeLabLevel(id:number){
+  if(!labStore||!labEnvironment()||!Number.isInteger(id)||id<1||id>LEVEL_COUNT)return false;
+  const before=currentGardenPlans(),from=save.highestLevel,outcome=completeLabThrough(save,id);
+  if(!labStore.save(outcome.save)){updateSaveStatus();return false;}
+  save=outcome.save;careGeneration++;selectedChapter=chapterForLevel(save.highestLevel).id;
+  startLevel(id,false,undefined,{labResult:true});
+  if(save.highestLevel>from)rememberMapAdvance(from,save.highestLevel);
+  roundEnded=true;firstReward=outcome.added.includes(id);
+  const level=levels[id-1];for(const goal of level.goals)collected[goal.kind]=goal.count;
+  clearedLeaves=level.leaves?.length??0;clearedCrates=level.crates?.length??0;
+  scene.stopPlaying();updateGoals();updateWallet();renderViews();
+  if(firstReward){rememberResultGarden(before);rememberResultMemory();}
+  switchView('puzzle');return true;
+}
+function renderLabControls(){
+  if(!TEST_TOOLS_ENABLED)return;
+  const banner=$('#progress-lab-banner');banner.hidden=!labStore;$('#progress-lab-label').textContent=text('labActive');$('#lab-clear-current').textContent=text('labClearButton');$('#lab-clear-current').title=text('labClearCurrent');
+  $('#lab-clear-current').hidden=!labStore;
+  const host=$('#settings-view'),panel=document.createElement('section');panel.className='progress-lab-controls';
+  panel.innerHTML=`<h3>${text('labTitle')}</h3><p>${text(labStore?'labActive':'labDescription')}</p><button id="lab-toggle" class="text-button">${text(labStore?'labExit':'labEnter')}</button>${labStore?`<label for="lab-level">${text('labLevel')}</label><div class="lab-level-row"><input id="lab-level" type="number" inputmode="numeric" min="1" max="${LEVEL_COUNT}" value="${save.highestLevel}"><button id="lab-complete-through" class="primary">${text('labCompleteThrough')}</button></div><p id="lab-error" role="status"></p><button id="lab-reset" class="text-button">${text('labReset')}</button>`:''}`;
+  host.append(panel);
+  const owner=save,generation=careGeneration,store=labStore;
+  const current=()=>route==='settings'&&owner===save&&generation===careGeneration&&store===labStore&&panel.isConnected&&labEnvironment();
+  $('#lab-toggle').onclick=()=>{if(current())changeLabMode(!store);};
+  if(store){
+    $('#lab-reset').onclick=()=>{if(current())resetLab();};
+    $('#lab-complete-through').onclick=()=>{if(!current())return;const raw=$<HTMLInputElement>('#lab-level').value.trim(),id=/^\d{1,3}$/.test(raw)?Number(raw):NaN;if(!Number.isInteger(id)||id<1||id>LEVEL_COUNT){$('#lab-error').textContent=text('labInvalid');return;}completeLabLevel(id);};
+  }
 }
 function clearBoardNotice(){boardNoticeKey=undefined;$('#board-notice').textContent='';$('#board-notice').classList.remove('pop');}
 function notice(key:TextKey){
@@ -955,7 +1022,7 @@ function settleRound(won:boolean){
   const previousGardenPlans=firstReward?currentGardenPlans():undefined;
   delete save.inProgress;
   if(firstReward){save.completed.push(currentLevel);save.stars++;save.coins+=40;save.highestLevel=Math.min(LEVEL_COUNT,Math.max(save.highestLevel,currentLevel+1));selectedChapter=chapterForLevel(save.highestLevel).id;}
-  if(firstReward&&previousMapLevel===currentLevel&&save.highestLevel===currentLevel+1)mapAdvance={from:currentLevel,to:currentLevel+1,owner:save};
+  if(firstReward&&previousMapLevel===currentLevel&&save.highestLevel===currentLevel+1)rememberMapAdvance(currentLevel,currentLevel+1);
   // 결과창 타이머 전에 회차 제거와 첫 보상을 하나의 저장으로 확정합니다.
   const stored=persist();
   resultGardenPlan=undefined;resultMemory=undefined;
@@ -1063,7 +1130,7 @@ function continueRound(activeRound:number,activeScene:BoardScene,button:HTMLButt
     const next=JSON.parse(JSON.stringify(save)) as SaveData;
     if(!testingLevel){next.inProgress=roundCheckpoint(activeScene.snapshot(),5,shuffles,paidShuffleUsed,true);
       if(!saveData(next)){updateSaveStatus();notice('careSaveBlocked');return false;}}
-    if(!testingLevel)save=next;
+    if(!testingLevel)adoptSave(next);
     activeScene.resumePreparedFailure();abandonRewardContinue();
     continueUsed=true;moves=5;roundEnded=false;resultShown=false;resultWon=undefined;firstReward=false;clearBoardNotice();
     dialog.close();updateGoals();renderViews();syncActivity();
@@ -1229,7 +1296,7 @@ function commitCare(button:HTMLButtonElement,expectedSave:SaveData,generation:nu
     const next:SaveData=JSON.parse(JSON.stringify(save));
     if(!prepare(next))return false;
     if(!careDemo&&!saveData(next)){updateSaveStatus();notice('careSaveBlocked');return false;}
-    save=next;updateWallet();updateSaveStatus();return true;
+    adoptSave(next);updateWallet();updateSaveStatus();return true;
   }finally{careProcessing=false;}
 }
 function clearPipUnlock(){pipUnlock=undefined;const card=document.querySelector<HTMLElement>('#pip-unlock-card');if(card)card.hidden=true;}
@@ -1623,7 +1690,14 @@ function renderCampaignMapView(){
       const advance=mapAdvance;mapAdvance=undefined;
       if(advance&&advance.owner===save&&advance.to===mapCurrentLevel()&&save.completed.includes(advance.from)){
         const from=document.querySelector<HTMLElement>(`#map-stage-${advance.from}`),to=document.querySelector<HTMLElement>(`#map-stage-${advance.to}`);
-        if(from&&to){const flight=createMapTravel(campaignScroll,from,to,mapPip,ownsMap,()=>{if(mapTravel===flight)syncPipActivity();});mapTravel=flight;}
+        if(from&&to){
+          if(advance.to-advance.from===1){const flight=createMapTravel(campaignScroll,from,to,mapPip,ownsMap,()=>{if(mapTravel===flight)syncPipActivity();});mapTravel=flight;}
+          else {
+            const recap=document.createElement('p');recap.className='campaign-journey-recap';recap.setAttribute('role','status');
+            recap.textContent=text('mapJourneyRecap').replace('{count}',String(advance.to-advance.from)).replace('{level}',String(advance.to));
+            campaignScroll.before(recap);mapPip.classList.add('map-pip-arriving');
+          }
+        }
       }
     }
   }
@@ -1654,7 +1728,7 @@ function renderViews(grew=false){
   document.querySelector<HTMLButtonElement>('#grow')?.toggleAttribute('disabled',growing||careStorageBlocked()||save.stars<2||save.garden>=5);
   $('#journal-view').innerHTML=`${careDemoPanel('journal')}<div class="subview-heading pip-view-heading"><div class="eyebrow">${text('friendsHeading')}</div><h2>${text('friendsTitle')}</h2></div>${pipCareCard()}${trailJournal(save.language,albumCompleted())}${campaignAlbumCard(save.language,albumCompleted(),selectedAlbumWorld,Boolean(careDemo))}${!careDemo?`<button id="pip-tutorial-help" class="text-button guide-help">${text('tutorial')}</button>`:''}`;
   if(!careDemo)$('#pip-tutorial-help').onclick=()=>showTutorial('help',$<HTMLButtonElement>('#pip-tutorial-help'));
-  $('#settings-view').innerHTML=`<div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><div class="storage-card" id="storage-card"><p id="save-status"></p><button id="save-retry" class="text-button" hidden></button><button id="save-reload" class="text-button" hidden></button></div><section class="support-note" aria-labelledby="support-title"><h3 id="support-title">${text('support')}</h3><p id="support-email">doeud1410@gmail.com</p></section><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v${APP_VERSION}</p>`;
+  $('#settings-view').innerHTML=`<button id="settings-return" class="settings-return">${icon('arrow',18)}${text('settingsReturn')}</button><div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><div class="storage-card" id="storage-card"><p id="save-status"></p><button id="save-retry" class="text-button" hidden></button><button id="save-reload" class="text-button" hidden></button></div><section class="support-note" aria-labelledby="support-title"><h3 id="support-title">${text('support')}</h3><p id="support-email">doeud1410@gmail.com</p></section><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v${APP_VERSION}</p>`;
   updateSaveStatus(focusedId);
   for(const id of ['#save-retry','#save-reload'])$(id).addEventListener('blur',()=>updateSaveStatus());
   const renderedSave=save,renderedGeneration=careGeneration;
@@ -1662,6 +1736,8 @@ function renderViews(grew=false){
   const settingsAction=(id:string)=>!lookDialog.open&&!spaceDialog.open&&!resourceDialog.open&&!careDemo&&currentControl(renderedControls.get(id)!,renderedSave,renderedGeneration);
   $('#save-retry').onclick=()=>{if(!settingsAction('save-retry'))return;retrySave(save);updateSaveStatus();};
   $('#save-reload').onclick=()=>{if(!settingsAction('save-reload'))return;if(confirm(text('saveReloadConfirm')))window.location.reload();};
+  $('#settings-return').onclick=()=>{if(currentControl($('#settings-return'),renderedSave,renderedGeneration))switchView(settingsReturnRoute);};
+  renderLabControls();
   bindCareControls();
   $('#music-toggle').onclick=()=>{if(!settingsAction('music-toggle'))return;save.music=!save.music;audio.setMusicEnabled(save.music);persist();$('#music-toggle').classList.toggle('on',save.music);$('#music-toggle').setAttribute('aria-checked',String(save.music));};
   const help=document.createElement('button');help.id='tutorial-help';help.className='primary guide-help';help.textContent=text('tutorial');help.onclick=()=>showTutorial('help',help);$('#settings-view').append(help);
@@ -1727,7 +1803,7 @@ function switchView(name:string){
   if(name!=='puzzle'){clearResumeNotice();clearBoardNotice();}
   if(route==='journal'&&name!=='journal')clearPipUnlock();
   if(name!=='village'&&(gardenActivity||journeyMoment||gardenTendingPlot!==undefined))clearCareReaction();
-  route=name;$('#app').dataset.route=name;document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
+  route=name;$('#app').dataset.route=name;$('.bottom-nav').hidden=name==='puzzle'||name==='settings';document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
   if(name==='village'||name==='map')renderViews();
   if(name==='map'&&mapPositioned!==mapCurrentLevel()){revealMapStage();mapPositioned=mapCurrentLevel();}
   document.querySelectorAll<HTMLButtonElement>('.bottom-nav button[data-route]').forEach(b=>{b.classList.toggle('active',b.dataset.route===name);if(b.dataset.route===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
@@ -1743,7 +1819,7 @@ function switchView(name:string){
   if(name==='map')mapTravel?.start();
   if(returnToResult)$('#result-next').focus({preventScroll:true});
 }
-document.querySelectorAll<HTMLButtonElement>('.bottom-nav button[data-route]').forEach(button=>button.onclick=()=>switchView(button.dataset.route!));
+document.querySelectorAll<HTMLButtonElement>('.bottom-nav button[data-route]').forEach(button=>button.onclick=()=>{if(route!=='puzzle'&&route!=='settings')switchView(button.dataset.route!);});
 $('#settings-button').onclick=()=>{if(route==='settings')switchView(settingsReturnRoute);else{settingsReturnRoute=route;switchView('settings');}};
 $('.brand').onclick=e=>{e.preventDefault();switchView('map');};
 $('#language-toggle').onchange=event=>changeLanguage((event.target as HTMLSelectElement).value==='en'?'en':'ko');
@@ -1754,7 +1830,7 @@ $('#board-notice').addEventListener('animationend',()=>{
 });
 for(const kind of ['stars','coins'] as const)$('#'+kind+'-help').onclick=()=>showResourceHelp(kind,$('#'+kind+'-help'));
 $('#restart').onclick=()=>showStagePreview(currentLevel,'restart',$('#restart'));
-if(TEST_TOOLS_ENABLED){$('#test-level-button').onclick=()=>showTestPicker();$<HTMLDialogElement>('#test-level-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTestPicker();});}
+if(TEST_TOOLS_ENABLED){$('#lab-clear-current').onclick=()=>completeLabLevel(currentLevel);$('#test-level-button').onclick=()=>showTestPicker();$<HTMLDialogElement>('#test-level-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTestPicker();});}
 $<HTMLDialogElement>('#result-dialog').addEventListener('cancel',event=>{event.preventDefault();if(testAds?.busy||rewardedContinue?.preparing)return;$<HTMLDialogElement>('#result-dialog').close();switchView('map');});
 $<HTMLDialogElement>('#tutorial-dialog').addEventListener('cancel',event=>{event.preventDefault();closeTutorial();});
 document.addEventListener('pointerdown',()=>{void audio.unlock().catch(()=>{});},{passive:true,capture:true});
