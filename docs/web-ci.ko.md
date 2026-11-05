@@ -1,5 +1,11 @@
 # 웹 자동 검증
 
+## 2026-11-05 · #122 생성자 경합 관측 연결
+
+최초 전체검사 `full-tests-corrected.log`의 같은round/다른claim 3worker 실패는 constructor worker-error 1개·신규지급1개·round-closed1개였고, 세 worker 결과가 모두 수신되어 IPC 미수신이나 timeout과 구분됩니다. `not-opened`는 바깥 ledger 변수에 객체가 할당되지 않았다는 뜻이며 native 연결이 한 번도 열리지 않았다는 증거가 아닙니다. 원문 숫자 오류/site가 없어 해당 기존 테스트에 이미 있는 SQLite 관측을 opt-in했습니다.
+
+worker3/500ms·SQL·close/재시도·기대 결과 신규1/round-closed2는 유지합니다. 세 worker의 허용DTO 수신·관측실패/잘림없음·hook 5method 설치/복원·복원실패0을 확인합니다. 경로·SQL·키·claim/transaction 원문은 추가하지 않습니다. 관련 한 파일60개가 첫 실행4.19초에 성공했고 타입3설정·독립읽기P1/P2없음입니다. 관측 비용이 있으므로 이후 성공만으로 원인/owner 해결을 선언하지 않습니다. 첫PR/main Node22/24 검사는 후속이며 #122는 계속 열어 둡니다. 원문은 Git 밖 `qa/integration-20261105/122-constructor-{first,typecheck-first}.log`입니다.
+
 ## 2026-11-05 · #507 시험 진행 전환의 돌봄 수명
 
 먹이 반응의2400ms 타이머가 남은 채 시험진입/복귀·초기화·누적완료에서 careGeneration만 바뀌면, 이전 타이머가 세대 불일치로 종료되어 pipReaction이 남는4조건을 재현했습니다. 저장/marker 성공 뒤 clearCareReaction으로 타이머·반응·교감 표시를 함께 정리한 뒤 세대를 바꿉니다. 실패 전 무변경은 유지합니다. 수정전4실패→수정후4성공·관련3파일736개·독립읽기P1/P2없음이며 필수첫PR/main CI·최신APK는후속입니다.
