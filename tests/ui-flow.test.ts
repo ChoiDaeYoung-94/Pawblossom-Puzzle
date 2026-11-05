@@ -3860,3 +3860,24 @@ it('합성 완료의 결과·새 추억은 새 BoardScene이 실제 준비된 �
   expect(h.run('completeLabLevel(57)')).toBe(true);expect(h.run('resultShown')).toBe(false);expect(h.element('#result-dialog').open).toBe(false);h.frame();
   expect(h.run('resultShown')).toBe(true);expect(h.element('#result-dialog').open).toBe(true);expect(h.element('#result-memory-open').disabled).toBe(false);expect(h.run('save.inProgress')).toBeUndefined();
 });
+
+
+describe('시험 초기화 의도와 저장 실패 뒤 옛 진행 부활 차단',()=>{
+  const ready=()=>{const h=mainHarness(false,false,true);h.run("switchView('settings');changeLabMode(true)");expect(h.run('completeLabLevel(57)')).toBe(true);expect(h.run('save.completed.length')).toBe(57);h.element('#result-home').onclick();h.run("switchView('settings')");return h;};
+  const normal=(h:ReturnType<typeof ready>)=>h.disk().filter(([key])=>!key.startsWith('pawblossom.progress-lab.v1:'));
+  it('두 번째 backup 쓰기 거절 뒤 primary가 손상돼도 옛57 진행이 부활하지 않는다',()=>{
+    const h=ready(),before=normal(h);h.run("globalThis.labBackupWrites=0;globalThis.originalLabSet=localStorage.setItem;localStorage.setItem=(key,value)=>{if(key==='pawblossom.progress-lab.v1:pawblossom.save.v1.backup'&&++labBackupWrites===2)throw Error('second backup rejected');originalLabSet(key,value);}");
+    expect(h.run('resetLab()')).toBe(true);h.run("originalLabSet('pawblossom.progress-lab.v1:pawblossom.save.v1','broken');globalThis.recoveredLab=createLabStore().load()");expect(h.run('recoveredLab.completed')).toEqual([]);expect(h.run('[recoveredLab.coins,recoveredLab.stars,recoveredLab.garden]')).toEqual([0,0,0]);expect(normal(h)).toEqual(before);
+  });
+  it.each(['backup','primary','marker-remove'])('%s 실패는 초기화된 메모리와 marker를 유지하고 새 로드에서 옛57을 복원하지 않는다',phase=>{
+    const h=ready(),before=normal(h);h.run(`globalThis.originalLabSet=localStorage.setItem;globalThis.originalLabRemove=localStorage.removeItem;
+      localStorage.setItem=(key,value)=>{if(key==='pawblossom.progress-lab.v1:pawblossom.save.v1${phase==='backup'?'.backup':''}'&&'${phase}'!=='marker-remove')throw Error('lab payload rejected');originalLabSet(key,value);};
+      localStorage.removeItem=key=>{if('${phase}'==='marker-remove'&&key==='pawblossom.progress-lab.v1:pawblossom.save.v1.reset')throw Error('lab marker remove rejected');return originalLabRemove(key);};`);
+    expect(h.run('resetLab()')).toBe(false);expect(h.run('save.completed')).toEqual([]);expect(h.run('saveStatus().resetPending')).toBe(true);
+    expect(h.run('createLabStore().load().completed')).toEqual([]);expect(normal(h)).toEqual(before);
+    h.run('localStorage.setItem=originalLabSet;localStorage.removeItem=originalLabRemove;retrySave(save)');expect(h.run('saveStatus().resetPending')).toBe(false);expect(h.run('createLabStore().load().completed')).toEqual([]);
+  });
+  it('marker 자체를 쓸 수 없으면 현재 진행·판·세대를 보존한다',()=>{
+    const h=ready(),disk=h.disk(),memory=h.run('JSON.stringify(save)'),round=h.run('round'),generation=h.run('careGeneration');h.setStorageFails(true);expect(h.run('resetLab()')).toBe(false);expect(h.disk()).toEqual(disk);expect(h.run('JSON.stringify(save)')).toBe(memory);expect(h.run('round')).toBe(round);expect(h.run('careGeneration')).toBe(generation);
+  });
+});

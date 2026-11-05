@@ -782,9 +782,10 @@ function changeLabMode(enter:boolean){
 function resetLab(){
   if(!labStore||!labEnvironment()||!confirm(text('labResetConfirm')))return false;
   const next=freshLabProgress(save);
-  if(!labStore.save(next)){updateSaveStatus();return false;}
+  // 초기화 의도를 먼저 기록합니다. 뒤 쓰기가 실패해도 옛 backup을 되살리지 않습니다.
+  if(!labStore.reset()){updateSaveStatus();return false;}
   save=next;mapAdvance=undefined;careGeneration++;selectedChapter=1;selectedAlbumWorld=undefined;mapPositioned=undefined;
-  startLevel(1);localize();updateWallet();renderViews();switchView('map');return true;
+  const stored=startLevel(1);localize();updateWallet();renderViews();switchView('map');return stored===true;
 }
 function completeLabLevel(id:number){
   if(!labStore||!labEnvironment()||!Number.isInteger(id)||id<1||id>LEVEL_COUNT)return false;
