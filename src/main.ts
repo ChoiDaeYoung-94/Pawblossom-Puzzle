@@ -775,7 +775,7 @@ function changeLabMode(enter:boolean){
     if(!candidate.save(next))return false;
     labStore=candidate;save=next;
   }else{labStore=undefined;save=normalLoadSave();}
-  mapAdvance=undefined;careGeneration++;selectedChapter=chapterForLevel(save.highestLevel).id;selectedAlbumWorld=undefined;mapPositioned=undefined;
+  clearCareReaction();mapAdvance=undefined;careGeneration++;selectedChapter=chapterForLevel(save.highestLevel).id;selectedAlbumWorld=undefined;mapPositioned=undefined;
   audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);
   resumeNormal(!enter);localize();updateWallet();renderViews();switchView('map');return true;
 }
@@ -784,14 +784,14 @@ function resetLab(){
   const next=freshLabProgress(save);
   // 초기화 의도를 먼저 기록합니다. 뒤 쓰기가 실패해도 옛 backup을 되살리지 않습니다.
   if(!labStore.reset()){updateSaveStatus();return false;}
-  save=next;mapAdvance=undefined;careGeneration++;selectedChapter=1;selectedAlbumWorld=undefined;mapPositioned=undefined;
+  clearCareReaction();save=next;mapAdvance=undefined;careGeneration++;selectedChapter=1;selectedAlbumWorld=undefined;mapPositioned=undefined;
   const stored=startLevel(1);localize();updateWallet();renderViews();switchView('map');return stored===true;
 }
 function completeLabLevel(id:number){
   if(!labStore||!labEnvironment()||!Number.isInteger(id)||id<1||id>LEVEL_COUNT)return false;
   const before=currentGardenPlans(),from=save.highestLevel,outcome=completeLabThrough(save,id);
   if(!labStore.save(outcome.save)){updateSaveStatus();return false;}
-  save=outcome.save;careGeneration++;selectedChapter=chapterForLevel(save.highestLevel).id;
+  clearCareReaction();save=outcome.save;careGeneration++;selectedChapter=chapterForLevel(save.highestLevel).id;
   startLevel(id,false,undefined,{labResult:true});
   if(save.highestLevel>from)rememberMapAdvance(from,save.highestLevel);
   roundEnded=true;firstReward=outcome.added.includes(id);
