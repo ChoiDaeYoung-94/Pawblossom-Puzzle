@@ -3881,3 +3881,16 @@ describe('시험 초기화 의도와 저장 실패 뒤 옛 진행 부활 차단'
     const h=ready(),disk=h.disk(),memory=h.run('JSON.stringify(save)'),round=h.run('round'),generation=h.run('careGeneration');h.setStorageFails(true);expect(h.run('resetLab()')).toBe(false);expect(h.disk()).toEqual(disk);expect(h.run('JSON.stringify(save)')).toBe(memory);expect(h.run('round')).toBe(round);expect(h.run('careGeneration')).toBe(generation);
   });
 });
+
+
+describe('테스트 진행 전환 때 진행 중 돌봄 반응 정리',()=>{
+  it.each(['enter','exit','reset','complete'])('%s는 이전 저장 세대의 먹이 반응·타이머를 새 진행에 남기지 않는다',operation=>{
+    const h=mainHarness(false,false,true);
+    if(operation!=='enter'){h.run("switchView('settings');changeLabMode(true)");h.run('completeLabLevel(10)');h.element('#result-home').onclick();}
+    h.run("switchView('journal')");h.element('#pip-feed').onclick();expect(h.run('pipReaction')).toBe('feed');expect(h.run('careReactionTimer')).toBeDefined();h.run("switchView('settings')");
+    const before=h.disk().filter(([key])=>!key.startsWith('pawblossom.progress-lab.v1:'));
+    expect(h.run(operation==='enter'?'changeLabMode(true)':operation==='exit'?'changeLabMode(false)':operation==='reset'?'resetLab()':'completeLabLevel(20)')).toBe(true);
+    expect(h.run('pipReaction')).toBeUndefined();expect(h.run('careReactionTimer')).toBeUndefined();expect(h.run('careReactionStarted')).toBe(0);expect(h.run('careIdlePose()')).toBe(true);h.flushCareReaction();expect(h.run('pipReaction')).toBeUndefined();
+    expect(h.disk().filter(([key])=>!key.startsWith('pawblossom.progress-lab.v1:'))).toEqual(before);
+  });
+});
