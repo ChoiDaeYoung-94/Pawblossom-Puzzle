@@ -1,6 +1,8 @@
 export type Language = 'en' | 'ko';
 const strings = {
   en: {
+    mapJourneyRecap:'{count} stages cleared · Pip has arrived at stage {level}!',settingsReturn:'Return to previous screen',labTitle:'Test progress',labDescription:'Use a separate saved profile for instant clears, rewards and garden tests. Your normal progress stays separate.',labActive:'Test progress · instant clear includes earlier levels · normal progress kept',labEnter:'Open test progress',labExit:'Return to normal progress',labLevel:'Complete through level (1–500)',labCompleteThrough:'Complete through this level',labClearButton:'Instant clear',labClearCurrent:'Clear this and all earlier levels',labReset:'Reset test progress',labResetConfirm:'Reset test levels, coins, stars, garden and Pip? Normal progress stays separate. Language and sound settings are kept.',labInvalid:'Enter a whole level number from 1 to 500.',
+
     trailSquirrelJournalTitle:'The orchard’s scattered acorns',trailAcornsLeft:'Acorns left: {count}',trailAcornsReady:'Acorns done · finish goals',
     trailSquirrelFirstTitle:'A trail of acorns',trailSquirrelFirstProblem:'A little squirrel has spilled its acorns across Pip’s orchard path.',trailSquirrelFirstTask:'Gather the acorns and finish every other goal to help clear the path.',trailSquirrelFirstAfter:'The first acorns are gathered. The squirrel spots a few more down the path.',
     trailSquirrelSecondTitle:'Between the blossom trees',trailSquirrelSecondProblem:'More acorns have rolled between the blossom trees. Pip and the squirrel follow the trail.',trailSquirrelSecondTask:'Collect the acorns, the other target pieces and every leaf pile.',trailSquirrelSecondAfter:'The next stretch is clear. The squirrel carries its acorns toward the last bend.',
@@ -140,6 +142,8 @@ const strings = {
     planted: 'A new patch is blooming!', allDone: 'Play again', levelSelect: 'Choose a level',
   },
   ko: {
+    mapJourneyRecap:'{count}판을 지나 {level}번 산책길에 도착했어요!',settingsReturn:'이전 화면으로',labTitle:'테스트 진행',labDescription:'별도 저장에서 즉시 완료·보상·정원을 테스트해요. 일반 진행은 따로 보존해요.',labActive:'테스트 진행 · 즉시 완료는 이전 판 포함 · 일반 진행 별도 보존',labEnter:'테스트 진행 열기',labExit:'일반 진행으로 돌아가기',labLevel:'완료할 마지막 레벨 (1–500)',labCompleteThrough:'이 레벨까지 모두 완료',labClearButton:'즉시 완료',labClearCurrent:'이전 판 포함 즉시 완료',labReset:'테스트 진행 초기화',labResetConfirm:'테스트 레벨·코인·별·정원·핍을 초기화할까요? 일반 진행과 언어·음량 설정은 유지해요.',labInvalid:'1부터 500까지의 정수 레벨을 입력해 주세요.',
+
     trailSquirrelJournalTitle:'과수원에 흩어진 도토리',trailAcornsLeft:'남은 도토리 {count}',trailAcornsReady:'도토리 완료 · 목표도 마쳐요',
     trailSquirrelFirstTitle:'도토리가 이어진 길',trailSquirrelFirstProblem:'작은 다람쥐가 핍의 과수원 산책길에 도토리를 쏟았어요.',trailSquirrelFirstTask:'도토리를 모으고 다른 목표도 모두 마쳐 길을 정리해요.',trailSquirrelFirstAfter:'첫 도토리를 모았어요. 다람쥐가 길 아래 남은 도토리를 발견해요.',
     trailSquirrelSecondTitle:'꽃나무 사이를 따라서',trailSquirrelSecondProblem:'꽃나무 사이에도 도토리가 굴러갔어요. 핍과 다람쥐가 함께 따라가요.',trailSquirrelSecondTask:'도토리와 다른 목표 블록을 모으고 낙엽도 모두 정리해요.',trailSquirrelSecondAfter:'다음 길목도 정리됐어요. 다람쥐가 도토리를 안고 마지막 굽이로 향해요.',

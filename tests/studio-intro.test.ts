@@ -44,10 +44,10 @@ describe('스튜디오 인트로 종료·미디어 수명',()=>{
     expect(video.muted).toBe(true);expect(video.src).toBe('');expect(video.load).toHaveBeenCalledOnce();expect(h.host.children).toEqual([h.startup]);
     expect(video.count).toBe(0);expect(h.doc.count).toBe(0);expect(h.doc.defaultView.count).toBe(0);expect(vi.getTimerCount()).toBe(0);
   });
-  it.each(['ko','en'] as const)('건너뛰기 버튼은 %s 이름과 실제 버튼 의미를 가지며 즉시 끝낸다',async language=>{
-    const h=setup(),task=h.begin(true,false,language),button=h.doc.element('button');
-    expect(button.type).toBe('button');expect(button.textContent).toBe(language==='ko'?'건너뛰기':'Skip');expect(button.focus).toHaveBeenCalledOnce();
-    button.dispatchEvent(new Event('click'));await task.finished;expect(vi.getTimerCount()).toBe(0);
+  it('정상 재생은 완성 로고 포스터나 건너뛰기 버튼 없이 시작한다',async()=>{
+    const h=setup(),task=h.begin(),video=h.doc.element('video');
+    expect(video.poster).toBe('');expect(h.doc.elements.some(element=>element.tag==='button')).toBe(false);expect(h.doc.element('section').focus).toHaveBeenCalledOnce();
+    video.dispatchEvent(new Event('ended'));await task.finished;expect(vi.getTimerCount()).toBe(0);
   });
   it('Escape도 종료하고 기본 동작을 취소한다',async()=>{
     const h=setup(),task=h.begin(),event=new Event('keydown',{cancelable:true});Object.assign(event,{key:'Escape'});h.doc.element('section').dispatchEvent(event);
