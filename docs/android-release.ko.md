@@ -1,4 +1,20 @@
-## 최신 로컬 통합 APK · 2026-11-05 · #503/#505/#507 · fcded21
+## 최신 로컬 통합 APK · 2026-11-06 · #518 · f2564fe
+
+기본 꽃밭을 자체 SVG 카툰으로 바꾸고 세 테마·다섯 화단·소유 장식·고정된 몸통/움직이는 나비 날개를 본화면과 미리보기에 함께 적용한 제품 `71c7b84aad348f5f809cb255b7c376d5452bf54e`를 포함합니다. 이전 fcded21의 시험 진행·현재/누적 즉시완료·초기화, 퍼즐 하단 메뉴/설정 복귀·인트로·초반 도구·중앙 하단 메뉴·지도 복귀 개선도 포함합니다. 전체 정원 공간/원화의 카툰 재제작과 사용자 감각 승인은 남습니다.
+
+파일은 `C:/Users/user/Documents/ChatGPT/Pawblossom-builds/2026-11-06-f2564fe-cartoon-garden/Pawblossom-Puzzle-v0.1.7-2026-11-06-f2564fe-debug.apk`입니다. **0.1.7/code8 · 54,882,419바이트 · SHA256 `6488c087ee3d49489c007d98a9bce5137c558ba3542fe3525699c58ff778cc0f`**입니다. min24/target36·기존 단일v2 서명자/권한·비웹494개를 이전 fcded21 APK와 대조했습니다. **시험 flags3개가 true인 testing debug APK**이며 실광고/실결제·출시 승인이 아닙니다. 이전 APK·원화·키·최초 진단은 보존합니다.
+
+빌드 소스는 `f2564fe693c57a6fdf4dc1583deca16d50a1380f`이며 제품71c7b84 이후 차이는 tests/docs뿐입니다. PR517 첫42173540933/main42174531368 attempt1은 양Node85파일4,400개·스토어19·타입3설정/두웹빌드/carrier 성공입니다. 첫 원문과 head/main whole-tree5ebeefe3 일치·종속PR/worktree/원격head를 확인해 기록 브랜치를 정리했습니다.
+
+기존 사용자 로컬 JDK21/SDK 경로가 없어 [Microsoft 공식 배포](https://learn.microsoft.com/en-us/java/openjdk/download#openjdk-21)의 전용21.0.13.0.2 ZIP을 SHA256/CRC·경로 검사 후 Git 밖 tools에 준비했습니다. 실제 ZIP은201,450,315바이트/SHA256 `c5706a9cf482ef1a0622a86eea5b13d557b07f04554572af061e2d02b58c0f99`이며486파일입니다. 기존 Unity 설치의 SDK36을 읽기만 사용했으며 게임 엔진은 Phaser/TypeScript/Capacitor입니다. 환경 변수는 빌드 자식 shell에만 적용하고 local.properties 원문을 복원했습니다. SDK 설치·전역 설정·키 생성·버전 증가는 없습니다.
+
+양측 fresh 동의 뒤06:41:46.2910556UTC부터 원12분 신규/15분 전체창으로 실행했습니다. Java 확인·reference·testing Vite/snapshot/Capacitor sync·offline 단일worker assemble·artifact 검증·production Vite/sync/복원증명의 **첫10단계가 모두 실제 exit0**입니다. assemble은46초에 성공했고 production108·Android public110/flagsfalse3를 복원했습니다. production108은 실제 PC 정원 검수의 served-byte manifest와 전수SHA가 같고 Android public은 이108개와 빈Cordova2개입니다. Android public의 빌드 전 옛 그림 바이트를 복원했다는 뜻은 아닙니다.
+
+testing117+빈Cordova2=APK 웹119개를 이름/길이/SHA로 전수 대조했고 public원본91개도 유지했습니다. ZIP660항목 CRC정상/중복0·기존 비웹494개 동일이며 APK 바이트 수가 같다는 사실을 크기 최적화로 해석하지 않습니다.06:43:07.8808398UTC에 직접 child10 exit0·알려진 handle11세대 잔존/unknown0·해당 전용JDK/Node 생성창 잔존0·SDK 핵심3/helperSHA·프로젝트 SDK 경로 원문/sourceclean을 확인해 원한도 안 실제반환했습니다. 원감사는 실행하지 않고 보존했으며 final감사는 runtime 경로 조회불가 후보를 unknown으로 분리하고 자체SHA를 남겼습니다. **live 자손 snapshot은 없으며 OS 전체 프로세스0으로 확대하지 않습니다.** 근거는 Git 밖 `qa/integration-20261106/518-{artifact-proof,build-status,production-restored,actual-return,inputs}.json`과 원문입니다.
+
+이번은 **PC 검수만 진행**했습니다. 새 설치/업데이트 저장·실제 Android/OEM/최근 앱 #375·인트로 첫 화면·영상/오디오 청취는 미검증입니다. PC 실제 정원12사례72그림/추가4사례20그림·4전체화면과 각 나비11위상/2초·모션감소/이탈, 별도 정상초반1–10 자연 도구 학습과 원정상43–45는 [웹 기록](web-ci.ko.md)에서 분리합니다. Drive·AAB·실키/env·상품/과금·공개배포·최종믹스 변경은 없습니다. 아래 최신 fcded21 표시는 당시 이력입니다.
+
+## 이전 로컬 통합 APK · 2026-11-05 · #503/#505/#507 · fcded21
 
 제품 소스 `fcded214acb64e640c5aef9ad9b5ca39a5259954`는 별도 테스트 진행·현재/누적 즉시완료·초기화, 퍼즐 하단 메뉴 숨김/설정 명시복귀, 인트로 완성로고 poster/건너뛰기 제거, 초반 도구3/4/6/8/10, 중앙 하단 메뉴·공통 카툰 프레임과 연속 완료 지도 복귀를 포함합니다. 시험 초기화 marker/복구와 돌봄 반응 수명 보완도 통합했습니다. 전체 원화의 카툰 재제작이나 사용자 감각 승인은 남습니다.
 
