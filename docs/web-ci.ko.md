@@ -1,5 +1,13 @@
 # 웹 자동 검증
 
+## 2026-11-06 · #513 통합 완료와 #515 비교 비용 후보
+
+#513/PR514 headcddddb496fa8eb4b272cd0f8a2c5b715f1d2d317의 첫PR42165754024, squash main4cf6b1587fcff41c5825cd8b9836f28fab29d7b4의 첫42166346143 attempt1은 양Node85파일4,400개·스토어19·타입3/두웹빌드/carrier가 성공했습니다. 최초 attempt 원문/6요약행과 whole-tree2d88791c 일치·종속PR/worktree/원격head를 확인해 소유브랜치를 정리했습니다. #513은 닫고 #338/#122·Draft234는 유지합니다. 아래 첫CI후속 문구는 구현 당시 이력입니다.
+
+같은 두 최초CI의 `server-round-state.test.ts`554개는 Node22에서182.430/351.491초, Node24에서37.414/44.616초였습니다. #122의 SQLite 검사60개는 각각2.695/3.464초와3.255/3.196초여서 서로 합치지 않습니다. 설치된 matcher는 `toMatchObject`의 성공 경로에서도 `getObjectSubset`을 호출하지만, 이것만으로 모든 Node22 시간 차이의 근본원인을 확정하지 않습니다.
+
+#515 후보는 500판 매수의 큰 부분일치 두assert만 실제 비교필드의 명시적 투영+`toStrictEqual`로 바꿉니다. board/leaves/moves/score/collected/clearedLeaves/status와 필요한 crates/clearedCrates를 그대로 비교하며 추가키/undefined·희소배열 차이에는 더 엄격합니다. 500개ID·각seed·최대40수·명령선택/3수째셔플·JSON복원·매수 validateState·종료뒤거절과 전체554개를 줄이지 않습니다. 제품/8worker·SQL/500ms/close/retry·CIworker/timeout은 바꾸지 않고 첫PR/main원문으로 새결과를 대조합니다. 현재는 파일검토만이며 새실행/성능수치는 후속입니다.
+
 ## 2026-11-06 · #513 정확 후보의 로컬 검사와 실제 UI
 
 정확후보71c7b84의 타입3/관련6파일777개가 모두 성공했습니다. 별도 production Vite/carrier와 자체 SVG9표본도 성공했습니다. 최종12개 합성UI사례/72그림은 KO390×844·KO320×568·EN320×568·KO844×390의 성장0·1·5를 검수했습니다. 잠긴 노을/별빛은 미리보기로, 성장5의 소유테마는 실제선택으로 구분했습니다. 미리보기 비교·취소는 primary/backup/reset3원문이 같고 부팅 후 영구값도 fixture와 전수일치했습니다. 그림 ID/gradient 참조·5화단/성장수/비트맵0·가로넘침·앱오류0과 소스/production108전수SHAfalse3 불변을 대조했습니다.

@@ -35,8 +35,11 @@ describe('서버 순수 회차 상태·기존 엔진 기준 동등성',()=>{
       const legal=e.legalMoves(),m=legal[(n*7)%legal.length],result=e.swap(m.a,m.b);moves--;score+=result.score;leaves+=result.leavesCleared??0;result.collected.forEach((x,k)=>items[k]+=x);
       s=advanceState(clone(s),{type:'swap',...m}).state;
       const won=levels[id-1].goals.every(g=>items[g.kind]>=g.count)&&leaves>=(levels[id-1].leaves?.length??0)&&e.remainingCrates()===0;
-      expect(s).toMatchObject({board:e.board,leaves:e.leaves,moves,score,collected:items,clearedLeaves:leaves,status:won?'won':moves===0?'failed':'active'});
-      if(e.hasCrates)expect(s).toMatchObject({crates:e.crates,clearedCrates:levels[id-1].crates!.length-e.remainingCrates()});
+      // 매 수의 같은 필드를 엄격 비교하며 성공 경로의 부분집합 생성은 피합니다.
+      expect({board:s.board,leaves:s.leaves,moves:s.moves,score:s.score,collected:s.collected,clearedLeaves:s.clearedLeaves,status:s.status})
+        .toStrictEqual({board:e.board,leaves:e.leaves,moves,score,collected:items,clearedLeaves:leaves,status:won?'won':moves===0?'failed':'active'});
+      if(e.hasCrates)expect({crates:s.crates,clearedCrates:s.clearedCrates})
+        .toStrictEqual({crates:e.crates,clearedCrates:levels[id-1].crates!.length-e.remainingCrates()});
       validateState(s);
     }
     expect(s.status).not.toBe('active');
