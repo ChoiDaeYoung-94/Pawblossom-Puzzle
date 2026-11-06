@@ -28,6 +28,7 @@ import * as puzzleToolActions from '../src/puzzleToolActions';
 import * as puzzleToolUi from '../src/PuzzleToolUI';
 import {specialTileArt,specialArtKinds,specialBodyKey,specialBodyPath} from '../src/SpecialTileArt';
 import * as paintedGardenArt from '../src/GardenPaintedArt';
+import * as cartoonGardenArt from '../src/CartoonGardenArt';
 import * as gardenStructureArt from '../src/GardenStructureArt';
 import * as boardDisplay from '../src/BoardDisplay';
 import {campaignScenery,campaignWorld,campaignWorldName,campaignWorldPaint,campaignMusicTheme} from '../src/CampaignScenery';
@@ -339,7 +340,13 @@ function mainHarness(storageFails = false, firstUse = false, testTools = false, 
   Object.assign(context,i18nExports);
   const gardenSpaceArtExports:Record<string,unknown>={};vm.runInNewContext(gardenSpaceArtCode,{exports:gardenSpaceArtExports,require:(name:string)=>name==='./GardenPaintedArt'?paintedGardenArt:gardenStructureArt});Object.assign(context,gardenSpaceArtExports,gardenStructureArt);
   const gardenSpacesUIExports:Record<string,unknown>={};vm.runInNewContext(gardenSpacesUICode,{exports:gardenSpacesUIExports,require:(name:string)=>name==='./i18n'?i18nExports:name==='./gardenSpaces'?gardenSpacesExports:gardenSpaceArtExports});Object.assign(context,gardenSpacesUIExports);
-  const gardenExports:Record<string,unknown>={};vm.runInNewContext(gardenCode,{exports:gardenExports,require:(name:string)=>name==='./gardenDesign'?gardenDesignExports:name==='./GardenPaintedArt'?paintedGardenArt:gardenStructureArt});Object.assign(context,gardenExports);
+  const gardenExports:Record<string,unknown>={};vm.runInNewContext(gardenCode,{exports:gardenExports,require:(name:string)=>{
+    if(name==='./gardenDesign')return gardenDesignExports;
+    if(name==='./GardenPaintedArt')return paintedGardenArt;
+    if(name==='./GardenStructureArt')return gardenStructureArt;
+    if(name==='./CartoonGardenArt')return cartoonGardenArt;
+    throw new Error('Unknown garden art dependency: '+name);
+  }});Object.assign(context,gardenExports);
   vm.runInContext(stateCode, context);
   Object.assign(context, stateExports);
   Object.assign(context,{normalLoadSave:stateExports.loadSave,normalSaveData:stateExports.saveData,normalRetrySave:stateExports.retrySave,normalSaveStatus:stateExports.saveStatus,normalClearSave:stateExports.clearSave});
@@ -3325,8 +3332,8 @@ describe('후반 정원 공간과 확정 전 미리보기',()=>{
   });
   it.each(['ko','en'] as const)('%s의4탭·큰 장면·현재/바뀔 모습 비교·취소는 저장/선택/회차를 보존하고 정상 확정만12별 씁니다',language=>{
     const h=mainHarness(false,false,false,false,initial(language,50));h.run("switchView('village');globalThis.spaceRound=scene;globalThis.spaceFocus=[];document.querySelector('#garden-space-restore').focus=options=>spaceFocus.push(options?.preventScroll)");
-    expect(h.run('gardenWorkshop(false)')).toContain('data-renderer="painted-v4"');
-    expect(h.run('gardenWorkshop(false)')).toContain('href="/assets/garden-v4/backdrop-meadow.webp"');
+    expect(h.run('gardenWorkshop(false)')).toContain('data-renderer="cartoon-v1"');
+    expect(h.run('gardenWorkshop(false)')).toContain('data-garden-layer="backdrop"');
     const disk=h.disk(),writes=h.writes(),round=h.run(roundState);open(h);
     expect(h.run('otherModal()')).toBe(true);expect(h.run('spaceDialog.innerHTML')).toContain(t(language,'spacePreviewTitle'));expect(h.run('spaceDialog.innerHTML')).toContain('data-phase="1"');expect(h.run('spaceDialog.innerHTML')).toContain('id="preview-space-sky"');
     expect(h.run('spaceDialog.innerHTML')).toContain('data-renderer="painted-v4"');expect(h.run('spaceDialog.innerHTML')).toContain('href="/assets/garden-v4/backdrop-meadow.webp"');

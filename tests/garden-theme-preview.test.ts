@@ -21,7 +21,7 @@ describe('구매 전 정원 풍경 비교',()=>{
   it.each(['ko','en'] as const)('%s 현재와 변경 후 그림을 비교해도 입력 상태와 소유를 바꾸지 않습니다',language=>{
     const current={...freshGardenDesign(),flowers:['daisy','violet','meadow','daisy','violet'] as const},design={...current,flowers:[...current.flowers]},pip={growth:100,affection:100};
     const before=JSON.stringify(design),after=gardenThemePreview(language,design,5,pip,40,100,'starlight',false,false,false),now=gardenThemePreview(language,design,5,pip,40,100,'starlight',true,false,false);
-    expect(after).toContain('data-sky="starlight"');expect(now).not.toContain('data-sky="starlight"');expect(after).toContain('garden-look-confirm');expect(after).not.toMatch(/id="garden-look-confirm"[^>]*disabled/);expect(JSON.stringify(design)).toBe(before);
+    expect(after).toContain('data-sky="starlight"');expect(now).not.toContain('data-sky="starlight"');expect(after).toContain('data-renderer="cartoon-v1"');expect(now).toContain('data-renderer="cartoon-v1"');expect(after).toContain('garden-look-confirm');expect(after).not.toMatch(/id="garden-look-confirm"[^>]*disabled/);expect(JSON.stringify(design)).toBe(before);
   });
   it('부족코인·미달조건·저장차단은 확정을 거절하고 음수 확정 잔액을 약속하지 않습니다',()=>{
     const pip={growth:100,affection:100};

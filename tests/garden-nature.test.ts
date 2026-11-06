@@ -5,6 +5,7 @@ import {createGardenNature} from '../src/GardenNature';
 class NatureNode {
   dataset:Record<string,string>={};attributes:Record<string,string>={};children:NatureNode[]=[];
   parentElement:NatureNode|null=null;connected=false;innerHTML='';
+  get parentNode():NatureNode|null{return this.parentElement;}
   constructor(public ownerDocument:Document,public tagName:string){}
   get isConnected():boolean{return this.parentElement?this.parentElement.isConnected:this.connected;}
   get nextSibling():NatureNode|null {const siblings=this.parentElement?.children??[];return siblings[siblings.indexOf(this)+1]??null;}
@@ -52,6 +53,48 @@ async function settle(){for(let i=0;i<10;i++)await Promise.resolve();}
 async function load(images:ImageStub[]){images.forEach(image=>image.onload?.());await settle();}
 const rigs=(h:ReturnType<typeof setup>)=>h.picture.querySelectorAll('.garden-nature-butterfly');
 afterEach(()=>{vi.restoreAllMocks();vi.unstubAllGlobals();});
+
+function setupCartoon(count=3){
+  const h=setup('flowers',2,0,'cartoon-v1'),vectors:NatureNode[]=[],wings:NatureNode[]=[],bodies:NatureNode[]=[];
+  for(let i=0;i<count;i++){
+    const vector=h.node('g',{'data-garden-vector-butterfly':'true',transform:`translate(${[189,282,351][i]} ${[107,191,101][i]}) rotate(${i*20-15})`});
+    const wing=h.node('g',{class:'garden-cartoon-wings'}),body=h.node('path',{d:'M0-4V7'});
+    vector.append(wing,body);h.art.append(vector);vectors.push(vector);wings.push(wing);bodies.push(body);
+  }
+  return {...h,nature:createGardenNature(dom(h.picture),h.createImage),vectors,wings,bodies};
+}
+
+describe('자체 SVG 나비의 현재 그림 소유권',()=>{
+  it('몸통·좌표·원본은 유지하고 활성/정리 상태만 바꾸며 bitmap·timer·RNG가 없습니다',()=>{
+    const timer=vi.spyOn(globalThis,'setTimeout'),random=vi.spyOn(Math,'random'),raf=vi.fn();vi.stubGlobal('requestAnimationFrame',raf);
+    const h=setupCartoon(),before=JSON.stringify([h.vectors.map(n=>n.attributes),h.wings.map(n=>n.attributes),h.bodies.map(n=>n.attributes)]);
+    h.nature.setActive(true);expect(h.picture.dataset).toEqual({natureReady:'true',natureActive:'true'});
+    h.nature.setActive(false);expect(h.picture.dataset).toEqual({natureReady:'true',natureActive:'false'});
+    h.nature.dispose();h.nature.dispose();h.nature.setActive(true);expect(h.picture.dataset).toEqual({});
+    expect(JSON.stringify([h.vectors.map(n=>n.attributes),h.wings.map(n=>n.attributes),h.bodies.map(n=>n.attributes)])).toBe(before);
+    expect(h.art.children).toEqual(h.vectors);expect(h.images).toHaveLength(0);
+    expect(timer).not.toHaveBeenCalled();expect(random).not.toHaveBeenCalled();expect(raf).not.toHaveBeenCalled();
+  });
+  it.each(['disconnect','renderer','replacement','parent','wings','transform'] as const)('%s 뒤에는 원래 슬롯 전체가 일치하지 않아 활성화하지 않습니다',mode=>{
+    const h=setupCartoon();h.nature.setActive(true);
+    if(mode==='disconnect')h.picture.connected=false;
+    if(mode==='renderer')h.art.setAttribute('data-renderer','painted-v4');
+    if(mode==='replacement'){h.art.remove();h.picture.append(h.node('svg',{class:'garden-art','data-renderer':'cartoon-v1'}));}
+    if(mode==='parent'){const foreign=h.node('g');h.art.append(foreign);foreign.append(h.vectors[0]);}
+    if(mode==='wings')h.wings[0].remove();
+    if(mode==='transform')h.vectors[0].setAttribute('transform','translate(0 0)');
+    h.nature.setActive(true);expect(h.picture.dataset.natureActive).toBe('false');expect(h.picture.dataset.natureReady).toBeUndefined();expect(h.images).toHaveLength(0);
+  });
+  it('이전 controller 정리는 새 소유자나 다른 정원의 표시를 지우지 않습니다',()=>{
+    const h=setupCartoon(),other=setupCartoon();other.nature.setActive(true);
+    const previous=h.nature,next=createGardenNature(dom(h.picture),h.createImage);next.setActive(true);
+    previous.setActive(false);previous.dispose();expect(h.picture.dataset.natureActive).toBe('true');
+    next.dispose();expect(h.picture.dataset).toEqual({});expect(other.picture.dataset.natureActive).toBe('true');expect(other.images).toHaveLength(0);
+  });
+  it('소유 나비가 없는 꽃밭은 정지 그림 그대로이며 추가 이미지 요청이 없습니다',()=>{
+    const h=setupCartoon(0);h.nature.setActive(true);expect(h.picture.dataset.natureActive).toBe('false');expect(h.picture.dataset.natureReady).toBeUndefined();expect(h.images).toHaveLength(0);
+  });
+});
 
 describe('실제 정원 한 곳의 자연 모션 표시 소유권',()=>{
   it('원본3개를 보존하고 자산1개 decode 뒤 최대6날개군·고정 몸통을 같은 부모에 붙입니다',async()=>{

@@ -55,7 +55,7 @@ import { icon } from './icons';
 import { SwapPractice } from './SwapPractice';
 import { SpecialTapPractice } from './SpecialTapPractice';
 import { bindPracticeBoard } from './bindPracticeInputs';
-import { gardenArt,flowerArt } from './GardenArt';
+import { gardenArt,flowerArt,FLOWER_GARDEN_RENDERER } from './GardenArt';
 import {previewGardenPreset,type GardenPresetId} from './GardenPresets';
 import {gardenPresetPreview} from './GardenPresetsUI';
 import {previewGardenTheme,gardenThemePreview} from './GardenThemePreview';
@@ -1613,7 +1613,7 @@ function gardenWorkshop(grew:boolean){
   const space=selectedGardenArea as Exclude<GardenArea,'flowers'|'journey'>;
   // 선택 칸을 먼저 보정해 돌보기 대상 문구와 그림이 같은 칸을 가리킵니다.
   const editor=flowers?gardenEditor():'';
-  const image=flowers?gardenArt(save.garden,grew,save.gardenDesign,{renderer:'painted-v4'}):gardenSpaceArt(space,spaces[space],save.gardenDesign?.theme??'meadow','garden-space','painted-v4',{foreground:false});
+  const image=flowers?gardenArt(save.garden,grew,save.gardenDesign,{renderer:FLOWER_GARDEN_RENDERER}):gardenSpaceArt(space,spaces[space],save.gardenDesign?.theme??'meadow','garden-space','painted-v4',{foreground:false});
   const progress=flowers?`${icon('flower',17)} ${save.garden} / 5`:spacePhaseName(save.language,spaces[space]);
   const picture=`<div id="garden-nature" class="garden-picture garden-preview"><div class="garden-illustration" role="img" aria-label="${gardenDescription()}">${image}</div>${gardenVisitor()}${gardenTendingPlot===undefined?'':gardenTendingArt(gardenTendingPlot,gardenPlotPoints[gardenTendingPlot],Date.now()-careReactionStarted)}${gardenActivitySpots('art')}${flowers?'':paintedGardenForeground(space,spaces[space])}<span class="garden-pill">${progress}</span></div>`;
   const growth=flowers?`<div class="garden-card garden-growth"><h3>${text('garden')}</h3><p class="garden-stage" id="garden-stage" role="status" tabindex="-1">${text(`gardenStage${save.garden}` as TextKey)}</p><p>${text('gardenDesc')}</p><button class="primary" id="grow" ${growing||save.stars<2||save.garden>=5?'disabled':''}>${icon('leaf',20)}${text(save.garden>=5?'gardenDone':'grow')}</button>${save.stars<2&&save.garden<5?`<small>${text('needStars')}</small>`:''}</div>`:'';

@@ -21,9 +21,37 @@ type Slot={source:SVGImageElement;parent:Element;art:SVGSVGElement;attributes:(s
 type Mounted={slot:Slot;node:SVGElement;marker?:string};
 const sourceAttributes=['href','x','y','width','height','preserveAspectRatio'];
 
+/** SVG 원본은 그대로 두고, 현재 그림의 날개 애니메이션 허용만 소유합니다. */
+function createCartoonGardenNature(picture:HTMLElement,art:SVGSVGElement):GardenNature {
+  const slots=Array.from(art.querySelectorAll<SVGGElement>('[data-garden-vector-butterfly="true"]')).map(node=>({
+    node,parent:node.parentElement,wings:node.querySelector<SVGGElement>('.garden-cartoon-wings'),transform:node.getAttribute('transform'),
+  }));
+  let disposed=false;
+  const owned=()=>!disposed&&owners.get(picture)===nature;
+  const valid=()=>picture.isConnected&&picture.contains(art)&&picture.querySelector('.garden-art[data-renderer="cartoon-v1"]')===art
+    &&!art.hasAttribute('data-space')&&slots.length>0&&slots.every(slot=>slot.parent&&slot.wings&&slot.node.parentElement===slot.parent&&art.contains(slot.node)
+      &&slot.wings.parentNode===slot.node&&slot.node.getAttribute('data-garden-vector-butterfly')==='true'&&slot.node.getAttribute('transform')===slot.transform);
+  const nature:GardenNature={
+    setActive(active){
+      if(!owned())return;
+      const ready=valid();
+      if(ready)picture.dataset.natureReady='true';else delete picture.dataset.natureReady;
+      picture.dataset.natureActive=String(active&&ready);
+    },
+    dispose(){
+      if(disposed)return;disposed=true;
+      if(owners.get(picture)===nature){owners.delete(picture);delete picture.dataset.natureReady;delete picture.dataset.natureActive;}
+    },
+  };
+  owners.set(picture,nature);nature.setActive(false);
+  return nature;
+}
+
 /** 실제 정원 그림 하나의 표시만 소유합니다. 미리보기·저장·입력·게임 시간에는 관여하지 않습니다. */
 export function createGardenNature(picture:HTMLElement,createImage:()=>HTMLImageElement=()=>new Image()):GardenNature {
   owners.get(picture)?.dispose();
+  const cartoon=picture.querySelector<SVGSVGElement>('.garden-art[data-renderer="cartoon-v1"]');
+  if(cartoon)return createCartoonGardenNature(picture,cartoon);
   const id=`garden-nature-${++nextNature}`,mounted:Mounted[]=[];
   let disposed=false,image:HTMLImageElement|undefined;
   const owned=()=>!disposed&&owners.get(picture)===nature;

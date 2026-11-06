@@ -1,5 +1,13 @@
 # 출시까지의 개발 순서
 
+## 2026-11-06 · #513 꽃밭 카툰 그림과 초반 도구 검수
+
+정상43–45 기록은 PR512의 첫PR42159442752/main42160198852 attempt1 양Node84/4,378 성공·원문/브랜치정리로 mainc075a3e에 반영했습니다. 기존46판30이동320점 회차와 영구값을 보존하며 이후 정상차례는 전수일치부터입니다. APKfcded21은 바꾸지 않았습니다.
+
+기본 꽃밭의 직접 작도한 카툰SVG를 본화면·테마/코디미리보기에 연결하는 #513 후보를 구현했습니다. 5칸·핍좌표/소유장식·가격/저장·3테마를 유지하고 나비의 현재그림 owner/몸통고정·날개만/비활성·모션감소를 검증합니다. 다른 정원공간과 전체 원화는 별도후속이며, 현재 후보의 수정후정확검사·실제작은화면/가로 paint·사용자감각/Android 승인은 아직 남습니다.
+
+비교 도구 조사는 공식 지원의 [Candy Crush 종류·효과](https://candycrush.zendesk.com/hc/en-us/articles/211320729-What-types-of-Boosters-are-available), [Matching Story 개발사 설명](https://play.google.com/store/apps/details?id=com.joycastle.mergematch&hl=en), [Jewels Magic의5종 도구](https://bitmangogames.helpshift.com/hc/en/37-jewels-magic-mystery-match3/faq/10984-about-boosters/)를 대조했습니다. 세 게임의 도구별 정확 해금표/모두10판내해금은 확인하지 못했고, [연승보너스의32판 조건](https://bitmangogames.helpshift.com/hc/en/37-jewels-magic-mystery-match3/faq/11258-what-is-jewels-boost/)을 도구해금으로 해석하지 않습니다. 우리3/4/6/8/10은 자체 초반학습 설계입니다. 새전용 정상프로필의1–10/필수실습·이야기/자동소개·첫무료·취소/실제reload를 검수하며 기존1–45프로필과 분리합니다. 이 새프로필은 아직 열지 않았습니다.
+
 ## 2026-11-06 · 정상46회차와 오늘 우선순위
 
 사용자가19시KST 또는 계정 주간30% 선도달까지 작업을 재개했습니다. 새4% 조회/다른프로젝트fresh조율·명시반환/총괄단독작성·Ultra/PC-only를 유지하며 이전98%·단독자원 지시는 당시 이력입니다. 시작main2e5406e는 원격동일/clean이었고 PR509/511의 정확첫PR/main 양Node84/4,378 성공·원문/각브랜치정리를 보존했습니다. 기존APKfcded21은 그대로입니다.

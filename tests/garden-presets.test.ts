@@ -45,6 +45,7 @@ describe('소유물만 쓰는 무료 정원 코디',()=>{
       const html=gardenPresetPreview(language,undefined,2,grown,0,'starlight',false,false,false);
       expect(html).toMatch(/id="garden-look-confirm"[^>]+disabled/);expect(html).toMatch(/id="garden-look-current"[^>]+aria-pressed="true"/);expect(html).toMatch(/id="garden-look-after"[^>]+disabled/);
       const ready=gardenPresetPreview(language,owned(),5,grown,40,'starlight',false,false,true);expect(ready).not.toMatch(/id="garden-look-confirm"[^>]+disabled/);expect(ready).toContain('space-preview-demo');
+      expect(html).toContain('data-renderer="cartoon-v1"');expect(ready).toContain('data-renderer="cartoon-v1"');expect(ready).not.toContain('/assets/garden-v4/backdrop-');
     }
   });
 });
