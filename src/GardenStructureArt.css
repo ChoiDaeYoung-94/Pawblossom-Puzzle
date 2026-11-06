@@ -14,3 +14,8 @@
 @keyframes garden-nature-flap{0%,24%,64%,100%{transform:scaleX(1)}34%{transform:scaleX(.34)}44%{transform:scaleX(1)}54%{transform:scaleX(.50)}}
 @keyframes garden-nature-ripple{0%{transform:scale(.65);opacity:0}20%{opacity:.55}100%{transform:scale(1.4);opacity:0}}
 @media(prefers-reduced-motion:reduce){.garden-nature-butterfly,.garden-nature-water{display:none!important}.garden-nature-wing,.garden-nature-water ellipse{animation:none!important}.garden-picture .garden-nature-butterfly+[data-garden-nature-source]{visibility:visible!important}}
+
+/* SVG 나비는 원본 몸통과 좌표를 고정하고 현재 그림의 날개만 접습니다. */
+.garden-cartoon-wings{transform-box:view-box;transform-origin:0 0;pointer-events:none}
+.garden-picture[data-nature-active=true][data-nature-ready=true] .garden-art[data-renderer=cartoon-v1] .garden-cartoon-wings{animation:garden-nature-flap 1.8s ease-in-out infinite;animation-delay:var(--garden-flutter-delay,0s)}
+@media(prefers-reduced-motion:reduce){.garden-cartoon-wings{animation:none!important}}

@@ -1,14 +1,17 @@
 import { gardenDesignFor,type GardenDesign,type FlowerStyle } from './gardenDesign';
 import {paintedGardenBackdrop,paintedGardenBed,paintedGardenFlowers,type GardenArtRenderer} from './GardenPaintedArt';
 import {paintedGardenBench,paintedGardenLantern,paintedGardenButterfly} from './GardenStructureArt';
+import {cartoonGardenArt} from './CartoonGardenArt';
+export const FLOWER_GARDEN_RENDERER='cartoon-v1' as const;
 const blossom=(style:FlowerStyle,meadowColor='#e9a9b1')=>style==='violet'?'<path d="M-9-5Q-8-17 0-15Q8-17 9-5L12 1Q6 7 0 2Q-6 7-12 1Z" fill="#a18ac9" stroke="#76629d" stroke-width="1.3"/><path d="M-4 1v5m8-5v5" stroke="#edc76d" stroke-width="2"/>':`${Array.from({length:style==='daisy'?10:5},(_,i)=>`<ellipse cx="0" cy="-6" rx="${style==='daisy'?2.6:4.4}" ry="${style==='daisy'?7:5.6}" fill="${style==='daisy'?'#fffdf2':meadowColor}" stroke="${style==='daisy'?'#cbbf93':'#ca8795'}" stroke-width=".6" transform="rotate(${i*(style==='daisy'?36:72)})"/>`).join('')}<circle r="3.5" fill="#efc75e"/>`;
 export const flowerArt=(style:FlowerStyle)=>`<svg viewBox="-17 -18 34 36" aria-hidden="true">${blossom(style)}</svg>`;
 /** 꽃 선택과 소유 장식만 그리며 저장 객체를 변경하지 않습니다. */
-export function gardenArt(value:number,celebrate=false,selection?:GardenDesign,options:{renderer?:GardenArtRenderer;idPrefix?:string}={}):string {
+export function gardenArt(value:number,celebrate=false,selection?:GardenDesign,options:{renderer?:GardenArtRenderer|'cartoon-v1';idPrefix?:string}={}):string {
   if(options.idPrefix!==undefined&&!/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(options.idPrefix))throw new RangeError('invalid-garden-art-prefix');
   const scoped=(image:string)=>options.idPrefix?image.replaceAll('id="garden-',`id="${options.idPrefix}-garden-`).replaceAll('url(#garden-',`url(#${options.idPrefix}-garden-`):image;
   const stage=Number.isFinite(value)?Math.max(0,Math.min(5,Math.floor(value))):0;
   const design=gardenDesignFor(selection);
+  if(options.renderer===FLOWER_GARDEN_RENDERER)return scoped(cartoonGardenArt(stage,celebrate,design));
   const painted=options.renderer==='painted-v4';
   // 핍의 왼쪽 전경을 피해 꽃밭의 오른쪽 아래에 놓습니다. 미선택 구 저장은 원래 위치입니다.
   const lanternPositions=[[211,173],[338,161],[454,178],[270,244],[405,244]];
