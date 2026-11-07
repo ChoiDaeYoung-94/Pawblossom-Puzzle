@@ -1,5 +1,9 @@
 # 웹 자동 검증
 
+## 2026-11-08 · #539 정상59·실물 복귀 기록 첫 CI
+
+PR540 headb3104e1의 첫PR42381867312와 mainea4f03a의 첫42382571062는 attempt1·양Node86파일4,418개·스토어19·타입3/production·testing·carrier가 성공했습니다. QA7/`539-native-normal-first-{pr,main}-*`에 원문을 보존하고 whole-tree6a3d56cc·종속PR/worktree/원격head 확인 뒤 브랜치를 정리했습니다. 문서5파일만 바뀌었고 제품/APK0e44/b936·실서비스 상태는 같습니다. 실행 시간의 변동을 Node22 성능 개선이나 #122 원인 해결로 해석하지 않습니다.
+
 ## 2026-11-07 · #537 callback 공통 시간축 관측 첫 CI
 
 PR538 head81aff55의 첫PR42380226881과 main4b016b1의 첫42380847116은 attempt1·Node22/24 각각86파일4,418개·스토어19·타입3/production·testing·carrier가 성공했습니다. QA7/`537-callback-first-{pr,main}-*`에 첫 원문을 보존했고 head/main whole-tree47829661 일치·종속PR/worktree/원격head 확인 뒤 브랜치를 정리했습니다. 제품/APK는0e44/b936으로 같습니다.

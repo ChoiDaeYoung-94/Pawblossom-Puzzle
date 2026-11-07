@@ -1,5 +1,12 @@
 # Pawblossom Puzzle 작업 규칙
 
+## 최신 진행 · 2026-11-08
+
+- 최신 사용자 지시는 질문 없이 가능한 작업을 계속하고, 시간 제한 없이 계정 전체 주간 잔여5%(사용95%) 전에 검증·정리·상세 보고를 마치는 것입니다. LDPlayer와 연결된 공기계 사용을 허용했으며 이전 PC-only/시간·30% 기준보다 우선합니다. 다른 프로젝트와 매 차례 fresh·원 actual/new/full·명시 실제반환을 유지합니다. 실키/env·운영상품/과금/공개배포·Drive·최종믹스 경계와 root 단독 코드/Git·Ultra 독립 읽기는 유지합니다.
+- #338 sourceea4f03a/제품0e44는 기존59완료/noCP의영구값전체일치뒤미행동60CP32이동0점부팅생성/명시시작을구분했습니다. 새정상60 family첫차례53쌍(교환51/자연보드꽃폭탄2)·실패/retry/추가소비/오류0으로60·61첫완료,최종61별2350/high62·62판25이동330/도구[]/셔플1·상자6완료를보존했습니다. 두번째승리뒤지도복귀from60→62/count2의정확EN도착recap/currentaria·핍sibling·primary불변과현재62노드/preview명시시작을확인했습니다. 모션감소라실제걷기완료/사람난이도/69완료로확대하지않습니다. 마지막54계획은공개scan뒤선택/Enter전중단(스캔화살표는있음),원14:58:23.5768861/new15:11:23.5768861/full15:13:23.5768861UTC안15:10:51.4919387실제반환·관측10(Chrome8)잔존0/5231worker0·동결12/108SHAfalse3/sourceclean입니다.
+- #535 b936실물가로는808×387/DPR2.625·XMLrotation1/핵심4조작44px·squarecanvas315.607px/15CDP의일반3raw·전체4/CP1판23이동860exact를확인했습니다. 원회전free/auto1/userRotation0을flow/close두번복구해14:45:48.9099547UTC반환했고Nativequery181전부exit0·동결24입니다. 실제회전후터치/도구선택·free의물리센서순간각도원복보장은아닙니다. audio첫차례는hidden+hasFocustrue의QA기대불일치로exit1/14:59:14.4092183반환했고원문을보존했습니다. 새audio-recovery는sameContext running→suspended→running·realtime24/phase22(전환2제외),전경4/hidden3/복귀15의요청·응답동일구간·시간진행/정지/재개를확인했습니다. 14CDP일반3raw/전체4/전체CP exact·Native111exit0/동결35·flow/close0·108SHAfalse3/sourceclean으로15:05:27.5381732UTC실제반환했습니다. 엄격OSfocus파서는2회미지원/rawAudio저장0이며청취/OSfocus소유권·다른기기·최종믹스승인은아닙니다. 두새sidecar와빌드시점artifact.deviceTest:false를구분합니다.
+- #539/PR540 headb3104e1 첫PR42381867312/mainea4f03a 첫42382571062 attempt1은양Node86파일4418·스토어19·타입3/두웹/carrier 성공입니다. whole-tree6a3d56cc/종속PR·worktree/원격head·원문을확인해브랜치를정리했습니다. 제품/APK는0e44/b936으로유지하며#338/#535/#122와Draft234는열어둡니다.
+
 ## 최신 직접 지시 · 2026-11-07
 
 - #338 정상58–59는 source1b3b00f/제품0e44의기존57별2190·58판24이동650전체CP/영구값전수일치뒤처음완료했습니다. 실제47쌍(교환46/보드꽃폭탄1)·추가소비/오류0,최종59별2270/highest60·회차없음/60명시시작0입니다. 새normal58 family는명시null의과거경로를현재PID전체부재일때만허용하며Node/Chrome필수증거·unknown세대차단은유지했습니다. 8경계사례/독립읽기뒤원14:13:46.6347563/new14:26:46.6347563/full14:28:46.6347563UTC안14:25:30.8168378실제반환·관측10(Chrome8)잔존0/5231·worker0·동결12/108SHAfalse3/sourceclean입니다. 기존fifth null-path감사실패/별도수동반환은보존하며사람난이도/500판/Android완료로확대하지않습니다.
