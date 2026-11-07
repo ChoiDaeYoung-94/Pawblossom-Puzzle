@@ -1,5 +1,10 @@
 # 출시까지 남은 작업
 
+## 2026-11-07 · #527 실제 constructor BUSY envelope 회귀
+
+- [x] 알려진합성holder의잠금을 결과수신/명시terminate까지유지하고 기존worker1개의constructor/base5·BEGIN/threw1·native닫힘/부모not-opened·hook복원·잘림없음/누출0·메시지2개와 독립정리를검사했습니다. 첫1파일29개/1.92초·타입3/독립읽기새P1/P2없음입니다.
+- [ ] 정확첫PR/mainCI/원문·정리. 제품/helper/SQL/500ms·기존3worker/IPC/retry와 #122 원CI잠금owner/근본원인은유지합니다.
+
 ## 2026-11-07 · #524 가로 안내·44px 도구
 
 - [x] 낮은 가로 안내2열/본문스크롤·고정footer, 그림폭 P2수정, 기존실습/합성click 보호·키보드와 세로배치를 유지했습니다.

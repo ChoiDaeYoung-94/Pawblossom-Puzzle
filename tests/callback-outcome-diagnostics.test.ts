@@ -216,4 +216,42 @@ describe('선택 SQLite DTO의 엄격 경계',()=>{
       rmSync(target,{recursive:true,force:true});
     }
   });
+  it('알려진 holder의 실제 생성자 BUSY도 기존 결과1개에 단계와 연결 닫힘을 보존합니다',async()=>{
+    const folder=mkdtempSync(join(tmpdir(),'pawblossom-callback-ctor-busy-')),path=join(folder,'reward.sqlite'),key=new Uint8Array(32).fill(97);
+    const query='synthetic-private-busy-query',context={ownerId:'synthetic-private-busy-owner',roundId:'synthetic-private-busy-round'};
+    let fixture:RewardLedger|undefined,holder:DatabaseSync|undefined,worker:Worker|undefined;
+    try{
+      fixture=new RewardLedger({databasePath:path,serverKey:key,policy,dependencies:{now:()=>epoch,transport:async()=>keyResponse()}});fixture.close();fixture=undefined;
+      holder=new DatabaseSync(path);expect(holder.prepare('PRAGMA journal_mode').get()?.journal_mode).toBe('delete');holder.exec('BEGIN IMMEDIATE');
+      worker=new Worker(new URL('./helpers/reward-ledger-worker.mjs',import.meta.url),{workerData:{path,key:[...key],policy,entries:[keyEntry()],now:epoch,query,context,diagnostics:true,sqliteDiagnostics:true},execArgv:['--experimental-strip-types']});
+      const messages:unknown[]=[];worker.on('message',message=>messages.push(message));
+      expect((await once(worker,'message'))[0]).toBe('ready');const output=once(worker,'message');worker.postMessage('go');
+      const envelope=(await output)[0],trace=createCallbackOutcomeTrace(1,{sqliteDiagnostics:true});
+      expect(holder.isOpen).toBe(true);expect(holder.isTransaction).toBe(true);
+      expect(Object.keys(envelope)).toEqual(['kind','result','diagnostic','sqliteDiagnostic']);
+      expect(receiveCallbackOutcome(envelope,trace,0)).toEqual({kind:'worker-error'});
+      expect(trace.workers[0]).toMatchObject({stage:'close',report:'received',resultStage:'constructor',errorStage:'constructor',kind:'worker-error',closeOutcome:'not-opened',observationFailed:false,nativeObservation:'not-observed',sqlite:{report:'received'}});
+      const diagnostic=trace.workers[0].sqlite!.diagnostic!;
+      expect(diagnostic.sqliteErrors).toEqual([{operation:'database-exec',site:'transaction-begin',phase:'reward-open',errorCode:'ERR_SQLITE_ERROR',extendedCode:5,baseCode:5,transactionActive:false,connectionClosed:true}]);
+      expect(diagnostic.sqliteTransactions.map(tx=>[tx.phase,tx.site,tx.outcome])).toEqual([['reward-open','transaction-begin','threw']]);
+      expect(diagnostic.sqliteErrorsTruncated).toBe(false);expect(diagnostic.sqliteTransactionsTruncated).toBe(false);expect(diagnostic.sqliteTransactionObservationFailed).toBe(false);
+      expect(diagnostic.sqliteHook).toEqual({installation:'installed',restoration:'restored',installedMethods:5,restoreFailures:0});
+      expect(trace.truncated).toBe(false);expect(trace.observationFailed).toBe(false);
+      for(const serialized of [JSON.stringify(envelope),callbackOutcomeContext(trace)]){
+        for(const privateValue of [path,query,context.ownerId,context.roundId,Buffer.from(key).toString('hex'),'BEGIN IMMEDIATE','database is locked','reward-ledger-open-failed'])expect(serialized).not.toContain(privateValue);
+        expect(serialized).not.toMatch(/"(?:message|stack|errstr|sql|args|receiver)"\s*:/);
+      }
+      await worker.terminate();worker=undefined;
+      expect(messages).toHaveLength(2);expect(messages[0]).toBe('ready');expect(messages[1]).toBe(envelope);
+      expect(holder.isOpen).toBe(true);expect(holder.isTransaction).toBe(true);
+    }finally{
+      const failures:unknown[]=[];
+      for(const close of [()=>worker?.terminate(),()=>{if(holder?.isTransaction)holder.exec('ROLLBACK');},()=>holder?.close(),()=>fixture?.close(),()=>{
+        const target=resolve(folder);
+        if(dirname(target)!==resolve(tmpdir())||!basename(target).startsWith('pawblossom-callback-ctor-busy-'))throw new Error('unsafe-test-cleanup-path');
+        rmSync(target,{recursive:true,force:true});
+      }])try{await close();}catch(error){failures.push(error);}
+      if(failures.length)throw new AggregateError(failures,'fixture-cleanup-failed');
+    }
+  });
 });

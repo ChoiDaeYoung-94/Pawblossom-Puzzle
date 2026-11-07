@@ -2,6 +2,8 @@
 
 ## 최신 직접 지시 · 2026-11-07
 
+- #527은 알려진합성holder가 BEGIN IMMEDIATE를 결과수신/명시worker종료뒤까지 유지할때 기존callback worker의 실제constructor BUSY/base5·transaction-begin/threw1·native닫힘/부모not-opened·hook5복원/잘림없음과 envelope전체누출0을 test-only로검사합니다. 제품/helper/SQL/500ms·기존3worker/IPC/retry변경0이며 원CI잠금owner/동일site/근본원인해결·자연exit로확대하지않습니다. 별도527worktree에서첫1파일29개/1.92초·타입3성공/독립읽기새P1/P2없음이며 정확첫PR/mainCI는후속입니다. main b219와526 APK소스를분리유지했습니다.
+
 - #524 제품69ec361은 낮은가로 안내를 그림/설명2열·별도footer로 나누고 본문스크롤/명시종료·실습/키보드를 유지하며 셔플/도구·확정/취소를44px로 맞췄습니다. 첫실제검수의잠긴도구한계·helper기한/빌드결속보완과 세로선택바실패를 원문보존했습니다. 원06ad의DOM에서 바48→52/보드274→270/선택true→false를 재현해 일반/선택 바를항상52로 고정했습니다. 수정후 source결속production108·KOEN808×387/844×390/320×568/640×320의8조건32쪽·특수/2×2/실제tap/swipe/Enter·Space와 별도해금3판6조건에서 선택전후보드동일/지연뒤유지/대상선택·확정활성/취소저장전체불변·오류0을확인했습니다. 관련6파일763/타입3·독립읽기새P1/P2없음이며 필수첫PR/mainCI·새APK/Android차분은후속입니다. 원07:39:34/신규07:45:34/전체07:47:34UTC안07:41:44.5029421UTC 실제반환·Chromeexit0/등록핸들종료/관측12잔존·unknown0/helperSHA/108전수SHA/sourceclean을대조했습니다. PC합성초기값검수이며 실물정상1판23이동860점·원PC45/46·초반1–10은 열지않았습니다. 새조회12%/잔여5%마감을 유지합니다.
 
 - #520 세번째실물차례는 기존미행동1판26이동0점의자동checkpoint를대조하고명시UI시작뒤실제두칸교환/자연폭탄/다시swipe3행동을확인했습니다. 최종정상1판23이동860점/도구[]·셔플1/미완료0별0코인입니다. 퍼즐HOME/최근앱은동일PID·저장전체불변, force-stop은기존PID부재/새PID와primary·전체회차일치/backup최신회전으로구분합니다. 설정명시복귀·퍼즐하단탭0·securefalse/Dozing→wake저장일치뒤실제입력도확인했습니다. ownPID로그96,722B의FATAL EXCEPTION0이며전체기기/보안잠금/청취승인은아닙니다. 원06:59:56.4665785/신규07:11:56/전체07:14:56UTC안07:11:31.303594UTC실제반환·자체앱force-stop/HOME/소켓종료/sourceclean/helperSHA를대조했습니다. allpeer0/서버부재fresh동의뒤동일LD14ADB를한번정상시작한PID10952는공유서비스로명시유지했고기기점유/예약0입니다. 중간두번째차례는사전조회만하고06:50:36.4268485UTC조기반환/앱입력0입니다.
