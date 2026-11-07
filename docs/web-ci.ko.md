@@ -1,5 +1,11 @@
 # 웹 자동 검증
 
+## 2026-11-07 · PR530 정상46–47 기록 첫 CI
+
+- head `9b63a912549f1940ccb62bd5a58074d2194b4b11`의 첫PR `42359620894`와 main `63bd54194f4b7e9b64c52b2789eca5e1fbf7732f`의 첫push `42360293312`는 모두 attempt1입니다.
+- 양쪽 Node22/24 각각85파일4,402·스토어19·타입3/production·testing웹/carrier 성공 원문을 QA7/`338-normal47-first-{pr,main}-*`에 보존했습니다. whole-tree 일치와 종속PR/worktree/원격head 확인 뒤 기록 브랜치를 정리했습니다.
+- 문서만 변경하며 제품69ec361·APK8bd64f…와 정상 프로필을 바꾸지 않습니다.
+
 ## 2026-11-07 · PR529 APK/실물 기록 첫 CI
 
 - PR529 head `43e4f5615137678d745fa7597613d7a2fab0218c`의 첫 PR 실행은 `42357344603`, main `ca5c6a1e16300dc927d001700ec589ff4ff7e49f`의 첫 push 실행은 `42358805036`입니다. 모두 attempt1입니다.
