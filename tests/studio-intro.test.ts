@@ -13,6 +13,9 @@ class Element extends Events {
   id='';hidden=false;className='';textContent='';src='';poster='';muted=false;tabIndex=0;type='';playsInline=false;preload='';
   attrs=new Map<string,string>();children:Element[]=[];parent?:Element;
   isConnected=true;
+  paused=false;readyState=0;currentTime=0;
+  requestVideoFrameCallback?: (callback:VideoFrameRequestCallback)=>number;
+  cancelVideoFrameCallback=vi.fn();
   pause=vi.fn();load=vi.fn();focus=vi.fn();canPlayType=vi.fn(()=>this.ownerDocument.playable?'probably':'');
   play=vi.fn(()=>this.ownerDocument.play());
   constructor(readonly tag:string,readonly ownerDocument:Document){super();}
@@ -48,6 +51,32 @@ describe('스튜디오 인트로 종료·미디어 수명',()=>{
     const h=setup(),task=h.begin(),video=h.doc.element('video');
     expect(video.poster).toBe('');expect(h.doc.elements.some(element=>element.tag==='button')).toBe(false);expect(h.doc.element('section').focus).toHaveBeenCalledOnce();
     video.dispatchEvent(new Event('ended'));await task.finished;expect(vi.getTimerCount()).toBe(0);
+  });
+  it('play 완료만으로 노출하지 않고 실제 첫 프레임 콜백 뒤 표시한다',async()=>{
+    const h=setup();let presented!:VideoFrameRequestCallback;
+    const create=h.doc.createElement.bind(h.doc);
+    h.doc.createElement=tag=>{const e=create(tag);if(tag==='video')e.requestVideoFrameCallback=callback=>{presented=callback;return 7;};return e;};
+    const task=h.begin(),video=h.doc.element('video');await tick();
+    expect(video.getAttribute('data-frame-ready')).toBeNull();
+    presented(0,{} as VideoFrameCallbackMetadata);
+    expect(video.getAttribute('data-frame-ready')).toBe('true');
+    task.finish();await task.finished;expect(video.cancelVideoFrameCallback).not.toHaveBeenCalled();expect(video.count).toBe(0);
+  });
+  it('종료는 대기 중인 첫 프레임을 취소하고 늦은 콜백으로 노출하지 않는다',async()=>{
+    const h=setup();let presented!:VideoFrameRequestCallback;
+    const create=h.doc.createElement.bind(h.doc);
+    h.doc.createElement=tag=>{const e=create(tag);if(tag==='video')e.requestVideoFrameCallback=callback=>{presented=callback;return 9;};return e;};
+    const task=h.begin(),video=h.doc.element('video');task.finish();await task.finished;
+    expect(video.cancelVideoFrameCallback).toHaveBeenCalledWith(9);presented(0,{} as VideoFrameCallbackMetadata);
+    expect(video.getAttribute('data-frame-ready')).toBeNull();expect(video.count).toBe(0);expect(vi.getTimerCount()).toBe(0);
+  });
+  it('구형 미디어는 재생 중이고 프레임과 시간 진행이 있을 때만 표시한다',async()=>{
+    const h=setup(),task=h.begin(),video=h.doc.element('video');await tick();
+    video.readyState=2;video.dispatchEvent(new Event('timeupdate'));expect(video.getAttribute('data-frame-ready')).toBeNull();
+    video.currentTime=.1;video.paused=true;video.dispatchEvent(new Event('timeupdate'));expect(video.getAttribute('data-frame-ready')).toBeNull();
+    video.paused=false;video.readyState=1;video.dispatchEvent(new Event('timeupdate'));expect(video.getAttribute('data-frame-ready')).toBeNull();
+    video.readyState=2;video.dispatchEvent(new Event('timeupdate'));expect(video.getAttribute('data-frame-ready')).toBe('true');
+    task.finish();await task.finished;expect(video.count).toBe(0);
   });
   it('Escape도 종료하고 기본 동작을 취소한다',async()=>{
     const h=setup(),task=h.begin(),event=new Event('keydown',{cancelable:true});Object.assign(event,{key:'Escape'});h.doc.element('section').dispatchEvent(event);
