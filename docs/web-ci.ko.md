@@ -1,5 +1,11 @@
 # 웹 자동 검증
 
+## 2026-11-07 · PR529 APK/실물 기록 첫 CI
+
+- PR529 head `43e4f5615137678d745fa7597613d7a2fab0218c`의 첫 PR 실행은 `42357344603`, main `ca5c6a1e16300dc927d001700ec589ff4ff7e49f`의 첫 push 실행은 `42358805036`입니다. 모두 attempt1입니다.
+- 양쪽 실행의 Node22/24가 각각85파일4,402개·스토어19·타입3/production·testing웹/carrier를 통과했습니다. QA7의 `526-android-first-{pr,main}-{ci,attempt,counts}.json`과 원문 `all.log`를 보존했습니다.
+- head/main whole-tree `c02cb16ccbcc800aa620a9c26043d6b6093f5b22`가 같고 종속PR0·worktree 미점유·원격head를 확인해 기록 브랜치를 정리했습니다. 문서 CI 성공과 제품69ec361/실물 세로 검수의 범위는 구분합니다.
+
 ## 2026-11-07 · PR525 첫 CI·새 APK/실물 후속
 
 headceccf38 첫PR42352493657와 mainb219c47 첫42353109493 attempt1은 양Node85파일4,401개·스토어19·타입3/두웹빌드/carrier가 성공했습니다. 첫원문과 whole-tree7bbf49a9 일치·종속PR/worktree/원격head를 확인해 해당브랜치를 정리했습니다. 제품69ec361의 PC8조건32쪽+해금6조건과 구실패를 구분했고, 정확main의 새APK/첫10단계/원한도내08:06:14.3126766UTC 실제반환은 [Android 기록](android-release.ko.md)에 분리했습니다.
