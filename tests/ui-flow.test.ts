@@ -3800,6 +3800,20 @@ describe('선택한 정원 꽃밭에 무료 물주기',()=>{
 describe('별도 테스트 진행과 명시적인 화면 복귀',()=>{
   const ready=()=>{const h=mainHarness(false,false,true);h.run("switchView('settings')");expect(h.run('changeLabMode(true)')).toBe(true);return h;};
   const normal=(h:ReturnType<typeof ready>)=>h.disk().filter(([key])=>!key.startsWith('pawblossom.progress-lab.v1:'));
+  it('소개 저장 뒤 설정의 현재 버튼은 동작하고 이전 저장 문맥의 버튼은 거절한다',()=>{
+    const h=mainHarness();const oldMusic=h.element('#music-toggle').onclick;
+    h.run("save.highestLevel=3;startLevel(3);switchView('map')");h.frame();h.run("switchView('puzzle')");expect(h.run('toolDialog.open')).toBe(true);
+    h.element('#tool-info-close').onclick();const disk=h.disk(),cp=h.run('JSON.stringify(save.inProgress)'),music=h.run('save.music');oldMusic();expect(h.disk()).toEqual(disk);
+    h.element('#settings-button').onclick();expect(h.run('route')).toBe('settings');h.element('#music-toggle').onclick();expect(h.run('save.music')).toBe(!music);
+    h.element('#settings-return').onclick();expect(h.run('route')).toBe('puzzle');expect(h.run('JSON.stringify(save.inProgress)')).toBe(cp);expect(h.run('save.puzzleTools.trialUsed')).toEqual([]);
+  });
+  it('소개 저장 뒤 시험 설정의 실제 복귀 버튼이 일반 회차 원문을 보존한다',()=>{
+    const h=ready(),before=normal(h),cp=h.run('normalLoadSave().inProgress');h.run('completeLabLevel(2)');h.element('#result-home').onclick();
+    h.run("startLevel(3);switchView('map')");h.frame();h.run("switchView('puzzle')");expect(h.run('toolDialog.open')).toBe(true);const oldToggle=h.element('#lab-toggle').onclick;
+    h.element('#tool-info-close').onclick();expect(h.run('save.puzzleTools.introduced')).toContain('trowel');h.element('#settings-button').onclick();h.element('#lab-toggle').onclick();
+    expect(h.run('labStore')).toBeUndefined();expect(h.run('route')).toBe('map');expect(h.run('save.inProgress')).toEqual(cp);expect(normal(h)).toEqual(before);
+    const after=h.disk();oldToggle();expect(h.run('labStore')).toBeUndefined();expect(h.disk()).toEqual(after);
+  });
   it('진입 전부터 정상 primary·backup·reset 원문을 그대로 보존한다',()=>{
     const h=mainHarness(false,false,true);h.run("switchView('settings')");const before=h.disk();
     expect(h.run('changeLabMode(true)')).toBe(true);expect(normal(h)).toEqual(before);

@@ -1713,6 +1713,25 @@ function renderCampaignMapView(){
   campaignScroll.scrollTop=mapScrollOffset;
   document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach(button=>button.onclick=()=>{if(ownsMap())showStagePreview(Number(button.dataset.level),'map',button);});
 }
+function renderSettingsView(focusedId?:string){
+  $('#settings-view').innerHTML=`<button id="settings-return" class="settings-return">${icon('arrow',18)}${text('settingsReturn')}</button><div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><div class="storage-card" id="storage-card"><p id="save-status"></p><button id="save-retry" class="text-button" hidden></button><button id="save-reload" class="text-button" hidden></button></div><section class="support-note" aria-labelledby="support-title"><h3 id="support-title">${text('support')}</h3><p id="support-email">doeud1410@gmail.com</p></section><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v${APP_VERSION}</p>`;
+  updateSaveStatus(focusedId);
+  for(const id of ['#save-retry','#save-reload'])$(id).addEventListener('blur',()=>updateSaveStatus());
+  const renderedSave=save,renderedGeneration=careGeneration;
+  const renderedControls=new Map(['save-retry','save-reload','music-toggle','sfx-toggle','language','reset'].map(id=>[id,$('#'+id)]));
+  const settingsAction=(id:string)=>!lookDialog.open&&!spaceDialog.open&&!resourceDialog.open&&!careDemo&&currentControl(renderedControls.get(id)!,renderedSave,renderedGeneration);
+  $('#save-retry').onclick=()=>{if(!settingsAction('save-retry'))return;retrySave(save);updateSaveStatus();};
+  $('#save-reload').onclick=()=>{if(!settingsAction('save-reload'))return;if(confirm(text('saveReloadConfirm')))window.location.reload();};
+  $('#settings-return').onclick=()=>{if(currentControl($('#settings-return'),renderedSave,renderedGeneration))switchView(settingsReturnRoute);};
+  renderLabControls();
+  $('#music-toggle').onclick=()=>{if(!settingsAction('music-toggle'))return;save.music=!save.music;audio.setMusicEnabled(save.music);persist();$('#music-toggle').classList.toggle('on',save.music);$('#music-toggle').setAttribute('aria-checked',String(save.music));};
+  const help=document.createElement('button');help.id='tutorial-help';help.className='primary guide-help';help.textContent=text('tutorial');help.onclick=()=>showTutorial('help',help);$('#settings-view').append(help);
+  if(androidAdEntry){const entry=document.createElement('button');entry.id='test-ad-button';entry.className='text-button';entry.textContent=adCopy(save.language).title;entry.onclick=()=>{void showAdDialog();};$('#settings-view').append(entry);}
+  if(androidBillingEntry){const entry=document.createElement('button');entry.id='test-billing-button';entry.className='text-button';entry.textContent=billingCopy(save.language).title;entry.onclick=()=>{void showBillingDialog();};$('#settings-view').append(entry);}
+  $('#sfx-toggle').onclick=()=>{if(!settingsAction('sfx-toggle'))return;save.sfx=!save.sfx;audio.setSfxEnabled(save.sfx);persist();$('#sfx-toggle').classList.toggle('on',save.sfx);$('#sfx-toggle').setAttribute('aria-checked',String(save.sfx));};
+  $<HTMLSelectElement>('#language').onchange=event=>{if(settingsAction('language'))changeLanguage((event.target as HTMLSelectElement).value==='ko'?'ko':'en');};
+  $('#reset').onclick=()=>{if(!settingsAction('reset')||!confirm(text('resetConfirm')))return;const cleared=clearSave();updateSaveStatus();if(!cleared)return;clearCareReaction();careGeneration++;clearTimeout(growthTimer);growthTimer=undefined;growing=false;save=cleared;selectedChapter=1;audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');showTutorial();};
+}
 function renderViews(grew=false){
   if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);
   const readingViews=['village','journal'].map(view=>$('#'+view+'-view'));
@@ -1729,24 +1748,8 @@ function renderViews(grew=false){
   document.querySelector<HTMLButtonElement>('#grow')?.toggleAttribute('disabled',growing||careStorageBlocked()||save.stars<2||save.garden>=5);
   $('#journal-view').innerHTML=`${careDemoPanel('journal')}<div class="subview-heading pip-view-heading"><div class="eyebrow">${text('friendsHeading')}</div><h2>${text('friendsTitle')}</h2></div>${pipCareCard()}${trailJournal(save.language,albumCompleted())}${campaignAlbumCard(save.language,albumCompleted(),selectedAlbumWorld,Boolean(careDemo))}${!careDemo?`<button id="pip-tutorial-help" class="text-button guide-help">${text('tutorial')}</button>`:''}`;
   if(!careDemo)$('#pip-tutorial-help').onclick=()=>showTutorial('help',$<HTMLButtonElement>('#pip-tutorial-help'));
-  $('#settings-view').innerHTML=`<button id="settings-return" class="settings-return">${icon('arrow',18)}${text('settingsReturn')}</button><div class="subview-heading"><div class="eyebrow">PAWBLOSSOM PUZZLE</div><h2>${text('settingsTitle')}</h2><p>${text('settingsDesc')}</p></div><div class="settings-card"><div class="setting-row"><span>${icon('volume',22)}${text('music')}</span><button class="toggle ${save.music?'on':''}" id="music-toggle" role="switch" aria-checked="${save.music}" aria-label="${text('music')}"><i></i></button></div><div class="setting-row"><span>${icon('paw',22)}${text('sfx')}</span><button class="toggle ${save.sfx?'on':''}" id="sfx-toggle" role="switch" aria-checked="${save.sfx}" aria-label="${text('sfx')}"><i></i></button></div><div class="setting-row"><label for="language">${text('language')}</label><select id="language"><option value="en" ${save.language==='en'?'selected':''}>English</option><option value="ko" ${save.language==='ko'?'selected':''}>한국어</option></select></div><p class="sound-note">${text('soundHint')}</p></div><div class="save-note">${icon('leaf',20)}<p>${text('offline')}</p></div><div class="storage-card" id="storage-card"><p id="save-status"></p><button id="save-retry" class="text-button" hidden></button><button id="save-reload" class="text-button" hidden></button></div><section class="support-note" aria-labelledby="support-title"><h3 id="support-title">${text('support')}</h3><p id="support-email">doeud1410@gmail.com</p></section><button id="reset" class="text-button reset-button">${text('reset')}</button><p class="version">Pawblossom Puzzle · v${APP_VERSION}</p>`;
-  updateSaveStatus(focusedId);
-  for(const id of ['#save-retry','#save-reload'])$(id).addEventListener('blur',()=>updateSaveStatus());
-  const renderedSave=save,renderedGeneration=careGeneration;
-  const renderedControls=new Map(['save-retry','save-reload','music-toggle','sfx-toggle','language','reset'].map(id=>[id,$('#'+id)]));
-  const settingsAction=(id:string)=>!lookDialog.open&&!spaceDialog.open&&!resourceDialog.open&&!careDemo&&currentControl(renderedControls.get(id)!,renderedSave,renderedGeneration);
-  $('#save-retry').onclick=()=>{if(!settingsAction('save-retry'))return;retrySave(save);updateSaveStatus();};
-  $('#save-reload').onclick=()=>{if(!settingsAction('save-reload'))return;if(confirm(text('saveReloadConfirm')))window.location.reload();};
-  $('#settings-return').onclick=()=>{if(currentControl($('#settings-return'),renderedSave,renderedGeneration))switchView(settingsReturnRoute);};
-  renderLabControls();
+  renderSettingsView(focusedId);
   bindCareControls();
-  $('#music-toggle').onclick=()=>{if(!settingsAction('music-toggle'))return;save.music=!save.music;audio.setMusicEnabled(save.music);persist();$('#music-toggle').classList.toggle('on',save.music);$('#music-toggle').setAttribute('aria-checked',String(save.music));};
-  const help=document.createElement('button');help.id='tutorial-help';help.className='primary guide-help';help.textContent=text('tutorial');help.onclick=()=>showTutorial('help',help);$('#settings-view').append(help);
-  if(androidAdEntry){const entry=document.createElement('button');entry.id='test-ad-button';entry.className='text-button';entry.textContent=adCopy(save.language).title;entry.onclick=()=>{void showAdDialog();};$('#settings-view').append(entry);}
-  if(androidBillingEntry){const entry=document.createElement('button');entry.id='test-billing-button';entry.className='text-button';entry.textContent=billingCopy(save.language).title;entry.onclick=()=>{void showBillingDialog();};$('#settings-view').append(entry);}
-  $('#sfx-toggle').onclick=()=>{if(!settingsAction('sfx-toggle'))return;save.sfx=!save.sfx;audio.setSfxEnabled(save.sfx);persist();$('#sfx-toggle').classList.toggle('on',save.sfx);$('#sfx-toggle').setAttribute('aria-checked',String(save.sfx));};
-  $<HTMLSelectElement>('#language').onchange=event=>{if(settingsAction('language'))changeLanguage((event.target as HTMLSelectElement).value==='ko'?'ko':'en');};
-  $('#reset').onclick=()=>{if(!settingsAction('reset')||!confirm(text('resetConfirm')))return;const cleared=clearSave();updateSaveStatus();if(!cleared)return;clearCareReaction();careGeneration++;clearTimeout(growthTimer);growthTimer=undefined;growing=false;save=cleared;selectedChapter=1;audio.setMusicEnabled(save.music);audio.setSfxEnabled(save.sfx);localize();updateWallet();renderViews();startLevel(1);switchView('puzzle');showTutorial();};
   // 같은 돌봄 세대의 읽기 상태를 먼저 복원한 뒤 기존 초점·스크롤을 잇습니다.
   for(const view of readingViews)view.dataset.readingGeneration=String(careGeneration);
   for(const {id,open} of reading){
@@ -1806,6 +1809,7 @@ function switchView(name:string){
   if(name!=='village'&&(gardenActivity||journeyMoment||gardenTendingPlot!==undefined))clearCareReaction();
   route=name;$('#app').dataset.route=name;$('.bottom-nav').hidden=name==='puzzle'||name==='settings';document.querySelectorAll<HTMLElement>('.view').forEach(view=>view.hidden=view.id!==`${name}-view`);
   if(name==='village'||name==='map')renderViews();
+  else if(name==='settings')renderSettingsView();
   if(name==='map'&&mapPositioned!==mapCurrentLevel()){revealMapStage();mapPositioned=mapCurrentLevel();}
   document.querySelectorAll<HTMLButtonElement>('.bottom-nav button[data-route]').forEach(b=>{b.classList.toggle('active',b.dataset.route===name);if(b.dataset.route===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   updateSaveStatus();
