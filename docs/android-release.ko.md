@@ -8,6 +8,18 @@
 
 인트로 첫 합성 프레임 전 video를 가리는 변경입니다. artifact.json의 빌드 시점 deviceTest:false는 유지하며, 아래 실물 후속은 별도 `device-first-frame-verification-20261107.json`에 기록했습니다. Drive 업로드·청취/최종 믹스·실서비스 승인은 하지 않았습니다.
 
+### 새 APK 가로 배치·홈 전환 WebAudio 관측
+
+같은 b936 APK/SM-N986N·Android13에서 user0/display0의 원래 WM·명시된 두 회전 설정을 읽고 일치시킨 뒤 `lock 1`로 전환했습니다. 실제 XML rotation1·**808×387/DPR2.625**, 설정/재시작/셔플/테스트 버튼 각각44px·가시/centerHit, 화면 안의 정사각 canvas315.607px과 root의 가로 PNG 시각 확인을 마쳤습니다. 15개 CDP 전부 일반3키 원문·전체Paw4키·1판 전체CP23이동860점/도구[]·셔플1이 같습니다. 정상 보드 행동0입니다.
+
+초기 **free/accelerometer_rotation1/user_rotation0**은 원각도lock→반영 확인→free→전체값 확인 순서로 flow와 close에서 복구했습니다. 원14:45:07.2747577/신규14:53:07.2747577/전체14:56:07.2747577UTC 안 **14:45:48.9099547UTC 실제 반환**·Nativequery181개exit0/정리오류·강제종료0·동결24/production108전수SHA·false3/sourceclean·기존ADB49852 유지입니다. free의 순간 물리 센서 각도 원복·회전 뒤 실제 터치 교환/도구 사용·다른OEM 승인과 구분합니다. XML WebView2056×1017과 CSS×DPR2121×1015.875의 가로축65px 차이는 원문대로 남기며 원인을 status bar로 확정하지 않습니다.
+
+첫 passiveAudio 차례는 HOME 후 실제 `visibility:hidden`인데 `hasFocus:true`가 유지돼, 숨김과 focusfalse를 함께 요구한 **QA 조건으로 중단**됐습니다. WebAudio24표본·protocol완료·running→suspended와 **14:59:14.4092183UTC 자원반환**은 별개로 남깁니다. 제품 결함이나 복귀 성공으로 바꾸지 않습니다. 새 audio-recovery는 hidden/focus를 분리하고 설치·음량/설정·외부 포커스 helper 없이 같은 HOME→Activity 복귀를 다시 검수했습니다.
+
+실제 같은 context의 **running→suspended→running**·realtime24표본/protocol오류0입니다. 요청·응답 모두 구간 안인 전경4표본(Δ3.088초), hidden3(Δ0), 복귀15(Δ14.6507초)을 확인했고 전환 중2표본은 phase에서 제외했습니다. hidden의 hasFocus=true도 보존합니다. 14개 CDP 전부 일반3raw/전체4키/전체CP가 기준과 같습니다. 원15:04:34.7093813/신규15:08:34.7093813/전체15:11:34.7093813UTC 안 **15:05:27.5381732UTC 실제 반환**, Nativequery111exit0·flow/close각0·동결35/108SHAfalse3/sourceclean·기존서버/양측통지입니다.
+
+`device-landscape-verification-20261107.json`·`device-audio-lifecycle-verification-20261107.json`을 APK 옆에 별도로 보존했습니다. OSfocus dump는 두 번 모두 현재 엄격 파서가 거절해 전역 audio 원문을 RAM에서 폐기하고 stdout/stderr0바이트만 남겼습니다. **WebAudio 상태/시간 관측은 실제 청취·OSfocus 소유권·최종 믹스 승인이 아닙니다.** 빌드 시점 artifact.deviceTest:false와 이전 실패를 유지합니다.
+
 ### 새 APK native 이어하기·최근 앱 카드 제거 후 복귀
 
 동일 SM-N986N/Android13에서 설치된 b936 APK 바이트를 다시 대조하고 native TAB/Enter로 지도→명시 이어하기→퍼즐을 검수했습니다. eighth-fast의 전체87개 Native 신원 query가 exit0·자체 임시파일 제거/강제종료0이며, 일반3키와 전체Paw4키·1판 전체CP23이동860점/도구[]·셔플1이 같습니다. 원13:38:53.843/신규13:46:53.843/전체13:49:53.843UTC 안 **13:39:21.5899579UTC 실제 반환**입니다.
