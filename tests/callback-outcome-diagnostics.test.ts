@@ -2,6 +2,7 @@ import {describe,it,expect,vi} from 'vitest';
 import {Worker} from 'node:worker_threads';
 import {fork} from 'node:child_process';
 import {once} from 'node:events';
+import {DatabaseSync} from 'node:sqlite';
 import {mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {basename,dirname,join,resolve} from 'node:path';
@@ -180,6 +181,38 @@ describe('선택 SQLite DTO의 엄격 경계',()=>{
       if(worker)await worker.terminate();ledger.close();
       const target=resolve(folder);
       if(dirname(target)!==resolve(tmpdir())||!basename(target).startsWith('pawblossom-callback-sqlite-'))throw new Error('unsafe-test-cleanup-path');
+      rmSync(target,{recursive:true,force:true});
+    }
+  });
+  it('실제 생성자 prepare 실패도 기존 결과1개에 SQLite 진단과 연결 닫힘을 보존합니다',async()=>{
+    const folder=mkdtempSync(join(tmpdir(),'pawblossom-callback-ctor-sqlite-')),path=join(folder,'reward.sqlite'),key=new Uint8Array(32).fill(83);
+    const query='synthetic-private-ctor-query',context={ownerId:'synthetic-private-ctor-owner',roundId:'synthetic-private-ctor-round'},fixtureSql='CREATE TABLE synthetic_private_fixture (value TEXT) STRICT';
+    let fixture:DatabaseSync|undefined,worker:Worker|undefined;
+    try{
+      fixture=new DatabaseSync(path);fixture.exec(fixtureSql);fixture.close();fixture=undefined;
+      worker=new Worker(new URL('./helpers/reward-ledger-worker.mjs',import.meta.url),{workerData:{path,key:[...key],policy,entries:[keyEntry()],now:epoch,query,context,diagnostics:true,sqliteDiagnostics:true},execArgv:['--experimental-strip-types']});
+      const messages:unknown[]=[];worker.on('message',message=>messages.push(message));
+      expect((await once(worker,'message'))[0]).toBe('ready');const output=once(worker,'message');worker.postMessage('go');
+      const envelope=(await output)[0],trace=createCallbackOutcomeTrace(1,{sqliteDiagnostics:true});
+      expect(Object.keys(envelope)).toEqual(['kind','result','diagnostic','sqliteDiagnostic']);
+      expect(receiveCallbackOutcome(envelope,trace,0)).toEqual({kind:'worker-error'});
+      expect(trace.workers[0]).toMatchObject({stage:'close',report:'received',resultStage:'constructor',errorStage:'constructor',kind:'worker-error',closeOutcome:'not-opened',observationFailed:false,nativeObservation:'not-observed',sqlite:{report:'received'}});
+      const diagnostic=trace.workers[0].sqlite!.diagnostic!;
+      expect(diagnostic.sqliteErrors).toEqual([{operation:'database-prepare',site:'unknown',phase:'reward-open',errorCode:'ERR_SQLITE_ERROR',extendedCode:1,baseCode:1,transactionActive:null,connectionClosed:true}]);
+      expect(diagnostic.sqliteTransactions.map(tx=>[tx.phase,tx.site,tx.outcome])).toEqual([['reward-open','transaction-begin','returned'],['reward-open','transaction-rollback','returned']]);
+      expect(diagnostic.sqliteErrorsTruncated).toBe(false);expect(diagnostic.sqliteTransactionsTruncated).toBe(false);expect(diagnostic.sqliteTransactionObservationFailed).toBe(false);
+      expect(diagnostic.sqliteHook).toEqual({installation:'installed',restoration:'restored',installedMethods:5,restoreFailures:0});
+      expect(trace.truncated).toBe(false);expect(trace.observationFailed).toBe(false);
+      for(const serialized of [JSON.stringify(envelope),callbackOutcomeContext(trace)]){
+        for(const privateValue of [path,query,context.ownerId,context.roundId,Buffer.from(key).toString('hex'),fixtureSql,'SELECT profile FROM reward_meta','no such table: reward_meta','reward-ledger-open-failed'])expect(serialized).not.toContain(privateValue);
+        expect(serialized).not.toMatch(/"(?:message|stack|errstr|sql|args|receiver)"\s*:/);
+      }
+      await worker.terminate();worker=undefined;
+      expect(messages).toHaveLength(2);expect(messages[0]).toBe('ready');expect(messages[1]).toBe(envelope);
+    }finally{
+      if(worker)await worker.terminate();fixture?.close();
+      const target=resolve(folder);
+      if(dirname(target)!==resolve(tmpdir())||!basename(target).startsWith('pawblossom-callback-ctor-sqlite-'))throw new Error('unsafe-test-cleanup-path');
       rmSync(target,{recursive:true,force:true});
     }
   });
