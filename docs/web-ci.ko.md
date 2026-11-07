@@ -1,5 +1,11 @@
 # 웹 자동 검증
 
+## 2026-11-07 · PR531 실물 시험 진행 기록 첫 CI
+
+- head `5d337c53ac23e3fa9f7ed44c77ed76b0d99004d5`의 첫PR `42361307632`와 main `86760b6efe18a0da3423f687a81701db6ba91322`의 첫push `42362072228`는 모두 attempt1입니다.
+- 양쪽 Node22/24 각각85파일4,402·스토어19·타입3/production·testing웹/carrier 성공 원문을 QA7/`526-phone-lab-first-{pr,main}-*`에 보존했습니다. whole-tree 일치와 종속PR/worktree/원격head를 확인한 뒤 기록 브랜치를 정리했습니다.
+- 문서 기록이며 제품69ec361·APK8bd64f…와 실물 세로/별도 시험 진행 검수 범위를 유지합니다.
+
 ## 2026-11-07 · PR530 정상46–47 기록 첫 CI
 
 - head `9b63a912549f1940ccb62bd5a58074d2194b4b11`의 첫PR `42359620894`와 main `63bd54194f4b7e9b64c52b2789eca5e1fbf7732f`의 첫push `42360293312`는 모두 attempt1입니다.
