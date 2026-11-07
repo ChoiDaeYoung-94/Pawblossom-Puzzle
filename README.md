@@ -33,11 +33,11 @@ npm run build:test
 
 ## 최신 테스트 전달
 
-최신 로컬 testing APK는 빌드 소스 `0e44e8a`/첫프레임 제품 코드 `453ec11`의 **`Pawblossom-Puzzle-v0.1.7-2026-11-07-0e44e8a-debug.apk`**입니다. 0.1.7/code8·54,882,419바이트이며 기존 초반 도구·별도 시험 진행·카툰 꽃밭·가로 안내/도구 선택 개선에 인트로 첫 영상 프레임 전 가림을 추가했습니다. 작업 폴더 밖 `Pawblossom-builds/2026-11-07-0e44e8a-intro-first-frame/`에 보존했습니다. 빌드·PC4조건 검수와 새 APK의 실제 단말 후속을 구분합니다. 정확 경로·SHA256·서명/권한·실물 검수 범위는 [Android 기록 상단](docs/android-release.ko.md)을 확인해 주세요. Drive에 새로 업로드하지 않았으며, 같은 버전 번호이므로 날짜·소스·해시로 구분합니다.
+최신 로컬 testing APK는 소스 **73c3cef**의 **`Pawblossom-Puzzle-v0.1.7-2026-11-08-73c3cef-debug.apk`**입니다. 0.1.7/code8·54,882,419바이트·SHA256 `95a262d05d61d6b7ae770d640c1dce356c5193f294b1eabab93e0ce7859f410a`이며 `Pawblossom-builds/2026-11-08-73c3cef-tool-order-settings/`에 보존했습니다. 도구 표시3/4/6/8/10과 도구소개 직후 설정복귀/Lab종료 수정을 포함합니다. SM-N986N/Android13에서 no-clear 업데이트·설치바이트SHA/일반진행 보존·자연4소개 직후 Lab종료를 확인했습니다. PC 정상진행63완료/64부분과 실물 일반1판은 다른 프로필입니다. 정확한 근거와 직전APK에서만 검수한 최근앱·가로·WebAudio 범위는 [Android 기록 상단](docs/android-release.ko.md)을 확인해 주세요. 같은 버전 번호이므로 날짜·소스·해시로 구분하며 Drive에 업로드하지 않았습니다.
 
-같은 새 APK를 SM-N986N/Android13에 데이터 삭제 없이 업데이트하고 실제 설치 바이트를 확인했습니다. native 이어하기와 최근 앱의 자기 카드 제거1회→MAIN/LAUNCHER cold재실행 뒤 정상1판23이동860점·일반3키/전체CP 보존을 검수했습니다. 홈 아이콘 직접 탭·반복/모든OEM·청취·실서비스 승인과 구분하며, 정확 범위는 위 Android 기록에 보존합니다.
+직전 b936 APK는 같은 SM-N986N/Android13에 데이터 삭제 없이 업데이트하고 실제 설치 바이트를 확인했습니다. 그 버전에서 native 이어하기와 최근 앱의 자기 카드 제거1회→MAIN/LAUNCHER cold재실행 뒤 정상1판23이동860점·일반3키/전체CP 보존을 검수했습니다. 이 최근앱 검수를 최신95a APK에서 반복한 것은 아니며, 홈 아이콘 직접 탭·반복/모든OEM·청취·실서비스 승인과 구분합니다.
 
-추가로 같은 실물의 강제 가로808×387 배치·44px 핵심버튼·정사각보드와 저장 보존/원회전 설정 복구를 확인했습니다. HOME→Activity 복귀에서는 같은 WebAudio context가 running→suspended→running으로 바뀌고 숨김 중 시간 진행이 멈춘 것을 관측했습니다. 회전 후 터치 조작·실제 청취/OSfocus 소유권은 별도이며, APK 옆의 검수 sidecar에 범위를 기록했습니다.
+직전 b936 APK에서 추가로 같은 실물의 강제 가로808×387 배치·44px 핵심버튼·정사각보드와 저장 보존/원회전 설정 복구를 확인했습니다. HOME→Activity 복귀에서는 같은 WebAudio context가 running→suspended→running으로 바뀌고 숨김 중 시간 진행이 멈춘 것을 관측했습니다. 최신95a의 해당 반복검수·회전 후 터치 조작·실제 청취/OSfocus 소유권은 별도이며, 해당 APK 옆의 검수 sidecar에 범위를 기록했습니다.
 
 이전 전달·검수 이력:
 
