@@ -22,9 +22,9 @@
 #tool-target-controls{height:52px;max-height:52px;min-height:52px}
 #tool-target-controls button{min-width:44px;min-height:44px}
 .tool-info-actions button{min-height:44px}
-.puzzle-tools-bar[data-selecting="true"]{min-height:52px}
+.puzzle-tools-bar{min-height:52px}
 @media(orientation:landscape){
- .puzzle-tools-bar{min-height:44px}
+ .puzzle-tools-bar{min-height:52px}
  .puzzle-tools-bar .tool-open{min-width:44px;min-height:44px}
  .puzzle-tools-bar #shuffle{width:44px;flex-basis:44px;height:44px;min-height:44px}
  .puzzle-tools-bar #tool-target-controls{position:relative;inset:auto}
