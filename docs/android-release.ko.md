@@ -1,3 +1,25 @@
+## 최신 로컬 통합 APK · 2026-11-07 · #526 · b219c47
+
+파일은 `C:/Users/user/Documents/ChatGPT/Pawblossom-builds/2026-11-07-b219c47-landscape-guide/Pawblossom-Puzzle-v0.1.7-2026-11-07-b219c47-debug.apk`입니다. **0.1.7/code8 · 54,882,419바이트 · SHA256 `8bd64f36fb2ea5570b5df4302303e20f0f98cc77bdf379616a54377667492954`**입니다. 낮은 가로 안내의 두열 본문/별도footer와44px 조작부·일반/선택52px고정바를 포함한 제품69ec361입니다. 이전 카툰 기본꽃밭·시험진행/현재·누적완료/초기화·초반도구·설정복귀도 포함합니다. 전체원화/모든정원 카툰화와 사용자 감각 승인은 남습니다.
+
+정확 sourceb219c475221c66b987f0fad207300ba56fcea701의 첫 main42353109493 attempt1 양Node85/4,401·스토어19·타입3/두웹빌드/carrier 성공 뒤 제작했습니다. 첫PR42352493657와 head/main whole-tree7bbf49a9 일치·종속PR/worktree/원격head를 확인해 브랜치를 정리했습니다. 이후 f490606의 변경은 검사/문서이며 제품바이트는 같습니다. SDK/네이티브 코드·버전·키를 바꾸지 않았습니다.
+
+검증된 전용JDK21과 기존SDK36을 읽기만 사용했습니다. 첫10단계 exit0·기존 단일v2 서명자/권한·비웹494개 동일·내장웹119개/원본91개 전수SHA·ZIP660항목 CRC정상/중복0·testing true3을 대조했습니다. APK 바이트 수가 이전과 같다는 사실을 최적화로 해석하지 않습니다. production108/Android public110 false3은 실제 UI검수의108파일과 전수SHA가 같게 복원했고 local.properties 원문과SDK핵심3·동결helper도 일치합니다.
+
+원08:04:31/신규08:16:31/전체08:19:31UTC 안08:06:14.3126766UTC 실제반환입니다. 직접child10 exit0·live자손61표본·관측36신원잔존/unknown0·해당JDK/Node생성창잔존0입니다. 샘플링은 전수실시간관측이나 OS전체process0을 뜻하지 않습니다. 준비용관측fixture는 최초tick완전일치로0표본이 된 실패를 보존했고, 실제StartTime/CIM의0.4–0.5마이크로초 차이에1ms오차와live누락/종료표본 구분을 적용한 별도검사가 성공했습니다. 첫main CI도 main/push/workflow/Node22·24와 정확SHA/attempt에 결속했습니다. 근거는 Git밖526-{artifact-proof,build-status,production-restored,actual-return,inputs}.json과 원문입니다.
+
+## 2026-11-07 · #526 fourth 실물 업데이트·세로 UI
+
+third와 분리한 새helper/lease/증거폴더로 같은 SM-N986N/Android13을 검사했습니다. 설치된 구APK SHA6488c087…778cc0f를 실제바이트로 읽고, 정상1판23이동860점의 primary원문·전체회차·영구값을 기존기록과 전수대조했습니다. ownforce-stop/PID부재→old COLD를 확인했으며 이전backup이 최신primary로 회전한 사실은 별도필드입니다. 데이터제거 없이 새APK를1회 `-r -t` 설치하고 실제설치APK54,882,419B/SHA8bd64f…92954를 읽어 대조했습니다. 새PID부재→new COLD도 원문으로 확인했습니다.
+
+업데이트 전후와 최종 UI검수 뒤 **관측Paw2키 전체원문이 같고 정상1판23이동860점·0별0코인**입니다. 실제viewport는 **세로411×808/DPR2.625**였습니다. 미리보기의23이동/남은딸기7·당근0→명시이어하기→설정→안내4쪽→실제두칸실습→명시닫기→이전화면 버튼의 퍼즐복귀를 확인했습니다. 설정44×44·셔플/잠긴도구44.4286×48px 등 실제접근한조작의 CSS크기/중앙hit를 읽었습니다. 최고해금1인 이프로필로는 해금대상의확정/취소를 열지 않았습니다. 가로Android·최근카드스와이프제거·시험진행namespace/해금대상과 다른OEM/보안잠금·청취는 후속입니다.
+
+HTML dialog의 Native접근성 XML에서 WebView가0개/여러개인 보조코드중단은 입력전에 멈춘 하네스한계로 보존했습니다. 첫실측Native WebView원점/DPR에 현재viewport·동일nativefocuswindow·현재CSS중앙hit를 다시 대조한 사본으로 실제터치했습니다. CDP는 DOM과 저장값을 읽기만 했으며 엔진/RNG 상태를 주입하지 않았습니다. third 원본/초기준비실패/수정사본은 보존했고 PC원정상45/46·초반1–10은 미접근입니다.
+
+원08:22:04/신규08:34:04/전체08:37:04UTC이며 마지막일반입력과최종회차읽기는신규한도안입니다. 앱종료/PID부재·HOME요청·본인MP4/XML부재·소켓종료는08:34:52.931994UTC에 끝났고 최종server/선택폰guard는08:36:45UTC였습니다. **root실제반환08:37:39.345105UTC는 전체한도보다35.345초늦어 withinOriginalReturnDeadline=false로 보존/양측통지했습니다.** 감사·통지 지연을 기한준수로 해석하지 않습니다. 새공유ADB49852/08:22:08.4676720UTC/동일LD14·5037은 의도적으로 유지하고 다음사용전fresh대조를 요청했습니다. 초기 부재에서 정상start1회이며 kill/reconnect0입니다.
+
+새COLD 원영상은 확보했으며 전프레임 분석은 후속입니다. 첫녹화준비는 출력파일초기화만 확인하므로 captureFirstFrameReadyProven=false입니다. 원영상/serial·원문은 Git밖 phone-fourth/·phone-fourth-actual-return.private.json·input핀에만 보존하고 원격에 올리지 않습니다. 실키/env·실상품/과금·공개배포/Drive·최종믹스 변경0입니다.
+
 ## 2026-11-07 · #520 실물 퍼즐·재실행·화면 복귀
 
 세번째 차례는 최신518APK를 재설치하거나 초기화하지 않고 같은 SM-N986N의 기존 미행동1판26이동0점 자동checkpoint부터 대조했습니다. 지도·미리보기에서 명시적으로 시작한 뒤 실제 두칸터치 교환, 자연 생성폭탄 터치, 아래방향 swipe의3행동을 처리했습니다. 최종 정상1판23이동860점·수집[5,10,2,3,8,10]·도구사용[]·셔플1이며 미완료/0별/0코인/1해금입니다. 첫 차례의 '명시1판시작0'과 부팅 때 이미 생성된 미행동checkpoint를 구분합니다.
@@ -26,7 +48,7 @@ window policy secure=false 조건에서 native sleep의 실제 상태는 Dozing�
 
 근거는 Git 밖 Pawblossom-builds/qa/integration-20261107/phone-first-actual-return.json, phone-first/installed-apk-proof.json, 각 native stdout·PNG·read-only CDP 원문과 lease/helper 원본·수정사본입니다. private 원문/폰serial은 원격 업로드하지 않습니다. 실광고/상품·과금·키/env·공개배포/Drive·최종믹스 변경0입니다.
 
-## 최신 로컬 통합 APK · 2026-11-06 · #518 · f2564fe
+## 이전 로컬 통합 APK · 2026-11-06 · #518 · f2564fe
 
 기본 꽃밭을 자체 SVG 카툰으로 바꾸고 세 테마·다섯 화단·소유 장식·고정된 몸통/움직이는 나비 날개를 본화면과 미리보기에 함께 적용한 제품 `71c7b84aad348f5f809cb255b7c376d5452bf54e`를 포함합니다. 이전 fcded21의 시험 진행·현재/누적 즉시완료·초기화, 퍼즐 하단 메뉴/설정 복귀·인트로·초반 도구·중앙 하단 메뉴·지도 복귀 개선도 포함합니다. 전체 정원 공간/원화의 카툰 재제작과 사용자 감각 승인은 남습니다.
 
