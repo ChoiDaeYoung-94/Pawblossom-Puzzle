@@ -1,5 +1,11 @@
 # 웹 자동 검증
 
+## 2026-11-07 · #537 callback 공통 시간축 관측 첫 CI
+
+PR538 head81aff55의 첫PR42380226881과 main4b016b1의 첫42380847116은 attempt1·Node22/24 각각86파일4,418개·스토어19·타입3/production·testing·carrier가 성공했습니다. QA7/`537-callback-first-{pr,main}-*`에 첫 원문을 보존했고 head/main whole-tree47829661 일치·종속PR/worktree/원격head 확인 뒤 브랜치를 정리했습니다. 제품/APK는0e44/b936으로 같습니다.
+
+원래 constructor 실패는 수신된 실패이며 숫자코드/site/잠금owner는 여전히 미확정입니다. 다음 자연 실패의 기존 DTO로 실제 BEGIN/base5 여부와 같은 batch의 관측 transaction 구간을 비교합니다. 완전하지 않은 clock/수집/잘림은 미확정이며, 구간 겹침도 SQLite owner 증명이 아닙니다. 성공 시간의 변동이나 알려진 parent-holder 합성 재현을 원인 해결로 합산하지 않습니다.
+
 ## 2026-11-07 · 정상49 기록과 첫 프레임 수정의 첫 CI
 
 | 변경 | PR head / 첫 run | main / 첫 run | 양 Node 결과 |

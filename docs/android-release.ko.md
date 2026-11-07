@@ -8,6 +8,16 @@
 
 인트로 첫 합성 프레임 전 video를 가리는 변경입니다. artifact.json의 빌드 시점 deviceTest:false는 유지하며, 아래 실물 후속은 별도 `device-first-frame-verification-20261107.json`에 기록했습니다. Drive 업로드·청취/최종 믹스·실서비스 승인은 하지 않았습니다.
 
+### 새 APK native 이어하기·최근 앱 카드 제거 후 복귀
+
+동일 SM-N986N/Android13에서 설치된 b936 APK 바이트를 다시 대조하고 native TAB/Enter로 지도→명시 이어하기→퍼즐을 검수했습니다. eighth-fast의 전체87개 Native 신원 query가 exit0·자체 임시파일 제거/강제종료0이며, 일반3키와 전체Paw4키·1판 전체CP23이동860점/도구[]·셔플1이 같습니다. 원13:38:53.843/신규13:46:53.843/전체13:49:53.843UTC 안 **13:39:21.5899579UTC 실제 반환**입니다.
+
+그 뒤 inspection 차례에서 실제 Samsung launcher의 유일한 Paw 카드·own task와 새 XML/PNG를 확인했습니다. 새 recents-swipe 차례는 같은 식별을 다시 한 뒤 **자기 카드만 위로1회 제거**했습니다. 성공한 upstream task 조회에서 own task 부재와 `pidof` exit1/출력0을 확인한 뒤, 명시적 MAIN/LAUNCHER intent로 `Status: ok / COLD` 재실행했습니다. 홈 아이콘을 직접 탭한 검수와 구분합니다.
+
+재실행과 native 이어하기 뒤 **22개 CDP 스냅샷 전부 일반3키 원문·전체Paw4키·전체CP가 기준과 일치**하며, root가 복귀한1판23이동860점·같은 보드 화면을 직접 확인했습니다. 정상 보드 행동/재설치/영상 녹화0입니다. Native query179개가 각각 exit0·기한준수·임시파일 제거/정리오류·강제종료0이며, flow/close도각exit0입니다. 원14:17:03.4022502/신규14:25:03.4022502/전체14:28:03.4022502UTC 안 **14:17:55.8330874UTC 실제 반환**·동결24/production108전수SHA·false3/sourceclean·기존ADB49852 유지·양측 통지를 완료했습니다.
+
+APK 옆 `device-continue-verification-20261107.json`·`device-recents-swipe-verification-20261107.json`에 별도 검수 근거를 보존했습니다. 빌드 시점 artifact.deviceTest:false와 seventh의 부분 성공은 덮지 않습니다. 해당 기기의 카드 제거1회와 재진입 근거이며, 반복/모든OEM·과거 앱 카드 오류의 근본 원인·가로 화면·청취/오디오 포커스·실서비스 승인은 아닙니다.
+
 ### 새 APK 실물 업데이트·인트로 후속 · seventh
 
 SM-N986N/Android13에 기존 b219 APK의 실제 SHA를 확인한 뒤 **데이터 삭제 없이 한 번 업데이트**했습니다. 기기 안 새 APK의 실제 바이트 SHA가 위 b9367a3e…와 같습니다. 업데이트 전·후 cold 시작의 일반3키(primary/backup/reset·부재null포함), 관측한 전체 Paw4키, **1판 전체 회차·23이동860점/도구[]·셔플1**이 정확히 같습니다. 정상 보드 행동은0입니다.
