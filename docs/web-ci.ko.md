@@ -1,5 +1,13 @@
 # 웹 자동 검증
 
+## 2026-11-07 · #527 알려진 생성자 BUSY의 기존 부모 진단 전달
+
+별도 정상fixture RewardLedger를 닫은 뒤 부모 DatabaseSync holder가 DELETE journal mode에서 BEGIN IMMEDIATE를 잡습니다. 기존 재시도 없는 callback worker1개를 opt-in 진단으로 실행하고 결과와 명시terminate뒤까지 holder의 open/transaction true를 확인했습니다. 첫 관련1파일29개/1.92초·타입3설정·독립읽기새P1/P2없음이며 제품·worker/helper·SQL/500ms·기존3worker/IPC/close/retry는 바꾸지 않습니다.
+
+기존worker-error/constructor·외부not-opened와 실제database-exec/transaction-begin/reward-open/ERR_SQLITE_ERROR/extended5/base5·transactionActivefalse/nativeconnectionClosedtrue를 부모에서 검사합니다. BEGIN이 내부try전에 실패하므로 transaction-begin/threw 한행만 기대하고 ROLLBACK을 기대하지 않습니다. hook5설치/복원실패0·관측/잘림false, envelope전체와 부모투영의 경로/query/합성owner/round/key·SQL·message/stack누출0, 종료까지ready1/result1을 확인합니다. finally는 앞 단계가 실패해도 worker종료·holder rollback/close·fixtureclose·전용경로검사/삭제를 각각 시도합니다. 시간기반해제·500ms정확시간assert와 자연workerexit 주장은 없습니다.
+
+이는 알려진 합성holder의 안전한 진단전달 회귀입니다. 원래 간헐CI의 잠금owner/동일site·#122 근본원인 해결은 아닙니다. UI/APK용main b219를 건드리지 않는 별도 worktree에서 준비했으며 정확첫PR/mainCI·원문은 후속입니다.
+
 ## 2026-11-07 · #524 낮은 가로 안내와 도구 선택 바
 
 제품69ec361은 낮은 가로 화면에서 안내 그림과 설명을 두 열로 나누고, 본문만 스크롤되도록 하단의 이전/다음/닫기를 분리했습니다. 실습 ID·입력 바인딩·합성click 방지 지연 초점과 기존 저장/RNG/재화는 유지했습니다. 실제 셔플·도구 열기·확정/취소·도구 안내 버튼은 최소44px로 맞췄습니다. 일반/선택 도구 바는52px로 같게 유지합니다.
