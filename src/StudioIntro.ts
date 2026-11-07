@@ -21,6 +21,7 @@ export function showStudioIntro(host:HTMLElement,prefs:StudioPreferences,reduce=
   const wasHidden=startup?.hidden??false,oldAria=startup?.getAttribute('aria-hidden');
   if(startup){startup.hidden=true;startup.setAttribute('aria-hidden','true');}
   let done=false,resolve!:()=>void;
+  let frameCallback:number|undefined,watchProgress=false;
   const timers:ReturnType<typeof setTimeout>[]=[];
   const finished=new Promise<void>(value=>{resolve=value;});
   const finish=()=>{
@@ -28,6 +29,8 @@ export function showStudioIntro(host:HTMLElement,prefs:StudioPreferences,reduce=
     for(const timer of timers)clearTimeout(timer);
     root.removeEventListener('keydown',onKey);
     video.removeEventListener('ended',finish);video.removeEventListener('error',finish);
+    if(watchProgress)video.removeEventListener('timeupdate',onProgress);
+    if(frameCallback!==undefined){try{video.cancelVideoFrameCallback(frameCallback);}catch{/* 종료한 미디어의 콜백 취소 실패는 무시합니다. */}frameCallback=undefined;}
     doc.removeEventListener('visibilitychange',onVisibility);doc.defaultView?.removeEventListener('pagehide',finish);
     video.muted=true;
     try{video.pause();}catch{/* 깨진 미디어도 게임 진입을 막지 않습니다. */}
@@ -39,6 +42,8 @@ export function showStudioIntro(host:HTMLElement,prefs:StudioPreferences,reduce=
   };
   const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();finish();}};
   const onVisibility=()=>{if(doc.hidden)finish();};
+  const reveal=()=>{if(!done)video.setAttribute('data-frame-ready','true');};
+  const onProgress=()=>{if(!video.paused&&video.readyState>=2&&video.currentTime>0)reveal();};
   root.addEventListener('keydown',onKey);
   video.addEventListener('ended',finish);video.addEventListener('error',finish);
   doc.addEventListener('visibilitychange',onVisibility);doc.defaultView?.addEventListener('pagehide',finish);
@@ -50,6 +55,8 @@ export function showStudioIntro(host:HTMLElement,prefs:StudioPreferences,reduce=
     poster.hidden=!staticOnly;video.hidden=staticOnly;
     if(staticOnly)timers.push(setTimeout(finish,1200));
     else {
+      if(typeof video.requestVideoFrameCallback==='function')frameCallback=video.requestVideoFrameCallback(()=>{frameCallback=undefined;reveal();});
+      else {watchProgress=true;video.addEventListener('timeupdate',onProgress);}
       video.src='/assets/brand/quad-d-intro.mp4';
       const play=(mutedRetry=false)=>{
         if(done)return;

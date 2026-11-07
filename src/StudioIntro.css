@@ -1,5 +1,6 @@
 .studio-intro{position:fixed;inset:0;z-index:1000;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);place-items:center;background:#10151c;color:#f5f2eb;overflow:hidden}
 .studio-intro-film{grid-area:1/1;display:block;width:max(100%,720px);max-width:min(1280px,284vh);max-width:min(1280px,284dvh);object-fit:contain;aspect-ratio:16/9}
 .studio-intro-film[hidden],#app-startup[hidden]{display:none}
+.studio-intro video:not([data-frame-ready]){opacity:0;pointer-events:none}
 .studio-boot-retry{min-width:112px;min-height:48px;padding:12px 20px;border:0;border-radius:24px;background:#68416f;color:#fff;font:600 16px/1.2 system-ui,sans-serif;cursor:pointer}
 .studio-boot-retry:focus-visible{outline:3px solid #68416f;outline-offset:4px}
