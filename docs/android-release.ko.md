@@ -1,3 +1,19 @@
+## 2026-11-07 · #520 첫 실물 Samsung 검수
+
+사용자가 이번에 LD와 연결 공기계의 사용을 허용했습니다. 시간제한 없이 주간잔여5%(사용95%)까지 검증·정리·보고하며 이전 PC-only·19시/30%는 완료 이력입니다. 최초새조회0%와 첫차례뒤4%는 과거와 별도 관측이고 사용량 초기화/예약은 만들지 않았습니다.
+
+첫 선택기기는 Samsung SM-N986N/Android13/ARM64입니다. serial과 식별 원문은 Git 밖 private 근거에만 보존합니다. 기존 Pawblossom은 미설치였고 pm path는 exit1/빈 결과, 별도 package 조회도 부재였습니다. 최신518APK를 데이터 제거 없이 첫 설치했으며 기기 안 실제APK54,882,419B/SHA256 6488c087ee3d49489c007d98a9bce5137c558ba3542fe3525699c58ff778cc0f가 전달본과 같았습니다. 버전0.1.7/code8만으로 판정하지 않았습니다. Android double-tilde 설치경로의 첫 parser 중단과 엄격한 문자범위 수정 뒤 실제바이트 대조를 구분합니다.
+
+첫 cold 실행은 Status ok·TotalTime846ms/WaitTime855ms였고 가로WebView808×387/DPR2.625에서 KO4쪽·두칸터치/딸기3매치·명시안내완료를 확인했습니다. 기동시간 한 표본이며 일반 성능으로 확대하지 않습니다. 패널밖 swipe와 내부 swipe를 구분했고 실제 내부scrollTop170.2857 뒤 다음 버튼/다음 페이지로 진행됐습니다. 가로안내 반복스크롤은 UX후보이며 진행불가로 확정하지 않습니다. 정상1판 명시시작0입니다.
+
+지도에서 HOME→최근앱→관측한 Pawblossom 자기카드 직접터치→지도 복귀가 성공했습니다. 복귀 전후 동일앱PID와 localStorage 전체원문이 같았습니다(존재키2개/reset키부재). 새프로필은 tutorialSeen만 저장된0별/0코인/1해금입니다. 퍼즐회차·프로세스재생성·잠금·최근앱스와이프제거·업데이트저장은 아직 검사하지 않았고 #375 원인해결/모든Samsung·OEM 승인으로 확대하지 않습니다. PC정상45/46·초반1–10은 열지 않았습니다.
+
+원시작06:34:13.5964612/신규06:46:13/전체06:49:13UTC 안 마지막HOME06:46:01.901460·소켓guard06:46:03.702968 뒤06:46:23.489287UTC root 실제반환을 양측 통지했습니다. 자체MP4/XML제거exit0·소켓종료/원기한불변·동결 원helperSHA·sourceclean을 확인했습니다. 원녹화는buffer40B 준비guard가 앱시작 전에 중단했고 영상/실패를 보존했습니다. 수정사본은 native output 초기화만 준비신호로 남겨 첫 captured-frame 보장은 하지 않습니다. 실제cold영상626,363B의 첫프레임·인트로는 후속 오프라인 분석이며 실제청취도 미검증입니다.
+
+중간 공유ADB 신원guard가 기존PID47568 부재를 발견해 다음tap 전에 중단했습니다. Tamer의 Unity 종료로그에 'Killing ADB server...'가 직접 남았고 세 프로젝트가 같은LD14실행파일/SHA의 새44824/06:41:14.723597UTC/5037단독을 독립대조했습니다. 선택폰 serial/model/transport 재조회 뒤 원기한 안 재결속했으며 기존서버 연속성은 실패로 보존합니다. Paw는 ADB CLI/daemon 시작·kill/reconnect0입니다. 앞으로 Editor 시작부터 종료·실제반환까지와 ADB기기 작업을 직렬화합니다. 다른LD/폰앱/계정·전역설정은 조작하지 않았습니다.
+
+근거는 Git 밖 Pawblossom-builds/qa/integration-20261107/phone-first-actual-return.json, phone-first/installed-apk-proof.json, 각 native stdout·PNG·read-only CDP 원문과 lease/helper 원본·수정사본입니다. private 원문/폰serial은 원격 업로드하지 않습니다. 실광고/상품·과금·키/env·공개배포/Drive·최종믹스 변경0입니다.
+
 ## 최신 로컬 통합 APK · 2026-11-06 · #518 · f2564fe
 
 기본 꽃밭을 자체 SVG 카툰으로 바꾸고 세 테마·다섯 화단·소유 장식·고정된 몸통/움직이는 나비 날개를 본화면과 미리보기에 함께 적용한 제품 `71c7b84aad348f5f809cb255b7c376d5452bf54e`를 포함합니다. 이전 fcded21의 시험 진행·현재/누적 즉시완료·초기화, 퍼즐 하단 메뉴/설정 복귀·인트로·초반 도구·중앙 하단 메뉴·지도 복귀 개선도 포함합니다. 전체 정원 공간/원화의 카툰 재제작과 사용자 감각 승인은 남습니다.
