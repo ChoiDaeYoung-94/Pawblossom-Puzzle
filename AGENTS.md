@@ -2,6 +2,8 @@
 
 ## 최신 직접 지시 · 2026-11-07
 
+- #522는 기존 실제worker의 생성자 prepare오류와 opt-in SQLite 관측의 교차를 test-only로 보강했습니다. 별도합성DB의 reward_meta 누락이 실제 ERR_SQLITE_ERROR/base1로 발생하고 worker-error/constructor·외부not-opened와 native연결닫힘/BEGIN·ROLLBACK/hook복원·잘림없음·envelope전체 SQL/경로/키/stack누출0을 확인합니다. 첫관련1파일28개/1.06초·타입3 성공·독립읽기P1/P2없음이며 기존ready1/result1은 명시terminate 완료까지의 근거입니다. 제품/helper/SQL/500ms·기존3worker/IPC/close/retry는 변경0이고 자연exit·실제BUSY/owner/근본원인 해결로 확대하지 않습니다. 필수첫PR/mainCI는 후속입니다.
+
 - 사용자 새지시로 질문 없이 자율 개발·검수를 재개했고 LD플레이어·연결 공기계와 타프로젝트 소통을 허용했습니다. 시간제한 없이 계정주간잔여5%(사용95%)까지 검증·정리·상세보고합니다. 최초새조회0%와 첫차례뒤4%는 이전50/30%와 별도 관측이며 초기화/예약/자동재개를 만들지 않습니다. 이전 PC-only·19시/30%는 완료 이력입니다. root 단독 코드/Git 작성·Ultra 독립읽기·실키/env·상품/과금·공개배포/Drive·최종믹스 경계를 유지합니다.
 - #520 첫 실물 SM-N986N/Android13은 기존앱 미설치부터 최신518APK 첫설치·실제54,882,419B/SHA6488c087…778cc0f 일치·cold ok·가로 KO4쪽·두칸실습/3매치·명시안내완료와 지도HOME→최근앱 자기카드 터치복귀/동일PID·저장전체불변을 확인했습니다. 첫1판 명시시작/퍼즐회차·잠금·force-stop/업데이트저장·청취는 후속입니다. PC 정상45/46·초반1–10은 열지 않았습니다. 가로안내 내부스크롤은 정상이며 최초패널밖swipe실패를 제품 진행불가로 해석하지 않습니다.
 - 원차례06:34:13.5964612/신규06:46:13/전체06:49:13UTC 안 마지막HOME06:46:01·guard06:46:03 뒤06:46:23.489287UTC 실제반환했습니다. 자체영상/XML제거exit0·소켓종료·sourceclean/원helperSHA를 대조해 양측 통지했고 공유점유/예약0입니다. 경로표기 준비검사·APK double-tilde parser·녹화buffer40B 첫앱시작0의 중단/수정사본을 원문보존합니다. 실제영상 첫프레임은 후속분석이며 capture-ready를 확정하지 않습니다.

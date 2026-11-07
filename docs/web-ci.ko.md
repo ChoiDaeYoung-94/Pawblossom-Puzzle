@@ -1,5 +1,13 @@
 # 웹 자동 검증
 
+## 2026-11-07 · #522 실제 constructor prepare 오류의 진단 전달
+
+기존 생성자 실패 검사는 유효 SQLite 설정 없이 실패하고 실제 SQLite opt-in 회귀는 callback 성공만 검사했습니다. 새 검사는 전용임시DB에 reward_meta 없는 합성테이블을 만들고 닫은 뒤, 정상path/key/policy로 기존worker를 실행합니다. 실제prepare오류가 일반화된 throw로 바뀌어도 기존worker-error/constructor 결과와 선택SQLiteDTO가 부모에 수신되는 경계를 확인합니다.
+
+첫 관련파일28개/1.06초와 타입3설정이 성공했고 독립읽기 새P1/P2는 없었습니다. database-prepare/reward-open/ERR_SQLITE_ERROR/extended1/base1·연결닫힘true·BEGIN/ROLLBACK반환·hook5설치/복원실패0·관측실패/잘림false와 envelope전체/부모투영의 경로·SQL·합성키/owner/round/query·message/stack미포함을 확인했습니다. 외부ledger not-opened는 생성자대입전실패이며 native연결을 열지 않았다는 뜻이 아닙니다. 기존ready1/result1은 명시terminate 완료까지 수신한 수량입니다. fixture연결/worker/전용임시경로 정리를 유지합니다.
+
+제품/helper·SQL/500ms·기존3worker기대/IPC/close/retry는 바꾸지 않았습니다. DatabaseSync 자체throw는 hook밖이고 이번회귀 범위가 아니며 실제BUSY·잠금owner/근본원인 해결이나 자연workerexit로 합산하지 않습니다. 필수첫PR/mainCI는 후속입니다.
+
 ## 2026-11-07 · #520 첫 실물 검수와 공유 ADB
 
 최신518APK 실물 첫설치/실제SHA·cold·가로KO4쪽/실습·지도HOME/최근앱동일PID/저장불변은 [Android 기록 상단](android-release.ko.md)에 분리했습니다. 원15분 안06:46:23.489287UTC 실제반환·자체영상/XML정리·소켓종료와 source729a2a9 clean을 확인했습니다. PC정상45/46·초반1–10은 열지 않았고 제품/웹/Android작업소스·APK를 바꾸지 않았습니다. 새설치와 기존업데이트 저장·퍼즐회차/OEM 승인·청취를 구분합니다.
