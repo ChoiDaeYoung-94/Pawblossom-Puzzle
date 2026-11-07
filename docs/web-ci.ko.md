@@ -1,5 +1,29 @@
 # 웹 자동 검증
 
+## 2026-11-07 · 정상49 기록과 첫 프레임 수정의 첫 CI
+
+| 변경 | PR head / 첫 run | main / 첫 run | 양 Node 결과 |
+| --- | --- | --- | --- |
+| PR532 정상48–49 기록 | 37419eb / 42366235393 | 870526c / 42366746990 | 각85파일4,402 |
+| PR534 첫 프레임 전 video 가림 | d8c1110 / 42367677965 | 0e44e8a / 42368257358 | 각85파일4,405 |
+
+모두 attempt1·스토어19·타입3/production·testing웹/carrier가 성공했습니다. QA7/`338-normal49-first-{pr,main}-*`·`533-intro-first-{pr,main}-*`에 전체 로그와 첫 attempt 원문을 보존했습니다. 각각 whole-tree 동일·종속PR/worktree/원격head를 확인해 해당 브랜치를 정리했습니다. PR534의 새 Android APK와 단말 재녹화는 별도 근거입니다.
+
+## 2026-11-07 · Node22/24 진단 CPU 프로필
+
+공식 SHA로 검증한 별도 Node22.23.4/24.22.2에서 동일 source86760b6의500비교 case를 각각 실행했습니다. 두 런타임 모두 ID1–500이 정확히500개 성공하고 나머지54개는 skip입니다. 전체554/85파일 suite 또는 실제500판 UI 완료가 아닙니다.
+
+| 런타임 | Inspector 구간 | sample 수 | core에 귀속된 가중시간 비율 | runs 자기 sample 비율 |
+| --- | ---: | ---: | ---: | ---: |
+| Node22.23.4 / V8 12.4.254.21-node.57 | 310.519초 | 59,657 | 90.197% | 72.752% |
+| Node24.22.2 / V8 13.6.233.17-node.63 | 40.201초 | 7,474 | 62.498% | 34.191% |
+
+가중시간은 Inspector `timeDeltas`를 sample에 귀속한 값이며 실제 CPU 사용시간이나 독립 성능 벤치마크가 아닙니다. 당시 Tamer Native와 FPS Gradle이 병행했고 Windows/런타임/V8도 구분해야 합니다. 같은 비교 코드를 포함한 CI 파일 전체554개의 Node22 시간이37초·251초·391초 등으로 달라진 원문도 보존하므로 일정한 개선율·V8 단독 원인·Linux CI 원인 해결을 주장하지 않습니다. [Node Inspector](https://nodejs.org/docs/latest-v22.x/api/inspector.html#cpu-profiler)의 beforeAll/afterAll 수집은 요청1000µs이며 실제 평균 간격과 다릅니다.
+
+최초 `--cpu-prof` smoke는 검사 exit0 뒤 profile파일0으로 artifact guard가 실패했습니다. Windows SIGTERM/종료 시 flush의 가능 경로와 실제 해당 worker의 종료 신호 미관측을 구분합니다. 새 private Inspector 수집은 smoke 양쪽1성공/553skip 뒤 full500씩을 성공했고 프로필 SHA와 caseID를 전수 대조했습니다. 첫 full의 반환 감사 실패(과거3개 path미확보), 별도 root재감사 및 birth-null fail-closed 보완 후 **원10:13:52/new10:25:52/full10:28:52UTC 안10:26:10.4918658UTC 최종 반환**을 각각 보존합니다. QA7/`server-round-cpu-analysis-final.json`은 첫 분석을 덮지 않고 최종 반환 근거를 연결합니다.
+
+제품 엔진은 바꾸지 않았습니다. 엔진 LF 소스 SHA가 서버 원장 프로필과 행·영수증·메타 HMAC에 결속되므로, 할당 최적화 후보를 제품에 반영하려면 기존 회차/DB 호환 검토가 먼저 필요합니다. #122 잠금 owner·근본 원인 해결로 합산하지 않습니다.
+
 ## 2026-11-07 · PR531 실물 시험 진행 기록 첫 CI
 
 - head `5d337c53ac23e3fa9f7ed44c77ed76b0d99004d5`의 첫PR `42361307632`와 main `86760b6efe18a0da3423f687a81701db6ba91322`의 첫push `42362072228`는 모두 attempt1입니다.

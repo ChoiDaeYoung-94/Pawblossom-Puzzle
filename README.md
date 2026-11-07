@@ -33,7 +33,7 @@ npm run build:test
 
 ## 최신 테스트 전달
 
-최신 로컬 testing APK는 빌드 소스 `b219c47`/제품 `69ec361`의 **`Pawblossom-Puzzle-v0.1.7-2026-11-07-b219c47-debug.apk`**입니다. 0.1.7/code8·54,882,419바이트이며 초반 도구 학습, 별도 시험 진행, 카툰 꽃밭과 낮은 가로 안내·도구 선택 유지 보완을 포함합니다. 작업 폴더 밖 `Pawblossom-builds/2026-11-07-b219c47-landscape-guide/`에 보존했습니다. 정확 경로·SHA256·서명/권한·실물 업데이트와 검수 범위는 [Android 기록 상단](docs/android-release.ko.md)을 확인해 주세요. 새 APK를 Drive에 업로드하지 않았으며, 같은 버전 번호이므로 날짜·소스·해시로 구분합니다.
+최신 로컬 testing APK는 빌드 소스 `0e44e8a`/첫프레임 제품 코드 `453ec11`의 **`Pawblossom-Puzzle-v0.1.7-2026-11-07-0e44e8a-debug.apk`**입니다. 0.1.7/code8·54,882,419바이트이며 기존 초반 도구·별도 시험 진행·카툰 꽃밭·가로 안내/도구 선택 개선에 인트로 첫 영상 프레임 전 가림을 추가했습니다. 작업 폴더 밖 `Pawblossom-builds/2026-11-07-0e44e8a-intro-first-frame/`에 보존했습니다. 빌드·PC4조건 검수와 새 APK의 실제 단말 후속을 구분합니다. 정확 경로·SHA256·서명/권한·실물 검수 범위는 [Android 기록 상단](docs/android-release.ko.md)을 확인해 주세요. Drive에 새로 업로드하지 않았으며, 같은 버전 번호이므로 날짜·소스·해시로 구분합니다.
 
 이전 전달·검수 이력:
 
