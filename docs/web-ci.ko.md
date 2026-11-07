@@ -1,5 +1,15 @@
 # 웹 자동 검증
 
+## 2026-11-07 · PR525 첫 CI·새 APK/실물 후속
+
+headceccf38 첫PR42352493657와 mainb219c47 첫42353109493 attempt1은 양Node85파일4,401개·스토어19·타입3/두웹빌드/carrier가 성공했습니다. 첫원문과 whole-tree7bbf49a9 일치·종속PR/worktree/원격head를 확인해 해당브랜치를 정리했습니다. 제품69ec361의 PC8조건32쪽+해금6조건과 구실패를 구분했고, 정확main의 새APK/첫10단계/원한도내08:06:14.3126766UTC 실제반환은 [Android 기록](android-release.ko.md)에 분리했습니다.
+
+fourth 실물은 old/new실설치바이트·COLD·업데이트 전후/최종 관측Paw키전체원문·정상23이동860점이 같았습니다. 세로411×808 안내4쪽/두탭실습/명시닫기·설정복귀/가시44px 근거이며 가로Android·최근카드제거·해금대상 승인은 아닙니다. Native정리08:34:52.931994/lastguard08:36:45와 root실제반환08:37:39.345105를 나눠 원한도35.345초초과를 보존했습니다. 입력전XML보조한계/측정원점·동일viewport/window결속과 원본문서·별도fixture/실물·PC정상프로필 경계를 유지합니다.
+
+## 2026-11-07 · PR528 첫 PR/main CI
+
+head5a5461a의 첫42353520424 attempt1은 양Node85파일4,402개·스토어19·타입3/두웹빌드/carrier 성공 원문을 보존했습니다. mainf490606 첫42356438419도 동일수량/전체검증이 성공했고 head/main whole-tree7e9e8ae0 일치·종속PR/worktree/원격head를 대조해 해당브랜치를 정리했습니다. 제품/SQL/500ms·#122 원CI잠금owner/근본원인·Node22시간원인은 유지합니다.
+
 ## 2026-11-07 · #527 알려진 생성자 BUSY의 기존 부모 진단 전달
 
 별도 정상fixture RewardLedger를 닫은 뒤 부모 DatabaseSync holder가 DELETE journal mode에서 BEGIN IMMEDIATE를 잡습니다. 기존 재시도 없는 callback worker1개를 opt-in 진단으로 실행하고 결과와 명시terminate뒤까지 holder의 open/transaction true를 확인했습니다. 첫 관련1파일29개/1.92초·타입3설정·독립읽기새P1/P2없음이며 제품·worker/helper·SQL/500ms·기존3worker/IPC/close/retry는 바꾸지 않습니다.
