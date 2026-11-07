@@ -1,5 +1,12 @@
 # Pawblossom Puzzle 작업 규칙
 
+## 최신 직접 지시 · 2026-11-07
+
+- 사용자 새지시로 질문 없이 자율 개발·검수를 재개했고 LD플레이어·연결 공기계와 타프로젝트 소통을 허용했습니다. 시간제한 없이 계정주간잔여5%(사용95%)까지 검증·정리·상세보고합니다. 최초새조회0%와 첫차례뒤4%는 이전50/30%와 별도 관측이며 초기화/예약/자동재개를 만들지 않습니다. 이전 PC-only·19시/30%는 완료 이력입니다. root 단독 코드/Git 작성·Ultra 독립읽기·실키/env·상품/과금·공개배포/Drive·최종믹스 경계를 유지합니다.
+- #520 첫 실물 SM-N986N/Android13은 기존앱 미설치부터 최신518APK 첫설치·실제54,882,419B/SHA6488c087…778cc0f 일치·cold ok·가로 KO4쪽·두칸실습/3매치·명시안내완료와 지도HOME→최근앱 자기카드 터치복귀/동일PID·저장전체불변을 확인했습니다. 첫1판 명시시작/퍼즐회차·잠금·force-stop/업데이트저장·청취는 후속입니다. PC 정상45/46·초반1–10은 열지 않았습니다. 가로안내 내부스크롤은 정상이며 최초패널밖swipe실패를 제품 진행불가로 해석하지 않습니다.
+- 원차례06:34:13.5964612/신규06:46:13/전체06:49:13UTC 안 마지막HOME06:46:01·guard06:46:03 뒤06:46:23.489287UTC 실제반환했습니다. 자체영상/XML제거exit0·소켓종료·sourceclean/원helperSHA를 대조해 양측 통지했고 공유점유/예약0입니다. 경로표기 준비검사·APK double-tilde parser·녹화buffer40B 첫앱시작0의 중단/수정사본을 원문보존합니다. 실제영상 첫프레임은 후속분석이며 capture-ready를 확정하지 않습니다.
+- Unity Editor 전체 수명과 ADB 기기 검수는 앞으로 직렬화합니다. Tamer Editor 종료로그에 'Killing ADB server...'가 직접 남았고 기존47568 단절로 양측 신원guard가 입력 전 중단했습니다. 같은LD14실행파일/SHA의 새44824를 세 프로젝트가 독립대조하고 선택폰 serial/model/transport를 재조회한 뒤 원기한 안 재결속했습니다. 두 세대/중단·연속성 실패를 보존하며 기존서버 연속보존 성공으로 합산하지 않습니다. Paw ADB CLI/daemon/kill/reconnect·다른기기입력0입니다.
+
 ## 최신 직접 지시 · 2026-11-06
 
 - #518 새 로컬 APK는 첫 main42174531368 성공의 sourcef2564fe/제품71c7b84이며 `Pawblossom-builds/2026-11-06-f2564fe-cartoon-garden/Pawblossom-Puzzle-v0.1.7-2026-11-06-f2564fe-debug.apk`입니다. 54,882,419B·SHA256 `6488c087ee3d49489c007d98a9bce5137c558ba3542fe3525699c58ff778cc0f`·기존 단일v2/권한/native494·웹119/ZIP660CRC·testing true3를 대조했습니다. 기존 로컬 JDK/SDK 경로 부재 뒤 공식 SHA 검증 전용 JDK21 ZIP을 작업 외 tools에 준비했고 기존 Unity SDK36은 읽기만 했습니다. 양측 fresh 동의/원06:41:46.2910556·신규06:53:46·전체06:56:46UTC 안 wrapper10단계 첫 exit0와06:43:07.8808398UTC 실제반환을 확인했습니다. known11잔존/unknown0·해당JDK/Node생성창잔존0·SDK핵심3/helperSHA/local.properties원문/sourceclean·실제브라우저와 같은 production108/Android110 false3복원입니다. 미실행 원감사와 null-path후보 unknown 보완 final감사/SHA를 구분하며 live자손snapshot 부재는 보존합니다. PC-only라 설치/실행·청취/Drive·최종믹스0이며 새 추가공유자원예정0/주간새조회27%에서 문서·필수CI·마감보고만 진행합니다.
