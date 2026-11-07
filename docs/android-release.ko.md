@@ -1,5 +1,20 @@
 ## 최신 로컬 통합 APK · 2026-11-07 · #526 · b219c47
 
+### 추가 실물 시험 진행 검수 · fifth
+
+동일 APK의 실설치 SHA를 다시 대조하고 sourceca5c6a1/제품69ec361의 SM-N986N/Android13·세로411×808(DPR2.625)에서 실제 native 입력으로 다음 순서를 확인했습니다. APK를 다시 만들거나 정상 보드에서 교환하지 않았습니다.
+
+- 시험 진행 열기 → 숫자10/이 레벨까지 모두 완료: 1–10완료·10별400코인/highest11.
+- 시험 전용 초기화/명시 확인: 완료[]·0별0코인/highest1.
+- 새1판 진입·공개 보드 활성/idle 확인 후 현재판 즉시 완료: 완료[1]·1별40코인/highest2.
+- 일반 진행 복귀·미리보기 이어하기: 정상1판의 **전체 보드/회차·23이동860점/도구[]·셔플1** 유지. 전체29개 읽기 스냅샷과 이전fourth까지 일반3키(primary/backup/reset·부재null포함)의 원문이 같습니다.
+
+원09:25:13/신규09:33:13/전체09:35:13UTC 안 **09:32:42.0058998UTC 실제 반환**입니다. flow/close 각exit0·종료확인/강제종료·정리오류0, 자체앱PID·본인XML부재/HOME요청·소켓종료·기존ADB명시유지·동결8파일·production108전수SHA/false3·sourceclean을 확인했습니다. 준비도구의 결과창스크롤/공개보드대기/자기Python종료확인P2세건과PS따옴표구문오류는 기기 실행 전 수정·재검토했고 제품 결함으로 세지 않습니다.
+
+APK 옆의 `device-progress-lab-verification-20261107.json`과 QA7/phone-fifth의 원문을 보존했습니다. 원래 artifact.json의 빌드 당시 deviceTest:false와 fourth 검수 파일을 덮지 않았습니다. 합성 시험 완료이며 정상10판 플레이·사람 난이도, 가로Android/LDPlayer·최근카드제거·오디오청취·운영광고/결제 검수는 아닙니다.
+
+### APK 파일·빌드 근거
+
 파일은 `C:/Users/user/Documents/ChatGPT/Pawblossom-builds/2026-11-07-b219c47-landscape-guide/Pawblossom-Puzzle-v0.1.7-2026-11-07-b219c47-debug.apk`입니다. **0.1.7/code8 · 54,882,419바이트 · SHA256 `8bd64f36fb2ea5570b5df4302303e20f0f98cc77bdf379616a54377667492954`**입니다. 낮은 가로 안내의 두열 본문/별도footer와44px 조작부·일반/선택52px고정바를 포함한 제품69ec361입니다. 이전 카툰 기본꽃밭·시험진행/현재·누적완료/초기화·초반도구·설정복귀도 포함합니다. 전체원화/모든정원 카툰화와 사용자 감각 승인은 남습니다.
 
 정확 sourceb219c475221c66b987f0fad207300ba56fcea701의 첫 main42353109493 attempt1 양Node85/4,401·스토어19·타입3/두웹빌드/carrier 성공 뒤 제작했습니다. 첫PR42352493657와 head/main whole-tree7bbf49a9 일치·종속PR/worktree/원격head를 확인해 브랜치를 정리했습니다. 이후 f490606의 변경은 검사/문서이며 제품바이트는 같습니다. SDK/네이티브 코드·버전·키를 바꾸지 않았습니다.
