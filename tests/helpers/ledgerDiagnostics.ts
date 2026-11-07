@@ -6,6 +6,7 @@ import {projectSchedulerSummary,projectScheduling,schedulerField,unavailableSche
 
 import {createSpanRecorder,projectTransactionSpans,type SpanRecorder,type TransactionSpans} from './ledgerTransactionSpans.ts';
 type DiagnosticsOptions={schedulerProbe?:SchedulerProbe;transactionSpans?:boolean;spanClockAnchor?:unknown};
+export type AsyncSpanOptions=Pick<DiagnosticsOptions,'transactionSpans'|'spanClockAnchor'>;
 
 const phases=['unknown','fixture','service-open','adapter-create','adapter-call','prepare','workers','reward-open','redeem','round-open','apply','start','command','get','close','open','seed','retry','invalid-limits','child-create','child-send','child-result','child-exit','reconcile','verify','reprofile','eligibility','insert-rejected','inbox-lock-receive','inbox-lock-process','inbox-unlock-receive','reward-lock-retry','reward-unlock-advance','recovery-completed'] as const;
 type Phase=typeof phases[number];
@@ -120,8 +121,8 @@ function finishTransactionObservation(trace:PhaseTrace,row:SqliteTransactionRow|
 function installSqliteDiagnostics(trace:PhaseTrace,options?:DiagnosticsOptions,asyncLifetime=false):()=>void {
   let spans:SpanRecorder|undefined;
   const observeSpans=<R>(observe:()=>R):R|undefined=>{try{return observe();}catch{transactionObservationFailed(trace);try{if(spans)spans.report.observationFailed=true;}catch{}return;}};
-  // 보상 worker의 Sync opt-in만 받으며 Async의 활성/소유권 계약은 유지합니다.
-  if(!asyncLifetime&&schedulerField(options,'transactionSpans')===true)observeSpans(()=>{spans=createSpanRecorder(schedulerField(options,'spanClockAnchor'));trace.transactionSpans=spans.report;});
+  // Async는 별도로 추린 span opt-in만 받으며 활성/descriptor 소유권 계약은 유지합니다.
+  if(schedulerField(options,'transactionSpans')===true)observeSpans(()=>{spans=createSpanRecorder(schedulerField(options,'spanClockAnchor'));trace.transactionSpans=spans.report;});
   const scheduler=schedulerField(options,'schedulerProbe') as SchedulerProbe|undefined;let schedulingCount=0;
   if(scheduler)try{const summary=projectSchedulerSummary(schedulerField(scheduler,'summary'));if(summary)trace.schedulerProbe=summary;}catch{}
   const finishScheduling=(row:SqliteTransactionRow|null,attempted:boolean,sampled:boolean,sample:unknown)=>{
@@ -185,10 +186,13 @@ export function withSqliteDiagnostics<T>(trace:PhaseTrace|null,work:()=>T,option
   try{return work();}finally{restore();}
 }
 /** 선택한 단발 callback worker에서만 사용합니다. Sync의 Promise/즉시 복원 계약과 분리합니다. */
-export async function withSqliteDiagnosticsAsync<T>(trace:PhaseTrace|null,work:()=>T|PromiseLike<T>):Promise<T> {
+export async function withSqliteDiagnosticsAsync<T>(trace:PhaseTrace|null,work:()=>T|PromiseLike<T>,options?:AsyncSpanOptions):Promise<T> {
   if(!trace)return await work();
   let restore=()=>{};
-  try{restore=installSqliteDiagnostics(trace,undefined,true);}catch{transactionObservationFailed(trace);}
+  try{
+    const narrowed=schedulerField(options,'transactionSpans')===true?{transactionSpans:true,spanClockAnchor:schedulerField(options,'spanClockAnchor')}:undefined;
+    restore=installSqliteDiagnostics(trace,narrowed,true);
+  }catch{transactionObservationFailed(trace);}
   try{return await work();}finally{try{restore();}catch{transactionObservationFailed(trace);}}
 }
 function methodCount(value:unknown):number {return typeof value==='number'&&Number.isInteger(value)&&value>=0&&value<=5?value:0;}
