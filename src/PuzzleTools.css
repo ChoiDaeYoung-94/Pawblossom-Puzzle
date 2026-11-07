@@ -17,3 +17,15 @@
   .tool-info-actions button{min-height:44px}
   #tool-target-controls button{min-width:44px;min-height:44px}
 }
+
+/* 가로에서도 실제 버튼을44px로 유지하고 확정 바 안에 여백까지 확보합니다. */
+#tool-target-controls{height:52px;max-height:52px;min-height:52px}
+#tool-target-controls button{min-width:44px;min-height:44px}
+.tool-info-actions button{min-height:44px}
+.puzzle-tools-bar[data-selecting="true"]{min-height:52px}
+@media(orientation:landscape){
+ .puzzle-tools-bar{min-height:44px}
+ .puzzle-tools-bar .tool-open{min-width:44px;min-height:44px}
+ .puzzle-tools-bar #shuffle{width:44px;flex-basis:44px;height:44px;min-height:44px}
+ .puzzle-tools-bar #tool-target-controls{position:relative;inset:auto}
+}
