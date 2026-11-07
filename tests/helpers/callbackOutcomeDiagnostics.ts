@@ -1,5 +1,6 @@
 // 검사 전용 callback 분류입니다. 원문 입력/결과/오류·native DB receiver를 복사하지 않고 선택한 고정 DTO만 투영합니다.
-import {createTrace,refreshClosedConnections,withSqliteDiagnosticsAsync,type PhaseTrace} from './ledgerDiagnostics.ts';
+import {createTrace,refreshClosedConnections,withSqliteDiagnosticsAsync,type PhaseTrace,type AsyncSpanOptions} from './ledgerDiagnostics.ts';
+import {createSpanClockAnchor,projectTransactionSpans,type SpanClockAnchor,type SpanClockProvider,type TransactionSpans} from './ledgerTransactionSpans.ts';
 const stages=['constructor','callback','close','unknown'] as const;
 const kinds=['voucher-recorded','rejected','service-error','worker-error','unknown'] as const;
 const codes=['invalid-input','invalid-claim','voucher-missing','round-closed','round-limit','expired','invalid-time','duplicate-transaction','aborted','invalid-callback','policy-mismatch','invalid-signature','key-unavailable','storage-unavailable','unknown'] as const;
@@ -11,12 +12,16 @@ export interface CallbackOutcome {
   closeOutcome:typeof closes[number];observationFailed:boolean;nativeObservation:'not-observed';
 }
 export interface CallbackOutcomeTrace {
-  workers:(CallbackOutcome&{index:number;report:'missing'|'received'|'invalid';sqlite?:CallbackSqliteObservation})[];
+  workers:(CallbackOutcome&{index:number;report:'missing'|'received'|'invalid';sqlite?:CallbackSqliteObservation;transactionSpans?:CallbackSpanObservation})[];
   truncated:boolean;observationFailed:boolean;
 }
 declare module 'vitest' {interface TaskMeta {callbackOutcomeDiagnostic?:CallbackOutcomeTrace;}}
 const failures=new WeakSet<object>();
 const sqliteExpected=new WeakSet<object>();
+interface ParentSpanState {anchor?:SpanClockAnchor;received?:SpanClockAnchor;}
+interface SpanProjectionContext {anchor?:SpanClockAnchor;clock:SpanClockProvider;}
+export interface CallbackSpanObservation {report:'missing'|'received'|'invalid';diagnostic:TransactionSpans|null;}
+const spanExpected=new WeakMap<CallbackOutcomeTrace,Map<number,ParentSpanState>>();
 function failed(value:object){failures.add(value);try{Reflect.set(value,'observationFailed',true);}catch{}}
 function read(value:unknown,key:string,onFailure:()=>void):unknown {try{return value!==null&&(typeof value==='object'||typeof value==='function')?Reflect.get(value,key):undefined;}catch{onFailure();return undefined;}}
 function allowed<T extends string>(value:unknown,values:readonly T[],fallback:T):T{return typeof value==='string'&&values.includes(value as T)?value as T:fallback;}
@@ -50,18 +55,41 @@ export async function runObservedCallback(create:()=>CallbackLedger,query:unknow
     try{ledger?.close();update(trace,{closeOutcome:ledger?'returned':'not-opened'});}catch{update(trace,{closeOutcome:'threw'});}
   }
 }
-export function callbackOutcomeEnvelope(result:unknown,trace:CallbackOutcome,sqliteDiagnostic?:unknown){
+interface SpanEnvelopeContext {value:unknown;anchor:unknown;observationFailed?:boolean;}
+export function callbackOutcomeEnvelope(result:unknown,trace:CallbackOutcome,sqliteDiagnostic?:unknown,spanContext?:SpanEnvelopeContext){
   const legacy={kind:'synthetic-callback-outcome',result,diagnostic:projectCallbackOutcome(trace)};
-  return arguments.length<3?legacy:{...legacy,sqliteDiagnostic:projectCallbackSqliteDiagnostic(sqliteDiagnostic)};
+  const envelope=arguments.length<3?legacy:{...legacy,sqliteDiagnostic:projectCallbackSqliteDiagnostic(sqliteDiagnostic)};
+  if(spanContext===undefined)return envelope;
+  let spans:TransactionSpans|undefined;
+  try{
+    spans=projectTransactionSpans(ownData(spanContext,'value'),ownData(spanContext,'anchor'));
+    if(optionalData(spanContext,'observationFailed')===true){
+      spans??=projectTransactionSpans({schema:0});
+      if(spans){spans.observationFailed=true;spans.clock.status='unavailable';spans.clock.reason='invalid';}
+    }
+  }catch{spans=projectTransactionSpans({schema:0});}
+  return {...envelope,transactionSpans:spans};
 }
-export function createCallbackOutcomeTrace(count:number,options?:{sqliteDiagnostics?:boolean}):CallbackOutcomeTrace {
+export function createCallbackOutcomeTrace(count:number,options?:{sqliteDiagnostics?:boolean;transactionSpans?:boolean}):CallbackOutcomeTrace {
   const bounded=Number.isSafeInteger(count)&&count>=0?Math.min(count,8):0;
   const trace:CallbackOutcomeTrace={workers:Array.from({length:bounded},(_,index)=>({...createCallbackOutcome(),index,report:'missing'})),truncated:count>8,observationFailed:bounded===0&&count!==0};
   if(options?.sqliteDiagnostics===true){sqliteExpected.add(trace);for(const row of trace.workers)row.sqlite={report:'missing',diagnostic:null};}
+  if(sqliteExpected.has(trace)&&spanRequested(options)){spanExpected.set(trace,new Map());for(const row of trace.workers)row.transactionSpans={report:'missing',diagnostic:null};}
   return trace;
+}
+/** 기존 GO 1회에만 부모 anchor의 사본을 실으며 payload로 private 상태를 갱신하지 않습니다. */
+export function prepareCallbackWorkerGo(trace:CallbackOutcomeTrace,index:number):'go'|{kind:'go';spanClockAnchor:SpanClockAnchor} {
+  const states=spanExpected.get(trace);if(!states)return 'go';
+  try{
+    if(!Number.isInteger(index)||index<0||index>=trace.workers.length||index>=8||states.has(index)){failed(trace);return 'go';}
+    const anchor=createSpanClockAnchor();states.set(index,{anchor:{...anchor}});
+    return {kind:'go',spanClockAnchor:{...anchor}};
+  }catch{failed(trace);return 'go';}
 }
 // result의 원래 참조를 반환하며 envelope/diagnostic의 getter·투영 실패를 업무 예외로 바꾸지 않습니다.
 export function receiveCallbackOutcome(value:unknown,trace:CallbackOutcomeTrace,index:number):unknown {
+  // 최초 수신 시각을 투영/getter 읽기 전에 고정합니다.
+  const spanContext=parentSpanContext(trace,index,true);
   let result=value,report:'missing'|'received'|'invalid'='missing',diagnostic:unknown;
   try {
     const marker=Object.getOwnPropertyDescriptor(value,'kind');
@@ -77,6 +105,12 @@ export function receiveCallbackOutcome(value:unknown,trace:CallbackOutcomeTrace,
       try{const descriptor=report==='received'?Object.getOwnPropertyDescriptor(value,'sqliteDiagnostic'):undefined;row.sqlite=report==='invalid'?{report:'invalid',diagnostic:null}:!descriptor?{report:'missing',diagnostic:null}:'value' in descriptor?sqliteObservation(descriptor.value):{report:'invalid',diagnostic:null};}
       catch{row.sqlite={report:'invalid',diagnostic:null};}
     }
+    if(spanExpected.has(trace)){
+      try{
+        const descriptor=report==='received'?Object.getOwnPropertyDescriptor(value,'transactionSpans'):undefined;
+        row.transactionSpans=report==='invalid'?{report:'invalid',diagnostic:null}:!descriptor||'value' in descriptor&&descriptor.value===undefined?{report:'missing',diagnostic:null}:'value' in descriptor?spanObservation(descriptor.value,spanContext):{report:'invalid',diagnostic:null};
+      }catch{row.transactionSpans={report:'invalid',diagnostic:null};}
+    }
     if(report==='missing')row.observationFailed=false;
     trace.workers[index]=row;
   }catch{failed(trace);}
@@ -86,7 +120,7 @@ export function callbackOutcomeContext(trace:CallbackOutcomeTrace):string {
   try{
     const rows=trace.workers,truncated=trace.truncated,observationFailed=trace.observationFailed;
     if(!Array.isArray(rows))throw new Error();
-    return JSON.stringify({workers:Array.from({length:Math.min(rows.length,8)},(_,index)=>{const row=rows[index];return {...projectCallbackOutcome(row),index,report:allowed(row.report,['missing','received','invalid'],'invalid'),...(sqliteExpected.has(trace)?{sqlite:projectSqliteObservation(row)}:{})};}),
+    return JSON.stringify({workers:Array.from({length:Math.min(rows.length,8)},(_,index)=>{const row=rows[index];return {...projectCallbackOutcome(row),index,report:allowed(row.report,['missing','received','invalid'],'invalid'),...(sqliteExpected.has(trace)?{sqlite:projectSqliteObservation(row)}:{}),...(spanExpected.has(trace)?{transactionSpans:projectSpanObservation(row,parentSpanContext(trace,index,false))}:{})};}),
       truncated:truncated===true||rows.length>8,observationFailed:observationFailed!==false||typeof truncated!=='boolean'||failures.has(trace)});
   }
   catch{return '{"workers":[],"truncated":false,"observationFailed":true}';}
@@ -146,17 +180,48 @@ function projectSqliteObservation(row:unknown):CallbackSqliteObservation {
 }
 
 /** 기존 outcome literal은 유지하고 선택한 단발 worker의 SQLite 수명만 별도로 감쌉니다. */
-export async function runObservedCallbackWithSqlite(create:()=>CallbackLedger,query:unknown,trace:CallbackOutcome):Promise<ReturnType<typeof callbackOutcomeEnvelope>> {
+export async function runObservedCallbackWithSqlite(create:()=>CallbackLedger,query:unknown,trace:CallbackOutcome,options?:AsyncSpanOptions):Promise<ReturnType<typeof callbackOutcomeEnvelope>> {
   let sqlite:PhaseTrace|null=null;
   try{sqlite=createTrace('reward-worker');}catch{}
   const phase=(value:'reward-open'|'adapter-call'|'close')=>{if(sqlite)try{sqlite.phase=value;}catch{try{sqlite.sqliteTransactionObservationFailed=true;}catch{}}};
+  const spans=spanRequested(options),anchor=spans?optionalData(options,'spanClockAnchor'):undefined;
   const result=await withSqliteDiagnosticsAsync(sqlite,()=>runObservedCallback(()=>{
     phase('reward-open');const ledger=create();
     return {processCallback(input){phase('adapter-call');return ledger.processCallback(input);},close(){phase('close');ledger.close();}};
-  },query,trace));
+  },query,trace),spans?{transactionSpans:true,spanClockAnchor:anchor}:undefined);
   // work의 finally close와 hook 복원 뒤, 대응된 실제 연결의 닫힘만 확인합니다. SQL/close 호출을 추가하지 않습니다.
   if(sqlite)try{refreshClosedConnections(sqlite,0);}catch{try{sqlite.sqliteTransactionObservationFailed=true;}catch{}}
   let diagnostic:CallbackSqliteDiagnostic|null=null;
   if(sqlite)try{diagnostic=projectCallbackSqliteDiagnostic({schema:1,sqliteErrors:sqlite.sqliteErrors,sqliteErrorsTruncated:sqlite.sqliteErrorsTruncated,sqliteTransactions:sqlite.sqliteTransactions,sqliteTransactionsTruncated:sqlite.sqliteTransactionsTruncated,sqliteTransactionObservationFailed:sqlite.sqliteTransactionObservationFailed,sqliteHook:sqlite.sqliteHook});}catch{}
-  return callbackOutcomeEnvelope(result,trace,diagnostic);
+  let spanEnvelope:SpanEnvelopeContext|undefined;
+  if(spans)try{spanEnvelope={value:sqlite?.transactionSpans,anchor,observationFailed:!sqlite||sqlite.sqliteTransactionObservationFailed||sqlite.sqliteHook.installation!=='installed'||sqlite.sqliteHook.restoration!=='restored'};}catch{spanEnvelope={value:{schema:0},anchor,observationFailed:true};}
+  return callbackOutcomeEnvelope(result,trace,diagnostic,spanEnvelope);
+}
+
+function optionalData(value:unknown,key:string):unknown {try{return ownData(value,key);}catch{return;}}
+function spanRequested(value:unknown):boolean {return optionalData(value,'transactionSpans')===true;}
+function parentSpanContext(trace:CallbackOutcomeTrace,index:number,receive:boolean):SpanProjectionContext|undefined {
+  try{
+    const states=spanExpected.get(trace);
+    if(!states||!Number.isInteger(index)||index<0||index>=8||index>=trace.workers.length)return;
+    let state=states.get(index);
+    if(!state&&receive){state={};states.set(index,state);}
+    if(receive&&state&&!state.received)state.received={...createSpanClockAnchor()};
+    const received=state?.received;
+    return {anchor:state?.anchor,clock:{origin:()=>received?.originMs??null,now:()=>received?.sentAtProcessMs??null}};
+  }catch{failed(trace);return {clock:{origin:()=>null,now:()=>null}};}
+}
+function spanObservation(value:unknown,context?:SpanProjectionContext):CallbackSpanObservation {
+  const diagnostic=projectTransactionSpans(value,context?.anchor,context?.clock);
+  if(!diagnostic)return {report:'missing',diagnostic:null};
+  return {report:diagnostic.observationFailed&&diagnostic.clock.reason==='invalid'?'invalid':'received',diagnostic};
+}
+function projectSpanObservation(row:unknown,context?:SpanProjectionContext):CallbackSpanObservation {
+  try{
+    const value=ownData(row,'transactionSpans'),report=ownData(value,'report');
+    if(report==='missing')return {report:'missing',diagnostic:null};
+    if(report==='received')return spanObservation(ownData(value,'diagnostic'),context);
+    if(report==='invalid'){const diagnostic=ownData(value,'diagnostic');return {report:'invalid',diagnostic:diagnostic===null?null:projectTransactionSpans(diagnostic,context?.anchor,context?.clock)??null};}
+  }catch{}
+  return {report:'invalid',diagnostic:null};
 }

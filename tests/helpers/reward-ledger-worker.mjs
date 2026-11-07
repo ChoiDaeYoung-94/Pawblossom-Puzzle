@@ -14,8 +14,8 @@ async function run(data) {
   } catch {return {kind:'worker-error'};}
   finally {try{ledger?.close();}catch{}}
 }
-if(parentPort){parentPort.postMessage('ready');parentPort.once('message',async()=>{
-  if(workerData.diagnostics===true&&workerData.action===undefined){const trace=createCallbackOutcome();if(workerData.sqliteDiagnostics===true)parentPort.postMessage(await runObservedCallbackWithSqlite(()=>createLedger(workerData),workerData.query,trace));else{const result=await runObservedCallback(()=>createLedger(workerData),workerData.query,trace);parentPort.postMessage(callbackOutcomeEnvelope(result,trace));}}
+if(parentPort){parentPort.postMessage('ready');parentPort.once('message',async go=>{
+  if(workerData.diagnostics===true&&workerData.action===undefined){const trace=createCallbackOutcome();if(workerData.sqliteDiagnostics===true)parentPort.postMessage(await runObservedCallbackWithSqlite(()=>createLedger(workerData),workerData.query,trace,workerData.transactionSpans===true?{transactionSpans:true,spanClockAnchor:go?.kind==='go'?go.spanClockAnchor:undefined}:undefined));else{const result=await runObservedCallback(()=>createLedger(workerData),workerData.query,trace);parentPort.postMessage(callbackOutcomeEnvelope(result,trace));}}
   else parentPort.postMessage(await run(workerData));
 });}
 else process.once('message',async data=>{process.send?.(await run(data));process.disconnect?.();});

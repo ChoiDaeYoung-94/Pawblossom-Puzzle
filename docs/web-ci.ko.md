@@ -606,3 +606,14 @@ main136 CI39109768855 Node22의 기존 reward-redemption:163 기본5000ms timeou
 2026-10-16 승인된 운영 규칙에 따라 필요한 검증과 최신 PR head의 Node 22·24 검사가 모두 통과하면 별도 승인 없이 main에 Squash merge합니다. 현재 main 보호 규칙·ruleset·필수 검사 설정은 없습니다. CI 성공과 보호 규칙 설정, 단말·서비스·출시 검증은 각각 구분하며 저장소 보호 설정을 변경하거나 검사를 우회하지 않았습니다. 과거 선행 PR은 통합 완료했고 PR별 새 검사 근거는 [통합 기록](performance/main-integration-20261016.json)에 보존했습니다.
 
 2026-10-13 [첫 실제 GitHub 실행](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/38359304738)에서 Node 22·24 두 작업 모두 성공했습니다. 각 작업에서 테스트 43개와 타입 검사·Vite 빌드를 수행했습니다. 기존 Phaser 번들 크기 경고는 남아 있습니다.
+## 2026-11-07 · 콜백 worker의 선택 공통 시간축 관측
+
+기존 8-worker 동일 callback과 3-worker 같은 round/다른 claim 검사의 SQLite 관측에 `transactionSpans`를 명시 opt-in합니다. 제품·SQL·500ms·worker 수·신규1/중복7 및 신규1/round-closed2 기대·retry/close·ready/go/result 횟수는 그대로입니다. 기존 SQLite diagnostic schema1은 유지하고, envelope/worker 행의 별도 형제 필드에 고정 span DTO만 실었습니다.
+
+부모는 각 worker의 원래 GO 전송 직전에 anchor 사본을 만들고, index별 원본과 최초 수신 시각을 private WeakMap에 보관합니다. worker의 verified 주장·index·수신시각으로 이 상태를 갱신하지 않습니다. formatter도 최초 수신 시각으로 다시 검증하므로 늦은 종료시각이 나중에 유효해지지 않습니다. connectionIndex는 worker마다 별도 번호이며 합쳐 해석하지 않습니다.
+
+Async는 span 요청/anchor 두 옵션만 추려 받습니다. scheduler를 추가로 열지 않고 기존 active·descriptor 소유권·await/close 이후 hook 복원을 유지합니다. 실제 close/hook 복원 뒤만 envelope를 투영하고, 수집/복원 실패는 span 관측 실패로 남깁니다. 기본 off는 기존 GO 문자열과 새 필드/getter 미접근을 유지합니다. 미요청·missing·invalid·유효한 빈 관측·시계 불일치·잘림은 구분합니다.
+
+새 13개 검사와 기존 관련 검사를 합친 **5파일176개**, 타입3종을 통과했습니다. 실제 3-worker의 received/verified 확인 추가 후 해당 파일60개도 통과했습니다. 최초 준비의 잘못된 config 경로와 family를 phase로 전달한 타입 오류는 수정 전 결과로 보존하며, 위 통과는 수정 후 실행입니다. 정확 첫 PR/main CI는 별도 확인합니다.
+
+이 시각은 JS wrapper에서 관측한 호출 구간입니다. 관측 비용이 경합 타이밍에 영향을 줄 수 있으며, **실제 SQLite 잠금 소유자·근본 원인·자동 겹침 판정의 완료가 아닙니다.** 제품/APK·round profile/HMAC·실키·실서비스는 바꾸지 않았습니다.
