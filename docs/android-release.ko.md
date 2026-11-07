@@ -1,3 +1,26 @@
+## 최신 로컬 통합 APK · 2026-11-08 · #545 · 73c3cef
+
+- 파일: `Pawblossom-builds/2026-11-08-73c3cef-tool-order-settings/Pawblossom-Puzzle-v0.1.7-2026-11-08-73c3cef-debug.apk`
+- **54,882,419바이트**, SHA256 **`95a262d05d61d6b7ae770d640c1dce356c5193f294b1eabab93e0ce7859f410a`**. source/main `73c3cef20d09ae8e94d2d94980a784687f74c77c`·설정수정head7c8282d와 whole-tree262931b8가 같습니다. 0.1.7/code8/debug/testing true3·동일 단일v2서명/권한/native494·testing117/내장웹119/public91·ZIP660CRC/중복0입니다. **이 APK가 최신이며 아래 b936 기록은 직전 버전 이력입니다.**
+- 첫PR42392144843/main42393591387 attempt1 양Node86/4,420·스토어19·타입3/두웹/carrier 성공과 source7c8282d의 실제Chrome6조건을 결속했습니다. 생산108·시험117을 각각 다시 빌드해 전수SHA가 같았고, APK는 그 시험117을 정확히 포함합니다.
+- 빌드 원17:16:10/new17:28:10/full17:31:10UTC 안 **17:18:16.8453972UTC 실제반환**입니다. 10단계 첫exit0·동결22/SDK핵심/local.properties 원문/sourceclean과 새production108·Android110 false3 복원을 확인했습니다. live41관측/자손28표본·관측39신원 잔존0/unknown0이며 전OS수명 전수관측으로 확대하지 않습니다. QA7/`545-{build-status,artifact-proof,actual-return}.json`에 근거를 보존했습니다.
+
+### 최신 APK 실제 업데이트·설정/Lab 회귀
+
+SM-N986N/Android13 user0에 **b936→95a no-clear 업데이트1회**를 실행하고 설치된 바이트를 다시 읽어 SHA를 대조했습니다. 이전/이후 전체Paw4키 원문과 일반3키·1판 전체CP23이동860점/도구[]/셔플1이 정확히 같습니다. 새 도구 표시는3/4/6/8/10 순서입니다. 설치 검증 이후의 Lab 조작은 별도 단계이며, 업데이트 전후 전체저장 일치와 혼동하지 않습니다.
+
+기존 합성Lab2별80/highest3/3판0점에서 실제시험UI로3까지완료해3별120/highest4를 만든 뒤, 4판의 자연 장갑소개를 닫고 **즉시 설정→테스트진행 종료**를 눌렀습니다. 정상 지도로 복귀했고 기존1판 전체CP와 일반3키는 끝까지 같았습니다. 기존1판의 native 이어하기는 Lab 변경 전에 확인한 별도 단계입니다. 최종 Lab만 완료1–3/3별120/highest4·4판0점/무료소비[]입니다. 정상 캠페인4판 완료·무료도구 실제소비 검수가 아닙니다.
+
+flow20단계·native TAB/ENTER 입력·readonlyCDP84·flow/close exit0, 원17:27:18/new17:35:18/full17:38:18UTC 안 **17:29:36.4491748UTC 실제반환**·동결26·임시XML/자체앱/소켓 정리·공유ADB49852 유지입니다. `device-order-settings-verification-20261108.json`과 QA7/`phone-order-update-public-summary.json`을 보존했습니다. 빌드 시점 `artifact.json.deviceTest:false`를 소급 수정하지 않았습니다.
+
+가로 배치·최근앱 카드 종료·WebAudio 중단/복구와 인트로 영상은 아래 **직전 b936 APK의 실물 근거**이며 최신APK의 해당 반복검수로 합산하지 않습니다. 최신APK 냉기동/이어하기·저장 보존과 설정/Lab 회귀는 위 범위로 확인했습니다. 청취·OS오디오focus 소유권·모든OEM·500판 사람재미·Drive/최종믹스/실서비스 승인은 남습니다.
+
+### LDPlayer 이번 차례 결과 · 최신 APK 설치 미제출
+
+LD14 index0의 기존 설치 앱은 실제GUI로 기동했고 공개 지도 **별4/180코인·첫완료6/현재7판**을 확인했습니다. 기존 설치바이트 해시는 미확인입니다. 최신95a의 파일 선택 창을 열었으나 own 대화상자의 좌표/캐시·초점 제약으로 정확 파일명 입력을 확인하지 못해 **설치 제출0**으로 취소했습니다. 오류 원문은 도구대화에 보존하며, 최신APK의 LD 설치/실행 성공이나 저장 원문/회차 exact로 바꾸지 않습니다. 두 선택 창을 취소한 뒤 공개지도 값이 같고, 자기 Paw 탭닫기·LD홈 복귀를 확인했습니다. 보드입력/초기화/삭제/보안설정·ADB/VM/server수명/다른VM입력은0입니다.
+
+원17:43:43.487723/new17:51:43.487723/full17:54:43.487723UTC 안 자원감사 **17:46:52.347333UTC 실제반환**·추가읽기 홈관측17:47:04까지입니다. 알려진 LD세대/공유49852의 native5037 신원·production108 SHA/sourceclean/APK95a는 같습니다. 기존VM은 의도적으로 실행 유지했으며 전수수명/자체앱PID0을 주장하지 않습니다. QA7/`ld-gui-second-{lease.private,actual-return.private,public-summary}.json`에 기록했고 새 동작을 중지한 뒤 양측에 반환을 알렸습니다. 다음 LD 차례는 파일대화상자 지원/대상만의 ADB 연결과 기존진행 보존 방법부터 확인합니다.
+
 ## 최신 로컬 통합 APK · 2026-11-07 · #535 · 0e44e8a
 
 - 파일: `Pawblossom-builds/2026-11-07-0e44e8a-intro-first-frame/Pawblossom-Puzzle-v0.1.7-2026-11-07-0e44e8a-debug.apk`

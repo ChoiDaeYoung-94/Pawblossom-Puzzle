@@ -1,5 +1,14 @@
 # 웹 자동 검증
 
+## 2026-11-08 · 도구 순서/설정 owner 수정 첫 CI
+
+- #543/PR544 headaaa2c19의 첫PR **42386710863**와 maina2691f8의 첫 **42389888329**는 attempt1·양Node86파일4,418·스토어19·타입3/두웹/carrier 성공입니다. whole-tree **d4b7dd1f22e1c3c0833df45634e7572d459e8ed7** 일치·원문/종속PR·worktree/원격head 확인 뒤 브랜치를 정리했습니다.
+- #545/PR546 head7c8282d의 첫PR **42392144843**와 main73c3cef의 첫 **42393591387**는 attempt1·양Node86파일**4,420**·스토어19·타입3/두웹/carrier 성공입니다. whole-tree **262931b87ac25a90c8d6afb43a86a99a40e9ca3f**와 원문/종속PR·worktree/원격head를 확인해 브랜치를 정리했습니다. 최신APK95a는 이main과 실제Chrome6조건의 동일웹117을 포함하며 실제설치SHA/설정회귀도 별도 확인했습니다.
+
+QA7/`543-tool-order-first-{pr,main}-*`, `545-settings-first-{pr,main}-*`, 각 branch-cleanup.json에 원문을 보존했습니다. 첫PR544 main archive의 호출별GH_CONFIG_DIR 누락은 메타데이터 읽기 실패였고, 재로그인/CI재실행 없이 해당 원문 읽기만 다시 했습니다. #545의 최초red·전체render초안Pip2회귀·최종로컬deadline중지는 첫CI 성공과 구분해 보존했습니다. 실행시간 변동은 Node22 성능 고정 개선이나 #122 원인 해결이 아닙니다.
+
+기록 PR542의 head44671c6 첫42385831657/main2f00626 첫42386624247도 attempt1·양Node86/4,418·스토어19·타입3/두웹/carrier 성공이며 whole-treeab00168b 일치 뒤 브랜치를 정리했습니다.
+
 ## 2026-11-08 · #539 정상59·실물 복귀 기록 첫 CI
 
 PR540 headb3104e1의 첫PR42381867312와 mainea4f03a의 첫42382571062는 attempt1·양Node86파일4,418개·스토어19·타입3/production·testing·carrier가 성공했습니다. QA7/`539-native-normal-first-{pr,main}-*`에 원문을 보존하고 whole-tree6a3d56cc·종속PR/worktree/원격head 확인 뒤 브랜치를 정리했습니다. 문서5파일만 바뀌었고 제품/APK0e44/b936·실서비스 상태는 같습니다. 실행 시간의 변동을 Node22 성능 개선이나 #122 원인 해결로 해석하지 않습니다.
