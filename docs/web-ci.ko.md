@@ -1,5 +1,11 @@
 # 웹 자동 검증
 
+## 2026-11-07 · PR523 첫 PR/main CI와 실물 후속
+
+PR523 head dddac7764b6b5bcd56b96856f448a7c901f97d6c의 첫42349244191과 main8fa098cd96ce202120e3922e3881350adfbef237의 첫42350341370 attempt1은 양Node85파일4,401개·스토어19·타입3설정/두웹빌드/carrier가 성공했습니다. 첫원문과 head/main whole-tree bfe206750e876a4669c027305a8457b94c18657c 일치·종속PR없음/단일worktree·원격head를 확인해 브랜치를 정리했습니다. 제품/SQL/500ms·#122 잠금owner/근본원인은 유지합니다. 아래 CI후속은 구현당시 이력입니다.
+
+#520 실물 정상1판23이동860점·HOME/최근앱 동일PID/저장전체불변·force-stop primary/회차일치와 backup회전·securefalse/Dozing/wake 뒤실제입력·설정명시복귀 및 원차례내07:11:31.303594UTC 실제반환은 [Android 기록](android-release.ko.md)에 분리했습니다. 첫영상224프레임에서 완성로고 선노출은 관측하지 못했지만 전체기기/청취 승인은 아닙니다. 원PC45/46·초반1–10은 열지 않았습니다.
+
 ## 2026-11-07 · #522 실제 constructor prepare 오류의 진단 전달
 
 기존 생성자 실패 검사는 유효 SQLite 설정 없이 실패하고 실제 SQLite opt-in 회귀는 callback 성공만 검사했습니다. 새 검사는 전용임시DB에 reward_meta 없는 합성테이블을 만들고 닫은 뒤, 정상path/key/policy로 기존worker를 실행합니다. 실제prepare오류가 일반화된 throw로 바뀌어도 기존worker-error/constructor 결과와 선택SQLiteDTO가 부모에 수신되는 경계를 확인합니다.
