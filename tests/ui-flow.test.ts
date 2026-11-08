@@ -437,6 +437,19 @@ describe('직접 고르는 산책 도구의 실제 저장/UI 경계',()=>{
     h.run("showToolInfo('trowel','tool-trowel')");expect(h.run('toolDialog.innerHTML')).toContain(t('en','toolUnlock').replace('{level}','3'));expect(h.run('toolDialog.innerHTML')).not.toContain('class="tool-info-pip"');h.element('#tool-info-start').onclick();expect(h.run('toolMode')).toBeUndefined();
     h.element('#tool-info-close').onclick();expect(h.disk()).toEqual(before);expect(h.writes()).toBe(writes);expect(h.run('save.puzzleTools.trialUsed')).toEqual([]);
   });
+  it('무료/잔액부족/두종한도의 shelf 표시는 실제 선택 가능 여부와 같고 안내 진입은 유지한다',()=>{
+    const h=ready();h.run('save.coins=0;renderPuzzleTools()');
+    const shelf=()=>h.element('#tool-shelf').innerHTML;
+    expect(shelf()).toMatch(/id="tool-trowel"[^>]*data-usable="true"/);
+    h.run("save.puzzleTools={schema:2,introduced:['trowel'],trialUsed:['trowel']};renderPuzzleTools()");
+    expect(shelf()).toMatch(/id="tool-trowel"[^>]*data-usable="false"[^>]*aria-haspopup="dialog"/);
+    expect(shelf()).toContain(t('en','toolNoCoins'));
+    const before=h.disk(),writes=h.writes();h.run("showToolInfo('trowel','tool-trowel')");
+    expect(h.run('toolDialog.innerHTML')).toMatch(/id="tool-info-start"[^>]* disabled/);h.element('#tool-info-start').onclick();expect(h.run('toolMode')).toBeUndefined();
+    h.element('#tool-info-close').onclick();h.run("roundTools={profile:'tools-v2',used:['trowel','broom'],started:true};renderPuzzleTools()");
+    expect(shelf()).toMatch(/id="tool-gloves"[^>]*data-usable="false"/);expect(shelf()).toContain(t('en','toolRoundLimit'));
+    expect(h.disk()).toEqual(before);expect(h.writes()).toBe(writes);
+  });
   it('소개는 첫 무료 체험을 소비하지 않고 확정은 비용/판/집계를 한 번만 저장하며 이동은 유지한다',()=>{
     const h=ready(),moves=h.run('moves');select(h);expect(h.run('save.puzzleTools.introduced')).toEqual(['trowel']);expect(h.run('save.puzzleTools.trialUsed')).toEqual([]);
     const writes=h.writes(),use=h.element('#tool-confirm').onclick;expect(h.element('#tool-confirm').disabled).toBe(false);use();const stored=h.stored();
