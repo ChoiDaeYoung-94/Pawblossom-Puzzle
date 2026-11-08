@@ -15,10 +15,10 @@
 /* 세로 화면에서는 안내·확정·취소의 터치 영역을 최소44px로 유지합니다. */
 .tool-choice-short{display:none}
 @media(orientation:landscape){
- #tool-choice-status{max-height:40px}
+ #tool-choice-status{max-height:44px}
  #tool-choice-status .tool-choice-text,#tool-choice-status .tool-choice-cost{flex-shrink:0}
  .tool-choice-full{display:none}
- .tool-choice-short{display:block;white-space:normal;overflow-wrap:normal;line-height:12px}
+ .tool-choice-short{display:block;white-space:normal;overflow-wrap:normal;line-height:14px}
 }
 @media(orientation:portrait){
   .tool-info-actions button{min-height:44px}
