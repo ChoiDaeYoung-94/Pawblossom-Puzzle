@@ -34,8 +34,8 @@ describe('낙엽과 퍼즐 임시 연출',()=>{
     try{
       for(const chain of [1,2,4,99]){
         const h=harness();h.effects.match(source,chain);const star=h.objects.find(obj=>obj.name==='match-spark')!;
-        expect([star.x,star.y]).toEqual([436,436]);expect(star.triangles).toHaveLength(4);
-        const extent=Math.max(...star.triangles.flat().map(Math.abs));sizes.push(extent);expect(extent).toBeLessThanOrEqual(18);
+        expect([star.x,star.y]).toEqual([436,436]);expect(star.triangles.length).toBeGreaterThanOrEqual(4);
+        const extent=Math.max(...star.triangles.flat().map(Math.abs));sizes.push(extent);expect(extent).toBeLessThanOrEqual(24);
         expect(h.effects.activeCount).toBeLessThanOrEqual(3);h.effects.clear();h.finish();expect(h.effects.activeCount).toBe(0);expect(h.objects.every(obj=>obj.destroyed)).toBe(true);
       }
       expect(sizes[1]).toBeGreaterThan(sizes[0]);expect(sizes[2]).toBeGreaterThan(sizes[1]);expect(sizes[3]).toBe(sizes[2]);expect(random).not.toHaveBeenCalled();expect(JSON.stringify(source)).toBe(before);

@@ -46,8 +46,8 @@ export class BoardEffects {
     const directions=[[-1,-.65],[1,-.65],[-.65,1],[.65,1],[-1,.15],[1,.15],[.15,-1],[-.15,1]];
     const [dx,dy]=directions[index%directions.length];
     const chip=this.scene.add.graphics().setPosition(x,y).setDepth(12).setAngle(index*31).setName('tile-fragment');
-    chip.fillStyle(color,1);chip.fillTriangle(0,-6,5,0,0,6);chip.fillTriangle(0,-6,-5,0,0,6);
-    chip.lineStyle(1.5,0xfff7de,.95);chip.lineBetween(-2,-2,0,-4);
+    chip.fillStyle(0xfff7de,1);chip.fillTriangle(0,-8,6,0,0,8);chip.fillTriangle(0,-8,-6,0,0,8);
+    chip.fillStyle(color,1);chip.fillTriangle(0,-5,3,0,0,5);chip.fillTriangle(0,-5,-3,0,0,5);
     this.animate(chip,{x:x+dx*distance,y:y+dy*distance,angle:index*31+110,alpha:0,scaleX:.35,scaleY:.35,duration:270+index%3*25,ease:'Cubic.easeOut'});
   }
   /** 실제 상자 타격 칸에만 표시하며 낙하·보상·해소 대기를 추가하지 않습니다. */
@@ -110,12 +110,16 @@ export class BoardEffects {
     step.removed.filter((_,i)=>i%stride===0).forEach((p,i)=>{
       if(this.objects.size>=120)return;
       const {x,y}=point(p),spark=this.scene.add.graphics().setPosition(x,y).setDepth(8).setName('match-spark');
-      const color=colors[step.before[p.row]?.[p.col]?.kind??i%colors.length],strength=Math.min(4,Math.max(1,chain)),radius=8+strength*1.5,waist=radius*.24;
-      // Four filled points and their glint share one Graphics/one tween, even at high chains.
-      spark.fillStyle(color,.95);
+      const color=colors[step.before[p.row]?.[p.col]?.kind??i%colors.length],strength=Math.min(4,Math.max(1,chain)),radius=12+strength*2,waist=radius*.24;
+      // A bright outer star keeps fruit-coloured points distinct on the tile art.
+      // Both layers still share one Graphics/one tween and the existing lifetime.
+      spark.fillStyle(0xfff8df,1);
       spark.fillTriangle(-radius,0,0,-waist,radius,0);spark.fillTriangle(-radius,0,0,waist,radius,0);
       spark.fillTriangle(0,-radius,-waist,0,0,radius);spark.fillTriangle(0,-radius,waist,0,0,radius);
-      spark.lineStyle(2,strength>=3?0xffcb48:0xfff8df,.95);spark.strokeCircle(0,0,radius*.5);
+      const inner=radius*.64,innerWaist=waist*.64;spark.fillStyle(color,1);
+      spark.fillTriangle(-inner,0,0,-innerWaist,inner,0);spark.fillTriangle(-inner,0,0,innerWaist,inner,0);
+      spark.fillTriangle(0,-inner,-innerWaist,0,0,inner);spark.fillTriangle(0,-inner,innerWaist,0,0,inner);
+      spark.lineStyle(2,strength>=3?0xffcb48:color,.95);spark.strokeCircle(0,0,radius*.5);
       spark.fillStyle(0xfffbea,1);spark.fillRoundedRect(-2,-2,4,4,2);
       this.animate(spark,{y:y-12,scaleX:1.12,scaleY:1.12,alpha:0,duration:220+i%3*25,ease:'Sine.easeOut'});
       if(i<8){
