@@ -1,5 +1,6 @@
 // 테스트 전용입니다. native receiver·SQL·경로·원문 오류를 영수증에 넣지 않습니다.
 import {DatabaseSync} from 'node:sqlite';
+import type {SpanRecorder} from './ledgerTransactionSpans.ts';
 
 const nativeExec=Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'exec')?.value;
 const official={
@@ -25,7 +26,8 @@ export function readCallbackConnectionState(open:(()=>unknown)|undefined,transac
   return {isOpen:true,isOpenReason:null,isTransaction:typeof active==='boolean'?active:null,isTransactionReason:typeof active==='boolean'?null:'read-failed'};
 }
 
-export function createCallbackConnectionProbe(enabled:boolean){
+export function createCallbackConnectionProbe(enabled:boolean,spans?:{recorder:SpanRecorder;phase:()=>unknown}){
+  const spanFailure=()=>{try{if(enabled&&spans)spans.recorder.report.observationFailed=true;}catch{}};
   const receipt=enabled?{afterBegin:unavailable('not-reached'),afterClose:unavailable('not-reached')}:undefined;
   const verified=new WeakMap<object,Accessors>();
   let armed=false,reached=false,target:WeakRef<object>|undefined;
@@ -55,7 +57,15 @@ export function createCallbackConnectionProbe(enabled:boolean){
     observe<T>(sql:unknown,receiver:unknown,args:unknown[],around:(invoke:()=>unknown)=>T):T {
       let nativeReturned=false;
       // 성공 표식은 이 원본 호출 안에서만 생성합니다. callback의 반환·함수 참조만으로는 검증하지 않습니다.
-      const invoke=()=>{const result=Reflect.apply(nativeExec,receiver,args);nativeReturned=true;return result;};
+      const invoke=()=>{
+        let token:ReturnType<SpanRecorder['before']>=null;
+        if(enabled&&spans)try{token=spans.recorder.before(sql,receiver,spans.phase());}catch{spanFailure();}
+        try{
+          const result=Reflect.apply(nativeExec,receiver,args);nativeReturned=true;
+          if(enabled&&spans)try{spans.recorder.after(token,'returned',nativeExec);spans.recorder.nativeReturned?.('exec',sql,receiver,nativeExec);}catch{spanFailure();}
+          return result;
+        }catch(error){if(enabled&&spans)try{spans.recorder.after(token,'threw',nativeExec);}catch{spanFailure();}throw error;}
+      };
       if(!enabled)return around(invoke);
       const selected=armed&&!reached&&sql==='BEGIN IMMEDIATE';
       if(selected){armed=false;reached=true;try{if(receiver!==null&&(typeof receiver==='object'||typeof receiver==='function'))target=new WeakRef(receiver);}catch{}}

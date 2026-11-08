@@ -1,5 +1,15 @@
 # 웹 자동 검증
 
+## 2026-11-09 · #558 inbox 동시 처리 구간 관측
+
+PR557의 첫 PR42489436656은 양Node86파일4,425개를 통과했지만, 같은 whole-tree041f29ec의 main9474875 첫42491442877 attempt1은 Node24의 기존 inbox8worker 검사에서 실패했습니다. Node22는 성공했습니다. 실패 결과는 completed1/idle5/unavailable2이며 두 unavailable은 생성자 성공 뒤 `inbox-claim-begin`에서 실제 BUSY/base5를 반환했습니다(502.08531/507.085088ms). idle7 assertion 뒤의 최종 DB 수량 검사는 실행되지 않았습니다. cleanup 반환/ownedRemaining0·8worker exitObserved/exit0과 index0/2/3의 명시terminate를 구분해 보존했고, CI 재실행은 하지 않았습니다.
+
+이 inbox 그룹에는 기존 claim/connection DTO만 있고 공통 시간축 span이 없었습니다. #558은 해당 receive/process8worker에만 명시 opt-in을 추가합니다. private GO anchor와 최초 부모 수신 시각으로 worker→parent→formatter를 재검증하며, inbox/reward 역할은 같은 native receiver에서 성공한 고정 meta SQL의 호출 증거로 구분합니다. receiver나 SQL 원문·DB 경로·키·오류 message/stack을 DTO에 싣지 않습니다. 연결 index는 각 worker 안에서만 해석합니다.
+
+관측은 기존 native exec 호출 지점 안에 삽입하고, 기본 off의 같은 Worker/결과 참조·기존 ready/go/result 횟수·SQL/500ms·재시도·닫기·idle7/최종 DB assertion을 유지합니다. schema1·span/connection 상한8도 유지하며 누락/유효 빈 관측/형식 오류·관측 실패·잘림을 구분합니다. 관측 구간의 겹침은 잠금 owner 증명이 아니며, 이번 claim 실패를 #122의 과거 constructor 실패와 같은 원인으로 합산하지 않습니다.
+
+첫 로컬 차례는 오류 주입 fixture의 getter 반환형 누락 TS2345로 타입 검사에서 중단됐고 SQL 검사는 시작하지 않았습니다. 두 번째는 타입3종·관련206개 중205개가 성공했지만, 부모가 거절한 변조 GO의 시계 주장이 formatter 재투영 때 verified로 승격되는 실제 경계 오류를 잡았습니다. private 상태에 최초 부모 거절 사유를 고정하고, 뒤의 정상 중복 결과도 이를 교체하지 못하도록 보강했습니다. 독립 읽기에서 같은 경로가 확인된 기존 callback formatter에도 보호와 결정적 회귀를 추가했습니다. 두 실패의 원 로그와 당시 소스 SHA는 QA8의 별도 사본으로 보존했습니다. 원3/5창 안15:59:49.4894378UTC 실제반환·동결1064/관측19잔존0·unknown0/보호3트리 exact와 검사실패를 구분합니다. 수정본의 첫 PR/main CI 결과는 후속 기록입니다. 제품 코드와 설치된 source666 APK154a는 이 진단 변경과 별도로 유지합니다.
+
 ## 2026-11-08 · 도구 순서/설정 owner 수정 첫 CI
 
 - #543/PR544 headaaa2c19의 첫PR **42386710863**와 maina2691f8의 첫 **42389888329**는 attempt1·양Node86파일4,418·스토어19·타입3/두웹/carrier 성공입니다. whole-tree **d4b7dd1f22e1c3c0833df45634e7572d459e8ed7** 일치·원문/종속PR·worktree/원격head 확인 뒤 브랜치를 정리했습니다.

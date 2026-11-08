@@ -5,22 +5,28 @@ import {DatabaseSync} from 'node:sqlite';
 import {createCallbackClaimProbe} from './callbackClaimProbe.ts';
 import {createCallbackCloseReceipt} from './callbackCloseReceipt.ts';
 import {createCallbackConnectionProbe} from './callbackConnectionState.ts';
+import {createSpanRecorder} from './ledgerTransactionSpans.ts';
+import {inboxSpanEnvelope} from './inboxTransactionSpans.ts';
 // 운영 오류 메시지에는 SQL 원인이 없으므로 테스트 worker 내부에서 숫자 코드만 분류합니다.
 // SQL·인수·원문 오류를 결과나 로그로 내보내지 않습니다.
 let sqliteFailure;
 let claimProbe=createCallbackClaimProbe(false);
 let connectionProbe=createCallbackConnectionProbe(false);
+let transactionSpans,transactionPhase='inbox-open';
+const spanFailure=()=>{try{if(transactionSpans)transactionSpans.report.observationFailed=true;}catch{}};
 const classify=error=>{sqliteFailure=error?.code==='ERR_SQLITE_ERROR'&&[5,6].includes(error.errcode&255)?'busy':'sql-error';};
 const originalPrepare=DatabaseSync.prototype.prepare;
 DatabaseSync.prototype.exec=function(...args){try{return connectionProbe.observe(args[0],this,args,invoke=>claimProbe.observe(args[0],invoke));}catch(error){classify(error);throw error;}};
 DatabaseSync.prototype.prepare=function(...args){
   let statement;try{statement=Reflect.apply(originalPrepare,this,args);}catch(error){classify(error);throw error;}
+  if(transactionSpans)try{transactionSpans.nativeReturned?.('prepare',args[0],this,originalPrepare);}catch{spanFailure();}
   for(const method of ['get','all','run']){const original=statement[method];statement[method]=function(...values){try{return Reflect.apply(original,this,values);}catch(error){classify(error);throw error;}};}
   return statement;
 };
-async function run(d) {
+async function run(d,spans) {
+  transactionSpans=spans;transactionPhase='inbox-open';
   claimProbe=createCallbackClaimProbe(d.diagnostics===true);
-  connectionProbe=createCallbackConnectionProbe(d.diagnostics===true);
+  connectionProbe=createCallbackConnectionProbe(d.diagnostics===true,spans?{recorder:spans,phase:()=>transactionPhase}:undefined);
   const closeReceipt=createCallbackCloseReceipt(d.diagnostics===true);
   let inbox,stage='open',openAttempts=0;
   const failures=[],limit=Number.isSafeInteger(d.openRetries)&&d.openRetries>=0&&d.openRetries<=2?d.openRetries+1:1;
@@ -41,13 +47,22 @@ async function run(d) {
       }
     }
     stage=d.action==='receive'?'receive':'process';
+    transactionPhase=stage==='receive'?'inbox-receive':'inbox-process';
     if(stage==='process'){claimProbe.arm();connectionProbe.arm();}
     sqliteFailure=undefined;
     const result=d.action==='receive'?inbox.receive(d.query):await inbox.processNext();
     return diagnostic(d.diagnostics&&result.kind==='unavailable'?{...result,stage,sqlite:sqliteFailure??'none'}:result);
   }catch(error){return diagnostic({kind:'worker-error',stage,code:error?.message==='callback-inbox-open-failed'?'open-failed':'unexpected',sqlite:sqliteFailure??'none'});}
   // 반환 DTO의 같은 영수증은 finally 뒤 IPC 직렬화 때 최종 값을 읽습니다.
-  finally{try{closeReceipt.close(inbox);}catch{}finally{connectionProbe.afterClose();}}
+  finally{transactionPhase='inbox-close';try{closeReceipt.close(inbox);}catch{}finally{connectionProbe.afterClose();}}
 }
-if(parentPort){parentPort.postMessage('ready');parentPort.once('message',async()=>parentPort.postMessage(await run(workerData)));}
+async function observedRun(d,go){
+  if(d.diagnostics!==true||d.transactionSpans!==true||go?.kind!=='go')return run(d);
+  let spans,result;try{spans=createSpanRecorder(go.spanClockAnchor);}catch{}
+  try{result=await run(d,spans);}finally{
+    try{spans?.finish();}catch{spanFailure();}finally{transactionSpans=undefined;}
+  }
+  return inboxSpanEnvelope(result,spans?.report??{schema:0},go.spanClockAnchor);
+}
+if(parentPort){parentPort.postMessage('ready');parentPort.once('message',async go=>parentPort.postMessage(await observedRun(workerData,go)));}
 else process.once('message',async d=>{process.send?.(await run(d));process.disconnect?.();});
