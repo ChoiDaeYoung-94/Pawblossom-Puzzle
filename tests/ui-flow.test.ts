@@ -462,6 +462,30 @@ describe('직접 고르는 산책 도구의 실제 저장/UI 경계',()=>{
     const h=ready();select(h);h.element('#game-canvas').listeners.blur({relatedTarget:h.element(id)} as never);expect(h.run('Boolean(toolMode)')).toBe(true);
     h.element(id).onclick();expect(h.run('toolMode')).toBeUndefined();expect(h.stored().puzzleTools.trialUsed).toEqual(id==='#tool-confirm'?['trowel']:[]);
   });
+  const tabFromBoard=(h:ReturnType<typeof mainHarness>,shiftKey=false,extra:Record<string,unknown>={})=>{
+    h.run(`globalThis.tabFocusCalls=[];document.activeElement=document.querySelector('#game-canvas');
+      for(const id of ['#tool-confirm','#tool-cancel']){const target=document.querySelector(id);target.focus=options=>{
+        document.querySelector('#game-canvas').listeners.blur({relatedTarget:target});document.activeElement=target;
+        tabFocusCalls.push({id:target.id,preventScroll:options?.preventScroll});};}`);
+    let prevented=false;const board=h.element('#game-canvas');
+    board.listeners.keydown({key:'Tab',target:board,shiftKey,...extra,preventDefault(){prevented=true;}} as never);
+    // Android에서 관측한 기본 경로입니다. 막지 않으면 내부 canvas로 초점이 이동합니다.
+    if(!prevented)board.listeners.blur({relatedTarget:{tagName:'CANVAS'}} as never);
+    return prevented;
+  };
+  it.each([[false,true,'tool-confirm'],[true,true,'tool-cancel'],[false,false,'tool-cancel']] as const)('도구 Tab shift=%s·대상선택=%s는 %s로 이동하고 선택/전체저장을 유지한다',(shiftKey,chosen,target)=>{
+    const h=ready();h.run("showToolInfo('trowel','tool-trowel')");h.element('#tool-info-start').onclick();if(chosen)h.run('scene.toolTarget({row:0,col:0})');
+    const disk=h.disk(),writes=h.writes(),memory=h.run('JSON.stringify({save,roundTools,score,collected,moves,board:scene.snapshot()})');
+    expect(tabFromBoard(h,shiftKey)).toBe(true);expect(h.run('tabFocusCalls')).toEqual([{id:target,preventScroll:true}]);expect(h.run('Boolean(toolMode)')).toBe(true);
+    expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);expect(h.run('JSON.stringify({save,roundTools,score,collected,moves,board:scene.snapshot()})')).toBe(memory);
+    h.element('#'+target).onclick();expect(h.run('toolMode')).toBeUndefined();expect(h.stored().puzzleTools.trialUsed).toEqual(target==='tool-confirm'?['trowel']:[]);
+  });
+  it.each(['outside','busy','hidden','inactive','dialog','alt','ctrl','meta','composing'])('도구 Tab의 %s 경계는 초점을 가로채지 않는다',reason=>{
+    const h=ready();if(reason!=='outside')select(h);
+    if(reason==='busy')h.run('puzzleProcessing=true');if(reason==='hidden')h.run('document.hidden=true');if(reason==='inactive')h.run('nativeActive=false');if(reason==='dialog')h.run('resourceDialog.showModal()');
+    const extra=reason==='alt'?{altKey:true}:reason==='ctrl'?{ctrlKey:true}:reason==='meta'?{metaKey:true}:reason==='composing'?{isComposing:true}:{};
+    const disk=h.disk(),writes=h.writes();expect(tabFromBoard(h,false,extra)).toBe(false);expect(h.run('tabFocusCalls')).toEqual([]);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
   it('도구 컨트롤 밖으로 보드 초점이 이동하면 선택과 낡은 확정을 폐기한다',()=>{
     const h=ready();select(h);const use=h.element('#tool-confirm').onclick,writes=h.writes();h.element('#game-canvas').listeners.blur({relatedTarget:h.element('#settings-button')} as never);
     expect(h.run('toolMode')).toBeUndefined();use();expect(h.writes()).toBe(writes);expect(h.stored().puzzleTools.trialUsed).toEqual([]);
