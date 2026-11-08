@@ -5,11 +5,11 @@ interface Voice {
   bus: Bus;
   end: number;
   envelope: GainNode;
-  sources: OscillatorNode[];
+  sources: AudioScheduledSourceNode[];
   nodes: AudioNode[];
 }
 
-// Original eight-bar tune: C-major pentatonic, 4/4, 72 BPM.
+// Original eight-bar motif: C-major pentatonic, arranged below in 4/4 at 112 BPM.
 // Each row is a bar of eighth notes; null is a rest.
 const MELODY: readonly (readonly (number | null)[])[] = [
   [72, null, 76, 79, null, 76, 74, null],
@@ -26,14 +26,14 @@ const BASS = [48, 45, 55, 48, 48, 45, 55, 48] as const;
 export type MusicTheme='meadow'|'brook'|'orchard'|'woodland'|'lantern'|'garden'|'pip'|'winter'|'tide'|'dream'|'clockwork'|'festival';
 type MusicTimbre='bell'|'soft'|'wood';
 interface MusicScore {readonly melody:readonly (readonly (number|null)[])[];readonly bass:readonly number[];readonly fifths:readonly number[];readonly timbre:MusicTimbre}
-// 자체 악보: 모두72BPM/4박자여서 구간 변화는 다음 마디에서 자연스럽게 이어집니다.
-// 원래 초원8마디는 그대로 두고, 각 곡은 질문8마디+응답8마디로 약53초입니다.
+// 자체16마디 동기는 공통112BPM/4박자·32마디 편곡으로 다음 마디에서 테마를 전환합니다.
+// 질문8마디+응답8마디 동기는 보존하고 뒤16마디에서 반주·종지 강도를 달리합니다.
 const ANSWER_ORDER=[4,5,0,1,2,6,3,7] as const;
 const score=(melody:readonly (readonly (number|null)[])[],bass:readonly number[],timbre:MusicTimbre):MusicScore=>({
   melody:[...melody,...ANSWER_ORDER.map((index,bar)=>bar===7?[76,null,74,null,72,null,null,null]:melody[index]!.map(pitch=>pitch===null?null:bar<2&&pitch<=76?pitch+12:pitch))],
   bass:[...bass,...ANSWER_ORDER.map((index,bar)=>bar===7?48:bass[index]!)],fifths:[...bass,...ANSWER_ORDER.map((index,bar)=>bar===7?48:bass[index]!)].map(pitch=>pitch+7),timbre,
 });
-// 새 여정 곡은16마디 전체를 별도로 적습니다. 기존7곡의 생성/출력 경로는 유지합니다.
+// 여정 곡은16마디 전체를 별도로 적고 같은32마디 편곡·자원 예산을 공유합니다.
 const journeyScore=(melody:readonly (readonly (number|null)[])[],bass:readonly number[],timbre:MusicTimbre):MusicScore=>({melody,bass,fifths:bass.map(pitch=>pitch+7),timbre});
 const MUSIC_SCORES:Readonly<Record<MusicTheme,MusicScore>>={
   meadow:score(MELODY,BASS,'bell'),
@@ -127,7 +127,9 @@ const MUSIC_SCORES:Readonly<Record<MusicTheme,MusicScore>>={
 export function musicScore(theme:MusicTheme):MusicScore{return MUSIC_SCORES[theme];}
 export const MUSIC_THEMES=Object.freeze(Object.keys(MUSIC_SCORES) as MusicTheme[]);
 
-const EIGHTH = 60 / 72 / 2;
+export const MUSIC_TIMING=Object.freeze({bpm:112,pulsesPerBar:8,barsPerLoop:32} as const);
+const EIGHTH = 60 / MUSIC_TIMING.bpm / 2;
+export const MUSIC_LOOP_SECONDS=EIGHTH*MUSIC_TIMING.pulsesPerBar*MUSIC_TIMING.barsPerLoop;
 const PENTATONIC = [0, 2, 4, 7, 9] as const;
 export const AUDIO_LEVELS={music:4,sfx:3.4,master:1,makeup:1.12} as const;
 
@@ -145,6 +147,7 @@ export function outputCurve():Float32Array<ArrayBuffer> {
 export class AudioManager {
   private context?: AudioContext;
   private musicBus?: GainNode;
+  private percussionBuffer?: AudioBuffer;
   private sfxBus?: GainNode;
   private outputNodes: AudioNode[] = [];
   private voices = new Set<Voice>();
@@ -230,7 +233,9 @@ export class AudioManager {
   }
 
   setMusicEnabled(enabled: boolean): void {
+    const restarting=enabled&&!this.music;
     this.music = enabled;
+    if(restarting)this.stopVoices('music');
     this.setBus(this.musicBus, enabled ? AUDIO_LEVELS.music : 0);
     if (!enabled) this.stopMusic(true);
     else this.startMusic();
@@ -302,6 +307,7 @@ export class AudioManager {
     this.stopVoices();
     this.context = undefined;
     this.musicBus = undefined;
+    this.percussionBuffer = undefined;
     this.sfxBus = undefined;
     this.outputNodes = [];
     this.resuming = undefined;
@@ -411,22 +417,97 @@ export class AudioManager {
     if (this.nextNote < now) {
       // Skip missed notes after a busy frame, instead of emitting them together.
       const skipped = Math.ceil((now + 0.02 - this.nextNote) / EIGHTH);
-      this.step = (this.step + skipped) % 128;
+      this.step = (this.step + skipped) % (MUSIC_TIMING.pulsesPerBar*MUSIC_TIMING.barsPerLoop);
       this.nextNote += skipped * EIGHTH;
     }
     while (this.nextNote < now + 0.18) {
       if(this.step%8===0&&this.playingTheme!==this.requestedTheme){this.playingTheme=this.requestedTheme;this.step=0;}
       const score=MUSIC_SCORES[this.playingTheme];
-      const bar = Math.floor(this.step / 8);
+      const phraseBar=Math.floor(this.step / 8),bar=phraseBar%score.melody.length,chorus=phraseBar>=score.melody.length;
       const beat = this.step % 8;
-      const pitch = score.melody[bar]![beat];
-      if (pitch != null) this.note('music', pitch, this.nextNote, 0.52, 0.065);
-      if (beat === 0 || beat === 4) {
-        this.note('music', beat === 0 ? score.bass[bar]! : score.fifths[bar]!, this.nextNote, 0.85, 0.055);
+      const quiet=['garden','pip','dream','winter'].includes(this.playingTheme),root=score.bass[bar]!,time=this.nextNote;
+      const pitch=score.melody[bar]![beat]??(chorus&&bar%4===3&&beat===7?root+24:null);
+      const accent=[1,.82,.92,.86,1,.84,.96,.82][beat];
+      if(pitch!==null)this.musicTone('lead',pitch,time,.18,.06*accent*(chorus?1.04:1));
+      // Each eighth reserves at most three voices. No future offbeat chord can steal the lead slot.
+      if(beat%2===0){
+        this.musicTone('bass',root+[0,7,12,7][beat/2],time,.145,quiet?.033:.043);
+        this.musicPercussion(beat%4===0?'kick':'snare',time,quiet?.55:1);
+      }else{
+        this.musicTone('comp',root+12,time,.065,quiet?.011:.018);
+        const fill=chorus&&bar%4===3&&beat===7;
+        if(!quiet||beat===3||beat===7)this.musicPercussion(fill?'snare':'hat',time,fill?.8:quiet?.45:.65);
       }
       this.nextNote += EIGHTH;
-      this.step = (this.step + 1) % 128;
+      this.step = (this.step + 1) % (MUSIC_TIMING.pulsesPerBar*MUSIC_TIMING.barsPerLoop);
     }
+  }
+
+  private musicReservation(): {ctx:AudioContext;output:GainNode}|undefined {
+    const ctx=this.context,output=this.musicBus;
+    if(!ctx||!output||ctx.state!=='running'||!this.canPlay()||!this.music)return;
+    for(const voice of this.voices)if(voice.end<=ctx.currentTime)this.release(voice);
+    let count=0;for(const voice of this.voices)if(voice.bus==='music')count++;
+    return count<6?{ctx,output}:undefined;
+  }
+
+  /** Short pitched parts use one owned voice, including a root/fifth comp voicing. */
+  private musicTone(part:'lead'|'bass'|'comp',midi:number,time:number,duration:number,amplitude:number):boolean {
+    const reservation=this.musicReservation();if(!reservation)return false;
+    const {ctx,output}=reservation,nodes:AudioNode[]=[],sources:AudioScheduledSourceNode[]=[];
+    const own=<T extends AudioNode>(node:T):T=>{nodes.push(node);return node;};let voice:Voice|undefined;
+    try{
+      const envelope=own(ctx.createGain()),fundamental=own(ctx.createOscillator()),overtone=own(ctx.createOscillator()),partial=own(ctx.createGain());
+      sources.push(fundamental,overtone);
+      const hz=440*2**((midi-69)/12),timbre=MUSIC_SCORES[this.playingTheme].timbre;
+      fundamental.type=part==='comp'?'triangle':'sine';overtone.type='sine';fundamental.frequency.value=hz;
+      overtone.frequency.value=part==='comp'?hz*2**(7/12):hz*(part==='bass'?2:timbre==='wood'?3:2.002);
+      partial.gain.value=part==='comp'?.55:part==='bass'?.12:timbre==='soft'?.16:timbre==='wood'?.3:.26;
+      fundamental.connect(envelope);overtone.connect(partial);partial.connect(envelope);envelope.connect(output);
+      envelope.gain.setValueAtTime(0,time);envelope.gain.linearRampToValueAtTime(amplitude,time+.004);
+      envelope.gain.setValueAtTime(amplitude,time+(part==='lead'?.022:.012));
+      envelope.gain.exponentialRampToValueAtTime(.0001,time+duration);envelope.gain.linearRampToValueAtTime(0,time+duration+.015);
+      voice={bus:'music',end:time+duration+.018,envelope,sources,nodes};this.voices.add(voice);
+      const current=voice;fundamental.onended=()=>this.release(current);
+      for(const source of sources){source.start(time);source.stop(current.end);}return true;
+    }catch{
+      if(voice)this.release(voice);else this.discardMusicNodes(sources,nodes);
+      return false;
+    }
+  }
+
+  private musicPercussion(kind:'kick'|'snare'|'hat',time:number,strength:number):boolean {
+    const reservation=this.musicReservation();if(!reservation)return false;
+    const {ctx,output}=reservation,nodes:AudioNode[]=[],sources:AudioScheduledSourceNode[]=[];
+    const own=<T extends AudioNode>(node:T):T=>{nodes.push(node);return node;};let voice:Voice|undefined;
+    try{
+      const envelope=own(ctx.createGain()),duration=kind==='kick'?.08:kind==='snare'?.06:.035;
+      if(kind==='kick'){
+        const kick=own(ctx.createOscillator());sources.push(kick);kick.type='sine';kick.frequency.setValueAtTime(130,time);kick.frequency.exponentialRampToValueAtTime(52,time+.065);kick.connect(envelope);
+      }else{
+        if(!this.percussionBuffer){
+          const buffer=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*.08),ctx.sampleRate),data=buffer.getChannelData(0);let seed=0x4f1bbcdc;
+          // A private fixed noise texture never consumes the board's RNG.
+          for(let i=0;i<data.length;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;data[i]=seed/4294967295*2-1;}
+          this.percussionBuffer=buffer;
+        }
+        const noise=own(ctx.createBufferSource()),filter=own(ctx.createBiquadFilter());sources.push(noise);noise.buffer=this.percussionBuffer;
+        filter.type=kind==='hat'?'highpass':'bandpass';filter.frequency.value=kind==='hat'?5600:1700;filter.Q.value=.5;noise.connect(filter);filter.connect(envelope);
+        if(kind==='snare'){const body=own(ctx.createOscillator()),bodyLevel=own(ctx.createGain());sources.push(body);body.type='sine';body.frequency.value=185;bodyLevel.gain.value=.14;body.connect(bodyLevel);bodyLevel.connect(envelope);}
+      }
+      const amplitude=(kind==='kick'?.04:kind==='snare'?.017:.007)*strength;
+      envelope.connect(output);envelope.gain.setValueAtTime(0,time);envelope.gain.linearRampToValueAtTime(amplitude,time+.003);envelope.gain.exponentialRampToValueAtTime(.0001,time+duration);envelope.gain.linearRampToValueAtTime(0,time+duration+.015);
+      voice={bus:'music',end:time+duration+.018,envelope,sources,nodes};this.voices.add(voice);
+      const current=voice;sources[0].onended=()=>this.release(current);for(const source of sources){source.start(time);source.stop(current.end);}return true;
+    }catch{
+      if(voice)this.release(voice);else this.discardMusicNodes(sources,nodes);
+      return false;
+    }
+  }
+
+  private discardMusicNodes(sources:AudioScheduledSourceNode[],nodes:AudioNode[]):void {
+    for(const source of sources){source.onended=null;try{source.stop();}catch{/* Not started or already ended. */}}
+    for(const node of nodes)try{node.disconnect();}catch{/* Continue releasing the remaining owned nodes. */}
   }
 
   private stopMusic(fade = false): void {
@@ -478,7 +559,7 @@ export class AudioManager {
       source.onended = null;
       try { source.stop(); } catch { /* Already ended. */ }
     });
-    voice.nodes.forEach(node => node.disconnect());
+    voice.nodes.forEach(node => {try{node.disconnect();}catch{/* Continue releasing the remaining owned nodes. */}});
   }
 
   private stopVoices(bus?: Bus, fade = false): void {
