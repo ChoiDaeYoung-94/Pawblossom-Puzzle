@@ -466,7 +466,7 @@ export class AudioManager {
       fundamental.connect(envelope);overtone.connect(partial);partial.connect(envelope);envelope.connect(output);
       envelope.gain.setValueAtTime(0,time);envelope.gain.linearRampToValueAtTime(amplitude,time+.004);
       envelope.gain.setValueAtTime(amplitude,time+(part==='lead'?.022:.012));
-      envelope.gain.exponentialRampToValueAtTime(.0001,time+duration);envelope.gain.linearRampToValueAtTime(0,time+duration+.015);
+      if(part==='comp')envelope.gain.exponentialRampToValueAtTime(.0001,time+duration);else envelope.gain.linearRampToValueAtTime(.0001,time+duration);envelope.gain.linearRampToValueAtTime(0,time+duration+.015);
       voice={bus:'music',end:time+duration+.018,envelope,sources,nodes};this.voices.add(voice);
       const current=voice;fundamental.onended=()=>this.release(current);
       for(const source of sources){source.start(time);source.stop(current.end);}return true;
