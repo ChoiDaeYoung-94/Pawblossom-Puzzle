@@ -41,6 +41,6 @@
 @keyframes journey-moment { 0%,100% {opacity:0;transform:translateY(10px) scale(.7)} 30%,65% {opacity:1;transform:translateY(0) scale(1)} }
 @media (prefers-reduced-motion:reduce) { .journey-work-lights circle,.journey-pip-visit,.journey-work-picture[data-moment=true]::after { animation:none!important; } }
 
-.garden-area-tabs #garden-area-journey { grid-column:1/-1; background:#f6eafb; min-height:44px; }
+.garden-area-tabs #garden-area-journey { grid-column:1/-1; min-height:44px; }
 .journey-pip-visit,.journey-work-picture[data-moment=true]::after { animation-play-state:paused; }
 .journey-work-picture[data-journey-active=true] .journey-pip-visit,.journey-work-picture[data-journey-active=true][data-moment=true]::after { animation-play-state:running; }

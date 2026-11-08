@@ -1,5 +1,6 @@
 import {t,type Language,type TextKey} from './i18n';
 import {LEVEL_COUNT} from './levels';
+import {icon} from './icons';
 
 type TrailBeat=Readonly<{level:number;title:TextKey;problem:TextKey;task:TextKey;after:TextKey}>;
 type TrailEpisode=Readonly<{id:'wolf-v1'|'beaver-v1'|'squirrel-v1';counter:'leaves'|'crates'|'acorns';journalTitle:TextKey;journalFrom:number;images:Readonly<{blocking:string;relieved:string}>;beats:readonly TrailBeat[]}>;
@@ -56,7 +57,7 @@ export function trailStoryCard(language:Language,level:number,phase:'preview'|'w
 export function trailJournal(language:Language,completed:readonly number[]){
   return trailEpisodes.filter(episode=>episode.journalFrom===1||completed.some(level=>Number.isInteger(level)&&level>=episode.journalFrom-1&&level<=LEVEL_COUNT)).map(episode=>{
     const beats=episode.beats,owned=beats.filter(beat=>completed.includes(beat.level));
-    return `<details id="trail-journal-${episode.id}" class="trail-journal" data-trail-episode="${episode.id}" data-retain-open><summary id="trail-journal-${episode.id}-summary"><img src="${episode.images[owned.length===beats.length?'relieved':'blocking']}" width="54" height="54" alt="" decoding="async"/><span><small>${t(language,'trailJournalLabel')}</small><strong>${t(language,episode.journalTitle)}</strong></span><span class="trail-memory-count">${owned.length}/${beats.length}</span></summary><p>${t(language,'trailJournalNote')}</p><ol>${beats.map(beat=>{const done=completed.includes(beat.level);return `<li data-memory-owned="${done}"><span class="trail-memory-stage">${beat.level}</span><div><strong id="trail-memory-${beat.level}-title" tabindex="-1">${t(language,beat.title)}</strong><p>${done?t(language,beat.after):t(language,'trailMemoryAt').replace('{level}',String(beat.level))}</p></div></li>`;}).join('')}</ol></details>`;
+    return `<details id="trail-journal-${episode.id}" class="trail-journal" data-trail-episode="${episode.id}" data-retain-open><summary id="trail-journal-${episode.id}-summary"><img src="${episode.images[owned.length===beats.length?'relieved':'blocking']}" width="54" height="54" alt="" decoding="async"/><span><small>${t(language,'trailJournalLabel')}</small><strong>${t(language,episode.journalTitle)}</strong></span><span class="trail-memory-count">${owned.length}/${beats.length}</span><span class="trail-disclosure" aria-hidden="true">${icon('arrow',16)}</span></summary><p>${t(language,'trailJournalNote')}</p><ol>${beats.map(beat=>{const done=completed.includes(beat.level);return `<li data-memory-owned="${done}"><span class="trail-memory-stage">${beat.level}</span><div><strong id="trail-memory-${beat.level}-title" tabindex="-1">${t(language,beat.title)}</strong><p>${done?t(language,beat.after):t(language,'trailMemoryAt').replace('{level}',String(beat.level))}</p></div></li>`;}).join('')}</ol></details>`;
   }).join('');
 }
 

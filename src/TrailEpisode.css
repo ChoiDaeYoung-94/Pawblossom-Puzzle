@@ -55,6 +55,8 @@
 .trail-journal summary>img{object-fit:contain;flex-shrink:0}.trail-journal summary>span:nth-child(2){flex:1;min-width:0}
 .trail-journal summary small{display:block;font-size:9px;letter-spacing:.04em;color:#8e698d}.trail-journal summary strong{display:block;font-size:15px;line-height:1.4}
 .trail-memory-count{padding:5px 9px;border-radius:20px;background:#efe4f5;font-size:12px;font-weight:800}
+.trail-disclosure{display:grid;place-items:center;flex:0 0 30px;height:30px;border:1px solid #d0b6e2;border-radius:10px;background:#f0e4ff;color:#513085}
+.trail-journal[open] .trail-disclosure{transform:rotate(90deg)}
 .trail-journal>p{font-size:11px;line-height:1.6;padding:0 16px;margin:4px 0 14px;color:#756779}
 .trail-journal ol{padding:0 16px 12px;margin:0;list-style:none}
 .trail-journal li{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #eee4ef}
