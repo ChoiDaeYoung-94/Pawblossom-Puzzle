@@ -19,7 +19,8 @@ const connectionStates=['open','closed','unknown'] as const;
 const clockReasons=['parent-unverified','missing','read-failed','invalid','origin-mismatch','outside-window','verified'] as const;
 type Site='begin'|'commit'|'rollback';
 type Outcome=typeof outcomes[number];
-export interface SpanCall {startedAtProcessMs:number|null;finishedAtProcessMs:number|null;outcome:Outcome;transactionActiveAfter:boolean|null;}
+export interface SpanSqliteError {primaryCode:number|null;extendedCode:number|null;}
+export interface SpanCall {startedAtProcessMs:number|null;finishedAtProcessMs:number|null;outcome:Outcome;transactionActiveAfter:boolean|null;sqliteError?:SpanSqliteError;}
 export interface TransactionSpan {
   connectionIndex:number|null;role:typeof roles[number];roleEvidence:typeof evidence[number];phase:typeof phases[number];
   begin:SpanCall|null;commit:SpanCall|null;rollback:SpanCall|null;
@@ -40,6 +41,17 @@ const defaultClock:SpanClockProvider={origin:()=>performance.timeOrigin,now:()=>
 const own=(value:unknown,key:string):unknown=>{try{if(value===null||(typeof value!=='object'&&typeof value!=='function'))return;const d=Object.getOwnPropertyDescriptor(value,key);return d&&'value' in d?d.value:undefined;}catch{return;}};
 const finite=(value:unknown):number|null=>typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=Number.MAX_SAFE_INTEGER?value:null;
 const bool=(value:unknown):boolean|null=>typeof value==='boolean'?value:null;
+const unknownSqliteError=():SpanSqliteError=>({primaryCode:null,extendedCode:null});
+function sqliteCodes(extended:unknown,primary:unknown):SpanSqliteError {
+  if(typeof extended!=='number'||!Number.isInteger(extended)||extended<1||extended>65535)return unknownSqliteError();
+  const base=extended&255;
+  return base>=1&&base<=28&&primary===base?{primaryCode:base,extendedCode:extended}:unknownSqliteError();
+}
+function nativeSqliteError(error:unknown):SpanSqliteError {
+  if(own(error,'code')!=='ERR_SQLITE_ERROR')return unknownSqliteError();
+  const extended=own(error,'errcode');
+  return sqliteCodes(extended,typeof extended==='number'?extended&255:null);
+}
 function choice<T extends string>(value:unknown,values:readonly T[],fallback:T):T {return typeof value==='string'&&values.includes(value as T)?value as T:fallback;}
 function readClock(read:()=>unknown):number|null {try{return finite(read());}catch{return null;}}
 export function createSpanClockAnchor(clock:SpanClockProvider=defaultClock):SpanClockAnchor {
@@ -49,7 +61,7 @@ type NativeAccessors=Partial<Record<'isOpen'|'isTransaction',()=>unknown>>;
 function siteOf(sql:unknown):Site|null {return sql==='BEGIN IMMEDIATE'?'begin':sql==='COMMIT'?'commit':sql==='ROLLBACK'?'rollback':null;}
 interface Connection {index:number;receiver:WeakRef<object>;role:TransactionSpan['role'];roleEvidence:TransactionSpan['roleEvidence'];active?:TransactionSpan;}
 export interface SpanToken {span:TransactionSpan;call:SpanCall|null;site:Site;connection?:Connection;receiver:object|null;}
-export interface SpanRecorder {report:TransactionSpans;before(sql:unknown,receiver:unknown,phase:unknown):SpanToken|null;after(token:SpanToken|null,outcome:'returned'|'threw',executed?:unknown):void;nativeReturned?(operation:'exec'|'prepare',sql:unknown,receiver:unknown,executed:unknown):void;finish():void;}
+export interface SpanRecorder {report:TransactionSpans;before(sql:unknown,receiver:unknown,phase:unknown):SpanToken|null;after(token:SpanToken|null,outcome:'returned'|'threw',executed?:unknown,error?:unknown):void;nativeReturned?(operation:'exec'|'prepare',sql:unknown,receiver:unknown,executed:unknown):void;finish():void;}
 
 /** BEGIN/끝 호출을 한 행에 보존합니다. 관측 오류는 원래 SQLite 동작을 바꾸지 않습니다. */
 export function createSpanRecorder(anchor?:unknown,clock:SpanClockProvider=defaultClock):SpanRecorder {
@@ -99,7 +111,7 @@ export function createSpanRecorder(anchor?:unknown,clock:SpanClockProvider=defau
         return {span,call,site,connection,receiver:object};
       }catch{fail();return null;}
     },
-    after(token,outcome,executed){
+    after(token,outcome,executed,error){
       if(!token)return;
       try{
         const {span,call,connection,site,receiver}=token;
@@ -108,6 +120,7 @@ export function createSpanRecorder(anchor?:unknown,clock:SpanClockProvider=defau
           call.outcome=outcome;const end=now(),start=call.startedAtProcessMs;
           call.finishedAtProcessMs=start!==null&&end!==null&&end>=start?end:null;if(call.finishedAtProcessMs===null)fail();
           call.transactionActiveAfter=receiver?nativeState(receiver,'isTransaction'):null;
+          if(outcome==='threw')call.sqliteError=executed===nativeExec?nativeSqliteError(error):unknownSqliteError();
         }
         if(site==='begin'){
           if(outcome==='threw')span.endObservation='begin-threw';
@@ -159,7 +172,8 @@ export function createSpanRecorder(anchor?:unknown,clock:SpanClockProvider=defau
 function projectCall(value:unknown):SpanCall|null {
   if(value===null||value===undefined)return null;
   const start=finite(own(value,'startedAtProcessMs')),end=finite(own(value,'finishedAtProcessMs'));
-  return {startedAtProcessMs:start,finishedAtProcessMs:start!==null&&end!==null&&end>=start?end:null,outcome:choice(own(value,'outcome'),outcomes,'unknown'),transactionActiveAfter:bool(own(value,'transactionActiveAfter'))};
+  const outcome=choice(own(value,'outcome'),outcomes,'unknown'),rawError=outcome==='threw'?own(value,'sqliteError'):undefined;
+  return {startedAtProcessMs:start,finishedAtProcessMs:start!==null&&end!==null&&end>=start?end:null,outcome,transactionActiveAfter:bool(own(value,'transactionActiveAfter')),...(rawError===undefined?{}:{sqliteError:sqliteCodes(own(rawError,'extendedCode'),own(rawError,'primaryCode'))})};
 }
 /** worker의 검증 주장은 신뢰하지 않고 실제 부모 anchor/수신 시각으로 다시 판정합니다. */
 export function projectTransactionSpans(value:unknown,anchor?:unknown,clock:SpanClockProvider=defaultClock):TransactionSpans|undefined {

@@ -64,7 +64,7 @@ export function createCallbackConnectionProbe(enabled:boolean,spans?:{recorder:S
           const result=Reflect.apply(nativeExec,receiver,args);nativeReturned=true;
           if(enabled&&spans)try{spans.recorder.after(token,'returned',nativeExec);spans.recorder.nativeReturned?.('exec',sql,receiver,nativeExec);}catch{spanFailure();}
           return result;
-        }catch(error){if(enabled&&spans)try{spans.recorder.after(token,'threw',nativeExec);}catch{spanFailure();}throw error;}
+        }catch(error){if(enabled&&spans)try{spans.recorder.after(token,'threw',nativeExec,error);}catch{spanFailure();}throw error;}
       };
       if(!enabled)return around(invoke);
       const selected=armed&&!reached&&sql==='BEGIN IMMEDIATE';
