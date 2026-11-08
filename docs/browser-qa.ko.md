@@ -1,3 +1,17 @@
+## 2026-11-09 · source450 정상66 완료/67부분
+
+기존 정상65완료·66판32이동450점의 전체CP와 모든 영구값을 대조하고 실제41교환(66의32/67의9)으로66을 처음 완료했습니다. 마지막0이동/3,040점에서 목표달성 승리와 첫보상40을 확인했습니다. 최종66별·2,550코인/high67·67판22이동540점·도구[]/startedtrue/셔플1·상자5개제거/1개남음이며 추가도구·셔플/새보드특수/재시도·오류0입니다. 이번까지 누적596쌍=교환584+보드특수12, 46–66 첫완료21판이며 최초46은 기존부분회차에서 이어갔습니다. 고정seed의 별도선택보조를 쓴 실제공개UI 검수이며 사람재미·난이도/69완료/전스테이지수동완주가 아닙니다.
+
+첫 normal66-focus는 외부liveobserver를 Root가 시작하지 않아 프로필/Chrome배정뒤24초gate에서 입력전에 실패했습니다. 원실패·턴0·aboutblank 최종저장읽기실패·liveChrome관측없음을 보존했고, 원20:14:11.5014275/new20:27:11.5014275/full20:29:11.5014275UTC 안20:17:38.1309162에 알려진Node/현재profile·생성창runtime/5231worker 부재·동결15/Root108·110false3만의 별도recovery로 자원반환했습니다. 이 첫차례의 validation은 false이며 인앱CP일치를 주장하지 않습니다.
+
+별도 normal66-focus-v2는 동결16개에 observer를 포함하고 소유한 child의 실제exit0·EOF·원기한 뒤에만 부모가 Node용ready를 만듭니다. 원20:21:50.0748601/new20:34:50.0748601/full20:36:50.0748601UTC 안 helper최종20:34:13.0844399/providerc60f7e exit0 뒤 Root20:35:04.4800569 실제반환·관측10+별도heldobserver 부재/5231worker0/Rootproduction108·false3/sourceclean을 확인했습니다. 추가계획은 공개scan뒤Enter전 reserve에서 중단했고 원회차를 유지합니다. 새진행은 `normal66-focus-first-derived.json`과 APK옆PC sidecar에 결속했으며 빌드시점 deviceTest:false는 그대로입니다. 최신제품의 두승리지도복귀·실제걷기 완료로 확대하지 않고, source71의64→66 recap은 아래 이전근거로 구분합니다.
+
+## 2026-11-09 · source450 도구 Tab과 새 원문 APK · 브라우저 범위
+
+최신 로컬 파일은 `Pawblossom-builds/2026-11-09-450e5a8-tool-tab-focus/Pawblossom-Puzzle-v0.1.7-2026-11-09-450e5a8-debug.apk`입니다. 0.1.7/code8·54,882,419B·SHA256 `32a781d4eb088f6c3e44c371ecf65e41515d04d9160bc433cd9088be1b0c139e`·동일 단일v2서명/권한/native494·testing117/내장웹119/public91·ZIP660CRC/중복0입니다. 진한 UI/FX/112BPM 편곡·정원/추억 표시와 PR564의 실제 Android Tab 선택취소 수정이 포함됩니다. main450의 정확 첫42517734217 attempt1은 양Node87파일4473·스토어19·타입3/두웹/carrier 성공입니다.
+
+copy4 실제450 raw production108의 KO/EN320·808 네 조건에서 Tab/Shift+Tab/미선택취소·전체raw/보드크기불변과 첫무료Enter생성1회를 확인했습니다. 9PNG 독립시각에서 초점/조작 가림의 확정P1/P2는 없고, 320 대상설명말줄임과 취소초점 PNG부재는 유지합니다. 기존 fe후보 브라우저는 원19:57:08.5683238/new20:00:08.5683238/full20:02:08.5683238 안19:58:23.9957021 실제반환·관측28부재/동결759였습니다. 새raw copy4의 반환/원감사실패는 Android 문서와 같은 별도근거입니다.
+
 ## 2026-11-09 · main1e 원문 바이트 정원 후속
 
 PR561 checkout과 Windows Root public10개 SVG/OFL의 CRLF/LF 차이를 보존하고 Root tracked749 원문 mirror로 새 production108/testing117/production108을 만들었습니다. source1e 실제Chrome6조건12PNG/18summary·대비6.792·전체저장불변·오류0을 확인했고 12PNG의 Root/독립시각 검수도 마쳤습니다. copy3 원18:45:36.0791099/new18:57:36.0791099/full19:00:36.0791099UTC 안18:47:15.4032581 APK/Chrome/SDK 실제반환·첫15단계exit0/동결1542/관측73부재/unknown0·Root108/Android110false3 복원입니다. source1e의 새정원 바이트 검수이며, 기존 통합게임/Nativeaudio/사람청취 근거는 아래 소스·범위를 따릅니다.

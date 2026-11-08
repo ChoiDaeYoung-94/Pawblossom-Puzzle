@@ -1,10 +1,24 @@
-## 2026-11-09 · 최신1e323b1 정원 후속 APK
+## 2026-11-09 · source450 도구 Tab과 새 원문 APK
+
+최신 로컬 파일은 `Pawblossom-builds/2026-11-09-450e5a8-tool-tab-focus/Pawblossom-Puzzle-v0.1.7-2026-11-09-450e5a8-debug.apk`입니다. 0.1.7/code8·54,882,419B·SHA256 `32a781d4eb088f6c3e44c371ecf65e41515d04d9160bc433cd9088be1b0c139e`·동일 단일v2서명/권한/native494·testing117/내장웹119/public91·ZIP660CRC/중복0입니다. 진한 UI/FX/112BPM 편곡·정원/추억 표시와 PR564의 실제 Android Tab 선택취소 수정이 포함됩니다. main450의 정확 첫42517734217 attempt1은 양Node87파일4473·스토어19·타입3/두웹/carrier 성공입니다.
+
+copy4는 Root tracked749 raw mirror에서 production108/testing117/production108을 만들고, 그 실제 바이트로 KO/EN320×568·808×387의4조건9PNG를 검수했습니다. Tab→확정, 보드재초점뒤Shift+Tab→취소, 미선택Tab→취소/Enter취소와 전체raw·보드크기 불변, 첫조건의 실제무료생성1회를 확인했습니다. 9PNG의 독립시각에서 버튼/초점선/잘림·겹침의 확정 P1/P2는 없었습니다. 320의 긴 대상 설명은 말줄임되며 취소 버튼 자체의 초점 PNG는 없습니다. 기존 정원6조건은 source1e, 통합UI/Nativeaudio 근거는 source666/b50로 구분합니다.
+
+원20:06:27.5302793/new20:18:27.5302793/full20:21:27.5302793UTC·e979ddb6593b438fa6bf657cd99b78d3 안15단계 실제exit0/빌드·복원을 마쳤습니다. Root가 외부held wrapper 없이 start를 직접 실행해 원frozenreturn이 controller-exit JSON부재로 실패했습니다. 원실패/a7c0ad와 frozen1539는 보존했고, 별도 after-start recovery가 tool-provider session45923/a88e72 실제exit0·원lease/resourcePIDbirth·현재known73부재/unknown0·SDK/local.properties/Root108·Android110false3 복원을 대조하여 **20:12:16.0872432UTC 실제반환PASS**를 기록했습니다. originalReturnAuditPassed:false/nativeheldcontroller:false/정확controllerexitUTC:null을 유지합니다. 자손82표본은 모든 OS 수명 전수관측이 아니며 빌드 재실행0입니다. 다음 빌드는 외부held 종료 증빙을 포함한 실행기로 발행해야 합니다.
+
+빌드시점 artifact.deviceTest:false/전체통합newSourceBrowserTested:false를 유지하며 새 tool keyboard 범위만 true입니다. 마지막 설치 확인본은 두 기기 모두 이전d291이며 새32a의 no-clear 업데이트·Native도구/FX는 후속입니다. 새 기기 검수는 별도sidecar에 추가하고 빌드시점 false를 소급 변경하지 않습니다.
+
+## 2026-11-09 · 이전1e323b1 정원 후속 APK
 
 source/main1e323b1의 `Pawblossom-builds/2026-11-09-1e323b1-garden-affordance/Pawblossom-Puzzle-v0.1.7-2026-11-09-1e323b1-debug.apk`입니다. 54,882,419B·SHA256 `d29163f495a1007ded7f0e13f1fff1ec9278ea5135a9e370c61a95e14a388f1a`·0.1.7/code8·동일 단일v2서명/권한/native494·testing117/내장웹119/public91·ZIP660CRC/중복0입니다. 진한 UI/FX/112BPM 편곡·도구설명 정리·여행 정원 선택색/추억 펼침표시를 포함합니다.
 
 copy3 원18:45:36.0791099/new18:57:36.0791099/full19:00:36.0791099UTC 안18:47:15.4032581 실제반환·첫15단계exit0·동결1542/관측73세대부재/unknown0·자손57표본·SDK/local.properties 원문·새 Root108/Android110 false3 복원입니다. 관측 표본을 모든 OS 수명 전수로 확대하지 않습니다. Root tracked749 원문 mirror의 production108/testing117/production108과 실제Chrome KO/EN320·390·808의6조건12PNG·18summary/대비6.792·저장불변을 대조했습니다. 독립시각12PNG도 확인했고 native/서명/권한은80a와 같습니다.
 
-빌드시점 artifact의 deviceTest:false·전체통합 newSourceBrowserTested:false는 그대로이며 garden 범위만 true입니다. 새 APK의 실제 기기 설치/실행은 후속이며 기존80a/154a의 검수로 대체하지 않습니다.
+빌드시점 artifact의 deviceTest:false·전체통합 newSourceBrowserTested:false는 그대로이며 garden 범위만 true입니다. 최신d291은 SM-N986N/API33과 LD14 index2/PJJ110/API34 모두 기존80a에서 no-clear1회 업데이트했고 실제 설치 바이트 SHA를 대조했습니다. 실물은 전체Paw4키/일반3·1별40코인/highest2·2판24이동0점 전체CP, LD는 전체Paw2키/0별0코인/highest1·1판26이동0점 전체CP와 안내완료가 그대로입니다. 일반보드·안내입력0이며 각 기기 옆sidecar에 설치와 범위를 기록하고 빌드시점 deviceTest:false는 유지했습니다.
+
+실물 원19:00:39.3760421/new19:12:39.3760421/full19:15:39.3760421UTC 안19:04:14.2847184 실제반환입니다. Root의 수동final-peer 선행0 뒤 원return의 중복호출이 기존출력assert로1이 된 실패를 보존했습니다. 별도5pin recovery가 동일원창에서 새held metadata0payload/known6부재·13frozen/Root3tree·lease회수·설치completed-success를 확인했고 originalReturnAuditPassed:false/첫수동peer PID미기록을 명시했습니다. 설치/앱입력 재실행은0입니다. LD는 원19:05:07.9827525/new19:17:07.9827525/full19:20:07.9827525 안19:06:06.3974588 첫return까지PASS·held0/known5부재/158logical/13frozen·동일760/Root3tree·lease회수입니다.
+
+이번 두scope는 설치/저장만 확인했으며 NativeFX/실청취·OSfocus·모든OEM 승인이 아닙니다. 기존80a/154a의 UI/audio 검수와 구분합니다.
 
 ## 2026-11-09 · 이전71a8693 APK와 실제 관측
 
