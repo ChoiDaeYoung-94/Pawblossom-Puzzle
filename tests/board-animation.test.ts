@@ -24,6 +24,7 @@ class Graphic {
   destroyed=false;alpha=1;name='';rectangles:number[][]=[];lines:number[][]=[];strokes:number[][]=[];circles:number[][]=[];
   fillStyle(){return this;}lineStyle(){return this;}setDepth(){return this;}
   fillRoundedRect(...values:number[]){this.rectangles.push(values);return this;}
+  fillTriangle(){return this;}
   strokeRoundedRect(...values:number[]){this.strokes.push(values);return this;}fillCircle(...values:number[]){this.circles.push(values);return this;}strokeCircle(){return this;}
   lineBetween(...values:number[]){this.lines.push(values);return this;}
   setName(name:string){this.name=name;return this;}setPosition(){return this;}setAngle(){return this;}

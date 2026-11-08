@@ -49,9 +49,9 @@ export class BoardScene extends Phaser.Scene {
     this.effects.clear();this.effects=new BoardEffects(this);
     this.cameras.main.setBackgroundColor('#e5d5ef');
     const g=this.add.graphics();
-    g.fillStyle(0x493958,1);g.fillRoundedRect(4,7,472,470,25);
-    g.fillStyle(0xc8909f,1);g.fillRoundedRect(4,3,472,471,25);
-    g.fillStyle(0x8c79aa,1);g.fillRoundedRect(9,8,462,461,21);
+    g.fillStyle(0x3c2358,1);g.fillRoundedRect(4,7,472,470,25);
+    g.fillStyle(0x6e39c9,1);g.fillRoundedRect(4,3,472,471,25);
+    g.fillStyle(0x9c79c8,1);g.fillRoundedRect(9,8,462,461,21);
     g.lineStyle(2,0xffedf3,.9);g.strokeRoundedRect(6,5,468,467,23);
     for(let r=0;r<8;r++)for(let c=0;c<8;c++){
       if(!this.engine.isActive({row:r,col:c}))continue;
