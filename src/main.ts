@@ -1853,6 +1853,13 @@ boardFocus.addEventListener('blur',event=>{
 boardFocus.addEventListener('pointerdown',event=>{if(event.button===0&&event.isPrimary!==false&&scene?.keyboardState().available)clearResumeNotice();boardFocus.dataset.keyboard='false';scene?.hideKeyboardCursor();},{capture:true});
 boardFocus.addEventListener('keydown',event=>{
   if(event.target!==boardFocus||document.activeElement!==boardFocus||event.altKey||event.ctrlKey||event.metaKey||event.isComposing)return;
+  // 내부 canvas를 거치지 않고 같은 도구 작업의 확정/취소로 이동합니다.
+  if(event.key==='Tab'&&toolMode&&validToolMode(toolMode)){
+    const confirm=$<HTMLButtonElement>('#tool-confirm'),cancel=$<HTMLButtonElement>('#tool-cancel');
+    const target=event.shiftKey||confirm.disabled?cancel:confirm;
+    if(target.isConnected&&!target.disabled){event.preventDefault();target.focus({preventScroll:true});}
+    return;
+  }
   if(!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter',' ','Escape'].includes(event.key))return;
   if(boardPending||route!=='puzzle'||!nativeActive||document.hidden||testAds?.pausesGame||testBilling?.pausesGame||document.querySelector('dialog[open]'))return;
   // 대기 중에도 방향키/Space의 페이지 스크롤은 막고 엔진 입력은 거부합니다.
