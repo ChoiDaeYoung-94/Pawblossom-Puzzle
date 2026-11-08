@@ -37,11 +37,11 @@ import './JourneyGarden.css';
 import {journeyProjectSpecs,journeyProjectFor,nextJourneyProject,previewJourneyAction,prepareJourneyAction,type JourneyProject,type JourneyAction} from './journeyGarden';
 import {journeyGardenPanel,journeyGardenPreview,journeyNextCard,journeyName,journeyPhase} from './JourneyGardenUI';
 import {createJourneyGardenArt} from './JourneyGardenArt';
-import './UiTheme.css';
 import './GardenWorkshop.css';
 import './PipCare.css';
 import './MapComposition.css';
 import './MapJourney.css';
+import './UiTheme.css';
 import {CAMPAIGN_NODE_STEP,CAMPAIGN_NODE_X,campaignNodePath} from './CampaignRoute';
 import {createMapTravel} from './MapTravel';
 import { BoardScene,tileNames } from './BoardScene';
@@ -578,7 +578,8 @@ function toolEnvironment(){
 function sameToolContext(context:ToolContext){return context.round===round&&context.scene===scene&&context.save===save&&context.testing===testingLevel;}
 function currentToolRound(){return roundCheckpoint(scene.snapshot());}
 function renderPuzzleTools(){
-  $('#tool-shelf').innerHTML=toolShelf(save.language,save.highestLevel,save.puzzleTools,testingLevel,roundTools?.used);
+  const toolRound=roundTools?{schema:2 as const,actionProfile:roundTools.profile,toolsUsed:roundTools.used}:undefined;
+  $('#tool-shelf').innerHTML=toolShelf(save,toolRound,testingLevel);
   for(const button of Array.from(document.querySelectorAll<HTMLButtonElement>('#tool-shelf button[data-tool]')))button.onclick=()=>{if(button.isConnected&&document.querySelector('#'+button.id)===button)showToolInfo(button.dataset.tool as PuzzleToolId,button.id);};
   const all=$<HTMLButtonElement>('#tool-open');all.innerHTML=`<img src="${toolPicture('trowel')}" width="26" height="26" alt=""/><span>${text('toolShelf')}</span>`;all.onclick=()=>showToolInfo(undefined,all.id);
   $('.puzzle-tools-bar').dataset.selecting=String(Boolean(toolMode));$('#tool-target-controls').hidden=!toolMode;
