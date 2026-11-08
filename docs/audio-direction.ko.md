@@ -8,7 +8,7 @@
 
 전곡에서 선율 누락·클리핑은 0이며 음악 동시 음은 최대 5개입니다. 채택 후보는 지수 감쇠 초안보다 RMS가 약 3.60–3.68dB 높고, 0.94 이상 표본 수는 곡당 5개 또는 11개로 증가하지 않았습니다. 같은 실행의 4테마 미리듣기와 달리 전곡 비교의 기준은 모듈 SHA가 같은 이전 실제 렌더 기록입니다. 효과음 전후 최대 샘플 차이는 2.3842e-7 이하이고, `special+reward` 대표 혼합의 최대 SFX 7개도 확인했습니다. 이 수치는 청취 품질이나 SFX 혼합 명료도의 최종 판정이 아닙니다.
 
-원문·WAV는 Git 밖 `Pawblossom-builds/qa/integration-20261108/linear-dsp-first`, `linear-comparison-analysis.json`에 보존했습니다. `listening-final-v2`는 기존 72 BPM과 채택 112 BPM의 네 테마를 감쇄만 적용해 RMS를 맞춘 참고본입니다. LUFS·지각 음량 일치나 최종 믹스 승인은 아닙니다. 새 전체 CI·통합 APK·실물·LDPlayer 관측은 후속 기록으로 구분합니다. 아래 날짜별 72 BPM 기록은 당시 구현과 검수 이력입니다.
+원문·WAV는 Git 밖 `Pawblossom-builds/qa/integration-20261108/linear-dsp-first`, `linear-comparison-analysis.json`에 보존했습니다. `listening-final-v2`는 기존 72 BPM과 채택 112 BPM의 네 테마를 감쇄만 적용해 RMS를 맞춘 참고본입니다. LUFS·지각 음량 일치나 최종 믹스 승인은 아닙니다. 첫PR555/42484558415와 main666/42485267585 attempt1은 양Node86/4,425·스토어19·타입3/두웹/carrier가 성공했습니다. 편곡은666/154a와 최신71/80a APK에 포함됐습니다. Native UI/동일WebAudio context의 HOME suspend·복귀 시간진행은666/154a에서 관측했고 최신80a의 설치/저장 근거와 구분합니다. 청취·OSfocus 소유권·최종 믹스 승인은 아직입니다. 최신 Native FX/LD 전체 오디오 검수도 별도입니다. 아래 날짜별 72 BPM 기록은 당시 구현과 검수 이력입니다.
 
 ## 2026-10-25 · #346 긴 여정의 자체5곡 추가
 

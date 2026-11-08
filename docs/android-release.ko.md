@@ -1,11 +1,37 @@
-## 최신 로컬 통합 APK · 2026-11-08 · #545 · 73c3cef
+## 2026-11-09 · 최신1e323b1 정원 후속 APK
+
+source/main1e323b1의 `Pawblossom-builds/2026-11-09-1e323b1-garden-affordance/Pawblossom-Puzzle-v0.1.7-2026-11-09-1e323b1-debug.apk`입니다. 54,882,419B·SHA256 `d29163f495a1007ded7f0e13f1fff1ec9278ea5135a9e370c61a95e14a388f1a`·0.1.7/code8·동일 단일v2서명/권한/native494·testing117/내장웹119/public91·ZIP660CRC/중복0입니다. 진한 UI/FX/112BPM 편곡·도구설명 정리·여행 정원 선택색/추억 펼침표시를 포함합니다.
+
+copy3 원18:45:36.0791099/new18:57:36.0791099/full19:00:36.0791099UTC 안18:47:15.4032581 실제반환·첫15단계exit0·동결1542/관측73세대부재/unknown0·자손57표본·SDK/local.properties 원문·새 Root108/Android110 false3 복원입니다. 관측 표본을 모든 OS 수명 전수로 확대하지 않습니다. Root tracked749 원문 mirror의 production108/testing117/production108과 실제Chrome KO/EN320·390·808의6조건12PNG·18summary/대비6.792·저장불변을 대조했습니다. 독립시각12PNG도 확인했고 native/서명/권한은80a와 같습니다.
+
+빌드시점 artifact의 deviceTest:false·전체통합 newSourceBrowserTested:false는 그대로이며 garden 범위만 true입니다. 새 APK의 실제 기기 설치/실행은 후속이며 기존80a/154a의 검수로 대체하지 않습니다.
+
+## 2026-11-09 · 이전71a8693 APK와 실제 관측
+
+당시 파일은 `Pawblossom-builds/2026-11-09-71a8693-vivid-tool-copy/Pawblossom-Puzzle-v0.1.7-2026-11-09-71a8693-debug.apk`입니다. 54,882,419B·SHA256 `80a79733ff953788dd19c8eb90f082a50ce530fe2cbc8ad6210d4daeb54f4415`·0.1.7/code8/debug/testing true3이며 동일 단일v2서명·권한/native494·testing117/내장웹119/public91·ZIP660CRC/중복0입니다. 첫 main42498630747 attempt1 성공의 source71입니다. UI/FX/112BPM 편곡과 도구 설명 중복 제거를 포함하고, 후속PR561은 이71 APK에 포함하지 않습니다.
+
+copy2 빌드는 Root tracked749를 원문 그대로 복사한 mirror에서 production/testing/production을 다시 만들고 Root108/Android110 false3를 복원했습니다. mirror 자체의 독립 GitHEAD를 주장하지 않습니다. 원16:38:24.6068322/new16:50:24.6068322/full16:53:24.6068322UTC 안16:39:35.3588178 실제반환, 13단계 첫exit0·동결1679/관측45잔존0/unknown0·SDK/local.properties 원문/sourceclean입니다. 앞선 copy의 TypeError와 public10 텍스트 CRLF 차이·CAS복구는 별도 실패로 보존했습니다. QA8 `copy2-apk-{artifact-proof,actual-return}.json`이 근거입니다.
+
+SM-N986N/API33 user0에는154a→80a no-clear1회 업데이트 후 실제설치 바이트SHA·UID/dataDir/firstInstallTime과 전체Paw4raw/일반3·정상완료1/40코인/highest2·2판전체CP24이동0점을 대조했습니다. 원17:03:32.7165918/new17:15:32.7165918/full17:18:32.7165918 안17:04:54.1295362 실제반환입니다. `device-install-storage-verification-20261109.json`은 후속 sidecar이며 build-time `artifact.deviceTest:false`/`newSourceBrowserTested:false`는 그대로입니다. 실제 map PNG의 진한 주버튼·중앙 하단메뉴를 관측했지만 최신판의 전체FX/가로터치/청취 승인으로 확대하지 않습니다.
+
+LD14 **index2/emulator-5558/transport3/PJJ110/API34**에는80a fresh설치1회와 설치바이트SHA를 확인했습니다. 원17:07:41.8960866/new17:19:41.8960866/full17:22:41.8960866 안17:12:22.2147838에 별도 cleanup 복구와 자원반환을 완료했습니다. flow는 Android14의 `appId`를 받지 못한 parser실패, 첫 cleanup HOME는 전송전peer미수립 실패로 유지했습니다. Android13 `userId`/Android14 `appId` exact-one parser와 held controller 종료기록을 새 helper에서 보강했습니다. LD0의 이전GUI 미설치 기록은 그대로입니다.
+
+별도 즉시cold는 첫 신규CP 관측 직후 종료한 뒤 다음 동일 `https://localhost/`의 main UI 전 Paw0키와 새 CP를 관측해 실패했습니다. 원17:23:10.4462116/new17:35:10.4462116/full17:38:10.4462116 안17:23:58.6507197 자원반환·guide/정상보드입력0입니다. 두 CP는 실제 `validateCheckpoint`를 통과하고, 부팅소스에서 정상 CP 재생성 경로를 원인으로 확정하지 않았습니다. host명령기록 시각은 guest종료/디스크쓰기 시각이 아닙니다. 저장 영속화/가시성 시점은 가설이며 원인·해결은 미확정입니다. `ld-pre-guide-cold-storage-analysis.json`에 원문을 결속했습니다.
+
+다음 guide-v3에서는 Native안내6입력, `tutorialSeen`만의 primary 변경과 정확한 backup 회전, HOME/warm 후 **실6.297초·6stable표본**을 확인했습니다. cold초기7읽기는 Paw2키 전체가 그대로였고 main UI뒤에도 primary전체·전체CP·안내완료가 같았습니다. backup만 현재primary 원문으로 회전했으며 `tutorialSeen:false→true` 차이뿐입니다. 부팅 checkpoint/SaveStore.save 경로와 일치합니다. strict3raw gate의 원flow1/validationfalse를 고치지 않고 `ld-guide-v3-derived.json`과 `device-ld-guide-persistence-verification-20261109.json`에 이 부분 근거를 별도로 기록했습니다. 원17:58:18.5817850/new18:10:18.5817850/full18:13:18.5817850 안18:00:08.8819015 자원반환·known5부재/동결15/lease회수·Root3tree/기존760 유지입니다. 첫 즉시종료 실패/flush 원인 해결·청취·모든OEM 승인은 아닙니다.
+
+직전666/154a APK의 Native UI·오디오에서는 정상3키/CP2 보존, 설정 명시복귀·퍼즐 하단메뉴 숨김·잠긴 도구 설명은 열리고 실행은 disabled인 상태, 동일 WebAudio context의 전경 시간진행→HOME hidden suspend/정지→따뜻한 복귀/재개를 관측했습니다. 원14:56:24.955979/new15:08:24.955979/full15:11:24.955979 안15:07:29.5627147 composite반환입니다. 원origin guard 실패와 복구는 보존했으며 실제 청취/OSfocus 소유권·최신80a 반복검수와 구분합니다.
+
+아래 날짜별 ‘최신’은 당시 전달본의 이력입니다. 모든 artifact의 빌드 시점 false와 뒤 실제 관측 sidecar를 분리하며 Drive/공개배포·운영광고/결제는 진행하지 않았습니다.
+
+## 이전 로컬 통합 APK · 2026-11-08 · #545 · 73c3cef
 
 - 파일: `Pawblossom-builds/2026-11-08-73c3cef-tool-order-settings/Pawblossom-Puzzle-v0.1.7-2026-11-08-73c3cef-debug.apk`
-- **54,882,419바이트**, SHA256 **`95a262d05d61d6b7ae770d640c1dce356c5193f294b1eabab93e0ce7859f410a`**. source/main `73c3cef20d09ae8e94d2d94980a784687f74c77c`·설정수정head7c8282d와 whole-tree262931b8가 같습니다. 0.1.7/code8/debug/testing true3·동일 단일v2서명/권한/native494·testing117/내장웹119/public91·ZIP660CRC/중복0입니다. **이 APK가 최신이며 아래 b936 기록은 직전 버전 이력입니다.**
+- **54,882,419바이트**, SHA256 **`95a262d05d61d6b7ae770d640c1dce356c5193f294b1eabab93e0ce7859f410a`**. source/main `73c3cef20d09ae8e94d2d94980a784687f74c77c`·설정수정head7c8282d와 whole-tree262931b8가 같습니다. 0.1.7/code8/debug/testing true3·동일 단일v2서명/권한/native494·testing117/내장웹119/public91·ZIP660CRC/중복0입니다. **이 APK는 당시 전달본이며 아래 b936 기록은 그 이전 버전 이력입니다.**
 - 첫PR42392144843/main42393591387 attempt1 양Node86/4,420·스토어19·타입3/두웹/carrier 성공과 source7c8282d의 실제Chrome6조건을 결속했습니다. 생산108·시험117을 각각 다시 빌드해 전수SHA가 같았고, APK는 그 시험117을 정확히 포함합니다.
 - 빌드 원17:16:10/new17:28:10/full17:31:10UTC 안 **17:18:16.8453972UTC 실제반환**입니다. 10단계 첫exit0·동결22/SDK핵심/local.properties 원문/sourceclean과 새production108·Android110 false3 복원을 확인했습니다. live41관측/자손28표본·관측39신원 잔존0/unknown0이며 전OS수명 전수관측으로 확대하지 않습니다. QA7/`545-{build-status,artifact-proof,actual-return}.json`에 근거를 보존했습니다.
 
-### 최신 APK 실제 업데이트·설정/Lab 회귀
+### 당시 APK 실제 업데이트·설정/Lab 회귀
 
 SM-N986N/Android13 user0에 **b936→95a no-clear 업데이트1회**를 실행하고 설치된 바이트를 다시 읽어 SHA를 대조했습니다. 이전/이후 전체Paw4키 원문과 일반3키·1판 전체CP23이동860점/도구[]/셔플1이 정확히 같습니다. 새 도구 표시는3/4/6/8/10 순서입니다. 설치 검증 이후의 Lab 조작은 별도 단계이며, 업데이트 전후 전체저장 일치와 혼동하지 않습니다.
 
