@@ -1,10 +1,14 @@
+## 2026-11-09 · Native LD 도구와 남은 가로안내
+
+source450/32a 실제LD2의 별도Lab3/4/6/8/10에서 Native Tab정확1회·첫무료 생성/장갑교환·실제보드발동과 각scope일반3/fullCP보호·명시Lab종료를 확인했습니다. 9캡처797JPEG의 원문검사와 일부시각표본을 구분하며 실제기기/원시각·후속sidecar는 [Android 기록](android-release.ko.md)을 따릅니다. #563 원Tab취소는닫았고, 시험배너가있는CSS800×426/DPR2에서 안내문일부잘림은 #565로남겼습니다. 원래source1e 첫실패나 정상PC/사람난이도/청취 승인으로 합산하지 않습니다.
+
 ## 2026-11-09 · source450 정상66 완료/67부분
 
 기존 정상65완료·66판32이동450점의 전체CP와 모든 영구값을 대조하고 실제41교환(66의32/67의9)으로66을 처음 완료했습니다. 마지막0이동/3,040점에서 목표달성 승리와 첫보상40을 확인했습니다. 최종66별·2,550코인/high67·67판22이동540점·도구[]/startedtrue/셔플1·상자5개제거/1개남음이며 추가도구·셔플/새보드특수/재시도·오류0입니다. 이번까지 누적596쌍=교환584+보드특수12, 46–66 첫완료21판이며 최초46은 기존부분회차에서 이어갔습니다. 고정seed의 별도선택보조를 쓴 실제공개UI 검수이며 사람재미·난이도/69완료/전스테이지수동완주가 아닙니다.
 
 첫 normal66-focus는 외부liveobserver를 Root가 시작하지 않아 프로필/Chrome배정뒤24초gate에서 입력전에 실패했습니다. 원실패·턴0·aboutblank 최종저장읽기실패·liveChrome관측없음을 보존했고, 원20:14:11.5014275/new20:27:11.5014275/full20:29:11.5014275UTC 안20:17:38.1309162에 알려진Node/현재profile·생성창runtime/5231worker 부재·동결15/Root108·110false3만의 별도recovery로 자원반환했습니다. 이 첫차례의 validation은 false이며 인앱CP일치를 주장하지 않습니다.
 
-별도 normal66-focus-v2는 동결16개에 observer를 포함하고 소유한 child의 실제exit0·EOF·원기한 뒤에만 부모가 Node용ready를 만듭니다. 원20:21:50.0748601/new20:34:50.0748601/full20:36:50.0748601UTC 안 helper최종20:34:13.0844399/providerc60f7e exit0 뒤 Root20:35:04.4800569 실제반환·관측10+별도heldobserver 부재/5231worker0/Rootproduction108·false3/sourceclean을 확인했습니다. 추가계획은 공개scan뒤Enter전 reserve에서 중단했고 원회차를 유지합니다. 새진행은 `normal66-focus-first-derived.json`과 APK옆PC sidecar에 결속했으며 빌드시점 deviceTest:false는 그대로입니다. 최신제품의 두승리지도복귀·실제걷기 완료로 확대하지 않고, source71의64→66 recap은 아래 이전근거로 구분합니다.
+별도 normal66-focus-v2는 동결16개에 observer를 포함하고 소유한 child의 원기한 내 실제exit0·EOF를 확인한 뒤에만 부모가 Node용ready를 만듭니다. 원20:21:50.0748601/new20:34:50.0748601/full20:36:50.0748601UTC 안 helper최종20:34:13.0844399/providerc60f7e exit0 뒤 Root20:35:04.4800569 실제반환·관측10+별도heldobserver 부재/5231worker0/Rootproduction108·false3/sourceclean을 확인했습니다. 추가계획은 공개scan뒤Enter전 reserve에서 중단했고 원회차를 유지합니다. 새진행은 `normal66-focus-first-derived.json`과 APK옆PC sidecar에 결속했으며 빌드시점 deviceTest:false는 그대로입니다. 최신제품의 두승리지도복귀·실제걷기 완료로 확대하지 않고, source71의64→66 recap은 아래 이전근거로 구분합니다.
 
 ## 2026-11-09 · source450 도구 Tab과 새 원문 APK · 브라우저 범위
 
