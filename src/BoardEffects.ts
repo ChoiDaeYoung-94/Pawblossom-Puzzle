@@ -5,8 +5,8 @@ import {BOARD_RENDER_SCALE} from './BoardDisplay';
 
 type EffectObject=Phaser.GameObjects.Graphics|Phaser.GameObjects.Image|Phaser.GameObjects.Text;
 const point=(p:Position)=>({x:44+p.col*56,y:44+p.row*56});
-const colors=[0xf65a72,0xffa635,0x8285ed,0xd5a34f,0x8bcc4b,0xf28bbc];
-const specialColor=(special:Special)=>special==='row'?0x8be8ff:special==='column'?0xa8f1ca:special==='bomb'?0xffb686:0xe3b2ff;
+const colors=[0xf33b68,0xffa414,0x6851df,0xd79529,0x45ae43,0xdd46a2];
+const specialColor=(special:Special)=>special==='row'?0x26bcea:special==='column'?0x14a87c:special==='bomb'?0xff9228:0xb543e2;
 // 같은 단계의 겹치는 행·열은 한 번만 그리며 연쇄에도 추가 난수를 쓰지 않습니다.
 const uniqueEffects=(step:ResolveStep)=>{
   const seen=new Set<string>();
@@ -34,6 +34,7 @@ export class BoardEffects {
   anticipate(step:ResolveStep){
     if(reducedMotion())return;
     for(const p of uniqueEffects(step)){
+      if(this.objects.size>=120)break;
       const {x,y}=point(p),pulse=this.scene.add.graphics().setPosition(x,y).setDepth(12).setName('special-charge');
       pulse.fillStyle(specialColor(p.special),.3);pulse.fillRoundedRect(-23,-23,46,46,p.special==='bomb'||p.special==='rainbow'?23:10);
       pulse.lineStyle(3,0xfff9e4,.95);pulse.strokeCircle(0,0,17);
@@ -41,11 +42,12 @@ export class BoardEffects {
     }
   }
   private fragment(x:number,y:number,color:number,index:number,distance:number){
+    if(this.objects.size>=120)return;
     const directions=[[-1,-.65],[1,-.65],[-.65,1],[.65,1],[-1,.15],[1,.15],[.15,-1],[-.15,1]];
     const [dx,dy]=directions[index%directions.length];
     const chip=this.scene.add.graphics().setPosition(x,y).setDepth(12).setAngle(index*31).setName('tile-fragment');
-    chip.fillStyle(color,1);chip.fillRoundedRect(-3,-3,6,6,2);
-    chip.lineStyle(1,0xfff7de,.9);chip.lineBetween(-2,-2,2,-2);
+    chip.fillStyle(color,1);chip.fillTriangle(0,-6,5,0,0,6);chip.fillTriangle(0,-6,-5,0,0,6);
+    chip.lineStyle(1.5,0xfff7de,.95);chip.lineBetween(-2,-2,0,-4);
     this.animate(chip,{x:x+dx*distance,y:y+dy*distance,angle:index*31+110,alpha:0,scaleX:.35,scaleY:.35,duration:270+index%3*25,ease:'Cubic.easeOut'});
   }
   /** 실제 상자 타격 칸에만 표시하며 낙하·보상·해소 대기를 추가하지 않습니다. */
@@ -106,19 +108,24 @@ export class BoardEffects {
     // 64칸 제거에도 최대 12개만 만들어 모바일의 중첩 비용을 제한합니다.
     const stride=Math.max(1,Math.ceil(step.removed.length/12));
     step.removed.filter((_,i)=>i%stride===0).forEach((p,i)=>{
+      if(this.objects.size>=120)return;
       const {x,y}=point(p),spark=this.scene.add.graphics().setPosition(x,y).setDepth(8).setName('match-spark');
-      spark.lineStyle(2,chain>1?0xf4bc65:0xfff8df,1);
-      spark.lineBetween(-5,0,5,0);spark.lineBetween(0,-5,0,5);
-      this.animate(spark,{y:y-12,alpha:0,duration:220+i%3*25,ease:'Sine.easeOut'});
+      const color=colors[step.before[p.row]?.[p.col]?.kind??i%colors.length],strength=Math.min(4,Math.max(1,chain)),radius=8+strength*1.5,waist=radius*.24;
+      // Four filled points and their glint share one Graphics/one tween, even at high chains.
+      spark.fillStyle(color,.95);
+      spark.fillTriangle(-radius,0,0,-waist,radius,0);spark.fillTriangle(-radius,0,0,waist,radius,0);
+      spark.fillTriangle(0,-radius,-waist,0,0,radius);spark.fillTriangle(0,-radius,waist,0,0,radius);
+      spark.lineStyle(2,strength>=3?0xffcb48:0xfff8df,.95);spark.strokeCircle(0,0,radius*.5);
+      spark.fillStyle(0xfffbea,1);spark.fillRoundedRect(-2,-2,4,4,2);
+      this.animate(spark,{y:y-12,scaleX:1.12,scaleY:1.12,alpha:0,duration:220+i%3*25,ease:'Sine.easeOut'});
       if(i<8){
-        const color=colors[step.before[p.row]?.[p.col]?.kind??i%colors.length];
-        this.fragment(x,y,color,i,22+Math.min(chain,4)*3);
-        this.fragment(x,y,color,i+1,22+Math.min(chain,4)*3);
+        this.fragment(x,y,color,i,25+strength*4);
+        this.fragment(x,y,color,i+1,25+strength*4);
       }
     });
   }
   special(step:ResolveStep){
-    if(reducedMotion())return;
+    if(reducedMotion()||this.objects.size>=120)return;
     const effects=uniqueEffects(step);
     // 색 폭발과 같은 해결 단계의 실제 제거 칸만 연결합니다. 다른 특수와 겹친 칸도 포함됩니다.
     // Graphics 하나 안의 선 수도 제한하여 객체 상한과 별도로 그리기 비용을 관리합니다.
@@ -134,7 +141,7 @@ export class BoardEffects {
         const count=Math.min(12,targets.length);
         for(let i=0;i<count;i++){
           const p=targets[count===1?0:Math.round(i*(targets.length-1)/(count-1))],end=point(p);
-          threads.lineStyle(7,colors[step.before[p.row][p.col]!.kind],.45);threads.lineBetween(origin.x,origin.y,end.x,end.y);
+          threads.lineStyle(7,colors[step.before[p.row][p.col]!.kind],.7);threads.lineBetween(origin.x,origin.y,end.x,end.y);
           threads.lineStyle(2,0xfff9e6,.95);threads.lineBetween(origin.x,origin.y,end.x,end.y);
           threads.strokeCircle(end.x,end.y,7);
         }
@@ -142,10 +149,11 @@ export class BoardEffects {
       }
     }
     for(const p of effects){
+      if(this.objects.size>=120)break;
       const {x,y}=point(p);
       if(p.special==='row'||p.special==='column'){
         const across=p.special==='row',beam=this.scene.add.graphics().setPosition(x,y).setDepth(12).setName('special-sweep');
-        beam.fillStyle(specialColor(p.special),.6);
+        beam.fillStyle(specialColor(p.special),.85);
         beam.fillRoundedRect(across?16-x:-11,across?-11:16-y,across?448:22,across?22:448,10);
         beam.fillStyle(0xfffce7,.98);
         beam.fillRoundedRect(across?16-x:-3,across?-3:16-y,across?448:6,across?6:448,3);

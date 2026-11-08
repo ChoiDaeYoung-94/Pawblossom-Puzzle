@@ -6,12 +6,13 @@ import type {ResolveStep} from '../src/core';
 
 class ObjectStub {
   destroyed=false;name='';x=0;y=0;angle=0;origin=.5;displayWidth=0;displayHeight=0;crop:number[]=[];
-  rectangles:number[][]=[];lines:number[][]=[];strokes:number[][]=[];
+  rectangles:number[][]=[];lines:number[][]=[];strokes:number[][]=[];triangles:number[][]=[];
   constructor(public kind:string,public value=''){}
   setDepth(){return this;}setName(name:string){this.name=name;return this;}setOrigin(value=.5){this.origin=value;return this;}
   setPosition(x:number,y:number){this.x=x;this.y=y;return this;}setDisplaySize(width:number,height:number){this.displayWidth=width;this.displayHeight=height;return this;}setAngle(value:number){this.angle=value;return this;}
   setCrop(...values:number[]){this.crop=values;return this;}
   lineStyle(){return this;}fillStyle(){return this;}strokeRoundedRect(...values:number[]){this.strokes.push(values);return this;}fillRoundedRect(...values:number[]){this.rectangles.push(values);return this;}
+  fillTriangle(...values:number[]){this.triangles.push(values);return this;}
   lineBetween(...values:number[]){this.lines.push(values);return this;}strokeCircle(){return this;}destroy(){this.destroyed=true;}
 }
 function harness(){
@@ -28,6 +29,18 @@ const step:ResolveStep={before:[],after:[],removed:Array.from({length:64},(_,i)=
 const colorStep=():ResolveStep=>({...step,before:Array.from({length:8},(_,row)=>Array.from({length:8},(_,col)=>({kind:(row+col)%6}))),effects:[{row:0,col:0,special:'rainbow'},{row:1,col:1,special:'rainbow'}]});
 afterEach(()=>vi.unstubAllGlobals());
 describe('낙엽과 퍼즐 임시 연출',()=>{
+  it('채워진 매치 별은 실제 제거칸 중심에서 제한된 연쇄 강도로 커지고 난수·보드를 바꾸지 않습니다',()=>{
+    const source:ResolveStep={before:Array.from({length:8},()=>Array.from({length:8},()=>({kind:0}))),after:[],removed:[{row:7,col:7}]},before=JSON.stringify(source),random=vi.spyOn(Math,'random'),sizes:number[]=[];
+    try{
+      for(const chain of [1,2,4,99]){
+        const h=harness();h.effects.match(source,chain);const star=h.objects.find(obj=>obj.name==='match-spark')!;
+        expect([star.x,star.y]).toEqual([436,436]);expect(star.triangles).toHaveLength(4);
+        const extent=Math.max(...star.triangles.flat().map(Math.abs));sizes.push(extent);expect(extent).toBeLessThanOrEqual(18);
+        expect(h.effects.activeCount).toBeLessThanOrEqual(3);h.effects.clear();h.finish();expect(h.effects.activeCount).toBe(0);expect(h.objects.every(obj=>obj.destroyed)).toBe(true);
+      }
+      expect(sizes[1]).toBeGreaterThan(sizes[0]);expect(sizes[2]).toBeGreaterThan(sizes[1]);expect(sizes[3]).toBe(sizes[2]);expect(random).not.toHaveBeenCalled();expect(JSON.stringify(source)).toBe(before);
+    }finally{random.mockRestore();}
+  });
   it('같은 중심51px의 네 사분면이256 원본을 빈틈·겹침 없이 재구성하고 축소하며 완료 정리합니다',()=>{
     const h=harness(),hit=Object.freeze({row:3,col:6}),before=JSON.stringify(hit),random=vi.spyOn(Math,'random');
     try{
