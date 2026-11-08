@@ -320,3 +320,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, #game-canvas:focus-
 
 .puzzle-tools-bar #shuffle:disabled { color: var(--ui-disabled-ink); background: var(--ui-disabled); border-color: #b8adbf; box-shadow: none; }
 #shuffle:disabled #shuffle-count { color: #766c7d; background: #d5cadf; }
+
+/* Long portrait boards may leave breathing room around the square canvas. */
+.board-wrap { background: #f3edf6; box-shadow: inset 0 2px 0 #fff,0 3px 0 #c4b0d4; }
+#app[data-route="puzzle"] .brand-mark { color: #a62860; background: transparent; box-shadow: none; }
