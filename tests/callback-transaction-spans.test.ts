@@ -55,6 +55,14 @@ describe('callback 선택 공통 시간축 관측',()=>{
     const trace=enabled(),a=anchor(trace);a.sentAtProcessMs=(a.sentAtProcessMs??0)+1000;receiveCallbackOutcome(envelope(a),trace,0);
     expect(context(trace).workers[0].transactionSpans.diagnostic.clock).toMatchObject({status:'unavailable',reason:'outside-window'});
   });
+  it('최초 anchor 불일치는 formatter·정상 중복 결과로 승격되지 않음',()=>{
+    const clock=vi.spyOn(performance,'now').mockReturnValue(10),trace=enabled(),a=anchor(trace),privateAnchor={...a};
+    a.sentAtProcessMs=100;clock.mockReturnValue(200);expect(receiveCallbackOutcome(envelope(a),trace,0)).toBe(result);
+    expect(trace.workers[0].transactionSpans!.diagnostic!.clock).toMatchObject({status:'unavailable',reason:'outside-window',parentSentAtProcessMs:10});
+    expect(context(trace).workers[0].transactionSpans.diagnostic.clock).toMatchObject({status:'unavailable',reason:'outside-window',parentSentAtProcessMs:10});
+    receiveCallbackOutcome(envelope(privateAnchor),trace,0);
+    expect(context(trace).workers[0].transactionSpans.diagnostic.clock).toMatchObject({status:'unavailable',reason:'outside-window',parentReceivedAtProcessMs:200});
+  });
   it('부모가 등록하지 않은 anchor의 verified 표시는 신뢰하지 않음',()=>{
     const trace=enabled(),fake={originMs:performance.timeOrigin,sentAtProcessMs:performance.now()};receiveCallbackOutcome(envelope(fake),trace,0);
     expect(context(trace).workers[0].transactionSpans.diagnostic.clock.status).toBe('unavailable');

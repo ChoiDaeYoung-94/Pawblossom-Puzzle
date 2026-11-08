@@ -4,14 +4,15 @@ import {DatabaseSync} from 'node:sqlite';
 
 // 모듈 적재 때 원본 함수/공식 prototype accessor만 보존합니다. DB를 만들거나 SQL을 실행하지 않습니다.
 const nativeExec=Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'exec')?.value;
+const nativePrepare=Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'prepare')?.value;
 const nativePrototypeAccessors={
   isOpen:Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'isOpen')?.get,
   isTransaction:Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'isTransaction')?.get
 };
 const limit=8;
-const roles=['reward','round','unknown'] as const;
-const evidence=['observed-reward-open','observed-round-open','unavailable'] as const;
-const phases=['reward-open','redeem','round-open','apply','adapter-call','unknown'] as const;
+const roles=['reward','round','inbox','unknown'] as const;
+const evidence=['observed-reward-open','observed-round-open','observed-reward-statement','observed-inbox-statement','unavailable'] as const;
+const phases=['reward-open','redeem','round-open','apply','adapter-call','inbox-open','inbox-receive','inbox-process','inbox-close','unknown'] as const;
 const outcomes=['unknown','returned','threw'] as const;
 const ends=['missing','begin-threw','commit-returned','rollback-returned','end-threw','orphan','repeated-end','superseded'] as const;
 const connectionStates=['open','closed','unknown'] as const;
@@ -48,12 +49,13 @@ type NativeAccessors=Partial<Record<'isOpen'|'isTransaction',()=>unknown>>;
 function siteOf(sql:unknown):Site|null {return sql==='BEGIN IMMEDIATE'?'begin':sql==='COMMIT'?'commit':sql==='ROLLBACK'?'rollback':null;}
 interface Connection {index:number;receiver:WeakRef<object>;role:TransactionSpan['role'];roleEvidence:TransactionSpan['roleEvidence'];active?:TransactionSpan;}
 export interface SpanToken {span:TransactionSpan;call:SpanCall|null;site:Site;connection?:Connection;receiver:object|null;}
-export interface SpanRecorder {report:TransactionSpans;before(sql:unknown,receiver:unknown,phase:unknown):SpanToken|null;after(token:SpanToken|null,outcome:'returned'|'threw',executed?:unknown):void;finish():void;}
+export interface SpanRecorder {report:TransactionSpans;before(sql:unknown,receiver:unknown,phase:unknown):SpanToken|null;after(token:SpanToken|null,outcome:'returned'|'threw',executed?:unknown):void;nativeReturned?(operation:'exec'|'prepare',sql:unknown,receiver:unknown,executed:unknown):void;finish():void;}
 
 /** BEGIN/끝 호출을 한 행에 보존합니다. 관측 오류는 원래 SQLite 동작을 바꾸지 않습니다. */
 export function createSpanRecorder(anchor?:unknown,clock:SpanClockProvider=defaultClock):SpanRecorder {
   const report:TransactionSpans={schema:1,clock:{status:'unavailable',reason:'parent-unverified',originMs:readClock(()=>clock.origin()),parentOriginMs:finite(own(anchor,'originMs')),parentSentAtProcessMs:finite(own(anchor,'sentAtProcessMs')),workerStartedAtProcessMs:readClock(()=>clock.now()),workerFinishedAtProcessMs:null,parentReceivedAtProcessMs:null},spans:[],spansTruncated:false,connectionsTruncated:false,observationFailed:false};
   const known=new WeakMap<object,Connection>(),connections:Connection[]=[];
+  const statementRoles=new WeakMap<object,{role:TransactionSpan['role'];evidence:TransactionSpan['roleEvidence']}>(),conflicted=new WeakSet<object>();
   const verified=new WeakMap<object,NativeAccessors>();
   const verifyReceiver=(receiver:object,executed:unknown)=>{
     if(typeof nativeExec!=='function'||executed!==nativeExec)return;
@@ -85,8 +87,8 @@ export function createSpanRecorder(anchor?:unknown,clock:SpanClockProvider=defau
         let connection=object?known.get(object):undefined;
         if(!connection&&object){
           if(connections.length>=limit){report.connectionsTruncated=true;report.spansTruncated=true;return null;}
-          const role=phase==='reward-open'?'reward':phase==='round-open'?'round':'unknown';
-          connection={index:connections.length+1,receiver:new WeakRef(object),role,roleEvidence:role==='reward'?'observed-reward-open':role==='round'?'observed-round-open':'unavailable'};
+          const observed=statementRoles.get(object),role=observed?.role??(phase==='reward-open'?'reward':phase==='round-open'?'round':'unknown');
+          connection={index:connections.length+1,receiver:new WeakRef(object),role,roleEvidence:observed?.evidence??(role==='reward'?'observed-reward-open':role==='round'?'observed-round-open':'unavailable')};
           connections.push(connection);known.set(object,connection);
         }
         const span=site==='begin'?allocate(connection,phase):connection?.active??allocate(connection,phase);
@@ -114,6 +116,29 @@ export function createSpanRecorder(anchor?:unknown,clock:SpanClockProvider=defau
           span.endObservation=!call?'repeated-end':!span.begin?'orphan':outcome==='threw'?'end-threw':site==='commit'?'commit-returned':'rollback-returned';
           if(connection){if(outcome==='returned')connection.active=undefined;else connection.active=span;}
         }
+      }catch{fail();}
+    },
+    nativeReturned(operation,sql,receiver,executed){
+      try{
+        if(operation!=='exec'&&operation!=='prepare')return;
+        if(executed!==(operation==='exec'?nativeExec:nativePrepare)||typeof sql!=='string'||receiver===null||(typeof receiver!=='object'&&typeof receiver!=='function'))return;
+        const object=receiver as object;
+        if(operation==='exec')verifyReceiver(object,executed);
+        let role:'inbox'|'reward'|undefined;
+        if(operation==='exec'){
+          if(/^CREATE TABLE(?: IF NOT EXISTS)? callback_(?:meta|inbox) \(/.test(sql))role='inbox';
+          else if(/^CREATE TABLE(?: IF NOT EXISTS)? reward_meta \(/.test(sql))role='reward';
+        }else if(sql==='SELECT * FROM callback_meta WHERE id=1'||sql==='SELECT profile,high_water FROM callback_meta WHERE id=1')role='inbox';
+        else if(sql==='SELECT profile FROM reward_meta WHERE id=1'||sql==='SELECT * FROM reward_meta')role='reward';
+        if(!role||conflicted.has(object))return;
+        const current=statementRoles.get(object),connection=known.get(object);
+        if(current&&current.role!==role||connection&&connection.role!=='unknown'&&connection.role!==role){
+          conflicted.add(object);statementRoles.set(object,{role:'unknown',evidence:'unavailable'});fail();
+          if(connection){connection.role='unknown';connection.roleEvidence='unavailable';for(const span of report.spans)if(span.connectionIndex===connection.index){span.role='unknown';span.roleEvidence='unavailable';}}
+          return;
+        }
+        const source=role==='inbox'?'observed-inbox-statement':'observed-reward-statement';statementRoles.set(object,{role,evidence:source});
+        if(connection){connection.role=role;connection.roleEvidence=source;for(const span of report.spans)if(span.connectionIndex===connection.index){span.role=role;span.roleEvidence=source;}}
       }catch{fail();}
     },
     finish(){
@@ -153,7 +178,7 @@ export function projectTransactionSpans(value:unknown,anchor?:unknown,clock:Span
       if(length>limit)projected.spansTruncated=true;
       for(let i=0;i<Math.min(length,limit);i++){
         const raw=own(rawSpans,String(i)),index=own(raw,'connectionIndex'),role=choice(own(raw,'role'),roles,'unknown'),source=choice(own(raw,'roleEvidence'),evidence,'unavailable');
-        const proven=role==='reward'&&source==='observed-reward-open'||role==='round'&&source==='observed-round-open';
+        const proven=role==='reward'&&(source==='observed-reward-open'||source==='observed-reward-statement')||role==='round'&&source==='observed-round-open'||role==='inbox'&&source==='observed-inbox-statement';
         projected.spans.push({connectionIndex:typeof index==='number'&&Number.isInteger(index)&&index>=1&&index<=limit?index:null,role:proven?role:'unknown',roleEvidence:proven?source:'unavailable',phase:choice(own(raw,'phase'),phases,'unknown'),begin:projectCall(own(raw,'begin')),commit:projectCall(own(raw,'commit')),rollback:projectCall(own(raw,'rollback')),endObservation:choice(own(raw,'endObservation'),ends,'missing'),endAttemptsTruncated:own(raw,'endAttemptsTruncated')===true,connectionAtScopeEnd:choice(own(raw,'connectionAtScopeEnd'),connectionStates,'unknown'),transactionActiveAtScopeEnd:bool(own(raw,'transactionActiveAtScopeEnd'))});
       }
     }

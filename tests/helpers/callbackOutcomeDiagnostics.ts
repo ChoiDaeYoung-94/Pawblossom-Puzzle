@@ -18,8 +18,8 @@ export interface CallbackOutcomeTrace {
 declare module 'vitest' {interface TaskMeta {callbackOutcomeDiagnostic?:CallbackOutcomeTrace;}}
 const failures=new WeakSet<object>();
 const sqliteExpected=new WeakSet<object>();
-interface ParentSpanState {anchor?:SpanClockAnchor;received?:SpanClockAnchor;}
-interface SpanProjectionContext {anchor?:SpanClockAnchor;clock:SpanClockProvider;}
+interface ParentSpanState {anchor?:SpanClockAnchor;received?:SpanClockAnchor;clockFailure?:TransactionSpans['clock']['reason'];}
+interface SpanProjectionContext {anchor?:SpanClockAnchor;clock:SpanClockProvider;state?:ParentSpanState;}
 export interface CallbackSpanObservation {report:'missing'|'received'|'invalid';diagnostic:TransactionSpans|null;}
 const spanExpected=new WeakMap<CallbackOutcomeTrace,Map<number,ParentSpanState>>();
 function failed(value:object){failures.add(value);try{Reflect.set(value,'observationFailed',true);}catch{}}
@@ -208,20 +208,23 @@ function parentSpanContext(trace:CallbackOutcomeTrace,index:number,receive:boole
     if(!state&&receive){state={};states.set(index,state);}
     if(receive&&state&&!state.received)state.received={...createSpanClockAnchor()};
     const received=state?.received;
-    return {anchor:state?.anchor,clock:{origin:()=>received?.originMs??null,now:()=>received?.sentAtProcessMs??null}};
+    return {anchor:state?.anchor,state,clock:{origin:()=>received?.originMs??null,now:()=>received?.sentAtProcessMs??null}};
   }catch{failed(trace);return {clock:{origin:()=>null,now:()=>null}};}
 }
 function spanObservation(value:unknown,context?:SpanProjectionContext):CallbackSpanObservation {
   const diagnostic=projectTransactionSpans(value,context?.anchor,context?.clock);
   if(!diagnostic)return {report:'missing',diagnostic:null};
-  return {report:diagnostic.observationFailed&&diagnostic.clock.reason==='invalid'?'invalid':'received',diagnostic};
+  const invalid=diagnostic.observationFailed&&diagnostic.clock.reason==='invalid',state=context?.state;
+  if(state&&diagnostic.clock.status==='unavailable')state.clockFailure??=diagnostic.clock.reason;
+  if(state?.clockFailure){diagnostic.clock.status='unavailable';diagnostic.clock.reason=state.clockFailure;}
+  return {report:invalid?'invalid':'received',diagnostic};
 }
 function projectSpanObservation(row:unknown,context?:SpanProjectionContext):CallbackSpanObservation {
   try{
     const value=ownData(row,'transactionSpans'),report=ownData(value,'report');
     if(report==='missing')return {report:'missing',diagnostic:null};
     if(report==='received')return spanObservation(ownData(value,'diagnostic'),context);
-    if(report==='invalid'){const diagnostic=ownData(value,'diagnostic');return {report:'invalid',diagnostic:diagnostic===null?null:projectTransactionSpans(diagnostic,context?.anchor,context?.clock)??null};}
+    if(report==='invalid'){const diagnostic=ownData(value,'diagnostic');return {report:'invalid',diagnostic:diagnostic===null?null:spanObservation(diagnostic,context).diagnostic};}
   }catch{}
   return {report:'invalid',diagnostic:null};
 }

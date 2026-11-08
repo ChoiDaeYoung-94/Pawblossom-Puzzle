@@ -14,11 +14,12 @@ import {callback,epoch,keyEntry,keyResponse,policy,malleate} from './helpers/ssv
 import {createCallbackChildScope,finishCallbackTest} from './helpers/callbackChild';
 import {createCallbackParallelScope,type CallbackWorkerObserver,type CallbackWorkerObservation} from './helpers/callbackParallel';
 import {createTrace,beginPhase,elapsed,projectTrace,recordError} from './helpers/ledgerDiagnostics';
+import {createInboxSpanTrace,inboxSpanContext,wrapInboxSpanWorker,type InboxSpanTrace} from './helpers/inboxTransactionSpans';
 const key=randomBytes(32),rewardKey=randomBytes(32),owner={ownerId:'synthetic-private-owner',roundId:'synthetic-private-round'};
 const dirs:string[]=[],inboxes:CallbackInbox[]=[],ledgers:RewardLedger[]=[],dbs:DatabaseSync[]=[];
 const childJobs=createCallbackChildScope(),lockReleases:(()=>void)[]=[];
 const parallelWorkers=createCallbackParallelScope();
-let parallelReceipt:{receive:Map<number,Readonly<CallbackWorkerObservation>>;process:Map<number,Readonly<CallbackWorkerObservation>>;receiveResults?:unknown[];processResults?:unknown[]}|undefined;
+let parallelReceipt:{receive:Map<number,Readonly<CallbackWorkerObservation>>;process:Map<number,Readonly<CallbackWorkerObservation>>;receiveResults?:unknown[];processResults?:unknown[];receiveSpans?:InboxSpanTrace;processSpans?:InboxSpanTrace}|undefined;
 const receiptRows=(phase:'receive'|'process')=>[...(parallelReceipt?.[phase].values()??[])].sort((a,b)=>a.index-b.index).slice(0,8);
 const safeWorkerResults=(values:any[])=>values.map(r=>({kind:r.kind,code:r.code,stage:r.stage,sqlite:r.sqlite,diagnostic:r.diagnostic}));
 const workerUrl=new URL('./helpers/callback-inbox-worker.mjs',import.meta.url);
@@ -51,7 +52,7 @@ function releaseLockOnce(lock:DatabaseSync){
   let released=false;const release=()=>{if(released)return;released=true;lock.exec('ROLLBACK');};
   lockReleases.push(release);return release;
 }
-function parallel(data:unknown[],observe?:CallbackWorkerObserver){return parallelWorkers.run(data,d=>new Worker(workerUrl,{workerData:d,execArgv:['--experimental-strip-types']}),observe);}
+function parallel(data:unknown[],observe?:CallbackWorkerObserver,spans?:InboxSpanTrace){let index=0;return parallelWorkers.run(data,d=>{const worker=new Worker(workerUrl,{workerData:d,execArgv:['--experimental-strip-types']});return spans?wrapInboxSpanWorker(worker,spans,index++):worker;},observe);}
 function runCleanupSteps(steps:(()=>void)[]){let failed=false;for(const step of steps){try{step();}catch{failed=true;}}if(failed)throw new Error('callback-resource-cleanup-failed');}
 async function cleanup(){await finishCallbackTest(childJobs,{
   terminateWorkers:()=>parallelWorkers.cancelAllAndWait(),
@@ -65,7 +66,7 @@ afterEach(async()=>{
   finally{if(parallelReceipt){
     // assertion 시점의 exit 미관측과 기존 cleanup 뒤의 실제 이벤트를 분리합니다.
     try{console.info('callback-parallel-cleanup-receipt',JSON.stringify({stage:'cleanup',cleanupOutcome,ownedRemaining:parallelWorkers.size,observationFailed:parallelWorkers.observationFailed,
-      receive:{results:parallelReceipt.receiveResults,workers:receiptRows('receive')},process:{results:parallelReceipt.processResults,workers:receiptRows('process')}}));}catch{}
+      receive:{results:parallelReceipt.receiveResults,workers:receiptRows('receive'),...(parallelReceipt.receiveSpans?{transactionSpans:inboxSpanContext(parallelReceipt.receiveSpans)}:{})},process:{results:parallelReceipt.processResults,workers:receiptRows('process'),...(parallelReceipt.processSpans?{transactionSpans:inboxSpanContext(parallelReceipt.processSpans)}:{})}}));}catch{}
     parallelReceipt=undefined;
   }}
 });
@@ -93,19 +94,28 @@ describe('암호화 수신·원장 내부검증·재시작',()=>{
     expect(d.prepare('SELECT state,attempts FROM callback_inbox').get()).toEqual({state:'completed',attempts:2});
   });
   it('8worker 동일수신 row1/receipt1, 동시처리는 원자선점1회',async()=>{
-    parallelReceipt={receive:new Map(),process:new Map()};const currentReceipt=parallelReceipt;
+    parallelReceipt={receive:new Map(),process:new Map(),receiveSpans:createInboxSpanTrace(8,true),processSpans:createInboxSpanTrace(8,true)};const currentReceipt=parallelReceipt;
     const observe=(phase:'receive'|'process'):CallbackWorkerObserver=>receipt=>{currentReceipt[phase].set(receipt.index,receipt);};
-    const f=fixture(),received=await parallel(Array.from({length:8},()=>f.input({action:'receive',openRetries:2,diagnostics:true})),observe('receive'));
-    currentReceipt.receiveResults=safeWorkerResults(received);const receiveSafe=JSON.stringify({stage:'receive-assertion',results:currentReceipt.receiveResults,workers:receiptRows('receive')});
+    const f=fixture(),received=await parallel(Array.from({length:8},()=>f.input({action:'receive',openRetries:2,diagnostics:true,transactionSpans:true})),observe('receive'),currentReceipt.receiveSpans);
+    currentReceipt.receiveResults=safeWorkerResults(received);const receiveSafe=JSON.stringify({stage:'receive-assertion',results:currentReceipt.receiveResults,workers:receiptRows('receive'),transactionSpans:inboxSpanContext(currentReceipt.receiveSpans!)});
     expect(received.every(r=>r.kind==='accepted'),receiveSafe).toBe(true);expect(new Set(received.map(r=>r.receipt)).size,receiveSafe).toBe(1);
-    const results=await parallel(Array.from({length:8},()=>f.input({openRetries:2,diagnostics:true})),observe('process'));
-    currentReceipt.processResults=safeWorkerResults(results);const safe=JSON.stringify({stage:'process-assertion',results:currentReceipt.processResults,workers:receiptRows('process')});
+    const results=await parallel(Array.from({length:8},()=>f.input({openRetries:2,diagnostics:true,transactionSpans:true})),observe('process'),currentReceipt.processSpans);
+    currentReceipt.processResults=safeWorkerResults(results);const safe=JSON.stringify({stage:'process-assertion',results:currentReceipt.processResults,workers:receiptRows('process'),transactionSpans:inboxSpanContext(currentReceipt.processSpans!)});
     expect(results.filter(r=>r.kind==='completed'),safe).toHaveLength(1);expect(results.filter(r=>r.kind==='idle'),safe).toHaveLength(7);
     for(const r of [...received,...results]){expect(r.diagnostic.openAttempts).toBeLessThanOrEqual(3);expect(r.diagnostic.failures.every((v:any)=>v.stage==='open'&&v.sqlite==='busy'),safe).toBe(true);}
     for(const r of [...received,...results])expect(r.diagnostic.close,safe).toEqual({outcome:'returned'});
     for(const r of received){expect(r.diagnostic.claimBegin,safe).toBeUndefined();expect(r.diagnostic.claimConnection,safe).toEqual(claimConnectionNotReached());}
     for(const r of results){expect(r.diagnostic.claimBegin,safe).toEqual({stage:'inbox-claim-begin',outcome:'returned',elapsedMs:expect.any(Number),primaryCode:null,extendedCode:null});expect(Number.isFinite(r.diagnostic.claimBegin.elapsedMs),safe).toBe(true);expect(r.diagnostic.claimBegin.elapsedMs,safe).toBeGreaterThanOrEqual(0);expect(r.diagnostic.claimConnection,safe).toEqual(claimConnectionClosed());}
     expect(f.conn().prepare('SELECT attempts FROM callback_inbox').get()?.attempts).toBe(1);expect(f.conn(f.rewardPath).prepare('SELECT count(*) AS n FROM reward_vouchers').get()?.n).toBe(1);
+    for(const trace of [currentReceipt.receiveSpans!,currentReceipt.processSpans!]){
+      const spans=inboxSpanContext(trace)!;expect(spans.workers,safe).toHaveLength(8);expect(spans.observationFailed,safe).toBe(false);
+      for(const row of spans.workers){
+        expect(row.report,safe).toBe('received');expect(row.diagnostic?.clock.status,safe).toBe('verified');expect(row.diagnostic?.observationFailed,safe).toBe(false);
+        expect(row.diagnostic?.spans.length,safe).toBeGreaterThan(0);
+        expect(row.diagnostic?.spans.some(span=>span.role==='inbox'&&span.roleEvidence==='observed-inbox-statement'),safe).toBe(true);
+        expect(row.diagnostic?.spans.some(span=>span.role==='reward'&&span.roleEvidence==='observed-reward-statement'),safe).toBe(true);
+      }
+    }
   });
   it('worker 생성자 SQLite BUSY 진단→잠금 해제→같은 요청 제한 재시도',async()=>{
     const f=fixture(),b=f.open();b.receive(f.raw);const lock=f.conn(f.rewardPath);lock.exec('BEGIN IMMEDIATE');let busy=0;
