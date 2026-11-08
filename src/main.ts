@@ -586,7 +586,8 @@ function renderPuzzleTools(){
   if(toolMode){
     const context=toolMode,ready=Boolean(context.at&&validPuzzleToolTarget(context.checkpoint,context.id,context.at,context.other)),cost=toolStatus(save,context.checkpoint,context.id,testingLevel).cost;
     const choice=ready?(context.other?text('toolPairChosen'):text('toolCreateChosen').replace('{row}',String(context.at!.row+1)).replace('{col}',String(context.at!.col+1))):text(context.id==='gloves'?'toolChooseTwo':'toolChooseOne');
-    $('#tool-choice-status').innerHTML=`<span class="tool-choice-text">${choice} · ${toolName(save.language,context.id)}</span><strong class="tool-choice-cost">${cost}</strong>`;
+    const compact=ready?(context.other?text('toolPairShort'):text('toolCellShort').replace('{row}',String(context.at!.row+1)).replace('{col}',String(context.at!.col+1))):text(context.id==='gloves'?'toolChooseTwoShort':'toolChooseOneShort');
+    $('#tool-choice-status').innerHTML=`<span class="tool-choice-text"><span class="sr-only">${choice} · ${toolName(save.language,context.id)}</span><span class="tool-choice-full" aria-hidden="true">${choice} · ${toolName(save.language,context.id)}</span><span class="tool-choice-short" aria-hidden="true">${compact}</span></span><strong class="tool-choice-cost">${cost}</strong>`;
     const confirm=$<HTMLButtonElement>('#tool-confirm');confirm.textContent=text(context.id==='gloves'?'toolConfirm':'toolCreateConfirm');confirm.disabled=!ready;confirm.onclick=()=>{confirmTool(context);};
     const cancel=$<HTMLButtonElement>('#tool-cancel');cancel.textContent=text('toolCancel');cancel.onclick=()=>{if(toolMode===context)closeToolMode();};
   }
