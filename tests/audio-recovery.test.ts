@@ -215,9 +215,17 @@ describe('자체 구간 음악과 미예약 마디 전환',()=>{
   });
   it('긴 프레임 지연은 과거 편곡을 몰아내지 않고 실제 새 파트만 현재 이후에 예약합니다',async()=>{
     const a=make();await a.unlock();const ctx=owned(a).context!,tones=vi.spyOn(owned(a),'musicTone'),drums=vi.spyOn(owned(a),'musicPercussion');a.setMusicTheme('lantern');ctx.currentTime=1000;vi.advanceTimersByTime(25);
+    // The preserved musical phase can leave the next note outside the180ms
+    // horizon. Advance to its reservation window instead of requiring a burst.
+    expect(tones.mock.calls.length+drums.mock.calls.length).toBeLessThanOrEqual(3);
+    expect(tones.mock.calls.every(c=>c[2]>=ctx.currentTime)).toBe(true);expect(drums.mock.calls.every(c=>c[1]>=ctx.currentTime)).toBe(true);
+    tones.mockClear();drums.mockClear();
+    const due=owned(a).nextNote;expect(due).toBeGreaterThanOrEqual(1000);expect(due).toBeLessThan(1000+.18+60/MUSIC_TIMING.bpm/2);
+    ctx.currentTime=Math.max(ctx.currentTime+.025,due-.1);vi.advanceTimersByTime(25);
     expect(tones.mock.calls.length+drums.mock.calls.length).toBeGreaterThan(0);expect(tones.mock.calls.length+drums.mock.calls.length).toBeLessThanOrEqual(3);
-    expect(tones.mock.calls.every(c=>c[2]>=1000)).toBe(true);expect(drums.mock.calls.every(c=>c[1]>=1000)).toBe(true);
-    for(let i=1;i<=40;i++){ctx.currentTime=1000+i*.1;vi.advanceTimersByTime(25);}expect(owned(a).playingTheme).toBe('lantern');expect(vi.getTimerCount()).toBe(1);
+    expect(tones.mock.results.every(r=>r.type==='return'&&r.value===true)).toBe(true);expect(drums.mock.results.every(r=>r.type==='return'&&r.value===true)).toBe(true);
+    expect(tones.mock.calls.every(c=>c[2]>=ctx.currentTime)).toBe(true);expect(drums.mock.calls.every(c=>c[1]>=ctx.currentTime)).toBe(true);
+    const afterReservation=ctx.currentTime;for(let i=1;i<=40;i++){ctx.currentTime=afterReservation+i*.1;vi.advanceTimersByTime(25);}expect(owned(a).playingTheme).toBe('lantern');expect(vi.getTimerCount()).toBe(1);
   });
   it.each(MUSIC_THEMES)('%s의32마디에서 선율 누락 없이6음 예산·단일 타이머를 지킵니다',async theme=>{
     Context.lightweight=true;
