@@ -1,10 +1,30 @@
 import {describe,it,expect,vi} from 'vitest';
 import {DatabaseSync} from 'node:sqlite';
 import {createCallbackConnectionProbe,readCallbackConnectionState} from './helpers/callbackConnectionState';
+import {createSpanRecorder,projectTransactionSpans} from './helpers/ledgerTransactionSpans';
 
 const nativeExec=DatabaseSync.prototype.exec;
 const state=(isOpen:boolean,isTransaction:boolean|null)=>({isOpen,isOpenReason:null,isTransaction,isTransactionReason:isOpen?null:'closed'});
 describe('테스트 수신함 최초 claim 연결 상태',()=>{
+  it('선택 span의 BEGIN/COMMIT/ROLLBACK 숫자도 원래 예외와 한 번의 native 호출에서 수집합니다',()=>{
+    const spans=createSpanRecorder(),probe=createCallbackConnectionProbe(true,{recorder:spans,phase:()=>'inbox-process'}),db=new DatabaseSync(':memory:');let calls=0;
+    const exec=(sql:string)=>probe.observe(sql,db,[sql],invoke=>{calls++;return invoke();});
+    try{
+      exec('BEGIN IMMEDIATE');
+      for(const sql of ['BEGIN IMMEDIATE','COMMIT','ROLLBACK']){
+        if(sql==='COMMIT')exec('ROLLBACK');
+        let original:unknown,caught:unknown;
+        try{probe.observe(sql,db,[sql],invoke=>{calls++;try{return invoke();}catch(error){original=error;throw error;}});}catch(error){caught=error;}
+        expect(caught).toBeDefined();expect(caught).toBe(original);
+      }
+      db.close();spans.finish();
+      const failed=spans.report.spans.flatMap(span=>[span.begin,span.commit,span.rollback]).filter(call=>call?.outcome==='threw');
+      expect(failed).toHaveLength(3);expect(failed.every(call=>call?.sqliteError?.primaryCode===1&&call.sqliteError.extendedCode===1)).toBe(true);expect(calls).toBe(5);
+      const projected=projectTransactionSpans(spans.report)!;
+      expect(projected.spans.flatMap(span=>[span.begin,span.commit,span.rollback]).filter(call=>call?.outcome==='threw').map(call=>call?.sqliteError)).toEqual(Array.from({length:3},()=>({primaryCode:1,extendedCode:1})));
+      expect(spans.report.spans[0].begin).not.toHaveProperty('sqliteError');
+    }finally{if(db.isOpen)db.close();}
+  });
   it('검증된 한 연결의 BEGIN과 기존 close 뒤 상태가 같은 영수증에 남습니다',()=>{
     const probe=createCallbackConnectionProbe(true),db=new DatabaseSync(':memory:');
     const exec=(sql:string)=>probe.observe(sql,db,[sql],invoke=>invoke());

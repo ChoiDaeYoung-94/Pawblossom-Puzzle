@@ -79,6 +79,7 @@ describe('선택 transaction 구간·기존 관측 호환',()=>{
     expect(observed).toBe(emitted);expect(observed).toBeDefined();
     expect(trace.transactionSpans?.spans.map(span=>span.endObservation)).toEqual(['rollback-returned','begin-threw']);
     expect(trace.transactionSpans?.spans[0].rollback?.outcome).toBe('returned');expect(trace.transactionSpans?.spans[1].rollback).toBeNull();
+    expect(trace.transactionSpans?.spans[1].begin?.sqliteError).toEqual({primaryCode:1,extendedCode:1});
   });
   it.each([false,true])('COMMIT throw 뒤 ROLLBACK throw=%s도 원래 예외·this·인수·복원과 한 구간을 유지합니다',rollbackThrows=>{
     const connection=db(),trace=createTrace('reward-worker'),marker=new Error('synthetic-private-end'),argument={private:'synthetic-private-argument'},original=DatabaseSync.prototype.exec;
@@ -101,6 +102,54 @@ describe('선택 transaction 구간·기존 관측 호환',()=>{
     const connection=db(),trace=createTrace('reward-worker');
     withSqliteDiagnostics(trace,()=>{trace.phase='redeem';connection.exec('BEGIN');connection.exec('COMMIT');connection.close();},options);
     expect(trace.transactionSpans?.spans[0]).toMatchObject({begin:null,role:'unknown',roleEvidence:'unavailable',endObservation:'orphan',commit:{outcome:'returned'}});
+  });
+});
+
+describe('선택 span의 제한된 SQLite 숫자 오류',()=>{
+  it('실제 COMMIT/ROLLBACK 실패의 숫자를 보존하고 SQL·메시지는 내보내지 않습니다',()=>{
+    const connection=db(),trace=createTrace('reward-worker'),observed:unknown[]=[],marker={};
+    const descriptor=Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'exec');
+    const result=withSqliteDiagnostics(trace,()=>{
+      trace.phase='reward-open';
+      for(const sql of ['COMMIT','ROLLBACK']){
+        try{connection.exec(sql);}catch(error){observed.push(error);}
+      }
+      connection.close();return marker;
+    },options);
+    expect(result).toBe(marker);expect(observed).toHaveLength(2);
+    expect(trace.transactionSpans?.spans).toHaveLength(1);
+    const span=trace.transactionSpans!.spans[0];
+    for(const site of ['commit','rollback'] as const)expect(span[site]).toMatchObject({outcome:'threw',sqliteError:{primaryCode:1,extendedCode:1}});
+    expect(Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'exec')).toEqual(descriptor);
+    for(const error of observed)expect(JSON.stringify(trace)).not.toContain((error as Error).message);
+    // 두 native 호출이 모두 실패했으므로 accessor의 brand는 아직 입증하지 않습니다.
+    expect(span.connectionAtScopeEnd).toBe('unknown');
+  });
+  it('숫자 확장코드만 투영하고 worker의 불일치 primary와 원문 필드는 버립니다',()=>{
+    const observer=recorder(),native=Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'exec')!.value;
+    observer.after(observer.before('BEGIN IMMEDIATE',{},'inbox-process'),'threw',native,{code:'ERR_SQLITE_ERROR',errcode:261,message:'synthetic-private-error',sql:'synthetic-private-query'});observer.finish();
+    const span=observer.report.spans[0];expect(span.begin?.sqliteError).toEqual({primaryCode:5,extendedCode:261});
+    const projected=projectTransactionSpans(observer.report)!;expect(projected.spans[0].begin?.sqliteError).toEqual({primaryCode:5,extendedCode:261});
+    expect(JSON.stringify(projected)).not.toContain('synthetic-private');
+    span.begin!.sqliteError={primaryCode:6,extendedCode:261};
+    expect(projectTransactionSpans(observer.report)!.spans[0].begin?.sqliteError).toEqual({primaryCode:null,extendedCode:null});
+  });
+  it.each([-1,0,1.5,NaN,Infinity,65536,0x7fffffff,31,255])('범위 밖 코드 %s는 숫자 관측 불가이며 원 동작을 바꾸지 않습니다',errcode=>{
+    const observer=recorder(),native=Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'exec')!.value;
+    expect(()=>observer.after(observer.before('COMMIT',{},'redeem'),'threw',native,{code:'ERR_SQLITE_ERROR',errcode})).not.toThrow();
+    expect(observer.report.spans[0].commit?.sqliteError).toEqual({primaryCode:null,extendedCode:null});
+  });
+  it('원예외·투영의 getter를 실행하지 않고 구형 schema1의 필드 누락도 유지합니다',()=>{
+    let reads=0;const getter={get(){reads++;throw Error('synthetic-private-getter');}},error={};
+    Object.defineProperties(error,{code:getter,errcode:getter});
+    const observer=recorder(),native=Object.getOwnPropertyDescriptor(DatabaseSync.prototype,'exec')!.value;
+    observer.after(observer.before('COMMIT',{},'redeem'),'threw',native,error);observer.finish();
+    expect(observer.report.spans[0].commit?.sqliteError).toEqual({primaryCode:null,extendedCode:null});expect(reads).toBe(0);
+    const call=observer.report.spans[0].commit!;delete call.sqliteError;
+    expect(projectTransactionSpans(observer.report)!.spans[0].commit).not.toHaveProperty('sqliteError');
+    const forged={};Object.defineProperties(forged,{primaryCode:getter,extendedCode:getter});
+    Object.assign(call,{sqliteError:forged});
+    expect(projectTransactionSpans(observer.report)!.spans[0].commit?.sqliteError).toEqual({primaryCode:null,extendedCode:null});expect(reads).toBe(0);
   });
 });
 

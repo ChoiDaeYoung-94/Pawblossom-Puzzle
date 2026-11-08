@@ -169,7 +169,7 @@ function installSqliteDiagnostics(trace:PhaseTrace,options?:DiagnosticsOptions,a
       catch(error){
         finishTransactionObservation(trace,transaction,'threw');
         finishScheduling(transaction,schedulingAttempted,sampled,sample);
-        if(spans)observeSpans(()=>spans!.after(span,'threw',descriptor.value));
+        if(spans)observeSpans(()=>spans!.after(span,'threw',descriptor.value,error));
         // 수집 실패도 원래 예외의 종류/참조를 바꾸지 않습니다.
         try{if(trace.sqliteErrors.length<8){const errorCode=safeError(error).errorCode;const row:SqliteErrorRow={operation,site:sqliteSite(operation,args[0]),phase:trace.phase,errorCode,...sqliteCode(errorCode==='ERR_SQLITE_ERROR'?field(error,'errcode'):undefined),transactionActive:operation==='database-exec'?nativeBoolean(this as object,'isTransaction'):null,connectionClosed:null};if(operation==='database-exec'&&this!==null&&typeof this==='object')nativeDatabases.set(row,this);else if(operation==='database-prepare'&&this!==null&&typeof this==='object'&&trustedPrepareFailure(descriptor.value,error))nativeDatabases.set(row,this);trace.sqliteErrors.push(row);}else trace.sqliteErrorsTruncated=true;}catch{if(asyncLifetime)transactionObservationFailed(trace);}
         throw error;
