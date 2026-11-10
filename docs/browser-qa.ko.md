@@ -1,3 +1,13 @@
+## 2026-11-11 · 후속 실제 검수
+
+최신 제품은 PR575/main0167의 Android 시스템 바 대비 개선이며 새 APK6805(54,882,403B)를 공기계 SM-A175N/API37과 LD14 index2에 no-clear1회씩 설치했습니다. 패키지신원·실설치SHA·Pawraw/전체CP 보존과 대표Native대비를 확인했고 #574를 닫았습니다. 공기계는실제1교환뒤25이동30점·HOME/cold·별도이어하기복귀와WebAudio running→suspended→running을확인했습니다. LD일반은1판26이동0점/별도Lab은10판29이동1040점·9별360이며설치검수중게임UI입력0입니다. 원core/dispatch/build의false와별도후속PASS는분리하며빌드시점deviceTest:false·청취/전체영상·OSaudiofocus/최근앱카드승인false는유지합니다. 정상PC는별도7b1의72완료/73판20이동960점·누적833행동입니다. [상세 검수 기록](qa-2026-11-11.ko.md)과 [사용자 확인표](playtest-2026-11-11.ko.md)에현재상태와남은범위를정리했습니다.
+
+## 2026-11-11 · 정상71 완료와72 이어하기
+
+제품7b1/문서실행e726의 동일 정상 프로필에서 기존70완료 영구값과 부팅미행동71을 확인했습니다. 실제44쌍(교환41+직접특수3)으로71을8이동2,910점에 처음완료해1별40코인을 받았고, 최종71별2,750/high72·72판12이동1,780/딸기11남음·상자6완료·tools[]/startedtrue/셔플1을 보존했습니다. 새패배/재시도/소비/오류0, 누적759=742교환+17직접특수입니다. 이전noCP의checkpointExact:false와영구값exact/부팅미행동확인을 구분합니다.
+
+첫 반환 도구의 실행HEAD/제품HEAD 혼동 실패를 보존하고 별도 정확pin 검사로 원기한 내15:41:25.6424041UTC 실제반환을 확인했습니다. 이scope의 새story/지도복귀 검수는0이며, 후속 정상72의 한칸걷기 실제 결과는 상세 기록의 별도 절에 보관했습니다. 상세 근거와 한계는 [11월11일 개발 검수 기록](qa-2026-11-11.ko.md)에 있습니다.
+
 ## 2026-11-10 · 최신7b1 인트로 초점 APK
 
 최신 로컬 APK는 main7b1dd07/firstCI42764009103의 `Pawblossom-builds/2026-11-10-7b1dd07-intro-focus/Pawblossom-Puzzle-v0.1.7-2026-11-10-7b1dd07-debug.apk`·54,882,419B·SHA256 `323e0cf948d6534b50053e7fe56d425725040086254032ffcae75a6deb9f41fd`입니다. raw749 mirror의 실제testing117로390×844·808×387·Escape·모션감소4조건을 확인했고 root초점55/55/1/18표본의outline:none·Escape뒤guide-next solid3px·reduced paused/time0과4PNG/독립읽기를결속했습니다. 일반3PNG는초기암전으로영상전과정·자연종료승인은아닙니다. 새APK는같은단일v2/권한/native494·웹119/public91/ZIP660CRC·중복0이며기존eb4를baseline으로전수대조했습니다. 원06:13:30.8560618/new06:25:30.8560618/full06:28:30.8560618UTC·a142ace10e264943b4fd6f4d13796059 안06:14:55.3433179 실제반환PASS·15직계exit0/outerheld0EOF/known74부재·unknown0/49자손표본·1524frozen/SDK/local.properties exact·새7b1 production108 Android110false3복원/sourceclean입니다. build-time deviceTest:false/광범위browser:false/이전LabHint:false를유지하고이번IntroFocus4만true입니다. 새LD설치·황색선후속은아래별도실제기록에서완료했고이전eb4 Native근거와구분합니다.
