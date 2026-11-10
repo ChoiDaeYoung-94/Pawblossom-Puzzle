@@ -228,6 +228,26 @@ dialog::backdrop{background:#33233f70}
 #lab-clear-current{flex:none;min-height:44px;font-size:11px;padding:6px 10px}
 #app:not([data-route="puzzle"]) #lab-clear-current{display:none}
 
+/* 시험 배너와 조우 제목이 함께 있어도 안내문 한 줄과 스크롤 공간을 남깁니다. */
+@media(orientation:landscape) and (max-height:480px){
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view{row-gap:4px;grid-template-rows:auto auto minmax(16px,1fr) auto}
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .level-top,
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .level-top:has(#trail-encounter:not([hidden])){height:72px;min-height:72px;max-height:72px;grid-template-rows:22px 44px;row-gap:6px}
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .header-pip{flex-basis:72px;width:72px;height:72px}
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view #trail-encounter{display:none}
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .board-hint{align-self:stretch;align-content:start;align-items:start;max-height:none;line-height:1.4;overflow:auto}
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view #board-hint-text{display:block;-webkit-line-clamp:unset;overflow:visible}
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .puzzle-tools-bar{margin-block:2px!important}
+}
+@media(orientation:landscape) and (max-height:380px){
+ #app[data-route="puzzle"]:has(.progress-lab-banner:not([hidden])) .topbar{height:44px}
+ #app[data-route="puzzle"]:has(.progress-lab-banner:not([hidden])) .workspace{padding-block:2px}
+ #app[data-route="puzzle"]:has(.progress-lab-banner:not([hidden])) .game-panel{padding-top:4px}
+ #app[data-route="puzzle"] .progress-lab-banner:not([hidden]){flex-shrink:0;padding-block:0;margin-bottom:4px}
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view{row-gap:2px}
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .mission-bar{padding-block:4px}
+}
+
 /* 이야기 동물은 제목 옆의 좁은 틈 대신 별도 줄에 놓습니다. */
 @media(orientation:portrait){
  #puzzle-view .level-top:has(#trail-encounter:not([hidden])){display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:72px 32px;height:110px;min-height:110px;max-height:110px;gap:4px 8px}
