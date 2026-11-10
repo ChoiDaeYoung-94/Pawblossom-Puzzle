@@ -20,7 +20,14 @@ DatabaseSync.prototype.exec=function(...args){try{return connectionProbe.observe
 DatabaseSync.prototype.prepare=function(...args){
   let statement;try{statement=Reflect.apply(originalPrepare,this,args);}catch(error){classify(error);throw error;}
   if(transactionSpans)try{transactionSpans.nativeReturned?.('prepare',args[0],this,originalPrepare);}catch{spanFailure();}
-  for(const method of ['get','all','run']){const original=statement[method];statement[method]=function(...values){try{return Reflect.apply(original,this,values);}catch(error){classify(error);throw error;}};}
+  if(transactionSpans)try{transactionSpans.journalReturned?.('prepare',this,originalPrepare,statement,args[0]);}catch{spanFailure();}
+  for(const method of ['get','all','run']){const original=statement[method];statement[method]=function(...values){
+    try{
+      const result=Reflect.apply(original,this,values);
+      if(method==='get'&&transactionSpans)try{transactionSpans.journalReturned?.('get',this,original,result);}catch{spanFailure();}
+      return result;
+    }catch(error){classify(error);throw error;}
+  };}
   return statement;
 };
 async function run(d,spans) {
