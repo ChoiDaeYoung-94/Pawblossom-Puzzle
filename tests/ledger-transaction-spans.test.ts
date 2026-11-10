@@ -15,6 +15,91 @@ function deterministic(){let tick=10;return {origin:()=>1000,now:()=>tick++} sat
 const anchor={originMs:1000,sentAtProcessMs:1};
 function recorder(){return createSpanRecorder(anchor,deterministic());}
 
+function existingJournalQuery(r:ReturnType<typeof createSpanRecorder>,connection:DatabaseSync){
+  const prepare=DatabaseSync.prototype.prepare,get=StatementSync.prototype.get,sql='PRAGMA journal_mode';
+  const statement=Reflect.apply(prepare,connection,[sql]);r.journalReturned!('prepare',connection,prepare,statement,sql);
+  const row=Reflect.apply(get,statement,[]);r.journalReturned!('get',statement,get,row);
+  return {statement,row,get};
+}
+function nativeSpan(r:ReturnType<typeof createSpanRecorder>,connection:DatabaseSync){
+  const exec=DatabaseSync.prototype.exec;
+  for(const sql of ['BEGIN IMMEDIATE','COMMIT']){
+    const token=r.before(sql,connection,'reward-open');Reflect.apply(exec,connection,[sql]);r.after(token,'returned',exec);
+  }
+}
+
+describe('기존 journal_mode 반환의 연결별 선택 관측',()=>{
+  it('미관측은 필드 부재이고 실제 메모리 mode는 unavailable이며 과거 구간을 바꾸지 않습니다',()=>{
+    const connection=db(),r=recorder();nativeSpan(r,connection);
+    const {row}=existingJournalQuery(r,connection);expect(row.journal_mode).toBe('memory');nativeSpan(r,connection);
+    expect(r.report.spans[0]).not.toHaveProperty('journalMode');
+    expect(r.report.spans[1]).toMatchObject({connectionIndex:1,journalMode:'unavailable'});
+    expect(r.report.spans.map(span=>span.connectionIndex)).toEqual([1,1]);
+    expect(r.report.observationFailed).toBe(false);
+  });
+  it('borrowed get의 실제 this와 exact PRAGMA statement만 연결하고 index 순서를 바꾸지 않습니다',()=>{
+    const a=db(),b=db(),r=recorder(),prepare=DatabaseSync.prototype.prepare,get=StatementSync.prototype.get,sql='PRAGMA journal_mode';
+    const sa=Reflect.apply(prepare,a,[sql]),sb=Reflect.apply(prepare,b,[sql]);
+    r.journalReturned!('prepare',a,prepare,sa,sql);r.journalReturned!('prepare',b,prepare,sb,sql);
+    const borrowed=sa.get,result=Reflect.apply(borrowed,sb,[]);r.journalReturned!('get',sb,borrowed,result);
+    const other=a.prepare("SELECT 'wal' AS journal_mode");r.journalReturned!('prepare',a,prepare,other,"SELECT 'wal' AS journal_mode");r.journalReturned!('get',other,get,other.get());
+    nativeSpan(r,a);nativeSpan(r,b);
+    expect(r.report.spans[0]).not.toHaveProperty('journalMode');expect(r.report.spans[1]).toMatchObject({connectionIndex:2,journalMode:'unavailable'});
+    expect(r.report.connectionsTruncated||r.report.observationFailed).toBe(false);
+  });
+  it('신뢰된 성공 통보의 own-data만 허용하고 getter·추가 원문·이후 값으로 과거를 바꾸지 않습니다',()=>{
+    const connection=db(),r=recorder(),{statement,get}=existingJournalQuery(r,connection);let reads=0;
+    const getter={secret:'synthetic-private-journal'};Object.defineProperty(getter,'journal_mode',{get(){reads++;throw Error('synthetic-private-getter');}});
+    r.journalReturned!('get',statement,get,getter);nativeSpan(r,connection);
+    for(const value of ['delete','wal',42,'synthetic-private-mode'] as const){r.journalReturned!('get',statement,get,{journal_mode:value,sql:'synthetic-private-sql'});nativeSpan(r,connection);}
+    expect(r.report.spans.map(span=>span.journalMode)).toEqual(['unavailable','delete','wal','unavailable','unavailable']);
+    expect(reads).toBe(0);expect(JSON.stringify(r.report)).not.toContain('synthetic-private');
+  });
+  it('bound/mock 호출 함수와 다른 SQL은 native 관측으로 승격하지 않습니다',()=>{
+    const connection=db(),r=recorder(),prepare=DatabaseSync.prototype.prepare,get=StatementSync.prototype.get,statement=connection.prepare('PRAGMA journal_mode');
+    r.journalReturned!('prepare',connection,prepare.bind(connection),statement,'PRAGMA journal_mode');r.journalReturned!('get',statement,get,{journal_mode:'delete'});nativeSpan(r,connection);
+    r.journalReturned!('prepare',connection,prepare,statement,'PRAGMA journal_mode');r.journalReturned!('get',statement,get.bind(statement),{journal_mode:'wal'});nativeSpan(r,connection);
+    expect(r.report.spans.every(span=>!Object.hasOwn(span,'journalMode'))).toBe(true);
+  });
+  it('기본 off와 opt-in의 prepare/get 호출 횟수·this·인수·반환·예외 참조와5개 descriptor 복원을 보존합니다',()=>{
+    const connection=db(),prepareValue={},getValue={},marker=Error('synthetic-private-get-error');
+    const prepare=vi.spyOn(DatabaseSync.prototype,'prepare').mockReturnValue(prepareValue as any),get=vi.spyOn(StatementSync.prototype,'get').mockReturnValue(getValue as any);
+    const before=([[DatabaseSync.prototype,'exec'],[DatabaseSync.prototype,'prepare'],[StatementSync.prototype,'run'],[StatementSync.prototype,'get'],[StatementSync.prototype,'all']] as const).map(([prototype,key])=>({prototype,key,descriptor:Object.getOwnPropertyDescriptor(prototype,key)}));
+    for(const enabled of [false,true]){
+      const trace=createTrace('reward-worker'),arg={private:'synthetic-private-argument'};
+      expect(withSqliteDiagnostics(trace,()=>Reflect.apply(DatabaseSync.prototype.prepare,connection,['PRAGMA journal_mode',arg]),{transactionSpans:enabled})).toBe(prepareValue);
+      expect(withSqliteDiagnostics(trace,()=>Reflect.apply(StatementSync.prototype.get,prepareValue,[arg]),{transactionSpans:enabled})).toBe(getValue);
+      get.mockImplementationOnce(()=>{throw marker;});let thrown:unknown;
+      try{withSqliteDiagnostics(trace,()=>Reflect.apply(StatementSync.prototype.get,prepareValue,[arg]),{transactionSpans:enabled});}catch(error){thrown=error;}
+      expect(thrown).toBe(marker);
+      expect((prepare.mock.calls.at(-1) as unknown[])[1]).toBe(arg);
+      for(const call of get.mock.calls.slice(-2))expect(call[0]).toBe(arg);
+      expect(trace.sqliteHook).toMatchObject({installedMethods:5,restoration:'restored',restoreFailures:0});
+      for(const entry of before)expect(Object.getOwnPropertyDescriptor(entry.prototype,entry.key)).toEqual(entry.descriptor);
+    }
+    expect(prepare).toHaveBeenCalledTimes(2);expect(get).toHaveBeenCalledTimes(4);expect(prepare.mock.contexts.every(value=>value===connection)).toBe(true);expect(get.mock.contexts.every(value=>value===prepareValue)).toBe(true);
+    expect(prepare.mock.calls.every(args=>args[0]==='PRAGMA journal_mode'&&Array.from(args).length===2)).toBe(true);expect(get.mock.calls.every(args=>args.length===1)).toBe(true);
+  });
+  it('관측 통보 실패가 실제 native 반환을 바꾸지 않고 원문을 누출하지 않습니다',()=>{
+    const connection=db(),trace=createTrace('reward-worker'),real=spanHelpers.createSpanRecorder();
+    vi.spyOn(spanHelpers,'createSpanRecorder').mockReturnValue({...real,journalReturned:()=>{throw Error('synthetic-private-observer');}});
+    let original:unknown;const result=withSqliteDiagnostics(trace,()=>{original=connection.prepare('PRAGMA journal_mode').get();return original;},options);
+    expect(result).toBe(original);expect(result).toMatchObject({journal_mode:'memory'});expect(trace.transactionSpans?.observationFailed).toBe(true);
+    expect(trace.sqliteHook).toMatchObject({installedMethods:5,restoration:'restored',restoreFailures:0});expect(JSON.stringify(trace)).not.toContain('synthetic-private');
+  });
+  it('부모 투영은 미관측·유효/부적절한 own-data를 구분하고 accessor와 원문을 전달하지 않습니다',()=>{
+    const connection=db(),r=recorder();nativeSpan(r,connection);const raw=r.report;let reads=0;
+    for(const value of ['delete','wal','unavailable',null,44,{secret:'synthetic-private-mode'}]){
+      Object.defineProperty(raw.spans[0],'journalMode',{configurable:true,writable:true,value});
+      expect(projectTransactionSpans(raw)?.spans[0].journalMode).toBe(['delete','wal','unavailable'].includes(value as string)?value:'unavailable');
+      expect(JSON.stringify(projectTransactionSpans(raw))).not.toContain('synthetic-private');
+    }
+    delete raw.spans[0].journalMode;expect(projectTransactionSpans(raw)?.spans[0]).not.toHaveProperty('journalMode');
+    Object.defineProperty(raw.spans[0],'journalMode',{configurable:true,get(){reads++;throw Error('synthetic-private-getter');}});
+    expect(projectTransactionSpans(raw)?.spans[0]).not.toHaveProperty('journalMode');expect(reads).toBe(0);
+  });
+});
+
 describe('선택 transaction 구간·기존 관측 호환',()=>{
   it('기본/null 경로는 새 필드나 clock 관측 없이 기존5개 hook·반환을 유지합니다',()=>{
     const connection=db(),sentinel={},native=vi.spyOn(DatabaseSync.prototype,'exec').mockReturnValue(sentinel as any);

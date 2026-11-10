@@ -165,7 +165,14 @@ function installSqliteDiagnostics(trace:PhaseTrace,options?:DiagnosticsOptions,a
       try{if(scheduler?.active===true&&operation==='database-exec'&&(trace.phase==='round-open'||trace.phase==='command')&&(args[0]==='BEGIN IMMEDIATE'||args[0]==='COMMIT')&&trace.sqliteTransactions.length<8&&schedulingCount<8){schedulingAttempted=true;schedulingCount++;sample=scheduler.before();sampled=true;}}catch{}
       const transaction=operation==='database-exec'?beginTransactionObservation(trace,args[0],this):null;
       const span=operation==='database-exec'&&spans?observeSpans(()=>spans!.before(args[0],this,trace.phase))??null:null;
-      try{const result=Reflect.apply(descriptor.value,this,args);finishTransactionObservation(trace,transaction,'returned');finishScheduling(transaction,schedulingAttempted,sampled,sample);if(spans)observeSpans(()=>spans!.after(span,'returned',descriptor.value));return result;}
+      try{
+        const result=Reflect.apply(descriptor.value,this,args);finishTransactionObservation(trace,transaction,'returned');finishScheduling(transaction,schedulingAttempted,sampled,sample);
+        if(spans){
+          observeSpans(()=>spans!.after(span,'returned',descriptor.value));
+          if(operation==='database-prepare'||operation==='statement-get')observeSpans(()=>spans!.journalReturned?.(operation==='database-prepare'?'prepare':'get',this,descriptor.value,result,args[0]));
+        }
+        return result;
+      }
       catch(error){
         finishTransactionObservation(trace,transaction,'threw');
         finishScheduling(transaction,schedulingAttempted,sampled,sample);
