@@ -114,6 +114,8 @@ describe('암호화 수신·원장 내부검증·재시작',()=>{
         expect(row.diagnostic?.spans.length,safe).toBeGreaterThan(0);
         expect(row.diagnostic?.spans.some(span=>span.role==='inbox'&&span.roleEvidence==='observed-inbox-statement'),safe).toBe(true);
         expect(row.diagnostic?.spans.some(span=>span.role==='reward'&&span.roleEvidence==='observed-reward-statement'),safe).toBe(true);
+        // 기존 파일 DB의 native PRAGMA 조회만 동일 연결의 worker→부모 투영에 남습니다.
+        for(const span of row.diagnostic!.spans)expect(span.journalMode,safe).toBe('delete');
       }
     }
   });
