@@ -1,4 +1,6 @@
 .studio-intro{position:fixed;inset:0;z-index:1000;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);place-items:center;background:#10151c;color:#f5f2eb;overflow:hidden}
+/* 전체 화면 미디어 루트의 초점은 유지하고 브라우저 기본 외곽선만 숨깁니다. */
+.studio-intro:focus{outline:none}
 .studio-intro-film{grid-area:1/1;display:block;width:max(100%,720px);max-width:min(1280px,284vh);max-width:min(1280px,284dvh);object-fit:contain;aspect-ratio:16/9}
 .studio-intro-film[hidden],#app-startup[hidden]{display:none}
 .studio-intro video:not([data-frame-ready]){opacity:0;pointer-events:none}
