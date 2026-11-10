@@ -1,5 +1,13 @@
 # 원격 Android 테스트
 
+## 2026-11-11 · 새 물리폰과 공유 서버 세대
+
+새6805는 SM-A175N/API37과 LD14 index2에 설치했습니다. 공기계 CP25/30의 HOME/cold·실제이어하기 복귀와 단일WebAudio context 상태 전환, LD전체Paw4raw/일반1·별도Lab10 보존을 완료했습니다. 원4f559 C17 postguard실패와 원LD dispatch실패는 그대로이고 별도후속PASS를 연결했습니다. 최근앱카드·휴대폰캡처137 정상종료·OS오디오포커스·최종청취/포괄OEM은 남아 있습니다. 현재프로필/파일/실제반환은 [상세 기록](qa-2026-11-11.ko.md), 다음사용자검수는 [확인표](playtest-2026-11-11.ko.md)를 참조합니다.
+
+최신 직접 지시로 LD와 새 Samsung SM-A175N/API37 테스트폰을 모두 허용합니다. 주간사용85% 또는 한국시간오전7시 선도달 전에 정리·상세보고하며, 각 공유범위는 타프로젝트의 실제반환 뒤 fresh 원시작/newStop/fullReturn·nonce로 발급합니다. 현재 결과는 [11월11일 개발 검수 기록](qa-2026-11-11.ko.md)을 참조합니다.
+
+옛46652 서버세대를 재사용하지 않습니다. 새38840의 정확native100ns birth/path/SHA·live handle과 listener 전용분류(class3)의 유일loopback5037 owner, 연결마다 실제state5 역방향4tuple/PID를 결속합니다. listener의 관측rawstate0/6을LISTEN2로 바꾸거나 원인을 확정하지 않습니다. 외부모듈의 dict 반환과 C17의None 반환 계약을 구분하고 원명령 기한 전후검사·명령재실행0을 유지합니다. 사용자·다른앱·서버수명·설정·운영인증은 건드리지 않습니다.
+
 ## 2026-11-10 · 최신7b1 인트로 초점 APK
 
 최신 로컬 APK는 main7b1dd07/firstCI42764009103의 `Pawblossom-builds/2026-11-10-7b1dd07-intro-focus/Pawblossom-Puzzle-v0.1.7-2026-11-10-7b1dd07-debug.apk`·54,882,419B·SHA256 `323e0cf948d6534b50053e7fe56d425725040086254032ffcae75a6deb9f41fd`입니다. raw749 mirror의 실제testing117로390×844·808×387·Escape·모션감소4조건을 확인했고 root초점55/55/1/18표본의outline:none·Escape뒤guide-next solid3px·reduced paused/time0과4PNG/독립읽기를결속했습니다. 일반3PNG는초기암전으로영상전과정·자연종료승인은아닙니다. 새APK는같은단일v2/권한/native494·웹119/public91/ZIP660CRC·중복0이며기존eb4를baseline으로전수대조했습니다. 원06:13:30.8560618/new06:25:30.8560618/full06:28:30.8560618UTC·a142ace10e264943b4fd6f4d13796059 안06:14:55.3433179 실제반환PASS·15직계exit0/outerheld0EOF/known74부재·unknown0/49자손표본·1524frozen/SDK/local.properties exact·새7b1 production108 Android110false3복원/sourceclean입니다. build-time deviceTest:false/광범위browser:false/이전LabHint:false를유지하고이번IntroFocus4만true입니다. 새LD설치·황색선후속은아래별도실제기록에서완료했고이전eb4 Native근거와구분합니다.

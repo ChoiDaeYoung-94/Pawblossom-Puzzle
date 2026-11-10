@@ -1,3 +1,13 @@
+## 2026-11-11 · 후속 실제 검수
+
+최신 제품은 PR575/main0167의 Android 시스템 바 대비 개선이며 새 APK6805(54,882,403B)를 공기계 SM-A175N/API37과 LD14 index2에 no-clear1회씩 설치했습니다. 패키지신원·실설치SHA·Pawraw/전체CP 보존과 대표Native대비를 확인했고 #574를 닫았습니다. 공기계는실제1교환뒤25이동30점·HOME/cold·별도이어하기복귀와WebAudio running→suspended→running을확인했습니다. LD일반은1판26이동0점/별도Lab은10판29이동1040점·9별360이며설치검수중게임UI입력0입니다. 원core/dispatch/build의false와별도후속PASS는분리하며빌드시점deviceTest:false·청취/전체영상·OSaudiofocus/최근앱카드승인false는유지합니다. 정상PC는별도7b1의72완료/73판20이동960점·누적833행동입니다. [상세 검수 기록](qa-2026-11-11.ko.md)과 [사용자 확인표](playtest-2026-11-11.ko.md)에현재상태와남은범위를정리했습니다.
+
+## 2026-11-11 · 작업 초반323e 새 테스트폰 검수
+
+현재 직접 지시는 주간 잔여15%(사용85%) 또는 한국시간11월11일 오전7시 선도달 안에서 정리·보고를 마치며, 새 공기계와 LDPlayer를 모두 사용하는 것입니다. 아래90%/LD전용은 당시 이력입니다. 작업 초반에는 아래7b1/323e를 사용했고 이후0167/6805로 갱신했습니다.
+
+Samsung SM-A175N/API37에 신규1회 설치해 실제설치 전체SHA를 확인하고 첫안내/정상1판26이동0점을 관측했습니다. 원첫scope는 Android XML의 가상Button부재로0입력에서중단, 새v2는 동일영역의 WebView가1→중첩2개로변해0입력에서중단됐습니다. 설치PASS·검수flowfalse·자원반환PASS를 구분해 [11월11일 개발 검수 기록](qa-2026-11-11.ko.md)에 보관합니다. 기존LD 검수와 새 휴대폰 실터치/인트로/최근앱·오디오의 미검증 범위를 합산하지 않으며, 빌드시점deviceTest:false도 유지합니다.
+
 ## 2026-11-10 · 최신7b1 인트로 초점 APK
 
 최신 로컬 APK는 main7b1dd07/firstCI42764009103의 `Pawblossom-builds/2026-11-10-7b1dd07-intro-focus/Pawblossom-Puzzle-v0.1.7-2026-11-10-7b1dd07-debug.apk`·54,882,419B·SHA256 `323e0cf948d6534b50053e7fe56d425725040086254032ffcae75a6deb9f41fd`입니다. raw749 mirror의 실제testing117로390×844·808×387·Escape·모션감소4조건을 확인했고 root초점55/55/1/18표본의outline:none·Escape뒤guide-next solid3px·reduced paused/time0과4PNG/독립읽기를결속했습니다. 일반3PNG는초기암전으로영상전과정·자연종료승인은아닙니다. 새APK는같은단일v2/권한/native494·웹119/public91/ZIP660CRC·중복0이며기존eb4를baseline으로전수대조했습니다. 원06:13:30.8560618/new06:25:30.8560618/full06:28:30.8560618UTC·a142ace10e264943b4fd6f4d13796059 안06:14:55.3433179 실제반환PASS·15직계exit0/outerheld0EOF/known74부재·unknown0/49자손표본·1524frozen/SDK/local.properties exact·새7b1 production108 Android110false3복원/sourceclean입니다. build-time deviceTest:false/광범위browser:false/이전LabHint:false를유지하고이번IntroFocus4만true입니다. 새LD설치·황색선후속은아래별도실제기록에서완료했고이전eb4 Native근거와구분합니다.
