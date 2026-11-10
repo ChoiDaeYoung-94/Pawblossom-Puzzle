@@ -1843,14 +1843,18 @@ $<HTMLDialogElement>('#tutorial-dialog').addEventListener('cancel',event=>{event
 document.addEventListener('pointerdown',()=>{void audio.unlock().catch(()=>{});},{passive:true,capture:true});
 // 한 Game 동안 DOM에 한 번만 등록합니다. 회차 교체는 현재 scene을 조회합니다.
 const boardFocus=$('#game-canvas');
-boardFocus.addEventListener('focus',()=>{if(boardFocus.matches(':focus-visible')){boardFocus.dataset.keyboard='true';scene?.focusKeyboard();}updateBoardAccess();});
+function setBoardKeyboardMode(keyboard:boolean){
+  const next=String(keyboard),changed=boardFocus.dataset.keyboard!==next;boardFocus.dataset.keyboard=next;
+  if(changed&&TEST_TOOLS_ENABLED&&labStore&&window.matchMedia?.('(orientation:landscape) and (max-height:480px)').matches)$('.board-hint').scrollTop=0;
+}
+boardFocus.addEventListener('focus',()=>{if(boardFocus.matches(':focus-visible')){setBoardKeyboardMode(true);scene?.focusKeyboard();}updateBoardAccess();});
 boardFocus.addEventListener('blur',event=>{
-  boardFocus.dataset.keyboard='false';
+  setBoardKeyboardMode(false);
   // 보드에서 도구의 확정/취소로 옮기는 초점은 같은 선택 작업 안에 있습니다.
   if(toolMode&&(event.relatedTarget===$('#tool-confirm')||event.relatedTarget===$('#tool-cancel'))){scene?.hideKeyboardCursor();return;}
   scene?.cancelInput();
 });
-boardFocus.addEventListener('pointerdown',event=>{if(event.button===0&&event.isPrimary!==false&&scene?.keyboardState().available)clearResumeNotice();boardFocus.dataset.keyboard='false';scene?.hideKeyboardCursor();},{capture:true});
+boardFocus.addEventListener('pointerdown',event=>{if(event.button===0&&event.isPrimary!==false&&scene?.keyboardState().available)clearResumeNotice();setBoardKeyboardMode(false);scene?.hideKeyboardCursor();},{capture:true});
 boardFocus.addEventListener('keydown',event=>{
   if(event.target!==boardFocus||document.activeElement!==boardFocus||event.altKey||event.ctrlKey||event.metaKey||event.isComposing)return;
   // 내부 canvas를 거치지 않고 같은 도구 작업의 확정/취소로 이동합니다.
@@ -1866,9 +1870,9 @@ boardFocus.addEventListener('keydown',event=>{
   event.preventDefault();
   if(!scene.keyboardState().available)return;
   clearResumeNotice();
-  boardFocus.dataset.keyboard='true';void audio.unlock().catch(()=>{});scene.focusKeyboard();scene.keyboardKey(event.key,event.repeat,event.shiftKey&&event.key==='Enter');
+  setBoardKeyboardMode(true);void audio.unlock().catch(()=>{});scene.focusKeyboard();scene.keyboardKey(event.key,event.repeat,event.shiftKey&&event.key==='Enter');
 });
-window.addEventListener('blur',()=>{if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);boardFocus.dataset.keyboard='false';scene?.cancelInput();practiceInputs?.cancel();boardFeedback.cancel();});
+window.addEventListener('blur',()=>{if(lookPreview)closeLookPreview(false);if(spacePreview)closeSpacePreview(false);setBoardKeyboardMode(false);scene?.cancelInput();practiceInputs?.cancel();boardFeedback.cancel();});
 window.addEventListener('resize',()=>{practiceInputs?.cancel();boardFeedback.cancel();});
 window.addEventListener('scroll',()=>boardFeedback.cancel(),{capture:true,passive:true});
 function refreshNativeState(){

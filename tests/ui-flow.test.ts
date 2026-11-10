@@ -1170,6 +1170,40 @@ describe('명시적 스테이지 전환의 보드 초점',()=>{
   });
 });
 
+describe('진행시험의 낮은 가로 안내 스크롤 전환',()=>{
+  function setup(testTools=true,lab=true,landscape=true){
+    const h=mainHarness(false,false,testTools);
+    h.run(`window.matchMedia=query=>({matches:${landscape}&&query==='(orientation:landscape) and (max-height:480px)'})`);
+    if(lab)expect(h.run('changeLabMode(true)')).toBe(true);
+    h.run("switchView('puzzle');document.activeElement=document.querySelector('#game-canvas');document.querySelector('#game-canvas').dataset.keyboard='false'");
+    return h;
+  }
+  it('새 키보드 안내는 처음부터 보이고 같은 모드의 방향키는 읽던 위치를 유지합니다',()=>{
+    const h=setup(),disk=h.disk(),writes=h.writes();
+    h.run("document.querySelector('.board-hint').scrollTop=37;document.querySelector('#game-canvas').listeners.focus()");
+    expect(h.element('.board-hint').scrollTop).toBe(0);expect(h.element('#game-canvas').dataset.keyboard).toBe('true');
+    h.run("document.querySelector('.board-hint').scrollTop=29;const board=document.querySelector('#game-canvas');board.listeners.keydown({target:board,key:'ArrowUp',preventDefault(){}})");
+    expect(h.element('.board-hint').scrollTop).toBe(29);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+  it('키보드 끝에서 blur·포인터·창 이탈로 바뀌면 짧은 안내의 처음으로 돌아가고 저장은 유지합니다',()=>{
+    for(const boundary of ['blur','pointer','window']){
+      const h=setup(),disk=h.disk(),writes=h.writes();
+      h.run("document.querySelector('#game-canvas').listeners.focus();document.querySelector('.board-hint').scrollTop=73");
+      if(boundary==='blur')h.run("document.activeElement=document.body;document.querySelector('#game-canvas').listeners.blur({relatedTarget:null})");
+      else if(boundary==='pointer')h.run("document.querySelector('#game-canvas').listeners.pointerdown({button:0,isPrimary:true})");
+      else h.windowEvents.blur();
+      expect(h.element('.board-hint').scrollTop,boundary).toBe(0);expect(h.element('#game-canvas').dataset.keyboard).toBe('false');
+      expect(h.disk(),boundary).toEqual(disk);expect(h.writes(),boundary).toBe(writes);
+    }
+  });
+  it.each(['production','normal','portrait','missing-media'])('%s에서는 원래 안내 스크롤을 변경하지 않습니다',scope=>{
+    const h=setup(scope!=='production',scope==='portrait'||scope==='missing-media',scope!=='portrait');
+    if(scope==='missing-media')h.run('delete window.matchMedia');
+    const disk=h.disk(),writes=h.writes();h.run("document.querySelector('.board-hint').scrollTop=23;document.querySelector('#game-canvas').listeners.focus()");
+    expect(h.element('.board-hint').scrollTop).toBe(23);expect(h.disk()).toEqual(disk);expect(h.writes()).toBe(writes);
+  });
+});
+
 describe('핍·설정 도움말과 원래 화면 복귀',()=>{
   const open=(h:ReturnType<typeof mainHarness>,route:'settings'|'journal')=>{
     h.run(`switchView('${route}')`);
