@@ -241,7 +241,7 @@ dialog::backdrop{background:#33233f70}
  .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .puzzle-tools-bar{margin-block:2px!important}
 }
 @media(orientation:landscape) and (max-height:380px){
- #app[data-route="puzzle"]:has(.progress-lab-banner:not([hidden])) .topbar{height:44px}
+ #app[data-route="puzzle"]:has(.progress-lab-banner:not([hidden])) .topbar{height:46px}
  #app[data-route="puzzle"]:has(.progress-lab-banner:not([hidden])) .workspace{padding-block:2px}
  #app[data-route="puzzle"]:has(.progress-lab-banner:not([hidden])) .game-panel{padding-top:4px}
  #app[data-route="puzzle"] .progress-lab-banner:not([hidden]){flex-shrink:0;padding-block:0;margin-bottom:4px}
