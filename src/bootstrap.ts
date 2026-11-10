@@ -1,9 +1,12 @@
 import './StudioIntro.css';
+import './NativeSystemBars.css';
 import {App} from '@capacitor/app';
 import {Capacitor} from '@capacitor/core';
 import {showStudioIntro,studioPreferences} from './StudioIntro';
 import {bindStudioLifecycle,createStudioBoot} from './StudioBoot';
 import {reducedMotion} from './reducedMotion';
+
+if(Capacitor.isNativePlatform()&&Capacitor.getPlatform()==='android')document.documentElement.classList.add('android-system-bars');
 
 const host=document.getElementById('app')??document.body;
 const prefs=studioPreferences();
