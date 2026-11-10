@@ -1,5 +1,25 @@
 # 웹 자동 검증
 
+## 2026-11-10 · journal mode 관측과 Lab 가로 안내 첫 CI
+
+| 변경 | 정확 첫 PR attempt1 | 정확 첫 main attempt1 | Node22/24 각각 |
+| --- | --- | --- | --- |
+| PR568 · test-only journalReturned | 42744703974 | 42745727825 | 87파일·4,480 |
+| PR569 · 최종1b639e7 Lab 안내/스크롤 | 42746379952 | 42747828784 | 87파일·4,486 |
+
+두 쌍 모두 스토어19·타입3·production/testing·carrier 분리 검사가 성공했습니다. PR568의 whole-tree2de61154와 PR569의d8d4f1ec를 각 main과 대조하고 열린 head/base 종속PR0·원격head·깨끗한 작업트리를 확인해 브랜치를 정리했습니다. 원문은 Git 밖 QA10의 `journal567-{pr,main}-first-*`, `hint565-pr-source1b-first-*`, `hint565-main-first-*`입니다. 구33 후보의 첫PR42744915195 성공은 최종1b의 검사와 구분합니다.
+
+journalReturned는 기존 native prepare/get가 성공한 고정 PRAGMA의 반환을 관측하며 own-data enum delete/wal/unavailable만 전달합니다. 다른 연결에 빌려 호출한 get, 모의 함수·예외·getter·반환/오류/인수 참조와 다섯 descriptor 복원 경계를 보강했습니다. extra SQL/기존500ms·worker/IPC·retry·기본off·schema1/limit8은 유지합니다. 첫 CI의 성공은 다음 자연 실패를 위한 관측 준비이며 #122의 실제 lock owner·근본원인 해결이나 scheduler 수정이 아닙니다.
+
+
+최신 APK의 LD Native Lab 안내4/6 후속과 #565 닫힘은 CI 실행과 별도 근거이며 [Android 기록](android-release.ko.md)을 따릅니다.
+
+PR572 head11723546의 첫42762557295 attempt1은 양Node87파일4,486·스토어19/타입3/두웹/carrier가성공했습니다. Node22 Vitest386.99초/round-state파일332.339초, Node24 96.73초/45.515초의차이는관측했으나내부원인은미확정이며재실행0입니다. 양Node callback DTO의관측span은journal delete/returned·잘림/관측실패0이고새자연잠금실패/숫자코드는없습니다. 각exit16은0이지만일부terminate요청/반환이있어전체자연종료로표현하지않습니다. #122 owner/RCA해결은아닙니다. 원로그의literal caret ANSI표현으로첫요약파서가거부한것은CI실패가아니며같은첫원문을그대로보존한뒤읽기파서를보완했습니다. main7b1dd07의첫42764009103 attempt1도양Node87파일4,486·스토어19/타입3/두웹/carrier가성공했습니다. round-state파일은Node22의254.844초/Node24의25.367초이며두성공시간차이를원인결론으로확대하지않습니다. 두whole-tree d525d615와종속PR0·원격head·깨끗한작업트리를대조해브랜치를정리했습니다.
+
+스테이지 확장 검수는 기존 합의대로 전체 데이터·모델 규칙과 대표 실제UI/기기 검수를 병행합니다. 현재 server-round-state의554개는500판 BoardEngine↔roundState 차등검사와고정54개이며SQL/API/DB/임시fixture를쓰지않습니다. 각판최대40turn의독립모델검사이므로현재catalog기준판수에따라증가하며500×500전개는아닙니다. 미래1000–2000판은추가된전체catalog·초기모델/회차모델을자동검사하고새기믹·형태·경계·변경기능/이상후보를대표기기검수하되매업데이트전수수동완주를조건으로두지않습니다. legalMoveSearch/매치검사·셔플의기존상한과중복검증비용은별도성능후보이고,이번에는보호검사삭제·대표샘플만으로전체모델대체·시간제한완화·Node업그레이드를하지않았습니다. 녹색모델검사와사람재미/난이도는서로대체하지않습니다.
+
+1000–2000판지원완료로표현하지않습니다. 현재LEVEL_COUNT/저장validator상한일부는동적이지만extendedPlans·chapters의500끝구간(총31장),25풍경(index상한24/최종판정)·자산/음악,Lab/시험선택기의1–3자리정규식과한영1–500문구는확장후속입니다. 999/1000/신규최종/최종+1·소수/네자리배치와기존500완료→501진입을검수해야합니다. 기존스테이지규칙을바꾸면levelSignature가달라지고,서버경로는전체CONTENT_HASH가profile/MAC에포함되므로단순추가의기존DB호환도자동보장하지않습니다. 돌봄100/500프리셋·여행정원500목표와기존100snapshot은일괄치환대상이아니며유지/확장을구분합니다. 스토어초안은현재출시판수를약속하지않으므로배포콘텐츠와최종문구일치만확인합니다. 이번에는확장데이터/서버이관/기존경제를변경하지않았습니다.
+
 ## 2026-11-09 · UI/FX/편곡과 후속 선택색 후보 첫 CI
 
 | 변경 | 첫 PR run | 첫 main run | 양Node 자동검사 |
