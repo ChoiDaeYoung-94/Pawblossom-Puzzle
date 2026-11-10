@@ -236,6 +236,7 @@ dialog::backdrop{background:#33233f70}
  .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .header-pip{flex-basis:72px;width:72px;height:72px}
  .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view #trail-encounter{display:none}
  .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .board-hint{align-self:stretch;align-content:start;align-items:start;max-height:none;line-height:1.4;overflow:auto}
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .board-hint>svg{align-self:start}
  .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view #board-hint-text{display:block;-webkit-line-clamp:unset;overflow:visible}
  .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .puzzle-tools-bar{margin-block:2px!important}
 }
