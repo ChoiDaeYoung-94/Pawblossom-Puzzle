@@ -238,6 +238,12 @@ dialog::backdrop{background:#33233f70}
  .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .board-hint{align-self:stretch;align-content:start;align-items:start;max-height:none;line-height:1.4;overflow:auto}
  .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .board-hint>svg{align-self:start}
  .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view #board-hint-text{display:block;-webkit-line-clamp:unset;overflow:visible}
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view #board-keyboard-help{display:none}
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view:has(#game-canvas[data-keyboard="true"]:focus) #board-hint-text{display:none}
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view:has(#game-canvas[data-keyboard="true"]:focus) #board-keyboard-help{display:block}
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .board-hint::-webkit-scrollbar{width:6px}
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .board-hint::-webkit-scrollbar-track{background:#eee3f5;border-radius:6px}
+ .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .board-hint::-webkit-scrollbar-thumb{background:#8b67a3;border-radius:6px}
  .game-panel:has(>.progress-lab-banner:not([hidden])) #puzzle-view .puzzle-tools-bar{margin-block:2px!important}
 }
 @media(orientation:landscape) and (max-height:380px){
