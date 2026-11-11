@@ -237,6 +237,14 @@ describe('자체 구간 음악과 미예약 마디 전환',()=>{
       const pitch=score.melody[Math.floor(step/8)%score.melody.length][step%8];
       if(pitch!==null)expect(lead.some(c=>c[1]===pitch&&Math.abs(c[2]-(.05+step*eighth))<1e-6)).toBe(true);
     }
+    if(!['garden','pip','dream','winter'].includes(theme)){
+      const inLoop=drums.mock.calls.filter(c=>c[1]<.05+MUSIC_LOOP_SECONDS-1e-6);
+      expect(inLoop).toHaveLength(256);expect(inLoop.filter(c=>c[0]==='kick')).toHaveLength(64);expect(inLoop.filter(c=>c[0]==='snare')).toHaveLength(68);expect(inLoop.filter(c=>c[0]==='hat')).toHaveLength(124);
+      for(const bar of [19,23,27,31]){
+        const ending=[5,6,7].map(beat=>{const call=inLoop.find(c=>Math.abs(c[1]-(.05+(bar*8+beat)*eighth))<1e-6)!;return [call[0],call[2]];});
+        expect(ending).toEqual(bar===19||bar===27?[['hat',.65],['snare',.8],['snare',1]]:[['snare',.8],['hat',.65],['snare',1]]);
+      }
+    }
     expect(ctx.createBuffer).toHaveBeenCalledOnce();expect(owned(a).nextNote).toBeGreaterThan(MUSIC_LOOP_SECONDS);expect(vi.getTimerCount()).toBe(1);expect(owned(a).playingTheme).toBe(theme);
   });
   it('타악 고정 버퍼는 context마다 한 번 만들고 교체·종료 뒤 이전 버퍼를 재사용하지 않습니다',async()=>{
