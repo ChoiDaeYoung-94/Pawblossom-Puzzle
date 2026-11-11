@@ -35,10 +35,13 @@ export class BoardEffects {
   toolCreated(at:Position){
     if(this.objects.size>=120)return;
     const {x,y}=point(at),spark=this.scene.add.graphics().setPosition(x,y).setDepth(22).setName('tool-created-spark');
-    spark.fillStyle(0xfff8df,1);
     for(const [cx,cy]of[[-17,-17],[17,17]]){
-      spark.fillTriangle(cx-6,cy,cx,cy-2,cx+6,cy);spark.fillTriangle(cx-6,cy,cx,cy+2,cx+6,cy);
-      spark.fillTriangle(cx,cy-6,cx-2,cy,cx,cy+6);spark.fillTriangle(cx,cy-6,cx+2,cy,cx,cy+6);
+      // 밝은 칸에서도 보이도록 크림색 별에 보라색 가장자리를 둡니다.
+      for(const [color,radius,waist]of[[0x74517e,7,3],[0xfff8df,5,1.5]]){
+        spark.fillStyle(color,1);
+        spark.fillTriangle(cx-radius,cy,cx,cy-waist,cx+radius,cy);spark.fillTriangle(cx-radius,cy,cx,cy+waist,cx+radius,cy);
+        spark.fillTriangle(cx,cy-radius,cx-waist,cy,cx,cy+radius);spark.fillTriangle(cx,cy-radius,cx+waist,cy,cx,cy+radius);
+      }
     }
     this.animate(spark,reducedMotion()?{alpha:0,duration:180}:{alpha:0,scaleX:1.12,scaleY:1.12,duration:220,ease:'Sine.easeOut'});
   }

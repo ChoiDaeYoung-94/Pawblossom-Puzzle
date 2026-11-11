@@ -35,7 +35,7 @@ describe('낙엽과 퍼즐 임시 연출',()=>{
     try{
       h.effects.toolCreated(at);expect(h.objects).toHaveLength(1);expect(h.tweens).toHaveLength(1);
       const spark=h.objects[0],tween=h.tweens[0];expect(spark.name).toBe('tool-created-spark');expect([spark.x,spark.y]).toEqual([44,436]);
-      expect(spark.triangles).toHaveLength(8);expect(Math.max(...spark.triangles.flat().map(Math.abs))).toBeLessThanOrEqual(23);
+      expect(spark.triangles).toHaveLength(16);expect(Math.max(...spark.triangles.flat().map(Math.abs))*1.12).toBeLessThan(28);
       expect(tween).toMatchObject({alpha:0,duration:reduced?180:220});
       if(reduced){expect(tween).not.toHaveProperty('scaleX');expect(tween).not.toHaveProperty('scaleY');expect(tween).not.toHaveProperty('x');expect(tween).not.toHaveProperty('y');}
       expect(h.effects.activeCount).toBe(1);h.finish();expect(h.effects.activeCount).toBe(0);expect(spark.destroyed).toBe(true);expect(random).not.toHaveBeenCalled();
