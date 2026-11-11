@@ -261,7 +261,9 @@ describe('저장한 도구 결과의 선택·재생과 일반 정산 분리',()=
   });
   it('씨앗은 해당 piece만 바꾸고 다른 블록/일반 이동을 건드리지 않는다',()=>{
     const h=ready(false),old=h.scene.pieces.map(line=>line.slice()),plan=preparePuzzleTool(h.round,'seeds',{row:0,col:0})!,done=vi.fn(),calls=h.rng.mock.calls.length;
+    const created=vi.spyOn((h.scene as unknown as {effects:BoardEffects}).effects,'toolCreated');
     h.scene.playPreparedTool(plan,done);expect(done).toHaveBeenCalledOnce();expect(h.scene.pieces[0][0]).not.toBe(old[0][0]);expect(old[0][0]!.destroyed).toBe(true);expect(h.scene.pieces[0][1]).toBe(old[0][1]);expect(h.onMove).not.toHaveBeenCalled();expect(h.rng).toHaveBeenCalledTimes(calls);
+    expect(created).toHaveBeenCalledExactlyOnceWith(plan.target);
   });
   it('이미 재생 중인 두 번째 적용과 종료 뒤 적용은 실행하지 않는다',()=>{
     const h=ready(),move=h.scene.engine.legalMoves()[0],plan=preparePuzzleTool(h.round,'gloves',move.a,move.b,seededRng(9))!,done=vi.fn();h.scene.wait=()=>new Promise(()=>{});

@@ -31,6 +31,17 @@ export class BoardEffects {
   clear(){for(const item of this.objects){this.scene.tweens.killTweensOf(item);item.destroy();}this.objects.clear();}
   /** 실제 제거 범위의 표시도 파편과 같은 상한·종료 정리 안에서 관리합니다. */
   trackOverlay(overlay:Phaser.GameObjects.Graphics){this.animate(overlay,{alpha:0,delay:180,duration:130});}
+  /** 도구 생성은 발동 범위와 구분해 생성 칸 안의 두 모서리만 짧게 반짝입니다. */
+  toolCreated(at:Position){
+    if(this.objects.size>=120)return;
+    const {x,y}=point(at),spark=this.scene.add.graphics().setPosition(x,y).setDepth(22).setName('tool-created-spark');
+    spark.fillStyle(0xfff8df,1);
+    for(const [cx,cy]of[[-17,-17],[17,17]]){
+      spark.fillTriangle(cx-6,cy,cx,cy-2,cx+6,cy);spark.fillTriangle(cx-6,cy,cx,cy+2,cx+6,cy);
+      spark.fillTriangle(cx,cy-6,cx-2,cy,cx,cy+6);spark.fillTriangle(cx,cy-6,cx+2,cy,cx,cy+6);
+    }
+    this.animate(spark,reducedMotion()?{alpha:0,duration:180}:{alpha:0,scaleX:1.12,scaleY:1.12,duration:220,ease:'Sine.easeOut'});
+  }
   anticipate(step:ResolveStep){
     if(reducedMotion())return;
     for(const p of uniqueEffects(step)){
