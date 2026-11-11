@@ -1,5 +1,6 @@
 import {describe,expect,it,vi} from 'vitest';
 import {EventEmitter} from 'node:events';
+import type {Worker} from 'node:worker_threads';
 import {runLedgerWorkerBatch} from './helpers/ledgerWorkerBatch';
 import {createTrace,childRow,purchaseFailureContext} from './helpers/ledgerDiagnostics';
 
@@ -9,7 +10,7 @@ class FakeWorker extends EventEmitter {
 const flush=()=>new Promise<void>(resolve=>setImmediate(resolve));
 function setup(options:Parameters<typeof runLedgerWorkerBatch>[2]={},count=2){
   const workers:FakeWorker[]=[];
-  const output=runLedgerWorkerBatch(Array.from({length:count},(_,i)=>i),()=>{const worker=new FakeWorker();workers.push(worker);return worker;},options);
+  const output=runLedgerWorkerBatch(Array.from({length:count},(_,i)=>i),()=>{const worker=new FakeWorker();workers.push(worker);return worker as unknown as Worker;},options);
   return {workers,output};
 }
 describe('원장 worker 부모의 준비·결과 정산',()=>{
@@ -63,12 +64,12 @@ describe('원장 worker 부모의 준비·결과 정산',()=>{
   });
   it('다음 생성자 예외 뒤 이미 만든 worker의 정리는 caller에게 남기고 GO0',async()=>{
     const worker=new FakeWorker(),owned:FakeWorker[]=[];
-    const output=runLedgerWorkerBatch([0,1],input=>{if(input)throw new Error('secret-path');owned.push(worker);return worker;});
+    const output=runLedgerWorkerBatch([0,1],input=>{if(input)throw new Error('secret-path');owned.push(worker);return worker as unknown as Worker;});
     await expect(output).rejects.toThrow(/^ledger-worker-start-failed$/);expect(owned).toEqual([worker]);expect(worker.postMessage).not.toHaveBeenCalled();
   });
   it('다음 생성자 안의 이전 worker 동기 실패도 막 등록한 gate까지 거절',async()=>{
     const workers:FakeWorker[]=[];
-    const output=runLedgerWorkerBatch([0,1,2],index=>{if(index===1)workers[0].emit('error',new Error('secret'));const worker=new FakeWorker();workers.push(worker);return worker;});
+    const output=runLedgerWorkerBatch([0,1,2],index=>{if(index===1)workers[0].emit('error',new Error('secret'));const worker=new FakeWorker();workers.push(worker);return worker as unknown as Worker;});
     await expect(output).rejects.toThrow(/^ledger-worker-error$/);expect(workers).toHaveLength(2);
     workers.forEach(worker=>expect(worker.postMessage).not.toHaveBeenCalled());
   });
