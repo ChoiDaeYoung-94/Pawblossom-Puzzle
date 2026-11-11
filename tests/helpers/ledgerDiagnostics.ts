@@ -221,6 +221,13 @@ function booleanOrNull(value:unknown):boolean|null {return typeof value==='boole
 function boundedCount(value:unknown,max:number):number {return typeof value==='number'&&Number.isInteger(value)&&value>=0&&value<=max?value:0;}
 export function workerRow(index:number):WorkerRow {return {index,readyAtMs:null,goAtMs:null,resultAtMs:null,exitAtMs:null,exitCode:null,terminationRequested:false,terminationRequestedAtMs:null,kind:'other',code:null,diagnostic:null,errorName:null,errorCode:null};}
 export function childRow(index:number):ChildRow {return {index,createdAtMs:null,sentAtMs:null,resultAtMs:null,exitAtMs:null,exitCode:null,terminationRequested:false,errorName:null,errorCode:null};}
+// 실패 콘솔에는 허용된 단계·시간·child 상태만 투영합니다. raw meta/오류/입력을 stringify하지 않습니다.
+export function purchaseFailureContext(trace:LedgerTrace){
+  return {...projectTrace(trace),elapsedMs:elapsed(trace),family:allowed(trace.family,['purchase-restart','purchase-batch'],'other'),
+    children:trace.children.slice(0,8).map(row=>({index:boundedCount(row.index,7),createdAtMs:number(row.createdAtMs),sentAtMs:number(row.sentAtMs),resultAtMs:number(row.resultAtMs),exitAtMs:number(row.exitAtMs),
+      exitCode:typeof row.exitCode==='number'&&Number.isInteger(row.exitCode)?row.exitCode:null,terminationRequested:row.terminationRequested===true,
+      errorName:row.errorName===null?null:safeError({name:row.errorName,code:row.errorCode}).errorName,errorCode:row.errorCode===null?null:safeError({name:row.errorName,code:row.errorCode}).errorCode})),childrenTruncated:trace.children.length>8};
+}
 // envelope 전체를 문자열화하지 않고 기존 결과와 안전한 진단을 분리합니다.
 export function receiveWorker(value:any,row:WorkerRow,spanClockAnchor?:unknown):any {
   const wrapped=field(value,'kind')==='synthetic-worker-report';const result=wrapped?field(value,'result'):value;

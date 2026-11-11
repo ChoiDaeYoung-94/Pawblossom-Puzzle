@@ -7,7 +7,8 @@ import {Worker} from 'node:worker_threads';
 import {DatabaseSync} from 'node:sqlite';
 import {PurchaseLedger, type PurchaseLedgerOptions} from '../server/commerce/purchaseLedger';
 import {createLedgerAcknowledger} from '../server/commerce/googlePlayAcknowledge';
-import {createTrace,step,asyncStep,elapsed,beginPhase,childRow,safeError,type LedgerTrace} from './helpers/ledgerDiagnostics';
+import {runLedgerWorkerBatch} from './helpers/ledgerWorkerBatch';
+import {createTrace,step,asyncStep,elapsed,beginPhase,childRow,safeError,purchaseFailureContext,type LedgerTrace} from './helpers/ledgerDiagnostics';
 
 // 실제 계정·키·구매가 아닌 합성 fixture만 사용합니다.
 const policy = {packageName: 'com.example.pawblossom', productId: 'remove_ads', purchaseOptionId: 'permanent', mode: 'production' as const};
@@ -55,23 +56,10 @@ async function child(input: ReturnType<typeof data>,trace?:LedgerTrace) {
   finally { if (process.exitCode === null) {if(row)row.terminationRequested=true;process.kill();await exited;} }
 }
 async function concurrent(inputs: ReturnType<typeof data>[]) {
-  const workers = inputs.map(input => new Worker(workerUrl, {workerData: input, execArgv: ['--experimental-strip-types']}));
-  workers.forEach(worker => activeWorkers.add(worker));
-  const readies: Promise<void>[] = [];
-  const outputs: Promise<any>[] = [];
-  for (const worker of workers) {
-    let ready!: () => void, result!: (value: any) => void;
-    let failReady!: (error: Error) => void, failResult!: (error: Error) => void;
-    readies.push(new Promise((resolve, reject) => {ready = resolve; failReady = reject;}));
-    outputs.push(new Promise((resolve, reject) => {result = resolve; failResult = reject;}));
-    worker.on('message', value => {if (value === 'ready') ready(); else result(value);});
-    worker.once('error', error => {failReady(error); failResult(error);});
-    worker.once('exit', code => {if (code) {const error = new Error('worker-failed'); failReady(error); failResult(error);}});
-  }
+  const workers:Worker[]=[];
   try {
     // 모든 연결 작업자가 준비될 때까지 기다린 뒤 같은 barrier에서 실행합니다.
-    const [, results] = await Promise.all([Promise.all(readies).then(() => workers.forEach(worker => worker.postMessage('run'))), Promise.all(outputs)]);
-    return results;
+    return await runLedgerWorkerBatch(inputs,input=>{const worker=new Worker(workerUrl,{workerData:input,execArgv:['--experimental-strip-types']});workers.push(worker);activeWorkers.add(worker);return worker;},{go:()=> 'run'});
   } finally { await Promise.all(workers.map(worker => worker.terminate())); workers.forEach(worker => activeWorkers.delete(worker)); }
 }
 afterEach(async () => {
@@ -208,7 +196,8 @@ describe('실제 파일 원장 + Google 승인 POST adapter', () => {
       expect(transport).toHaveBeenCalledTimes(1); expect(db(h.path).prepare('SELECT * FROM entitlements').all()).toHaveLength(1);
     }
   });
-  it('실제 프로세스 재시작 뒤 최신 GET로 수렴하고 POST·재지급하지 않습니다', async ({task}) => {
+  it('실제 프로세스 재시작 뒤 최신 GET로 수렴하고 POST·재지급하지 않습니다', async ({task,onTestFailed}) => {
+    onTestFailed(()=>{try{console.error('[pawblossom:purchase-failure]',JSON.stringify(purchaseFailureContext(trace)));}catch{}});
     const trace=task.meta.ledgerDiagnostic=createTrace('purchase-restart');const location=step(trace,'prepare',path);
     const first = await child(data(location, {httpAcknowledge: true, postStatus: 409, pending: true}),trace);
     expect(first).toMatchObject({result: {newGrant: true, acknowledgement: 'pending'}, entitlement: true, postCount: 1});
@@ -438,7 +427,8 @@ describe('영구 pending ack와 제한된 재시도', () => {
     expect(() => h.ledger.acknowledgementSummary()).toThrow('ledger-read-failed');
     expect(h.transport).not.toHaveBeenCalled(); expect(h.ack).not.toHaveBeenCalled();
   });
-  it('배치 한도와 잘못된 재시도 한도를 지킵니다', async ({task}) => {
+  it('배치 한도와 잘못된 재시도 한도를 지킵니다', async ({task,onTestFailed}) => {
+    onTestFailed(()=>{try{console.error('[pawblossom:purchase-failure]',JSON.stringify(purchaseFailureContext(trace)));}catch{}});
     const trace=task.meta.ledgerDiagnostic=createTrace('purchase-batch');const h=step(trace,'open',()=>open(undefined,{acknowledge:async()=>'retry'}));
     for(let i=0;i<3;i++)await asyncStep(trace,'seed',()=>h.ledger.process(`${token}${i}`,owner));
     advance();expect(await asyncStep(trace,'retry',()=>h.ledger.retryPending(2))).toMatchObject({processed:2});
