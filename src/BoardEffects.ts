@@ -31,6 +31,20 @@ export class BoardEffects {
   clear(){for(const item of this.objects){this.scene.tweens.killTweensOf(item);item.destroy();}this.objects.clear();}
   /** 실제 제거 범위의 표시도 파편과 같은 상한·종료 정리 안에서 관리합니다. */
   trackOverlay(overlay:Phaser.GameObjects.Graphics){this.animate(overlay,{alpha:0,delay:180,duration:130});}
+  /** 도구 생성은 발동 범위와 구분해 생성 칸 안의 두 모서리만 짧게 반짝입니다. */
+  toolCreated(at:Position){
+    if(this.objects.size>=120)return;
+    const {x,y}=point(at),spark=this.scene.add.graphics().setPosition(x,y).setDepth(22).setName('tool-created-spark');
+    for(const [cx,cy]of[[-17,-17],[17,17]]){
+      // 밝은 칸에서도 보이도록 크림색 별에 보라색 가장자리를 둡니다.
+      for(const [color,radius,waist]of[[0x74517e,7,3],[0xfff8df,5,1.5]]){
+        spark.fillStyle(color,1);
+        spark.fillTriangle(cx-radius,cy,cx,cy-waist,cx+radius,cy);spark.fillTriangle(cx-radius,cy,cx,cy+waist,cx+radius,cy);
+        spark.fillTriangle(cx,cy-radius,cx-waist,cy,cx,cy+radius);spark.fillTriangle(cx,cy-radius,cx+waist,cy,cx,cy+radius);
+      }
+    }
+    this.animate(spark,reducedMotion()?{alpha:0,duration:180}:{alpha:0,scaleX:1.12,scaleY:1.12,duration:220,ease:'Sine.easeOut'});
+  }
   anticipate(step:ResolveStep){
     if(reducedMotion())return;
     for(const p of uniqueEffects(step)){

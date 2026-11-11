@@ -29,6 +29,23 @@ const step:ResolveStep={before:[],after:[],removed:Array.from({length:64},(_,i)=
 const colorStep=():ResolveStep=>({...step,before:Array.from({length:8},(_,row)=>Array.from({length:8},(_,col)=>({kind:(row+col)%6}))),effects:[{row:0,col:0,special:'rainbow'},{row:1,col:1,special:'rainbow'}]});
 afterEach(()=>vi.unstubAllGlobals());
 describe('낙엽과 퍼즐 임시 연출',()=>{
+  it.each([false,true])('도구 생성 감소모션=%s는 생성 칸 안 두 반짝임·단일 객체/정리·난수 불변',reduced=>{
+    vi.stubGlobal('window',{matchMedia:()=>({matches:reduced})});
+    const h=harness(),at=Object.freeze({row:7,col:0}),random=vi.spyOn(Math,'random');
+    try{
+      h.effects.toolCreated(at);expect(h.objects).toHaveLength(1);expect(h.tweens).toHaveLength(1);
+      const spark=h.objects[0],tween=h.tweens[0];expect(spark.name).toBe('tool-created-spark');expect([spark.x,spark.y]).toEqual([44,436]);
+      expect(spark.triangles).toHaveLength(16);expect(Math.max(...spark.triangles.flat().map(Math.abs))*1.12).toBeLessThan(28);
+      expect(tween).toMatchObject({alpha:0,duration:reduced?180:220});
+      if(reduced){expect(tween).not.toHaveProperty('scaleX');expect(tween).not.toHaveProperty('scaleY');expect(tween).not.toHaveProperty('x');expect(tween).not.toHaveProperty('y');}
+      expect(h.effects.activeCount).toBe(1);h.finish();expect(h.effects.activeCount).toBe(0);expect(spark.destroyed).toBe(true);expect(random).not.toHaveBeenCalled();
+    }finally{random.mockRestore();}
+  });
+  it('도구 생성도 기존120개 상한에서 새 객체를 만들지 않고 종료 취소와 늦은 완료를 정리',()=>{
+    const h=harness();for(let i=0;i<125;i++)h.effects.toolCreated({row:0,col:0});
+    expect(h.effects.activeCount).toBe(120);expect(h.objects).toHaveLength(120);expect(h.tweens).toHaveLength(120);
+    h.effects.clear();expect(h.killed).toHaveLength(120);expect(h.objects.every(obj=>obj.destroyed)).toBe(true);h.finish();expect(h.effects.activeCount).toBe(0);
+  });
   it('채워진 매치 별은 실제 제거칸 중심에서 제한된 연쇄 강도로 커지고 난수·보드를 바꾸지 않습니다',()=>{
     const source:ResolveStep={before:Array.from({length:8},()=>Array.from({length:8},()=>({kind:0}))),after:[],removed:[{row:7,col:7}]},before=JSON.stringify(source),random=vi.spyOn(Math,'random'),sizes:number[]=[];
     try{

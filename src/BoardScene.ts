@@ -428,6 +428,7 @@ export class BoardScene extends Phaser.Scene {
     if(!plan.result){
       const at=plan.target;this.pieces[at.row][at.col]?.destroy();const piece=this.pieces[at.row][at.col]=this.makePiece(this.engine.board[at.row][at.col]!,at);
       if(!this.syncMotion())this.tweens.add({targets:piece,scale:{from:.65,to:1},duration:280,ease:'Back.easeOut'});
+      this.effects.toolCreated(at);
       this.hooks.audio.play('special');complete();this.resetHint();this.changed();return true;
     }
     this.busy=true;const token=++this.preparedSequence;this.prepared={token,complete};const valid=()=>this.prepared?.token===token&&!this.finished;
