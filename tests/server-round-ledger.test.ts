@@ -6,6 +6,7 @@ import {createHash,createHmac} from 'node:crypto';
 import {DatabaseSync,StatementSync} from 'node:sqlite';
 import {fork} from 'node:child_process';
 import {Worker} from 'node:worker_threads';
+import {runLedgerWorkerBatch} from './helpers/ledgerWorkerBatch';
 import {performance} from 'node:perf_hooks';
 import {isDeepStrictEqual} from 'node:util';
 import {BoardEngine} from '../src/core/BoardEngine';
@@ -44,13 +45,15 @@ async function child(input:ReturnType<typeof data>){
   try{process.send(input);const v=await output;await done;return v;}finally{if(process.exitCode===null){process.kill();await done;}}
 }
 async function concurrent(inputs:ReturnType<typeof data>[],trace?:LedgerTrace,onConstructorBusy?:()=>void){
-  const batch=inputs.map((value,index)=>{const row=trace?workerRow(index):undefined;if(row)trace!.workers.push(row);const worker=new Worker(workerUrl,{workerData:trace?{...value,diagnostics:true}:value,execArgv:['--experimental-transform-types']});if(row)observeWorker(worker,trace!,row);return worker;});workers.push(...batch);
-  const outputs:Promise<any>[]=[];
-  await Promise.all(batch.map((w,index)=>new Promise<void>((resolve,reject)=>{
-    const row=trace?.workers[index];let receive!:(v:any)=>void;outputs.push(new Promise((yes,no)=>{receive=yes;w.on('error',error=>no(workerFailure(error,trace)));}));
-    w.on('message',v=>{if(v==='ready'){if(row)row.readyAtMs=elapsed(trace!);resolve();}else if(v?.kind==='synthetic-open-busy'){onConstructorBusy?.();}else{if(row)row.resultAtMs=elapsed(trace!);receive(row?receiveWorker(v,row):v);}});w.on('error',error=>reject(workerFailure(error,trace)));
-  })));
-  batch.forEach((w,index)=>{if(trace)trace.workers[index].goAtMs=elapsed(trace);w.postMessage('go');});return Promise.all(outputs);
+  return runLedgerWorkerBatch(inputs,(value,index)=>{
+    const row=trace?workerRow(index):undefined;if(row)trace!.workers.push(row);
+    const worker=new Worker(workerUrl,{workerData:trace?{...value,diagnostics:true}:value,execArgv:['--experimental-transform-types']});workers.push(worker);if(row)observeWorker(worker,trace!,row);return worker;
+  },{
+    onReady:index=>{if(trace)trace.workers[index].readyAtMs=elapsed(trace);},
+    go:index=>{if(trace)trace.workers[index].goAtMs=elapsed(trace);return 'go';},
+    progress:value=>{if(value?.kind!=='synthetic-open-busy')return false;onConstructorBusy?.();return true;},
+    receive:(value,index)=>{if(!trace)return value;const row=trace.workers[index];row.resultAtMs=elapsed(trace);return receiveWorker(value,row);},
+  }).catch(error=>{throw workerFailure(error,trace);});
 }
 function mac(domain:string,value:string){const derived=createHmac('sha256',key).update('pawblossom-round-v1\0'+domain).digest();return createHmac('sha256',derived).update(value).digest('hex');}
 function signRow(d:DatabaseSync,patch:(s:any)=>void){

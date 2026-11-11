@@ -8,6 +8,7 @@ import {Worker} from 'node:worker_threads';
 import {RewardLedger,type RewardLedgerOptions,type TrustedRewardRound} from '../server/ads/rewardLedger';
 import {policy,epoch,keyEntry,keyResponse,callback,malleate} from './helpers/ssvFixture';
 import {createCallbackOutcomeTrace,prepareCallbackWorkerGo,receiveCallbackOutcome,callbackOutcomeContext,type CallbackOutcomeTrace} from './helpers/callbackOutcomeDiagnostics';
+import {runLedgerWorkerBatch} from './helpers/ledgerWorkerBatch';
 const key=new Uint8Array(32).fill(71),owner={ownerId:'synthetic-owner-private',roundId:'synthetic-round-private'};
 const folders:string[]=[],ledgers:RewardLedger[]=[],connections:DatabaseSync[]=[],workers:Worker[]=[];
 const workerUrl=new URL('./helpers/reward-ledger-worker.mjs',import.meta.url);
@@ -32,14 +33,9 @@ async function child(data:ReturnType<typeof input>){
   try{p.send(data);const result=await output;await done;return result;}finally{if(p.exitCode===null){p.kill();await done;}}
 }
 async function concurrent(data:ReturnType<typeof input>[],trace?:CallbackOutcomeTrace){
-  const batch=data.map(value=>new Worker(workerUrl,{workerData:value,execArgv:['--experimental-strip-types']}));workers.push(...batch);
-  const outputs:Promise<any>[]=[];
-  const ready=batch.map((worker,index)=>new Promise<void>((resolve,reject)=>{
-    let receive!:(v:any)=>void;
-    outputs.push(new Promise(r=>receive=r));
-    worker.on('message',v=>v==='ready'?resolve():receive(trace?receiveCallbackOutcome(v,trace,index):v));worker.on('error',reject);
-  }));
-  await Promise.all(ready);batch.forEach((w,index)=>w.postMessage(trace?prepareCallbackWorkerGo(trace,index):'go'));return Promise.all(outputs);
+  return runLedgerWorkerBatch(data,value=>{
+    const worker=new Worker(workerUrl,{workerData:value,execArgv:['--experimental-strip-types']});workers.push(worker);return worker;
+  },{go:index=>trace?prepareCallbackWorkerGo(trace,index):'go',receive:(value,index)=>trace?receiveCallbackOutcome(value,trace,index):value});
 }
 afterEach(async()=>{vi.restoreAllMocks();await Promise.all(workers.splice(0).map(w=>w.terminate()));connections.splice(0).forEach(d=>d.close());ledgers.splice(0).forEach(l=>l.close());folders.splice(0).forEach(p=>rmSync(p,{recursive:true,force:true}));});
 describe('서버 claim binding·보상권 (게임 지급 아님)',()=>{
