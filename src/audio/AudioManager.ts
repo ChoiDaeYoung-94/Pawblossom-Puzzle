@@ -430,14 +430,22 @@ export class AudioManager {
       const accent=[1,.82,.92,.86,1,.84,.96,.82][beat];
       if(pitch!==null)this.musicTone('lead',pitch,time,.18,.06*accent*(chorus?1.04:1));
       // Each eighth reserves at most three voices. No future offbeat chord can steal the lead slot.
+      let drum:'kick'|'snare'|'hat'|undefined,strength=1;
       if(beat%2===0){
         this.musicTone('bass',root+[0,7,12,7][beat/2],time,.145,quiet?.033:.043);
-        this.musicPercussion(beat%4===0?'kick':'snare',time,quiet?.55:1);
+        drum=beat%4===0?'kick':'snare';strength=quiet?.55:1;
       }else{
         this.musicTone('comp',root+12,time,.065,quiet?.011:.018);
         const fill=chorus&&bar%4===3&&beat===7;
-        if(!quiet||beat===3||beat===7)this.musicPercussion(fill?'snare':'hat',time,fill?.8:quiet?.45:.65);
+        if(!quiet||beat===3||beat===7){drum=fill?'snare':'hat';strength=fill?.8:quiet?.45:.65;}
       }
+      // 후반 종지는 기존 세 타격만 재배치하며 타격 수·악기별 강도·bus gain을 유지합니다.
+      if(chorus&&!quiet&&bar%4===3&&beat>=5){
+        if(beat===7){drum='snare';strength=1;}
+        else if(beat===6){drum=bar%8===7?'hat':'snare';strength=bar%8===7?.65:.8;}
+        else if(bar%8===7){drum='snare';strength=.8;}
+      }
+      if(drum)this.musicPercussion(drum,time,strength);
       this.nextNote += EIGHTH;
       this.step = (this.step + 1) % (MUSIC_TIMING.pulsesPerBar*MUSIC_TIMING.barsPerLoop);
     }
