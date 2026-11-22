@@ -373,7 +373,7 @@ j의 official quit0 직후 첫 PID 잔존 거절도 보존하고 추가 literalU
 
 신규 개인 계정의 기기 확인은 소유자의 Play Console 모바일 앱과 루팅하지 않은 실물 Android10 이상 기기로 진행하며 개발용 LD 검수와 별개입니다. 개인/조직은 신원/공개 정보 요건이 다르고, 한국 개발자의 개인 계정은 개발자 전화번호도 확인해야 합니다. 조직은 통상 D-U-N-S·조직 문서/웹사이트 확인이 필요하며 신규DUNS 발급은 최대30일이 걸릴 수 있습니다. 적용 계정/기보유·인증 완료 여부를 먼저 확인합니다. [실물 기기](https://support.google.com/googleplay/android-developer/answer/14316361?hl=en), [계정 정보·DUNS](https://support.google.com/googleplay/android-developer/answer/13628312?hl=en), [신원·전화번호·웹사이트](https://support.google.com/googleplay/android-developer/answer/10841920?hl=en)
 
-지정 공개 브랜드 저장소에는 [Quad D 공통 지원 안내](https://github.com/ChoiDaeYoung-94/ChoiDaeYoung-94/blob/main/docs/support.md)가 있습니다. 공통 메일 `chleodud1410@gmail.com`과 Paw 확정 메일 `doeud1410@gmail.com`은 자동 대체하지 않습니다. [공개 정책 안내](https://github.com/ChoiDaeYoung-94/ChoiDaeYoung-94/blob/main/docs/policies/README.md)는 그 자체가 약관/개인정보처리방침이 아니며 Paw 문서는 게시 전이라고 명시합니다. 공통 안내의 존재를 Paw 정책 본문/운영주체 확정으로 세지 않습니다.
+지정 공개 브랜드 저장소에는 [Quad D 공통 지원 안내](https://github.com/ChoiDaeYoung-94/ChoiDaeYoung-94/blob/main/docs/support.md)가 있습니다. 공통 메일 `별도 브랜드 연락처`과 Paw 확정 메일 `doeud1410@gmail.com`은 자동 대체하지 않습니다. [공개 정책 안내](https://github.com/ChoiDaeYoung-94/ChoiDaeYoung-94/blob/main/docs/policies/README.md)는 그 자체가 약관/개인정보처리방침이 아니며 Paw 문서는 게시 전이라고 명시합니다. 공통 안내의 존재를 Paw 정책 본문/운영주체 확정으로 세지 않습니다.
 
 로컬 `public/app-ads.txt` 원본은 이미 준비됐습니다. 공개GitHub 안내와 제어 가능한 hostname 루트의 app-ads.txt·Play 개발자 웹사이트 연결·AdMob 크롤링/인증은 별도로 확인해야 합니다. 이번 공개 읽기는 지정 브랜드 저장소 범위이며 운영 호스트 선택/실제 게시를 완료한 것이 아닙니다. [공식 호스트·스토어 연결·탐색 규칙](https://support.google.com/admob/answer/9363762?hl=en)
 
@@ -601,7 +601,7 @@ APK0.1.7/code8·**55,695,703바이트**, SHA256 **`8d6d8043aba156d0cb350c9fa63cc
 
 최종 preflight는git506의 실제 원100판/고정fixture/현재첫100과 회차서명, 기존11장·전체31장 ID·500 ID·25세계 각20판을 대조했습니다. 원7곡은git256/고정fixture/현재와 exact이고 신규5곡의16×8음칸/베이스·5도·MIDI범위와 EIGHTH 이후 오디오 실행/출력부 exact도 확인했습니다. 신규 지도5/정원5 원본 atlas의 크기/SHA가 제작 기록과 같습니다. core/state/native/deps는7c32대비 변경0이며 레벨 확장은 의도적으로 별도 검증합니다.
 
-기존 작업용 Chrome의 `doeud1410@gmail.com`/[테스트 폴더](https://drive.google.com/drive/u/1/folders/1dUUwNPZXmSpX8z0t1GsLjbnHuYI-MSHm)에 새APK+121바이트 checksum을 추가했습니다. 실제 「항목2개 업로드 완료」/53.1MB/소유자나를 확인했고 APK파일ID는 `1U2P4UWi33DzLjO47MZOYJZRFEXFsRh42`, checksum은 `1Iz45gW8VKUqUbaYvOxUKLikB84U7qL14`입니다. 실제 Downloads 경로로 다시 내려받은55,695,703바이트/SHA가 원본과 같습니다. 기존파일/공유 설정은 바꾸지 않았고 Share대화상자의 별도 권한 감사를 새로 했다는 뜻은 아닙니다. 처음20초 이벤트 대기는 Google대용량 검사불가 안내 앞에서 만료됐고, 안내에서 직접 만든APK다운로드를 진행한 뒤 실제 경로를 받았습니다. 이를 업로드 실패/해시 불일치로 합산하지 않습니다.
+기존 작업용 Chrome의 `운영 담당 계정`/테스트 폴더에 새APK+121바이트 checksum을 추가했습니다. 실제 「항목2개 업로드 완료」/53.1MB/소유자나를 확인했고 APK파일ID는 `비공개 파일 식별자`, checksum은 `비공개 파일 식별자`입니다. 실제 Downloads 경로로 다시 내려받은55,695,703바이트/SHA가 원본과 같습니다. 기존파일/공유 설정은 바꾸지 않았고 Share대화상자의 별도 권한 감사를 새로 했다는 뜻은 아닙니다. 처음20초 이벤트 대기는 Google대용량 검사불가 안내 앞에서 만료됐고, 안내에서 직접 만든APK다운로드를 진행한 뒤 실제 경로를 받았습니다. 이를 업로드 실패/해시 불일치로 합산하지 않습니다.
 
 Git밖 `2026-10-25-a4d8f51/artifact-verification.json`·`drive-delivery.json`·실제Drive스크린샷과 `qa/integration-20261025/campaign500-*`에 원문을 보존합니다. 별도 사용자 테스트 안내 문서는 만들지 않습니다. 이후 전달 문서 PR은 제품/버전 변경이 없으며 실제 게임 소스는 위 커밋입니다. 이전506/100판 전달은 아래 이력으로 남깁니다.
 
@@ -613,7 +613,7 @@ Git밖 `2026-10-25-a4d8f51/artifact-verification.json`·`drive-delivery.json`·�
 
 APK0.1.7/code8·**25,397,795바이트**, SHA256 **`9ffb10f345d043470b8832b8ad437e1dca1abd52e091ae1a0aaf2fd25935f310`**입니다. testing 웹92+정확한 빈cordova2/public94 전수 SHA·META 포함 비웹536의7c32 불변·ZIP 중복0·v2/전체 signer 정확1/기존 서명·package/min24target36을 확인했습니다. APK의 실제 CSS에는 새 팔레트, JS에는 새 canvas 바탕이 포함되며 e00 APK에는 해당 표시가 없음을 별도 비교했습니다. production dist84/Android public86을 전수 SHA로 복원하고 빌드 직후 Git clean을 확인했습니다. 새 native JUnit/lint 실행·최신 LD 설치/조작은 없습니다.
 
-**새506의 Drive 업로드와 실제 재다운로드 SHA 일치를 확인했습니다.** 기존 작업용 Chrome의 `doeud1410@gmail.com` 계정과 [기존 테스트 폴더](https://drive.google.com/drive/u/1/folders/1dUUwNPZXmSpX8z0t1GsLjbnHuYI-MSHm)에서 APK+121바이트 checksum의 `항목 2개 업로드 완료`/소유자 나/24.2MB 행을 확인했습니다. APK의 실제 파일ID는 `1CaIi4xsY7F6i6gPslQ0enZ-58mcjV7aO`입니다. 기존 파일과 공유 설정은 변경하지 않았습니다. 파일 형식 안내 뒤 실제 다운로드 경로를 받고 내려받은25,397,795바이트/SHA가 위 원본과 일치했습니다. 첫 다운로드 대기는 안내 대화상자에서20초 만료됐으며 다운로드 실패나 해시 불일치로 합산하지 않습니다.
+**새506의 Drive 업로드와 실제 재다운로드 SHA 일치를 확인했습니다.** 기존 작업용 Chrome의 `운영 담당 계정` 계정과 기존 테스트 폴더에서 APK+121바이트 checksum의 `항목 2개 업로드 완료`/소유자 나/24.2MB 행을 확인했습니다. APK의 실제 파일ID는 `비공개 파일 식별자`입니다. 기존 파일과 공유 설정은 변경하지 않았습니다. 파일 형식 안내 뒤 실제 다운로드 경로를 받고 내려받은25,397,795바이트/SHA가 위 원본과 일치했습니다. 첫 다운로드 대기는 안내 대화상자에서20초 만료됐으며 다운로드 실패나 해시 불일치로 합산하지 않습니다.
 
 로컬 APK·checksum·기존 검증과 새 전달 원문/실제 스크린샷은 Git 밖 `Pawblossom-builds/2026-10-25-50653c0`의 `artifact-verification.json`/`drive-delivery.json`/`drive-delivery-proof.jpg`에 있습니다. 앞선 브라우저 연결/Work 권한 상태 불일치 이력은 보존하고, 이번 복구를 다른 계정 사용이나 보안 설정 변경으로 우회하지 않았습니다. 아래 e00 중간본은 밝은 UI 이전이며 그 재다운로드 미검증 이력은 그대로입니다. 같은0.1.7/code8이므로 날짜/커밋 이름·SHA로 구별합니다.
 
@@ -627,7 +627,7 @@ APK0.1.7/code8·**25,397,795바이트**, SHA256 **`9ffb10f345d043470b8832b8ad437
 
 APK0.1.7/code8·**25,397,797바이트**, SHA256 **`46daf0c296588a6f7ef9d77b5adf2ba0ad01c0d67b8650dfe3aa798d7961da0b`**입니다. testing 웹92개+정확한 빈 cordova2개=public94개를 전수 SHA로 확인했고, META 포함 비웹536개는7c32와 동일합니다. ZIP 중복0·v2/전체 signer 정확1·기존 서명 일치·min24/target36/package를 검증했습니다. production dist84/Android public86을 각각 전수 SHA로 복원했으며 Git clean입니다. 새 native JUnit/lint 실행은 없고 native 바이트 불변 검증과 구분합니다. 파일·고유 checksum·검증 원문은 저장소 밖 `Pawblossom-builds/2026-10-25-e00ccf6`에 보존합니다.
 
-**Drive 업로드 완료 / 재다운로드 해시 미검증**입니다. 기존 Chrome 작업 계정 `doeud1410@gmail.com`과 [기존 테스트 폴더](https://drive.google.com/drive/u/1/folders/1dUUwNPZXmSpX8z0t1GsLjbnHuYI-MSHm)를 확인한 뒤 위 APK와121바이트 checksum을 추가했습니다. 실제 `항목2개업로드완료`·진행100/파일 행24.2MB·121바이트/소유자 나를 확인했고, APK 행의 실제 `data-id`는 `1tTs2OE0ozyDl2oxnu8DLHOCBgmY-ZvYY`입니다. 이전7c32 두 파일·공유 설정은 변경하지 않았습니다. 새 Share 대화상자의 제한됨 상태는 이번에 별도 확인하지 않았습니다.
+**Drive 업로드 완료 / 재다운로드 해시 미검증**입니다. 기존 Chrome 작업 계정 `운영 담당 계정`과 기존 테스트 폴더를 확인한 뒤 위 APK와121바이트 checksum을 추가했습니다. 실제 `항목2개업로드완료`·진행100/파일 행24.2MB·121바이트/소유자 나를 확인했고, APK 행의 실제 `data-id`는 `비공개 파일 식별자`입니다. 이전7c32 두 파일·공유 설정은 변경하지 않았습니다. 새 Share 대화상자의 제한됨 상태는 이번에 별도 확인하지 않았습니다.
 
 파일 메뉴의 재다운로드 시도에서 브라우저30초 timeout/세션 초기화 뒤 동일 탭은 `Debugger unattached`를 반환했습니다. 문서화된 동일 브라우저 재연결 뒤에도 남았고, 다운로드 대상 파일은 실제로 없습니다. 연결 앱의 다른 계정으로 확인한 해당 파일 메타데이터도404여서 우회하지 않았습니다. 재다운로드 SHA 일치·새 Drive 스크린샷을 완료로 표시하지 않으며 실제 AX 업로드 완료 관측과 원문은 저장소 밖 `integration-20261025/drive-delivery.json`에 보존합니다.
 
@@ -651,9 +651,9 @@ APK는0.1.7/code8, **16,117,566바이트**, SHA256 **`b4bc8275cb7c926da52d7169d0
 
 ## 이전 Drive 통합 APK 전달 · 2026-10-24 · #295
 
-최근 Drive 전달 파일은 **`Pawblossom-Puzzle-v0.1.7-2026-10-24-7c32d1f-debug.apk`**이며 [기존 비공개 테스트 폴더](https://drive.google.com/drive/u/1/folders/1dUUwNPZXmSpX8z0t1GsLjbnHuYI-MSHm)에 APK와121바이트 checksum을 추가했습니다. 게임 소스 `7c32d1fde39bb7f5ceca0609c1311459009bce0f`/PR299의 최초 정확main [CI40076278401](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40076278401)은 양Node55파일3,224개·store12·타입3설정·두 빌드 성공입니다. fcc/300/e285는 앞선 전달 또는 내부 후보 이력으로 보존하며 이 파일과 혼동하지 않습니다.
+최근 Drive 전달 파일은 **`Pawblossom-Puzzle-v0.1.7-2026-10-24-7c32d1f-debug.apk`**이며 기존 비공개 테스트 폴더에 APK와121바이트 checksum을 추가했습니다. 게임 소스 `7c32d1fde39bb7f5ceca0609c1311459009bce0f`/PR299의 최초 정확main [CI40076278401](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/40076278401)은 양Node55파일3,224개·store12·타입3설정·두 빌드 성공입니다. fcc/300/e285는 앞선 전달 또는 내부 후보 이력으로 보존하며 이 파일과 혼동하지 않습니다.
 
-파일은13,717,113바이트, SHA256 `91caa75819c3dea0f53983a30f97429a4277a5ec55b0f9f5517817b6670a1507`입니다. 실제 Drive에서 재다운로드한 동일 이름 파일의 크기/SHA가 원본과 일치합니다. 새 APK의 Share 대화상자는 제한됨/소유자1인 작업 계정이며 공개 범위는 바꾸지 않았습니다. [확인한 파일 페이지](https://drive.google.com/file/d/1ZGmYN0aNh1A2V19_UJpxVUkJgzCrB4UG/view)는 제목/ID는 맞지만 직접 미리보기가 빈 화면이므로 폴더의 다운로드 경로를 우선 안내합니다. 첫 download 이벤트 대기는 Drive의 파일 형식 확인 전이라 끝나지 않았고, 해당 사이트 확인 뒤 실제 이벤트/로컬 파일/해시를 확인했습니다. 브라우저 보안 경고를 우회하지 않았습니다. #256의 옛825 재다운로드 미완료와 별도입니다.
+파일은13,717,113바이트, SHA256 `91caa75819c3dea0f53983a30f97429a4277a5ec55b0f9f5517817b6670a1507`입니다. 실제 Drive에서 재다운로드한 동일 이름 파일의 크기/SHA가 원본과 일치합니다. 새 APK의 Share 대화상자는 제한됨/소유자1인 작업 계정이며 공개 범위는 바꾸지 않았습니다. 확인한 파일 페이지는 제목/ID는 맞지만 직접 미리보기가 빈 화면이므로 폴더의 다운로드 경로를 우선 안내합니다. 첫 download 이벤트 대기는 Drive의 파일 형식 확인 전이라 끝나지 않았고, 해당 사이트 확인 뒤 실제 이벤트/로컬 파일/해시를 확인했습니다. 브라우저 보안 경고를 우회하지 않았습니다. #256의 옛825 재다운로드 미완료와 별도입니다.
 
 이번 파일에는 핍·지도/정원 모션과 자체 그림, 별도 씨앗 배달3판, 사전 배치 세로 특수·실제 운반/보충 연쇄1판 및 #296 Native 여백 설정이 함께 있습니다. 본편100판/저장/경제를 새 운반 규칙으로 바꾸지 않았습니다. APK의86웹 SHA와 빈Cordova2개·중복0, e285와 같은 비웹536개/단일v2 서명, package `com.choidaeyoung.pawblossompuzzle`/min24/target36/0.1.7/code8을 확인했습니다. JVM16개(기능15+scaffold1)는 UP-TO-DATE XML 재사용이며 새 실행이 아닙니다. lint 분석은 실행, 리포트는 재사용으로 app 오류0/기존 경고15입니다.
 
@@ -675,7 +675,7 @@ API34/WebView124의 업데이트·HOME/복귀·세로/원래가로·설정/미�
 
 ## 최신 모션·아트 통합 전달 · 2026-10-24 · #286
 
-최신 사용자 검수 파일은 [Pawblossom-Puzzle-v0.1.7-2026-10-24-fcc3ac5-debug.apk](https://drive.google.com/file/d/1ycBZudn9oJVcfirLvZTdHni9WC8roNL4/view)입니다. 게임 소스는 `fcc3ac51073c022242e59e0f58b5ee1e0d17d5b0`, 버전0.1.7/code8,13,245,189바이트, SHA256 `c7b3fd0855554e1d1742269bd89ec84b6c6f71617860012ee13ecc76abef5012`입니다. 기존 작업 계정의 같은 테스트 폴더에 고유 APK와121바이트 checksum을 추가했고 Chrome의 실제 재다운로드 파일도 크기·SHA256이 일치했습니다. 공유 창은 소유자1명/일반 액세스 제한됨이며 권한·기존 파일을 바꾸지 않았습니다. Drive 페이지의 파일 형식 안내를 확인했으며 브라우저 보안 경고를 해제하거나 우회하지 않았습니다.
+최신 사용자 검수 파일은 Pawblossom-Puzzle-v0.1.7-2026-10-24-fcc3ac5-debug.apk입니다. 게임 소스는 `fcc3ac51073c022242e59e0f58b5ee1e0d17d5b0`, 버전0.1.7/code8,13,245,189바이트, SHA256 `c7b3fd0855554e1d1742269bd89ec84b6c6f71617860012ee13ecc76abef5012`입니다. 기존 작업 계정의 같은 테스트 폴더에 고유 APK와121바이트 checksum을 추가했고 Chrome의 실제 재다운로드 파일도 크기·SHA256이 일치했습니다. 공유 창은 소유자1명/일반 액세스 제한됨이며 권한·기존 파일을 바꾸지 않았습니다. Drive 페이지의 파일 형식 안내를 확인했으며 브라우저 보안 경고를 해제하거나 우회하지 않았습니다.
 
 앞선06b 내부 후보 이후의 퍼즐 배경/패널 재질(#268), 핍의 분리된 눈·귀·호흡과 지도 현재 위치/장식 움직임(#273), 퍼즐 밖 숨은 보드 그리기 제한(#279), 정원·돌봄 핍 대기/행동과 자체 리본·물뿌리개(#276), 자체 입체 상자/낙엽과 상자 사분면 파손(#272), 나비의 고정 몸통/분리 날갯짓·복원 연못 대기 물결(#288)을 포함합니다. 모션 감소·숨김/미리보기·행동 우선·소유 DOM 정리의 검증 범위는 assets/browser-qa/web-ci의 각 소스 기록과 구분합니다. 타 게임 에셋 복제, 새 규칙·RNG·기존 저장/재화 변경은 이 전달에 포함하지 않습니다. 사용자 감각 승인이나 상용 품질 완료는 아직 아닙니다.
 
@@ -713,7 +713,7 @@ Temurin21.0.12.1+1/기존SDK36의assembleDebug·testDebugUnitTest·lintDebug가�
 
 ## 최신 22시 연장 통합 APK · 2026-10-23 · #256
 
-최신 업로드 파일은 [Pawblossom-Puzzle-v0.1.7-2026-10-23-82565b4-debug.apk](https://drive.google.com/file/d/1A-pOLdH2WR5zbglmqsE-rKS1QqlmxQWu/view?usp=drive_link)입니다. 게임 소스 main `82565b40a7fe8e3ed1b62118cf3564354c7aa8fe`, 버전0.1.7/code8,11,581,117바이트, SHA256 `7168524fc86852802be0dbfaa73f6c0e81e8235a26391c5d4ba8726d54fcbcc0`입니다. 기존 작업 계정 doeud1410@gmail.com의 기존 비공개 Pawblossom 테스트 폴더에 고유 APK와 checksum 두 항목 업로드 완료를 확인했습니다. **이번 파일의 실제 재다운로드·해시 대조는 미완료**입니다. Drive 공유 창은 일시 오류, 미리보기는 빈 화면, 다운로드는 이벤트/파일 수신을 확인하지 못했습니다. Chrome 다운로드 관리 화면은 브라우저 URL 보안 정책으로 접근이 차단돼 우회하지 않았습니다. 기존 파일·공유 범위는 유지했으며 #256은 재다운로드 확인 전 닫지 않습니다. 아래 faf APK는 앞선20시 묶음의 전달 성공 이력이고 이번 파일의 재다운로드 근거가 아닙니다. 로컬768 후보는 정원 표시 검수 중 발견한 두 문제를 보완하기 전의 중간 파일이며 Drive에는 올리지 않았습니다.
+최신 업로드 파일은 Pawblossom-Puzzle-v0.1.7-2026-10-23-82565b4-debug.apk입니다. 게임 소스 main `82565b40a7fe8e3ed1b62118cf3564354c7aa8fe`, 버전0.1.7/code8,11,581,117바이트, SHA256 `7168524fc86852802be0dbfaa73f6c0e81e8235a26391c5d4ba8726d54fcbcc0`입니다. 기존 작업 계정 운영 담당 계정의 기존 비공개 Pawblossom 테스트 폴더에 고유 APK와 checksum 두 항목 업로드 완료를 확인했습니다. **이번 파일의 실제 재다운로드·해시 대조는 미완료**입니다. Drive 공유 창은 일시 오류, 미리보기는 빈 화면, 다운로드는 이벤트/파일 수신을 확인하지 못했습니다. Chrome 다운로드 관리 화면은 브라우저 URL 보안 정책으로 접근이 차단돼 우회하지 않았습니다. 기존 파일·공유 범위는 유지했으며 #256은 재다운로드 확인 전 닫지 않습니다. 아래 faf APK는 앞선20시 묶음의 전달 성공 이력이고 이번 파일의 재다운로드 근거가 아닙니다. 로컬768 후보는 정원 표시 검수 중 발견한 두 문제를 보완하기 전의 중간 파일이며 Drive에는 올리지 않았습니다.
 
 앞선 지도/HUD/자체 핍·여섯 블록/특수 입력에 더해 대표34·40·90·100번 콘텐츠 [PR248](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/248), 첫 키보드→터치 입력의 보드 크기 유지 [PR250](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/250), 특수 몸체·줄기 빛/색 연결 [PR252](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/252), 정원 미리보기를 닫던 상위 클릭 범위 수정 [PR255](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/255), 꽃밭/복원 연못의 무료 교감 [PR257](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/257), 물결·핍 층과 복원 단계 인사 [PR259](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/259)를 포함합니다. 무료 교감은 능력치/재화/저장을 바꾸지 않는 첫 단계이며 새 목표 규칙·아이템 경제·100판 장기 재미·정원/핍 육성 전체 완성을 뜻하지 않습니다.34/40/90/100의 진행 중 회차는 콘텐츠 서명 변경으로 분리될 수 있지만 완료·재화·정원 영구 기록은 보호합니다.
 
@@ -727,7 +727,7 @@ APK 웹47개는 해당 testing 빌드와 전수 해시 일치, 빈 Cordova2개·
 
 ## 최신 지도·퍼즐·자체 에셋 통합 APK · 2026-10-23 · #243
 
-사용자 확인용 파일은 [Pawblossom-Puzzle-v0.1.7-2026-10-23-faf484d-debug.apk](https://drive.google.com/file/d/1jE_OvxdIfGMRS9G3DO7T3IqsWsb53mP3/view?usp=drive_link)입니다. 게임 소스 main `faf484d47a8d8f6dc6676018d13d5275427adf13`, 버전0.1.7/code8,11,578,781바이트, SHA256 `6aa44558490cef92b27ad729630fb90e187c63168a339f564821e8f6601582e1`입니다. 기존 작업 계정 doeud1410@gmail.com/Pawblossom 테스트 폴더에 고유 APK와 checksum만 추가했고 실제 재다운로드 크기·해시가 일치합니다. 기존 파일·비공개 공유 범위는 유지했습니다. 아래473과 이전 파일은 오늘 개편 전 이력이며, 과거 Draft234는 이 전달의 근거로 병합하지 않았습니다.
+사용자 확인용 파일은 Pawblossom-Puzzle-v0.1.7-2026-10-23-faf484d-debug.apk입니다. 게임 소스 main `faf484d47a8d8f6dc6676018d13d5275427adf13`, 버전0.1.7/code8,11,578,781바이트, SHA256 `6aa44558490cef92b27ad729630fb90e187c63168a339f564821e8f6601582e1`입니다. 기존 작업 계정 운영 담당 계정/Pawblossom 테스트 폴더에 고유 APK와 checksum만 추가했고 실제 재다운로드 크기·해시가 일치합니다. 기존 파일·비공개 공유 범위는 유지했습니다. 아래473과 이전 파일은 오늘 개편 전 이력이며, 과거 Draft234는 이 전달의 근거로 병합하지 않았습니다.
 
 오늘 제품 변경은 독립100단계 지도/현재 위치/목표 미리보기/동일 판 이어하기 [PR237](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/237), 목표·이동 중심 HUD/정사각 보드 보정/자체 핍 idle [PR239](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/239), 여섯 자체 입체 소재의 본판·목표·안내 일관성 [PR241](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/241), Shift+Enter 특수 선택·교환/합성 [PR242](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/242)입니다. 기존100판 목표·엔진/RNG·골든·저장·경제·가격·오디오 믹스는 그대로이며 새 수익화/특수/정원 장기 루프 완료를 뜻하지 않습니다.
 
@@ -743,7 +743,7 @@ APK 웹47개는 최종 testing 빌드와 전수 해시 일치하고 빈 Cordova2
 
 ## 최신 입력·정원·핍 검수 후보 · 2026-10-22 저녁 · #229
 
-사용자 확인용 최신 파일은 [Pawblossom-Puzzle-v0.1.7-2026-10-22-47316a6-debug.apk](https://drive.google.com/file/d/1VxJDmZ1RvuUnYY3vnQFLRZITvDBOhtpA/view)입니다. 게임 소스 main `47316a6350a83a04cb045aa308f4611c137c9bca`, 버전0.1.7/code8, 11,155,455바이트, SHA256 `4408da7b37b67f7aacd85abba95e2b52ec53876b88527aee5cf61b764113f6bc`입니다. 기존 작업 계정의 테스트 폴더에 고유 APK와 checksum만 추가했으며 실제 재다운로드 크기·해시가 일치합니다. 비공개 공유 범위와 기존 파일을 유지하고 추가 Chrome 탭만 닫았습니다. 아래340과 이전 APK는 새 입력·후반 정원·핍 안내를 포함하지 않는 전달 이력입니다.
+사용자 확인용 최신 파일은 Pawblossom-Puzzle-v0.1.7-2026-10-22-47316a6-debug.apk입니다. 게임 소스 main `47316a6350a83a04cb045aa308f4611c137c9bca`, 버전0.1.7/code8, 11,155,455바이트, SHA256 `4408da7b37b67f7aacd85abba95e2b52ec53876b88527aee5cf61b764113f6bc`입니다. 기존 작업 계정의 테스트 폴더에 고유 APK와 checksum만 추가했으며 실제 재다운로드 크기·해시가 일치합니다. 비공개 공유 범위와 기존 파일을 유지하고 추가 Chrome 탭만 닫았습니다. 아래340과 이전 APK는 새 입력·후반 정원·핍 안내를 포함하지 않는 전달 이력입니다.
 
 가장자리 여백/같은 캔버스의 정상 한 손가락 이동을 보완한 [PR226](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/226), 연못·쉼터·꽃아치의 단계별 복원/선택 꾸미기·미리보기·핍 방문을 연결한 [PR228](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/228), 성장 완료 후 무료 교감과 소품·소유 상태 안내를 보완한 [PR230](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/230)을 포함합니다. 핵심 복원은 기존 꽃밭 포함 별94개입니다. 이473 APK에서 확인한 비용은 혼합 육성 경로의 기존450+신규1080=1530코인이며 당시 체험1600코인/100별/100완료 조건에서70코인/6별이 남았습니다. 단일 먹이/놀이25회 경로의 최대1630코인은 이 잔액으로 보장되지 않아 #232에서 체험 전용 예산1800코인으로 보완합니다. 기존473 파일은 당시 검수 증거로 유지하며 이 기록을 새 APK 전달 완료로 바꾸지 않습니다. 강제 코인 구매나 새 현금 상품은 없고 체험은 정상 진행을 대체하지 않습니다. 장기 성장·100이후 재미 전체 완료는 아닙니다.
 
@@ -757,7 +757,7 @@ APK 웹47개는 최종 testing 빌드와 전수 해시 일치하고 빈 Cordova2
 
 ## 이전 100스테이지 검수 후보 · 2026-10-22 · #221
 
-사용자 확인용 최신 파일은 [Pawblossom-Puzzle-v0.1.7-2026-10-22-34031f1-debug.apk](https://drive.google.com/file/d/1L6dRtO4sJook8Erle_A2ALkdM-VMMZJT/view)입니다. 게임 소스 main `34031f1082457c940cb7f05deb3c744dec19f6b5`, 버전0.1.7/code8, 11,146,331바이트, SHA256 `7fa11bfc90ba5ee17e227107428098a1e747d1a6a24577c9ef9b0538840d21c6`입니다. 기존 작업 계정/테스트 폴더에 고유 APK와 checksum만 추가했고 실제 재다운로드 크기·해시가 일치합니다. 기존 파일/공유 범위는 유지했으며 추가 Chrome 탭 두 개만 닫았습니다. 별도 테스트 안내 파일은 만들지 않았습니다.
+사용자 확인용 최신 파일은 Pawblossom-Puzzle-v0.1.7-2026-10-22-34031f1-debug.apk입니다. 게임 소스 main `34031f1082457c940cb7f05deb3c744dec19f6b5`, 버전0.1.7/code8, 11,146,331바이트, SHA256 `7fa11bfc90ba5ee17e227107428098a1e747d1a6a24577c9ef9b0538840d21c6`입니다. 기존 작업 계정/테스트 폴더에 고유 APK와 checksum만 추가했고 실제 재다운로드 크기·해시가 일치합니다. 기존 파일/공유 범위는 유지했으며 추가 Chrome 탭 두 개만 닫았습니다. 별도 테스트 안내 파일은 만들지 않았습니다.
 
 **이 파일은 UI·게임 검수 후보이며 출시 검증 완료본이 아닙니다.** [PR220](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/220) 최종head5ac75333의 최초 [CI39729150932](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39729150932)는 Node22/24 각각44파일2,909개·스토어12·타입/두빌드가 성공했습니다. Squash main과 전체tree가 같습니다. 그러나 정확main 최초 [CI39729465596](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39729465596)은 Node24 원장8worker에서2,908성공/1실패, Node22는2,909·스토어12·타입/두빌드 성공입니다. worker0 command BEGIN의501.126ms BUSY5로 revision-conflict가7개 중6개였으며 적용1회 검사는 통과했습니다. 원인/잠금owner는 [#122 기록](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/122#issuecomment-6333736093)에서 미확정입니다. 같은head 재실행이나 제한·기대 완화는 하지 않았습니다.
 
@@ -770,7 +770,7 @@ APK의웹38+빈cordova2/비웹536·기존v2인증서·appId/min24/target36·prod
 원문·동결·실화면·CI 실패와 진단은 Git 밖 `qa/content-100-20261022`, APK·전달 증빙은 `2026-10-22-34031f1`에 보존합니다. #73 실UMP/GMA·동의/연령·Play구매/복원/pending/환불·폰/청취·스토어, #122 원장 원인 추적은 미완료입니다. 개발자명/공개 지원·개인정보 호스팅·100판의 장기 재미와40이후 성장/재화 사용 흐름은 후속 검토입니다. AAB/공개배포/콘솔상품/실키env/최종믹스/자동 폰 테스트·새예약은 보류합니다. 아래9fa/63b/afb/오전 APK와 당시 검증 문구는100판 추가 이전 이력입니다.
 ## 이전40판 main 검수 APK · 2026-10-22 오후 · #210 최종
 
-이번 사용자 검수용 최신 파일은 [Pawblossom-Puzzle-v0.1.7-2026-10-22-9fa15f0-debug.apk](https://drive.google.com/file/d/13dAbsmALhEHyLpNktoE6wB--JVrWvKvV/view)입니다. 게임 main `9fa15f096a85b439883bd3a17d4959f609f5b4c6`, 버전0.1.7/code8, 11,145,015바이트, SHA256 `c660f802dba6737a81967a04a96f7d36cb9e1a513bffb6aea61f3884fb4c9b81`입니다. 기존 작업 계정/테스트 폴더에 고유 APK·checksum을 추가하고 실제 재다운로드 크기·해시 일치를 확인했습니다. 기존 파일·공유 범위는 유지했으며 아래 afb/63b와 오전20ff는 중간/이전 전달 이력입니다.
+이번 사용자 검수용 최신 파일은 Pawblossom-Puzzle-v0.1.7-2026-10-22-9fa15f0-debug.apk입니다. 게임 main `9fa15f096a85b439883bd3a17d4959f609f5b4c6`, 버전0.1.7/code8, 11,145,015바이트, SHA256 `c660f802dba6737a81967a04a96f7d36cb9e1a513bffb6aea61f3884fb4c9b81`입니다. 기존 작업 계정/테스트 폴더에 고유 APK·checksum을 추가하고 실제 재다운로드 크기·해시 일치를 확인했습니다. 기존 파일·공유 범위는 유지했으며 아래 afb/63b와 오전20ff는 중간/이전 전달 이력입니다.
 
 PR209/212/214/215의 핍 반응/기어·특수 비율·정원 꽃/공동 작품·등불 위치·작은 화면 개선에 PR217의20/40완료 풍경과 체험500 보강까지 포함합니다. 실제 전체 체험 비용450이 최초400보다50 부족했던 점을 발견해 testing 전용 체험 잔액만500으로 바꾸고, 한 번에 성장/친밀도100·소품2개·5꽃밭·작품3개·풍경2개 구매 후50잔액과 종료 후 일반430코인/20노을/21번28이동0점 복귀를 확인했습니다. 정상 가격/재화·production 체험 미노출은 유지합니다.
 
@@ -784,9 +784,9 @@ APK의38웹파일/빈cordova2개·비웹536항목·v2/기존 인증서·appId/mi
 
 ## 이전 중간 검수 전달 · 2026-10-22 오후 · #210
 
-당시 풍경 기능까지 확인할 사용자 테스트 후보는 [Pawblossom-Puzzle-v0.1.7-2026-10-22-63b6188-debug.apk](https://drive.google.com/file/d/1iCm8KDUUqG9gOGmrW3huqlm4BbYPPld4/view)입니다. 게임 소스 `63b618841c362481aa4dcf22b555987bb0bd5767`, 11,145,019바이트, SHA256 `06adcd45cf485d8bddc2f1ec1dfc0fe26f2da0113f96f83f2dab063a2f10f20e`, 버전0.1.7/code8입니다. **당시 이 후보의 PR217은 필수 CI 실패로 Draft·미병합 상태였습니다. 이후 실제 체험 보완을 거쳐 현재는 위 main9fa로 통합됐습니다.** 두 APK 모두 기존 작업 계정의 테스트 폴더에 추가하고 실제 재다운로드 크기·SHA 일치를 확인했습니다. 기존 파일과 공유 범위는 유지했습니다.
+당시 풍경 기능까지 확인할 사용자 테스트 후보는 Pawblossom-Puzzle-v0.1.7-2026-10-22-63b6188-debug.apk입니다. 게임 소스 `63b618841c362481aa4dcf22b555987bb0bd5767`, 11,145,019바이트, SHA256 `06adcd45cf485d8bddc2f1ec1dfc0fe26f2da0113f96f83f2dab063a2f10f20e`, 버전0.1.7/code8입니다. **당시 이 후보의 PR217은 필수 CI 실패로 Draft·미병합 상태였습니다. 이후 실제 체험 보완을 거쳐 현재는 위 main9fa로 통합됐습니다.** 두 APK 모두 기존 작업 계정의 테스트 폴더에 추가하고 실제 재다운로드 크기·SHA 일치를 확인했습니다. 기존 파일과 공유 범위는 유지했습니다.
 
-필수 검사까지 성공한 main 기반 전달본은 [afb7f32 APK](https://drive.google.com/file/d/1pJfnS-l1R7m4jRIxapsF8cDTSxM9xwoK/view)입니다. 소스 `afb7f329a8d306236d9fbfb2edd3830d0cf683c3`, 11,143,331바이트, SHA256 `d69238d1e0174a0907691809fc43ae1f7d004a1825ed37cf89602e0f766e3963`이며 노을/별빛 풍경만 포함하지 않습니다. PR209/212/214/215의 퍼즐 핍 반응 확대·중복 소개 제거·정사각형 기어/특수 비율, 꽃3종·정원 작품3개와 핍 성장 연결, 무료 등불 위치 선택·작은 화면 초점/영문 넘침 개선을 포함합니다. 정확 main [CI39721755586](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39721755586)은 Node22/24 각각44파일2,837개·스토어12개·타입/두 웹빌드·flags 성공입니다.
+필수 검사까지 성공한 main 기반 전달본은 afb7f32 APK입니다. 소스 `afb7f329a8d306236d9fbfb2edd3830d0cf683c3`, 11,143,331바이트, SHA256 `d69238d1e0174a0907691809fc43ae1f7d004a1825ed37cf89602e0f766e3963`이며 노을/별빛 풍경만 포함하지 않습니다. PR209/212/214/215의 퍼즐 핍 반응 확대·중복 소개 제거·정사각형 기어/특수 비율, 꽃3종·정원 작품3개와 핍 성장 연결, 무료 등불 위치 선택·작은 화면 초점/영문 넘침 개선을 포함합니다. 정확 main [CI39721755586](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39721755586)은 Node22/24 각각44파일2,837개·스토어12개·타입/두 웹빌드·flags 성공입니다.
 
 후보63b는20/40개 서로 다른 일반 스테이지 완료와 성장/친밀도·꽃밭 조건으로 노을/별빛을 각80코인에 한 번 소유하고 무료 전환하는 기능을 더합니다. 기본 초원12출력은 바이트 그대로이며 자체 배경 팔레트·정적 해/별만 바꿉니다. 체험의40완료 조건 미리보기는 일반 완료 목록·저장 재화/회차와 분리합니다. 이전 가격·돌봄 효과·보상·현금 상품은 바꾸지 않았습니다.
 
@@ -806,7 +806,7 @@ APK의38웹파일/빈cordova2개·비웹536항목·v2/기존 인증서·appId/mi
 
 ## 이전 통합 APK · 2026-10-22 오전 · #200
 
-당시 테스트 전달본은 [Pawblossom-Puzzle-v0.1.7-2026-10-22-20ff9d9-debug.apk](https://drive.google.com/file/d/1-bjDY5tGW07F3mu5LZdKfWPtFJABfQ2w/view)입니다. 게임 소스는 `20ff9d93a3f7363be65ea135e24db8208e49097a`, 버전0.1.7/code8을 유지했습니다. 14,496,451바이트, SHA256 `737d73367c84f6411c6d7fdcf3ab73a2854188b6eb398eeeb39c6ddce166f9af`이며 기존 Drive 테스트 폴더에 APK와 고유checksum만 추가했습니다. 실제 재다운로드 크기·해시가 일치하며 기존 파일과 공유 범위를 보존했습니다. 아래 f375 등 APK는 이전 이력입니다.
+당시 테스트 전달본은 Pawblossom-Puzzle-v0.1.7-2026-10-22-20ff9d9-debug.apk입니다. 게임 소스는 `20ff9d93a3f7363be65ea135e24db8208e49097a`, 버전0.1.7/code8을 유지했습니다. 14,496,451바이트, SHA256 `737d73367c84f6411c6d7fdcf3ab73a2854188b6eb398eeeb39c6ddce166f9af`이며 기존 Drive 테스트 폴더에 APK와 고유checksum만 추가했습니다. 실제 재다운로드 크기·해시가 일치하며 기존 파일과 공유 범위를 보존했습니다. 아래 f375 등 APK는 이전 이력입니다.
 
 이 APK는 이전 사용자 검수 이후 시작 배경음 연결·현재 언어/설정 비율, 자체 타일/특수·넓은 효과와 목표 날림/핍 반응, 2×2 꽃폭탄, 핍 먹이·놀이·성장·소품과 정원 체험, 무료 후20코인 추가 섞기·회차당1회+5 이어하기, 비정형31–35와 나무상자36–40, 별·코인 사용처 설명을 포함합니다. 실서비스 권한이 필요한 광고·구매 경로와 단말 동작을 구현/합성 검사와 구분합니다.
 
@@ -929,7 +929,7 @@ care-final 소스의 관련 회귀는6파일388개 통과했습니다. 명시적
 
 결과 정원→퍼즐 복귀 수정 [PR182](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/182)을 최초 필수 CI39552922868 성공 후 병합했습니다. 게임 main `f375ed6a209c56ad439af3f88b1ec8ebd079b568`의 [정확한 최초 CI39553093859](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/actions/runs/39553093859)도 Node22·24 각각37파일2,523개·스토어12개·타입/두 웹 빌드/flags 성공입니다. [PR180](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/pull/180)의 한영 소개 화면6장은 브라우저 초안이며 게임 런타임에는 포함하지 않습니다. 이전 #181의 커밋 전 표현은 아래 검증 당시의 이력입니다.
 
-최종 파일은 **`Pawblossom-Puzzle-v0.1.7-2026-10-21-f375ed6-debug.apk`**, **14,479,213바이트**, SHA256 **`3f073bc15ec071463314f49d7bb2314d837dad11a28e5a940440749f8276d985`**입니다. [기존 Drive 폴더의 새 APK](https://drive.google.com/file/d/1pukXwa1aAJFVsbAIG9vf7mhmkP7tZuu-/view)와 전용 checksum만 추가하고 실제 재다운로드 크기·SHA 일치를 확인했습니다. 오전089와 오후e442 APK·기존 자료·공유 범위는 보존했으며 새 테스트 안내 파일은 만들지 않았습니다. 이 문서 PR은 제품 변경이 없는 전달 근거 기록입니다.
+최종 파일은 **`Pawblossom-Puzzle-v0.1.7-2026-10-21-f375ed6-debug.apk`**, **14,479,213바이트**, SHA256 **`3f073bc15ec071463314f49d7bb2314d837dad11a28e5a940440749f8276d985`**입니다. 기존 Drive 폴더의 새 APK와 전용 checksum만 추가하고 실제 재다운로드 크기·SHA 일치를 확인했습니다. 오전089와 오후e442 APK·기존 자료·공유 범위는 보존했으며 새 테스트 안내 파일은 만들지 않았습니다. 이 문서 PR은 제품 변경이 없는 전달 근거 기록입니다.
 
 testing sync→debug assemble/unit/lint→APK 보존→production sync 복원을 완료했습니다. Gradle20초/169작업(실행40·UP-TO-DATE129) 성공이며 **JVM16개(유의미15개)는 오전 동일 native 결과 UP-TO-DATE 재사용**입니다. 결과 XML3개 SHA가 동일하고 Android/설정/의존성/스크립트 변경0을 확인했습니다. lintAnalyzeDebug 실행·unit/androidTest 분석과 report 캐시를 구분하며 오류0/기존 경고15개입니다. APK의 testing 웹30개/빈 호환2개와 production30개가 #181 동결본과 각각 전수 일치하고, 저장소 dist/Android public의 최종 production 복원을 확인했습니다.
 
@@ -954,7 +954,7 @@ Git 밖 `Pawblossom-builds/qa/issue-181-ended-return`에 before/after 화면·�
 - 파일 `Pawblossom-Puzzle-v0.1.7-2026-10-21-e4429b8-debug.apk`, **14,479,084바이트**, SHA256 `eb035dcaf3696a909dde5294cbe8f131c39cd19c4e3e1ff86ae3b0ece952f5bd`입니다. appId `com.choidaeyoung.pawblossompuzzle`, 버전0.1.7/code8·min24/target36을 유지했습니다. 기존 전달본과 같은 v2 인증서 SHA256 `3db1481f54ab024e442493713f4d5dd400b985e4c2a41852b4b389a6e2df47b3`를 확인했습니다. 동일 서명은 실제 단말 업데이트 성공을 뜻하지 않습니다.
 - `npm run android:sync:test` → Gradle `:app:assembleDebug :app:testDebugUnitTest :app:lintDebug` → APK 보존 → `npm run android:sync`로 production 복원을 완료했습니다. Gradle17초/169작업(실행40·UP-TO-DATE129) 성공입니다. **JVM은 UP-TO-DATE로 오전16개(유의미15개) 결과를 재사용**했으며 새 실행으로 세지 않습니다. 오전089 이후 Android/설정/의존성/스크립트 변경0과 결과 XML3개 SHA 동일성을 확인했습니다. `lintAnalyzeDebug`는 실행됐고 unit/androidTest 분석·report는 UP-TO-DATE이며 최종 오류0/기존 경고15개입니다.
 - APK/testing 웹30파일·추가 빈 Capacitor 호환파일2개와 production30파일을 전수 해시 비교했습니다. 두 빌드는 #176 브라우저 검증 동결본과 각각 전수 일치하며 최종 저장소 dist/Android public은 production입니다. testing flags3true/production3false, Google 공식 시험 앱 ID·시험 광고/결제 플러그인·SDK 클래스 포함, MobileAds 자동 초기화 provider와 광고 식별자 관련4권한·실상품 properties 제외를 확인했습니다. 이 정적 포함 확인은 실SDK 광고 표시·결제·복원·환불 성공이 아닙니다.
-- 기존 `doeud1410@gmail.com`의 Pawblossom 테스트 폴더에 [새 APK](https://drive.google.com/file/d/1fnqdNuGH6EB_jax8FvoV2pD6p1TSBFIv/view)와 `SHA256SUMS-2026-10-21-e4429b8.txt`만 추가했습니다. 실제 재다운로드 APK의 크기·SHA가 원본과 일치했습니다. 오전089 APK·기존 자료·공유 범위를 보존하고 테스트 안내 파일은 만들지 않았습니다.
+- 기존 `운영 담당 계정`의 Pawblossom 테스트 폴더에 새 APK와 `SHA256SUMS-2026-10-21-e4429b8.txt`만 추가했습니다. 실제 재다운로드 APK의 크기·SHA가 원본과 일치했습니다. 오전089 APK·기존 자료·공유 범위를 보존하고 테스트 안내 파일은 만들지 않았습니다.
 
 Git 밖 `C:/Users/user/Documents/ChatGPT/Pawblossom-builds/2026-10-21-e4429b8`에 소스 경계·두 sync/Gradle 로그·APK·양 dist·정적 패키지/서명/전수 웹 검증·오전 재사용 XML/lint·Drive 실제 다운로드 검증/깨끗한 폴더 스크린샷을 보존했습니다. `qa/issue-169-final-apk/independent-artifact-review.json`의 독립 읽기 검수는 패키지/해시·production 복원·캐시 경계에 한정하며 Drive 성공을 대신하지 않습니다. Drive는 별도 `drive-delivery.json`과 원본/다운로드 해시로 확인했습니다.
 
@@ -992,7 +992,7 @@ Git 밖 `Pawblossom-builds/qa/issue-122-callback-outcome-trace`에 명령·최�
 - `Pawblossom-Puzzle-v0.1.7-2026-10-21-08912a0-debug.apk`, 14,476,717바이트, SHA256 `d31c9162d87727685ee71216a5f663ed014dab663d985cbf5fac60288b640603`입니다. appId `com.choidaeyoung.pawblossompuzzle`, 버전0.1.7/code8·min24/target36을 유지합니다. v2 서명과 이전 전달본의 동일 인증서 SHA256 `3db1481f54ab024e442493713f4d5dd400b985e4c2a41852b4b389a6e2df47b3`를 확인했으며 실제 설치·업데이트는 아직 검증하지 않았습니다.
 - APK 웹 파일30개 전수 크기/SHA는 testing dist와 일치하고, Capacitor 호환 파일2개는 실제 빈 파일입니다. 이번 testing·production dist의30개 전체는 #163 최종 브라우저 검증본과 각각 byte 동일합니다. APK의 testing flags3true, 공식 Google 시험 App ID·debug 광고/결제 브리지 및 SDK 클래스 descriptor 존재를 확인했습니다. 자동 광고 초기화 provider와 지정 광고 식별자 권한4개는 없습니다. 이 정적 존재 검사는 실제 SDK 실행·구매·보상 지급의 증명이 아닙니다.
 - APK 사본 보존 뒤 `npm run android:sync`로 현재 production을 복원했습니다. dist/Android 웹 파일30개 전수 SHA와 production flags3false를 대조했고, 실상품 로컬 설정은 없습니다. 새 AAB·폰 자동 검사·실계정 키/env·상품/콘솔·공개 배포·최종 오디오 믹스 변경은 하지 않았습니다.
-- 기존 작업용 `doeud1410@gmail.com`의 [Pawblossom Puzzle 테스트 폴더](https://drive.google.com/drive/u/1/folders/1dUUwNPZXmSpX8z0t1GsLjbnHuYI-MSHm)에 날짜/커밋으로 구분한 [APK](https://drive.google.com/file/d/1FcGg42rdwjAu-ZXXu7ocGX_vBX48cdya/view)와 `SHA256SUMS-2026-10-21-08912a0.txt`만 업로드했습니다. 실제 업로드 완료 목록과 파일 ID·제목을 확인하고 APK를 다시 다운로드해 크기14,476,717바이트·SHA256이 원본과 일치하는 것을 검증했습니다. Drive의 APK 형식 확인창을 확인한 정상 다운로드이며 Chrome 보안 차단을 우회하지 않았습니다. 기존 파일·공유 범위를 보존했고 별도 APK 테스트 안내 문서를 만들지 않았습니다. 안내는 채팅에 직접 제공합니다. 재다운로드 근거는 `drive-delivery.json`, 최종 폴더 증빙은 `drive-delivery-proof.jpg`입니다.
+- 기존 작업용 `운영 담당 계정`의 Pawblossom Puzzle 테스트 폴더에 날짜/커밋으로 구분한 APK와 `SHA256SUMS-2026-10-21-08912a0.txt`만 업로드했습니다. 실제 업로드 완료 목록과 파일 ID·제목을 확인하고 APK를 다시 다운로드해 크기14,476,717바이트·SHA256이 원본과 일치하는 것을 검증했습니다. Drive의 APK 형식 확인창을 확인한 정상 다운로드이며 Chrome 보안 차단을 우회하지 않았습니다. 기존 파일·공유 범위를 보존했고 별도 APK 테스트 안내 문서를 만들지 않았습니다. 안내는 채팅에 직접 제공합니다. 재다운로드 근거는 `drive-delivery.json`, 최종 폴더 증빙은 `drive-delivery-proof.jpg`입니다.
 
 Git 밖 `C:/Users/user/Documents/ChatGPT/Pawblossom-builds/2026-10-21-08912a0`에 사본·두 dist·기존 산출물 보존본·Gradle/JVM/lint·메타데이터·인증서/전체 에셋 검증·checkpoint를 보존합니다. APK 전용 검증 도구는 `qa/issue-161-apk-delivery`에 있으며 AAB를 요구하는 예전 스크립트를 그대로 실행하지 않았습니다. 실제 단말·청취·광고/구매/복원/환불·스토어와 #122 원인 추적은 미완료입니다. 이번 문서의 독립 검수·PR CI·정확 main CI는 제출 후 별도로 확인합니다.
 
@@ -1808,7 +1808,7 @@ APK/AAB·Android sync·버전·최종 오디오 믹스·실계정/키/env·Drive
 
 ## 2026-10-17 · 인증된 내부 게임 요청·보상 연결 (이슈 #113)
 
-기준 main `d890494e2f0c40314127ba288024de5d0fc910f9`, 작업 `codex/113-authenticated-game-service`, [이슈 #113](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/113)입니다. 현재 **구현·로컬 검증·총괄 독립 최종검수 완료/커밋·PR 제출 승인**입니다. `GameService`만 추가하고 기존 Auth/Round/Reward의 핵심 API·TTL·스키마와 앱은 유지했습니다. 아래 발급/소비 orchestration 미구현 표현은 당시 이력입니다.
+기준 main `d890494e2f0c40314127ba288024de5d0fc910f9`, 작업 `codex/비공개 파일 식별자`, [이슈 #113](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/113)입니다. 현재 **구현·로컬 검증·총괄 독립 최종검수 완료/커밋·PR 제출 승인**입니다. `GameService`만 추가하고 기존 Auth/Round/Reward의 핵심 API·TTL·스키마와 앱은 유지했습니다. 아래 발급/소비 orchestration 미구현 표현은 당시 이력입니다.
 
 - `new GameService({auth,authTransport?,round,reward,rewardAdUnit,allowRewardClaim?})`는 세 인스턴스를 소유합니다. 생성 시 통신하거나 파일/env에서 키를 자동 조회하지 않습니다. 서버 구성을 한 번 복사하고 세 32바이트 키를 별도로 복제·분리하며 임시 사본은 성공/실패 모두 지웁니다. auth/round의 test·production과 reward의 synthetic·production을 대응시킵니다. round/reward DB는 절대 `.sqlite` 경로·실경로/기존 파일 inode를 비교해 동일 경로·symlink 별명·hardlink 공유를 거절합니다. 경로 검사는 생성 시점의 검사이며 외부 파일시스템 경합/ACL 보호를 대신하지 않습니다. 생성 도중 실패하면 이미 연 자원을 모두 정리하고 고정 오류만 냅니다.
 - `start({sessionTicket,requestId,levelId,signal?})`, `get({sessionTicket,roundId,signal?})`, `command({sessionTicket,roundId,operationId,expectedRevision,command,signal?})`, `issueRewardClaim({sessionTicket,roundId,expectedRevision,signal?})`, `applyReward({sessionTicket,roundId,signal?})`만 사용자 요청 API입니다. 허용 필드·형식·중첩 명령/좌표를 첫 await 전에 snapshot합니다. 추가 owner/context/board/score/grant/adUnit/동의·나이/verified/raw SSV, 상속·accessor·symbol·위조/Proxy signal은 거절합니다. 매 유효 작업에서 `auth.authenticate()`를 새로 호출하고 성공 context에서 `{ownerId}`만 projection합니다. 인증 성공 캐시/장기 세션을 발급하지 않습니다.
@@ -1830,7 +1830,7 @@ APK/AAB·Android sync·버전·최종 오디오 믹스·실계정/키/env·Drive
 
 ## 2026-10-17 · 보상권 영구 소비·실패 회차 이동 추가 (이슈 #111)
 
-기준 main `d867e32f3a3a5fa3839878bfda1feffe165bcf35`, 작업 `codex/111-reward-redemption-continue`, [이슈 #111](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/111)입니다. **서버 내부 보상권 소비→런타임 권한→실패 회차 +5 구현·로컬 검증·총괄 최종검수를 마쳤고 커밋/PR 제출을 승인받았습니다.** 최신 PR/main의 Node22·24 CI와 반영 근거는 GitHub에 구분 기록합니다. 앱·엔진·30개 level·구매/인증·callback 수신함 설정과 기존 claim/SSV 시간 정책은 유지했습니다. 아래 #109의 보상 소비/+5 미구현 표현은 당시 이력입니다.
+기준 main `d867e32f3a3a5fa3839878bfda1feffe165bcf35`, 작업 `codex/비공개 파일 식별자`, [이슈 #111](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/111)입니다. **서버 내부 보상권 소비→런타임 권한→실패 회차 +5 구현·로컬 검증·총괄 최종검수를 마쳤고 커밋/PR 제출을 승인받았습니다.** 최신 PR/main의 Node22·24 CI와 반영 근거는 GitHub에 구분 기록합니다. 앱·엔진·30개 level·구매/인증·callback 수신함 설정과 기존 claim/SSV 시간 정책은 유지했습니다. 아래 #109의 보상 소비/+5 미구현 표현은 당시 이력입니다.
 
 - `RewardLedger.redeemVoucher(trustedOwnerRound)`는 저장된 실제 voucher만 소비합니다. owner-round/transaction에 UNIQUE인 `reward_redemptions`와 안정적인 HMAC grant ID를 같은 SQLite 트랜잭션에 영구 저장하고 COMMIT 성공 뒤에만 `{kind:'voucher-redeemed',consumed,grant:{opaqueGrantId}}`를 반환합니다. 같은 소비의 재시도·재시작은 같은 ID/`consumed:false`이며 새 런타임 참조를 만듭니다. 미발급·다른 owner/round·pending은 `voucher-missing`, 아직 소비하지 않은 closed 회차는 `round-closed`입니다. 이미 저장한 voucher와 소비 기록은 삭제하지 않으며 `hasVoucher`는 종전처럼 voucher 존재를 뜻합니다. 소비에 claim TTL을 새로 적용하지 않고, 실제 회차 만료는 회차 원장이 판단합니다.
 - 성공 소비만 모듈 private WeakMap에 실제 객체 참조와 owner/round/environment를 등록합니다. `readRedeemedGrant(grant,trustedOwnerRound,expectedEnvironment)`는 해당 참조·binding을 검사해 opaque ID만 반환합니다. synthetic 광고 환경은 test 회차, production은 production 회차에 대응합니다. string ID/verified 객체/JSON/spread/상속/Proxy 복제/다른 owner·round·환경은 권한이 아닙니다. 클라이언트 credential·직렬화 토큰·공개 암호학적 증명이 아니며 프로세스·worker 경계로 객체를 보내면 brand가 사라집니다. 같은 프로세스의 신뢰된 서버 계층이 현재 요청 안에서 전달해야 합니다. owner/round 타입·동결 객체 자체도 인증을 대신하지 않습니다.
@@ -1872,7 +1872,7 @@ APK/AAB·Android sync·버전·최종 오디오 믹스·실계정/키/env·Drive
 
 ## 2026-10-17 · 서버 퍼즐 회차·멱등 이동 원장 (이슈 #109)
 
-기준 main `de72bdd3b87de8eaa3a8a1dd9d8398235f7bce30`, 작업 `codex/109-server-round-ledger`, [이슈 #109](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/109)입니다. `server/game/roundState.ts`·`roundLedger.ts`와 파일/프로세스/worker 검증을 추가했습니다. **서버 내부 회차 원장 구현·로컬 검증·총괄 최종검수를 마쳤고 커밋/PR 제출을 승인받았습니다**입니다. 기존 앱·BoardEngine·30개 level·저장·RewardLedger/구매/인증 schema와 TTL은 수정하지 않았습니다. 아래 과거 round 미구현 표현은 당시 이력입니다.
+기준 main `de72bdd3b87de8eaa3a8a1dd9d8398235f7bce30`, 작업 `codex/비공개 파일 식별자`, [이슈 #109](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/109)입니다. `server/game/roundState.ts`·`roundLedger.ts`와 파일/프로세스/worker 검증을 추가했습니다. **서버 내부 회차 원장 구현·로컬 검증·총괄 최종검수를 마쳤고 커밋/PR 제출을 승인받았습니다**입니다. 기존 앱·BoardEngine·30개 level·저장·RewardLedger/구매/인증 schema와 TTL은 수정하지 않았습니다. 아래 과거 round 미구현 표현은 당시 이력입니다.
 
 - 생성자는 절대 `.sqlite` 경로·별도 안정적인 32byte 키·`test/production` 환경을 명시적으로 받습니다. 실제 계정/키/파일/env를 읽거나 통신하지 않습니다. master 사본으로 owner/create/operation/state/receipt/meta의 HMAC 키를 용도 분리한 뒤 master는 지웁니다. 구성/DB 열기 실패·명시 close·무결성/rollback 실패는 내부 키를 지우고 닫으며 caller 키는 유지합니다. 안전하게 rollback한 일시 잠금/COMMIT 오류는 `storage-unavailable`을 반환하고 동일 인스턴스 재시도를 허용합니다. 오류 원문·키·경로를 반환/로그에 넣지 않습니다.
 - `start(trustedOwner,{requestId,levelId})`는 서버 256bit random roundId와 32bit Mulberry32 상태로 생성합니다. 매 난수 호출마다 `(state+0x6d2b79f5)>>>0`를 저장하며 복원은 초기 보드 난수를 소비하지 않습니다. 응답 snapshot은 roundId/revision/생성·만료 시각과 보드/낙엽/목표/이동/수집/점수/셔플/상태의 깊은 복제·동결 사본입니다. 원본 owner/RNG/seed/키/요청 ID는 응답에 없으며 DB에는 owner/요청/operation HMAC과 내부 RNG 진행 상태를 보관합니다. RNG의 비암호학적 예측 가능성이나 DB 암호화/ACL까지 해결하지 않습니다.
@@ -1910,7 +1910,7 @@ APK/AAB·Android sync·버전·최종 오디오 믹스·실계정/키/env·Drive
 
 ## 2026-10-17 · 선택형 PlayFab 세션 검증·소유자 binding (이슈 #107)
 
-기준 main `3174a3dbc38d4f4e6b996b8c7c838e5600a39ad7`, 작업 `codex/107-server-session-auth`, [이슈 #107](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/107)입니다. `server/auth/playfabSession.ts`·인증 응답 전용 `strictSessionJson.ts`와 합성 테스트를 추가했습니다. **PlayFab을 선택할 경우 사용할 서버 어댑터 준비이며 provider 최종 채택·운영 로그인 연결 완료가 아닙니다.** 구현·로컬 검증·총괄 읽기검수를 마쳤고 커밋/PR 제출을 허용받았습니다. 아래 과거 인증 미구현 표현은 당시 이력이며 실제 인증 서비스/앱 연결은 여전히 미완료입니다.
+기준 main `3174a3dbc38d4f4e6b996b8c7c838e5600a39ad7`, 작업 `codex/비공개 파일 식별자`, [이슈 #107](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/107)입니다. `server/auth/playfabSession.ts`·인증 응답 전용 `strictSessionJson.ts`와 합성 테스트를 추가했습니다. **PlayFab을 선택할 경우 사용할 서버 어댑터 준비이며 provider 최종 채택·운영 로그인 연결 완료가 아닙니다.** 구현·로컬 검증·총괄 읽기검수를 마쳤고 커밋/PR 제출을 허용받았습니다. 아래 과거 인증 미구현 표현은 당시 이력이며 실제 인증 서비스/앱 연결은 여전히 미완료입니다.
 
 - `new PlayFabSessionAuthenticator(config, transport)`는 통신하지 않습니다. title ID, `production/test` 환경, 서비스별 `bindingDomain`, 안정적인 별도32byte `bindingKey`, 서버 비밀 공급 함수 `getSecretKey(signal)`을 외부에서 주입합니다. 환경·파일·계정·실키를 자동으로 읽거나 생성/저장하지 않습니다. 구성 getter는 한 번 snapshot하고 키는 복제합니다. 생성 중 후속 구성 오류와 `close()`에서 내부 키를 지우고 caller 키는 보존합니다. 구매/보상 원장의 키와 별도로 관리해야 합니다.
 - `authenticate({sessionTicket, signal?})`만 통신합니다. 신뢰된 title로 고정한 `https://<title>.playfabapi.com/Server/AuthenticateSessionTicket`에 POST하고 `X-SecretKey`, JSON `{SessionTicket}`을 보냅니다. `redirect:error`·`credentials:omit`·`cache:no-store`이며 URL 객체의 canonical 주소를 fetch/응답 URL 비교에 함께 사용합니다. HMAC title은 대문자 정규화를 유지합니다. 입력 ticket/signal은 await 전에 snapshot하며 owner/context 등 추가 입력 필드를 거절합니다.
@@ -1934,7 +1934,7 @@ Node24.21.0에서 최종 `npm test` **24파일1374개(신규176개)**, `npm run 
 
 ## 2026-10-17 · 보상형 콜백 암호화 수신함·제한 재처리 (이슈 #105)
 
-기준 main `46b5df21bc09d2ffa0c0969e2c03b09cef64bf79`, 작업 `codex/105-rewarded-callback-inbox`, [이슈 #105](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/105)입니다. **구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.** 서버 전용 `callbackInbox.ts`·`callbackHttp.ts`, 실제 SQLite 테스트와 별도 프로세스/worker helper를 추가하고, 기존 SSV parser의 원문을 반환하지 않는 boolean 구조 검사만 공유했습니다. `RewardLedger`의 TTL·시계·거절·보상권 의미와 앱/native/콘솔 설정은 변경하지 않았습니다. 아래 #103의 수신함/HTTP 미구현 표현은 당시 이력이며 이번 구현은 실제 HTTP 배포 완료를 뜻하지 않습니다.
+기준 main `46b5df21bc09d2ffa0c0969e2c03b09cef64bf79`, 작업 `codex/비공개 파일 식별자`, [이슈 #105](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/105)입니다. **구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.** 서버 전용 `callbackInbox.ts`·`callbackHttp.ts`, 실제 SQLite 테스트와 별도 프로세스/worker helper를 추가하고, 기존 SSV parser의 원문을 반환하지 않는 boolean 구조 검사만 공유했습니다. `RewardLedger`의 TTL·시계·거절·보상권 의미와 앱/native/콘솔 설정은 변경하지 않았습니다. 아래 #103의 수신함/HTTP 미구현 표현은 당시 이력이며 이번 구현은 실제 HTTP 배포 완료를 뜻하지 않습니다.
 
 ### API·신뢰 경계·저장 정책
 
@@ -1969,7 +1969,7 @@ Node24.21.0에서 최종 `npm test` **24파일1374개(신규176개)**, `npm run 
 
 ## 2026-10-17 · 서버 보상형 SSV·요청 binding·영구 보상 원장 (이슈 #103)
 
-기준 main `99da38faefbefca97bb04b6974259d688dfe45cc`, 작업 `codex/103-rewarded-ssv-ledger`, [이슈 #103](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/103)입니다. **구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.** `server/ads/admobSsv.ts`와 구매 DB에서 분리한 `server/ads/rewardLedger.ts`를 추가했습니다. 보상권을 원장에 저장하는 핵심이며 실제 게임 이동+5 지급/소비, 앱/native/SDK, HTTP, 인증 서버, 배포와 연결하지 않았습니다. 아래 과거 SSV/원장 미구현 표현은 당시 이력입니다.
+기준 main `99da38faefbefca97bb04b6974259d688dfe45cc`, 작업 `codex/비공개 파일 식별자`, [이슈 #103](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/103)입니다. **구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.** `server/ads/admobSsv.ts`와 구매 DB에서 분리한 `server/ads/rewardLedger.ts`를 추가했습니다. 보상권을 원장에 저장하는 핵심이며 실제 게임 이동+5 지급/소비, 앱/native/SDK, HTTP, 인증 서버, 배포와 연결하지 않았습니다. 아래 과거 SSV/원장 미구현 표현은 당시 이력입니다.
 
 ### 공식 근거와 자체 ASCII profile
 
@@ -2026,7 +2026,7 @@ Node24.21.0에서 최종 `npm test` **24파일1374개(신규176개)**, `npm run 
 
 ## 2026-10-17 · Google 전액 환불 조회와 영구 구매 회수 (이슈 #101)
 
-기준 main `46b9c76346f10822c51848ecc8635bd25c04a65a`, 작업 `codex/101-voided-purchase-reconciliation`, [이슈 #101](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/101)입니다. **구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.** `server/commerce/googlePlayVoidedPurchases.ts`의 전체 페이지 조회와 `PurchaseLedger.reconcileVoided`를 추가했습니다. 실제 계정/API/HTTP 서비스/앱에 연결하지 않았으며 아래 과거 기록의 환불 회수·migration 미구현은 당시 이력입니다. 이번 범위는 이미 검증·등록된 단일 수량 영구 비소모 구매의 회수 및 늦은 동일 토큰 지급 차단입니다.
+기준 main `46b9c76346f10822c51848ecc8635bd25c04a65a`, 작업 `codex/비공개 파일 식별자`, [이슈 #101](https://github.com/ChoiDaeYoung-94/Pawblossom-Puzzle/issues/101)입니다. **구현·로컬 검증·총괄 검수를 마쳤으며 최신 PR/main 검사·반영 근거는 GitHub에 기록합니다.** `server/commerce/googlePlayVoidedPurchases.ts`의 전체 페이지 조회와 `PurchaseLedger.reconcileVoided`를 추가했습니다. 실제 계정/API/HTTP 서비스/앱에 연결하지 않았으며 아래 과거 기록의 환불 회수·migration 미구현은 당시 이력입니다. 이번 범위는 이미 검증·등록된 단일 수량 영구 비소모 구매의 회수 및 늦은 동일 토큰 지급 차단입니다.
 
 ### 조회 profile과 전체 페이지 검증
 

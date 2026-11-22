@@ -21,3 +21,12 @@ test-results/
 *.db-*
 *.key
 server/private/
+
+# Local signing and account credentials
+*.p12
+*.pfx
+*.dpapi
+**/key.properties
+**/service-account*.json
+**/service_account*.json
+**/client_secret*.json
